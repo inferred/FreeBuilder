@@ -1,0 +1,1106 @@
+/*
+ * Copyright 2014 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.inferred.freebuilder.processor;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import com.google.common.annotations.GwtCompatible;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ClassToInstanceMap;
+import com.google.common.collect.MutableClassToInstanceMap;
+import com.google.common.testing.EqualsTester;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.server.rpc.RPC;
+
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.Processor;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
+import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
+
+@RunWith(JUnit4.class)
+public class ProcessorTest {
+
+  private static final JavaFileObject NO_BUILDER_CLASS = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  public abstract int getPropertyA();")
+      .addLine("  public abstract boolean isPropertyB();")
+      .addLine("}")
+      .build();
+  private static final String PROPERTY_A_DESCRIPTION = "the value of property A.";
+  private static final String PROPERTY_B_DESCRIPTION = "whether the object is property B.";
+  private static final JavaFileObject TWO_PROPERTY_FREE_BUILDER_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  /** Returns %s */", PROPERTY_A_DESCRIPTION)
+      .addLine("  public abstract int getPropertyA();")
+      .addLine("  /** Returns %s */", PROPERTY_B_DESCRIPTION)
+      .addLine("  public abstract boolean isPropertyB();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("  public static Builder builder() {")
+      .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject TWO_PROPERTY_FREE_BUILDER_INTERFACE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  int getPropertyA();")
+      .addLine("  boolean isPropertyB();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject TWO_DEFAULTS_FREE_BUILDER_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  /** Returns %s */", PROPERTY_A_DESCRIPTION)
+      .addLine("  public abstract int getPropertyA();")
+      .addLine("  /** Returns %s */", PROPERTY_B_DESCRIPTION)
+      .addLine("  public abstract boolean isPropertyB();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    public Builder() {")
+      .addLine("      setPropertyA(0);")
+      .addLine("      setPropertyB(false);")
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("  public static Builder builder() {")
+      .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject STRING_PROPERTY_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  public abstract String getName();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("  public static Builder builder() {")
+      .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  @Rule public final ExpectedException thrown = ExpectedException.none();
+  private final BehaviorTester behaviorTester = new BehaviorTester();
+
+  @Test
+  public void testAbstractClass() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testInterface() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_INTERFACE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void test_nullPointerException() {
+    behaviorTester
+        .with(new Processor())
+        .with(STRING_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("try {")
+            .addLine("  com.example.DataType.builder().setName(null);")
+            .addLine("  fail(\"Expected NPE\");")
+            .addLine("} catch (NullPointerException expected) { }")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuilderSerializability_nonSerializableSubclass() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("assertFalse(com.example.DataType.builder() instanceof %s);",
+                Serializable.class)
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuilderSerializability_serializableSubclass() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract int getPropertyA();")
+            .addLine("  public abstract boolean isPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder implements %s {}",
+                Serializable.class)
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true);")
+            .addLine("com.example.DataType.Builder copy =")
+            .addLine("    %s.reserialize(builder);", ProcessorTest.class)
+            .addLine("com.example.DataType value = copy.build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCantBuildWithAnUnsetProperty() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Not set: [propertyB]");
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .build();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCantBuildWithMultipleUnsetProperties() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Not set: [propertyB, propertyD]");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract int getPropertyA();")
+            .addLine("  public abstract boolean isPropertyB();")
+            .addLine("  public abstract String getPropertyC();")
+            .addLine("  public abstract int getPropertyD();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyC(\"\")")
+            .addLine("    .build();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_valueInstance() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .build();")
+            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(11, builder.getPropertyA());")
+            .addLine("assertTrue(builder.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_builder() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true);")
+            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(11, builder.getPropertyA());")
+            .addLine("assertTrue(builder.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_builderIgnoresUnsetField() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11);")
+            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(11, builder.getPropertyA());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_builderUnsetPropertyGetterThrows() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("propertyB not set");
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11);")
+            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("    .mergeFrom(template);")
+            .addLine("builder.isPropertyB();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuildPartial_ignoresUnsetField() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .buildPartial();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuildPartial_unsetPropertyGetterThrows() {
+    thrown.expect(UnsupportedOperationException.class);
+    thrown.expectMessage("propertyB not set");
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .buildPartial();")
+            .addLine("value.isPropertyB();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuildPartial_toString() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .buildPartial();")
+            .addLine("assertEquals(\"partial DataType{propertyA=11}\", value.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuildPartial_toString_twoPrimitiveProperties() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .buildPartial();")
+            .addLine("assertEquals(\"partial DataType{propertyA=11, propertyB=true}\",")
+            .addLine("    value.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_noDefaults() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Not set: [propertyA, propertyB]");
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_withDefaults() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_DEFAULTS_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .addLine("assertEquals(0, value.getPropertyA());")
+            .addLine("assertFalse(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_implicitConstructor() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Not set: [propertyA, propertyB]");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  /** Returns %s */", PROPERTY_A_DESCRIPTION)
+            .addLine("  public abstract int getPropertyA();")
+            .addLine("  /** Returns %s */", PROPERTY_B_DESCRIPTION)
+            .addLine("  public abstract boolean isPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_explicitNoArgsConstructor() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Not set: [propertyA, propertyB]");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  /** Returns %s */", PROPERTY_A_DESCRIPTION)
+            .addLine("  public abstract int getPropertyA();")
+            .addLine("  /** Returns %s */", PROPERTY_B_DESCRIPTION)
+            .addLine("  public abstract boolean isPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    public Builder() {}")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_builderMethod() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Not set: [propertyA, propertyB]");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  /** Returns %s */", PROPERTY_A_DESCRIPTION)
+            .addLine("  public abstract int getPropertyA();")
+            .addLine("  /** Returns %s */", PROPERTY_B_DESCRIPTION)
+            .addLine("  public abstract boolean isPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    private Builder() {}")
+            .addLine("  }")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_newBuilderMethod() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Not set: [propertyA, propertyB]");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  /** Returns %s */", PROPERTY_A_DESCRIPTION)
+            .addLine("  public abstract int getPropertyA();")
+            .addLine("  /** Returns %s */", PROPERTY_B_DESCRIPTION)
+            .addLine("  public abstract boolean isPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    private Builder() {}")
+            .addLine("  }")
+            .addLine("  public static Builder newBuilder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.newBuilder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_noBuilderFactory() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract int getPropertyA();")
+            .addLine("  public abstract boolean isPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    public Builder(int a, boolean b) {")
+            .addLine("      setPropertyA(a);")
+            .addLine("      setPropertyB(b);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder(11, true)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuilderGetters() {
+    behaviorTester
+    .with(new Processor())
+    .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+    .with(new TestBuilder()
+        .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+        .addLine("    .setPropertyA(11)")
+        .addLine("    .setPropertyB(true);")
+        .addLine("assertEquals(11, builder.getPropertyA());")
+        .addLine("assertTrue(builder.isPropertyB());")
+        .build())
+    .runTest();
+  }
+
+  @Test
+  public void testBuilderGetterThrowsIfValueUnset() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("propertyB not set");
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .isPropertyB();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testNoDefaultsOptimization() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder.class.getSuperclass()")
+            .addLine("    .getDeclaredField(\"_unsetProperties\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testDefaultsOptimization() {
+    thrown.expect(new BaseMatcher<Throwable>() {
+
+      @Override
+      public boolean matches(Object obj) {
+        if (!(obj instanceof Throwable)) {
+          return false;
+        }
+        Throwable cause = ((Throwable) obj).getCause();
+        return ((cause instanceof NoSuchFieldException)
+            && cause.getMessage().equals("_unsetProperties"));
+      }
+
+      @Override
+      public void describeTo(Description desc) {
+        desc.appendText("caused by: java.lang.NoSuchFieldException: _unsetProperties");
+      }});
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_DEFAULTS_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder.class.getSuperclass()")
+            .addLine("    .getDeclaredField(\"_unsetProperties\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testEquality() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new %s()", EqualsTester.class)
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(11)")
+            .addLine("            .setPropertyB(true)")
+            .addLine("            .build(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(11)")
+            .addLine("            .setPropertyB(true)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(11)")
+            .addLine("            .setPropertyB(false)")
+            .addLine("            .build(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(11)")
+            .addLine("            .setPropertyB(false)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(12)")
+            .addLine("            .setPropertyB(true)")
+            .addLine("            .build(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(12)")
+            .addLine("            .setPropertyB(true)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(11)")
+            .addLine("            .setPropertyB(true)")
+            .addLine("            .buildPartial(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(11)")
+            .addLine("            .setPropertyB(true)")
+            .addLine("            .buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(11)")
+            .addLine("            .buildPartial(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyA(11)")
+            .addLine("            .buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyB(true)")
+            .addLine("            .buildPartial(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setPropertyB(true)")
+            .addLine("            .buildPartial())")
+            .addLine("    .testEquals();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testDoubleEquality() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract double getValue();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new %s()", EqualsTester.class)
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setValue(Double.NaN)")
+            .addLine("            .build(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setValue(Double.NaN)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setValue(0.0)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setValue(-0.0)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setValue(Double.NaN)")
+            .addLine("            .buildPartial(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setValue(Double.NaN)")
+            .addLine("            .buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setValue(0.0)")
+            .addLine("            .buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .setValue(-0.0)")
+            .addLine("            .buildPartial())")
+            .addLine("    .testEquals();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToString_noProperties() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder().build();")
+            .addLine("assertEquals(\"DataType{}\", value.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToString_oneProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(STRING_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .build();")
+            .addLine("assertEquals(\"DataType{name=fred}\", value.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToString_twoPrimitiveProperties() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .build();")
+            .addLine("assertEquals(\"DataType{propertyA=11, propertyB=true}\", value.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testGwtSerialize_twoStringProperties() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(serializable = true)", GwtCompatible.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getPropertyA();")
+            .addLine("  String getPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setPropertyA(\"foo\")")
+            .addLine("    .setPropertyB(\"bar\")")
+            .addLine("    .build();")
+            .addLine("%s.gwtSerialize(value);", this.getClass())
+            .build())
+        .withContextClassLoader()  // Used by GWT to find the custom field serializer.
+        .runTest();
+  }
+
+  @Test
+  public void testGwtSerialize_twoPrimitiveProperties() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(serializable = true)", GwtCompatible.class)
+            .addLine("public interface DataType {")
+            .addLine("  int getPropertyA();")
+            .addLine("  float getPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setPropertyA(5)")
+            .addLine("    .setPropertyB(3.142F)")
+            .addLine("    .build();")
+            .addLine("%s.gwtSerialize(value);", this.getClass())
+            .build())
+        .withContextClassLoader()  // Used by GWT to find the custom field serializer.
+        .runTest();
+  }
+
+  @Test
+  public void testGwtSerialize_stringListProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(serializable = true)", GwtCompatible.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s> getNames();", List.class, String.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addNames(\"foo\")")
+            .addLine("    .addNames(\"bar\")")
+            .addLine("    .build();")
+            .addLine("%s.gwtSerialize(value);", this.getClass())
+            .build())
+        .withContextClassLoader()  // Used by GWT to find the custom field serializer.
+        .runTest();
+  }
+
+  /**
+   * Server-side deserialize does not match server-side serialize, so we can't test a round trip.
+   */
+  public static <T> void gwtSerialize(T object) throws SerializationException {
+    RPC.encodeResponseForSuccess(ProcessorTest.class.getMethods()[0], object);
+  }
+
+  public static <T> T reserialize(final T object) {
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    try {
+      ObjectOutputStream out = new ObjectOutputStream(bytes);
+      out.writeObject(object);
+      ObjectInputStream in = new ObjectInputStream(
+          new ByteArrayInputStream(bytes.toByteArray())) {
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc) throws ClassNotFoundException {
+          return Class.forName(desc.getName(), false, object.getClass().getClassLoader());
+        }
+      };
+      @SuppressWarnings("unchecked")
+      T result = (T) in.readObject();
+      return result;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  public void testUnderriding_hashCodeEqualsAndToString() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class Person {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  @Override public final boolean equals(Object other) {")
+            .addLine("    return (other instanceof Person)")
+            .addLine("        && getName().equals(((Person) other).getName());")
+            .addLine("  }")
+            .addLine("  @Override public final int hashCode() {")
+            .addLine("    return getName().hashCode();")
+            .addLine("  }")
+            .addLine("  @Override public final String toString() {")
+            .addLine("    return getName() + \" (age \" + getAge() + \")\";")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  public static class Builder extends Person_Builder {}")
+            .addLine("}")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testUnderriding_hashCodeAndEquals() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class Person {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  @Override public final boolean equals(Object other) {")
+            .addLine("    return (other instanceof Person)")
+            .addLine("        && getName().equals(((Person) other).getName());")
+            .addLine("  }")
+            .addLine("  @Override public final int hashCode() {")
+            .addLine("    return getName().hashCode();")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  public static class Builder extends Person_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.Person billAt18 = new com.example.Person.Builder()")
+            .addLine("    .setName(\"Bill\")")
+            .addLine("    .setAge(18)")
+            .addLine("    .build();")
+            .addLine("com.example.Person billAt26 = new com.example.Person.Builder()")
+            .addLine("    .setName(\"Bill\")")
+            .addLine("    .setAge(26)")
+            .addLine("    .build();")
+            .addLine("assertEquals(billAt18, billAt26);")
+            .addLine("assertEquals(billAt18.hashCode(), billAt26.hashCode());")
+            .addLine("assertEquals(\"Person{name=Bill, age=26}\", billAt26.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testUnderriding_toString() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class Person {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  @Override public final String toString() {")
+            .addLine("    return getName() + \" (age \" + getAge() + \")\";")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  public static class Builder extends Person_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.Person p1 = new com.example.Person.Builder()")
+            .addLine("    .setName(\"Bill\")")
+            .addLine("    .setAge(18)")
+            .addLine("    .build();")
+            .addLine("com.example.Person p2 = new com.example.Person.Builder()")
+            .addLine("    .setName(\"Bill\")")
+            .addLine("    .setAge(18)")
+            .addLine("    .build();")
+            .addLine("assertEquals(p1, p2);")
+            .addLine("assertEquals(p1.hashCode(), p2.hashCode());")
+            .addLine("assertEquals(\"Bill (age 18)\", p1.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuilderClassIsEmpty_whenNotSubclassed() {
+    behaviorTester
+        .with(new Processor())
+        .with(NO_BUILDER_CLASS)
+        .with(new TestBuilder()
+            .addLine("Class<?> builderClass = Class.forName(\"com.example.DataType_Builder\");")
+            .addLine("assertThat(builderClass.getDeclaredMethods()).asList().isEmpty();")
+            .build())
+        .runTest();
+
+  }
+
+  @SupportedAnnotationTypes("*")
+  private static class AnnotationsProcessor extends AbstractProcessor {
+    private static final ClassLoader CLASS_LOADER = AnnotationsProcessor.class.getClassLoader();
+
+    private final Map<String, ClassToInstanceMap<Annotation>> annotations =
+        new HashMap<String, ClassToInstanceMap<Annotation>>();
+
+    public <A extends Annotation> A getAnnotation(String elementPath, Class<A> annotationType) {
+      ClassToInstanceMap<Annotation> elementAnnotations = annotations.get(elementPath);
+      return (elementAnnotations == null) ? null : elementAnnotations.getInstance(annotationType);
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+      return SourceVersion.latestSupported();
+    }
+
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+      Deque<Element> todo = new ArrayDeque<Element>(roundEnv.getRootElements());
+      while (!todo.isEmpty()) {
+        Element element = todo.pop();
+        todo.addAll(element.getEnclosedElements());
+        for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
+          String annotationName = annotationMirror.getAnnotationType().toString();
+          try {
+            @SuppressWarnings("unchecked")
+            Class<? extends Annotation> annotationType =
+                (Class<? extends Annotation>) CLASS_LOADER.loadClass(annotationName);
+            addAnnotation(element, annotationType);
+          } catch (ClassNotFoundException e) {
+            // Ignore it.
+          }
+        }
+      }
+      return false;
+    }
+
+    private <A extends Annotation> void addAnnotation(Element element, Class<A> annotationType) {
+      String path = getPath(element);
+      ClassToInstanceMap<Annotation> elementAnnotations = annotations.get(path);
+      if (elementAnnotations == null) {
+        elementAnnotations = MutableClassToInstanceMap.create();
+        annotations.put(path, elementAnnotations);
+      }
+      A annotation = element.getAnnotation(annotationType);
+      elementAnnotations.putInstance(annotationType, annotation);
+    }
+
+    private static String getPath(Element element) {
+      List<String> path = new ArrayList<String>();
+      Element parent = element;
+      while (parent != null && parent.getKind() != ElementKind.PACKAGE) {
+        path.add(parent.getSimpleName().toString());
+        parent = parent.getEnclosingElement();
+      }
+      Collections.reverse(path);
+      return Joiner.on(".").join(path);
+    }
+  }
+}
