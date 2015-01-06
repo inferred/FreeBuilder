@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>@FreeBuilder by google</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>@FreeBuilder</h1>
+        <h2>Automatic generation of the Builder pattern for Java 1.6+</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/google/freebuilder/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/google/freebuilder/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/google/freebuilder" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <blockquote>
+<p>The Builder pattern is a good choice when designing classes whose constructors
+or static factories would have more than a handful of parameters.
+— <em>Effective Java, Second Edition</em>, page 39</p>
+</blockquote>
+
+<h2 id="background">
+<a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>Background</h2>
+
+<p>Implementing the <a href="http://en.wikipedia.org/wiki/Builder_pattern">Builder pattern</a>
+in Java is tedious, error-prone and repetitive. Who hasn't seen a ten-argument
+constructor, thought cross thoughts about the previous maintainers of the
+class, then added "just one more"? Even a simple four-field class requires 39
+lines of code for the most basic builder API, or 72 lines if you don't use a
+utility like <a href="https://github.com/google/auto/tree/master/value">AutoValue</a> to generate the value boilerplate.</p>
+
+<p><code>@FreeBuilder</code> produces all the boilerplate for you, as well as free extras like
+JavaDoc, getter methods, <a href="#collections_and_maps">collections support</a>,
+<a href="#nested_buildable_types">nested builders</a>, and <a href="#partials">partial values</a>
+(used in testing), which are highly useful, but would very rarely justify
+their creation and maintenance burden in hand-crafted code. (We also reserve
+the right to add more awesome methods in future!)</p>
+
+<blockquote>
+<p>[The Builder pattern] is more verbose…so should only be used if there are
+enough parameters, say, four or more. But keep in mind that you may want to add
+parameters in the future. If you start out with constructors or static
+factories, and add a builder when the class evolves to the point where the
+number of parameters starts to get out of hand, the obsolete constructors or
+static factories will stick out like a sore thumb. Therefore, it's often better
+to start with a builder in the first place.
+— <em>Effective Java, Second Edition</em>, page 39</p>
+</blockquote>
+
+<h2 id="how_to_use_freebuilder">
+<a id="how-to-use-freebuilder" class="anchor" href="#how-to-use-freebuilder" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to use <code>@FreeBuilder</code>
+</h2>
+
+<h3 id="quick_start">
+<a id="quick-start" class="anchor" href="#quick-start" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quick start</h3>
+
+<p>Add the <code>@FreeBuilder</code> artifact as an optional dependency to your Maven POM:</p>
+
+<div class="highlight highlight-xml"><pre>&lt;<span class="pl-ent">dependencies</span>&gt;
+  &lt;<span class="pl-ent">dependency</span>&gt;
+    &lt;<span class="pl-ent">groupId</span>&gt;org.inferred&lt;/<span class="pl-ent">groupId</span>&gt;
+    &lt;<span class="pl-ent">artifactId</span>&gt;freebuilder&lt;/<span class="pl-ent">artifactId</span>&gt;
+    &lt;<span class="pl-ent">version</span>&gt;${version}&lt;/<span class="pl-ent">version</span>&gt;
+    &lt;<span class="pl-ent">optional</span>&gt;true&lt;/<span class="pl-ent">optional</span>&gt;
+  &lt;/<span class="pl-ent">dependency</span>&gt;
+&lt;/<span class="pl-ent">dependencies</span>&gt;</pre></div>
+
+<p>Create your value type (e.g. <code>Person</code>) as an interface or abstract class,
+containing an abstract accessor method for each desired field. This accessor
+must be non-void, parameterless, and start with 'get' or 'is'. Add the
+<code>@FreeBuilder</code> annotation to your class, and it will automatically generate an
+implementing class and a package-visible builder API (<code>Person_Builder</code>), which
+you must subclass. For instance:</p>
+
+<div class="highlight highlight-java"><pre>@<span class="pl-stj">FreeBuilder</span>
+<span class="pl-s">public</span> <span class="pl-s">interface</span> <span class="pl-en">Person</span> {
+  <span class="pl-c">/** Returns the person's full (English) name. */</span>
+  <span class="pl-stj">String</span> <span class="pl-en">getName</span>();
+  <span class="pl-c">/** Returns the person's age in years, rounded down. */</span>
+  <span class="pl-st">int</span> <span class="pl-en">getAge</span>();
+  <span class="pl-c">/** Builder of {@link Person} instances. */</span>
+  <span class="pl-s">class</span> <span class="pl-en">Builder</span> <span class="pl-s">extends</span> <span class="pl-e">Person_Builder</span> { }
+}</pre></div>
+
+<p>If you are writing an abstract class, or using Java 8, you may wish to hide the
+builder's constructor and manually provide instead a static <code>builder()</code> method
+on the value type (though <em>Effective Java</em> does not do this).</p>
+
+<h3 id="what_you_get">
+<a id="what-you-get" class="anchor" href="#what-you-get" aria-hidden="true"><span class="octicon octicon-link"></span></a>What you get</h3>
+
+<p>If you write the Person interface shown above, you get:</p>
+
+<ul>
+<li>A builder class with:
+
+<ul>
+<li>a no-args constructor</li>
+<li>JavaDoc</li>
+<li>getters (throwing <code>IllegalStateException</code> for unset fields)</li>
+<li>setters</li>
+<li>
+<code>mergeFrom</code> methods to copy data from existing values or builders</li>
+<li>a <code>build</code> method that verifies all fields have been set
+
+<ul>
+<li><a href="#defaults_and_constraints">see below for default values and constraint checking</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>An implementation of <code>Person</code> with:
+
+<ul>
+<li><code>toString</code></li>
+<li>
+<code>equals</code> and <code>hashCode</code>
+</li>
+</ul>
+</li>
+<li>A <a href="#partials">partial</a> implementation of <code>Person</code> for unit tests with:
+
+<ul>
+<li>
+<code>UnsupportedOperationException</code>-throwing getters for unset fields</li>
+<li><code>toString</code></li>
+<li>
+<code>equals</code> and <code>hashCode</code>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="highlight highlight-java"><pre><span class="pl-stj">Person</span> person <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-stj">Person</span>.<span class="pl-stj">Builder</span>()
+    .setName(<span class="pl-s1"><span class="pl-pds">"</span>Phil<span class="pl-pds">"</span></span>)
+    .setAge(<span class="pl-c1">31</span>)
+    .build();
+<span class="pl-stj">System</span><span class="pl-k">.</span>out<span class="pl-k">.</span>println(person);  <span class="pl-c">// Person{name=Phil, age=31}</span></pre></div>
+
+<h3 id="defaults_and_constraints">
+<a id="defaults-and-constraints" class="anchor" href="#defaults-and-constraints" aria-hidden="true"><span class="octicon octicon-link"></span></a>Defaults and constraints</h3>
+
+<p>We use method overrides to add customization like default values and constraint
+checks. For instance:</p>
+
+<div class="highlight highlight-java"><pre>@<span class="pl-stj">FreeBuilder</span>
+<span class="pl-s">public</span> <span class="pl-s">interface</span> <span class="pl-en">Person</span> {
+  <span class="pl-c">/** Returns the person's full (English) name. */</span>
+  <span class="pl-stj">String</span> <span class="pl-en">getName</span>();
+  <span class="pl-c">/** Returns the person's age in years, rounded down. */</span>
+  <span class="pl-st">int</span> <span class="pl-en">getAge</span>();
+  <span class="pl-c">/** Returns a human-readable description of the person. */</span>
+  <span class="pl-stj">String</span> <span class="pl-en">getDescription</span>();
+  <span class="pl-c">/** Builder class for {@link Person}. */</span>
+  <span class="pl-s">class</span> <span class="pl-en">Builder</span> <span class="pl-s">extends</span> <span class="pl-e">Person_Builder</span> {
+    <span class="pl-s">public</span> <span class="pl-en">Builder</span>() {
+      <span class="pl-c">// Set defaults in the builder constructor.</span>
+      setDescription(<span class="pl-s1"><span class="pl-pds">"</span>Indescribable<span class="pl-pds">"</span></span>);
+    }
+    <span class="pl-st">@Override</span> <span class="pl-s">public</span> <span class="pl-stj">Builder</span> <span class="pl-en">setAge</span>(<span class="pl-st">int</span> <span class="pl-v">age</span>) {
+      <span class="pl-c">// Check single-field (argument) constraints in the setter methods.</span>
+      checkArgument(age <span class="pl-k">&gt;=</span> <span class="pl-c1">18</span>);
+      <span class="pl-k">return</span> <span class="pl-v">super</span><span class="pl-k">.</span>setAge(age);
+    }
+    <span class="pl-st">@Override</span> <span class="pl-s">public</span> <span class="pl-stj">Person</span> <span class="pl-en">build</span>() {
+      <span class="pl-c">// Check cross-field (state) constraints in the build method.</span>
+      <span class="pl-stj">Person</span> person <span class="pl-k">=</span> <span class="pl-v">super</span><span class="pl-k">.</span>build();
+      checkState(<span class="pl-k">!</span>person<span class="pl-k">.</span>getDescription()<span class="pl-k">.</span>contains(person<span class="pl-k">.</span>getName()));
+      <span class="pl-k">return</span> person;
+    }
+  }
+}</pre></div>
+
+<h3 id="optional_values">
+<a id="optional-values" class="anchor" href="#optional-values" aria-hidden="true"><span class="octicon octicon-link"></span></a>Optional values</h3>
+
+<p>If a property is optional—that is, has no reasonable default—then
+use <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/base/Optional.html">the Optional type</a>. It will default to Optional.absent(), and the Builder
+will gain additional convenience setter methods.</p>
+
+<div class="highlight highlight-java"><pre>  <span class="pl-c">/** Returns an optional human-readable description of the person. */</span>
+  <span class="pl-st">Optional&lt;<span class="pl-stj">String</span>&gt;</span> getDescription();</pre></div>
+
+<p>Prefer to use explicit defaults where meaningful, as it avoids the need for
+edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
+the empty string, as it forces the user to think about those edge cases.
+<a href="https://github.com/FreeBuilder" class="user-mention">@FreeBuilder</a> does <strong>not</strong> support nulls and will throw a
+NullPointerException if one is passed to a setter.</p>
+
+<h3 id="collections_and_maps">
+<a id="collections-and-maps" class="anchor" href="#collections-and-maps" aria-hidden="true"><span class="octicon octicon-link"></span></a>Collections and Maps</h3>
+
+<p><code>@FreeBuilder</code> has special support for <code><a href="http://docs.oracle.com/javase/tutorial/collections/interfaces/list.html">List</a></code>,
+<code><a href="http://docs.oracle.com/javase/tutorial/collections/interfaces/set.html">Set</a></code>, <code><a href="https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained#Multiset">Multiset</a></code>, <code><a href="http://docs.oracle.com/javase/tutorial/collections/interfaces/map.html">Map</a></code> and
+<code><a href="https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained#Multimap">Multimap</a></code> properties:</p>
+
+<ul>
+<li>The Builder's <code>set<em>X</em></code> method is removed</li>
+<li>Mutation methods are added instead: <code>add<em>X</em></code> (collections),
+<code>put<em>X</em></code> (maps) and <code>clear<em>X</em></code>
+</li>
+<li>The Builder's <code>get<em>X</em></code> method returns an unmodifiable view
+of the current values: when the Builder is changed, the view also changes</li>
+<li>The property defaults to an empty collection</li>
+<li>The value type returns immutable collections</li>
+</ul>
+
+<h3 id="nested_buildable_types">
+<a id="nested-buildable-types" class="anchor" href="#nested-buildable-types" aria-hidden="true"><span class="octicon octicon-link"></span></a>Nested buildable types</h3>
+
+<p><code>@FreeBuilder</code> has special support for buildable types like <a href="https://developers.google.com/protocol-buffers/">protos</a> and other
+<code>@FreeBuilder</code> types:</p>
+
+<ul>
+<li>The <code>set<em>X</em></code> method gains an overload for the property
+type's Builder, as shorthand for <code>set<em>X</em>(x.build())</code>
+</li>
+<li>The <code>get<em>X</em></code> method is removed</li>
+<li>A <code>get<em>X</em>Builder</code> method is added instead, returning a
+mutable Builder for the property</li>
+<li>The property inherits the defaults of its Builder type</li>
+</ul>
+
+<h3 id="builder_construction">
+<a id="builder-construction" class="anchor" href="#builder-construction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Builder construction</h3>
+
+<p><em>Effective Java</em> recommends passing required parameters in to the Builder
+constructor. While we follow most of the recommendations therein, we explicitly
+do not follow this one: while you gain compile-time verification that all
+parameters are set, you lose flexibility in client code, as well as opening
+yourself back up to the exact same subtle usage bugs as traditional constructors
+and factory methods. For the default <code>@FreeBuilder</code> case, where all parameters
+are required, this does not scale.</p>
+
+<p>If you want to follow <em>Effective Java</em> more faithfully in your own types,
+however, just create the appropriate constructor in your builder subclass:</p>
+
+<div class="highlight highlight-java"><pre>    <span class="pl-s">public</span> Builder(<span class="pl-stj">String</span> name, <span class="pl-st">int</span> age) {
+      <span class="pl-c">// Set all initial values in the builder constructor</span>
+      setName(name);
+      setAge(age);
+    }</pre></div>
+
+<p>Implementation note: in javac, we spot these fields being set in the
+constructor, and do not check again at runtime. </p>
+
+<h3 id="partials">
+<a id="partials" class="anchor" href="#partials" aria-hidden="true"><span class="octicon octicon-link"></span></a>Partials</h3>
+
+<p>A <em>partial value</em> is an implementation of the value type which does not
+conform to the type's state constraints. It may be missing required fields, or
+it may violate a cross-field constraint.</p>
+
+<div class="highlight highlight-java"><pre><span class="pl-stj">Person</span> person <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-stj">Person</span>.<span class="pl-stj">Builder</span>()
+    .setName(<span class="pl-s1"><span class="pl-pds">"</span>Phil<span class="pl-pds">"</span></span>)
+    .buildPartial();  <span class="pl-c">// build() would throw an IllegalStateException here</span>
+<span class="pl-stj">System</span><span class="pl-k">.</span>out<span class="pl-k">.</span>println(person);  <span class="pl-c">// prints: partial Person{name="Phil"}</span>
+person<span class="pl-k">.</span>getAge();  <span class="pl-c">// throws UnsupportedOperationException</span></pre></div>
+
+<p>As partials violate the (legitimate) expectations of your program, they must
+<strong>not</strong> be created in production code. (They may also affect the
+performance of your program, as the JVM cannot make as many optimizations.)
+However, when testing a component which does not rely on the full state
+restrictions of the value type, partials can reduce the fragility of your test
+suite, allowing you to add new required fields or other constraints to an
+existing value type without breaking swathes of test code.</p>
+
+<h3 id="ides">
+<a id="ides" class="anchor" href="#ides" aria-hidden="true"><span class="octicon octicon-link"></span></a>IDEs</h3>
+
+<p>Follow your IDE's annotation processing instructions [<a href="http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm">Eclipse instructions</a>;
+<a href="http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html">IntelliJ instructions</a>].</p>
+
+<h3 id="gwt">
+<a id="gwt" class="anchor" href="#gwt" aria-hidden="true"><span class="octicon octicon-link"></span></a>GWT</h3>
+
+<p>To enable <a href="http://www.gwtproject.org/">GWT</a> serialization of the generated Value subclass, just add
+<code>@GwtCompatible(serializable = true)</code> to your <code>@FreeBuilder</code>-annotated type, and
+extend/implement <code>Serializable</code>. This will generate a <a href="http://www.gwtproject.org/javadoc/latest/com/google/gwt/user/client/rpc/CustomFieldSerializer.html">CustomFieldSerializer</a>,
+and ensure all necessary types are whitelisted.</p>
+
+<h2 id="alternatives">
+<a id="alternatives" class="anchor" href="#alternatives" aria-hidden="true"><span class="octicon octicon-link"></span></a>Alternatives</h2>
+
+<h3 id="autovalue_vs_freebuilder">
+<a id="autovalue-vs-freebuilder" class="anchor" href="#autovalue-vs-freebuilder" aria-hidden="true"><span class="octicon octicon-link"></span></a>AutoValue vs <code>@FreeBuilder</code>
+</h3>
+
+<p><em><strong>Why is <code>@FreeBuilder</code> better than <a href="https://github.com/google/auto/tree/master/value">AutoValue</a>?</strong></em></p>
+
+<p>It's not! AutoValue provides an implementing class with a package-visible
+constructor, so you can easily implement the Factory pattern. <code>@FreeBuilder</code>
+provides an implementing class with a builder API, so you can easily implement
+and customize the Builder pattern. So, like chalk and cheese, which you use
+depends on what you want!</p>
+
+<p>If you're writing an immutable type that needs a small number of values to
+create (<em>Effective Java</em> suggests at most three), and is not likely to
+require more in future, use the Factory pattern. Otherwise, consider using
+<code>@FreeBuilder</code> to implement the Builder pattern.</p>
+
+<p><em><strong>I used <a href="https://github.com/google/auto/tree/master/value">AutoValue</a>, but now have more than three properties! How
+do I migrate to <code>@FreeBuilder</code>?</strong></em></p>
+
+<ol>
+<li>Ensure your getter methods start with 'get' or 'is'.</li>
+<li>Change your annotation to <code>@FreeBuilder</code>.</li>
+<li>Rewrite your factory method(s) to use the builder API.</li>
+<li>Inline your factory method(s) with a refactoring tool (e.g. Eclipse).</li>
+</ol>
+
+<p>You can always skip step 4 and have both factory and builder methods, if that
+seems cleaner!</p>
+
+<p><em><strong>Can I use both <a href="https://github.com/google/auto/tree/master/value">AutoValue</a> and <code>@FreeBuilder</code>?</strong></em></p>
+
+<p>Not really. You can certainly use both annotations, but you will end up with
+two different implementing classes that never compare equal, even if they have
+the same values.</p>
+
+<h3 id="proto_vs_freebuilder">
+<a id="proto-vs-freebuilder" class="anchor" href="#proto-vs-freebuilder" aria-hidden="true"><span class="octicon octicon-link"></span></a>Proto vs <code>@FreeBuilder</code>
+</h3>
+
+<p><em><strong><a href="https://developers.google.com/protocol-buffers/">Protocol buffers</a> have provided builders for ages. Why should I
+use <code>@FreeBuilder</code>?</strong></em></p>
+
+<p>Protocol buffers are cross-platform, backwards- and forwards-compatible, and
+have a very efficient wire format. Unfortunately, they do not support custom
+validation logic; nor can you use appropriate Java domain types, such as
+<a href="http://docs.oracle.com/javase/8/docs/api/java/time/Instant.html">Instant</a> or <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/Range.html">Range</a>. Generally, it will be clear which one is appropriate
+for your use-case.</p>
+
+<h2 id="why_free">
+<a id="wait-why-free" class="anchor" href="#wait-why-free" aria-hidden="true"><span class="octicon octicon-link"></span></a>Wait, why "free"?</h2>
+
+<ul>
+<li>Free as in beer: you don't pay the cost of writing or maintaining the builder
+code.</li>
+<li>Free as in flexible: you should always be able to customize the builder where
+the defaults don't work for you.</li>
+<li>Free as in liberty: you can always drop <code>@FreeBuilder</code> and walk away with
+the code it generated for you.</li>
+</ul>
+
+<h2 id="license">
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+<pre><code>Copyright 2014 Google Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+</code></pre>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
