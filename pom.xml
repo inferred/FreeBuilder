@@ -40,6 +40,12 @@
     </license>
   </licenses>
 
+  <scm>
+    <url>https://github.com/google/freebuilder</url>
+    <connection>scm:git:git://github.com/google/freebuilder.git</connection>
+    <developerConnection>scm:git:git@github.com:google/freebuilder.git</developerConnection>
+  </scm>
+
   <organization>
     <name>Google, Inc.</name>
     <url>http://www.google.com</url>
