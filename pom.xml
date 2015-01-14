@@ -62,6 +62,17 @@
     <url>http://www.google.com</url>
   </organization>
 
+  <developers>
+    <developer>
+      <name>Chris Purcell</name>
+      <email>Chris.Purcell.39@gmail.com</email>
+      <url>https://plus.google.com/+ChrisPurcell</url>
+      <timezone>Europe/London</timezone>
+      <organization>Google</organization>
+      <organizationUrl>http://www.google.com/about/company/</organizationUrl>
+    </developer>
+  </developers>
+
   <dependencies>
     <dependency>
       <groupId>com.google.guava</groupId>
