@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -293,7 +292,7 @@ public class TypeMirrors {
     /** Replaces the given match with the given replacement string. */
     void replace(MatchResult match, String replacement) {
       Preconditions.checkArgument(
-          Objects.equals(match.group(), value.substring(match.start(), match.end())),
+          match.group().equals(value.substring(match.start(), match.end())),
           "MatchResult does not match the current value of this string");
       value = value.substring(0, match.start()) + replacement + value.substring(match.end());
     }

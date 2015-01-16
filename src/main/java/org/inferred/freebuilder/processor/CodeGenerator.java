@@ -36,7 +36,6 @@ import org.inferred.freebuilder.processor.util.SourceWriter;
 
 import java.io.Serializable;
 import java.util.EnumSet;
-import java.util.Objects;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
@@ -696,8 +695,7 @@ public class CodeGenerator {
 
   /** Returns the correct keyword to use to inherit from the given type: implements, or extends. */
   private String getInheritanceKeyword(TypeElement type) {
-    if ((type.getSuperclass().getKind() == TypeKind.NONE)
-        && (!Objects.equals(type.getQualifiedName().toString(), Object.class.getName()))) {
+    if (type.getKind().isInterface()) {
       return "implements";
     } else {
       return "extends";

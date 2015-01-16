@@ -91,9 +91,4 @@ public class IsInvalidTypeVisitor
   public Boolean visitNoType(NoType t, Void p) {
     return false;
   }
-
-  @Override
-  public Boolean visitUnion(UnionType t, Void p) {
-    return any(t.getAlternatives(), this);
-  }
 }

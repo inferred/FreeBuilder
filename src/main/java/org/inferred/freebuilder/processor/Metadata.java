@@ -15,10 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.addAll;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -29,7 +31,6 @@ import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -206,7 +207,7 @@ public class Metadata {
 
     @Override
     public int hashCode() {
-      return Objects.hash(
+      return Objects.hashCode(
           allCapsName,
           boxedType.toString(),
           capitalizedName,
@@ -223,14 +224,14 @@ public class Metadata {
         return false;
       }
       Property other = (Property) obj;
-      return Objects.equals(allCapsName, other.allCapsName)
-          && Objects.equals(boxedType.toString(), other.boxedType.toString())
-          && Objects.equals(capitalizedName, other.capitalizedName)
-          && Objects.equals(codeGenerator, other.codeGenerator)
-          && Objects.equals(getterName, other.getterName)
-          && Objects.equals(name, other.name)
-          && Objects.equals(type.toString(), other.type.toString())
-          && Objects.equals(fullyCheckedCast, other.fullyCheckedCast);
+      return equal(allCapsName, other.allCapsName)
+          && equal(boxedType.toString(), other.boxedType.toString())
+          && equal(capitalizedName, other.capitalizedName)
+          && equal(codeGenerator, other.codeGenerator)
+          && equal(getterName, other.getterName)
+          && equal(name, other.name)
+          && equal(type.toString(), other.type.toString())
+          && equal(fullyCheckedCast, other.fullyCheckedCast);
     }
 
     @Override
@@ -319,7 +320,7 @@ public class Metadata {
 
   @Override
   public int hashCode() {
-    return Objects.hash(
+    return Objects.hashCode(
         type.toString(),
         builder.toString(),
         builderFactory,
@@ -339,17 +340,17 @@ public class Metadata {
       return false;
     }
     Metadata other = (Metadata) obj;
-    return Objects.equals(type.toString(), other.type.toString())
-        && Objects.equals(builder.toString(), other.builder.toString())
-        && Objects.equals(builderFactory, other.builderFactory)
-        && Objects.equals(generatedBuilder.toString(), other.generatedBuilder.toString())
-        && Objects.equals(valueType.toString(), other.valueType.toString())
-        && Objects.equals(partialType.toString(), other.partialType.toString())
-        && Objects.equals(propertyEnum.toString(), other.propertyEnum.toString())
-        && Objects.equals(properties, other.properties)
-        && Objects.equals(underriddenMethods, other.underriddenMethods)
-        && Objects.equals(builderSerializable, other.builderSerializable)
-        && Objects.equals(gwtSerializable, other.gwtSerializable);
+    return equal(type.toString(), other.type.toString())
+        && equal(builder.toString(), other.builder.toString())
+        && equal(builderFactory, other.builderFactory)
+        && equal(generatedBuilder.toString(), other.generatedBuilder.toString())
+        && equal(valueType.toString(), other.valueType.toString())
+        && equal(partialType.toString(), other.partialType.toString())
+        && equal(propertyEnum.toString(), other.propertyEnum.toString())
+        && equal(properties, other.properties)
+        && equal(underriddenMethods, other.underriddenMethods)
+        && equal(builderSerializable, other.builderSerializable)
+        && equal(gwtSerializable, other.gwtSerializable);
   }
 
   @Override

@@ -22,6 +22,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -31,7 +32,6 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -480,7 +480,7 @@ public class MethodElement implements ExecutableElement {
 
     @Override
     public int hashCode() {
-      return Objects.hash(annotationMirrors, modifiers, simpleName.toString(), type.toString());
+      return Objects.hashCode(annotationMirrors, modifiers, simpleName.toString(), type.toString());
     }
 
     @Override
@@ -505,7 +505,7 @@ public class MethodElement implements ExecutableElement {
 
   @Override
   public int hashCode() {
-    return Objects.hash(
+    return Objects.hashCode(
         annotationMirrors,
         modifiers,
         parameters,
