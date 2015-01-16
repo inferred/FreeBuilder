@@ -62,6 +62,8 @@ you must subclass. For instance:
 
 
 ```java
+import org.inferred.freebuilder.FreeBuilder;
+
 @FreeBuilder
 public interface Person {
   /** Returns the person's full (English) name. */
