@@ -87,7 +87,9 @@ must be non-void, parameterless, and start with 'get' or 'is'. Add the
 implementing class and a package-visible builder API (<code>Person_Builder</code>), which
 you must subclass. For instance:</p>
 
-<div class="highlight highlight-java"><pre>@<span class="pl-stj">FreeBuilder</span>
+<div class="highlight highlight-java"><pre><span class="pl-s">import</span> org.inferred.freebuilder.FreeBuilder;
+
+@<span class="pl-stj">FreeBuilder</span>
 <span class="pl-s">public</span> <span class="pl-s">interface</span> <span class="pl-en">Person</span> {
   <span class="pl-c">/** Returns the person's full (English) name. */</span>
   <span class="pl-stj">String</span> <span class="pl-en">getName</span>();
