@@ -173,9 +173,11 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
               REMOVE_PREFIX,
               property.getCapitalizedName(),
               unboxedKeyType.or(keyType),
-              valueType)
-          .addLine("    %s.checkNotNull(key);", Preconditions.class)
-          .addLine("    %s.checkArgument(%s.containsKey(key),",
+              valueType);
+      if (!unboxedKeyType.isPresent()) {
+        code.addLine("    %s.checkNotNull(key);", Preconditions.class);
+      }
+      code.addLine("    %s.checkArgument(%s.containsKey(key),",
               Preconditions.class, property.getName())
           .addLine("        \"Key not present in %s: %%s\", key);", property.getName())
           .addLine("    %s.remove(key);", property.getName())
