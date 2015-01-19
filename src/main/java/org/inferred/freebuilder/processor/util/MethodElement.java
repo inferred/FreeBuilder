@@ -27,7 +27,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import java.io.StringWriter;
+import org.inferred.freebuilder.processor.util.TypeShortener.AlwaysShorten;
+
+import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -198,146 +200,154 @@ public class MethodElement implements ExecutableElement {
   }
 
   /**
-   * Writes the signature of this {@code MethodElement} out to {@code writer}, and returns another
-   * {@link SourceWriter} to append the method implementation to. The implementation code will be
-   * indented, and the terminal brace will be written when the returned SourceWriter is closed.
+   * Writes the signature of this {@code MethodElement} out to {@code builder}, and returns another
+   * {@link SourceBuilder} to append the method implementation to. The implementation code will be
+   * indented, and the terminal brace will be written when the returned SourceBuilder is closed.
    *
-   * <p>If the method is abstract, the returned SourceWriter will throw an exception if it is
+   * <p>If the method is abstract, the returned SourceBuilder will throw an exception if it is
    * written to.
    */
-  public SourceWriter startWritingTo(SourceWriter writer) {
+  public MethodSourceBuilder startWritingTo(SourceBuilder builder) {
     if (modifiers.contains(Modifier.ABSTRACT)) {
-      writeSignature(writer, ";");
-      return new ThrowingSourceWriter();
+      writeSignature(builder, ";");
+      return new ThrowingSourceBuilder();
     } else {
-      writeSignature(writer, " {");
-      return new MethodSourceWriter(writer);
+      writeSignature(builder, " {");
+      return new MethodSourceBuilderImpl(builder);
     }
   }
 
-  private void writeSignature(SourceWriter writer, String trailingText) {
-    writeMirrors(writer);
-    writeMethodNameLine(writer, trailingText);
-    writeParameters(writer, trailingText);
-    writeThrownTypes(writer, trailingText);
+  private void writeSignature(SourceBuilder builder, String trailingText) {
+    writeMirrors(builder);
+    writeMethodNameLine(builder, trailingText);
+    writeParameters(builder, trailingText);
+    writeThrownTypes(builder, trailingText);
   }
 
-  private void writeMirrors(final SourceWriter writer) {
+  private void writeMirrors(final SourceBuilder builder) {
     for (AnnotationMirror annotationMirror : annotationMirrors) {
-      writer.addLine("  %s", annotationMirror);
+      builder.addLine("  %s", annotationMirror);
     }
   }
 
-  private void writeMethodNameLine(final SourceWriter writer, String trailingText) {
-    writer.add("  ");
+  private void writeMethodNameLine(final SourceBuilder builder, String trailingText) {
+    builder.add("  ");
     if (!modifiers.isEmpty()) {
-      writer.add("%s ", Joiner.on(" ").join(modifiers));
+      builder.add("%s ", Joiner.on(" ").join(modifiers));
     }
-    writer.add("%s %s(", returnType, simpleName);
+    builder.add("%s %s(", returnType, simpleName);
     // If there are no parameters, we can close the bracket right now.
     if (parameters.isEmpty()) {
-      writer.add(")");
+      builder.add(")");
       // If there are no thrown types either, we can conclude the signature.
       if (thrownTypes.isEmpty()) {
-        writer.add(trailingText);
+        builder.add(trailingText);
       }
     }
-    writer.add("\n");
+    builder.add("\n");
   }
 
-  private void writeParameters(final SourceWriter writer, String trailingText) {
+  private void writeParameters(final SourceBuilder builder, String trailingText) {
     if (!parameters.isEmpty()) {
       for (int i = 0; i < parameters.size(); ++i) {
         // Write each annotation on its own line if there is more than one of them.
         ParameterElement parameter = parameters.get(i);
         if (parameter.getAnnotationMirrors().size() > 1) {
           for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
-            writer.addLine("      %s", annotationMirror);
+            builder.addLine("      %s", annotationMirror);
           }
         }
-        writer.add("      ");
+        builder.add("      ");
         // If there is a single annotation, it can go inline.
         if (parameter.getAnnotationMirrors().size() == 1) {
-          writer.add("%s ", getOnlyElement(parameter.getAnnotationMirrors()));
+          builder.add("%s ", getOnlyElement(parameter.getAnnotationMirrors()));
         }
         // Write any modifiers.
         if (!parameter.getModifiers().isEmpty()) {
-          writer.add("%s ", Joiner.on(" ").join(parameter.getModifiers()));
+          builder.add("%s ", Joiner.on(" ").join(parameter.getModifiers()));
         }
         // Write the parameter type and name.
-        writer.add("%s %s", parameter.asType(), parameter.getSimpleName());
+        builder.add("%s %s", parameter.asType(), parameter.getSimpleName());
         if (i < parameters.size() - 1) {
           // Each line but the last ends with a comma.
-          writer.add(",");
+          builder.add(",");
         } else {
           // The last line ends with a close bracket.
-          writer.add(")");
+          builder.add(")");
           // If there are no thrown types, we can conclude the signature.
           if (thrownTypes.isEmpty()) {
-            writer.add(trailingText);
+            builder.add(trailingText);
           }
         }
-        writer.add("\n");
+        builder.add("\n");
       }
     }
   }
 
-  private void writeThrownTypes(final SourceWriter writer, String trailingText) {
+  private void writeThrownTypes(final SourceBuilder builder, String trailingText) {
     if (!thrownTypes.isEmpty()) {
       for (int i = 0; i < thrownTypes.size(); ++i) {
-        writer.add(parameters.isEmpty() ? "      " : "          ");
+        builder.add(parameters.isEmpty() ? "      " : "          ");
         if (i == 0) {
-          writer.add("throws ");
+          builder.add("throws ");
         } else {
-          writer.add("    ");
+          builder.add("    ");
         }
-        writer.add("%s", thrownTypes.get(i));
+        builder.add("%s", thrownTypes.get(i));
         if (i < thrownTypes.size() - 1) {
-          writer.add(",");
+          builder.add(",");
         } else {
-          writer.add(trailingText);
+          builder.add(trailingText);
         }
-        writer.add("\n");
+        builder.add("\n");
       }
     }
   }
 
-  private final class ThrowingSourceWriter extends SourceWriter {
-
-    ThrowingSourceWriter() {
-      super(null);
-    }
+  /** {@link Closeable} {@link SourceBuilder} for writing methods. */
+  public abstract static class MethodSourceBuilder implements SourceBuilder, Closeable {
+    @Override
+    public abstract void close();
 
     @Override
-    public SourceWriter add(String fmt, Object... args) {
+    public abstract MethodSourceBuilder add(String fmt, Object... args);
+
+    @Override
+    public MethodSourceBuilder addLine(String fmt, Object... args) {
+      return add(fmt + "\n", args);
+    }
+  }
+
+  private static final class ThrowingSourceBuilder extends MethodSourceBuilder {
+
+    @Override
+    public MethodSourceBuilder add(String fmt, Object... args) {
       throw new IllegalStateException("Cannot write implementation code for an abstract method");
     }
 
     @Override
-    public void close() {
-      // Do nothing
-    }
+    public void close() {}
   }
 
-  private final class MethodSourceWriter extends SourceWriter {
+  private static final class MethodSourceBuilderImpl
+      extends MethodSourceBuilder implements Closeable {
 
-    private final SourceWriter classWriter;
+    private final SourceBuilder code;
     private boolean startOfLine = true;
     private boolean closed = false;
 
-    MethodSourceWriter(SourceWriter classWriter) {
-      super(null);
-      this.classWriter = classWriter;
+    MethodSourceBuilderImpl(SourceBuilder code) {
+      this.code = code;
     }
 
     @Override
-    public SourceWriter add(String fmt, Object... args) {
+    public MethodSourceBuilder add(String fmt, Object... args) {
       checkState(!closed, "Cannot call add() after close()");
       String indentedFmt = (startOfLine ? "    " : "") + Joiner.on("\n    ").join(fmt.split("\n"));
-      classWriter.add(indentedFmt, args);
+      code.add(indentedFmt, args);
       startOfLine = fmt.endsWith("\n");
       if (startOfLine) {
-        classWriter.add("\n");
+        code.add("\n");
       }
       return this;
     }
@@ -346,9 +356,9 @@ public class MethodElement implements ExecutableElement {
     public void close() {
       if (!closed) {
         if (!startOfLine) {
-          classWriter.add("\n");
+          code.add("\n");
         }
-        classWriter.addLine("  }");
+        code.addLine("  }");
       }
       closed = true;
     }
@@ -498,9 +508,9 @@ public class MethodElement implements ExecutableElement {
 
   @Override
   public String toString() {
-    StringWriter writer = new StringWriter();
-    writeSignature(new SourceWriter(writer), ";");
-    return writer.toString();
+    SourceStringBuilder builder = new SourceStringBuilder(new AlwaysShorten());
+    writeSignature(builder, ";");
+    return builder.toString();
   }
 
   @Override

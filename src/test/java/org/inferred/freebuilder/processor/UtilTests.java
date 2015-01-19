@@ -15,12 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static junit.framework.Assert.failNotEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.inferred.freebuilder.processor.Util;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -131,14 +131,6 @@ public class UtilTests {
   }
 
   private void assertEquals(TypeMirror expected, TypeMirror actual) {
-    if (expected == null || actual == null) {
-      if (expected != null || actual != null) {
-        failNotEquals(null, expected, actual);
-      }
-    } else {
-      if (!expected.toString().equals(actual.toString())) {
-        failNotEquals(null, expected, actual);
-      }
-    }
+    Assert.assertEquals((expected == null) ? "null" : expected, (actual == null) ? "null" : actual);
   }
 }

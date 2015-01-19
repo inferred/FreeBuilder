@@ -42,7 +42,6 @@ import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.ImpliedClass;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
-import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
 
 import java.beans.Introspector;
 import java.io.Serializable;
@@ -143,9 +142,9 @@ class Analyser {
             ? BuilderFactory.from(builder.get())
             : Optional.of(NO_ARGS_CONSTRUCTOR))
         .setGeneratedBuilder(generatedBuilder)
-        .setValueType(pickTypeName("Value", generatedBuilder, type))
-        .setPartialType(pickTypeName("Partial", generatedBuilder, type))
-        .setPropertyEnum(pickTypeName("Property", generatedBuilder, type))
+        .setValueType(generatedBuilder.createNestedClass("Value"))
+        .setPartialType(generatedBuilder.createNestedClass("Partial"))
+        .setPropertyEnum(generatedBuilder.createNestedClass("Property"))
         .addAllUnderriddenMethods(findUnderriddenMethods(methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .setGwtSerializable(isGwtSerializable(type))
@@ -273,29 +272,6 @@ class Analyser {
       }
       return false;
     }
-  }
-
-  /** Pick a name for a new implied type, given a list of {@code typesToCheckForConflicts}. */
-  private ImpliedNestedClass pickTypeName(
-      String prefix, ImpliedClass enclosingElement, TypeElement... typesToCheckForConflicts) {
-    int suffix = 0;
-    String newName = prefix;  // Don't add a trailing '0'.
-    boolean conflicting;
-    do {
-      conflicting = false;
-      for (TypeElement type : typesToCheckForConflicts) {
-        for (Element element : type.getEnclosedElements()) {
-          if (element.getSimpleName().contentEquals(newName)) {
-            conflicting = true;
-            break;
-          }
-        }
-      }
-      if (conflicting) {
-        newName = prefix + (++suffix);
-      }
-    } while (conflicting);
-    return enclosingElement.createNestedClass(newName);
   }
 
   /**

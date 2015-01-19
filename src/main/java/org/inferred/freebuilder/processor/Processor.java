@@ -24,7 +24,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.CompilationUnitWriter;
 
 import java.util.Set;
 
@@ -74,7 +74,7 @@ public class Processor extends AbstractProcessor {
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
         Metadata metadata = analyser.analyse(type);
-        SourceWriter code = metadata.getGeneratedBuilder()
+        CompilationUnitWriter code = metadata.getGeneratedBuilder()
             .openSourceWriter(processingEnv.getFiler());
         try {
           codeGenerator.writeBuilderSource(code, metadata);

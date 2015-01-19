@@ -22,7 +22,7 @@ import com.google.auto.common.MoreTypes;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Set;
 
@@ -36,21 +36,21 @@ public enum BuilderFactory {
 
   /** A new Builder can be made by calling the class' no-args constructor. */
   NO_ARGS_CONSTRUCTOR {
-    @Override public void addNewBuilder(SourceWriter code, TypeElement builderType) {
+    @Override public void addNewBuilder(SourceBuilder code, TypeElement builderType) {
       code.add("new %s()", builderType);
     }
   },
 
   /** The enclosing class provides a static builder() factory method. */
   BUILDER_METHOD {
-    @Override public void addNewBuilder(SourceWriter code, TypeElement builderType) {
+    @Override public void addNewBuilder(SourceBuilder code, TypeElement builderType) {
       code.add("%s.builder()", builderType.getEnclosingElement());
     }
   },
 
   /** The enclosing class provides a static newBuilder() factory method. */
   NEW_BUILDER_METHOD {
-    @Override public void addNewBuilder(SourceWriter code, TypeElement builderType) {
+    @Override public void addNewBuilder(SourceBuilder code, TypeElement builderType) {
       code.add("%s.newBuilder()", builderType.getEnclosingElement());
     }
   };
@@ -70,7 +70,7 @@ public enum BuilderFactory {
   }
 
   /** Adds a code snippet calling the Builder factory method. */
-  public abstract void addNewBuilder(SourceWriter code, TypeElement builderType);
+  public abstract void addNewBuilder(SourceBuilder code, TypeElement builderType);
 
   private static boolean hasExplicitNoArgsConstructor(TypeElement type) {
     for (ExecutableElement constructor : constructorsIn(type.getEnclosedElements())) {

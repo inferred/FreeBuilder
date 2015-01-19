@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -96,7 +96,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addValueFieldDeclaration(SourceWriter code, String finalField) {
+    public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
       code.addLine("    // Store a nullable object instead of an Optional. Escape analysis then")
           .addLine("    // allows the JVM to optimize away the Optional objects created by our")
           .addLine("    // getter method.")
@@ -104,7 +104,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldDeclaration(SourceWriter code) {
+    public void addBuilderFieldDeclaration(SourceBuilder code) {
       code.addLine("  // Store a nullable object instead of an Optional. Escape analysis then")
           .addLine("  // allows the JVM to optimize away the Optional objects created by and")
           .addLine("  // passed to our API.")
@@ -112,7 +112,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceWriter code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // Setter (T, not nullable)
       code.addLine("")
           .addLine("  /**")
@@ -206,37 +206,37 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addFinalFieldAssignment(SourceWriter code, String finalField, String builder) {
+    public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
       code.addLine("      %s = %s.%s;", finalField, builder, property.getName());
     }
 
     @Override
-    public void addMergeFromValue(SourceWriter code, String value) {
+    public void addMergeFromValue(SourceBuilder code, String value) {
       code.addLine("    %s(%s.%s());", setterName, value, property.getGetterName());
     }
 
     @Override
-    public void addMergeFromBuilder(SourceWriter code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
       code.addLine("    %s(%s.%s());", setterName, builder, property.getGetterName());
     }
 
     @Override
-    public void addReadValueFragment(SourceWriter code, String finalField) {
+    public void addReadValueFragment(SourceBuilder code, String finalField) {
       code.add("%s.fromNullable(%s)", Optional.class, finalField);
     }
 
     @Override
-    public void addSetFromResult(SourceWriter code, String builder, String variable) {
+    public void addSetFromResult(SourceBuilder code, String builder, String variable) {
       code.addLine("        %s.%s(%s);", builder, setterName, variable);
     }
 
     @Override
-    public void addClear(SourceWriter code, String template) {
+    public void addClear(SourceBuilder code, String template) {
       code.addLine("    %1$s = %2$s.%1$s;", property.getName(), template);
     }
 
     @Override
-    public void addPartialClear(SourceWriter code) {
+    public void addPartialClear(SourceBuilder code) {
       code.addLine("    %s = null;", property.getName());
     }
   }

@@ -32,7 +32,7 @@ import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
-import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.io.Serializable;
 import java.util.EnumSet;
@@ -47,7 +47,7 @@ import javax.lang.model.type.TypeKind;
 public class CodeGenerator {
 
   /** Write the source code for a generated builder. */
-  void writeBuilderSource(SourceWriter code, Metadata metadata) {
+  void writeBuilderSource(SourceBuilder code, Metadata metadata) {
     if (metadata.getBuilder() == metadata.getGeneratedBuilder()) {
       writeStubSource(code, metadata);
       return;
@@ -189,7 +189,7 @@ public class CodeGenerator {
     if (!metadata.getUnderriddenMethods().contains(StandardMethod.TO_STRING)) {
       code.addLine("")
           .addLine("    @%s", Override.class)
-          .addLine("    public String toString() {")
+          .addLine("    public %s toString() {", String.class)
           .add("      return \"%s{", metadata.getType().getSimpleName());
       switch (metadata.getProperties().size()) {
         case 0: {
@@ -485,7 +485,7 @@ public class CodeGenerator {
     if (!metadata.getUnderriddenMethods().contains(StandardMethod.TO_STRING)) {
       code.addLine("")
           .addLine("    @%s", Override.class)
-          .addLine("    public String toString() {");
+          .addLine("    public %s toString() {", String.class);
       code.add("      return \"partial %s{", metadata.getType().getSimpleName());
       switch (metadata.getProperties().size()) {
         case 0: {
@@ -574,7 +574,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private void addPropertyEnum(Metadata metadata, SourceWriter code) {
+  private void addPropertyEnum(Metadata metadata, SourceBuilder code) {
     code.addLine("")
         .addLine("  private enum %s {", metadata.getPropertyEnum().getSimpleName());
     for (Property property : metadata.getProperties()) {
@@ -584,19 +584,20 @@ public class CodeGenerator {
     }
     code.addLine("    ;")
         .addLine("")
-        .addLine("    private final String name;")
+        .addLine("    private final %s name;", String.class)
         .addLine("")
-        .addLine("    private %s(String name) {", metadata.getPropertyEnum().getSimpleName())
+        .addLine("    private %s(%s name) {",
+            metadata.getPropertyEnum().getSimpleName(), String.class)
         .addLine("      this.name = name;")
         .addLine("    }")
         .addLine("")
-        .addLine("    @%s public String toString() {", Override.class)
+        .addLine("    @%s public %s toString() {", Override.class, String.class)
         .addLine("      return name;")
         .addLine("    }")
         .addLine("  }");
   }
 
-  private void addCustomValueSerializer(Metadata metadata, SourceWriter code) {
+  private void addCustomValueSerializer(Metadata metadata, SourceBuilder code) {
     code.addLine("")
         .addLine("  @%s", GwtCompatible.class)
         .addLine("  public static class %s_CustomFieldSerializer",
@@ -684,7 +685,7 @@ public class CodeGenerator {
         .addLine("  }");
   }
 
-  private void writeStubSource(SourceWriter code, Metadata metadata) {
+  private void writeStubSource(SourceBuilder code, Metadata metadata) {
     code.addLine("/**")
         .addLine(" * Placeholder. Create {@code %s.Builder} and subclass this type.",
             metadata.getType())

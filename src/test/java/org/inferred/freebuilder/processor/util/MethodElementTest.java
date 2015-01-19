@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
@@ -25,33 +26,26 @@ import com.google.common.truth.Expect;
 
 import org.inferred.freebuilder.processor.util.MethodElement;
 import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.MethodElement.MethodSourceBuilder;
 import org.inferred.freebuilder.processor.util.MethodElement.ParameterElement;
+import org.inferred.freebuilder.processor.util.TypeShortener.NeverShorten;
 import org.inferred.freebuilder.processor.util.testing.Model;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
-import java.io.StringWriter;
-import java.lang.annotation.Annotation;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
-import javax.lang.model.element.NestingKind;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -95,11 +89,11 @@ public class MethodElementTest {
   @Test
   public void testWriteDefinitionTo_emptyMethod() {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME);
-    StringWriter writer = new StringWriter();
-    try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(writer))) {
+    StringBuilder builder = new StringBuilder();
+    try (MethodSourceBuilder methodWriter = method.startWritingTo(newSourceBuilder(builder))) {
       methodWriter.addLine("return 0.3;");
     }
-    String source = writer.toString();
+    String source = builder.toString();
     assertEquals(
         "  float Bill() {\n"
             + "    return 0.3;\n"
@@ -111,16 +105,17 @@ public class MethodElementTest {
   public void testWriteDefinitionTo_abstractEmptyMethod() {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
         .setModifiers(EnumSet.of(Modifier.ABSTRACT));
-    StringWriter writer = new StringWriter();
-    method.startWritingTo(new SourceWriter(writer)).close();
-    assertEquals("  abstract float Bill();\n", writer.toString());
+    StringBuilder builder = new StringBuilder();
+    method.startWritingTo(newSourceBuilder(builder)).close();
+    assertEquals("  abstract float Bill();\n", builder.toString());
   }
 
   @Test
   public void testWriteDefinitionTo_abstractEmptyMethod_throws() {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
         .setModifiers(EnumSet.of(Modifier.ABSTRACT));
-    try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(new StringWriter()))) {
+    try (MethodSourceBuilder methodWriter =
+        method.startWritingTo(newSourceBuilder(new StringBuilder()))) {
       thrown.expect(IllegalStateException.class);
       methodWriter.addLine("anything");
     }
@@ -130,8 +125,8 @@ public class MethodElementTest {
   public void testWriteDefinitionTo_oneParameter() {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
         .addParameter(new ParameterElement(FLOAT, PARAM_NAME_1));
-    StringWriter writer = new StringWriter();
-    try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(writer))) {
+    StringBuilder builder = new StringBuilder();
+    try (MethodSourceBuilder methodWriter = method.startWritingTo(newSourceBuilder(builder))) {
       methodWriter.addLine("return 0.3;");
     }
     assertEquals(
@@ -139,7 +134,7 @@ public class MethodElementTest {
             + "      float Ted) {\n"
             + "    return 0.3;\n"
             + "  }\n",
-        writer.toString());
+        builder.toString());
   }
 
   @Test
@@ -147,12 +142,12 @@ public class MethodElementTest {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
         .setModifiers(EnumSet.of(Modifier.ABSTRACT))
         .addParameter(new ParameterElement(FLOAT, PARAM_NAME_1));
-    StringWriter writer = new StringWriter();
-    method.startWritingTo(new SourceWriter(writer)).close();
+    StringBuilder builder = new StringBuilder();
+    method.startWritingTo(newSourceBuilder(builder)).close();
     assertEquals(
         "  abstract float Bill(\n"
             + "      float Ted);\n",
-        writer.toString());
+        builder.toString());
   }
 
   @Test
@@ -160,12 +155,12 @@ public class MethodElementTest {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
         .setModifiers(EnumSet.of(Modifier.ABSTRACT))
         .addParameter(new ParameterElement(FLOAT, PARAM_NAME_1).setFinal());
-    StringWriter writer = new StringWriter();
-    method.startWritingTo(new SourceWriter(writer)).close();
+    StringBuilder builder = new StringBuilder();
+    method.startWritingTo(newSourceBuilder(builder)).close();
     assertEquals(
         "  abstract float Bill(\n"
             + "      final float Ted);\n",
-            writer.toString());
+            builder.toString());
   }
 
   @Test
@@ -173,8 +168,8 @@ public class MethodElementTest {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
         .addParameter(new ParameterElement(INT, PARAM_NAME_1))
         .addParameter(new ParameterElement(DOUBLE, PARAM_NAME_2));
-    StringWriter writer = new StringWriter();
-    try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(writer))) {
+    StringBuilder builder = new StringBuilder();
+    try (MethodSourceBuilder methodWriter = method.startWritingTo(newSourceBuilder(builder))) {
       methodWriter.addLine("return 0.3;");
     }
     assertEquals(
@@ -183,7 +178,7 @@ public class MethodElementTest {
             + "      double Bogus) {\n"
             + "    return 0.3;\n"
             + "  }\n",
-        writer.toString());
+        builder.toString());
   }
 
   @Test
@@ -192,8 +187,8 @@ public class MethodElementTest {
         .addParameter(new ParameterElement(INT, PARAM_NAME_1))
         .addParameter(new ParameterElement(DOUBLE, PARAM_NAME_2))
         .addParameter(new ParameterElement(CHAR, PARAM_NAME_3));
-    StringWriter writer = new StringWriter();
-    try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(writer))) {
+    StringBuilder builder = new StringBuilder();
+    try (MethodSourceBuilder methodWriter = method.startWritingTo(newSourceBuilder(builder))) {
       methodWriter.addLine("return 0.3;");
     }
     assertEquals(
@@ -202,15 +197,15 @@ public class MethodElementTest {
             + "      double Bogus,\n"
             + "      char Journey) {\n"
             + "    return 0.3;\n  }\n",
-        writer.toString());
+        builder.toString());
   }
 
   @Test
   public void testWriteDefinitionTo_oneThrownType() {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
-        .addThrownType(new ClassTypeImpl("org.example", "Foo"));
-    StringWriter writer = new StringWriter();
-    try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(writer))) {
+        .addThrownType(newTopLevelClass("org.example.Foo"));
+    StringBuilder builder = new StringBuilder();
+    try (MethodSourceBuilder methodWriter = method.startWritingTo(newSourceBuilder(builder))) {
       methodWriter.addLine("return 0.3;");
     }
     assertEquals(
@@ -218,27 +213,27 @@ public class MethodElementTest {
             + "      throws org.example.Foo {\n"
             + "    return 0.3;\n"
             + "  }\n",
-        writer.toString());
+        builder.toString());
   }
 
   @Test
   public void testWriteDefinitionTo_oneThrownType_abstract() {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
         .setModifiers(EnumSet.of(Modifier.ABSTRACT))
-        .addThrownType(new ClassTypeImpl("org.example", "Foo"));
-    StringWriter writer = new StringWriter();
-    method.startWritingTo(new SourceWriter(writer)).close();
+        .addThrownType(newTopLevelClass("org.example.Foo"));
+    StringBuilder builder = new StringBuilder();
+    method.startWritingTo(newSourceBuilder(builder)).close();
     assertEquals("  abstract float Bill()\n"
-            + "      throws org.example.Foo;\n", writer.toString());
+            + "      throws org.example.Foo;\n", builder.toString());
   }
 
   @Test
   public void testWriteDefinitionTo_twoThrownTypes() {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
-        .addThrownType(new ClassTypeImpl("org.example", "Foo"))
-        .addThrownType(new ClassTypeImpl("org.example", "Bar"));
-    StringWriter writer = new StringWriter();
-    try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(writer))) {
+        .addThrownType(newTopLevelClass("org.example.Foo"))
+        .addThrownType(newTopLevelClass("org.example.Bar"));
+    StringBuilder builder = new StringBuilder();
+    try (MethodSourceBuilder methodWriter = method.startWritingTo(newSourceBuilder(builder))) {
       methodWriter.addLine("return 0.3;");
     }
     assertEquals(
@@ -247,17 +242,17 @@ public class MethodElementTest {
             + "          org.example.Bar {\n"
             + "    return 0.3;\n"
             + "  }\n",
-        writer.toString());
+        builder.toString());
   }
 
   @Test
   public void testWriteDefinitionTo_threeThrownTypes() {
     MethodElement method = new MethodElement(FLOAT, METHOD_NAME)
-        .addThrownType(new ClassTypeImpl("org.example", "Foo"))
-        .addThrownType(new ClassTypeImpl("org.example", "Bar"))
-        .addThrownType(new ClassTypeImpl("org.example", "Baz"));
-    StringWriter writer = new StringWriter();
-    try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(writer))) {
+        .addThrownType(newTopLevelClass("org.example.Foo"))
+        .addThrownType(newTopLevelClass("org.example.Bar"))
+        .addThrownType(newTopLevelClass("org.example.Baz"));
+    StringBuilder builder = new StringBuilder();
+    try (MethodSourceBuilder methodWriter = method.startWritingTo(newSourceBuilder(builder))) {
       methodWriter.addLine("return 0.3;");
     }
     assertEquals(
@@ -267,7 +262,7 @@ public class MethodElementTest {
             + "          org.example.Baz {\n"
             + "    return 0.3;\n"
             + "  }\n",
-        writer.toString());
+        builder.toString());
   }
 
   @Test
@@ -310,8 +305,8 @@ public class MethodElementTest {
         method.addThrownType(type);
       }
       method.setModifiers(realMethod.getModifiers());
-      StringWriter writer = new StringWriter();
-      try (SourceWriter methodWriter = method.startWritingTo(new SourceWriter(writer))) {
+      StringBuilder builder = new StringBuilder();
+      try (MethodSourceBuilder methodWriter = method.startWritingTo(newSourceBuilder(builder))) {
         methodWriter.addLine("return %s.of(\"cheese\", \"cake\");", ImmutableList.class);
       }
 
@@ -319,61 +314,17 @@ public class MethodElementTest {
           "  @org.example.Foo.Annotation\n"
               + "  @org.example.Foo.Annotation2(name=\"bar\")\n"
               + "  public final java.util.List<java.lang.String> doSomething(\n"
-              + "      @org.example.Foo.Annotation String parameterA,\n"
+              + "      @org.example.Foo.Annotation java.lang.String parameterA,\n"
               + "      @org.example.Foo.Annotation2(name=\"baz\") long parameterB,\n"
               + "      java.util.Set<java.lang.Integer> parameterC)\n"
               + "          throws java.io.IOException,\n"
               + "              java.util.concurrent.ExecutionException,\n"
-              + "              InterruptedException {\n"
+              + "              java.lang.InterruptedException {\n"
               + "    return com.google.common.collect.ImmutableList.of(\"cheese\", \"cake\");\n"
               + "  }\n",
-          writer.toString());
+          builder.toString());
     } finally {
       model.destroy();
-    }
-  }
-
-  private static class NameImpl implements Name {
-
-    private final String delegate;
-
-    NameImpl(String delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public int length() {
-      return delegate.length();
-    }
-
-    @Override
-    public char charAt(int index) {
-      return delegate.charAt(index);
-    }
-
-    @Override
-    public CharSequence subSequence(int start, int end) {
-      return delegate.subSequence(start, end);
-    }
-
-    @Override
-    public boolean contentEquals(CharSequence cs) {
-      return delegate.contentEquals(cs);
-    }
-
-    @Override
-    public String toString() {
-      return delegate;
-    }
-
-    @Override
-    public int hashCode() {
-      return delegate.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      return (o instanceof NameImpl) && delegate.equals(((NameImpl) o).delegate);
     }
   }
 
@@ -412,186 +363,7 @@ public class MethodElementTest {
     }
   }
 
-  private static class ClassTypeImpl implements DeclaredType {
-
-    private final String pkg;
-    private final String simpleName;
-
-    ClassTypeImpl(String pkg, String simpleName) {
-      this.pkg = pkg;
-      this.simpleName = simpleName;
-    }
-
-    @Override
-    public TypeKind getKind() {
-      return TypeKind.DECLARED;
-    }
-
-    @Override
-    public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-      return v.visitDeclared(this, p);
-    }
-
-    @Override
-    public Element asElement() {
-      return new ClassElementImpl();
-    }
-
-    @Override
-    public TypeMirror getEnclosingType() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<? extends TypeMirror> getTypeArguments() {
-      return ImmutableList.of();
-    }
-
-    @Override
-    public String toString() {
-      return pkg + "." + simpleName;
-    }
-
-    @Override
-    public int hashCode() {
-      return toString().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      return (o instanceof ClassTypeImpl) && toString().equals(o.toString());
-    }
-
-    private class ClassElementImpl implements TypeElement {
-
-      @Override
-      public TypeMirror asType() {
-        return ClassTypeImpl.this;
-      }
-
-      @Override
-      public ElementKind getKind() {
-        return ElementKind.CLASS;
-      }
-
-      @Override
-      public List<? extends AnnotationMirror> getAnnotationMirrors() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public Set<Modifier> getModifiers() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public <R, P> R accept(ElementVisitor<R, P> v, P p) {
-        return v.visitType(this, p);
-      }
-
-      @Override
-      public List<? extends Element> getEnclosedElements() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public NestingKind getNestingKind() {
-        return NestingKind.TOP_LEVEL;
-      }
-
-      @Override
-      public Name getQualifiedName() {
-        return new NameImpl(pkg + "." + simpleName);
-      }
-
-      @Override
-      public Name getSimpleName() {
-        return new NameImpl(simpleName);
-      }
-
-      @Override
-      public TypeMirror getSuperclass() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public List<? extends TypeMirror> getInterfaces() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public List<? extends TypeParameterElement> getTypeParameters() {
-        return ImmutableList.of();
-      }
-
-      @Override
-      public Element getEnclosingElement() {
-        return new PackageElementImpl();
-      }
-    }
-
-    private class PackageElementImpl implements PackageElement {
-
-      @Override
-      public TypeMirror asType() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public ElementKind getKind() {
-        return ElementKind.PACKAGE;
-      }
-
-      @Override
-      public List<? extends AnnotationMirror> getAnnotationMirrors() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public Set<Modifier> getModifiers() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public List<? extends Element> getEnclosedElements() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public <R, P> R accept(ElementVisitor<R, P> v, P p) {
-        return v.visitPackage(this, p);
-      }
-
-      @Override
-      public Name getQualifiedName() {
-        return new NameImpl(pkg);
-      }
-
-      @Override
-      public Name getSimpleName() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public boolean isUnnamed() {
-        return false;
-      }
-
-      @Override
-      public Element getEnclosingElement() {
-        throw new UnsupportedOperationException();
-      }
-
-    }
+  private static SourceBuilder newSourceBuilder(StringBuilder builder) {
+    return new SourceStringBuilder(new NeverShorten(), builder);
   }
 }

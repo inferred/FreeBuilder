@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
 public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
@@ -52,12 +52,12 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldDeclaration(SourceWriter code) {
+    public void addBuilderFieldDeclaration(SourceBuilder code) {
       code.addLine("  private %s %s;", property.getType(), property.getName());
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceWriter code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // Setter
       code.addLine("")
           .addLine("  /**")
@@ -113,31 +113,31 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addFinalFieldAssignment(SourceWriter code, String finalField, String builder) {
+    public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
       code.addLine("      %s = %s.%s;", finalField, builder, property.getName());
     }
 
     @Override
-    public void addMergeFromValue(SourceWriter code, String value) {
+    public void addMergeFromValue(SourceBuilder code, String value) {
       code.addLine("    %s(%s.%s());", setterName, value, property.getGetterName());
     }
 
     @Override
-    public void addMergeFromBuilder(SourceWriter code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
       code.addLine("    %s(%s.%s());", setterName, builder, property.getGetterName());
     }
 
     @Override
-    public void addSetFromResult(SourceWriter code, String builder, String variable) {
+    public void addSetFromResult(SourceBuilder code, String builder, String variable) {
       code.addLine("        %s.%s(%s);", builder, setterName, variable);
     }
 
     @Override
-    public void addClear(SourceWriter code, String template) {
+    public void addClear(SourceBuilder code, String template) {
       code.addLine("    %1$s = %2$s.%1$s;", property.getName(), template);
     }
 
     @Override
-    public void addPartialClear(SourceWriter code) { }
+    public void addPartialClear(SourceBuilder code) { }
   }
 }

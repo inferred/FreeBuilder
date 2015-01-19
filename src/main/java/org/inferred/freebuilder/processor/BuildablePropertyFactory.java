@@ -30,7 +30,7 @@ import com.google.common.collect.FluentIterable;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.List;
 
@@ -169,14 +169,14 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldDeclaration(SourceWriter code) {
+    public void addBuilderFieldDeclaration(SourceBuilder code) {
       code.add("  private final %s %s = ", builderType, property.getName());
       builderFactory.addNewBuilder(code, builderType);
       code.add(";\n");
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceWriter code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // set(T)
       code.addLine("")
           .addLine("  /**")
@@ -225,23 +225,23 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addFinalFieldAssignment(SourceWriter code, String finalField, String builder) {
+    public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
       code.addLine("      %s = %s.%s.build();", finalField, builder, property.getName());
     }
 
     @Override
-    public void addPartialFieldAssignment(SourceWriter code, String finalField, String builder) {
+    public void addPartialFieldAssignment(SourceBuilder code, String finalField, String builder) {
       code.addLine("      %s = %s.%s.buildPartial();", finalField, builder, property.getName());
     }
 
     @Override
-    public void addMergeFromValue(SourceWriter code, String value) {
+    public void addMergeFromValue(SourceBuilder code, String value) {
       code.addLine("    %s.mergeFrom(%s.%s());",
           property.getName(), value, property.getGetterName());
     }
 
     @Override
-    public void addMergeFromBuilder(SourceWriter code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
       code.add("    %s.mergeFrom(%s.%s()", property.getName(), builder, getBuilderName);
       if (mergeFromBuilderMethod == MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE) {
         code.add(".buildPartial()");
@@ -250,17 +250,17 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addSetFromResult(SourceWriter code, String builder, String variable) {
+    public void addSetFromResult(SourceBuilder code, String builder, String variable) {
       code.addLine("        %s.%s(%s);", builder, setterName, variable);
     }
 
     @Override
-    public void addClear(SourceWriter code, String template) {
+    public void addClear(SourceBuilder code, String template) {
       code.addLine("    %s.clear();", property.getName());
     }
 
     @Override
-    public void addPartialClear(SourceWriter code) {
+    public void addPartialClear(SourceBuilder code) {
       code.addLine("    %s.clear();", property.getName());
     }
   }

@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -84,13 +84,13 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldDeclaration(SourceWriter code) {
+    public void addBuilderFieldDeclaration(SourceBuilder code) {
       code.addLine("  private %1$s<%2$s, %3$s> %4$s = new %1$s<%2$s, %3$s>();",
           LinkedHashMap.class, keyType, valueType, property.getName());
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceWriter code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // put(K key, V value)
       code.addLine("")
           .addLine("  /**")
@@ -218,19 +218,19 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addFinalFieldAssignment(SourceWriter code, String finalField, String builder) {
+    public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
       code.addLine("      %s = %s.copyOf(%s.%s);",
           finalField, ImmutableMap.class, builder, property.getName());
     }
 
     @Override
-    public void addMergeFromValue(SourceWriter code, String value) {
+    public void addMergeFromValue(SourceBuilder code, String value) {
       code.addLine("      %s%s(%s.%s());",
           PUT_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
     }
 
     @Override
-    public void addMergeFromBuilder(SourceWriter code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
       code.addLine("      %s%s(((%s) %s).%s);",
           PUT_ALL_PREFIX,
           property.getCapitalizedName(),
@@ -240,18 +240,18 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addSetFromResult(SourceWriter code, String builder, String variable) {
+    public void addSetFromResult(SourceBuilder code, String builder, String variable) {
       code.addLine("        %s.%s%s(%s);",
           builder, PUT_ALL_PREFIX, property.getCapitalizedName(), variable);
     }
 
     @Override
-    public void addClear(SourceWriter code, String template) {
+    public void addClear(SourceBuilder code, String template) {
       code.addLine("    %s.clear();", property.getName());
     }
 
     @Override
-    public void addPartialClear(SourceWriter code) {
+    public void addPartialClear(SourceBuilder code) {
       code.addLine("    %s.clear();", property.getName());
     }
   }

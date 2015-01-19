@@ -15,6 +15,10 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
@@ -39,6 +43,7 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
 
   private final Element originatingElement;
   private final Elements elementUtils;
+  private final Set<ImpliedNestedClass> nestedClasses = new LinkedHashSet<ImpliedNestedClass>();
 
   /**
    * Constructor for {@link ImpliedClass}.
@@ -61,12 +66,26 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
     this.elementUtils = elementUtils;
   }
 
+  /**
+   * Creates a nested class inside this one, called {@code simpleName}.
+   *
+   * <p>This is used to prevent namespace clashes when writing source code.
+   */
   public ImpliedNestedClass createNestedClass(CharSequence simpleName) {
-    return new ImpliedNestedClass(this, simpleName, elementUtils);
+    ImpliedNestedClass nestedClass = new ImpliedNestedClass(this, simpleName, elementUtils);
+    nestedClasses.add(nestedClass);
+    return nestedClass;
   }
 
   /**
-   * Returns a {@link SourceWriter} for creating this class. The file preamble (package and
+   * Returns all nested classes directly declared in this type.
+   */
+  public Set<ImpliedNestedClass> getNestedClasses() {
+    return Collections.unmodifiableSet(nestedClasses);
+  }
+
+  /**
+   * Returns a {@link CompilationUnitWriter} for creating this class. The file preamble (package and
    * imports) will be generated automatically.
    *
    * @throws FilerException if a Filer guarantee is violated (see the {@link FilerException}
@@ -74,8 +93,8 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
    *     so should be downgraded to a warning, whereas runtime exceptions should be flagged as an
    *     internal error to the user
    */
-  public SourceWriter openSourceWriter(Filer filer) throws FilerException {
-    return new SourceWriter(filer, this, originatingElement);
+  public CompilationUnitWriter openSourceWriter(Filer filer) throws FilerException {
+    return new CompilationUnitWriter(filer, this, originatingElement);
   }
 
   /**
@@ -87,6 +106,7 @@ public static class ImpliedNestedClass
       extends AbstractImpliedClass<TypeElement> implements TypeElement {
 
     private final Elements elementUtils;
+    private final Set<ImpliedNestedClass> nestedClasses = new LinkedHashSet<ImpliedNestedClass>();
 
     private ImpliedNestedClass(
         TypeElement enclosingElement,
@@ -96,8 +116,22 @@ public static class ImpliedNestedClass
       this.elementUtils = elementUtils;
     }
 
+    /**
+     * Creates a nested class inside this one, called {@code simpleName}.
+     *
+     * <p>This is used to prevent namespace clashes when writing source code.
+     */
     public ImpliedNestedClass createNestedClass(CharSequence simpleName) {
-      return new ImpliedNestedClass(this, simpleName, elementUtils);
+      ImpliedNestedClass nestedClass = new ImpliedNestedClass(this, simpleName, elementUtils);
+      nestedClasses.add(nestedClass);
+      return nestedClass;
+    }
+
+    /**
+     * Returns all nested classes directly declared in this type.
+     */
+    public Set<ImpliedNestedClass> getNestedClasses() {
+      return Collections.unmodifiableSet(nestedClasses);
     }
   }
 }

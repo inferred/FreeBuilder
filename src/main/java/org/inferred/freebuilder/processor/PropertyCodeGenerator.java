@@ -18,7 +18,7 @@ package org.inferred.freebuilder.processor;
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.SourceWriter;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Set;
 
@@ -73,42 +73,42 @@ public abstract class PropertyCodeGenerator {
   }
 
   /** Add the field declaration for the property to the value's source code. */
-  public void addValueFieldDeclaration(SourceWriter code, String finalField) {
+  public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
     code.addLine("    private final %s %s;", property.getType(), finalField);
   }
 
   /** Add the field declaration for the property to the builder's source code. */
-  public abstract void addBuilderFieldDeclaration(SourceWriter code);
+  public abstract void addBuilderFieldDeclaration(SourceBuilder code);
 
   /** Add the accessor methods for the property to the builder's source code. */
-  public abstract void addBuilderFieldAccessors(SourceWriter code, Metadata metadata);
+  public abstract void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata);
 
   /** Add the final assignment of the property to the value object's source code. */
   public abstract void addFinalFieldAssignment(
-      SourceWriter code, String finalField, String builder);
+      SourceBuilder code, String finalField, String builder);
 
   /** Add the final assignment of the property to the partial value object's source code. */
-  public void addPartialFieldAssignment(SourceWriter code, String finalField, String builder) {
+  public void addPartialFieldAssignment(SourceBuilder code, String finalField, String builder) {
     addFinalFieldAssignment(code, finalField, builder);
   }
 
   /** Add a merge from value for the property to the builder's source code. */
-  public abstract void addMergeFromValue(SourceWriter code, String value);
+  public abstract void addMergeFromValue(SourceBuilder code, String value);
 
   /** Add a merge from builder for the property to the builder's source code. */
-  public abstract void addMergeFromBuilder(SourceWriter code, Metadata metadata, String builder);
+  public abstract void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder);
 
   /** Adds a fragment converting the value object's field to the property's type. */
-  public void addReadValueFragment(SourceWriter code, String finalField) {
+  public void addReadValueFragment(SourceBuilder code, String finalField) {
     code.addLine("%s", finalField);
   }
 
   /** Adds a set call for the property from a function result to the builder's source code. */
-  public abstract void addSetFromResult(SourceWriter code, String builder, String variable);
+  public abstract void addSetFromResult(SourceBuilder code, String builder, String variable);
 
   /** Adds a clear call for the property given a template builder to the builder's source code. */
-  public abstract void addClear(SourceWriter code, String template);
+  public abstract void addClear(SourceBuilder code, String template);
 
   /** Adds a partial clear call for the property to the builder's source code. */
-  public abstract void addPartialClear(SourceWriter code);
+  public abstract void addPartialClear(SourceBuilder code);
 }

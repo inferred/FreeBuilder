@@ -487,34 +487,6 @@ public class AnalyserTest {
   }
 
   @Test
-  public void conflictingTypeNames() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  public interface Value { }",
-        "  public interface Partial { }",
-        "  public interface Partial2 { }",
-        "  public interface Property { }",
-        "  public interface Property1 { }",
-        "  public interface Property2 { }",
-        "  public static class Builder extends DataType_Builder {}",
-        "}"));
-    assertEquals("com.example.DataType", dataType.getType().getQualifiedName().toString());
-    assertEquals("com.example", dataType.getPackage().getQualifiedName().toString());
-    assertEquals("com.example.DataType_Builder",
-        dataType.getGeneratedBuilder().getQualifiedName().toString());
-    assertEquals("com.example.DataType_Builder.Value1",
-        dataType.getValueType().getQualifiedName().toString());
-    assertEquals("com.example.DataType_Builder.Partial1",
-        dataType.getPartialType().getQualifiedName().toString());
-    assertEquals("com.example.DataType_Builder.Property3",
-        dataType.getPropertyEnum().getQualifiedName().toString());
-    assertThat(dataType.getProperties()).isEmpty();
-    assertFalse(dataType.isGwtSerializable());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
-  }
-
-  @Test
   public void notGwtSerializable() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
