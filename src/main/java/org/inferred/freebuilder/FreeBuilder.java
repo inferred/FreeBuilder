@@ -21,75 +21,38 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a type that has an auto-generated builder. See also
- * <a href="http://freebuilder.inferred.org/">freebuilder.inferred.org</a>.
+ * Annotates a type that has an auto-generated builder.
  *
- * <h3>Basics</h3>
+ * <h3>Quick start</h3>
  *
- * <p>Given an abstract class X and a set of abstract getter methods, the {@literal @}FreeBuilder
- * annotation processor will generate a builder class X_Builder, for use as a supertype of a
- * boilerplate X.Builder class, e.g.:
+ * <p>Create your value type (e.g. {@code Person}) as an interface or abstract class, containing
+ * an abstract accessor method for each desired field. This accessor must be non-void,
+ * parameterless, and start with 'get' or 'is'. Add the {@code @FreeBuilder} annotation to your
+ * class, and it will automatically generate an implementing class and a package-visible builder API
+ * ({@code Person_Builder}), which you must subclass. For instance:
  *
- * <pre>
- * {@literal @}FreeBuilder
- * public abstract class DataType {
- *   public abstract int getPropertyA();
- *   public abstract boolean isPropertyB();
+ * <p><blockquote><pre> {@literal @}FreeBuilder
+ * public interface Person {
+ *   /** Returns the person's full (English) name. *{@literal /}
+ *   String getName();
+ *   /** Returns the person's age in years, rounded down. *{@literal /}
+ *   int getAge();
+ *   /** Builder of {{@literal @}link Person} instances. *{@literal /}
+ *   class Builder extends Person_Builder { }
+ * }</pre></blockquote>
  *
- *   public static class Builder extends DataType_Builder {}
- *   public static Builder builder() {
- *     return new Builder();
- *   }
- * }</pre>
+ * <p>You can now use the {@code Builder} class:
  *
- * An implementation of the abstract class X will be constructed and returned by the builder's
- * <code>build()</code> method.
+ * <p><blockquote><pre> Person person = new Person.Builder()
+ *     .setName("Phil")
+ *     .setAge(31)
+ *     .build();
+ * System.out.println(person);  // Person{name=Phil, age=31}</pre></blockquote></p>
  *
- * <pre>
- * DataType value = DataType.builder()
- *     .setPropertyA(11)
- *     .setPropertyB(true)
- *     .build();</pre>
- *
- * <h3>Defaults and Validation</h3>
- *
- * <p>To set defaults and perform validation, override the relevant methods on the builder, e.g.:
- *
- * <pre>
- *   public static class Builder extends DataType_Builder {
- *     // Set defaults in the constructor.
- *     private Builder() {
- *       setPropertyB(false);
- *     }
- *
- *     // Perform single-property (argument) validation in the setter methods.
- *     {@literal @}Override public Builder setPropertyA(int propertyA) {
- *       Preconditions.checkArgument(propertyA >= 0);
- *       return super.setPropertyA(propertyA);
- *     }
- *
- *     // Perform cross-property (state) validation in the build method.
- *     {@literal @}Override public DataType build() {
- *       DataType result = super.build(); // Ensures all properties are set
- *       Preconditions.checkState(result.getPropertyA() &lt;= 10 || result.isPropertyB(),
- *           "Property A can only exceed 10 if property B is set");
- *       return result;
- *     }
- *   }</pre>
- *
- * <h3>Effective Java</h3>
- *
- * <p><em>Effective Java</em> (ISBN 978-0321356680) recommends the Builder pattern <cite>when
- * designing classes whose constructors or static factories would have more than a handful of
- * parameters...say, four or more. But keep in mind that you may want to add parameters in
- * the future....it's often better to start with a builder in the first place.</cite>
- *
- * <p>We follow most of the recommendations of <em>Effective Java</em>, except that we do not
- * reqire all required parameters be passed to the Builder's constructor. This allows greater
- * flexibility in use, plus increased readability from all parameters being named, at the
- * cost of losing compile-time validation.
+ * @see
+ * <a href="http://freebuilder.inferred.org/">Full documentation at freebuilder.inferred.org</a>
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
-public @interface FreeBuilder {
-}
+public @interface FreeBuilder {}
+
