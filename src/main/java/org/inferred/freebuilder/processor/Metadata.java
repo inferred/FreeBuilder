@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.ImpliedClass;
 import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -42,7 +43,7 @@ import javax.lang.model.util.Elements;
 /**
  * Metadata about a &#64;{@link org.inferred.freebuilder.FreeBuilder FreeBuilder} type.
  */
-public class Metadata {
+public class Metadata extends ValueType {
 
   /** Standard Java methods that may be underridden. */
   public enum StandardMethod {
@@ -137,7 +138,7 @@ public class Metadata {
   }
 
   /** Metadata about a property of a {@link Metadata}. */
-  public static class Property {
+  public static class Property extends ValueType {
     private final TypeMirror type;
     private final TypeMirror boxedType;
     private final String name;
@@ -206,40 +207,15 @@ public class Metadata {
     }
 
     @Override
-    public int hashCode() {
-      return Objects.hashCode(
-          allCapsName,
-          boxedType.toString(),
-          capitalizedName,
-          codeGenerator,
-          getterName,
-          name,
-          type.toString(),
-          fullyCheckedCast);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof Property)) {
-        return false;
-      }
-      Property other = (Property) obj;
-      return equal(allCapsName, other.allCapsName)
-          && equal(boxedType.toString(), other.boxedType.toString())
-          && equal(capitalizedName, other.capitalizedName)
-          && equal(codeGenerator, other.codeGenerator)
-          && equal(getterName, other.getterName)
-          && equal(name, other.name)
-          && equal(type.toString(), other.type.toString())
-          && equal(fullyCheckedCast, other.fullyCheckedCast);
-    }
-
-    @Override
-    public String toString() {
-      return "Property{type=" + type + ", boxedType=" + boxedType + ", name=" + name
-          + ", capitalizedName=" + capitalizedName + ", getterName=" + getterName + ", allCapsName="
-          + allCapsName + ", codeGenerator=" + codeGenerator + ", fullyCheckedCast="
-          + fullyCheckedCast + "}";
+    protected void addFields(FieldReceiver fields) {
+      fields.add("type", type.toString());
+      fields.add("boxedType", boxedType.toString());
+      fields.add("name", name);
+      fields.add("capitalizedName", capitalizedName);
+      fields.add("getterName", getterName);
+      fields.add("allCapsName", allCapsName);
+      fields.add("codeGenerator", codeGenerator);
+      fields.add("fullyCheckedCast", fullyCheckedCast);
     }
 
     /** Builder for {@link Property}. */
@@ -319,47 +295,18 @@ public class Metadata {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hashCode(
-        type.toString(),
-        builder.toString(),
-        builderFactory,
-        generatedBuilder.toString(),
-        valueType.toString(),
-        partialType.toString(),
-        propertyEnum.toString(),
-        properties,
-        underriddenMethods,
-        builderSerializable,
-        gwtSerializable);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Metadata)) {
-      return false;
-    }
-    Metadata other = (Metadata) obj;
-    return equal(type.toString(), other.type.toString())
-        && equal(builder.toString(), other.builder.toString())
-        && equal(builderFactory, other.builderFactory)
-        && equal(generatedBuilder.toString(), other.generatedBuilder.toString())
-        && equal(valueType.toString(), other.valueType.toString())
-        && equal(partialType.toString(), other.partialType.toString())
-        && equal(propertyEnum.toString(), other.propertyEnum.toString())
-        && equal(properties, other.properties)
-        && equal(underriddenMethods, other.underriddenMethods)
-        && equal(builderSerializable, other.builderSerializable)
-        && equal(gwtSerializable, other.gwtSerializable);
-  }
-
-  @Override
-  public String toString() {
-    return "Metadata{type=" + type + ", builder=" + builder
-        + ", generatedBuilder=" + generatedBuilder + ", valueType=" + valueType + ", partialType="
-        + partialType + ", propertyEnum=" + propertyEnum + ", properties=" + properties
-        + ", underriddenMethods=" + underriddenMethods + ", builderSerializable="
-        + builderSerializable + ", gwtSerializable=" + gwtSerializable + "}";
+  protected void addFields(FieldReceiver fields) {
+    fields.add("type", type.toString());
+    fields.add("builder", builder.toString());
+    fields.add("builderFactory", builderFactory);
+    fields.add("generatedBuilder", generatedBuilder.toString());
+    fields.add("valueType", valueType.toString());
+    fields.add("partialType", partialType.toString());
+    fields.add("propertyEnum", propertyEnum.toString());
+    fields.add("properties", properties);
+    fields.add("underriddenMethods", underriddenMethods);
+    fields.add("builderSerializable", builderSerializable);
+    fields.add("gwtSerializable", gwtSerializable);
   }
 
   /** Builder for {@link Metadata}. */

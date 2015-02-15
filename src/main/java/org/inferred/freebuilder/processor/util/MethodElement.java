@@ -58,7 +58,7 @@ import javax.lang.model.type.TypeVisitor;
  *
  * <p>Note: does not currently support generic parameters.
  */
-public class MethodElement implements ExecutableElement {
+public class MethodElement extends ValueType implements ExecutableElement {
 
   private final ArrayList<AnnotationMirror> annotationMirrors = new ArrayList<AnnotationMirror>();
   private final EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
@@ -404,7 +404,7 @@ public class MethodElement implements ExecutableElement {
    * A mutable JavaBean implementation of {@link VariableElement} for parameters of
    * {@link MethodElement} instances.
    */
-  public static class ParameterElement implements VariableElement {
+  public static class ParameterElement extends ValueType implements VariableElement {
 
     private final ArrayList<AnnotationMirror> annotationMirrors = new ArrayList<AnnotationMirror>();
     private final EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
@@ -489,20 +489,11 @@ public class MethodElement implements ExecutableElement {
     }
 
     @Override
-    public int hashCode() {
-      return Objects.hashCode(annotationMirrors, modifiers, simpleName.toString(), type.toString());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof ParameterElement)) {
-        return false;
-      }
-      ParameterElement other = (ParameterElement) obj;
-      return annotationMirrors.equals(other.annotationMirrors)
-          && modifiers.equals(other.modifiers)
-          && simpleName.contentEquals(other.simpleName)
-          && type.toString().equals(other.type.toString());
+    protected void addFields(FieldReceiver fields) {
+      fields.add("annotationMirrors", annotationMirrors);
+      fields.add("modifiers", modifiers);
+      fields.add("simpleName", simpleName.toString());
+      fields.add("type", type.toString());
     }
   }
 
@@ -514,34 +505,14 @@ public class MethodElement implements ExecutableElement {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hashCode(
-        annotationMirrors,
-        modifiers,
-        parameters,
-        returnType.toString(),
-        simpleName.toString(),
-        toStringList(thrownTypes),
-        varArgs);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof MethodElement)) {
-      return false;
-    }
-    MethodElement other = (MethodElement) obj;
-    return annotationMirrors.equals(other.annotationMirrors)
-        && modifiers.equals(other.modifiers)
-        && parameters.equals(other.parameters)
-        && returnType.toString().equals(other.returnType.toString())
-        && simpleName.contentEquals(other.simpleName)
-        && toStringList(thrownTypes).equals(toStringList(other.thrownTypes))
-        && (varArgs == other.varArgs);
-  }
-
-  private static List<String> toStringList(ArrayList<?> list) {
-    return Lists.transform(list, toStringFunction());
+  protected void addFields(FieldReceiver fields) {
+    fields.add("annotationMirrors", annotationMirrors);
+    fields.add("modifiers", modifiers);
+    fields.add("parameters", parameters);
+    fields.add("returnType", returnType.toString());
+    fields.add("simpleName", simpleName.toString());
+    fields.add("thrownTypes", Lists.transform(thrownTypes, toStringFunction()));
+    fields.add("varArgs", varArgs);
   }
 
   private static final Function<Element, TypeMirror> AS_TYPE = new Function<Element, TypeMirror>() {
