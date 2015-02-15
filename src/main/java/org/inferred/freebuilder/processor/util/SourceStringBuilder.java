@@ -25,10 +25,18 @@ import javax.lang.model.type.TypeMirror;
 /**
  * A {@link SourceBuilder} that writes to a {@link StringBuilder}.
  */
-final class SourceStringBuilder implements SourceBuilder {
+public final class SourceStringBuilder implements SourceBuilder {
 
   private final StringBuilder destination;
   private final TypeShortener shortener;
+
+  /**
+   * Returns a {@link SourceStringBuilder} that always shortens types, even if that causes
+   * conflicts.
+   */
+  public static SourceStringBuilder simple() {
+    return new SourceStringBuilder(new TypeShortener.AlwaysShorten());
+  }
 
   SourceStringBuilder(TypeShortener shortener) {
     this(shortener, new StringBuilder());

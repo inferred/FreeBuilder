@@ -17,11 +17,11 @@ package org.inferred.freebuilder.processor.util;
 
 import javax.lang.model.element.Name;
 
-class NameImpl implements Name {
+public class NameImpl implements Name {
 
   private final String delegate;
 
-  NameImpl(String delegate) {
+  public NameImpl(String delegate) {
     this.delegate = delegate;
   }
 

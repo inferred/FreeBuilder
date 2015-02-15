@@ -31,11 +31,11 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 
-class PackageElementImpl implements PackageElement {
+public class PackageElementImpl implements PackageElement {
 
   private final String qualifiedName;
 
-  PackageElementImpl(String qualifiedName) {
+  public PackageElementImpl(String qualifiedName) {
     this.qualifiedName = qualifiedName;
   }
 

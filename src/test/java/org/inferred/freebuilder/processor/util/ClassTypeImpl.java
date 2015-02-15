@@ -37,7 +37,10 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 
-class ClassTypeImpl implements DeclaredType {
+/**
+ * Fake implementation of {@link DeclaredType} for unit tests.
+ */
+public class ClassTypeImpl implements DeclaredType {
 
   private final Element enclosingElement;
   private final TypeMirror enclosingType;
@@ -110,6 +113,9 @@ class ClassTypeImpl implements DeclaredType {
     return (o instanceof ClassTypeImpl) && toString().equals(o.toString());
   }
 
+  /**
+   * Fake implementation of {@link TypeElement} for unit tests.
+   */
   class ClassElementImpl implements TypeElement {
 
     @Override
@@ -165,7 +171,7 @@ class ClassTypeImpl implements DeclaredType {
 
     @Override
     public TypeMirror getSuperclass() {
-      throw new UnsupportedOperationException();
+      return NoTypes.NONE;
     }
 
     @Override
