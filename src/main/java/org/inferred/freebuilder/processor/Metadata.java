@@ -61,6 +61,7 @@ public class Metadata extends ValueType {
   private final List<Property> properties;
   private final Set<StandardMethod> underriddenMethods;
   private final boolean builderSerializable;
+  private final boolean gwtCompatible;
   private final boolean gwtSerializable;
 
   private Metadata(Builder builder) {
@@ -75,6 +76,7 @@ public class Metadata extends ValueType {
     this.properties = ImmutableList.copyOf(builder.properties);
     this.underriddenMethods = ImmutableSet.copyOf(builder.underriddenMethods);
     this.builderSerializable = builder.builderSerializable;
+    this.gwtCompatible = builder.gwtCompatible;
     this.gwtSerializable = builder.gwtSerializable;
   }
 
@@ -130,6 +132,11 @@ public class Metadata extends ValueType {
   /** Returns whether the builder type should be serializable. */
   public boolean isBuilderSerializable() {
     return builderSerializable;
+  }
+
+  /** Returns whether the type (and hence the generated builder type) is GWT compatible. */
+  public boolean isGwtCompatible() {
+    return gwtCompatible;
   }
 
   /** Returns whether the type (and hence the generated value type) is GWT serializable. */
@@ -306,6 +313,7 @@ public class Metadata extends ValueType {
     fields.add("properties", properties);
     fields.add("underriddenMethods", underriddenMethods);
     fields.add("builderSerializable", builderSerializable);
+    fields.add("gwtCompatible", gwtCompatible);
     fields.add("gwtSerializable", gwtSerializable);
   }
 
@@ -323,6 +331,7 @@ public class Metadata extends ValueType {
     private final List<Property> properties = new ArrayList<Property>();
     private final Set<StandardMethod> underriddenMethods = EnumSet.noneOf(StandardMethod.class);
     private Boolean builderSerializable;
+    private Boolean gwtCompatible;
     private Boolean gwtSerializable;
 
     public Builder(Elements elements) {
@@ -407,6 +416,12 @@ public class Metadata extends ValueType {
       return this;
     }
 
+    /** Sets whether the type (and hence the generated builder type) is GWT compatible. */
+    public Builder setGwtCompatible(boolean gwtCompatible) {
+      this.gwtCompatible = gwtCompatible;
+      return this;
+    }
+
     /** Sets whether the type (and hence the generated value type) is GWT serializable. */
     public Builder setGwtSerializable(boolean gwtSerializable) {
       this.gwtSerializable = gwtSerializable;
@@ -430,6 +445,7 @@ public class Metadata extends ValueType {
       checkState(propertyEnum.getEnclosingElement().equals(generatedBuilder),
           "propertyEnum not a nested class of generatedBuilder");
       checkState(builderSerializable != null, "builderSerializable not set");
+      checkState(gwtCompatible != null, "gwtCompatible not set");
       checkState(gwtSerializable != null, "gwtSerializable not set");
       return new Metadata(this);
     }

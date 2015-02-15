@@ -90,6 +90,7 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder)
+        .setGwtCompatible(false)
         .setGwtSerializable(false)
         .setPartialType(expectedBuilder.createNestedClass("Partial"))
         .setPropertyEnum(expectedBuilder.createNestedClass("Property"))
@@ -121,6 +122,7 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder)
+        .setGwtCompatible(false)
         .setGwtSerializable(false)
         .setPartialType(expectedBuilder.createNestedClass("Partial"))
         .setPropertyEnum(expectedBuilder.createNestedClass("Property"))
@@ -491,6 +493,7 @@ public class AnalyserTest {
         "public interface DataType {",
         "  class Builder extends DataType_Builder {}",
         "}"));
+    assertTrue(dataType.isGwtCompatible());
     assertFalse(dataType.isGwtSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
@@ -503,6 +506,7 @@ public class AnalyserTest {
         "public interface DataType {",
         "  class Builder extends DataType_Builder {}",
         "}"));
+    assertTrue(dataType.isGwtCompatible());
     assertTrue(dataType.isGwtSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
@@ -904,6 +908,7 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder)
+        .setGwtCompatible(false)
         .setGwtSerializable(false)
         .setPartialType(expectedBuilder.createNestedClass("Partial"))
         .setPropertyEnum(expectedBuilder.createNestedClass("Property"))
@@ -936,6 +941,7 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder)
+        .setGwtCompatible(false)
         .setGwtSerializable(false)
         .setPartialType(expectedBuilder.createNestedClass("Partial"))
         .setPropertyEnum(expectedBuilder.createNestedClass("Property"))

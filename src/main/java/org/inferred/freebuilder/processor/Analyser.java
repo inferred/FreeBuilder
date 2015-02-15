@@ -147,6 +147,7 @@ class Analyser {
         .setPropertyEnum(generatedBuilder.createNestedClass("Property"))
         .addAllUnderriddenMethods(findUnderriddenMethods(methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
+        .setGwtCompatible(isGwtCompatible(type))
         .setGwtSerializable(isGwtSerializable(type))
         .addAllProperties(findProperties(type, methods, builder).values())
         .build();
@@ -624,6 +625,11 @@ class Analyser {
     // If there is a user-provided subclass, only make its generated superclass serializable if
     // it is itself; otherwise, tools may complain about missing a serialVersionUID field.
     return any(builder.get().getInterfaces(), isEqualTo(Serializable.class));
+  }
+
+  private boolean isGwtCompatible(TypeElement type) {
+    GwtCompatible gwtCompatible = type.getAnnotation(GwtCompatible.class);
+    return (gwtCompatible != null);
   }
 
   private boolean isGwtSerializable(TypeElement type) {

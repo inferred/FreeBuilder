@@ -58,6 +58,9 @@ public class CodeGenerator {
         .addLine(" * derived from the API of {@link %s}.", metadata.getType())
         .addLine(" */")
         .addLine("@%s(\"%s\")", Generated.class, this.getClass().getName());
+    if (metadata.isGwtCompatible()) {
+      code.addLine("@%s", GwtCompatible.class);
+    }
     code.add("abstract class %s", metadata.getGeneratedBuilder().getSimpleName());
     if (metadata.isBuilderSerializable()) {
       code.add(" implements %s", Serializable.class);
