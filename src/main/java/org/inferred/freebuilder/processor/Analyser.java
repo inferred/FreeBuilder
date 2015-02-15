@@ -263,15 +263,7 @@ class Analyser {
   }
 
   private boolean isUnderride(ExecutableElement method) {
-    if (method.getModifiers().contains(Modifier.FINAL)) {
-      return true;
-    } else {
-      if (!method.getModifiers().contains(Modifier.ABSTRACT)) {
-        messager.printMessage(
-            ERROR, method + " must be abstract or final on @FreeBuilder types", method);
-      }
-      return false;
-    }
+    return !method.getModifiers().contains(Modifier.ABSTRACT);
   }
 
   /**
@@ -548,11 +540,6 @@ class Analyser {
     Set<Modifier> modifiers = method.getModifiers();
     boolean isGetterMethod = name.startsWith(GET_PREFIX) || name.startsWith(IS_PREFIX);
     if (!modifiers.contains(Modifier.ABSTRACT)) {
-      // The user can write methods that do not declare a property by marking them "final".
-      if (isGetterMethod && !modifiers.contains(Modifier.FINAL) && declaredOnValueType) {
-        messager.printMessage(
-            ERROR, "Getter methods must be abstract or final on @FreeBuilder types", method);
-      }
       return false;
     }
     if (!isGetterMethod) {

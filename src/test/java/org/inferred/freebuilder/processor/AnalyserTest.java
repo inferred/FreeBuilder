@@ -343,9 +343,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("getName");
-    assertThat(messager.getMessagesByElement().get("getName"))
-        .containsExactly("[ERROR] Getter methods must be abstract or final on @FreeBuilder types");
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -413,9 +411,7 @@ public class AnalyserTest {
         "  public abstract String getName();",
         "  public abstract void getNothing();",
         "  public abstract int getAge();",
-        "  public boolean isDoubleBarrelled() {",
-        "    return getName().contains(\"-\");",
-        "  }",
+        "  public abstract float isDoubleBarrelled();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
@@ -432,7 +428,8 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().get("getNothing"))
         .containsExactly("[ERROR] Getter methods must not be void on @FreeBuilder types");
     assertThat(messager.getMessagesByElement().get("isDoubleBarrelled"))
-        .containsExactly("[ERROR] Getter methods must be abstract or final on @FreeBuilder types");
+        .containsExactly("[ERROR] Getter methods starting with 'is' must return a boolean"
+            + " on @FreeBuilder types");
   }
 
   @Test
@@ -534,7 +531,7 @@ public class AnalyserTest {
     TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
-        "  @Override public final boolean equals(Object obj) {",
+        "  @Override public boolean equals(Object obj) {",
         "    return (obj instanceof DataType);",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
@@ -553,7 +550,7 @@ public class AnalyserTest {
     TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
-        "  @Override public final int hashCode() {",
+        "  @Override public int hashCode() {",
         "    return DataType.class.hashCode();",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
@@ -569,6 +566,106 @@ public class AnalyserTest {
 
   @Test
   public void underriddenHashCodeAndEquals() throws CannotGenerateCodeException {
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  @Override public int hashCode() {",
+        "    return DataType.class.hashCode();",
+        "  }",
+        "  @Override public boolean equals(Object obj) {",
+        "    return (obj instanceof DataType);",
+        "  }",
+        "  public static class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    assertThat(metadata.getUnderriddenMethods())
+        .containsExactly(StandardMethod.HASH_CODE, StandardMethod.EQUALS);
+    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
+  }
+
+  @Test
+  public void underriddenToString() throws CannotGenerateCodeException {
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  @Override public String toString() {",
+        "    return \"DataType{}\";",
+        "  }",
+        "  public static class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    assertThat(metadata.getUnderriddenMethods()).containsExactly(StandardMethod.TO_STRING);
+    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
+  }
+
+  @Test
+  public void underriddenTriad() throws CannotGenerateCodeException {
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  @Override public boolean equals(Object obj) {",
+        "    return (obj instanceof DataType);",
+        "  }",
+        "  @Override public int hashCode() {",
+        "    return DataType.class.hashCode();",
+        "  }",
+        "  @Override public String toString() {",
+        "    return \"DataType{}\";",
+        "  }",
+        "  public static class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    assertThat(metadata.getUnderriddenMethods())
+        .containsExactly(StandardMethod.EQUALS, StandardMethod.HASH_CODE, StandardMethod.TO_STRING);
+    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
+  }
+
+  @Test
+  public void finalEquals() throws CannotGenerateCodeException {
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  @Override public final boolean equals(Object obj) {",
+        "    return (obj instanceof DataType);",
+        "  }",
+        "  public static class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    assertThat(metadata.getUnderriddenMethods()).containsExactly(StandardMethod.EQUALS);
+    assertThat(messager.getMessagesByElement().asMap())
+        .containsEntry("equals", ImmutableList.of(
+            "[ERROR] hashCode and equals must be underridden together on @FreeBuilder types"));
+  }
+
+  @Test
+  public void finalHashCode() throws CannotGenerateCodeException {
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  @Override public final int hashCode() {",
+        "    return DataType.class.hashCode();",
+        "  }",
+        "  public static class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    assertThat(metadata.getUnderriddenMethods()).containsExactly(StandardMethod.HASH_CODE);
+    assertThat(messager.getMessagesByElement().asMap())
+        .containsEntry("hashCode", ImmutableList.of(
+            "[ERROR] hashCode and equals must be underridden together on @FreeBuilder types"));
+  }
+
+  @Test
+  public void finalHashCodeAndEquals() throws CannotGenerateCodeException {
     TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
@@ -589,7 +686,7 @@ public class AnalyserTest {
   }
 
   @Test
-  public void underriddenToString() throws CannotGenerateCodeException {
+  public void finalToString() throws CannotGenerateCodeException {
     TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
@@ -606,7 +703,7 @@ public class AnalyserTest {
   }
 
   @Test
-  public void underriddenTriad() throws CannotGenerateCodeException {
+  public void finalTriad() throws CannotGenerateCodeException {
     TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
@@ -675,60 +772,6 @@ public class AnalyserTest {
 
     assertThat(metadata.getUnderriddenMethods()).isEmpty();
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
-  }
-
-  @Test
-  public void ambiguousEquals() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  @Override public boolean equals(Object obj) {",
-        "    return (obj instanceof DataType);",
-        "  }",
-        "  public static class Builder extends DataType_Builder {}",
-        "}");
-
-    analyser.analyse(dataType);
-
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("equals", ImmutableList.of(
-            "[ERROR] equals(java.lang.Object) must be abstract or final on @FreeBuilder types"));
-  }
-
-  @Test
-  public void ambiguousHashCode() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  @Override public int hashCode() {",
-        "    return DataType.class.hashCode();",
-        "  }",
-        "  public static class Builder extends DataType_Builder {}",
-        "}");
-
-    analyser.analyse(dataType);
-
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode() must be abstract or final on @FreeBuilder types"));
-  }
-
-  @Test
-  public void ambiguousToString() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  @Override public String toString() {",
-        "    return \"DataType{}\";",
-        "  }",
-        "  public static class Builder extends DataType_Builder {}",
-        "}");
-
-    analyser.analyse(dataType);
-
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("toString", ImmutableList.of(
-            "[ERROR] toString() must be abstract or final on @FreeBuilder types"));
   }
 
   @Test
