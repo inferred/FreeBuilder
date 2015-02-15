@@ -542,7 +542,7 @@ public class AnalyserTest {
     assertThat(metadata.getUnderriddenMethods()).containsExactly(StandardMethod.EQUALS);
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("equals", ImmutableList.of(
-            "[ERROR] hashCode and equals must be underridden together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
   }
 
   @Test
@@ -561,7 +561,7 @@ public class AnalyserTest {
     assertThat(metadata.getUnderriddenMethods()).containsExactly(StandardMethod.HASH_CODE);
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode and equals must be underridden together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
   }
 
   @Test
@@ -642,7 +642,7 @@ public class AnalyserTest {
     assertThat(metadata.getUnderriddenMethods()).containsExactly(StandardMethod.EQUALS);
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("equals", ImmutableList.of(
-            "[ERROR] hashCode and equals must be underridden together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
   }
 
   @Test
@@ -661,7 +661,7 @@ public class AnalyserTest {
     assertThat(metadata.getUnderriddenMethods()).containsExactly(StandardMethod.HASH_CODE);
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode and equals must be underridden together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
   }
 
   @Test

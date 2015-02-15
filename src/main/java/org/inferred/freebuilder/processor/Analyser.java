@@ -256,7 +256,7 @@ class Analyser {
           ? standardMethods.get(StandardMethod.EQUALS)
           : standardMethods.get(StandardMethod.HASH_CODE);
       messager.printMessage(ERROR,
-          "hashCode and equals must be underridden together on @FreeBuilder types",
+          "hashCode and equals must be implemented together on @FreeBuilder types",
           underriddenMethod);
     }
     return standardMethods.keySet();
