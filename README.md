@@ -281,16 +281,19 @@ and ensure all necessary types are whitelisted.
 
 <em><strong>Why is `@FreeBuilder` better than [AutoValue][]?</strong></em>
 
-It's not! AutoValue provides an implementing class with a package-visible
-constructor, so you can easily implement the Factory pattern. `@FreeBuilder`
-provides an implementing class with a builder API, so you can easily implement
-and customize the Builder pattern. So, like chalk and cheese, which you use
-depends on what you want!
+It’s not! AutoValue provides an implementing class with a package-visible
+constructor, so you can easily implement the Factory pattern. If you’re writing
+an immutable type that needs a small number of values to create (Effective Java
+suggests at most three), and is not likely to require more in future, use the
+Factory pattern.
 
-If you're writing an immutable type that needs a small number of values to
-create (<em>Effective Java</em> suggests at most three), and is not likely to
-require more in future, use the Factory pattern. Otherwise, consider using
-`@FreeBuilder` to implement the Builder pattern.
+How about if you want a builder? [AutoValue.Builder][] lets you explicitly
+specify a minimal Builder interface that will then be implemented by generated
+code, while `@FreeBuilder` provides a generated builder API. AutoValue.Builder
+is better if you must have a minimal API&mdash;for instance, in an Android
+project, where every method is expensive&mdash;or strongly prefer a
+visible-in-source API at the expense of many useful methods. Otherwise, consider
+using `@FreeBuilder` to implement the Builder pattern.
 
 <em><strong>I used [AutoValue][], but now have more than three properties! How
 do I migrate to `@FreeBuilder`?</strong></em>
@@ -311,6 +314,7 @@ two different implementing classes that never compare equal, even if they have
 the same values.
 
 [AutoValue]: https://github.com/google/auto/tree/master/value
+[AutoValue.Builder]: https://github.com/google/auto/tree/master/value#builders
 
 
 <h3 id=proto_vs_freebuilder>Proto vs <code>@FreeBuilder</code></h3>
