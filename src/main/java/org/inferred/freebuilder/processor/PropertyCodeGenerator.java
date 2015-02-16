@@ -100,7 +100,7 @@ public abstract class PropertyCodeGenerator {
 
   /** Adds a fragment converting the value object's field to the property's type. */
   public void addReadValueFragment(SourceBuilder code, String finalField) {
-    code.addLine("%s", finalField);
+    code.add("%s", finalField);
   }
 
   /** Adds a set call for the property from a function result to the builder's source code. */

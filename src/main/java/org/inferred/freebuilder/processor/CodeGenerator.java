@@ -22,7 +22,9 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
@@ -35,6 +37,7 @@ import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.EnumSet;
 
 import javax.annotation.Generated;
@@ -65,12 +68,12 @@ public class CodeGenerator {
     if (metadata.isBuilderSerializable()) {
       code.add(" implements %s", Serializable.class);
     }
-    code.add(" {");
+    code.addLine(" {");
     // Static fields
     if (metadata.getProperties().size() > 1) {
       code.addLine("")
-          .addLine("  private static final %1$s COMMA_JOINER =", Joiner.class)
-          .addLine("      %s.on(\", \").skipNulls();\n", Joiner.class);
+          .addLine("  private static final %1$s COMMA_JOINER = %1$s.on(\", \").skipNulls();",
+              Joiner.class);
     }
     // Property enum
     if (hasRequiredProperties) {
@@ -84,8 +87,9 @@ public class CodeGenerator {
     }
     // Unset properties
     if (hasRequiredProperties) {
-      code.addLine("  private final %1$s<%2$s> _unsetProperties = %1$s.allOf(%2$s.class);",
-          EnumSet.class, metadata.getPropertyEnum());
+      code.addLine("  private final %s<%s> _unsetProperties =",
+              EnumSet.class, metadata.getPropertyEnum())
+          .addLine("      %s.allOf(%s.class);", EnumSet.class, metadata.getPropertyEnum());
     }
     // Setters and getters
     for (Property property : metadata.getProperties()) {
@@ -154,10 +158,12 @@ public class CodeGenerator {
           default:
             if (property.getType().getKind().isPrimitive()) {
               code.addLine("      if (%1$s != other.%1$s) {", property.getName());
-            } else {
+            } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
               code.addLine("      if (%1$s != other.%1$s", property.getName())
               .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
                   property.getName());
+            } else {
+              code.addLine("      if (!%1$s.equals(other.%1$s)) {", property.getName());
             }
         }
         code.addLine("        return false;")
@@ -171,21 +177,8 @@ public class CodeGenerator {
       code.addLine("")
           .addLine("    @%s", Override.class)
           .addLine("    public int hashCode() {")
-          .addLine("      // Return the same result as passing all the fields")
-          .addLine("      // into Arrays.hashCode() in an Object[].")
-          .addLine("      int result = 1;");
-      for (Property property : metadata.getProperties()) {
-        code.addLine("      result *= 31;");
-        if (property.getType().getKind().isPrimitive()) {
-          code.addLine("      result += ((%s) %s).hashCode();",
-              property.getBoxedType(), property.getName());
-
-        } else {
-          code.addLine("      result += ((%1$s == null) ? 0 : %1$s.hashCode());",
-              property.getName());
-        }
-      }
-      code.addLine("      return result;")
+          .addLine("      return %s.hashCode(new Object[] { %s });",
+              Arrays.class, Joiner.on(", ").join(getNames(metadata.getProperties())))
           .addLine("    }");
     }
     // toString
@@ -233,7 +226,7 @@ public class CodeGenerator {
                 code.add(")\n");
               }
             }
-            code.addLine("          + \"}\";\n");
+            code.addLine("          + \"}\";");
           } else {
             code.add("\"\n");
             Property lastProperty = getLast(metadata.getProperties());
@@ -258,28 +251,26 @@ public class CodeGenerator {
     // build()
     code.addLine("")
         .addLine("  /**")
-        .addLine("   * Returns a newly-created {@link %s}", metadata.getType())
-        .addLine("   * based on the contents of the {@code %s}.",
-            metadata.getBuilder().getSimpleName());
+        .addLine("   * Returns a newly-created {@link %s} based on the contents of the {@code %s}.",
+            metadata.getType(), metadata.getBuilder().getSimpleName());
     if (hasRequiredProperties) {
       code.addLine("   *")
-          .addLine("    @throws IllegalStateException if any field has not been set");
+          .addLine("   * @throws IllegalStateException if any field has not been set");
     }
     code.addLine("   */")
         .addLine("  public %s build() {", metadata.getType());
     if (hasRequiredProperties) {
-      code.addLine("    if (!_unsetProperties.isEmpty()) {")
-          .addLine("      throw new %s(\"Not set: \" + _unsetProperties);",
-              IllegalStateException.class)
-          .addLine("    }");
+      code.addLine(
+          "    %s.checkState(_unsetProperties.isEmpty(), \"Not set: %%s\", _unsetProperties);",
+          Preconditions.class);
     }
     code.addLine("    return new %s(this);", metadata.getValueType())
         .addLine("  }");
     // mergeFrom(Value)
     code.addLine("")
         .addLine("  /**")
-        .addLine("   * Sets all property values using the given")
-        .addLine("   * {@code %s} as a template.", metadata.getType())
+        .addLine("   * Sets all property values using the given {@code %s} as a template.",
+            metadata.getType())
         .addLine("   */")
         .addLine("  public %s mergeFrom(%s value) {",
             metadata.getBuilder(), metadata.getType());
@@ -548,7 +539,7 @@ public class CodeGenerator {
               code.add(")\n");
             }
           }
-          code.addLine("          + \"}\";\n");
+          code.addLine("          + \"}\";");
           break;
         }
       }
@@ -709,6 +700,14 @@ public class CodeGenerator {
   private static String withInitialCapital(Object obj) {
     String s = obj.toString();
     return s.substring(0, 1).toUpperCase() + s.substring(1);
+  }
+
+  private static ImmutableList<String> getNames(Iterable<Property> properties) {
+    ImmutableList.Builder<String> result = ImmutableList.builder();
+    for (Property property : properties) {
+      result.add(property.getName());
+    }
+    return result.build();
   }
 
   private static final Predicate<Property> IS_REQUIRED = new Predicate<Property>() {

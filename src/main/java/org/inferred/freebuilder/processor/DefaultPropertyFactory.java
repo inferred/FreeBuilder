@@ -103,10 +103,10 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("   */")
           .addLine("  public %s %s() {", property.getType(), property.getGetterName());
       if (!hasDefault) {
-        code.addLine("    if (_unsetProperties.contains(%s.%s)) {",
+        code.addLine("    %s.checkState(", Preconditions.class)
+            .addLine("        !_unsetProperties.contains(%s.%s),",
                 metadata.getPropertyEnum(), property.getAllCapsName())
-            .addLine("      throw new IllegalStateException(\"%s not set\");", property.getName())
-            .addLine("    }");
+            .addLine("        \"%s not set\");", property.getName());
       }
       code.addLine("    return %s;", property.getName())
           .addLine("  }");
