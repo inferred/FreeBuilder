@@ -283,7 +283,8 @@ public class CodeGenerator {
     // mergeFrom(Builder)
     code.addLine("")
         .addLine("  /**")
-        .addLine("   * Copies values from the given {@code %s}.", metadata.getBuilder());
+        .addLine("   * Copies values from the given {@code %s}.",
+            metadata.getBuilder().getSimpleName());
     if (hasRequiredProperties) {
       code.addLine("   * Does not affect any properties not set on the input.");
     }

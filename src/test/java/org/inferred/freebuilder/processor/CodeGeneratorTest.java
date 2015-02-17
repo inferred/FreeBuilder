@@ -241,7 +241,7 @@ public class CodeGeneratorTest {
         "  }",
         "",
         "  /**",
-        "   * Copies values from the given {@code Person.Builder}.", // TODO @link
+        "   * Copies values from the given {@code Builder}.",
         "   * Does not affect any properties not set on the input.",
         "   */",
         "  public Person.Builder mergeFrom(Person.Builder template) {",
