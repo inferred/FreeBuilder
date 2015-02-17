@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.inferred.freebuilder.processor.util.SourceBuilders.withIndent;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -300,10 +301,10 @@ public class CodeGenerator {
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("    if (!_templateUnset.contains(%s.%s)) {",
             metadata.getPropertyEnum(), property.getAllCapsName());
-      }
-      property.getCodeGenerator().addMergeFromBuilder(code, metadata, "template");
-      if (property.getCodeGenerator().getType() == Type.REQUIRED) {
+        property.getCodeGenerator().addMergeFromBuilder(withIndent(code, 2), metadata, "template");
         code.addLine("    }");
+      } else {
+        property.getCodeGenerator().addMergeFromBuilder(code, metadata, "template");
       }
     }
     code.addLine("    return (%s) this;", metadata.getBuilder());

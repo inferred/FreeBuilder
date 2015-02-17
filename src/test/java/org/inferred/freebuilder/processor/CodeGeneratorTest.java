@@ -250,10 +250,10 @@ public class CodeGeneratorTest {
         "    EnumSet<Person_Builder.Property> _templateUnset = ((Person_Builder) template)"
             + "._unsetProperties;",
         "    if (!_templateUnset.contains(Person_Builder.Property.NAME)) {",
-        "    setName(template.getName());", // TODO correct indent
+        "      setName(template.getName());",
         "    }",
         "    if (!_templateUnset.contains(Person_Builder.Property.AGE)) {",
-        "    setAge(template.getAge());",
+        "      setAge(template.getAge());",
         "    }",
         "    return (Person.Builder) this;",
         "  }",
