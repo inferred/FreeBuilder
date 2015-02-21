@@ -21,12 +21,18 @@ import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelC
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ImpliedClass;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.NameImpl;
+import org.inferred.freebuilder.processor.util.NoTypes;
 import org.inferred.freebuilder.processor.util.PackageElementImpl;
+import org.inferred.freebuilder.processor.util.ValueType;
+import org.inferred.freebuilder.processor.CodeGeneratorTest.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -35,13 +41,28 @@ import org.mockito.cglib.proxy.Enhancer;
 import org.mockito.cglib.proxy.InvocationHandler;
 import org.mockito.cglib.proxy.NoOp;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.Set;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ElementVisitor;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVisitor;
+import javax.lang.model.util.AbstractElementVisitor6;
 import javax.lang.model.util.Elements;
 
 @RunWith(JUnit4.class)
@@ -598,6 +619,354 @@ public class CodeGeneratorTest {
         "}\n"));
   }
 
+  @Test
+  public void testOptionalProperties() {
+    GenericTypeElementImpl optional = newTopLevelGenericType("com.google.common.base.Optional");
+    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
+    GenericTypeMirrorImpl optionalInteger = optional.newMirror(integer);
+    ClassTypeImpl string = newTopLevelClass("java.lang.String");
+    GenericTypeMirrorImpl optionalString = optional.newMirror(string);
+    TypeElement person = newTopLevelClass("com.example.Person").asElement();
+    ImpliedClass generatedBuilder =
+        new ImpliedClass(PACKAGE, "Person_Builder", person, elements());
+    Property.Builder name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setBoxedType(optionalString)
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName("getName")
+        .setName("name")
+        .setType(optionalString);
+    Property.Builder age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setBoxedType(optionalInteger)
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName("getAge")
+        .setName("age")
+        .setType(optionalInteger);
+    Metadata metadata = new Metadata.Builder(elements())
+        .setBuilder(newNestedClass(person, "Builder").asElement())
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder)
+        .setGwtCompatible(false)
+        .setGwtSerializable(false)
+        .setPartialType(generatedBuilder.createNestedClass("Partial"))
+        .addProperty(name
+            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
+                name.build(), "setName", "setNullableName", "clearName", string,
+                Optional.<TypeMirror>absent()))
+            .build())
+        .addProperty(age
+            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
+                age.build(), "setAge", "setNullableAge", "clearAge", integer,
+                Optional.<TypeMirror>of(INT)))
+            .build())
+        .setPropertyEnum(generatedBuilder.createNestedClass("Property"))
+        .setType(person)
+        .setValueType(generatedBuilder.createNestedClass("Value"))
+        .build();
+
+    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple();
+    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
+
+    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+        "/**",
+        " * Auto-generated superclass of {@link Person.Builder},",
+        " * derived from the API of {@link Person}.",
+        " */",
+        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "abstract class Person_Builder {",
+        "",
+        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
+        "",
+        "  // Store a nullable object instead of an Optional. Escape analysis then",
+        "  // allows the JVM to optimize away the Optional objects created by and",
+        "  // passed to our API.",
+        "  private String name = null;",
+        "  // Store a nullable object instead of an Optional. Escape analysis then",
+        "  // allows the JVM to optimize away the Optional objects created by and",
+        "  // passed to our API.",
+        "  private Integer age = null;",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#getName()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   * @throws NullPointerException if {@code name} is null",
+        "   */",
+        "  public Person.Builder setName(String name) {",
+        "    this.name = Preconditions.checkNotNull(name);",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#getName()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder setName(Optional<? extends String> name) {",
+        "    if (name.isPresent()) {",
+        "      return setName(name.get());",
+        "    } else {",
+        "      return clearName();",
+        "    }",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#getName()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder setNullableName(@Nullable String name) {",
+        "    if (name != null) {",
+        "      return setName(name);",
+        "    } else {",
+        "      return clearName();",
+        "    }",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#getName()}",
+        "   * to {@link Optional#absent() Optional.absent()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder clearName() {",
+        "    this.name = null;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns the value that will be returned by {@link Person#getName()}.",
+        "   */",
+        "  public Optional<String> getName() {",
+        "    return Optional.fromNullable(name);",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#getAge()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder setAge(int age) {",
+        "    this.age = age;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#getAge()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder setAge(Optional<? extends Integer> age) {",
+        "    if (age.isPresent()) {",
+        "      return setAge(age.get());",
+        "    } else {",
+        "      return clearAge();",
+        "    }",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#getAge()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder setNullableAge(@Nullable Integer age) {",
+        "    if (age != null) {",
+        "      return setAge(age);",
+        "    } else {",
+        "      return clearAge();",
+        "    }",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#getAge()}",
+        "   * to {@link Optional#absent() Optional.absent()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder clearAge() {",
+        "    this.age = null;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns the value that will be returned by {@link Person#getAge()}.",
+        "   */",
+        "  public Optional<Integer> getAge() {",
+        "    return Optional.fromNullable(age);",
+        "  }",
+        "",
+        "  private static final class Value extends Person {",
+        "    // Store a nullable object instead of an Optional. Escape analysis then",
+        "    // allows the JVM to optimize away the Optional objects created by our",
+        "    // getter method.",
+        "    private final String name;",
+        "    // Store a nullable object instead of an Optional. Escape analysis then",
+        "    // allows the JVM to optimize away the Optional objects created by our",
+        "    // getter method.",
+        "    private final Integer age;",
+        "",
+        "    private Value(Person_Builder builder) {",
+        "      this.name = builder.name;",
+        "      this.age = builder.age;",
+        "    }",
+        "",
+        "    @Override",
+        "    public Optional<String> getName() {",
+        "      return Optional.fromNullable(name);",
+        "    }",
+        "",
+        "    @Override",
+        "    public Optional<Integer> getAge() {",
+        "      return Optional.fromNullable(age);",
+        "    }",
+        "",
+        "    @Override",
+        "    public boolean equals(Object obj) {",
+        "      if (!(obj instanceof Person_Builder.Value)) {",
+        "        return false;",
+        "      }",
+        "      Person_Builder.Value other = (Person_Builder.Value) obj;",
+        "      if (name != other.name",
+        "          && (name == null || !name.equals(other.name))) {",
+        "        return false;",
+        "      }",
+        "      if (age != other.age",
+        "          && (age == null || !age.equals(other.age))) {",
+        "        return false;",
+        "      }",
+        "      return true;",
+        "    }",
+        "",
+        "    @Override",
+        "    public int hashCode() {",
+        "      return Arrays.hashCode(new Object[] { name, age });",
+        "    }",
+        "",
+        "    @Override",
+        "    public String toString() {",
+        "      return \"Person{\"",
+        "          + COMMA_JOINER.join(",
+        "              (name != null ? \"name=\" + name : null),",
+        "              (age != null ? \"age=\" + age : null))",
+        "          + \"}\";",
+        "    }",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns a newly-created {@link Person} based on the contents of the {@code Builder}.",
+        "   */",
+        "  public Person build() {",
+        "    return new Person_Builder.Value(this);",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets all property values using the given {@code Person} as a template.",
+        "   */",
+        "  public Person.Builder mergeFrom(Person value) {",
+        "    setName(value.getName());",
+        "    setAge(value.getAge());",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Copies values from the given {@code Builder}.",
+        "   */",
+        "  public Person.Builder mergeFrom(Person.Builder template) {",
+        "    setName(template.getName());",
+        "    setAge(template.getAge());",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Resets the state of this builder.",
+        "   */",
+        "  public Person.Builder clear() {",
+        "    Person_Builder template = new Person.Builder();",
+        "    name = template.name;",
+        "    age = template.age;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  private static final class Partial extends Person {",
+        "    // Store a nullable object instead of an Optional. Escape analysis then",
+        "    // allows the JVM to optimize away the Optional objects created by our",
+        "    // getter method.",
+        "    private final String name;",
+        "    // Store a nullable object instead of an Optional. Escape analysis then",
+        "    // allows the JVM to optimize away the Optional objects created by our",
+        "    // getter method.",
+        "    private final Integer age;",
+        "",
+        "    Partial(Person_Builder builder) {",
+        "      this.name = builder.name;",
+        "      this.age = builder.age;",
+        "    }",
+        "",
+        "    @Override",
+        "    public Optional<String> getName() {",
+        "      return Optional.fromNullable(name);",
+        "    }",
+        "",
+        "    @Override",
+        "    public Optional<Integer> getAge() {",
+        "      return Optional.fromNullable(age);",
+        "    }",
+        "",
+        "    @Override",
+        "    public boolean equals(Object obj) {",
+        "      if (!(obj instanceof Person_Builder.Partial)) {",
+        "        return false;",
+        "      }",
+        "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
+        "      if (name != other.name",
+        "          && (name == null || !name.equals(other.name))) {",
+        "        return false;",
+        "      }",
+        "      if (age != other.age",
+        "          && (age == null || !age.equals(other.age))) {",
+        "        return false;",
+        "      }",
+        "      return true;",
+        "    }",
+        "",
+        "    @Override",
+        "    public int hashCode() {",
+        "      int result = 1;",
+        "      result *= 31;",
+        "      result += ((name == null) ? 0 : name.hashCode());",
+        "      result *= 31;",
+        "      result += ((age == null) ? 0 : age.hashCode());",
+        "      return result;",
+        "    }",
+        "",
+        "    @Override",
+        "    public String toString() {",
+        "      return \"partial Person{\"",
+        "          + COMMA_JOINER.join(",
+        "              (name != null ? \"name=\" + name : null),",
+        "              (age != null ? \"age=\" + age : null))",
+        "          + \"}\";",
+        "    }",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns a newly-created partial {@link Person}",
+        "   * based on the contents of the {@code Builder}.",
+        "   * State checking will not be performed.",
+        "   *",
+        "   * <p>Partials should only ever be used in tests.",
+        "   */",
+        "  @VisibleForTesting()",
+        "  public Person buildPartial() {",
+        "    return new Person_Builder.Partial(this);",
+        "  }",
+        "}\n"));
+  }
+
   private static Elements elements() {
     Enhancer e = new Enhancer();
     e.setClassLoader(ElementsImpl.class.getClassLoader());
@@ -628,5 +997,187 @@ public class CodeGeneratorTest {
       return new NameImpl(cs.toString());
     }
   }
+
+  private static GenericTypeElementImpl newTopLevelGenericType(String qualifiedName) {
+    String pkg = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
+    String simpleName = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
+    PackageElement enclosingElement = new PackageElementImpl(pkg);
+    return new GenericTypeElementImpl(enclosingElement, NoTypes.NONE, simpleName);
+  }
+
+  static class GenericTypeElementImpl extends ValueType
+      implements javax.lang.model.element.TypeElement {
+
+    private final Element enclosingElement;
+    private final TypeMirror enclosingType;
+    private final String simpleName;
+
+    private GenericTypeElementImpl(
+        Element enclosingElement, TypeMirror enclosingType, String simpleName) {
+      this.enclosingElement = enclosingElement;
+      this.enclosingType = enclosingType;
+      this.simpleName = simpleName;
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("enclosingElement", enclosingElement);
+      fields.add("enclosingType", enclosingType);
+      fields.add("simpleName", simpleName);
+    }
+
+    public GenericTypeMirrorImpl newMirror(TypeMirror... typeArguments) {
+      return new GenericTypeMirrorImpl(ImmutableList.copyOf(typeArguments));
+    }
+
+    @Override
+    public TypeMirror asType() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ElementKind getKind() {
+      return ElementKind.CLASS;
+    }
+
+    @Override
+    public Set<javax.lang.model.element.Modifier> getModifiers() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <R, P> R accept(ElementVisitor<R, P> v, P p) {
+      return v.visitType(this, p);
+    }
+
+    @Override
+    public List<? extends Element> getEnclosedElements() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public NestingKind getNestingKind() {
+      return (enclosingElement.getKind() == ElementKind.PACKAGE)
+          ? NestingKind.TOP_LEVEL : NestingKind.MEMBER;
+    }
+
+    @Override
+    public Name getQualifiedName() {
+      return new NameImpl(GET_QUALIFIED_NAME.visit(enclosingElement) + "." + simpleName);
+    }
+
+    @Override
+    public Name getSimpleName() {
+      return new NameImpl(simpleName);
+    }
+
+    @Override
+    public TypeMirror getSuperclass() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<? extends TypeMirror> getInterfaces() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<? extends TypeParameterElement> getTypeParameters() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Element getEnclosingElement() {
+      return enclosingElement;
+    }
+
+    // Override
+    public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
+      // TODO: handle Java 8 type annotations
+      throw new UnsupportedOperationException();
+    }
+
+    // Override
+    @Override
+    public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
+      // TODO: handle Java 8 type annotations
+      throw new UnsupportedOperationException();
+    }
+
+    // Override
+    @Override
+    public List<? extends AnnotationMirror> getAnnotationMirrors() {
+      // TODO: handle Java 8 type annotations
+      throw new UnsupportedOperationException();
+    }
+
+    class GenericTypeMirrorImpl extends ValueType implements DeclaredType {
+      private final ImmutableList<TypeMirror> typeArguments;
+
+      GenericTypeMirrorImpl(ImmutableList<TypeMirror> typeArguments) {
+        this.typeArguments = typeArguments;
+      }
+
+      @Override
+      protected void addFields(FieldReceiver fields) {
+        fields.add("GenericTypeElementImpl.this", GenericTypeElementImpl.this); 
+        fields.add("typeArguments", typeArguments);
+      }
+
+      @Override
+      public TypeKind getKind() {
+        return TypeKind.DECLARED;
+      }
+
+      @Override
+      public <R, P> R accept(TypeVisitor<R, P> v, P p) {
+        return v.visitDeclared(this, p);
+      }
+
+      @Override
+      public GenericTypeElementImpl asElement() {
+        return GenericTypeElementImpl.this;
+      }
+
+      @Override
+      public TypeMirror getEnclosingType() {
+        return enclosingType;
+      }
+
+      @Override
+      public ImmutableList<TypeMirror> getTypeArguments() {
+        return typeArguments;
+      }
+    }
+  }
+
+  private static final AbstractElementVisitor6<Name, ?> GET_QUALIFIED_NAME =
+      new AbstractElementVisitor6<Name, Void>() {
+
+        @Override
+        public Name visitPackage(PackageElement e, Void p) {
+          return e.getQualifiedName();
+        }
+
+        @Override
+        public Name visitType(TypeElement e, Void p) {
+          return e.getQualifiedName();
+        }
+
+        @Override
+        public Name visitVariable(VariableElement e, Void p) {
+          throw new IllegalArgumentException();
+        }
+
+        @Override
+        public Name visitExecutable(ExecutableElement e, Void p) {
+          throw new IllegalArgumentException();
+        }
+
+        @Override
+        public Name visitTypeParameter(TypeParameterElement e, Void p) {
+          throw new IllegalArgumentException();
+        }
+      };
 }
 

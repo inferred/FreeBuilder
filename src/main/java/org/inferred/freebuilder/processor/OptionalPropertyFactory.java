@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -67,7 +68,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     return Optional.absent();
   }
 
-  private static class CodeGenerator extends PropertyCodeGenerator {
+  @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     private final String setterName;
     private final String nullableSetterName;
@@ -75,7 +76,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
 
-    CodeGenerator(
+    @VisibleForTesting CodeGenerator(
         Property property,
         String setterName,
         String nullableSetterName,

@@ -189,22 +189,4 @@ public class ClassTypeImpl implements DeclaredType {
       return enclosingElement;
     }
   }
-
-  enum NoTypes implements NoType {
-    NONE() {
-      @Override public TypeKind getKind() {
-        return TypeKind.NONE;
-      }
-    };
-
-    @Override
-    public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-      return v.visitNoType(this, p);
-    }
-
-    @Override
-    public String toString() {
-      return getKind().toString().toLowerCase();
-    }
-  }
 }
