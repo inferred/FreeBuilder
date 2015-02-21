@@ -231,13 +231,13 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("      %s%s(%s.%s());",
+      code.addLine("    %s%s(%s.%s());",
           PUT_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("      %s%s(((%s) %s).%s);",
+      code.addLine("    %s%s(((%s) %s).%s);",
           PUT_ALL_PREFIX,
           property.getCapitalizedName(),
           metadata.getGeneratedBuilder(),

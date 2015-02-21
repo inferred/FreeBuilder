@@ -428,8 +428,7 @@ public class CodeGenerator {
         switch (property.getType().getKind()) {
           case FLOAT:
           case DOUBLE:
-            code.addLine("      if (%s.doubleToLongBits(%s)",
-                Double.class, property.getName())
+            code.addLine("      if (%s.doubleToLongBits(%s)", Double.class, property.getName())
                 .addLine("          != %s.doubleToLongBits(other.%s)) {",
                     Double.class, property.getName());
             break;
@@ -437,10 +436,12 @@ public class CodeGenerator {
           default:
             if (property.getType().getKind().isPrimitive()) {
               code.addLine("      if (%1$s != other.%1$s) {", property.getName());
+            } else if (property.getCodeGenerator().getType() == Type.HAS_DEFAULT) {
+              code.addLine("      if (!%1$s.equals(other.%1$s)) {", property.getName());
             } else {
               code.addLine("      if (%1$s != other.%1$s", property.getName())
-              .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
-                  property.getName());
+                  .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
+                      property.getName());
             }
         }
         code.addLine("        return false;")
