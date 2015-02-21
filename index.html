@@ -305,16 +305,21 @@ and ensure all necessary types are whitelisted.</p>
 
 <p><em><strong>Why is <code>@FreeBuilder</code> better than <a href="https://github.com/google/auto/tree/master/value">AutoValue</a>?</strong></em></p>
 
-<p>It's not! AutoValue provides an implementing class with a package-visible
-constructor, so you can easily implement the Factory pattern. <code>@FreeBuilder</code>
-provides an implementing class with a builder API, so you can easily implement
-and customize the Builder pattern. So, like chalk and cheese, which you use
-depends on what you want!</p>
+<p>It’s not! AutoValue provides an implementing class with a package-visible
+constructor, so you can easily implement the Factory pattern. If you’re writing
+an immutable type that needs a small number of values to create (<em>Effective Java</em>
+suggests at most three), and is not likely to require more in future, use the
+Factory pattern.
 
-<p>If you're writing an immutable type that needs a small number of values to
-create (<em>Effective Java</em> suggests at most three), and is not likely to
-require more in future, use the Factory pattern. Otherwise, consider using
-<code>@FreeBuilder</code> to implement the Builder pattern.</p>
+<p>How about if you want a builder?
+<a href="https://github.com/google/auto/tree/master/value#builders">AutoValue.Builder</a>
+lets you explicitly
+specify a minimal Builder interface that will then be implemented by generated
+code, while <code>@FreeBuilder</code> provides a generated builder API. AutoValue.Builder
+is better if you must have a minimal API&mdash;for instance, in an Android
+project, where every method is expensive&mdash;or strongly prefer a
+visible-in-source API at the expense of many useful methods. Otherwise, consider
+using <code>@FreeBuilder</code> to implement the Builder pattern.
 
 <p><em><strong>I used <a href="https://github.com/google/auto/tree/master/value">AutoValue</a>, but now have more than three properties! How
 do I migrate to <code>@FreeBuilder</code>?</strong></em></p>
