@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -106,9 +107,19 @@ public abstract class PropertyCodeGenerator {
   /** Adds a set call for the property from a function result to the builder's source code. */
   public abstract void addSetFromResult(SourceBuilder code, String builder, String variable);
 
+  /** Returns true if the clear method requires a template builder to operate correctly. */
+  public abstract boolean isTemplateRequiredInClear();
+
   /** Adds a clear call for the property given a template builder to the builder's source code. */
   public abstract void addClear(SourceBuilder code, String template);
 
   /** Adds a partial clear call for the property to the builder's source code. */
   public abstract void addPartialClear(SourceBuilder code);
+
+  public static final Predicate<PropertyCodeGenerator> IS_TEMPLATE_REQUIRED_IN_CLEAR =
+      new Predicate<PropertyCodeGenerator>() {
+        @Override public boolean apply(PropertyCodeGenerator input) {
+          return input.isTemplateRequiredInClear();
+        }
+      };
 }

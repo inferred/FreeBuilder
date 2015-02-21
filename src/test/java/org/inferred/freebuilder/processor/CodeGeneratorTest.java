@@ -1230,8 +1230,6 @@ public class CodeGeneratorTest {
         "   * Resets the state of this builder.",
         "   */",
         "  public Person.Builder clear() {",
-        // TODO(b/18700254) Unused variable
-        "    Person_Builder template = new Person.Builder();",
         "    name.clear();",
         "    age.clear();",
         "    return (Person.Builder) this;",

@@ -18,7 +18,10 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.inferred.freebuilder.processor.Metadata.Property.GET_CODE_GENERATOR;
+import static org.inferred.freebuilder.processor.PropertyCodeGenerator.IS_TEMPLATE_REQUIRED_IN_CLEAR;
 import static org.inferred.freebuilder.processor.util.SourceBuilders.withIndent;
+
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -26,6 +29,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
@@ -40,6 +45,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
@@ -317,18 +323,24 @@ public class CodeGenerator {
           .addLine("   * Resets the state of this builder.")
           .addLine("   */")
           .addLine("  public %s clear() {", metadata.getBuilder());
-      if (!metadata.getProperties().isEmpty()) {
+      List<PropertyCodeGenerator> codeGenerators =
+          Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
+      if (Iterables.any(codeGenerators, IS_TEMPLATE_REQUIRED_IN_CLEAR)) {
         code.add("    %s template = ", metadata.getGeneratedBuilder());
         metadata.getBuilderFactory().get().addNewBuilder(code, metadata.getBuilder());
         code.add(";\n");
-        for (Property property : metadata.getProperties()) {
-          property.getCodeGenerator().addClear(code, "template");
+      }
+      for (PropertyCodeGenerator codeGenerator : codeGenerators) {
+        if (codeGenerator.isTemplateRequiredInClear()) {
+          codeGenerator.addClear(code, "template");
+        } else {
+          codeGenerator.addClear(code, null);
         }
-        if (hasRequiredProperties) {
-          code.addLine("    _unsetProperties.clear();")
-              .addLine("    _unsetProperties.addAll(template._unsetProperties);",
-                  metadata.getGeneratedBuilder());
-        }
+      }
+      if (hasRequiredProperties) {
+        code.addLine("    _unsetProperties.clear();")
+            .addLine("    _unsetProperties.addAll(template._unsetProperties);",
+                metadata.getGeneratedBuilder());
       }
       code.addLine("    return (%s) this;", metadata.getBuilder())
           .addLine("  }");

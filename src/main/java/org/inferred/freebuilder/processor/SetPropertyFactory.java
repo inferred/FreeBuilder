@@ -220,6 +220,11 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public boolean isTemplateRequiredInClear() {
+      return false;
+    }
+
+    @Override
     public void addClear(SourceBuilder code, String template) {
       code.addLine("    %s.clear();", property.getName());
     }

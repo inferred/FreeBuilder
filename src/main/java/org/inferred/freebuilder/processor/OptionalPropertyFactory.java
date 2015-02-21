@@ -232,6 +232,11 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public boolean isTemplateRequiredInClear() {
+      return true;
+    }
+
+    @Override
     public void addClear(SourceBuilder code, String template) {
       code.addLine("    %1$s = %2$s.%1$s;", property.getName(), template);
     }

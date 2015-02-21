@@ -15,12 +15,11 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.addAll;
 
-import com.google.common.base.Objects;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -299,6 +298,14 @@ public class Metadata extends ValueType {
         return new Property(this);
       }
     }
+
+    public static final Function<Property, PropertyCodeGenerator> GET_CODE_GENERATOR =
+        new Function<Property, PropertyCodeGenerator>() {
+          @Override
+          public PropertyCodeGenerator apply(Property input) {
+            return input.getCodeGenerator();
+          }
+        };
   }
 
   @Override
