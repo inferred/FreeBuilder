@@ -88,18 +88,19 @@
       <groupId>com.google.auto.service</groupId>
       <artifactId>auto-service</artifactId>
       <version>1.0-rc2</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-user</artifactId>
       <version>2.6.1</version>
-      <scope>compile</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jvnet.sorcerer</groupId>
       <artifactId>sorcerer-javac</artifactId>
       <version>0.8</version>
-      <scope>compile</scope>
+      <optional>true</optional>
     </dependency>
     <!-- test dependencies -->
     <dependency>
