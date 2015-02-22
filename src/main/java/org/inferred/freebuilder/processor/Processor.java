@@ -15,8 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.auto.common.MoreElements.getAnnotationMirror;
 import static javax.lang.model.util.ElementFilter.typesIn;
+import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.RoundEnvironments.annotatedElementsIn;
 
 import com.google.auto.service.AutoService;
@@ -88,13 +88,13 @@ public class Processor extends AbstractProcessor {
             Kind.WARNING,
             "Error producing Builder: " + e.getMessage(),
             type,
-            getAnnotationMirror(type, FreeBuilder.class).get());
+            findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
       } catch (RuntimeException e) {
         processingEnv.getMessager().printMessage(
             Kind.ERROR,
             "Internal error: " + Throwables.getStackTraceAsString(e),
             type,
-            getAnnotationMirror(type, FreeBuilder.class).get());
+            findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
       }
     }
     return false;

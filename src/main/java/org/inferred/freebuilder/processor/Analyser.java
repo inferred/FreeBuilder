@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.auto.common.MoreElements.getAnnotationMirror;
 import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkState;
@@ -29,6 +28,7 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
+import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Optional;
@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -408,7 +407,7 @@ class Analyser {
 
   private void verifyNotNullable(TypeElement valueType, ExecutableElement getterMethod) {
     Optional<AnnotationMirror> nullableAnnotation =
-        getAnnotationMirror(getterMethod, Nullable.class);
+        findAnnotationMirror(getterMethod, "javax.annotation.Nullable");
     if (nullableAnnotation.isPresent()) {
       if (getterMethod.getEnclosingElement().equals(valueType)) {
         messager.printMessage(

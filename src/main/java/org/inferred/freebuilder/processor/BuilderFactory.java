@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-import com.google.auto.common.MoreTypes;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -90,7 +89,7 @@ public enum BuilderFactory {
       if (modifiers.contains(Modifier.STATIC)
           && !modifiers.contains(Modifier.PRIVATE)
           && method.getParameters().isEmpty()
-          && MoreTypes.equivalence().equivalent(builderType.asType(), method.getReturnType())) {
+          && builderType.asType().toString().equals(method.getReturnType().toString())) {
         resultBuilder.add(method.getSimpleName().toString());
       }
     }

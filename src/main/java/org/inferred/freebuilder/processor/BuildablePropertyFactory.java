@@ -15,11 +15,10 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.auto.common.MoreElements.isAnnotationPresent;
-import static com.google.auto.common.MoreTypes.asTypeElement;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.tryFind;
 import static javax.lang.model.util.ElementFilter.typesIn;
+import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -39,6 +38,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
@@ -69,7 +69,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     if (type.getKind() != TypeKind.DECLARED) {
       return Optional.absent();
     }
-    TypeElement element = asTypeElement(config.getTypes(), type);
+    TypeElement element = (TypeElement) ((DeclaredType) type).asElement();
 
     // Find the builder
     Optional<TypeElement> builder =
@@ -85,7 +85,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     MergeBuilderMethod mergeFromBuilderMethod;
-    if (isAnnotationPresent(element, FreeBuilder.class)) {
+    if (findAnnotationMirror(element, "org.inferred.freebuilder.FreeBuilder").isPresent()) {
       /*
        * If the element is annotated @FreeBuilder, assume the necessary methods will be added. We
        * can't check directly as the builder superclass may not have been generated yet. To be
