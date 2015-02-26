@@ -134,6 +134,12 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
   }
 
   @Override
+  public String shorten(TypeReference type) {
+    String prefix = getPrefixForTopLevelClass(type.getPackage(), type.getTopLevelTypeSimpleName());
+    return prefix + type.getTopLevelTypeSimpleName() + type.getNestedSuffix();
+  }
+
+  @Override
   public String apply(TypeMirror mirror) {
     return mirror.accept(this, null);
   }

@@ -82,6 +82,8 @@ public final class SourceStringBuilder implements SourceBuilder {
       DeclaredType mirror = (DeclaredType) arg;
       checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
       return shortener.shorten(mirror);
+    } else if (arg instanceof TypeReference) {
+      return shortener.shorten((TypeReference) arg);
     } else {
       return arg;
     }
