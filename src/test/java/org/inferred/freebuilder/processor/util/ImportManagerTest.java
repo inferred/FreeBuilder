@@ -192,6 +192,33 @@ public class ImportManagerTest {
         .containsExactly("java.util.Map", "javax.lang.model.element.Name").inOrder();
   }
 
+  @Test
+  public void testTypeReferenceShortening() {
+    ImportManager manager = new ImportManager.Builder().build();
+    assertEquals("String", manager.shorten(TypeReference.to("java.lang", "String")));
+    assertEquals("List", manager.shorten(TypeReference.to("java.util", "List")));
+    assertEquals("java.awt.List", manager.shorten(TypeReference.to("java.awt", "List")));
+    assertEquals("Map", manager.shorten(TypeReference.to("java.util", "Map")));
+    assertEquals("Map.Entry", manager.shorten(TypeReference.to("java.util", "Map", "Entry")));
+    assertThat(manager.getClassImports())
+        .containsExactly("java.util.List", "java.util.Map").inOrder();
+  }
+
+  @Test
+  public void testTypeReferenceShortening_withConflicts() {
+    ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
+    ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
+    ImportManager manager = new ImportManager.Builder()
+        .addImplicitImport(listType)
+        .addImplicitImport(stringType)
+        .build();
+    assertEquals("java.lang.String", manager.shorten(TypeReference.to("java.lang", "String")));
+    assertEquals("java.util.List", manager.shorten(TypeReference.to("java.util", "List")));
+    assertEquals("java.awt.List", manager.shorten(TypeReference.to("java.awt", "List")));
+    assertEquals("Map", manager.shorten(TypeReference.to("java.util", "Map")));
+    assertThat(manager.getClassImports()).containsExactly("java.util.Map");
+  }
+
   private static class OuterClass<T> {
     private class InnerClass { }
   }

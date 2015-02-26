@@ -91,12 +91,6 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>com.google.gwt</groupId>
-      <artifactId>gwt-user</artifactId>
-      <version>2.6.1</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>org.jvnet.sorcerer</groupId>
       <artifactId>sorcerer-javac</artifactId>
       <version>0.8</version>
@@ -107,6 +101,12 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava-testlib</artifactId>
       <version>17.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.gwt</groupId>
+      <artifactId>gwt-user</artifactId>
+      <version>2.6.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>

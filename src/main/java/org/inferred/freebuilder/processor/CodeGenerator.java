@@ -31,16 +31,13 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.gwt.user.client.rpc.CustomFieldSerializer;
-import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.client.rpc.SerializationStreamReader;
-import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.TypeReference;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -55,6 +52,15 @@ import javax.lang.model.type.TypeKind;
  * Code generation for the &#64;{@link FreeBuilder} annotation.
  */
 public class CodeGenerator {
+
+  private static final TypeReference CUSTOM_FIELD_SERIALIZER =
+      TypeReference.to("com.google.gwt.user.client.rpc", "CustomFieldSerializer");
+  private static final TypeReference SERIALIZATION_EXCEPTION =
+      TypeReference.to("com.google.gwt.user.client.rpc", "SerializationException");
+  private static final TypeReference SERIALIZATION_STREAM_READER =
+      TypeReference.to("com.google.gwt.user.client.rpc", "SerializationStreamReader");
+  private static final TypeReference SERIALIZATION_STREAM_WRITER =
+      TypeReference.to("com.google.gwt.user.client.rpc", "SerializationStreamWriter");
 
   /** Write the source code for a generated builder. */
   void writeBuilderSource(SourceBuilder code, Metadata metadata) {
@@ -612,11 +618,11 @@ public class CodeGenerator {
         .addLine("  public static class %s_CustomFieldSerializer",
             metadata.getValueType().getSimpleName())
         .addLine("      extends %s<%s> {",
-            CustomFieldSerializer.class, metadata.getValueType())
+            CUSTOM_FIELD_SERIALIZER, metadata.getValueType())
         .addLine("")
         .addLine("    @%s", Override.class)
         .addLine("    public void deserializeInstance(%s reader, %s instance) { }",
-            SerializationStreamReader.class, metadata.getValueType())
+            SERIALIZATION_STREAM_READER, metadata.getValueType())
         .addLine("")
         .addLine("    @%s", Override.class)
         .addLine("    public boolean hasCustomInstantiateInstance() {")
@@ -625,8 +631,8 @@ public class CodeGenerator {
         .addLine("")
         .addLine("    @%s", Override.class)
         .addLine("    public %s instantiateInstance(%s reader)",
-            metadata.getValueType(), SerializationStreamReader.class)
-        .addLine("        throws %s {", SerializationException.class)
+            metadata.getValueType(), SERIALIZATION_STREAM_READER)
+        .addLine("        throws %s {", SERIALIZATION_EXCEPTION)
         .addLine("      %1$s builder = new %1$s();", metadata.getBuilder());
     for (Property property : metadata.getProperties()) {
       if (property.getType().getKind().isPrimitive()) {
@@ -646,7 +652,7 @@ public class CodeGenerator {
                 property.getType(), property.getName());
         property.getCodeGenerator().addSetFromResult(code, "builder", property.getName());
         code.addLine("      } catch (%s e) {", ClassCastException.class)
-            .addLine("        throw new %s(", SerializationException.class)
+            .addLine("        throw new %s(", SERIALIZATION_EXCEPTION)
             .addLine("            \"Wrong type for property '%s'\", e);", property.getName())
             .addLine("      }");
       }
@@ -656,8 +662,8 @@ public class CodeGenerator {
         .addLine("")
         .addLine("    @%s", Override.class)
         .addLine("    public void serializeInstance(%s writer, %s instance)",
-            SerializationStreamWriter.class, metadata.getValueType())
-        .addLine("        throws %s {", SerializationException.class);
+            SERIALIZATION_STREAM_WRITER, metadata.getValueType())
+        .addLine("        throws %s {", SERIALIZATION_EXCEPTION);
     for (Property property : metadata.getProperties()) {
       if (property.getType().getKind().isPrimitive()) {
         code.add("      writer.write%s(",
@@ -676,19 +682,19 @@ public class CodeGenerator {
             + " new Value_CustomFieldSerializer();")
         .addLine("")
         .addLine("    public static void deserialize(%s reader, %s instance) {",
-            SerializationStreamReader.class, metadata.getValueType())
+            SERIALIZATION_STREAM_READER, metadata.getValueType())
         .addLine("      INSTANCE.deserializeInstance(reader, instance);")
         .addLine("    }")
         .addLine("")
         .addLine("    public static %s instantiate(%s reader)",
-            metadata.getValueType(), SerializationStreamReader.class)
-        .addLine("        throws %s {", SerializationException.class)
+            metadata.getValueType(), SERIALIZATION_STREAM_READER)
+        .addLine("        throws %s {", SERIALIZATION_EXCEPTION)
         .addLine("      return INSTANCE.instantiateInstance(reader);")
         .addLine("    }")
         .addLine("")
         .addLine("    public static void serialize(%s writer, %s instance)",
-            SerializationStreamWriter.class, metadata.getValueType())
-        .addLine("        throws %s {", SerializationException.class)
+            SERIALIZATION_STREAM_WRITER, metadata.getValueType())
+        .addLine("        throws %s {", SERIALIZATION_EXCEPTION)
         .addLine("      INSTANCE.serializeInstance(writer, instance);")
         .addLine("    }")
         .addLine("  }");
