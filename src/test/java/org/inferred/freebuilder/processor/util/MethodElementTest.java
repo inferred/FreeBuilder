@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Expect;
 
 import org.inferred.freebuilder.processor.util.MethodElement;
-import org.inferred.freebuilder.processor.util.SourceWriter;
 import org.inferred.freebuilder.processor.util.MethodElement.MethodSourceBuilder;
 import org.inferred.freebuilder.processor.util.MethodElement.ParameterElement;
 import org.inferred.freebuilder.processor.util.TypeShortener.NeverShorten;

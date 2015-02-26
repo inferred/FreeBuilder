@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor.util.testing;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.io.CharStreams.nullWriter;
 import static javax.tools.ToolProvider.getSystemJavaCompiler;
 
 import com.google.common.base.Joiner;

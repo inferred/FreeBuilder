@@ -46,7 +46,6 @@ import java.util.List;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeKind;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.

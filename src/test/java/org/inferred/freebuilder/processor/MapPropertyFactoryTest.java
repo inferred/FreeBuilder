@@ -15,8 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.junit.Assert.assertEquals;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.testing.EqualsTester;
 
