@@ -51,19 +51,6 @@ public class ListPropertyFactoryTest {
       .addLine("}")
       .build();
 
-  private static final JavaFileObject LIST_PRIMITIVES_AUTO_BUILT_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<Integer> getItems();", List.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
