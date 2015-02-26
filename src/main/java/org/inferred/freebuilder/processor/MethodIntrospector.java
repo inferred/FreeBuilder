@@ -38,6 +38,8 @@ public abstract class MethodIntrospector {
       return JavacMethodIntrospector.instance(env);
     } catch (IllegalArgumentException e) {
       return new NoMethodIntrospector();
+    } catch (LinkageError e) {
+      return new NoMethodIntrospector();
     }
   }
 
