@@ -133,7 +133,7 @@ public class SourceWriter implements Closeable {
     }
   }
 
-  private boolean isLegalType(TypeMirror mirror) {
+  private static boolean isLegalType(TypeMirror mirror) {
     return !(new IsInvalidTypeVisitor().visit(mirror));
   }
 
@@ -145,7 +145,7 @@ public class SourceWriter implements Closeable {
     }
   }
 
-  private PackageElement getPackage(Element element) {
+  private static PackageElement getPackage(Element element) {
     Element e = element;
     while (!(e instanceof PackageElement) && e != null) {
       e = e.getEnclosingElement();

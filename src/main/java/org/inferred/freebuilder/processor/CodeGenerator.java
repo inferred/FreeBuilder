@@ -588,7 +588,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private void addPropertyEnum(Metadata metadata, SourceBuilder code) {
+  private static void addPropertyEnum(Metadata metadata, SourceBuilder code) {
     code.addLine("")
         .addLine("  private enum %s {", metadata.getPropertyEnum().getSimpleName());
     for (Property property : metadata.getProperties()) {
@@ -611,7 +611,7 @@ public class CodeGenerator {
         .addLine("  }");
   }
 
-  private void addCustomValueSerializer(Metadata metadata, SourceBuilder code) {
+  private static void addCustomValueSerializer(Metadata metadata, SourceBuilder code) {
     code.addLine("")
         .addLine("  @%s", GwtCompatible.class)
         .addLine("  public static class %s_CustomFieldSerializer",
@@ -709,7 +709,7 @@ public class CodeGenerator {
   }
 
   /** Returns the correct keyword to use to inherit from the given type: implements, or extends. */
-  private String getInheritanceKeyword(TypeElement type) {
+  private static String getInheritanceKeyword(TypeElement type) {
     if (type.getKind().isInterface()) {
       return "implements";
     } else {

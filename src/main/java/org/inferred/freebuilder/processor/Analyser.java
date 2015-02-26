@@ -262,7 +262,7 @@ class Analyser {
     return standardMethods.keySet();
   }
 
-  private boolean isUnderride(ExecutableElement method) {
+  private static boolean isUnderride(ExecutableElement method) {
     return !method.getModifiers().contains(Modifier.ABSTRACT);
   }
 
@@ -626,12 +626,12 @@ class Analyser {
     return any(builder.get().getInterfaces(), isEqualTo(Serializable.class));
   }
 
-  private boolean isGwtCompatible(TypeElement type) {
+  private static boolean isGwtCompatible(TypeElement type) {
     GwtCompatible gwtCompatible = type.getAnnotation(GwtCompatible.class);
     return (gwtCompatible != null);
   }
 
-  private boolean isGwtSerializable(TypeElement type) {
+  private static boolean isGwtSerializable(TypeElement type) {
     GwtCompatible gwtCompatible = type.getAnnotation(GwtCompatible.class);
     return ((gwtCompatible != null) && (gwtCompatible.serializable()));
   }

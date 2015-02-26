@@ -89,7 +89,7 @@ public final class SourceStringBuilder implements SourceBuilder {
     }
   }
 
-  private boolean isLegalType(TypeMirror mirror) {
+  private static boolean isLegalType(TypeMirror mirror) {
     return !(new IsInvalidTypeVisitor().visit(mirror));
   }
 }

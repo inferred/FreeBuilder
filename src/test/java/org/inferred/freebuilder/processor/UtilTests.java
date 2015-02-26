@@ -130,7 +130,7 @@ public class UtilTests {
         (DeclaredType) model.typeMirror("java.util.Collection"), List.class, Set.class));
   }
 
-  private void assertEquals(TypeMirror expected, TypeMirror actual) {
+  private static void assertEquals(TypeMirror expected, TypeMirror actual) {
     Assert.assertEquals((expected == null) ? "null" : expected, (actual == null) ? "null" : actual);
   }
 }
