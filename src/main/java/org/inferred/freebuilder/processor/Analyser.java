@@ -30,25 +30,15 @@ import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUC
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
-import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.Metadata.StandardMethod;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.ImpliedClass;
-import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
-
 import java.beans.Introspector;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
@@ -69,6 +59,19 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.lang.model.util.Types;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Metadata.StandardMethod;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.ImpliedClass;
+import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
+
+import com.google.common.annotations.GwtCompatible;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 /**
  * Analyses a {@link org.inferred.freebuilder.FreeBuilder FreeBuilder}
@@ -106,6 +109,7 @@ class Analyser {
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
 
+  private static final Pattern GETTER_PATTERN = Pattern.compile("^(get|is)(.+)");
   private static final String GET_PREFIX = "get";
   private static final String IS_PREFIX = "is";
 
@@ -353,19 +357,19 @@ class Analyser {
       TypeElement valueType,
       ExecutableElement method,
       Set<String> methodsInvokedInBuilderConstructor) {
-    if (!isValidProperty(valueType, method)) {
+    MatchResult getterNameMatchResult = getterNameMatchResult(valueType, method);
+    if (getterNameMatchResult == null) {
       return null;
     }
     verifyNotNullable(valueType, method);
-    String getterName = method.getSimpleName().toString();
-    String capitalizedPropertyName = capitalizedPropertyName(getterName);
+    String getterName = getterNameMatchResult.group(0);
 
     TypeMirror propertyType = getReturnType(valueType, method);
-    String camelCaseName = Introspector.decapitalize(capitalizedPropertyName);
+    String camelCaseName = Introspector.decapitalize(getterNameMatchResult.group(2));
     Property.Builder resultBuilder = new Property.Builder()
             .setType(propertyType)
             .setName(camelCaseName)
-            .setCapitalizedName(capitalizedPropertyName)
+            .setCapitalizedName(getterNameMatchResult.group(2))
             .setAllCapsName(camelCaseToAllCaps(camelCaseName))
             .setGetterName(getterName)
             .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType));
@@ -473,19 +477,6 @@ class Analyser {
   }
 
   /**
-   * Returns the capitalized property name implied by the given getter method name.
-   */
-  private static String capitalizedPropertyName(String getterName) {
-    if (getterName.startsWith(GET_PREFIX)) {
-      return getterName.substring(3);
-    } else if (getterName.startsWith(IS_PREFIX)) {
-      return getterName.substring(2);
-    } else {
-      throw new AssertionError("Not a valid getter name: " + getterName);
-    }
-  }
-
-  /**
    * Visitor that returns true if a cast to the visited type is guaranteed to be fully checked at
    * runtime. This is true for any type that is non-generic, raw, or parameterized with unbounded
    * wildcards, such as {@code Integer}, {@code List} or {@code Map<?, ?>}.
@@ -528,21 +519,28 @@ class Analyser {
       };
 
   /**
-   * Verifies the given method is an abstract getter following the JavaBean convention. Any
+   * Verifies {@code method} is an abstract getter following the JavaBean convention. Any
    * deviations will be logged as an error.
+   *
+   * <p>We deviate slightly from the JavaBean convention by insisting that there must be a
+   * non-lowercase character immediately following the get/is prefix; this prevents ugly cases like
+   * 'get()' or 'getter()'.
+   *
+   * @return a {@link Matcher} with the getter prefix in group 1 and the property name suffix
+   *     in group 2, or {@code null} if {@code method} is not a valid abstract getter method
    */
-  private boolean isValidProperty(TypeElement valueType, ExecutableElement method) {
+  private MatchResult getterNameMatchResult(TypeElement valueType, ExecutableElement method) {
     if (maybeStandardMethod(method).isPresent()) {
-      return false;
+      return null;
+    }
+    Set<Modifier> modifiers = method.getModifiers();
+    if (!modifiers.contains(Modifier.ABSTRACT)) {
+      return null;
     }
     boolean declaredOnValueType = method.getEnclosingElement().equals(valueType);
     String name = method.getSimpleName().toString();
-    Set<Modifier> modifiers = method.getModifiers();
-    boolean isGetterMethod = name.startsWith(GET_PREFIX) || name.startsWith(IS_PREFIX);
-    if (!modifiers.contains(Modifier.ABSTRACT)) {
-      return false;
-    }
-    if (!isGetterMethod) {
+    Matcher getterMatcher = GETTER_PATTERN.matcher(name);
+    if (!getterMatcher.matches()) {
       if (declaredOnValueType) {
         messager.printMessage(
             ERROR,
@@ -552,7 +550,26 @@ class Analyser {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return false;
+      return null;
+    }
+    String prefix = getterMatcher.group(1);
+    String suffix = getterMatcher.group(2);
+    if (hasUpperCase(suffix.codePointAt(0))) {
+      if (declaredOnValueType) {
+        String message = new StringBuilder()
+            .append("Getter methods cannot have a lowercase character immediately after the '")
+            .append(prefix)
+            .append("' prefix on @FreeBuilder types (did you mean '")
+            .append(prefix)
+            .appendCodePoint(Character.toUpperCase(suffix.codePointAt(0)))
+            .append(suffix.substring(suffix.offsetByCodePoints(0, 1)))
+            .append("'?)")
+            .toString();
+        messager.printMessage(ERROR, message, method);
+      } else {
+        printNoImplementationMessage(valueType, method);
+      }
+      return null;
     }
     TypeMirror returnType = getReturnType(valueType, method);
     if (returnType.getKind() == TypeKind.VOID) {
@@ -562,9 +579,9 @@ class Analyser {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return false;
+      return null;
     }
-    if (name.startsWith(IS_PREFIX) && (returnType.getKind() != TypeKind.BOOLEAN)) {
+    if (prefix.equals(IS_PREFIX) && (returnType.getKind() != TypeKind.BOOLEAN)) {
       if (declaredOnValueType) {
         messager.printMessage(
             ERROR,
@@ -574,7 +591,7 @@ class Analyser {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return false;
+      return null;
     }
     if (!method.getParameters().isEmpty()) {
       if (declaredOnValueType) {
@@ -583,13 +600,13 @@ class Analyser {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return false;
+      return null;
     }
     if (new IsInvalidTypeVisitor().visit(returnType)) {
       // The compiler should already have issued an error.
-      return false;
+      return null;
     }
-    return true;
+    return getterMatcher.toMatchResult();
   }
 
   private void printNoImplementationMessage(TypeElement valueType, ExecutableElement method) {
@@ -624,6 +641,10 @@ class Analyser {
     // If there is a user-provided subclass, only make its generated superclass serializable if
     // it is itself; otherwise, tools may complain about missing a serialVersionUID field.
     return any(builder.get().getInterfaces(), isEqualTo(Serializable.class));
+  }
+
+  private static final boolean hasUpperCase(int codepoint) {
+    return Character.toUpperCase(codepoint) != codepoint;
   }
 
   private static boolean isGwtCompatible(TypeElement type) {
