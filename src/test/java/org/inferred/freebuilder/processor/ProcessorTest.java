@@ -927,7 +927,96 @@ public class ProcessorTest {
   }
 
   @Test
-  public void testUnderriding_hashCodeEqualsAndToString() {
+  public void testUnderriding_hashCodeAndEquals() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class Person {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  @Override public boolean equals(Object other) {")
+            .addLine("    return (other instanceof Person)")
+            .addLine("        && getName().equals(((Person) other).getName());")
+            .addLine("  }")
+            .addLine("  @Override public int hashCode() {")
+            .addLine("    return getName().hashCode();")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  public static class Builder extends Person_Builder {}")
+            .addLine("}")
+            .build())
+        // If hashCode and equals are not final, they are overridden to respect Partial behavior.
+        .with(new TestBuilder()
+            .addImport(EqualsTester.class)
+            .addImport("com.example.Person")
+            .addLine("new EqualsTester()")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setName(\"Bill\").setAge(10).build(),")
+            .addLine("        new Person.Builder().setName(\"Bill\").setAge(18).build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setName(\"Ted\").setAge(10).build(),")
+            .addLine("        new Person.Builder().setName(\"Ted\").setAge(18).build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setName(\"Bill\").setAge(10).buildPartial(),")
+            .addLine("        new Person.Builder().setName(\"Bill\").setAge(10).buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setName(\"Bill\").setAge(18).buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setName(\"Bill\").buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setName(\"Ted\").setAge(10).buildPartial(),")
+            .addLine("        new Person.Builder().setName(\"Ted\").setAge(10).buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setName(\"Ted\").setAge(18).buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setName(\"Ted\").buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setAge(10).buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new Person.Builder().setAge(18).buildPartial())")
+            .addLine("    .testEquals();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testUnderriding_toString() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class Person {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  @Override public String toString() {")
+            .addLine("    return getName() + \" (age \" + getAge() + \")\";")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  public static class Builder extends Person_Builder {}")
+            .addLine("}")
+            .build())
+        // If toString is not final, it is overridden in Partial.
+        .with(new TestBuilder()
+            .addLine("com.example.Person p1 = new com.example.Person.Builder()")
+            .addLine("    .setName(\"Bill\")")
+            .addLine("    .setAge(18)")
+            .addLine("    .build();")
+            .addLine("com.example.Person p2 = new com.example.Person.Builder()")
+            .addLine("    .setName(\"Bill\")")
+            .addLine("    .buildPartial();")
+            .addLine("assertEquals(\"Bill (age 18)\", p1.toString());")
+            .addLine("assertEquals(\"partial Person{name=Bill}\", p2.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testUnderriding_finalHashCodeEqualsAndToString() {
     behaviorTester
         .with(new Processor())
         .with(new SourceBuilder()
@@ -955,7 +1044,7 @@ public class ProcessorTest {
   }
 
   @Test
-  public void testUnderriding_hashCodeAndEquals() {
+  public void testUnderriding_finalHashCodeAndEquals() {
     behaviorTester
         .with(new Processor())
         .with(new SourceBuilder()
@@ -993,7 +1082,7 @@ public class ProcessorTest {
   }
 
   @Test
-  public void testUnderriding_toString() {
+  public void testUnderriding_finalToString() {
     behaviorTester
         .with(new Processor())
         .with(new SourceBuilder()
