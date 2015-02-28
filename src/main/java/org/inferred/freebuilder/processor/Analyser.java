@@ -143,9 +143,7 @@ class Analyser {
     return new Metadata.Builder(elements)
         .setType(type)
         .setBuilder(builder.or(generatedBuilder))
-        .setBuilderFactory(builder.isPresent()
-            ? BuilderFactory.from(builder.get())
-            : Optional.of(NO_ARGS_CONSTRUCTOR))
+        .setBuilderFactory(builderFactory(builder))
         .setGeneratedBuilder(generatedBuilder)
         .setValueType(generatedBuilder.createNestedClass("Value"))
         .setPartialType(generatedBuilder.createNestedClass("Partial"))
@@ -325,6 +323,17 @@ class Analyser {
     }
 
     return userClass;
+  }
+
+  private Optional<BuilderFactory> builderFactory(Optional<TypeElement> builder) {
+    if (!builder.isPresent()) {
+      return Optional.of(NO_ARGS_CONSTRUCTOR);
+    }
+    if (!builder.get().getModifiers().contains(Modifier.STATIC)) {
+      messager.printMessage(ERROR, "Builder must be static on @FreeBuilder types", builder.get());
+      return Optional.absent();
+    }
+    return BuilderFactory.from(builder.get());
   }
 
   private Map<String, Property> findProperties(
