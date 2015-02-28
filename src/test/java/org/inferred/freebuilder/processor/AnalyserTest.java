@@ -349,6 +349,20 @@ public class AnalyserTest {
   }
 
   @Test
+  public void nonAbstractMethodNamedIssue() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public boolean issue() {",
+        "    return true;",
+        "  }",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
   public void voidGetter() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
