@@ -349,6 +349,20 @@ public class AnalyserTest {
   }
 
   @Test
+  public void nonAbstractMethodNamedIssue() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public boolean issue() {",
+        "    return true;",
+        "  }",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
   public void voidGetter() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
@@ -401,6 +415,81 @@ public class AnalyserTest {
     assertThat(dataType.getProperties()).isEmpty();
     assertThat(messager.getMessagesByElement().keys()).containsExactly("name");
     assertThat(messager.getMessagesByElement().get("name"))
+        .containsExactly("[ERROR] Only getter methods (starting with 'get' or 'is') may be declared"
+            + " abstract on @FreeBuilder types");
+  }
+
+  @Test
+  public void abstractMethodNamedGet() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract String get();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).containsExactly("get");
+    assertThat(messager.getMessagesByElement().get("get"))
+        .containsExactly("[ERROR] Only getter methods (starting with 'get' or 'is') may be declared"
+            + " abstract on @FreeBuilder types");
+  }
+
+  @Test
+  public void abstractMethodNamedGetter() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract String getter();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).containsExactly("getter");
+    assertThat(messager.getMessagesByElement().get("getter"))
+        .containsExactly("[ERROR] Getter methods cannot have a lowercase character immediately"
+            + " after the 'get' prefix on @FreeBuilder types (did you mean 'getTer'?)");
+  }
+
+  @Test
+  public void abstractMethodNamedIssue() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract String issue();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).containsExactly("issue");
+    assertThat(messager.getMessagesByElement().get("issue"))
+        .containsExactly("[ERROR] Getter methods cannot have a lowercase character immediately"
+            + " after the 'is' prefix on @FreeBuilder types (did you mean 'isSue'?)");
+  }
+
+  @Test
+  public void abstractMethodNamedGetürkt() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract String getürkt();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).containsExactly("getürkt");
+    assertThat(messager.getMessagesByElement().get("getürkt"))
+        .containsExactly("[ERROR] Getter methods cannot have a lowercase character immediately"
+            + " after the 'get' prefix on @FreeBuilder types (did you mean 'getÜrkt'?)");
+  }
+
+  @Test
+  public void abstractMethodNamedIs() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract boolean is();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).containsExactly("is");
+    assertThat(messager.getMessagesByElement().get("is"))
         .containsExactly("[ERROR] Only getter methods (starting with 'get' or 'is') may be declared"
             + " abstract on @FreeBuilder types");
   }
