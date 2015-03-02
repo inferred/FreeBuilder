@@ -154,6 +154,55 @@ public class BuildablePropertyFactoryTest {
       .addLine("}")
       .build();
 
+  private static final JavaFileObject FREEBUILDERLIKE_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  interface Item {")
+      .addLine("    %s<String> getNames();", List.class)
+      .addLine("    class Builder extends DataType_Item_Builder {}")
+      .addLine("  }")
+      .addLine("  Item getItem();")
+      .addLine("  class Builder extends DataType_Builder {}")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject FREEBUILDERLIKE_BUILDER_SUPERCLASS = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("class DataType_Item_Builder {")
+      .addLine("  private final %s<String> names = new %s<String>();", List.class, ArrayList.class)
+      .addLine("  public DataType.Item.Builder addNames(String... names) {")
+      .addLine("    for (String name : names) {")
+      .addLine("      this.names.add(name);")
+      .addLine("    }")
+      .addLine("    return (DataType.Item.Builder) this;")
+      .addLine("  }")
+      .addLine("  public DataType.Item.Builder clear() {")
+      .addLine("    names.clear();")
+      .addLine("    return (DataType.Item.Builder) this;")
+      .addLine("  }")
+      .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item.Builder builder) {")
+      .addLine("    names.addAll(((DataType_Item_Builder) builder).names);")
+      .addLine("    return (DataType.Item.Builder) this;")
+      .addLine("  }")
+      .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item item) {")
+      .addLine("    names.addAll(item.getNames());")
+      .addLine("    return (DataType.Item.Builder) this;")
+      .addLine("  }")
+      .addLine("  public DataType.Item build() { return new Value(this); }")
+      .addLine("  public DataType.Item buildPartial() { return new Value(this); }")
+      .addLine("  private class Value implements DataType.Item {")
+      .addLine("    private %s<String> names;", ImmutableList.class)
+      .addLine("    Value(DataType_Item_Builder builder) {")
+      .addLine("      names = %s.copyOf(builder.names);",
+          ImmutableList.class)
+      .addLine("    }")
+      .addLine("    @%s public %s<String> getNames() { return names; }",
+          Override.class, ImmutableList.class)
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
@@ -279,6 +328,28 @@ public class BuildablePropertyFactoryTest {
   }
 
   @Test
+  public void testSetToValue_freebuilderlike() {
+    behaviorTester
+        .with(new Processor())
+        .with(FREEBUILDERLIKE_TYPE)
+        .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
+            .addLine("builder.setItem(new com.example.DataType.Item.Builder()")
+            .addLine("    .addNames(\"Foo\", \"Bar\")")
+            .addLine("    .build());")
+            .addLine("assertThat(builder.build().getItem().getNames())")
+            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+            .addLine("builder.setItem(new com.example.DataType.Item.Builder()")
+            .addLine("    .addNames(\"Cheese\", \"Ham\")")
+            .addLine("    .build());")
+            .addLine("assertThat(builder.build().getItem().getNames())")
+            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testSetToBuilder_valuesSet() {
     behaviorTester
         .with(new Processor())
@@ -339,6 +410,26 @@ public class BuildablePropertyFactoryTest {
   }
 
   @Test
+  public void testSetToBuilder_freebuilderlike() {
+    behaviorTester
+        .with(new Processor())
+        .with(FREEBUILDERLIKE_TYPE)
+        .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
+            .addLine("builder.setItem(new com.example.DataType.Item.Builder()")
+            .addLine("    .addNames(\"Foo\", \"Bar\"));")
+            .addLine("assertThat(builder.build().getItem().getNames())")
+            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+            .addLine("builder.setItem(new com.example.DataType.Item.Builder()")
+            .addLine("    .addNames(\"Cheese\", \"Ham\"));")
+            .addLine("assertThat(builder.build().getItem().getNames())")
+            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testSetToBuilder_missingValue() {
     thrown.expect(IllegalStateException.class);
     behaviorTester
@@ -370,6 +461,20 @@ public class BuildablePropertyFactoryTest {
     behaviorTester
         .with(new Processor())
         .with(PROTOLIKE_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
+            .addLine("builder.getItemBuilder().addNames(\"Foo\");")
+            .addLine("assertThat(builder.build().getItem().getNames()).containsExactly(\"Foo\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testGetBuilder_freebuilderlike() {
+    behaviorTester
+        .with(new Processor())
+        .with(FREEBUILDERLIKE_TYPE)
+        .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
             .addLine("builder.getItemBuilder().addNames(\"Foo\");")
@@ -446,6 +551,29 @@ public class BuildablePropertyFactoryTest {
             .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
             .addLine("builder.mergeFrom(new com.example.DataType.Builder()")
             .addLine("    .setItem(com.example.DataType.Item.newBuilder()")
+            .addLine("        .addNames(\"Cheese\", \"Ham\")")
+            .addLine("        .build()));")
+            .addLine("assertThat(builder.build().getItem().getNames())")
+            .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromBuilder_freebuilderlike() {
+    behaviorTester
+        .with(new Processor())
+        .with(FREEBUILDERLIKE_TYPE)
+        .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
+            .addLine("builder.setItem(new com.example.DataType.Item.Builder()")
+            .addLine("    .addNames(\"Foo\", \"Bar\")")
+            .addLine("    .build());")
+            .addLine("assertThat(builder.build().getItem().getNames())")
+            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+            .addLine("builder.mergeFrom(new com.example.DataType.Builder()")
+            .addLine("    .setItem(new com.example.DataType.Item.Builder()")
             .addLine("        .addNames(\"Cheese\", \"Ham\")")
             .addLine("        .build()));")
             .addLine("assertThat(builder.build().getItem().getNames())")
@@ -611,6 +739,30 @@ public class BuildablePropertyFactoryTest {
             .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
             .addLine("builder.clear().mergeFrom(new com.example.DataType.Builder()")
             .addLine("    .setItem(com.example.DataType.Item.newBuilder()")
+            .addLine("        .addNames(\"Cheese\", \"Ham\")")
+            .addLine("        .build())")
+            .addLine("    .build());")
+            .addLine("assertThat(builder.build().getItem().getNames())")
+            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuilderClear_freebuilderlike() {
+    behaviorTester
+        .with(new Processor())
+        .with(FREEBUILDERLIKE_TYPE)
+        .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
+            .addLine("builder.setItem(new com.example.DataType.Item.Builder()")
+            .addLine("    .addNames(\"Foo\", \"Bar\")")
+            .addLine("    .build());")
+            .addLine("assertThat(builder.build().getItem().getNames())")
+            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+            .addLine("builder.clear().mergeFrom(new com.example.DataType.Builder()")
+            .addLine("    .setItem(new com.example.DataType.Item.Builder()")
             .addLine("        .addNames(\"Cheese\", \"Ham\")")
             .addLine("        .build())")
             .addLine("    .build());")
