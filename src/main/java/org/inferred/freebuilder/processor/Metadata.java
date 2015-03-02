@@ -19,25 +19,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.addAll;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-
-import org.inferred.freebuilder.processor.util.ImpliedClass;
-import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
-import org.inferred.freebuilder.processor.util.ValueType;
-
 import java.util.ArrayList;
-import java.util.EnumSet;
+import java.util.EnumMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+
+import org.inferred.freebuilder.processor.util.ImpliedClass;
+import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
+import org.inferred.freebuilder.processor.util.ValueType;
+
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Metadata about a &#64;{@link org.inferred.freebuilder.FreeBuilder FreeBuilder} type.
@@ -49,6 +49,16 @@ public class Metadata extends ValueType {
     TO_STRING, HASH_CODE, EQUALS
   }
 
+  /** How compulsory the underride is. */
+  public enum UnderrideLevel {
+    /** There is no underride. */
+    ABSENT,
+    /** The underride can be overridden (viz. to respect Partials). */
+    OVERRIDEABLE,
+    /** The underride is declared final. */
+    FINAL;
+  }
+
   private final Elements elements;
   private final TypeElement type;
   private final TypeElement builder;
@@ -57,8 +67,8 @@ public class Metadata extends ValueType {
   private final ImpliedNestedClass valueType;
   private final ImpliedNestedClass partialType;
   private final ImpliedNestedClass propertyEnum;
-  private final List<Property> properties;
-  private final Set<StandardMethod> underriddenMethods;
+  private final ImmutableList<Property> properties;
+  private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
   private final boolean builderSerializable;
   private final boolean gwtCompatible;
   private final boolean gwtSerializable;
@@ -73,7 +83,7 @@ public class Metadata extends ValueType {
     this.partialType = builder.partialType;
     this.propertyEnum = builder.propertyEnum;
     this.properties = ImmutableList.copyOf(builder.properties);
-    this.underriddenMethods = ImmutableSet.copyOf(builder.underriddenMethods);
+    this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
     this.builderSerializable = builder.builderSerializable;
     this.gwtCompatible = builder.gwtCompatible;
     this.gwtSerializable = builder.gwtSerializable;
@@ -120,12 +130,16 @@ public class Metadata extends ValueType {
   }
 
   /** Returns metadata about the properies of the type. */
-  public List<Property> getProperties() {
+  public ImmutableList<Property> getProperties() {
     return properties;
   }
 
-  public Set<StandardMethod> getUnderriddenMethods() {
-    return underriddenMethods;
+  public UnderrideLevel standardMethodUnderride(StandardMethod standardMethod) {
+    return standardMethodUnderrides.get(standardMethod);
+  }
+
+  public ImmutableMap<StandardMethod, UnderrideLevel> getStandardMethodUnderrides() {
+    return standardMethodUnderrides;
   }
 
   /** Returns whether the builder type should be serializable. */
@@ -318,7 +332,7 @@ public class Metadata extends ValueType {
     fields.add("partialType", partialType.toString());
     fields.add("propertyEnum", propertyEnum.toString());
     fields.add("properties", properties);
-    fields.add("underriddenMethods", underriddenMethods);
+    fields.add("standardMethodUnderrides", standardMethodUnderrides);
     fields.add("builderSerializable", builderSerializable);
     fields.add("gwtCompatible", gwtCompatible);
     fields.add("gwtSerializable", gwtSerializable);
@@ -336,7 +350,7 @@ public class Metadata extends ValueType {
     public ImpliedNestedClass partialType;
     public ImpliedNestedClass propertyEnum;
     private final List<Property> properties = new ArrayList<Property>();
-    private final Set<StandardMethod> underriddenMethods = EnumSet.noneOf(StandardMethod.class);
+    private final Map<StandardMethod, UnderrideLevel> standardMethodUnderrides = noUnderrides();
     private Boolean builderSerializable;
     private Boolean gwtCompatible;
     private Boolean gwtSerializable;
@@ -405,15 +419,17 @@ public class Metadata extends ValueType {
       return this;
     }
 
-    /** Add an underridden standard method. */
-    public Builder addUnderriddenMethod(StandardMethod standardMethod) {
-      this.underriddenMethods.add(standardMethod);
+    /** Puts an underridden standard method into the map. */
+    public Builder putStandardMethodUnderride(
+        StandardMethod standardMethod, UnderrideLevel underrideLevel) {
+      this.standardMethodUnderrides.put(standardMethod, underrideLevel);
       return this;
     }
 
-    /** Add a set of underridden standard methods. */
-    public Builder addAllUnderriddenMethods(Iterable<StandardMethod> standardMethods) {
-      addAll(this.underriddenMethods, standardMethods);
+    /** Copies all the entries from a map of underridden standard methods. */
+    public Builder putAllStandardMethodUnderrides(
+        Map<? extends StandardMethod, ? extends UnderrideLevel> standardMethodUnderrides) {
+      this.standardMethodUnderrides.putAll(standardMethodUnderrides);
       return this;
     }
 
@@ -455,6 +471,15 @@ public class Metadata extends ValueType {
       checkState(gwtCompatible != null, "gwtCompatible not set");
       checkState(gwtSerializable != null, "gwtSerializable not set");
       return new Metadata(this);
+    }
+
+    private static Map<StandardMethod, UnderrideLevel> noUnderrides() {
+      Map<StandardMethod, UnderrideLevel> map =
+          new EnumMap<StandardMethod, UnderrideLevel>(StandardMethod.class);
+      for (StandardMethod standardMethod : StandardMethod.values()) {
+        map.put(standardMethod, UnderrideLevel.ABSENT);
+      }
+      return map;
     }
   }
 }

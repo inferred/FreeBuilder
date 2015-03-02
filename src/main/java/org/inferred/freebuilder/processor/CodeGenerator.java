@@ -19,9 +19,25 @@ import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.inferred.freebuilder.processor.Metadata.Property.GET_CODE_GENERATOR;
+import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
+import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.PropertyCodeGenerator.IS_TEMPLATE_REQUIRED_IN_CLEAR;
 import static org.inferred.freebuilder.processor.util.SourceBuilders.withIndent;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+
+import javax.annotation.Generated;
+import javax.lang.model.element.TypeElement;
+
+import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Metadata.StandardMethod;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.TypeReference;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -31,21 +47,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
-import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.Metadata.StandardMethod;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.TypeReference;
-
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-
-import javax.annotation.Generated;
-import javax.lang.model.element.TypeElement;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
@@ -149,43 +150,59 @@ public class CodeGenerator {
       code.addLine("    }");
     }
     // Equals
-    if (!metadata.getUnderriddenMethods().contains(StandardMethod.EQUALS)) {
-      code.addLine("")
-          .addLine("    @%s", Override.class)
-          .addLine("    public boolean equals(Object obj) {")
-          .addLine("      if (!(obj instanceof %s)) {", metadata.getValueType())
-          .addLine("        return false;")
-          .addLine("      }")
-          .addLine("      %1$s other = (%1$s) obj;", metadata.getValueType());
-      for (Property property : metadata.getProperties()) {
-        switch (property.getType().getKind()) {
-          case FLOAT:
-          case DOUBLE:
-            code.addLine("      if (%s.doubleToLongBits(%s)",
-                Double.class, property.getName())
-                .addLine("          != %s.doubleToLongBits(other.%s)) {",
-                    Double.class, property.getName());
-            break;
+    switch (metadata.standardMethodUnderride(StandardMethod.EQUALS)) {
+      case ABSENT:
+        // Default implementation if no user implementation exists.
+        code.addLine("")
+            .addLine("    @%s", Override.class)
+            .addLine("    public boolean equals(Object obj) {")
+            .addLine("      if (!(obj instanceof %s)) {", metadata.getValueType())
+            .addLine("        return false;")
+            .addLine("      }")
+            .addLine("      %1$s other = (%1$s) obj;", metadata.getValueType());
+        for (Property property : metadata.getProperties()) {
+          switch (property.getType().getKind()) {
+            case FLOAT:
+            case DOUBLE:
+              code.addLine("      if (%s.doubleToLongBits(%s)", Double.class, property.getName())
+                  .addLine("          != %s.doubleToLongBits(other.%s)) {",
+                      Double.class, property.getName());
+              break;
 
-          default:
-            if (property.getType().getKind().isPrimitive()) {
-              code.addLine("      if (%1$s != other.%1$s) {", property.getName());
-            } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-              code.addLine("      if (%1$s != other.%1$s", property.getName())
-              .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
-                  property.getName());
-            } else {
-              code.addLine("      if (!%1$s.equals(other.%1$s)) {", property.getName());
-            }
+            default:
+              if (property.getType().getKind().isPrimitive()) {
+                code.addLine("      if (%1$s != other.%1$s) {", property.getName());
+              } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
+                code.addLine("      if (%1$s != other.%1$s", property.getName())
+                .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
+                    property.getName());
+              } else {
+                code.addLine("      if (!%1$s.equals(other.%1$s)) {", property.getName());
+              }
+          }
+          code.addLine("        return false;")
+              .addLine("      }");
         }
-        code.addLine("        return false;")
-            .addLine("      }");
-      }
-      code.addLine("      return true;")
-          .addLine("    }");
+        code.addLine("      return true;")
+            .addLine("    }");
+        break;
+
+      case OVERRIDEABLE:
+        // Partial-respecting override if a non-final user implementation exists.
+        code.addLine("")
+            .addLine("    @%s", Override.class)
+            .addLine("    public boolean equals(Object obj) {")
+            .addLine("      return (!(obj instanceof %s) && super.equals(obj));",
+                metadata.getPartialType())
+            .addLine("    }");
+        break;
+
+      case FINAL:
+        // Cannot override if a final user implementation exists.
+        break;
     }
     // Hash code
-    if (!metadata.getUnderriddenMethods().contains(StandardMethod.HASH_CODE)) {
+    if (metadata.standardMethodUnderride(StandardMethod.HASH_CODE) == ABSENT) {
       code.addLine("")
           .addLine("    @%s", Override.class)
           .addLine("    public int hashCode() {")
@@ -194,7 +211,7 @@ public class CodeGenerator {
           .addLine("    }");
     }
     // toString
-    if (!metadata.getUnderriddenMethods().contains(StandardMethod.TO_STRING)) {
+    if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
       code.addLine("")
           .addLine("    @%s", Override.class)
           .addLine("    public %s toString() {", String.class)
@@ -433,7 +450,7 @@ public class CodeGenerator {
       code.addLine("    }");
     }
     // Equals
-    if (!metadata.getUnderriddenMethods().contains(StandardMethod.EQUALS)) {
+    if (metadata.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
       code.addLine("")
           .addLine("    @%s", Override.class)
           .addLine("    public boolean equals(Object obj) {")
@@ -472,7 +489,7 @@ public class CodeGenerator {
       code.addLine("    }");
     }
     // Hash code
-    if (!metadata.getUnderriddenMethods().contains(StandardMethod.HASH_CODE)) {
+    if (metadata.standardMethodUnderride(StandardMethod.HASH_CODE) != FINAL) {
       code.addLine("")
           .addLine("    @%s", Override.class)
           .addLine("    public int hashCode() {")
@@ -496,7 +513,7 @@ public class CodeGenerator {
           .addLine("    }");
     }
     // toString
-    if (!metadata.getUnderriddenMethods().contains(StandardMethod.TO_STRING)) {
+    if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) != FINAL) {
       code.addLine("")
           .addLine("    @%s", Override.class)
           .addLine("    public %s toString() {", String.class);

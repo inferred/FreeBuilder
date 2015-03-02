@@ -62,6 +62,7 @@ import javax.lang.model.util.Types;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
+import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.ImpliedClass;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
@@ -70,6 +71,7 @@ import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -148,7 +150,7 @@ class Analyser {
         .setValueType(generatedBuilder.createNestedClass("Value"))
         .setPartialType(generatedBuilder.createNestedClass("Partial"))
         .setPropertyEnum(generatedBuilder.createNestedClass("Property"))
-        .addAllUnderriddenMethods(findUnderriddenMethods(methods))
+        .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .setGwtCompatible(isGwtCompatible(type))
         .setGwtSerializable(isGwtSerializable(type))
@@ -245,7 +247,8 @@ class Analyser {
   }
 
   /** Find any standard methods the user has 'underridden' in their type. */
-  private Set<StandardMethod> findUnderriddenMethods(Iterable<ExecutableElement> methods) {
+  private Map<StandardMethod, UnderrideLevel> findUnderriddenMethods(
+      Iterable<ExecutableElement> methods) {
     Map<StandardMethod, ExecutableElement> standardMethods =
         new LinkedHashMap<StandardMethod, ExecutableElement>();
     for (ExecutableElement method : methods) {
@@ -263,7 +266,15 @@ class Analyser {
           "hashCode and equals must be implemented together on @FreeBuilder types",
           underriddenMethod);
     }
-    return standardMethods.keySet();
+    ImmutableMap.Builder<StandardMethod, UnderrideLevel> result = ImmutableMap.builder();
+    for (StandardMethod standardMethod : standardMethods.keySet()) {
+      if (standardMethods.get(standardMethod).getModifiers().contains(Modifier.FINAL)) {
+        result.put(standardMethod, UnderrideLevel.FINAL);
+      } else {
+        result.put(standardMethod, UnderrideLevel.OVERRIDEABLE);
+      }
+    }
+    return result.build();
   }
 
   private static boolean isUnderride(ExecutableElement method) {
