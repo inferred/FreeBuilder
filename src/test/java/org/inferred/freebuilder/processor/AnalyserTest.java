@@ -962,6 +962,26 @@ public class AnalyserTest {
   }
 
   @Test
+  public void nonStaticBuilder() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract String getName();",
+        "  public class Builder extends DataType_Builder {}",
+        "}"));
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("name");
+    assertEquals("java.lang.String", properties.get("name").getType().toString());
+    assertNull(properties.get("name").getBoxedType());
+    assertEquals("NAME", properties.get("name").getAllCapsName());
+    assertEquals("Name", properties.get("name").getCapitalizedName());
+    assertEquals("getName", properties.get("name").getGetterName());
+    assertThat(dataType.getBuilderFactory()).isAbsent();
+    assertThat(messager.getMessagesByElement().asMap()).containsEntry(
+        "Builder", ImmutableList.of("[ERROR] Builder must be static on @FreeBuilder types"));
+  }
+
+  @Test
   public void genericType() {
     TypeElement dataType = model.newType(
         "package com.example;",
