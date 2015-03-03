@@ -99,7 +99,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
       mergeFromBuilderMethod = MergeBuilderMethod.MERGE_DIRECTLY;
     } else {
       List<ExecutableElement> methods = FluentIterable
-          .from(builder.get().getEnclosedElements())
+          .from(config.getElements().getAllMembers(builder.get()))
           .filter(ExecutableElement.class)
           .filter(new IsCallableMethod())
           .toList();
