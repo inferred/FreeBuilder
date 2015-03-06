@@ -16,6 +16,8 @@ _Automatic generation of the Builder pattern for Java 1.6+_
   - [What you get](#what-you-get)
   - [Defaults and constraints](#defaults-and-constraints)
   - [Optional values](#optional-values)
+    - [Converting from `@Nullable`](#converting-from-nullable)
+    - [Converting widely-used types](#converting-widely-used-types)
   - [Collections and Maps](#collections-and-maps)
   - [Nested buildable types](#nested-buildable-types)
   - [Builder construction](#builder-construction)
@@ -190,7 +192,41 @@ Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
 the empty string, as it forces the user to think about those edge cases.
 `@FreeBuilder` does <strong>not</strong> support nulls and will throw a
-NullPointerException if one is passed to a setter.
+NullPointerException if one is passed to `setDescription`. Instead, call
+`clearDescription() to reset the field, or `setNullableDescription(Value)`
+if you have a potentially-null value.
+
+#### Converting from `@Nullable`
+
+This is the O(1), non-tedious, non&ndash;error-prone way we recomment converting
+`@Nullable` to Optional:
+
+ * Load all your code in Eclipse, or another IDE with support for renaming and
+    inlining.
+ * _[IDE REFACTOR]_ Rename all your `@Nullable` getters to `getNullableX`.
+ * Add an Optional-returning getX
+ * Implement your getNullableX methods as:  `return getX().orNull()`
+ * _[IDE REFACTOR]_ Inline your getNullableX methods
+
+At this point, you have effectively performed an automatic translation of a
+`@Nullable` method to an Optional-returning one. Of course, your code is not
+optimal yet (e.g.  `if (foo.getX().orNull() != null)`  instead of  `if
+(foo.getX().isPresent())` ). Search-and-replace should get most of these issues.
+
+ * _[IDE REFACTOR]_ Rename all your `@Nullable` setters to `setNullableX`.
+
+Your API is now `@FreeBuilder`-compatible :)
+
+#### Converting widely-used types
+
+Each step above is protected by the compiler; if you need to, you can do them by
+hand across multiple commits. This is of course a total pain, but if your API
+is widely-used, **you should consider using Optional anyway**. `@Nullable`
+getter methods are the classic example of [Hoare's billion-dollar
+mistake][Hoare]: a silent source of errors that users won't remember to write
+test cases for, and which won't be spotted in code reviews.
+
+[Hoare]: http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare
 
 
 ### Collections and Maps
