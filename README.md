@@ -1,5 +1,5 @@
 `@FreeBuilder`
-=========================
+==============
 
 _Automatic generation of the Builder pattern for Java 1.6+_
 
@@ -7,8 +7,32 @@ _Automatic generation of the Builder pattern for Java 1.6+_
 > or static factories would have more than a handful of parameters.
 > &mdash; <em>Effective Java, Second Edition</em>, page 39
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-<h2 id=background>Background</h2>
+- [Background](#background)
+- [How to use `@FreeBuilder`](#how-to-use-freebuilder)
+  - [Quick start](#quick-start)
+  - [What you get](#what-you-get)
+  - [Defaults and constraints](#defaults-and-constraints)
+  - [Optional values](#optional-values)
+  - [Collections and Maps](#collections-and-maps)
+  - [Nested buildable types](#nested-buildable-types)
+  - [Builder construction](#builder-construction)
+  - [Partials](#partials)
+  - [IDEs](#ides)
+  - [GWT](#gwt)
+- [Alternatives](#alternatives)
+  - [AutoValue vs `@FreeBuilder`](#autovalue-vs-freebuilder)
+  - [Proto vs `@FreeBuilder`](#proto-vs-freebuilder)
+- [Wait, why "free"?](#wait-why-free)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+Background
+----------
 
 Implementing the [Builder pattern](http://en.wikipedia.org/wiki/Builder_pattern)
 in Java is tedious, error-prone and repetitive. Who hasn't seen a ten-argument
@@ -18,8 +42,8 @@ lines of code for the most basic builder API, or 72 lines if you don't use a
 utility like [AutoValue][] to generate the value boilerplate.
 
 `@FreeBuilder` produces all the boilerplate for you, as well as free extras like
-JavaDoc, getter methods, [collections support](#collections_and_maps),
-[nested builders](#nested_buildable_types), and [partial values](#partials)
+JavaDoc, getter methods, [collections support](#collections-and-maps),
+[nested builders](#nested-buildable-types), and [partial values](#partials)
 (used in testing), which are highly useful, but would very rarely justify
 their creation and maintenance burden in hand-crafted code. (We also reserve
 the right to add more awesome methods in future!)
@@ -35,10 +59,11 @@ the right to add more awesome methods in future!)
 > &mdash; <em>Effective Java, Second Edition</em>, page 39
 
 
-<h2 id=how_to_use_freebuilder>How to use <code>@FreeBuilder</code></h2>
+How to use `@FreeBuilder`
+-------------------------
 
 
-<h3 id=quick_start>Quick start</h3>
+### Quick start
 
 Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
 
@@ -80,7 +105,7 @@ builder's constructor and manually provide instead a static `builder()` method
 on the value type (though <em>Effective Java</em> does not do this).
 
 
-<h3 id=what_you_get>What you get</h3>
+### What you get
 
 If you write the Person interface shown above, you get:
 
@@ -91,7 +116,7 @@ If you write the Person interface shown above, you get:
      * setters
      * `mergeFrom` methods to copy data from existing values or builders
      * a `build` method that verifies all fields have been set
-        * [see below for default values and constraint checking](#defaults_and_constraints)
+        * [see below for default values and constraint checking](#defaults-and-constraints)
   * An implementation of `Person` with:
      * `toString`
      * `equals` and `hashCode`
@@ -110,7 +135,7 @@ System.out.println(person);  // Person{name=Phil, age=31}
 ```
 
 
-<h3 id=defaults_and_constraints>Defaults and constraints</h3>
+### Defaults and constraints
 
 We use method overrides to add customization like default values and constraint
 checks. For instance:
@@ -147,7 +172,7 @@ public interface Person {
 ```
 
 
-<h3 id=optional_values>Optional values</h3>
+### Optional values
 
 If a property is optional&mdash;that is, has no reasonable default&mdash;then
 use [the Optional type][]. It will default to Optional.absent(), and the Builder
@@ -164,11 +189,11 @@ will gain additional convenience setter methods.
 Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
 the empty string, as it forces the user to think about those edge cases.
-@FreeBuilder does <strong>not</strong> support nulls and will throw a
+`@FreeBuilder` does <strong>not</strong> support nulls and will throw a
 NullPointerException if one is passed to a setter.
 
 
-<h3 id=collections_and_maps>Collections and Maps</h3>
+### Collections and Maps
 
 `@FreeBuilder` has special support for <code>[List][]</code>,
 <code>[Set][]</code>, <code>[Multiset][]</code>, <code>[Map][]</code> and
@@ -189,7 +214,7 @@ NullPointerException if one is passed to a setter.
 [Multimap]: https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained#Multimap
 
 
-<h3 id=nested_buildable_types>Nested buildable types</h3>
+### Nested buildable types
 
 `@FreeBuilder` has special support for buildable types like [protos][] and other
 `@FreeBuilder` types:
@@ -204,7 +229,7 @@ NullPointerException if one is passed to a setter.
 [protos]: https://developers.google.com/protocol-buffers/
 
 
-<h3 id=builder_construction>Builder construction</h3>
+### Builder construction
 
 <em>Effective Java</em> recommends passing required parameters in to the Builder
 constructor. While we follow most of the recommendations therein, we explicitly
@@ -230,7 +255,7 @@ Implementation note: in javac, we spot these fields being set in the
 constructor, and do not check again at runtime. 
 
 
-<h3 id=partials>Partials</h3>
+### Partials
 
 A <em>partial value</em> is an implementation of the value type which does not
 conform to the type's state constraints. It may be missing required fields, or
@@ -254,7 +279,7 @@ suite, allowing you to add new required fields or other constraints to an
 existing value type without breaking swathes of test code.
 
 
-<h3 id=ides>IDEs</h3>
+### IDEs
 
 Follow your IDE's annotation processing instructions [[Eclipse instructions][];
 [IntelliJ instructions][]].
@@ -263,7 +288,7 @@ Follow your IDE's annotation processing instructions [[Eclipse instructions][];
 [IntelliJ instructions]: http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html
 
 
-<h3 id=gwt>GWT</h3>
+### GWT
 
 To enable [GWT][] serialization of the generated Value subclass, just add
 `@GwtCompatible(serializable = true)` to your `@FreeBuilder`-annotated type, and
@@ -274,10 +299,11 @@ and ensure all necessary types are whitelisted.
 [CustomFieldSerializer]: http://www.gwtproject.org/javadoc/latest/com/google/gwt/user/client/rpc/CustomFieldSerializer.html
 
 
-<h2 id=alternatives>Alternatives</h2>
+Alternatives
+------------
 
 
-<h3 id=autovalue_vs_freebuilder>AutoValue vs <code>@FreeBuilder</code></h3>
+### AutoValue vs `@FreeBuilder`
 
 <em><strong>Why is `@FreeBuilder` better than [AutoValue][]?</strong></em>
 
@@ -317,7 +343,7 @@ the same values.
 [AutoValue.Builder]: https://github.com/google/auto/tree/master/value#builders
 
 
-<h3 id=proto_vs_freebuilder>Proto vs <code>@FreeBuilder</code></h3>
+### Proto vs `@FreeBuilder`
 
 <em><strong>[Protocol buffers][] have provided builders for ages. Why should I
 use `@FreeBuilder`?</strong></em>
@@ -333,7 +359,8 @@ for your use-case.
 [Range]: http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/Range.html
 
 
-<h2 id=why_free>Wait, why "free"?</h2>
+Wait, why "free"?
+-----------------
 
   * Free as in beer: you don't pay the cost of writing or maintaining the builder
     code.
@@ -342,7 +369,8 @@ for your use-case.
   * Free as in liberty: you can always drop `@FreeBuilder` and walk away with
     the code it generated for you.
 
-<h2 id=license>License</h2>
+License
+-------
 
     Copyright 2014 Google Inc. All rights reserved.
 
