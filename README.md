@@ -74,7 +74,7 @@ Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
   <dependency>
     <groupId>org.inferred</groupId>
     <artifactId>freebuilder</artifactId>
-    <version>1.0-rc4</version>
+    <version>1.0-rc5</version>
     <optional>true</optional>
   </dependency>
 </dependencies>
