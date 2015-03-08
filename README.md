@@ -24,6 +24,10 @@ _Automatic generation of the Builder pattern for Java 1.6+_
   - [Partials](#partials)
   - [IDEs](#ides)
   - [GWT](#gwt)
+- [Troubleshooting](#troubleshooting)
+  - [Javac](#javac)
+  - [Eclipse](#eclipse)
+  - [Online resouces](#online-resouces)
 - [Alternatives](#alternatives)
   - [AutoValue vs `@FreeBuilder`](#autovalue-vs-freebuilder)
   - [Proto vs `@FreeBuilder`](#proto-vs-freebuilder)
@@ -333,6 +337,54 @@ and ensure all necessary types are whitelisted.
 
 [GWT]: http://www.gwtproject.org/
 [CustomFieldSerializer]: http://www.gwtproject.org/javadoc/latest/com/google/gwt/user/client/rpc/CustomFieldSerializer.html
+
+
+Troubleshooting
+---------------
+
+
+### Javac
+
+If you make a mistake in your code (e.g. giving your value type a private
+constructor), `@FreeBuilder` is designed to output a Builder superclass anyway,
+with as much of the interface intact as possible, so the only errors you see
+are the ones output by the annotation processor.
+
+Unfortunately, `javac` has a broken design: if _any_ annotation processor
+outputs _any error whatsoever_, *all* generated code is discarded, and all
+references to that generated code are flagged as broken references. Since
+your Builder API is generated, that means every usage of a `@FreeBuilder`
+builder becomes an error. This deluge of false errors swamps the actual
+error you need to find and fix. (See also [the related issue][issue 3].)
+
+If you find yourself in this situation, search the output of `javac` for the
+string "@FreeBuilder type"; nearly all errors include this in their text.
+
+[issue 3]: https://github.com/google/FreeBuilder/issues/3
+
+### Eclipse
+
+Eclipse manages, somehow, to be worse than `javac` here. It will never output
+annotation processor errors unless there is another error of some kind; and,
+even then, only after an incremental, not clean, compile. In practice, most
+mistakes are made while editing the `@FreeBuilder` type, which means the
+incremental compiler will flag the errors. If you find a generated superclass
+appears to be missing after a clean compile, however, try touching the
+relevant file to trigger the incremental compiler. (Or run javac.)
+
+### Online resouces
+
+  * If you find yourself stuck, needing help, wondering whether a given
+    behaviour is a feature or a bug, or just wanting to discuss `@FreeBuilder`,
+    please join and/or post to [the `@FreeBuilder` mailing list][mailing list].
+  * To see a list of open issues, or add a new one, see [the `@FreeBuilder`
+    issue tracker][issue tracker].
+  * To submit a bug fix, or land a sweet new feature, [read up on how to
+    contribute][contributing].
+
+[mailing list]: https://groups.google.com/forum/#!forum/freebuilder
+[issue tracker]: https://github.com/google/freebuilder/issues
+[contributing]: https://github.com/google/FreeBuilder/blob/master/CONTRIBUTING.md
 
 
 Alternatives
