@@ -22,11 +22,16 @@ _Automatic generation of the Builder pattern for Java 1.6+_
   - [Nested buildable types](#nested-buildable-types)
   - [Builder construction](#builder-construction)
   - [Partials](#partials)
-  - [IDEs](#ides)
   - [GWT](#gwt)
-- [Troubleshooting](#troubleshooting)
-  - [Javac](#javac)
+- [Build tools and IDEs](#build-tools-and-ides)
+  - [javac](#javac)
+  - [Maven](#maven)
+  - [Gradle](#gradle)
   - [Eclipse](#eclipse)
+  - [IntelliJ](#intellij)
+- [Troubleshooting](#troubleshooting)
+  - [Troubleshooting javac](#troubleshooting-javac)
+  - [Troubleshooting Eclipse](#troubleshooting-eclipse)
   - [Online resouces](#online-resouces)
 - [Alternatives](#alternatives)
   - [AutoValue vs `@FreeBuilder`](#autovalue-vs-freebuilder)
@@ -71,18 +76,8 @@ How to use `@FreeBuilder`
 
 ### Quick start
 
-Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
-
-```xml
-<dependencies>
-  <dependency>
-    <groupId>org.inferred</groupId>
-    <artifactId>freebuilder</artifactId>
-    <version>1.0-rc5</version>
-    <optional>true</optional>
-  </dependency>
-</dependencies>
-```
+_See [Build tools and IDEs](#build-tools-and-ides) for how to add `@FreeBuilder` 
+to your project's build and/or IDE._
 
 Create your value type (e.g. `Person`) as an interface or abstract class,
 containing an abstract accessor method for each desired field. This accessor
@@ -319,15 +314,6 @@ suite, allowing you to add new required fields or other constraints to an
 existing value type without breaking swathes of test code.
 
 
-### IDEs
-
-Follow your IDE's annotation processing instructions [[Eclipse instructions][];
-[IntelliJ instructions][]].
-
-[Eclipse instructions]: http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm
-[IntelliJ instructions]: http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html
-
-
 ### GWT
 
 To enable [GWT][] serialization of the generated Value subclass, just add
@@ -339,11 +325,80 @@ and ensure all necessary types are whitelisted.
 [CustomFieldSerializer]: http://www.gwtproject.org/javadoc/latest/com/google/gwt/user/client/rpc/CustomFieldSerializer.html
 
 
+Build tools and IDEs
+--------------------
+
+### javac
+
+Download [freebuilder-1.0-rc5.jar][] and add it to the classpath (or
+processorpath, if you supply one) on the command line.
+
+[freebuilder-1.0-rc5.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.0-rc5/freebuilder-1.0-rc5.jar
+
+### Maven
+
+Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>org.inferred</groupId>
+    <artifactId>freebuilder</artifactId>
+    <version>1.0-rc5</version>
+    <optional>true</optional>
+  </dependency>
+</dependencies>
+```
+
+### Gradle
+
+Add the following line to your dependencies:
+
+```
+compile 'org.inferred:freebuilder:1.0-rc5'
+```
+
+### Eclipse
+
+_Condensed from [Eclipse Indigo's documentation][]._
+
+Download [freebuilder-1.0-rc5.jar][] and add it to your project. Right-click it
+and select **Build path > Add to Build path**.
+
+In your projects properties dialog, go to **Java Compiler > Annotation
+Processing** and ensure **Enable annotation processing** is checked.
+Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
+**Add JARs**, and select `freebuilder-1.0-rc5.jar`.
+
+[Eclipse Indigo's documentation]: http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm
+
+### IntelliJ
+
+_Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
+
+Download [freebuilder-1.0-rc5.jar][], add it to your project, right-click it and
+select **Use as Project Library**.
+
+In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation
+Processors** and ensure **Enable annotation processing** is selected, and
+**Store generated sources relative to** is set to *Module content root*.
+(If you have specified a processor path, ensure you add the new JAR to it.
+Similarly, if you choose to specify processors explicitly, add
+`org.inferred.freebuilder.processor.Processor` to the list.)
+
+Run **Build > Rebuild Project**, then right-click the new `generated` folder
+(this may have a different name if you have changed the **Production sources
+directory** setting) and select **Mark Directory As > Generated Sources Root**.
+
+[IntelliJ 14.0.3 documentation]: http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html
+[Auto Issue #106]: https://github.com/google/auto/issues/106
+
+
 Troubleshooting
 ---------------
 
 
-### Javac
+### Troubleshooting javac
 
 If you make a mistake in your code (e.g. giving your value type a private
 constructor), `@FreeBuilder` is designed to output a Builder superclass anyway,
@@ -362,7 +417,7 @@ string "@FreeBuilder type"; nearly all errors include this in their text.
 
 [issue 3]: https://github.com/google/FreeBuilder/issues/3
 
-### Eclipse
+### Troubleshooting Eclipse
 
 Eclipse manages, somehow, to be worse than `javac` here. It will never output
 annotation processor errors unless there is another error of some kind; and,
