@@ -374,17 +374,24 @@ Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
 
 ### IntelliJ
 
-_Condensed from the [IntelliJ 14.0.3 documentation][]._
+_Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
 
-Download [freebuilder-1.0-rc5.jar][] and add it to your project's classpath.
+Download [freebuilder-1.0-rc5.jar][], add it to your project, right-click it and
+select **Use as Project Library**.
+
 In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation
-Processors** and ensure **Enable annotation processing** is selected.
-
+Processors** and ensure **Enable annotation processing** is selected, and
+**Store generated sources relative to** is set to *Module content root*.
 (If you have specified a processor path, ensure you add the new JAR to it.
 Similarly, if you choose to specify processors explicitly, add
 `org.inferred.freebuilder.processor.Processor` to the list.)
 
+Run **Build > Rebuild Project**, then right-click the new `generated` folder
+(this may have a different name if you have changed the **Production sources
+directory** setting) and select **Mark Directory As > Generated Sources Root**.
+
 [IntelliJ 14.0.3 documentation]: http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html
+[Auto Issue #106]: https://github.com/google/auto/issues/106
 
 
 Troubleshooting
