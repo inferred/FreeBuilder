@@ -200,12 +200,12 @@
             <id>integration-test</id>
             <goals>
               <goal>install</goal>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
+              <goal>run</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -224,7 +224,6 @@
                   <exclude>org.jvnet.sorcerer:sorcerer-javac</exclude>
                 </excludes>
               </artifactSet>
-              <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
             </configuration>
           </execution>
         </executions>
