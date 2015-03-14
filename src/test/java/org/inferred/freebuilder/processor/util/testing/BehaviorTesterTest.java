@@ -102,20 +102,13 @@ public class BehaviorTesterTest {
     assertTrue("Expected an AssertionError", caughtError);
   }
 
-  @Test
+  @Test(expected = CompilationException.class)
   public void failingCompilation_throwsAssertionError() {
-    boolean caughtError = false;
-    try {
-      behaviorTester
-          .with(new TestBuilder()
-              .addLine("jooblefish")
-              .build())
-          .runTest();
-    } catch (AssertionError e) {
-      caughtError = true;
-      assertEquals("Compilation failed", e.getMessage());
-    }
-    assertTrue("Expected an AssertionError", caughtError);
+    behaviorTester
+        .with(new TestBuilder()
+            .addLine("jooblefish")
+            .build())
+        .runTest();
   }
 
   @Test

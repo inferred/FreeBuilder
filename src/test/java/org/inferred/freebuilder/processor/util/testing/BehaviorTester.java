@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -27,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.processing.Processor;
-import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
@@ -235,11 +233,8 @@ public class BehaviorTester {
     task.setProcessors(processors);
     boolean successful = task.call();
     if (!successful) {
-      for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-        System.err.println(diagnostic);
-      }
+      throw new CompilationException(diagnostics.getDiagnostics());
     }
-    assertTrue("Compilation failed", successful);
   }
 
   private static JavaCompiler getCompiler() {

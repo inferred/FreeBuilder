@@ -149,6 +149,19 @@ public class ModelTest {
   }
 
   @Test
+  public void newElementAnnotatedWith_compilationError() {
+    thrown.expect(CompilationException.class);
+    model.newElementAnnotatedWith(
+        Deprecated.class,
+        "package foo.bar;",
+        "public class MyType {",
+        "  public class MyInnerType {",
+        "    public void doNothing() {",
+        "  }",
+        "}");
+  }
+
+  @Test
   public void newType_class() {
     TypeElement type = model.newType(
         "package foo.bar;",
