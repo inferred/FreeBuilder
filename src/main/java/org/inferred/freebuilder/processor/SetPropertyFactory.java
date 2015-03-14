@@ -76,8 +76,11 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.addLine("  private %1$s<%2$s> %3$s = new %1$s<%2$s>();",
-          LinkedHashSet.class, elementType, property.getName());
+      code.addLine("  private %1$s<%2$s> %3$s = new %1$s<%4$s>();",
+          LinkedHashSet.class,
+          elementType,
+          property.getName(),
+          code.getSourceLevel().supportsDiamondOperator() ? "" : elementType);
     }
 
     @Override

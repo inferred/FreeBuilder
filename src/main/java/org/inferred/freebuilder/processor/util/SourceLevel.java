@@ -9,6 +9,8 @@ import com.google.common.base.Optional;
  *
  * <p>{@link SourceVersion} is problematic to use, as the constants themselves will be missing
  * on compilers that do not support them (e.g. "RELEASE_8" is not available on javac v6 or v7).
+ * Additionally, "sourceLevel.supportsDiamondOperator()" is far more readable than
+ * "sourceVersion.compareTo(SourceLevel.RELEASE_7) >= 0".
  */
 public enum SourceLevel {
   JAVA_6, JAVA_7;
@@ -30,5 +32,9 @@ public enum SourceLevel {
       default:
         return Optional.of(TypeReference.to("java.util", "Objects"));
     }
+  }
+
+  public boolean supportsDiamondOperator() {
+    return this.compareTo(JAVA_7) >= 0;
   }
 }
