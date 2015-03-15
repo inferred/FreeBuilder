@@ -586,18 +586,34 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testPropertyNamedTemplate() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract String getTemplate();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testBuilderGetters() {
     behaviorTester
-    .with(new Processor())
-    .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-    .with(new TestBuilder()
-        .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
-        .addLine("    .setPropertyA(11)")
-        .addLine("    .setPropertyB(true);")
-        .addLine("assertEquals(11, builder.getPropertyA());")
-        .addLine("assertTrue(builder.isPropertyB());")
-        .build())
-    .runTest();
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true);")
+            .addLine("assertEquals(11, builder.getPropertyA());")
+            .addLine("assertTrue(builder.isPropertyB());")
+            .build())
+        .runTest();
   }
 
   @Test
