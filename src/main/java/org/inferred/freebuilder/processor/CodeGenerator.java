@@ -348,20 +348,20 @@ public class CodeGenerator {
       List<PropertyCodeGenerator> codeGenerators =
           Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
       if (Iterables.any(codeGenerators, IS_TEMPLATE_REQUIRED_IN_CLEAR)) {
-        code.add("    %s template = ", metadata.getGeneratedBuilder());
+        code.add("    %s _template = ", metadata.getGeneratedBuilder());
         metadata.getBuilderFactory().get().addNewBuilder(code, metadata.getBuilder());
         code.add(";\n");
       }
       for (PropertyCodeGenerator codeGenerator : codeGenerators) {
         if (codeGenerator.isTemplateRequiredInClear()) {
-          codeGenerator.addClear(code, "template");
+          codeGenerator.addClear(code, "_template");
         } else {
           codeGenerator.addClear(code, null);
         }
       }
       if (hasRequiredProperties) {
         code.addLine("    _unsetProperties.clear();")
-            .addLine("    _unsetProperties.addAll(template._unsetProperties);",
+            .addLine("    _unsetProperties.addAll(_template._unsetProperties);",
                 metadata.getGeneratedBuilder());
       }
       code.addLine("    return (%s) this;", metadata.getBuilder())
