@@ -15,18 +15,20 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ClassToInstanceMap;
-import com.google.common.collect.MutableClassToInstanceMap;
-import com.google.common.testing.EqualsTester;
-import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.server.rpc.RPC;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
+import java.io.Serializable;
+import java.util.List;
+
+import javax.tools.JavaFileObject;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.Processor;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -36,32 +38,10 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamClass;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.TypeElement;
-import javax.tools.JavaFileObject;
+import com.google.common.annotations.GwtCompatible;
+import com.google.common.testing.EqualsTester;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.server.rpc.RPC;
 
 @RunWith(JUnit4.class)
 public class ProcessorTest {
@@ -1197,66 +1177,5 @@ public class ProcessorTest {
             .build())
         .runTest();
 
-  }
-
-  @SupportedAnnotationTypes("*")
-  private static class AnnotationsProcessor extends AbstractProcessor {
-    private static final ClassLoader CLASS_LOADER = AnnotationsProcessor.class.getClassLoader();
-
-    private final Map<String, ClassToInstanceMap<Annotation>> annotations =
-        new HashMap<String, ClassToInstanceMap<Annotation>>();
-
-    public <A extends Annotation> A getAnnotation(String elementPath, Class<A> annotationType) {
-      ClassToInstanceMap<Annotation> elementAnnotations = annotations.get(elementPath);
-      return (elementAnnotations == null) ? null : elementAnnotations.getInstance(annotationType);
-    }
-
-    @Override
-    public SourceVersion getSupportedSourceVersion() {
-      return SourceVersion.latestSupported();
-    }
-
-    @Override
-    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-      Deque<Element> todo = new ArrayDeque<Element>(roundEnv.getRootElements());
-      while (!todo.isEmpty()) {
-        Element element = todo.pop();
-        todo.addAll(element.getEnclosedElements());
-        for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
-          String annotationName = annotationMirror.getAnnotationType().toString();
-          try {
-            @SuppressWarnings("unchecked")
-            Class<? extends Annotation> annotationType =
-                (Class<? extends Annotation>) CLASS_LOADER.loadClass(annotationName);
-            addAnnotation(element, annotationType);
-          } catch (ClassNotFoundException e) {
-            // Ignore it.
-          }
-        }
-      }
-      return false;
-    }
-
-    private <A extends Annotation> void addAnnotation(Element element, Class<A> annotationType) {
-      String path = getPath(element);
-      ClassToInstanceMap<Annotation> elementAnnotations = annotations.get(path);
-      if (elementAnnotations == null) {
-        elementAnnotations = MutableClassToInstanceMap.create();
-        annotations.put(path, elementAnnotations);
-      }
-      A annotation = element.getAnnotation(annotationType);
-      elementAnnotations.putInstance(annotationType, annotation);
-    }
-
-    private static String getPath(Element element) {
-      List<String> path = new ArrayList<String>();
-      Element parent = element;
-      while (parent != null && parent.getKind() != ElementKind.PACKAGE) {
-        path.add(parent.getSimpleName().toString());
-        parent = parent.getEnclosingElement();
-      }
-      Collections.reverse(path);
-      return Joiner.on(".").join(path);
-    }
   }
 }
