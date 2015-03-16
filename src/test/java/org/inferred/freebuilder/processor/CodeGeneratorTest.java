@@ -621,12 +621,12 @@ public class CodeGeneratorTest {
         .addProperty(name
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
                 name.build(), "setName", "setNullableName", "clearName", string,
-                Optional.<TypeMirror>absent()))
+                Optional.<TypeMirror>absent(), false))
             .build())
         .addProperty(age
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
                 age.build(), "setAge", "setNullableAge", "clearAge", integer,
-                Optional.<TypeMirror>of(INT)))
+                Optional.<TypeMirror>of(INT), false))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property"))
         .setType(person)
@@ -1808,12 +1808,12 @@ public class CodeGeneratorTest {
         .addProperty(name
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
                 name.build(), "setName", "setNullableName", "clearName", string,
-                Optional.<TypeMirror>absent()))
+                Optional.<TypeMirror>absent(), false))
             .build())
         .addProperty(age
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
                 age.build(), "setAge", "setNullableAge", "clearAge", integer,
-                Optional.<TypeMirror>of(INT)))
+                Optional.<TypeMirror>of(INT), false))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property"))
         .setType(person)

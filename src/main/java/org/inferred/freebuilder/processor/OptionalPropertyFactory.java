@@ -21,6 +21,8 @@ import static org.inferred.freebuilder.processor.Util.upperBound;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.SimpleTypeVisitor6;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
@@ -56,13 +58,20 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
         String setterName = SET_PREFIX + capitalizedName;
         String nullableSetterName = NULLABLE_SET_PREFIX + capitalizedName;
         String clearName = CLEAR_PREFIX + capitalizedName;
+
+        // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
+        // type parameter of a static method (like Optional.fromNullable(t), in this case). We need
+        // to set the type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
+        boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
+
         return Optional.of(new CodeGenerator(
             config.getProperty(),
             setterName,
             nullableSetterName,
             clearName,
             elementType,
-            unboxedType));
+            unboxedType,
+            requiresExplicitTypeParameters));
       }
     }
     return Optional.absent();
@@ -75,6 +84,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     private final String clearName;
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
+    private final boolean requiresExplicitTypeParameters;
 
     @VisibleForTesting CodeGenerator(
         Property property,
@@ -82,13 +92,15 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
         String nullableSetterName,
         String clearName,
         TypeMirror elementType,
-        Optional<TypeMirror> unboxedType) {
+        Optional<TypeMirror> unboxedType,
+        boolean requiresExplicitTypeParametersInJava7) {
       super(property);
       this.setterName = setterName;
       this.nullableSetterName = nullableSetterName;
       this.clearName = clearName;
       this.elementType = elementType;
       this.unboxedType = unboxedType;
+      this.requiresExplicitTypeParameters = requiresExplicitTypeParametersInJava7;
     }
 
     @Override
@@ -201,8 +213,12 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("   * Returns the value that will be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
           .addLine("   */")
-          .addLine("  public %s %s() {", property.getType(), property.getGetterName())
-          .addLine("    return %s.fromNullable(%s);", Optional.class, property.getName())
+          .addLine("  public %s %s() {", property.getType(), property.getGetterName());
+      code.add("    return %s.", Optional.class);
+      if (requiresExplicitTypeParameters) {
+        code.add("<%s>", elementType);
+      }
+      code.add("fromNullable(%s);\n", property.getName())
           .addLine("  }");
     }
 
@@ -223,7 +239,11 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addReadValueFragment(SourceBuilder code, String finalField) {
-      code.add("%s.fromNullable(%s)", Optional.class, finalField);
+      code.add("%s.", Optional.class);
+      if (requiresExplicitTypeParameters) {
+        code.add("<%s>", elementType);
+      }
+      code.add("fromNullable(%s)", finalField);
     }
 
     @Override
@@ -246,4 +266,26 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("    %s = null;", property.getName());
     }
   }
+
+  private static final SimpleTypeVisitor6<Boolean, Void> HAS_WILDCARD =
+      new SimpleTypeVisitor6<Boolean, Void>() {
+        @Override protected Boolean defaultAction(TypeMirror e, Void p) {
+          return false;
+        }
+
+        @Override
+        public Boolean visitDeclared(DeclaredType t, Void p) {
+          for (TypeMirror typeArgument : t.getTypeArguments()) {
+            if (visit(typeArgument)) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        @Override
+        public Boolean visitWildcard(WildcardType t, Void p) {
+          return true;
+        }
+      };
 }
