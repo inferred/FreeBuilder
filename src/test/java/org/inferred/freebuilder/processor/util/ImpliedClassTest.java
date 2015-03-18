@@ -17,12 +17,9 @@ package org.inferred.freebuilder.processor.util;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
@@ -42,9 +39,8 @@ public class ImpliedClassTest {
   public void testGetters() {
     Elements elements = model.elementUtils();
     PackageElement pkg = elements.getPackageElement("java.lang");
-    TypeElement origin = elements.getTypeElement(ImpliedClassTest.class.getCanonicalName());
 
-    ImpliedClass cls = new ImpliedClass(pkg, "Make_Me", origin, elements);
+    ImpliedClass cls = new ImpliedClass(pkg, "Make_Me", elements);
 
     assertEquals(pkg, cls.getEnclosingElement());
     assertEquals(ElementKind.CLASS, cls.getKind());
@@ -57,9 +53,8 @@ public class ImpliedClassTest {
   public void testToString() {
     Elements elements = model.elementUtils();
     PackageElement pkg = elements.getPackageElement("java.lang");
-    TypeElement origin = elements.getTypeElement(String.class.getCanonicalName());
 
-    ImpliedClass cls = new ImpliedClass(pkg, "Make_Me", origin, elements);
+    ImpliedClass cls = new ImpliedClass(pkg, "Make_Me", elements);
 
     assertEquals("class java.lang.Make_Me", cls.toString());
   }
@@ -69,17 +64,14 @@ public class ImpliedClassTest {
     Elements elements = model.elementUtils();
     PackageElement pkg1 = elements.getPackageElement("java.lang");
     PackageElement pkg2 = elements.getPackageElement("java.util");
-    TypeElement origin1 = elements.getTypeElement(ImpliedClassTest.class.getCanonicalName());
-    TypeElement origin2 = elements.getTypeElement(ArrayList.class.getCanonicalName());
 
-    ImpliedClass cls = new ImpliedClass(pkg1, "Make_Me", origin1, elements);
-    ImpliedClass clsCopy = new ImpliedClass(pkg1, "Make_Me", origin1, elements);
-    ImpliedClass clsDifferentOrigin = new ImpliedClass(pkg1, "Make_Me", origin2, elements);
-    ImpliedClass clsDifferentName = new ImpliedClass(pkg1, "Bring_It_On", origin1, elements);
-    ImpliedClass clsDifferentPackage = new ImpliedClass(pkg2, "Make_Me", origin1, elements);
+    ImpliedClass cls = new ImpliedClass(pkg1, "Make_Me", elements);
+    ImpliedClass clsCopy = new ImpliedClass(pkg1, "Make_Me", elements);
+    ImpliedClass clsDifferentName = new ImpliedClass(pkg1, "Bring_It_On", elements);
+    ImpliedClass clsDifferentPackage = new ImpliedClass(pkg2, "Make_Me", elements);
 
     new EqualsTester()
-        .addEqualityGroup(cls, clsCopy, clsDifferentOrigin)
+        .addEqualityGroup(cls, clsCopy)
         .addEqualityGroup(clsDifferentName)
         .addEqualityGroup(clsDifferentPackage)
         .testEquals();

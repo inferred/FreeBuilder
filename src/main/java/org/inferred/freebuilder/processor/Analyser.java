@@ -138,7 +138,7 @@ class Analyser {
     PackageElement pkg = elements.getPackageOf(type);
     ImmutableSet<ExecutableElement> methods = methodsOn(type, elements);
     ImpliedClass generatedBuilder =
-        new ImpliedClass(pkg, generatedBuilderSimpleName(type), type, elements);
+        new ImpliedClass(pkg, generatedBuilderSimpleName(type), elements);
     Optional<TypeElement> builder = tryFindBuilder(generatedBuilder, type);
     return new Metadata.Builder(elements)
         .setType(type)

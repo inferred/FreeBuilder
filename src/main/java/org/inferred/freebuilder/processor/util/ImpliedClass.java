@@ -19,9 +19,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.FilerException;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -30,7 +27,7 @@ import javax.lang.model.util.Elements;
  * {@link TypeElement} representing a class that needs to be generated.
  *
  * <p>Typically created by a {@link javax.annotation.processing.Processor Processor} during user
- * code analysis, and subsequently generated using {@link #openSourceWriter}.
+ * code analysis.
  *
  * <p>This type implements {@link TypeElement}, as the API is stable, well-known, and lets
  * processors treat to-be-generated and user-supplied types the same way. However, not all methods
@@ -41,7 +38,6 @@ import javax.lang.model.util.Elements;
  */
 public class ImpliedClass extends AbstractImpliedClass<PackageElement> implements TypeElement {
 
-  private final Element originatingElement;
   private final Set<TypeReference> nestedClasses = new LinkedHashSet<TypeReference>();
 
   /**
@@ -49,19 +45,16 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
    *
    * @param pkg the package the class should be created in
    * @param simpleName the name the class should be given (without package)
-   * @param originatingElement the element that triggered the code generation
    * @param elementUtils the compiler-provided {@link Elements} implementation
    */
   public ImpliedClass(
       PackageElement pkg,
       CharSequence simpleName,
-      Element originatingElement,
       Elements elementUtils) {
     super(
         pkg,
         simpleName,
         elementUtils);
-    this.originatingElement = originatingElement;
   }
 
   /**
@@ -83,21 +76,6 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
    */
   public Set<TypeReference> getNestedClasses() {
     return Collections.unmodifiableSet(nestedClasses);
-  }
-
-  /**
-   * Returns a {@link CompilationUnitWriter} for creating this class. The file preamble (package and
-   * imports) will be generated automatically.
-   * @param sourceLevel
-   *
-   * @throws FilerException if a Filer guarantee is violated (see the {@link FilerException}
-   *     JavaDoc for more information); propagated because this is often seen in GUIDE projects,
-   *     so should be downgraded to a warning, whereas runtime exceptions should be flagged as an
-   *     internal error to the user
-   */
-  public CompilationUnitWriter openSourceWriter(
-      Filer filer, SourceLevel sourceLevel) throws FilerException {
-    return new CompilationUnitWriter(filer, this, sourceLevel, originatingElement);
   }
 }
 

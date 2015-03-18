@@ -82,7 +82,7 @@ public class AnalyserTest {
 
     PackageElement pkg = model.elementUtils().getPackageOf(dataType);
     ImpliedClass expectedBuilder =
-        new ImpliedClass(pkg, "DataType_Builder", dataType, model.elementUtils());
+        new ImpliedClass(pkg, "DataType_Builder", model.elementUtils());
     Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
@@ -113,7 +113,7 @@ public class AnalyserTest {
 
     PackageElement pkg = model.elementUtils().getPackageOf(dataType);
     ImpliedClass expectedBuilder =
-        new ImpliedClass(pkg, "DataType_Builder", dataType, model.elementUtils());
+        new ImpliedClass(pkg, "DataType_Builder", model.elementUtils());
     Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
@@ -1042,7 +1042,7 @@ public class AnalyserTest {
 
     PackageElement pkg = model.elementUtils().getPackageOf(dataType);
     ImpliedClass expectedBuilder =
-        new ImpliedClass(pkg, "DataType_Builder", dataType, model.elementUtils());
+        new ImpliedClass(pkg, "DataType_Builder", model.elementUtils());
     Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
         .setBuilder(model.typeElement("com.example.DataType.Builder"))
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
@@ -1075,7 +1075,7 @@ public class AnalyserTest {
 
     PackageElement pkg = model.elementUtils().getPackageOf(dataType);
     ImpliedClass expectedBuilder =
-        new ImpliedClass(pkg, "DataType_Builder", dataType, model.elementUtils());
+        new ImpliedClass(pkg, "DataType_Builder", model.elementUtils());
     Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
         .setBuilder(model.typeElement("com.example.DataType.Builder"))
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
