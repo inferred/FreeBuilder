@@ -108,5 +108,10 @@ public class TypeReference extends ValueType {
   public TypeReference nestedType(String simpleName) {
     return new TypeReference(packageName, topLevelType, nestedSuffix + "." + simpleName);
   }
+
+  @Override
+  public String toString() {
+    return getQualifiedName();
+  }
 }
 
