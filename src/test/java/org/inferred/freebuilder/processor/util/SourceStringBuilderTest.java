@@ -164,4 +164,14 @@ public class SourceStringBuilderTest {
     thrown.expect(IllegalArgumentException.class);
     builder.addLine("%s", errorType);
   }
+
+  @Test
+  public void testAddLine_excerpt() {
+    builder.addLine("%s = null;", new Excerpt() {
+      @Override public void addTo(SourceBuilder source) {
+        source.add("%s %s", "Foo", "bar");
+      }
+    });
+    assertThat(builder.toString()).isEqualTo("Foo bar = null;\n");
+  }
 }

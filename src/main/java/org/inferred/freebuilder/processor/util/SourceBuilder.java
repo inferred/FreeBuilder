@@ -34,8 +34,10 @@ public interface SourceBuilder {
    * <p>Formatting is done by {@link String#format}, except that:<ul>
    * <li> {@link Package} and {@link PackageElement} instances use their fully-qualified names
    *      (no "package " prefix).
-   * <li> {@link Class} and {@link TypeElement} instances use their qualified names where necessary,
-   *      or shorter versions if possible.
+   * <li> {@link Class}, {@link TypeElement}, {@link DeclaredType} and {@link TypeReference}
+   *      instances use their qualified names where necessary, or shorter versions if a suitable
+   *      import line can be added.
+   * <li> {@link Excerpt} instances have {@link Excerpt#addTo(SourceBuilder)} called.
    * </ul>
    */
   SourceBuilder add(String fmt, Object... args);
@@ -46,8 +48,10 @@ public interface SourceBuilder {
    * <p>Formatting is done by {@link String#format}, except that:<ul>
    * <li> {@link Package} and {@link PackageElement} instances use their fully-qualified names
    *      (no "package " prefix).
-   * <li> {@link Class} and {@link TypeElement} instances use their qualified names where
-   *      necessary, or shorter versions if possible.
+   * <li> {@link Class}, {@link TypeElement}, {@link DeclaredType} and {@link TypeReference}
+   *      instances use their qualified names where necessary, or shorter versions if a suitable
+   *      import line can be added.
+   * <li> {@link Excerpt} instances have {@link Excerpt#addTo(SourceBuilder)} called.
    * </ul>
    */
   SourceBuilder addLine(String fmt, Object... args);
