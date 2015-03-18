@@ -84,7 +84,6 @@ public class AnalyserTest {
     ImpliedClass expectedBuilder =
         new ImpliedClass(pkg, "DataType_Builder", dataType, model.elementUtils());
     Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
-        .setBuilder(expectedBuilder)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder)
@@ -116,7 +115,6 @@ public class AnalyserTest {
     ImpliedClass expectedBuilder =
         new ImpliedClass(pkg, "DataType_Builder", dataType, model.elementUtils());
     Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
-        .setBuilder(expectedBuilder)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder)

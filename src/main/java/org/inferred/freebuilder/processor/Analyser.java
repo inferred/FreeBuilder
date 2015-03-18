@@ -142,7 +142,7 @@ class Analyser {
     Optional<TypeElement> builder = tryFindBuilder(generatedBuilder, type);
     return new Metadata.Builder(elements)
         .setType(type)
-        .setBuilder(builder.or(generatedBuilder))
+        .setBuilder(builder)
         .setBuilderFactory(builderFactory(builder))
         .setGeneratedBuilder(generatedBuilder)
         .setValueType(generatedBuilder.createNestedClass("Value"))

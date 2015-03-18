@@ -61,7 +61,7 @@ public class Metadata extends ValueType {
 
   private final Elements elements;
   private final TypeElement type;
-  private final TypeElement builder;
+  @Nullable private final TypeElement builder;
   @Nullable private final BuilderFactory builderFactory;
   private final ImpliedClass generatedBuilder;
   private final ImpliedNestedClass valueType;
@@ -99,8 +99,20 @@ public class Metadata extends ValueType {
     return type;
   }
 
-  /** Returns the builder type that users will see. */
+  /**
+   * Returns true if there is a user-visible Builder subclass defined.
+   */
+  public boolean hasBuilder() {
+    return (builder != null);
+  }
+
+  /**
+   * Returns the builder type that users will see.
+   *
+   * @throws IllegalStateException if {@link #hasBuilder} returns false.
+   */
   public TypeElement getBuilder() {
+    checkState(hasBuilder());
     return builder;
   }
 
@@ -325,7 +337,7 @@ public class Metadata extends ValueType {
   @Override
   protected void addFields(FieldReceiver fields) {
     fields.add("type", type.toString());
-    fields.add("builder", builder.toString());
+    fields.add("builder", hasBuilder() ? builder.toString() : null);
     fields.add("builderFactory", builderFactory);
     fields.add("generatedBuilder", generatedBuilder.toString());
     fields.add("valueType", valueType.toString());
@@ -362,6 +374,12 @@ public class Metadata extends ValueType {
     /** Sets the type the metadata object being built is referring to. */
     public Builder setType(TypeElement type) {
       this.type = checkNotNull(type);
+      return this;
+    }
+
+    /** Sets the builder class that users will see, if any. */
+    public Builder setBuilder(Optional<TypeElement> builder) {
+      this.builder = builder.orNull();
       return this;
     }
 
@@ -455,7 +473,6 @@ public class Metadata extends ValueType {
      * Returns a newly-built {@link Metadata} based on the content of the {@code Builder}.
      */
     public Metadata build() {
-      checkState(builder != null, "builder not set");
       checkState(generatedBuilder != null, "generatedBuilder not set");
       checkState(type != null, "type not set");
       checkState(valueType != null, "valueType not set");
