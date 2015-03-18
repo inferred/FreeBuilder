@@ -26,7 +26,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
-import org.junit.Assert;
+import org.junit.ComparisonFailure;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,7 +41,7 @@ public class UtilTests {
   public void testUpperBound_knownType() {
     // T -> T
     TypeMirror result = Util.upperBound(model.elementUtils(), model.typeMirror("Number"));
-    assertEquals(model.typeMirror("Number"), result);
+    assertSameType(model.typeMirror("Number"), result);
   }
 
   @Test
@@ -49,7 +49,7 @@ public class UtilTests {
     // ? -> Object
     TypeMirror result = Util.upperBound(
         model.elementUtils(), model.typeUtils().getWildcardType(null, null));
-    assertEquals(model.typeMirror("Object"), result);
+    assertSameType(model.typeMirror("Object"), result);
   }
 
   @Test
@@ -57,7 +57,7 @@ public class UtilTests {
     // ? extends T -> T
     TypeMirror result = Util.upperBound(
         model.elementUtils(), model.typeUtils().getWildcardType(model.typeMirror("Number"), null));
-    assertEquals(model.typeMirror("Number"), result);
+    assertSameType(model.typeMirror("Number"), result);
   }
 
   @Test
@@ -65,7 +65,7 @@ public class UtilTests {
     // ? super T -> Object
     TypeMirror result = Util.upperBound(
         model.elementUtils(), model.typeUtils().getWildcardType(null, model.typeMirror("Number")));
-    assertEquals(model.typeMirror("Object"), result);
+    assertSameType(model.typeMirror("Object"), result);
   }
 
   @Test
@@ -129,7 +129,25 @@ public class UtilTests {
         (DeclaredType) model.typeMirror("java.util.Collection"), List.class, Set.class));
   }
 
-  private static void assertEquals(TypeMirror expected, TypeMirror actual) {
-    Assert.assertEquals((expected == null) ? "null" : expected, (actual == null) ? "null" : actual);
+  private void assertSameType(TypeMirror expected, TypeMirror actual) {
+    if (!model.typeUtils().isSameType(expected, actual)) {
+      String expectedString = (expected == null) ? "null" : expected.toString();
+      String actualString = (actual == null) ? "null" : actual.toString();
+      if (expectedString.equals(actualString)) {
+        expectedString = extendedToString(expected);
+        actualString = extendedToString(actual);
+      }
+      throw new ComparisonFailure(
+          "",
+          expectedString,
+          actualString);
+    }
+  }
+
+  private static String extendedToString(Object object) {
+    if (object == null) {
+      return null;
+    }
+    return object.getClass().getCanonicalName() + "<" + object + ">";
   }
 }
