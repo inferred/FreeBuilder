@@ -20,14 +20,11 @@ import static javax.lang.model.util.ElementFilter.typesIn;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Set;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-
-import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -62,11 +59,13 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
     // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
     // written first, but aren't known yet.
     ImportManager.Builder importManagerBuilder = new ImportManager.Builder();
-    importManagerBuilder.addImplicitImport(classToWrite);
+    importManagerBuilder.addImplicitImport(TypeReference.to(classToWrite));
     for (TypeElement sibling : siblingTypes(classToWrite)) {
-      importManagerBuilder.addImplicitImport(sibling);
+      importManagerBuilder.addImplicitImport(TypeReference.to(sibling));
     }
-    addNestedClasses(importManagerBuilder, classToWrite.getNestedClasses());
+    for (TypeReference nestedClass : classToWrite.getNestedClasses()) {
+      importManagerBuilder.addImplicitImport(nestedClass);
+    }
     importManager = importManagerBuilder.build();
     source = new SourceStringBuilder(sourceLevel, importManager, new StringBuilder());
   }
@@ -107,13 +106,5 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
   private static Iterable<TypeElement> siblingTypes(TypeElement type) {
     return Iterables.concat(
         ImmutableList.of(type), typesIn(type.getEnclosingElement().getEnclosedElements()));
-  }
-
-  private static void addNestedClasses(
-      ImportManager.Builder importManagerBuilder, Set<ImpliedNestedClass> nestedClasses) {
-    for (ImpliedNestedClass nestedClass : nestedClasses) {
-      importManagerBuilder.addImplicitImport(nestedClass);
-      addNestedClasses(importManagerBuilder, nestedClass.getNestedClasses());
-    }
   }
 }

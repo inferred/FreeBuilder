@@ -15,6 +15,10 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
+
 import com.google.common.base.Preconditions;
 
 /**
@@ -37,6 +41,20 @@ public class TypeReference extends ValueType {
       nestedSuffix.append(".").append(nestedType);
     }
     return new TypeReference(packageName, topLevelType, nestedSuffix.toString());
+  }
+
+  /**
+   * Returns a {@link TypeReference} for {@code type}.
+   */
+  public static TypeReference to(TypeElement type) {
+    if (type.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
+      PackageElement pkg = (PackageElement) type.getEnclosingElement();
+      return new TypeReference(
+          pkg.getQualifiedName().toString(), type.getSimpleName().toString(), "");
+    } else {
+      TypeReference enclosingElement = TypeReference.to((TypeElement) type.getEnclosingElement());
+      return enclosingElement.nestedType(type.getSimpleName().toString());
+    }
   }
 
   // Currently, only top-level types are implemented.
@@ -75,6 +93,20 @@ public class TypeReference extends ValueType {
 
   public String getQualifiedName() {
     return packageName + "." + topLevelType + nestedSuffix;
+  }
+
+  public String getSimpleName() {
+    return nestedSuffix.isEmpty()
+        ? topLevelType
+        : nestedSuffix.substring(nestedSuffix.lastIndexOf('.') + 1);
+  }
+
+  public boolean isTopLevel() {
+    return nestedSuffix.isEmpty();
+  }
+
+  public TypeReference nestedType(String simpleName) {
+    return new TypeReference(packageName, topLevelType, nestedSuffix + "." + simpleName);
   }
 }
 

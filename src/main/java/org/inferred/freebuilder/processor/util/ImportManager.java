@@ -15,15 +15,13 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.base.Functions.toStringFunction;
-import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.Iterables.addAll;
+import static com.google.common.collect.Iterables.getOnlyElement;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -39,8 +37,11 @@ import javax.lang.model.util.SimpleTypeVisitor6;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 
 /**
  * Manages the imports for a source file, and produces short type references by adding extra
@@ -64,39 +65,37 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
      * Simple names of implicitly imported types, mapped to qualified name if that type is safe to
      * use, null otherwise.
      */
-    private final Map<Name, Name> implicitImports = new LinkedHashMap<Name, Name>();
+    private final SetMultimap<String, TypeReference> implicitImports = LinkedHashMultimap.create();
 
     /**
      * Adds a type which is implicitly imported into the current compilation unit.
      */
-    public Builder addImplicitImport(TypeElement type) {
-      Name simpleName = type.getSimpleName();
-      boolean isTopLevel = type.getEnclosingElement().getKind().equals(ElementKind.PACKAGE);
-      if (isTopLevel && !implicitImports.containsKey(simpleName)) {
-        implicitImports.put(simpleName, type.getQualifiedName());
-      } else if (!type.getQualifiedName().equals(implicitImports.get(simpleName))) {
-        implicitImports.put(simpleName, null);
-      }
+    public Builder addImplicitImport(TypeReference type) {
+      implicitImports.put(type.getSimpleName(), type);
       return this;
     }
 
     public ImportManager build() {
-      return new ImportManager(
-          FluentIterable.from(implicitImports.keySet())
-              .transform(toStringFunction()),
-          FluentIterable.from(implicitImports.values())
-              .filter(notNull())
-              .transform(toStringFunction()));
+      Set<String> nonConflictingImports = new LinkedHashSet<String>();
+      for (Set<TypeReference> importGroup : Multimaps.asMap(implicitImports).values()) {
+        if (importGroup.size() == 1) {
+          TypeReference implicitImport = getOnlyElement(importGroup);
+          if (implicitImport.isTopLevel()) {
+            nonConflictingImports.add(implicitImport.getQualifiedName());
+          }
+        }
+      }
+      return new ImportManager(implicitImports.keySet(), nonConflictingImports);
     }
   }
 
   private final Set<String> visibleSimpleNames = new HashSet<String>();
-  private final Set<String> implicitImports = new HashSet<String>();
+  private final ImmutableSet<String> implicitImports;
   private final Set<String> explicitImports = new TreeSet<String>();
 
   private ImportManager(Iterable<String> visibleSimpleNames, Iterable<String> implicitImports) {
     addAll(this.visibleSimpleNames, visibleSimpleNames);
-    addAll(this.implicitImports, implicitImports);
+    this.implicitImports = ImmutableSet.copyOf(implicitImports);
   }
 
   public Set<String> getClassImports() {

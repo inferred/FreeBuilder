@@ -42,8 +42,7 @@ import javax.lang.model.util.Elements;
 public class ImpliedClass extends AbstractImpliedClass<PackageElement> implements TypeElement {
 
   private final Element originatingElement;
-  private final Elements elementUtils;
-  private final Set<ImpliedNestedClass> nestedClasses = new LinkedHashSet<ImpliedNestedClass>();
+  private final Set<TypeReference> nestedClasses = new LinkedHashSet<TypeReference>();
 
   /**
    * Constructor for {@link ImpliedClass}.
@@ -63,7 +62,6 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
         simpleName,
         elementUtils);
     this.originatingElement = originatingElement;
-    this.elementUtils = elementUtils;
   }
 
   /**
@@ -71,8 +69,11 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
    *
    * <p>This is used to prevent namespace clashes when writing source code.
    */
-  public ImpliedNestedClass createNestedClass(CharSequence simpleName) {
-    ImpliedNestedClass nestedClass = new ImpliedNestedClass(this, simpleName, elementUtils);
+  public TypeReference createNestedClass(CharSequence simpleName) {
+    TypeReference nestedClass = TypeReference.to(
+        getEnclosingElement().getQualifiedName().toString(),
+        getSimpleName().toString(),
+        simpleName.toString());
     nestedClasses.add(nestedClass);
     return nestedClass;
   }
@@ -80,7 +81,7 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
   /**
    * Returns all nested classes directly declared in this type.
    */
-  public Set<ImpliedNestedClass> getNestedClasses() {
+  public Set<TypeReference> getNestedClasses() {
     return Collections.unmodifiableSet(nestedClasses);
   }
 
@@ -97,44 +98,6 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
   public CompilationUnitWriter openSourceWriter(
       Filer filer, SourceLevel sourceLevel) throws FilerException {
     return new CompilationUnitWriter(filer, this, sourceLevel, originatingElement);
-  }
-
-  /**
-   * {@link TypeElement} representing a nested class of a class that needs to be generated.
-   *
-   * @see ImpliedClass
-   */
-public static class ImpliedNestedClass
-      extends AbstractImpliedClass<TypeElement> implements TypeElement {
-
-    private final Elements elementUtils;
-    private final Set<ImpliedNestedClass> nestedClasses = new LinkedHashSet<ImpliedNestedClass>();
-
-    private ImpliedNestedClass(
-        TypeElement enclosingElement,
-        CharSequence simpleName,
-        Elements elementUtils) {
-      super(enclosingElement, simpleName, elementUtils);
-      this.elementUtils = elementUtils;
-    }
-
-    /**
-     * Creates a nested class inside this one, called {@code simpleName}.
-     *
-     * <p>This is used to prevent namespace clashes when writing source code.
-     */
-    public ImpliedNestedClass createNestedClass(CharSequence simpleName) {
-      ImpliedNestedClass nestedClass = new ImpliedNestedClass(this, simpleName, elementUtils);
-      nestedClasses.add(nestedClass);
-      return nestedClass;
-    }
-
-    /**
-     * Returns all nested classes directly declared in this type.
-     */
-    public Set<ImpliedNestedClass> getNestedClasses() {
-      return Collections.unmodifiableSet(nestedClasses);
-    }
   }
 }
 
