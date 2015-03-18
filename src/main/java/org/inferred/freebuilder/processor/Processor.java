@@ -32,7 +32,6 @@ import javax.tools.Diagnostic.Kind;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.CompilationUnitWriter;
 import org.inferred.freebuilder.processor.util.SourceLevel;
-import org.inferred.freebuilder.processor.util.TypeReference;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Throwables;
@@ -80,7 +79,7 @@ public class Processor extends AbstractProcessor {
             processingEnv.getFiler(),
             processingEnv.getElementUtils(),
             SourceLevel.from(processingEnv.getSourceVersion()),
-            TypeReference.to(metadata.getGeneratedBuilder()),
+            metadata.getGeneratedBuilder(),
             ImmutableSet.of(
                 metadata.getPartialType(), metadata.getPropertyEnum(), metadata.getValueType()),
             type);

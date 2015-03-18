@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -107,6 +109,17 @@ public class TypeReference extends ValueType {
 
   public TypeReference nestedType(String simpleName) {
     return new TypeReference(packageName, topLevelType, nestedSuffix + "." + simpleName);
+  }
+
+  /**
+   * Returns a {@link TypeReference} to the type enclosing this one.
+   *
+   * @throws IllegalStateException if {@link #isTopLevel()} returns true
+   */
+  public TypeReference getEnclosingType() {
+    checkState(!isTopLevel(), "%s has no enclosing type", this);
+    return new TypeReference(
+        packageName, topLevelType, nestedSuffix.substring(0, nestedSuffix.lastIndexOf('.')));
   }
 
   @Override
