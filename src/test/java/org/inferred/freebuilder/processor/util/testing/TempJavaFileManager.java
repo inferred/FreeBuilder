@@ -47,7 +47,7 @@ public class TempJavaFileManager implements JavaFileManager {
       throw new IllegalStateException("Directory rejected by standard file manager", e);
     }
   }
-  
+
   @Override
   public int isSupportedOption(String option) {
     return delegate.isSupportedOption(option);

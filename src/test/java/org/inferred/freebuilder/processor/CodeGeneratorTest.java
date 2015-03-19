@@ -1456,7 +1456,7 @@ public class CodeGeneratorTest {
 
       @Override
       protected void addFields(FieldReceiver fields) {
-        fields.add("GenericTypeElementImpl.this", GenericTypeElementImpl.this); 
+        fields.add("GenericTypeElementImpl.this", GenericTypeElementImpl.this);
         fields.add("typeArguments", typeArguments);
       }
 
