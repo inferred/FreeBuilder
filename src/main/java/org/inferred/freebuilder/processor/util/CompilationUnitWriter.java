@@ -17,11 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static javax.lang.model.util.ElementFilter.typesIn;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
-import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
@@ -31,6 +26,11 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+
+import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /** Convenience wrapper around the {@link Writer} instances returned by {@link Filer}. */
 public class CompilationUnitWriter implements SourceBuilder, Closeable {

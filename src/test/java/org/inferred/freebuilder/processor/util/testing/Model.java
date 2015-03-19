@@ -20,19 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.tools.ToolProvider.getSystemJavaCompiler;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.reflect.TypeToken;
-import com.google.common.util.concurrent.ExecutionError;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
@@ -63,6 +50,19 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.ExecutionError;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 /**
  * Utility class for creating javax.lang.model instances for testing.

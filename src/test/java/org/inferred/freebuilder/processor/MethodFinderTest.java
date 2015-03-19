@@ -17,15 +17,6 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.MethodFinder;
-import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
-import org.inferred.freebuilder.processor.util.testing.ModelRule;
-import org.junit.ClassRule;
-import org.junit.Test;
-
 import java.io.IOException;
 
 import javax.lang.model.element.ExecutableElement;
@@ -34,6 +25,14 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor6;
+
+import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
+import org.inferred.freebuilder.processor.util.testing.ModelRule;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 public class MethodFinderTest {
 

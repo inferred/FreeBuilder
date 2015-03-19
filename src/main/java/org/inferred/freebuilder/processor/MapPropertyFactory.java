@@ -18,14 +18,6 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,6 +26,14 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing append-only semantics for {@link Map}

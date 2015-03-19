@@ -18,20 +18,19 @@ package org.inferred.freebuilder.processor;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.inferred.freebuilder.processor.Util;
-import org.inferred.freebuilder.processor.util.testing.ModelRule;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.util.List;
 import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
+
+import org.inferred.freebuilder.processor.util.testing.ModelRule;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class UtilTests {

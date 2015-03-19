@@ -17,8 +17,6 @@ package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.common.base.Throwables;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Matcher;
@@ -26,6 +24,8 @@ import java.util.regex.Pattern;
 
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
+
+import com.google.common.base.Throwables;
 
 /** Simple builder API for an in-memory {@link JavaFileObject}.  */
 public class SourceBuilder {

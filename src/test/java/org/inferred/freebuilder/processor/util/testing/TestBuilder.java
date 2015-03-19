@@ -15,17 +15,17 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.MapMaker;
-import com.google.common.truth.Truth;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.concurrent.ConcurrentMap;
 
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.MapMaker;
+import com.google.common.truth.Truth;
 
 /**
  * Simple builder API for a test method, suitable for use in {@link BehaviorTester}. See the

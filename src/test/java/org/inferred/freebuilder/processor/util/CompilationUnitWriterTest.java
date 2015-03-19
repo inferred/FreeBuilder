@@ -23,7 +23,18 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.FilerException;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.tools.JavaFileObject;
 
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -38,18 +49,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.FilerException;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.tools.JavaFileObject;
+import com.google.common.collect.ImmutableList;
 
 /** Tests for {@link CompilationUnitWriter}. */
 @RunWith(MockitoJUnitRunner.class)

@@ -18,14 +18,6 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -33,6 +25,14 @@ import java.util.Set;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing append-only semantics for {@link Set}

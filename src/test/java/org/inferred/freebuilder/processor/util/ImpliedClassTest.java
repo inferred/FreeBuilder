@@ -17,15 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.testing.EqualsTester;
-
-import org.inferred.freebuilder.processor.util.ImpliedClass;
-import org.inferred.freebuilder.processor.util.testing.ModelRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.util.ArrayList;
 
 import javax.lang.model.element.ElementKind;
@@ -33,6 +24,14 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+
+import org.inferred.freebuilder.processor.util.testing.ModelRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+import com.google.common.testing.EqualsTester;
 
 /** Tests for {@link ImpliedClass}. */
 @RunWith(JUnit4.class)

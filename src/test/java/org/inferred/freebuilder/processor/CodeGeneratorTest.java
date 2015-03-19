@@ -20,27 +20,6 @@ import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedCla
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.ImpliedClass;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
-import org.inferred.freebuilder.processor.util.NameImpl;
-import org.inferred.freebuilder.processor.util.NoTypes;
-import org.inferred.freebuilder.processor.util.PackageElementImpl;
-import org.inferred.freebuilder.processor.util.ValueType;
-import org.inferred.freebuilder.processor.CodeGeneratorTest.GenericTypeElementImpl.GenericTypeMirrorImpl;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.mockito.cglib.proxy.CallbackHelper;
-import org.mockito.cglib.proxy.Enhancer;
-import org.mockito.cglib.proxy.InvocationHandler;
-import org.mockito.cglib.proxy.NoOp;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -64,6 +43,27 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.util.AbstractElementVisitor6;
 import javax.lang.model.util.Elements;
+
+import org.inferred.freebuilder.processor.CodeGeneratorTest.GenericTypeElementImpl.GenericTypeMirrorImpl;
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.util.ClassTypeImpl;
+import org.inferred.freebuilder.processor.util.ImpliedClass;
+import org.inferred.freebuilder.processor.util.NameImpl;
+import org.inferred.freebuilder.processor.util.NoTypes;
+import org.inferred.freebuilder.processor.util.PackageElementImpl;
+import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.cglib.proxy.CallbackHelper;
+import org.mockito.cglib.proxy.Enhancer;
+import org.mockito.cglib.proxy.InvocationHandler;
+import org.mockito.cglib.proxy.NoOp;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 @RunWith(JUnit4.class)
 public class CodeGeneratorTest {

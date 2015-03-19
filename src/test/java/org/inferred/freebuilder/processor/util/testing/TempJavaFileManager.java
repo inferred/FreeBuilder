@@ -19,9 +19,6 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.io.Files.createTempDir;
 import static javax.tools.ToolProvider.getSystemJavaCompiler;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -33,6 +30,9 @@ import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 
 /** Implementation of {@link JavaFileManager} that provides its own temporary output storage. */
 public class TempJavaFileManager implements JavaFileManager {

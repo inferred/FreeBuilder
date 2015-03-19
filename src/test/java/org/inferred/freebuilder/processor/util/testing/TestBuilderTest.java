@@ -19,14 +19,13 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.util.testing.SourceBuilder.getTypeNameFromSource;
 import static org.junit.Assert.assertEquals;
 
-import org.inferred.freebuilder.processor.util.testing.TestBuilder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.io.IOException;
 
 import javax.tools.JavaFileObject;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for {@link TestBuilder}. */
 @RunWith(JUnit4.class)

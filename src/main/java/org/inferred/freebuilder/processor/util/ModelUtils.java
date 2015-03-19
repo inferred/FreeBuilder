@@ -15,11 +15,11 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import com.google.common.base.Optional;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+
+import com.google.common.base.Optional;
 
 /**
  * Utility methods for the javax.lang.model package.

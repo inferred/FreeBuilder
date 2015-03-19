@@ -15,8 +15,6 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import com.google.common.collect.ImmutableList;
-
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +33,8 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Fake implementation of {@link DeclaredType} for unit tests.

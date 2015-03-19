@@ -17,16 +17,6 @@ package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.reflect.TypeToken;
-
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -46,6 +36,16 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 
 /** Static utility methods pertaining to {@link TypeMirror} instances. */
 public class TypeMirrors {

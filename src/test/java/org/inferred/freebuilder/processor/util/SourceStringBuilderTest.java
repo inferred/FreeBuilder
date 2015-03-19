@@ -20,7 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableList;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Rule;
@@ -29,11 +33,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
+import com.google.common.collect.ImmutableList;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SourceStringBuilderTest {

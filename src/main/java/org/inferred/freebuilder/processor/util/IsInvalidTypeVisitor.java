@@ -17,8 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.any;
 
-import com.google.common.base.Predicate;
-
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -31,6 +29,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.AbstractTypeVisitor6;
+
+import com.google.common.base.Predicate;
 
 /** A type visitor that returns true if the type will be invalid if we write it out. */
 public class IsInvalidTypeVisitor

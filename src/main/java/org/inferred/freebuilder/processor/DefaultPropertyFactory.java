@@ -15,13 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
 public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {

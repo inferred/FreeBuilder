@@ -18,12 +18,12 @@ package org.inferred.freebuilder.processor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.testing.EqualsTester;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.tools.JavaFileObject;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.Processor;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -33,10 +33,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.Iterator;
-import java.util.Set;
-
-import javax.tools.JavaFileObject;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.testing.EqualsTester;
 
 /** Behavioral tests for {@code List<?>} properties. */
 @RunWith(JUnit4.class)

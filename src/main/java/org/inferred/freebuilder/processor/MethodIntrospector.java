@@ -15,13 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.collect.ImmutableSet;
-
 import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+
+import com.google.common.collect.ImmutableSet;
 
 /** Compiler-specific methods for introspecting methods during compilation. */
 public abstract class MethodIntrospector {

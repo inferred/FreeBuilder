@@ -19,11 +19,6 @@ import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.Iterables.addAll;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -41,6 +36,11 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor6;
+
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
 
 /**
  * Manages the imports for a source file, and produces short type references by adding extra

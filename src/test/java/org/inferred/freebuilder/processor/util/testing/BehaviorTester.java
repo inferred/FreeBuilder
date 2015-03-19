@@ -19,12 +19,6 @@ import static com.google.common.util.concurrent.Uninterruptibles.joinUninterrupt
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,6 +36,12 @@ import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
+
+import org.junit.Test;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Convenience class for performing behavioral tests of API-generating
