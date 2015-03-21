@@ -81,10 +81,10 @@ public class CodeGenerator {
     addFieldDeclarations(body, metadata);
 
     addAccessors(metadata, body);
-    addBuildMethod(body, metadata);
     addMergeFromValueMethod(body, metadata);
     addMergeFromBuilderMethod(body, metadata);
     addClearMethod(body, metadata);
+    addBuildMethod(body, metadata);
     addBuildPartialMethod(body, metadata);
 
     addValueType(body, metadata);
