@@ -81,22 +81,18 @@ public class CodeGenerator {
     addFieldDeclarations(body, metadata);
 
     addAccessors(metadata, body);
+    addBuildMethod(body, metadata);
+    addMergeFromValueMethod(body, metadata);
+    addMergeFromBuilderMethod(body, metadata);
+    addClearMethod(body, metadata);
+    addBuildPartialMethod(body, metadata);
 
     addValueType(body, metadata);
     if (metadata.isGwtSerializable()) {
       addCustomValueSerializer(body, metadata);
-    }
-    addBuildMethod(body, metadata);
-
-    addMergeFromValueMethod(body, metadata);
-    addMergeFromBuilderMethod(body, metadata);
-    addClearMethod(body, metadata);
-
-    if (metadata.isGwtSerializable()) {
       addGwtWhitelistType(body, metadata);
     }
     addPartialType(body, metadata);
-    addBuildPartialMethod(body, metadata);
     code.addLine("}");
   }
 
