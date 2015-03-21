@@ -75,7 +75,7 @@ public abstract class PropertyCodeGenerator {
 
   /** Add the field declaration for the property to the value's source code. */
   public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
-    code.addLine("    private final %s %s;", property.getType(), finalField);
+    code.addLine("private final %s %s;", property.getType(), finalField);
   }
 
   /** Add the field declaration for the property to the builder's source code. */

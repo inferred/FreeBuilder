@@ -61,7 +61,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.add("  ");
+      code.add("");
       for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
         code.add("@%s ", nullableAnnotation);
       }
@@ -76,64 +76,63 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // Setter
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Sets the value to be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!isNullable && !isPrimitive) {
-        code.addLine("   * @throws NullPointerException if {@code %s} is null", property.getName());
+        code.addLine(" * @throws NullPointerException if {@code %s} is null", property.getName());
       }
-      code.addLine("   */");
-      code.add("  public %s %s(", metadata.getBuilder(), setterName);
+      code.addLine(" */");
+      code.add("public %s %s(", metadata.getBuilder(), setterName);
       for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
         code.add("@%s ", nullableAnnotation);
       }
       code.add("%s %s) {\n", property.getType(), property.getName());
       if (isNullable || isPrimitive) {
-        code.addLine("    this.%1$s = %1$s;", property.getName());
+        code.addLine("  this.%1$s = %1$s;", property.getName());
       } else {
-        code.addLine("    this.%1$s = %2$s.checkNotNull(%1$s);",
+        code.addLine("  this.%1$s = %2$s.checkNotNull(%1$s);",
             property.getName(), Preconditions.class);
       }
       if (!hasDefault) {
-        code.addLine("    _unsetProperties.remove(%s.%s);",
+        code.addLine("  _unsetProperties.remove(%s.%s);",
             metadata.getPropertyEnum(), property.getAllCapsName());
       }
       if ((metadata.getBuilder() == metadata.getGeneratedBuilder())) {
-        code.addLine("    return this;");
+        code.addLine("  return this;");
       } else {
-        code.addLine("    return (%s) this;", metadata.getBuilder());
+        code.addLine("  return (%s) this;", metadata.getBuilder());
       }
-      code.addLine("  }");
+      code.addLine("}");
 
       // Getter
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Returns the value that will be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Returns the value that will be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName());
       if (!hasDefault) {
-        code.addLine("   *")
-            .addLine("   * @throws IllegalStateException if the field has not been set");
+        code.addLine(" *")
+            .addLine(" * @throws IllegalStateException if the field has not been set");
       }
-      code.addLine("   */");
+      code.addLine(" */");
       for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
-        code.addLine("  @%s", nullableAnnotation);
+        code.addLine("@%s", nullableAnnotation);
       }
-      code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
+      code.addLine("public %s %s() {", property.getType(), property.getGetterName());
       if (!hasDefault) {
-        code.addLine("    %s.checkState(", Preconditions.class)
-            .addLine("        !_unsetProperties.contains(%s.%s),",
+        code.addLine("  %s.checkState(", Preconditions.class)
+            .addLine("      !_unsetProperties.contains(%s.%s),",
                 metadata.getPropertyEnum(), property.getAllCapsName())
-            .addLine("        \"%s not set\");", property.getName());
+            .addLine("      \"%s not set\");", property.getName());
       }
-      code.addLine("    return %s;", property.getName())
-          .addLine("  }");
+      code.addLine("  return %s;", property.getName())
+          .addLine("}");
     }
 
     @Override
     public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
-      code.add("    ");
       for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
         code.add("@%s ", nullableAnnotation);
       }
@@ -142,22 +141,22 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("      %s = %s.%s;", finalField, builder, property.getName());
+      code.addLine("%s = %s.%s;", finalField, builder, property.getName());
     }
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("    %s(%s.%s());", setterName, value, property.getGetterName());
+      code.addLine("%s(%s.%s());", setterName, value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("    %s(%s.%s());", setterName, builder, property.getGetterName());
+      code.addLine("%s(%s.%s());", setterName, builder, property.getGetterName());
     }
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("        %s.%s(%s);", builder, setterName, variable);
+      code.addLine("%s.%s(%s);", builder, setterName, variable);
     }
 
     @Override
@@ -167,13 +166,13 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addClear(SourceBuilder code, String template) {
-      code.addLine("    %1$s = %2$s.%1$s;", property.getName(), template);
+      code.addLine("%1$s = %2$s.%1$s;", property.getName(), template);
     }
 
     @Override
     public void addPartialClear(SourceBuilder code) {
       if (isNullable) {
-        code.addLine("    %s = null;", property.getName());
+        code.addLine("%s = null;", property.getName());
       }
     }
   }

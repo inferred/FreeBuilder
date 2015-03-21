@@ -81,7 +81,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.addLine("  private %1$s<%2$s> %3$s = new %1$s<%4$s>();",
+      code.addLine("private %1$s<%2$s> %3$s = new %1$s<%4$s>();",
           LinkedHashSet.class,
           elementType,
           property.getName(),
@@ -92,128 +92,128 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // add(T element)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Adds {@code element} to the set to be returned from {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Adds {@code element} to the set to be returned from {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   * If the set already contains {@code element}, then {@code %s%s}",
+          .addLine(" * If the set already contains {@code element}, then {@code %s%s}",
               ADD_PREFIX, property.getCapitalizedName())
-          .addLine("   * has no effect (only the previously added element is retained).")
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+          .addLine(" * has no effect (only the previously added element is retained).")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
-        code.addLine("   * @throws NullPointerException if {@code element} is null");
+        code.addLine(" * @throws NullPointerException if {@code element} is null");
       }
-      code.addLine("   */")
-          .addLine("  public %s %s%s(%s element) {",
+      code.addLine(" */")
+          .addLine("public %s %s%s(%s element) {",
               metadata.getBuilder(),
               ADD_PREFIX,
               property.getCapitalizedName(),
               unboxedType.or(elementType));
       if (unboxedType.isPresent()) {
-        code.addLine("    this.%s.add(element);", property.getName());
+        code.addLine("  this.%s.add(element);", property.getName());
       } else {
-        code.addLine("    this.%s.add(%s.checkNotNull(element));",
+        code.addLine("  this.%s.add(%s.checkNotNull(element));",
             property.getName(), Preconditions.class);
       }
-      code.addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+      code.addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // add(T... elements)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Adds each element of {@code elements} to the set to be returned from")
-          .addLine("   * {@link %s#%s()}, ignoring duplicate elements",
+          .addLine("/**")
+          .addLine(" * Adds each element of {@code elements} to the set to be returned from")
+          .addLine(" * {@link %s#%s()}, ignoring duplicate elements",
               metadata.getType(), property.getGetterName())
-          .addLine("   * (only the first duplicate element is added).")
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+          .addLine(" * (only the first duplicate element is added).")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
-        code.addLine("   * @throws NullPointerException if {@code elements} is null or contains a")
-            .addLine("   *     null element");
+        code.addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
+            .addLine(" *     null element");
       }
-      code.addLine("   */")
-          .addLine("  public %s %s%s(%s... elements) {",
+      code.addLine(" */")
+          .addLine("public %s %s%s(%s... elements) {",
               metadata.getBuilder(),
               ADD_PREFIX,
               property.getCapitalizedName(),
               unboxedType.or(elementType))
-          .addLine("    for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("      %s%s(element);", ADD_PREFIX, property.getCapitalizedName())
-          .addLine("    }")
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
+          .addLine("    %s%s(element);", ADD_PREFIX, property.getCapitalizedName())
+          .addLine("  }")
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // addAll(Iterable<? extends T> elements)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Adds each element of {@code elements} to the set to be returned from")
-          .addLine("   * {@link %s#%s()}, ignoring duplicate elements",
+          .addLine("/**")
+          .addLine(" * Adds each element of {@code elements} to the set to be returned from")
+          .addLine(" * {@link %s#%s()}, ignoring duplicate elements",
               metadata.getType(), property.getGetterName())
-          .addLine("   * (only the first duplicate element is added).")
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   * @throws NullPointerException if {@code elements} is null or contains a")
-          .addLine("   *     null element")
-          .addLine("   */")
-          .addLine("  public %s %s%s(%s<? extends %s> elements) {",
+          .addLine(" * (only the first duplicate element is added).")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
+          .addLine(" *     null element")
+          .addLine(" */")
+          .addLine("public %s %s%s(%s<? extends %s> elements) {",
               metadata.getBuilder(),
               ADD_ALL_PREFIX,
               property.getCapitalizedName(),
               Iterable.class,
               elementType)
-          .addLine("    for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("      %s%s(element);", ADD_PREFIX, property.getCapitalizedName())
-          .addLine("    }")
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
+          .addLine("    %s%s(element);", ADD_PREFIX, property.getCapitalizedName())
+          .addLine("  }")
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // clear()
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Clears the set to be returned from {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Clears the set to be returned from {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   */")
-          .addLine("  public %s %s%s() {",
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" */")
+          .addLine("public %s %s%s() {",
               metadata.getBuilder(),
               CLEAR_PREFIX,
               property.getCapitalizedName())
-          .addLine("    this.%s.clear();", property.getName())
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  this.%s.clear();", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // get()
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Returns an unmodifiable view of the set that will be returned by")
-          .addLine("   * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   * Changes to this builder will be reflected in the view.")
-          .addLine("   */")
-          .addLine("  public %s<%s> %s%s() {",
+          .addLine("/**")
+          .addLine(" * Returns an unmodifiable view of the set that will be returned by")
+          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * Changes to this builder will be reflected in the view.")
+          .addLine(" */")
+          .addLine("public %s<%s> %s%s() {",
               Set.class,
               elementType,
               GET_PREFIX,
               property.getCapitalizedName())
-          .addLine("    return %s.unmodifiableSet(%s);", Collections.class, property.getName())
-          .addLine("  }");
+          .addLine("  return %s.unmodifiableSet(%s);", Collections.class, property.getName())
+          .addLine("}");
     }
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("      %s = %s.copyOf(%s.%s);",
+      code.addLine("%s = %s.copyOf(%s.%s);",
               finalField, ImmutableSet.class, builder, property.getName());
     }
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("    %s%s(%s.%s());",
+      code.addLine("%s%s(%s.%s());",
           ADD_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("    %s%s(((%s) %s).%s);",
+      code.addLine("%s%s(((%s) %s).%s);",
           ADD_ALL_PREFIX,
           property.getCapitalizedName(),
           metadata.getGeneratedBuilder(),
@@ -223,7 +223,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("        %s.%s%s(%s);",
+      code.addLine("%s.%s%s(%s);",
           builder, ADD_ALL_PREFIX, property.getCapitalizedName(), variable);
     }
 
@@ -234,12 +234,12 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addClear(SourceBuilder code, String template) {
-      code.addLine("    %s.clear();", property.getName());
+      code.addLine("%s.clear();", property.getName());
     }
 
     @Override
     public void addPartialClear(SourceBuilder code) {
-      code.addLine("    %s.clear();", property.getName());
+      code.addLine("%s.clear();", property.getName());
     }
   }
 }

@@ -115,131 +115,131 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
-      code.addLine("    // Store a nullable object instead of an Optional. Escape analysis then")
-          .addLine("    // allows the JVM to optimize away the Optional objects created by our")
-          .addLine("    // getter method.")
-          .addLine("    private final %s %s;", elementType, finalField);
+      code.addLine("// Store a nullable object instead of an Optional. Escape analysis then")
+          .addLine("// allows the JVM to optimize away the Optional objects created by our")
+          .addLine("// getter method.")
+          .addLine("private final %s %s;", elementType, finalField);
     }
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.addLine("  // Store a nullable object instead of an Optional. Escape analysis then")
-          .addLine("  // allows the JVM to optimize away the Optional objects created by and")
-          .addLine("  // passed to our API.")
-          .addLine("  private %s %s = null;", elementType, property.getName());
+      code.addLine("// Store a nullable object instead of an Optional. Escape analysis then")
+          .addLine("// allows the JVM to optimize away the Optional objects created by and")
+          .addLine("// passed to our API.")
+          .addLine("private %s %s = null;", elementType, property.getName());
     }
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // Setter (T, not nullable)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Sets the value to be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
-        code.addLine("   * @throws NullPointerException if {@code %s} is null", property.getName());
+        code.addLine(" * @throws NullPointerException if {@code %s} is null", property.getName());
       }
-      code.addLine("   */")
-          .addLine("  public %s %s(%s %s) {",
+      code.addLine(" */")
+          .addLine("public %s %s(%s %s) {",
               metadata.getBuilder(),
               setterName,
               unboxedType.or(elementType),
               property.getName());
       if (unboxedType.isPresent()) {
-        code.addLine("    this.%1$s = %1$s;", property.getName());
+        code.addLine("  this.%1$s = %1$s;", property.getName());
       } else {
-        code.addLine("    this.%1$s = %2$s.checkNotNull(%1$s);",
+        code.addLine("  this.%1$s = %2$s.checkNotNull(%1$s);",
             property.getName(), Preconditions.class);
       }
-      code.addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+      code.addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // Setter (Optional<? extends T>)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Sets the value to be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   */")
-          .addLine("  public %s %s(%s<? extends %s> %s) {",
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" */")
+          .addLine("public %s %s(%s<? extends %s> %s) {",
               metadata.getBuilder(),
               setterName,
               Optional.class,
               elementType,
               property.getName())
-          .addLine("    if (%s.isPresent()) {", property.getName())
-          .addLine("      return %s(%s.get());", setterName, property.getName())
-          .addLine("    } else {")
-          .addLine("      return %s();", clearName)
-          .addLine("    }")
-          .addLine("  }");
+          .addLine("  if (%s.isPresent()) {", property.getName())
+          .addLine("    return %s(%s.get());", setterName, property.getName())
+          .addLine("  } else {")
+          .addLine("    return %s();", clearName)
+          .addLine("  }")
+          .addLine("}");
 
       // Setter (nullable T)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Sets the value to be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   */")
-          .addLine("  public %s %s(@%s %s %s) {",
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" */")
+          .addLine("public %s %s(@%s %s %s) {",
               metadata.getBuilder(),
               nullableSetterName,
               javax.annotation.Nullable.class,
               elementType,
               property.getName())
-          .addLine("    if (%s != null) {", property.getName())
-          .addLine("      return %s(%s);", setterName, property.getName())
-          .addLine("    } else {")
-          .addLine("      return %s();", clearName)
-          .addLine("    }")
-          .addLine("  }");
+          .addLine("  if (%s != null) {", property.getName())
+          .addLine("    return %s(%s);", setterName, property.getName())
+          .addLine("  } else {")
+          .addLine("    return %s();", clearName)
+          .addLine("  }")
+          .addLine("}");
 
       // Clear
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Sets the value to be returned by {@link %s#%s()}",
+          .addLine("/**")
+          .addLine(" * Sets the value to be returned by {@link %s#%s()}",
               metadata.getType(), property.getGetterName())
-          .addLine("   * to {@link %s#absent() Optional.absent()}.", Optional.class)
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   */")
-          .addLine("  public %s %s() {", metadata.getBuilder(), clearName)
-          .addLine("    this.%s = null;", property.getName())
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine(" * to {@link %s#absent() Optional.absent()}.", Optional.class)
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" */")
+          .addLine("public %s %s() {", metadata.getBuilder(), clearName)
+          .addLine("  this.%s = null;", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // Getter
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Returns the value that will be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Returns the value that will be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   */")
-          .addLine("  public %s %s() {", property.getType(), property.getGetterName());
-      code.add("    return %s.", Optional.class);
+          .addLine(" */")
+          .addLine("public %s %s() {", property.getType(), property.getGetterName());
+      code.add("  return %s.", Optional.class);
       if (requiresExplicitTypeParameters) {
         code.add("<%s>", elementType);
       }
       code.add("fromNullable(%s);\n", property.getName())
-          .addLine("  }");
+          .addLine("}");
     }
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("      %s = %s.%s;", finalField, builder, property.getName());
+      code.addLine("%s = %s.%s;", finalField, builder, property.getName());
     }
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("    %s(%s.%s());", setterName, value, property.getGetterName());
+      code.addLine("%s(%s.%s());", setterName, value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("    %s(%s.%s());", setterName, builder, property.getGetterName());
+      code.addLine("%s(%s.%s());", setterName, builder, property.getGetterName());
     }
 
     @Override
@@ -253,7 +253,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("        %s.%s(%s);", builder, setterName, variable);
+      code.addLine("%s.%s(%s);", builder, setterName, variable);
     }
 
     @Override
@@ -263,12 +263,12 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addClear(SourceBuilder code, String template) {
-      code.addLine("    %1$s = %2$s.%1$s;", property.getName(), template);
+      code.addLine("%1$s = %2$s.%1$s;", property.getName(), template);
     }
 
     @Override
     public void addPartialClear(SourceBuilder code) {
-      code.addLine("    %s = null;", property.getName());
+      code.addLine("%s = null;", property.getName());
     }
   }
 

@@ -97,7 +97,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.addLine("  private %1$s<%2$s, %3$s> %4$s = %1$s.create();",
+      code.addLine("private %1$s<%2$s, %3$s> %4$s = %1$s.create();",
           LinkedListMultimap.class, keyType, valueType, property.getName());
     }
 
@@ -105,13 +105,13 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // put(K key, V value)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
-          .addLine("   * from {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+          .addLine("/**")
+          .addLine(" * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
+          .addLine(" * from {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
-        code.add("   * @throws NullPointerException if ");
+        code.add(" * @throws NullPointerException if ");
         if (unboxedKeyType.isPresent()) {
           code.add("{@code value}");
         } else if (unboxedValueType.isPresent()) {
@@ -121,127 +121,127 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
         }
         code.add(" is null\n");
       }
-      code.addLine("   */")
-          .addLine("  public %s %s%s(%s key, %s value) {",
+      code.addLine(" */")
+          .addLine("public %s %s%s(%s key, %s value) {",
               metadata.getBuilder(),
               PUT_PREFIX,
               property.getCapitalizedName(),
               unboxedKeyType.or(keyType),
               unboxedValueType.or(valueType));
       if (!unboxedKeyType.isPresent()) {
-        code.addLine("    %s.checkNotNull(key);", Preconditions.class);
+        code.addLine("  %s.checkNotNull(key);", Preconditions.class);
       }
       if (!unboxedValueType.isPresent()) {
-        code.addLine("    %s.checkNotNull(value);", Preconditions.class);
+        code.addLine("  %s.checkNotNull(value);", Preconditions.class);
       }
-      code.addLine("    this.%s.put(key, value);", property.getName())
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+      code.addLine("  this.%s.put(key, value);", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // putAll(K key, Iterable<? extends V> values)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Adds a collection of {@code values} with the same {@code key} to the")
-          .addLine("   * multimap to be returned from {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Adds a collection of {@code values} with the same {@code key} to the")
+          .addLine(" * multimap to be returned from {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (unboxedKeyType.isPresent()) {
-        code.addLine("   * @throws NullPointerException if {@code values} is null or contains a"
+        code.addLine(" * @throws NullPointerException if {@code values} is null or contains a"
             + " null element");
       } else {
-        code.addLine("   * @throws NullPointerException if either {@code key} or {@code values} is")
-            .addLine("   *     null, or if {@code values} contains a null element");
+        code.addLine(" * @throws NullPointerException if either {@code key} or {@code values} is")
+            .addLine(" *     null, or if {@code values} contains a null element");
       }
-      code.addLine("   */")
-          .addLine("  public %s %s%s(%s key, %s<? extends %s> values) {",
+      code.addLine(" */")
+          .addLine("public %s %s%s(%s key, %s<? extends %s> values) {",
               metadata.getBuilder(),
               PUT_ALL_PREFIX,
               property.getCapitalizedName(),
               unboxedKeyType.or(keyType),
               Iterable.class,
               valueType)
-          .addLine("    for (%s value : values) {", unboxedValueType.or(valueType))
-          .addLine("      %s%s(key, value);", PUT_PREFIX, property.getCapitalizedName())
-          .addLine("    }")
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  for (%s value : values) {", unboxedValueType.or(valueType))
+          .addLine("    %s%s(key, value);", PUT_PREFIX, property.getCapitalizedName())
+          .addLine("  }")
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // putAll(Multimap<? extends K, ? extends V> multimap)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Adds each entry of {@code multimap} to the multimap to be returned from")
-          .addLine("   * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   * @throws NullPointerException if {@code multimap} is null or contains a")
-          .addLine("   *     null key or value")
-          .addLine("   */")
-          .addLine("  public %s %s%s(%s<? extends %s, ? extends %s> multimap) {",
+          .addLine("/**")
+          .addLine(" * Adds each entry of {@code multimap} to the multimap to be returned from")
+          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code multimap} is null or contains a")
+          .addLine(" *     null key or value")
+          .addLine(" */")
+          .addLine("public %s %s%s(%s<? extends %s, ? extends %s> multimap) {",
               metadata.getBuilder(),
               PUT_ALL_PREFIX,
               property.getCapitalizedName(),
               Multimap.class,
               keyType,
               valueType)
-          .addLine("    for (%s<? extends %s, ? extends %s<? extends %s>> entry",
+          .addLine("  for (%s<? extends %s, ? extends %s<? extends %s>> entry",
               Entry.class, keyType, Collection.class, valueType)
-          .addLine("        : multimap.asMap().entrySet()) {")
-          .addLine("      %s%s(entry.getKey(), entry.getValue());",
+          .addLine("      : multimap.asMap().entrySet()) {")
+          .addLine("    %s%s(entry.getKey(), entry.getValue());",
               PUT_ALL_PREFIX, property.getCapitalizedName())
-          .addLine("    }")
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  }")
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // clear()
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Removes all of the mappings from the multimap to be returned from")
-          .addLine("   * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   */")
-          .addLine("  public %s %s%s() {",
+          .addLine("/**")
+          .addLine(" * Removes all of the mappings from the multimap to be returned from")
+          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" */")
+          .addLine("public %s %s%s() {",
               metadata.getBuilder(),
               CLEAR_PREFIX,
               property.getCapitalizedName())
-          .addLine("    this.%s.clear();", property.getName())
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  this.%s.clear();", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // get()
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Returns an unmodifiable view of the multimap that will be returned by")
-          .addLine("   * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   * Changes to this builder will be reflected in the view.")
-          .addLine("   */")
-          .addLine("  public %s<%s, %s> %s%s() {",
+          .addLine("/**")
+          .addLine(" * Returns an unmodifiable view of the multimap that will be returned by")
+          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * Changes to this builder will be reflected in the view.")
+          .addLine(" */")
+          .addLine("public %s<%s, %s> %s%s() {",
               ListMultimap.class,
               keyType,
               valueType,
               GET_PREFIX,
               property.getCapitalizedName())
-          .addLine("    return %s.unmodifiableListMultimap(%s);",
+          .addLine("  return %s.unmodifiableListMultimap(%s);",
               Multimaps.class, property.getName())
-          .addLine("  }");
+          .addLine("}");
     }
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("      %s = %s.copyOf(%s.%s);",
+      code.addLine("%s = %s.copyOf(%s.%s);",
               finalField, ImmutableListMultimap.class, builder, property.getName());
     }
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("    %s%s(%s.%s());",
+      code.addLine("%s%s(%s.%s());",
           PUT_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("    %s%s(((%s) %s).%s);",
+      code.addLine("%s%s(((%s) %s).%s);",
           PUT_ALL_PREFIX,
           property.getCapitalizedName(),
           metadata.getGeneratedBuilder(),
@@ -251,7 +251,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("        %s.%s%s(%s);",
+      code.addLine("%s.%s%s(%s);",
           builder, PUT_ALL_PREFIX, property.getCapitalizedName(), variable);
     }
 
@@ -262,12 +262,12 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
 
     @Override
     public void addClear(SourceBuilder code, String template) {
-      code.addLine("    %s.clear();", property.getName());
+      code.addLine("%s.clear();", property.getName());
     }
 
     @Override
     public void addPartialClear(SourceBuilder code) {
-      code.addLine("    %s.clear();", property.getName());
+      code.addLine("%s.clear();", property.getName());
     }
   }
 

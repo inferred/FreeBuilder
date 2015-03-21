@@ -90,7 +90,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.add("  private %1$s<%2$s, %3$s> %4$s = new %1$s<",
+      code.add("private %1$s<%2$s, %3$s> %4$s = new %1$s<",
           LinkedHashMap.class, keyType, valueType, property.getName());
       if (!code.getSourceLevel().supportsDiamondOperator()) {
         code.add("%s, %s", keyType, valueType);
@@ -102,14 +102,14 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // put(K key, V value)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Associates {@code key} with {@code value} in the map to be returned from")
-          .addLine("   * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   * Duplicate keys are not allowed.")
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+          .addLine("/**")
+          .addLine(" * Associates {@code key} with {@code value} in the map to be returned from")
+          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * Duplicate keys are not allowed.")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
-        code.add("   * @throws NullPointerException if ");
+        code.add(" * @throws NullPointerException if ");
         if (unboxedKeyType.isPresent()) {
           code.add("{@code value} is");
         } else if (unboxedValueType.isPresent()) {
@@ -119,128 +119,128 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
         }
         code.add(" null\n");
       }
-      code.addLine("   * @throws IllegalArgumentException if {@code key} is already present")
-          .addLine("   */")
-          .addLine("  public %s %s%s(%s key, %s value) {",
+      code.addLine(" * @throws IllegalArgumentException if {@code key} is already present")
+          .addLine(" */")
+          .addLine("public %s %s%s(%s key, %s value) {",
               metadata.getBuilder(),
               PUT_PREFIX,
               property.getCapitalizedName(),
               unboxedKeyType.or(keyType),
               unboxedValueType.or(valueType));
       if (!unboxedKeyType.isPresent()) {
-        code.addLine("    %s.checkNotNull(key);", Preconditions.class);
+        code.addLine("  %s.checkNotNull(key);", Preconditions.class);
       }
       if (!unboxedValueType.isPresent()) {
-        code.addLine("    %s.checkNotNull(value);", Preconditions.class);
+        code.addLine("  %s.checkNotNull(value);", Preconditions.class);
       }
-      code.addLine("    %s.checkArgument(!%s.containsKey(key),",
+      code.addLine("  %s.checkArgument(!%s.containsKey(key),",
               Preconditions.class, property.getName())
-          .addLine("        \"Key already present in %s: %%s\", key);", property.getName())
-          .addLine("    this.%s.put(key, value);", property.getName())
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("      \"Key already present in %s: %%s\", key);", property.getName())
+          .addLine("  this.%s.put(key, value);", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // putAll(Map<? extends K, ? extends V> map)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Associates all of {@code map}'s keys and values in the map to be returned")
-          .addLine("   * from {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   * Duplicate keys are not allowed.")
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   * @throws NullPointerException if {@code map} is null or contains a")
-          .addLine("   *     null key or value")
-          .addLine("   * @throws IllegalArgumentException if any key is already present")
-          .addLine("   */")
-          .addLine("  public %s %s%s(%s<? extends %s, ? extends %s> map) {",
+          .addLine("/**")
+          .addLine(" * Associates all of {@code map}'s keys and values in the map to be returned")
+          .addLine(" * from {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * Duplicate keys are not allowed.")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code map} is null or contains a")
+          .addLine(" *     null key or value")
+          .addLine(" * @throws IllegalArgumentException if any key is already present")
+          .addLine(" */")
+          .addLine("public %s %s%s(%s<? extends %s, ? extends %s> map) {",
               metadata.getBuilder(),
               PUT_ALL_PREFIX,
               property.getCapitalizedName(),
               Map.class,
               keyType,
               valueType)
-          .addLine("    for (%s key : map.keySet()) {", unboxedKeyType.or(keyType))
-          .addLine("      %s%s(key, map.get(key));", PUT_PREFIX, property.getCapitalizedName())
-          .addLine("    }")
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  for (%s key : map.keySet()) {", unboxedKeyType.or(keyType))
+          .addLine("    %s%s(key, map.get(key));", PUT_PREFIX, property.getCapitalizedName())
+          .addLine("  }")
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // remove(K key)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Removes the mapping for {@code key} from the map to be returned from")
-          .addLine("   * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+          .addLine("/**")
+          .addLine(" * Removes the mapping for {@code key} from the map to be returned from")
+          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedKeyType.isPresent()) {
-        code.addLine("   * @throws NullPointerException if {@code key} is null");
+        code.addLine(" * @throws NullPointerException if {@code key} is null");
       }
-      code.addLine("   * @throws IllegalArgumentException if {@code key} is not present")
-          .addLine("   */")
-          .addLine("  public %s %s%s(%s key) {",
+      code.addLine(" * @throws IllegalArgumentException if {@code key} is not present")
+          .addLine(" */")
+          .addLine("public %s %s%s(%s key) {",
               metadata.getBuilder(),
               REMOVE_PREFIX,
               property.getCapitalizedName(),
               unboxedKeyType.or(keyType),
               valueType);
       if (!unboxedKeyType.isPresent()) {
-        code.addLine("    %s.checkNotNull(key);", Preconditions.class);
+        code.addLine("  %s.checkNotNull(key);", Preconditions.class);
       }
-      code.addLine("    %s.checkArgument(%s.containsKey(key),",
+      code.addLine("  %s.checkArgument(%s.containsKey(key),",
               Preconditions.class, property.getName())
-          .addLine("        \"Key not present in %s: %%s\", key);", property.getName())
-          .addLine("    %s.remove(key);", property.getName())
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("      \"Key not present in %s: %%s\", key);", property.getName())
+          .addLine("  %s.remove(key);", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // clear()
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Removes all of the mappings from the map to be returned from ")
-          .addLine("   * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   */")
-          .addLine("  public %s %s%s() {",
+          .addLine("/**")
+          .addLine(" * Removes all of the mappings from the map to be returned from ")
+          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" */")
+          .addLine("public %s %s%s() {",
               metadata.getBuilder(),
               CLEAR_PREFIX,
               property.getCapitalizedName())
-          .addLine("    this.%s.clear();", property.getName())
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  this.%s.clear();", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // get()
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Returns an unmodifiable view of the map that will be returned by")
-          .addLine("   * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
-          .addLine("   * Changes to this builder will be reflected in the view.")
-          .addLine("   */")
-          .addLine("  public %s<%s, %s> %s%s() {",
+          .addLine("/**")
+          .addLine(" * Returns an unmodifiable view of the map that will be returned by")
+          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * Changes to this builder will be reflected in the view.")
+          .addLine(" */")
+          .addLine("public %s<%s, %s> %s%s() {",
               Map.class,
               keyType,
               valueType,
               GET_PREFIX,
               property.getCapitalizedName())
-          .addLine("    return %s.unmodifiableMap(%s);", Collections.class, property.getName())
-          .addLine("  }");
+          .addLine("  return %s.unmodifiableMap(%s);", Collections.class, property.getName())
+          .addLine("}");
     }
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("      %s = %s.copyOf(%s.%s);",
+      code.addLine("%s = %s.copyOf(%s.%s);",
           finalField, ImmutableMap.class, builder, property.getName());
     }
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("    %s%s(%s.%s());",
+      code.addLine("%s%s(%s.%s());",
           PUT_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("    %s%s(((%s) %s).%s);",
+      code.addLine("%s%s(((%s) %s).%s);",
           PUT_ALL_PREFIX,
           property.getCapitalizedName(),
           metadata.getGeneratedBuilder(),
@@ -250,7 +250,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("        %s.%s%s(%s);",
+      code.addLine("%s.%s%s(%s);",
           builder, PUT_ALL_PREFIX, property.getCapitalizedName(), variable);
     }
 
@@ -261,12 +261,12 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addClear(SourceBuilder code, String template) {
-      code.addLine("    %s.clear();", property.getName());
+      code.addLine("%s.clear();", property.getName());
     }
 
     @Override
     public void addPartialClear(SourceBuilder code) {
-      code.addLine("    %s.clear();", property.getName());
+      code.addLine("%s.clear();", property.getName());
     }
   }
 
