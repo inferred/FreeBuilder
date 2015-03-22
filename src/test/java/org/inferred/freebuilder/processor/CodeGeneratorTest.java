@@ -20,6 +20,7 @@ import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLe
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedClass;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
+import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -96,7 +97,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.createNestedClass("Value"))
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple();
+    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
     new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
 
     assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
@@ -400,7 +401,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.createNestedClass("Value"))
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple();
+    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
     new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
 
     assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
@@ -650,7 +651,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.createNestedClass("Value"))
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple();
+    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
     new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
 
     assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
@@ -996,7 +997,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.createNestedClass("Value"))
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple();
+    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
     new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
 
     assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(

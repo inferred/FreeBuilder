@@ -31,6 +31,7 @@ import javax.tools.Diagnostic.Kind;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.CompilationUnitWriter;
+import org.inferred.freebuilder.processor.util.SourceLevel;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Throwables;
@@ -74,8 +75,8 @@ public class Processor extends AbstractProcessor {
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
         Metadata metadata = analyser.analyse(type);
-        CompilationUnitWriter code = metadata.getGeneratedBuilder()
-            .openSourceWriter(processingEnv.getFiler());
+        CompilationUnitWriter code = metadata.getGeneratedBuilder().openSourceWriter(
+            processingEnv.getFiler(), SourceLevel.from(processingEnv.getSourceVersion()));
         try {
           codeGenerator.writeBuilderSource(code, metadata);
         } finally {

@@ -27,6 +27,7 @@ import javax.lang.model.type.TypeMirror;
  */
 public final class SourceStringBuilder implements SourceBuilder {
 
+  private final SourceLevel sourceLevel;
   private final StringBuilder destination;
   private final TypeShortener shortener;
 
@@ -34,15 +35,16 @@ public final class SourceStringBuilder implements SourceBuilder {
    * Returns a {@link SourceStringBuilder} that always shortens types, even if that causes
    * conflicts.
    */
-  public static SourceStringBuilder simple() {
-    return new SourceStringBuilder(new TypeShortener.AlwaysShorten());
+  public static SourceStringBuilder simple(SourceLevel sourceLevel) {
+    return new SourceStringBuilder(sourceLevel, new TypeShortener.AlwaysShorten());
   }
 
-  SourceStringBuilder(TypeShortener shortener) {
-    this(shortener, new StringBuilder());
+  SourceStringBuilder(SourceLevel sourceLevel, TypeShortener shortener) {
+    this(sourceLevel, shortener, new StringBuilder());
   }
 
-  SourceStringBuilder(TypeShortener shortener, StringBuilder destination) {
+  SourceStringBuilder(SourceLevel sourceLevel, TypeShortener shortener, StringBuilder destination) {
+    this.sourceLevel = sourceLevel;
     this.destination = destination;
     this.shortener = shortener;
   }
@@ -60,6 +62,11 @@ public final class SourceStringBuilder implements SourceBuilder {
   @Override
   public SourceBuilder addLine(String fmt, Object... args) {
     return add(fmt + "\n", args);
+  }
+
+  @Override
+  public SourceLevel getSourceLevel() {
+    return sourceLevel;
   }
 
   /** Returns the source code written so far. */

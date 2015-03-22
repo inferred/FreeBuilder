@@ -39,8 +39,11 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
   private final ImportManager importManager;
   private final SourceStringBuilder source;
 
-  CompilationUnitWriter(Filer filer, ImpliedClass classToWrite, Element originatingElement)
-      throws FilerException {
+  CompilationUnitWriter(
+      Filer filer,
+      ImpliedClass classToWrite,
+      SourceLevel sourceLevel,
+      Element originatingElement) throws FilerException {
     String pkg = classToWrite.getEnclosingElement().getQualifiedName().toString();
     try {
       writer = filer
@@ -65,7 +68,7 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
     }
     addNestedClasses(importManagerBuilder, classToWrite.getNestedClasses());
     importManager = importManagerBuilder.build();
-    source = new SourceStringBuilder(importManager, new StringBuilder());
+    source = new SourceStringBuilder(sourceLevel, importManager, new StringBuilder());
   }
 
   @Override
@@ -78,6 +81,11 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
   public CompilationUnitWriter addLine(String fmt, Object... args) {
     source.addLine(fmt, args);
     return this;
+  }
+
+  @Override
+  public SourceLevel getSourceLevel() {
+    return source.getSourceLevel();
   }
 
   @Override
