@@ -1,6 +1,6 @@
-package org.inferred.freebuilder.processor;
+package org.inferred.freebuilder.processor.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import javax.lang.model.SourceVersion;
 

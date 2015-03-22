@@ -1,10 +1,6 @@
-package org.inferred.freebuilder.processor;
+package org.inferred.freebuilder.processor.util;
 
 import javax.lang.model.SourceVersion;
-
-import org.inferred.freebuilder.processor.util.TypeReference;
-
-import com.google.common.base.Optional;
 
 /**
  * Compliance levels which are idiomatically supported by this processor.
