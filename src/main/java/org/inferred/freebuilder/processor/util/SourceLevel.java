@@ -2,6 +2,8 @@ package org.inferred.freebuilder.processor.util;
 
 import javax.lang.model.SourceVersion;
 
+import com.google.common.base.Optional;
+
 /**
  * Compliance levels which are idiomatically supported by this processor.
  *
@@ -17,6 +19,16 @@ public enum SourceLevel {
       return JAVA_6;
     } else {
       return JAVA_7;
+    }
+  }
+
+  public Optional<TypeReference> javaUtilObjects() {
+    switch (this) {
+      case JAVA_6:
+        return Optional.absent();
+
+      default:
+        return Optional.of(TypeReference.to("java.util", "Objects"));
     }
   }
 }

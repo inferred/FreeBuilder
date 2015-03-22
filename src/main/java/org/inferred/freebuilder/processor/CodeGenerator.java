@@ -160,31 +160,44 @@ public class CodeGenerator {
             .addLine("        return false;")
             .addLine("      }")
             .addLine("      %1$s other = (%1$s) obj;", metadata.getValueType());
-        for (Property property : metadata.getProperties()) {
-          switch (property.getType().getKind()) {
-            case FLOAT:
-            case DOUBLE:
-              code.addLine("      if (%s.doubleToLongBits(%s)", Double.class, property.getName())
-                  .addLine("          != %s.doubleToLongBits(other.%s)) {",
-                      Double.class, property.getName());
-              break;
-
-            default:
-              if (property.getType().getKind().isPrimitive()) {
-                code.addLine("      if (%1$s != other.%1$s) {", property.getName());
-              } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-                code.addLine("      if (%1$s != other.%1$s", property.getName())
-                .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
-                    property.getName());
-              } else {
-                code.addLine("      if (!%1$s.equals(other.%1$s)) {", property.getName());
-              }
+        if (metadata.getProperties().isEmpty()) {
+          code.addLine("      return true;");
+        } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+          String prefix = "      return ";
+          for (Property property : metadata.getProperties()) {
+            code.add(prefix);
+            code.add("%1$s.equals(%2$s, other.%2$s)",
+                code.getSourceLevel().javaUtilObjects().get(), property.getName());
+            prefix = "\n          && ";
           }
-          code.addLine("        return false;")
-              .addLine("      }");
+          code.add(";\n");
+        } else {
+          for (Property property : metadata.getProperties()) {
+            switch (property.getType().getKind()) {
+              case FLOAT:
+              case DOUBLE:
+                code.addLine("      if (%s.doubleToLongBits(%s)", Double.class, property.getName())
+                    .addLine("          != %s.doubleToLongBits(other.%s)) {",
+                        Double.class, property.getName());
+                break;
+
+              default:
+                if (property.getType().getKind().isPrimitive()) {
+                  code.addLine("      if (%1$s != other.%1$s) {", property.getName());
+                } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
+                  code.addLine("      if (%1$s != other.%1$s", property.getName())
+                  .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
+                      property.getName());
+                } else {
+                  code.addLine("      if (!%1$s.equals(other.%1$s)) {", property.getName());
+                }
+            }
+            code.addLine("        return false;")
+                .addLine("      }");
+          }
+          code.addLine("      return true;");
         }
-        code.addLine("      return true;")
-            .addLine("    }");
+        code.addLine("    }");
         break;
 
       case OVERRIDEABLE:
@@ -203,12 +216,17 @@ public class CodeGenerator {
     }
     // Hash code
     if (metadata.standardMethodUnderride(StandardMethod.HASH_CODE) == ABSENT) {
+      String properties = Joiner.on(", ").join(getNames(metadata.getProperties()));
       code.addLine("")
           .addLine("    @%s", Override.class)
-          .addLine("    public int hashCode() {")
-          .addLine("      return %s.hashCode(new Object[] { %s });",
-              Arrays.class, Joiner.on(", ").join(getNames(metadata.getProperties())))
-          .addLine("    }");
+          .addLine("    public int hashCode() {");
+      if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+        code.addLine("      return %s.hash(%s);",
+            code.getSourceLevel().javaUtilObjects().get(), properties);
+      } else {
+        code.addLine("      return %s.hashCode(new Object[] { %s });", Arrays.class, properties);
+      }
+      code.addLine("    }");
     }
     // toString
     if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
@@ -458,33 +476,51 @@ public class CodeGenerator {
           .addLine("        return false;")
           .addLine("      }")
           .addLine("      %1$s other = (%1$s) obj;", metadata.getPartialType());
-      for (Property property : metadata.getProperties()) {
-        switch (property.getType().getKind()) {
-          case FLOAT:
-          case DOUBLE:
-            code.addLine("      if (%s.doubleToLongBits(%s)", Double.class, property.getName())
-                .addLine("          != %s.doubleToLongBits(other.%s)) {",
-                    Double.class, property.getName());
-            break;
-
-          default:
-            if (property.getType().getKind().isPrimitive()) {
-              code.addLine("      if (%1$s != other.%1$s) {", property.getName());
-            } else if (property.getCodeGenerator().getType() == Type.HAS_DEFAULT) {
-              code.addLine("      if (!%1$s.equals(other.%1$s)) {", property.getName());
-            } else {
-              code.addLine("      if (%1$s != other.%1$s", property.getName())
-                  .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
-                      property.getName());
-            }
-        }
-        code.addLine("        return false;")
-            .addLine("      }");
-      }
-      if (hasRequiredProperties) {
-        code.addLine("      return _unsetProperties.equals(other._unsetProperties);");
-      } else {
+      if (metadata.getProperties().isEmpty()) {
         code.addLine("      return true;");
+      } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+        String prefix = "      return ";
+        for (Property property : metadata.getProperties()) {
+          code.add(prefix);
+          code.add("%1$s.equals(%2$s, other.%2$s)",
+              code.getSourceLevel().javaUtilObjects().get(), property.getName());
+          prefix = "\n          && ";
+        }
+        if (hasRequiredProperties) {
+          code.add(prefix);
+          code.add("%1$s.equals(_unsetProperties, other._unsetProperties)",
+              code.getSourceLevel().javaUtilObjects().get());
+        }
+        code.add(";\n");
+      } else {
+        for (Property property : metadata.getProperties()) {
+          switch (property.getType().getKind()) {
+            case FLOAT:
+            case DOUBLE:
+              code.addLine("      if (%s.doubleToLongBits(%s)", Double.class, property.getName())
+                  .addLine("          != %s.doubleToLongBits(other.%s)) {",
+                      Double.class, property.getName());
+              break;
+
+            default:
+              if (property.getType().getKind().isPrimitive()) {
+                code.addLine("      if (%1$s != other.%1$s) {", property.getName());
+              } else if (property.getCodeGenerator().getType() == Type.HAS_DEFAULT) {
+                code.addLine("      if (!%1$s.equals(other.%1$s)) {", property.getName());
+              } else {
+                code.addLine("      if (%1$s != other.%1$s", property.getName())
+                    .addLine("          && (%1$s == null || !%1$s.equals(other.%1$s))) {",
+                        property.getName());
+              }
+          }
+          code.addLine("        return false;")
+              .addLine("      }");
+          }
+        if (hasRequiredProperties) {
+          code.addLine("      return _unsetProperties.equals(other._unsetProperties);");
+        } else {
+          code.addLine("      return true;");
+        }
       }
       code.addLine("    }");
     }
@@ -492,25 +528,22 @@ public class CodeGenerator {
     if (metadata.standardMethodUnderride(StandardMethod.HASH_CODE) != FINAL) {
       code.addLine("")
           .addLine("    @%s", Override.class)
-          .addLine("    public int hashCode() {")
-          .addLine("      int result = 1;");
-      for (Property property : metadata.getProperties()) {
-        code.addLine("      result *= 31;");
-        if (property.getType().getKind().isPrimitive()) {
-          code.addLine("      result += ((%s) %s).hashCode();",
-              property.getBoxedType(), property.getName());
+          .addLine("    public int hashCode() {");
 
-        } else {
-          code.addLine("      result += ((%1$s == null) ? 0 : %1$s.hashCode());",
-              property.getName());
-        }
-      }
+      List<String> namesList = getNames(metadata.getProperties());
       if (hasRequiredProperties) {
-        code.addLine("      result *= 31;")
-            .addLine("      result += _unsetProperties.hashCode();");
+        namesList =
+            ImmutableList.<String>builder().addAll(namesList).add("_unsetProperties").build();
       }
-      code.addLine("      return result;")
-          .addLine("    }");
+      String properties = Joiner.on(", ").join(namesList);
+
+      if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+        code.addLine("      return %s.hash(%s);",
+            code.getSourceLevel().javaUtilObjects().get(), properties);
+      } else {
+        code.addLine("      return %s.hashCode(new Object[] { %s });", Arrays.class, properties);
+      }
+      code.addLine("    }");
     }
     // toString
     if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) != FINAL) {
