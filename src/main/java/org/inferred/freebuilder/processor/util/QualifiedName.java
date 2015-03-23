@@ -107,6 +107,14 @@ public class QualifiedName extends ValueType {
     return new QualifiedName(packageName, concat(simpleNames, ImmutableList.of(simpleName)));
   }
 
+  public ParameterizedType withParameters(String... typeParameters) {
+    return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
+  }
+
+  public ParameterizedType withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
+    return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
+  }
+
   /**
    * Returns the {@link QualifiedName} of the type enclosing this one.
    *
