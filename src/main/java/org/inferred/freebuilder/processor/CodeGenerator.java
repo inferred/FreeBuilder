@@ -36,6 +36,8 @@ import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
@@ -98,14 +100,14 @@ public class CodeGenerator {
 
   private void addBuilderTypeDeclaration(SourceBuilder code, Metadata metadata) {
     code.addLine("/**")
-        .addLine(" * Auto-generated superclass of {@link %s},", metadata.getBuilder())
-        .addLine(" * derived from the API of {@link %s}.", metadata.getType())
+        .addLine(" * Auto-generated superclass of %s,", metadata.getBuilder().javadocLink())
+        .addLine(" * derived from the API of %s.", metadata.getType().javadocLink())
         .addLine(" */")
         .addLine("@%s(\"%s\")", Generated.class, this.getClass().getName());
     if (metadata.isGwtCompatible()) {
       code.addLine("@%s", GwtCompatible.class);
     }
-    code.add("abstract class %s", metadata.getGeneratedBuilder().getSimpleName());
+    code.add("abstract class %s", metadata.getGeneratedBuilder().declaration());
     if (metadata.isBuilderSerializable()) {
       code.add(" implements %s", Serializable.class);
     }
@@ -143,8 +145,8 @@ public class CodeGenerator {
     boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Returns a newly-created {@link %s} based on the contents of the {@code %s}.",
-            metadata.getType(), metadata.getBuilder().getSimpleName());
+        .addLine(" * Returns a newly-created %s based on the contents of the {@code %s}.",
+            metadata.getType().javadocLink(), metadata.getBuilder().getSimpleName());
     if (hasRequiredProperties) {
       code.addLine(" *")
           .addLine(" * @throws IllegalStateException if any field has not been set");
@@ -156,7 +158,7 @@ public class CodeGenerator {
           "  %s.checkState(_unsetProperties.isEmpty(), \"Not set: %%s\", _unsetProperties);",
           Preconditions.class);
     }
-    code.addLine("  return new %s(this);", metadata.getValueType())
+    code.addLine("  return %s(this);", metadata.getValueType().constructor())
         .addLine("}");
   }
 
@@ -164,14 +166,13 @@ public class CodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets all property values using the given {@code %s} as a template.",
-            metadata.getType())
+            metadata.getType().getQualifiedName())
         .addLine(" */")
-        .addLine("public %s mergeFrom(%s value) {",
-            metadata.getBuilder(), metadata.getType());
+        .addLine("public %s mergeFrom(%s value) {", metadata.getBuilder(), metadata.getType());
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator().addMergeFromValue(withIndent(code, 2), "value");
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add("  return (%s) this;\n", metadata.getBuilder());
     code.addLine("}");
   }
 
@@ -256,7 +257,7 @@ public class CodeGenerator {
   private static void addBuildPartialMethod(SourceBuilder code, Metadata metadata) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Returns a newly-created partial {@link %s}", metadata.getType())
+        .addLine(" * Returns a newly-created partial %s", metadata.getType().javadocLink())
         .addLine(" * based on the contents of the {@code %s}.",
             metadata.getBuilder().getSimpleName())
         .addLine(" * State checking will not be performed.");
@@ -270,7 +271,7 @@ public class CodeGenerator {
         .addLine(" */")
         .addLine("@%s()", VisibleForTesting.class)
         .addLine("public %s buildPartial() {", metadata.getType())
-        .addLine("  return new %s(this);", metadata.getPartialType())
+        .addLine("  return %s(this);", metadata.getPartialType().constructor())
         .addLine("}");
   }
 
@@ -302,17 +303,13 @@ public class CodeGenerator {
     if (metadata.isGwtSerializable()) {
       // Due to a bug in GWT's handling of nested types, we have to declare Value as package scoped
       // so Value_CustomFieldSerializer can access it.
-      code.addLine("@%s(serializable = true)", GwtCompatible.class)
-          .addLine("static final class %s %s %s {",
-              metadata.getValueType().getSimpleName(),
-              getInheritanceKeyword(metadata.getType()),
-              metadata.getType());
+      code.addLine("@%s(serializable = true)", GwtCompatible.class);
     } else {
-      code.addLine("private static final class %s %s %s {",
-          metadata.getValueType().getSimpleName(),
-          getInheritanceKeyword(metadata.getType()),
-          metadata.getType());
+      code.add("private ");
     }
+    code.addLine("static final class %s %s {",
+        metadata.getValueType().declaration(),
+        extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator().addValueFieldDeclaration(withIndent(code, 2), property.getName());
@@ -347,10 +344,10 @@ public class CodeGenerator {
         code.addLine("")
             .addLine("  @%s", Override.class)
             .addLine("  public boolean equals(Object obj) {")
-            .addLine("    if (!(obj instanceof %s)) {", metadata.getValueType())
+            .addLine("    if (!(obj instanceof %s)) {", metadata.getValueType().getQualifiedName())
             .addLine("      return false;")
             .addLine("    }")
-            .addLine("    %1$s other = (%1$s) obj;", metadata.getValueType());
+            .addLine("    %1$s other = (%1$s) obj;", metadata.getValueType().withWildcards());
         if (metadata.getProperties().isEmpty()) {
           code.addLine("    return true;");
         } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
@@ -397,7 +394,7 @@ public class CodeGenerator {
             .addLine("  @%s", Override.class)
             .addLine("  public boolean equals(Object obj) {")
             .addLine("    return (!(obj instanceof %s) && super.equals(obj));",
-                metadata.getPartialType())
+                metadata.getPartialType().getQualifiedName())
             .addLine("  }");
         break;
 
@@ -487,126 +484,129 @@ public class CodeGenerator {
 
   private static void addCustomValueSerializer(SourceBuilder code, Metadata metadata) {
     code.addLine("")
-        .addLine("  @%s", GwtCompatible.class)
-        .addLine("  public static class %s_CustomFieldSerializer",
+        .addLine("@%s", GwtCompatible.class);
+    if (metadata.getType().isParameterized()) {
+      code.addLine("@%s(\"unchecked\")", SuppressWarnings.class);
+    }
+    code.addLine("public static class %s_CustomFieldSerializer",
             metadata.getValueType().getSimpleName())
-        .addLine("      extends %s<%s> {",
-            CUSTOM_FIELD_SERIALIZER, metadata.getValueType())
+        .addLine("    extends %s<%s> {", CUSTOM_FIELD_SERIALIZER, metadata.getValueType())
         .addLine("")
-        .addLine("    @%s", Override.class)
-        .addLine("    public void deserializeInstance(%s reader, %s instance) { }",
+        .addLine("  @%s", Override.class)
+        .addLine("  public void deserializeInstance(%s reader, %s instance) { }",
             SERIALIZATION_STREAM_READER, metadata.getValueType())
         .addLine("")
-        .addLine("    @%s", Override.class)
-        .addLine("    public boolean hasCustomInstantiateInstance() {")
-        .addLine("      return true;")
-        .addLine("    }")
+        .addLine("  @%s", Override.class)
+        .addLine("  public boolean hasCustomInstantiateInstance() {")
+        .addLine("    return true;")
+        .addLine("  }")
         .addLine("")
-        .addLine("    @%s", Override.class)
-        .addLine("    public %s instantiateInstance(%s reader)",
+        .addLine("  @%s", Override.class)
+        .addLine("  public %s instantiateInstance(%s reader)",
             metadata.getValueType(), SERIALIZATION_STREAM_READER)
-        .addLine("        throws %s {", SERIALIZATION_EXCEPTION)
-        .addLine("      %1$s builder = new %1$s();", metadata.getBuilder());
+        .addLine("      throws %s {", SERIALIZATION_EXCEPTION)
+        .addLine("    %1$s builder = new %1$s();", metadata.getBuilder());
     for (Property property : metadata.getProperties()) {
       if (property.getType().getKind().isPrimitive()) {
-        code.addLine("        %s %s = reader.read%s();",
+        code.addLine("      %s %s = reader.read%s();",
             property.getType(), property.getName(), withInitialCapital(property.getType()));
         property.getCodeGenerator()
             .addSetFromResult(withIndent(code, 6), "builder", property.getName());
       } else if (String.class.getName().equals(property.getType().toString())) {
-        code.addLine("        %s %s = reader.readString();",
+        code.addLine("      %s %s = reader.readString();",
             property.getType(), property.getName());
         property.getCodeGenerator()
             .addSetFromResult(withIndent(code, 6), "builder", property.getName());
       } else {
-        code.addLine("      try {");
+        code.addLine("    try {");
         if (!property.isFullyCheckedCast()) {
-          code.addLine("        @SuppressWarnings(\"unchecked\")");
+          code.addLine("      @SuppressWarnings(\"unchecked\")");
         }
-        code.addLine("        %1$s %2$s = (%1$s) reader.readObject();",
+        code.addLine("      %1$s %2$s = (%1$s) reader.readObject();",
                 property.getType(), property.getName());
         property.getCodeGenerator()
             .addSetFromResult(withIndent(code, 8), "builder", property.getName());
-        code.addLine("      } catch (%s e) {", ClassCastException.class)
-            .addLine("        throw new %s(", SERIALIZATION_EXCEPTION)
-            .addLine("            \"Wrong type for property '%s'\", e);", property.getName())
-            .addLine("      }");
+        code.addLine("    } catch (%s e) {", ClassCastException.class)
+            .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
+            .addLine("          \"Wrong type for property '%s'\", e);", property.getName())
+            .addLine("    }");
       }
     }
-    code.addLine("      return (%s) builder.build();", metadata.getValueType())
-        .addLine("    }")
+    code.addLine("    return (%s) builder.build();", metadata.getValueType())
+        .addLine("  }")
         .addLine("")
-        .addLine("    @%s", Override.class)
-        .addLine("    public void serializeInstance(%s writer, %s instance)",
+        .addLine("  @%s", Override.class)
+        .addLine("  public void serializeInstance(%s writer, %s instance)",
             SERIALIZATION_STREAM_WRITER, metadata.getValueType())
-        .addLine("        throws %s {", SERIALIZATION_EXCEPTION);
+        .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
     for (Property property : metadata.getProperties()) {
       if (property.getType().getKind().isPrimitive()) {
-        code.add("      writer.write%s(",
+        code.add("    writer.write%s(",
             withInitialCapital(property.getType()), property.getName());
       } else if (String.class.getName().equals(property.getType().toString())) {
-        code.add("      writer.writeString(", property.getName());
+        code.add("    writer.writeString(", property.getName());
       } else {
-        code.add("      writer.writeObject(", property.getName());
+        code.add("    writer.writeObject(", property.getName());
       }
       property.getCodeGenerator().addReadValueFragment(code, "instance." + property.getName());
       code.add(");\n");
     }
-    code.addLine("    }")
+    code.addLine("  }")
         .addLine("")
-        .addLine("    private static final Value_CustomFieldSerializer INSTANCE ="
+        .addLine("  private static final Value_CustomFieldSerializer INSTANCE ="
             + " new Value_CustomFieldSerializer();")
         .addLine("")
-        .addLine("    public static void deserialize(%s reader, %s instance) {",
+        .addLine("  public static void deserialize(%s reader, %s instance) {",
             SERIALIZATION_STREAM_READER, metadata.getValueType())
-        .addLine("      INSTANCE.deserializeInstance(reader, instance);")
-        .addLine("    }")
+        .addLine("    INSTANCE.deserializeInstance(reader, instance);")
+        .addLine("  }")
         .addLine("")
-        .addLine("    public static %s instantiate(%s reader)",
+        .addLine("  public static %s instantiate(%s reader)",
             metadata.getValueType(), SERIALIZATION_STREAM_READER)
-        .addLine("        throws %s {", SERIALIZATION_EXCEPTION)
-        .addLine("      return INSTANCE.instantiateInstance(reader);")
-        .addLine("    }")
+        .addLine("      throws %s {", SERIALIZATION_EXCEPTION)
+        .addLine("    return INSTANCE.instantiateInstance(reader);")
+        .addLine("  }")
         .addLine("")
-        .addLine("    public static void serialize(%s writer, %s instance)",
+        .addLine("  public static void serialize(%s writer, %s instance)",
             SERIALIZATION_STREAM_WRITER, metadata.getValueType())
-        .addLine("        throws %s {", SERIALIZATION_EXCEPTION)
-        .addLine("      INSTANCE.serializeInstance(writer, instance);")
-        .addLine("    }")
-        .addLine("  }");
+        .addLine("      throws %s {", SERIALIZATION_EXCEPTION)
+        .addLine("    INSTANCE.serializeInstance(writer, instance);")
+        .addLine("  }")
+        .addLine("}");
   }
 
   private static void addGwtWhitelistType(SourceBuilder code, Metadata metadata) {
     code.addLine("")
-        .addLine("  /** This class exists solely to ensure GWT whitelists all required types. */")
-        .addLine("  @%s(serializable = true)", GwtCompatible.class)
-        .addLine("  static final class GwtWhitelist %s %s {",
-            getInheritanceKeyword(metadata.getType()), metadata.getType())
+        .addLine("/** This class exists solely to ensure GWT whitelists all required types. */")
+        .addLine("@%s(serializable = true)", GwtCompatible.class)
+        .addLine("static final class GwtWhitelist%s %s {",
+            metadata.getType().typeParameters(),
+            extending(metadata.getType(), metadata.isInterfaceType()))
         .addLine("");
     for (Property property : metadata.getProperties()) {
-      code.addLine("    %s %s;", property.getType(), property.getName());
+      code.addLine("  %s %s;", property.getType(), property.getName());
     }
     code.addLine("")
-        .addLine("    private GwtWhitelist() {")
-        .addLine("      throw new %s();", UnsupportedOperationException.class)
-        .addLine("    }");
+        .addLine("  private GwtWhitelist() {")
+        .addLine("    throw new %s();", UnsupportedOperationException.class)
+        .addLine("   }");
     for (Property property : metadata.getProperties()) {
       code.addLine("")
-          .addLine("    @%s", Override.class)
-          .addLine("    public %s %s() {", property.getType(), property.getGetterName());
-      code.addLine("      throw new %s();", UnsupportedOperationException.class)
-          .addLine("    }");
+          .addLine("  @%s", Override.class)
+          .addLine("  public %s %s() {", property.getType(), property.getGetterName())
+          .addLine("    throw new %s();", UnsupportedOperationException.class)
+          .addLine("  }");
     }
-    code.addLine("  }");
+    code.addLine("}");
   }
 
   private static void addPartialType(SourceBuilder code, Metadata metadata) {
     boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
     code.addLine("")
-        .addLine("private static final class %s %s %s {",
+        .addLine("private static final class %s%s %s {",
             metadata.getPartialType().getSimpleName(),
-            getInheritanceKeyword(metadata.getType()),
-            metadata.getType());
+            metadata.getType().typeParameters(),
+            extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator().addValueFieldDeclaration(withIndent(code, 2), property.getName());
@@ -653,10 +653,10 @@ public class CodeGenerator {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public boolean equals(Object obj) {")
-          .addLine("    if (!(obj instanceof %s)) {", metadata.getPartialType())
+          .addLine("    if (!(obj instanceof %s)) {", metadata.getPartialType().getQualifiedName())
           .addLine("      return false;")
           .addLine("    }")
-          .addLine("    %1$s other = (%1$s) obj;", metadata.getPartialType());
+          .addLine("    %1$s other = (%1$s) obj;", metadata.getPartialType().withWildcards());
       if (metadata.getProperties().isEmpty()) {
         code.addLine("    return true;");
       } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
@@ -805,16 +805,20 @@ public class CodeGenerator {
             metadata.getType())
         .addLine(" */")
         .addLine("@%s(\"%s\")", Generated.class, this.getClass().getName())
-        .addLine("abstract class %s {}", metadata.getGeneratedBuilder().getSimpleName());
+        .addLine("abstract class %s {}", metadata.getGeneratedBuilder().declaration());
   }
 
-  /** Returns the correct keyword to use to inherit from the given type: implements, or extends. */
-  private static String getInheritanceKeyword(TypeElement type) {
-    if (type.getKind().isInterface()) {
-      return "implements";
-    } else {
-      return "extends";
-    }
+  /** Returns an {@link Excerpt} of "implements/extends {@code type}{@code typeParameters}". */
+  private static Excerpt extending(final ParameterizedType type, final boolean isInterface) {
+    return new Excerpt() {
+      @Override public void addTo(SourceBuilder source) {
+        if (isInterface) {
+          source.add("implements %s", type);
+        } else {
+          source.add("extends %s", type);
+        }
+      }
+    };
   }
 
   private static String withInitialCapital(Object obj) {

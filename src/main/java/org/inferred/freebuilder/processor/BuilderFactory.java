@@ -25,6 +25,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import com.google.common.base.Optional;
@@ -35,22 +36,30 @@ public enum BuilderFactory {
 
   /** A new Builder can be made by calling the class' no-args constructor. */
   NO_ARGS_CONSTRUCTOR {
-    @Override public void addNewBuilder(SourceBuilder code, TypeElement builderType) {
-      code.add("new %s()", builderType);
+    @Override public void addNewBuilder(
+        SourceBuilder code,
+        ParameterizedType builderType) {
+      code.add("%s()", builderType.constructor());
     }
   },
 
   /** The enclosing class provides a static builder() factory method. */
   BUILDER_METHOD {
-    @Override public void addNewBuilder(SourceBuilder code, TypeElement builderType) {
-      code.add("%s.builder()", builderType.getEnclosingElement());
+    @Override public void addNewBuilder(
+        SourceBuilder code,
+        ParameterizedType builderType) {
+      code.add("%s.%sbuilder()",
+          builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
     }
   },
 
   /** The enclosing class provides a static newBuilder() factory method. */
   NEW_BUILDER_METHOD {
-    @Override public void addNewBuilder(SourceBuilder code, TypeElement builderType) {
-      code.add("%s.newBuilder()", builderType.getEnclosingElement());
+    @Override public void addNewBuilder(
+        SourceBuilder code,
+        ParameterizedType builderType) {
+      code.add("%s.%snewBuilder()",
+          builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
     }
   };
 
@@ -69,7 +78,7 @@ public enum BuilderFactory {
   }
 
   /** Adds a code snippet calling the Builder factory method. */
-  public abstract void addNewBuilder(SourceBuilder code, TypeElement builderType);
+  public abstract void addNewBuilder(SourceBuilder code, ParameterizedType builderType);
 
   private static boolean hasExplicitNoArgsConstructor(TypeElement type) {
     for (ExecutableElement constructor : constructorsIn(type.getEnclosedElements())) {

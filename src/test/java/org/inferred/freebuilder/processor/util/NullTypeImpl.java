@@ -21,3 +21,4 @@ public class NullTypeImpl implements NullType {
   }
 
 }
+

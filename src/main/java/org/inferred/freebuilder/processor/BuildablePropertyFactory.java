@@ -34,6 +34,7 @@ import javax.lang.model.util.Types;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -142,7 +143,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
         GET_BUILDER_PREFIX + config.getProperty().getCapitalizedName() + GET_BUILDER_SUFFIX;
     return Optional.of(new CodeGenerator(
         config.getProperty(),
-        builder.get(),
+        ParameterizedType.from(builder.get()),
         builderFactory.get(),
         setterName,
         getBuilderName,
@@ -151,7 +152,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
-    final TypeElement builderType;
+    final ParameterizedType builderType;
     final BuilderFactory builderFactory;
     final String setterName;
     final String getBuilderName;
@@ -159,7 +160,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     CodeGenerator(
         Property property,
-        TypeElement builderType,
+        ParameterizedType builderType,
         BuilderFactory builderFactory,
         String setterName,
         String getBuilderName,
@@ -184,8 +185,8 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
       // set(T)
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Sets the value to be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code %s} is null", property.getName())
@@ -204,8 +205,8 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
       // set(T.Builder)
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Sets the value to be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code builder} is null")
@@ -220,8 +221,8 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
       // getBuilder()
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Returns a builder for the value that will be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Returns a builder for the value that will be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" */")
           .addLine("public %s %s() {", builderType, getBuilderName)
           .addLine("  return %s;", property.getName())

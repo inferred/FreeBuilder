@@ -20,9 +20,9 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Generated;
 import javax.annotation.Nullable;
-import javax.lang.model.element.TypeElement;
 import org.inferred.freebuilder.processor.BuilderFactory;
 import org.inferred.freebuilder.processor.Metadata;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
 /**
@@ -43,6 +43,7 @@ abstract class Metadata_Builder {
     BUILDER_SERIALIZABLE("builderSerializable"),
     GWT_COMPATIBLE("gwtCompatible"),
     GWT_SERIALIZABLE("gwtSerializable"),
+    INTERFACE_TYPE("interfaceType"),
     ;
 
     private final String name;
@@ -60,21 +61,22 @@ abstract class Metadata_Builder {
   // allows the JVM to optimize away the Optional objects created by and
   // passed to our API.
   private BuilderFactory builderFactory = null;
-  private QualifiedName generatedBuilder;
+  private ParameterizedType generatedBuilder;
   // Store a nullable object instead of an Optional. Escape analysis then
   // allows the JVM to optimize away the Optional objects created by and
   // passed to our API.
-  private TypeElement optionalBuilder = null;
-  private QualifiedName partialType;
+  private ParameterizedType optionalBuilder = null;
+  private ParameterizedType partialType;
   private ArrayList<Metadata.Property> properties = new ArrayList<Metadata.Property>();
-  private QualifiedName propertyEnum;
+  private ParameterizedType propertyEnum;
   private LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel> standardMethodUnderrides = new LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>();
-  private TypeElement type;
-  private QualifiedName valueType;
+  private ParameterizedType type;
+  private ParameterizedType valueType;
   private LinkedHashSet<QualifiedName> visibleNestedTypes = new LinkedHashSet<QualifiedName>();
   private boolean builderSerializable;
   private boolean gwtCompatible;
   private boolean gwtSerializable;
+  private boolean interfaceType;
   private final EnumSet<Metadata_Builder.Property> _unsetProperties =
       EnumSet.allOf(Metadata_Builder.Property.class);
 
@@ -139,7 +141,7 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code generatedBuilder} is null
    */
-  public Metadata.Builder setGeneratedBuilder(QualifiedName generatedBuilder) {
+  public Metadata.Builder setGeneratedBuilder(ParameterizedType generatedBuilder) {
     this.generatedBuilder = Preconditions.checkNotNull(generatedBuilder);
     _unsetProperties.remove(Metadata_Builder.Property.GENERATED_BUILDER);
     return (Metadata.Builder) this;
@@ -150,7 +152,7 @@ abstract class Metadata_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public QualifiedName getGeneratedBuilder() {
+  public ParameterizedType getGeneratedBuilder() {
     Preconditions.checkState(
         !_unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER),
         "generatedBuilder not set");
@@ -163,7 +165,7 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code optionalBuilder} is null
    */
-  public Metadata.Builder setOptionalBuilder(TypeElement optionalBuilder) {
+  public Metadata.Builder setOptionalBuilder(ParameterizedType optionalBuilder) {
     this.optionalBuilder = Preconditions.checkNotNull(optionalBuilder);
     return (Metadata.Builder) this;
   }
@@ -173,7 +175,7 @@ abstract class Metadata_Builder {
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Builder setOptionalBuilder(Optional<? extends TypeElement> optionalBuilder) {
+  public Metadata.Builder setOptionalBuilder(Optional<? extends ParameterizedType> optionalBuilder) {
     if (optionalBuilder.isPresent()) {
       return setOptionalBuilder(optionalBuilder.get());
     } else {
@@ -186,7 +188,7 @@ abstract class Metadata_Builder {
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Builder setNullableOptionalBuilder(@Nullable TypeElement optionalBuilder) {
+  public Metadata.Builder setNullableOptionalBuilder(@Nullable ParameterizedType optionalBuilder) {
     if (optionalBuilder != null) {
       return setOptionalBuilder(optionalBuilder);
     } else {
@@ -208,7 +210,7 @@ abstract class Metadata_Builder {
   /**
    * Returns the value that will be returned by {@link Metadata#getOptionalBuilder()}.
    */
-  public Optional<TypeElement> getOptionalBuilder() {
+  public Optional<ParameterizedType> getOptionalBuilder() {
     return Optional.fromNullable(optionalBuilder);
   }
 
@@ -218,7 +220,7 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code partialType} is null
    */
-  public Metadata.Builder setPartialType(QualifiedName partialType) {
+  public Metadata.Builder setPartialType(ParameterizedType partialType) {
     this.partialType = Preconditions.checkNotNull(partialType);
     _unsetProperties.remove(Metadata_Builder.Property.PARTIAL_TYPE);
     return (Metadata.Builder) this;
@@ -229,7 +231,7 @@ abstract class Metadata_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public QualifiedName getPartialType() {
+  public ParameterizedType getPartialType() {
     Preconditions.checkState(
         !_unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE),
         "partialType not set");
@@ -306,7 +308,7 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code propertyEnum} is null
    */
-  public Metadata.Builder setPropertyEnum(QualifiedName propertyEnum) {
+  public Metadata.Builder setPropertyEnum(ParameterizedType propertyEnum) {
     this.propertyEnum = Preconditions.checkNotNull(propertyEnum);
     _unsetProperties.remove(Metadata_Builder.Property.PROPERTY_ENUM);
     return (Metadata.Builder) this;
@@ -317,7 +319,7 @@ abstract class Metadata_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public QualifiedName getPropertyEnum() {
+  public ParameterizedType getPropertyEnum() {
     Preconditions.checkState(
         !_unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM),
         "propertyEnum not set");
@@ -401,7 +403,7 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code type} is null
    */
-  public Metadata.Builder setType(TypeElement type) {
+  public Metadata.Builder setType(ParameterizedType type) {
     this.type = Preconditions.checkNotNull(type);
     _unsetProperties.remove(Metadata_Builder.Property.TYPE);
     return (Metadata.Builder) this;
@@ -412,7 +414,7 @@ abstract class Metadata_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public TypeElement getType() {
+  public ParameterizedType getType() {
     Preconditions.checkState(
         !_unsetProperties.contains(Metadata_Builder.Property.TYPE),
         "type not set");
@@ -425,7 +427,7 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code valueType} is null
    */
-  public Metadata.Builder setValueType(QualifiedName valueType) {
+  public Metadata.Builder setValueType(ParameterizedType valueType) {
     this.valueType = Preconditions.checkNotNull(valueType);
     _unsetProperties.remove(Metadata_Builder.Property.VALUE_TYPE);
     return (Metadata.Builder) this;
@@ -436,7 +438,7 @@ abstract class Metadata_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public QualifiedName getValueType() {
+  public ParameterizedType getValueType() {
     Preconditions.checkState(
         !_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE),
         "valueType not set");
@@ -576,26 +578,50 @@ abstract class Metadata_Builder {
     return gwtSerializable;
   }
 
+  /**
+   * Sets the value to be returned by {@link Metadata#isInterfaceType()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Builder setInterfaceType(boolean interfaceType) {
+    this.interfaceType = interfaceType;
+    _unsetProperties.remove(Metadata_Builder.Property.INTERFACE_TYPE);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Metadata#isInterfaceType()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public boolean isInterfaceType() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE),
+        "interfaceType not set");
+    return interfaceType;
+  }
+
   private static final class Value extends Metadata {
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
     private final BuilderFactory builderFactory;
-    private final QualifiedName generatedBuilder;
+    private final ParameterizedType generatedBuilder;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
-    private final TypeElement optionalBuilder;
-    private final QualifiedName partialType;
+    private final ParameterizedType optionalBuilder;
+    private final ParameterizedType partialType;
     private final ImmutableList<Metadata.Property> properties;
-    private final QualifiedName propertyEnum;
+    private final ParameterizedType propertyEnum;
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel> standardMethodUnderrides;
-    private final TypeElement type;
-    private final QualifiedName valueType;
+    private final ParameterizedType type;
+    private final ParameterizedType valueType;
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final boolean builderSerializable;
     private final boolean gwtCompatible;
     private final boolean gwtSerializable;
+    private final boolean interfaceType;
 
     private Value(Metadata_Builder builder) {
       this.builderFactory = builder.builderFactory;
@@ -611,6 +637,7 @@ abstract class Metadata_Builder {
       this.builderSerializable = builder.builderSerializable;
       this.gwtCompatible = builder.gwtCompatible;
       this.gwtSerializable = builder.gwtSerializable;
+      this.interfaceType = builder.interfaceType;
     }
 
     @Override
@@ -619,17 +646,17 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public QualifiedName getGeneratedBuilder() {
+    public ParameterizedType getGeneratedBuilder() {
       return generatedBuilder;
     }
 
     @Override
-    public Optional<TypeElement> getOptionalBuilder() {
+    public Optional<ParameterizedType> getOptionalBuilder() {
       return Optional.fromNullable(optionalBuilder);
     }
 
     @Override
-    public QualifiedName getPartialType() {
+    public ParameterizedType getPartialType() {
       return partialType;
     }
 
@@ -639,7 +666,7 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public QualifiedName getPropertyEnum() {
+    public ParameterizedType getPropertyEnum() {
       return propertyEnum;
     }
 
@@ -649,12 +676,12 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public TypeElement getType() {
+    public ParameterizedType getType() {
       return type;
     }
 
     @Override
-    public QualifiedName getValueType() {
+    public ParameterizedType getValueType() {
       return valueType;
     }
 
@@ -676,6 +703,11 @@ abstract class Metadata_Builder {
     @Override
     public boolean isGwtSerializable() {
       return gwtSerializable;
+    }
+
+    @Override
+    public boolean isInterfaceType() {
+      return interfaceType;
     }
 
     @Override
@@ -725,12 +757,15 @@ abstract class Metadata_Builder {
       if (gwtSerializable != other.gwtSerializable) {
         return false;
       }
+      if (interfaceType != other.interfaceType) {
+        return false;
+      }
       return true;
     }
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(new Object[] { builderFactory, generatedBuilder, optionalBuilder, partialType, properties, propertyEnum, standardMethodUnderrides, type, valueType, visibleNestedTypes, builderSerializable, gwtCompatible, gwtSerializable });
+      return Arrays.hashCode(new Object[] { builderFactory, generatedBuilder, optionalBuilder, partialType, properties, propertyEnum, standardMethodUnderrides, type, valueType, visibleNestedTypes, builderSerializable, gwtCompatible, gwtSerializable, interfaceType });
     }
 
     @Override
@@ -749,7 +784,8 @@ abstract class Metadata_Builder {
               "visibleNestedTypes=" + visibleNestedTypes,
               "builderSerializable=" + builderSerializable,
               "gwtCompatible=" + gwtCompatible,
-              "gwtSerializable=" + gwtSerializable)
+              "gwtSerializable=" + gwtSerializable,
+              "interfaceType=" + interfaceType)
           + "}";
     }
   }
@@ -781,6 +817,7 @@ abstract class Metadata_Builder {
     setBuilderSerializable(value.isBuilderSerializable());
     setGwtCompatible(value.isGwtCompatible());
     setGwtSerializable(value.isGwtSerializable());
+    setInterfaceType(value.isInterfaceType());
     return (Metadata.Builder) this;
   }
 
@@ -821,6 +858,9 @@ abstract class Metadata_Builder {
     if (!_templateUnset.contains(Metadata_Builder.Property.GWT_SERIALIZABLE)) {
       setGwtSerializable(template.isGwtSerializable());
     }
+    if (!_templateUnset.contains(Metadata_Builder.Property.INTERFACE_TYPE)) {
+      setInterfaceType(template.isInterfaceType());
+    }
     return (Metadata.Builder) this;
   }
 
@@ -842,6 +882,7 @@ abstract class Metadata_Builder {
     builderSerializable = _template.builderSerializable;
     gwtCompatible = _template.gwtCompatible;
     gwtSerializable = _template.gwtSerializable;
+    interfaceType = _template.interfaceType;
     _unsetProperties.clear();
     _unsetProperties.addAll(_template._unsetProperties);
     return (Metadata.Builder) this;
@@ -852,21 +893,22 @@ abstract class Metadata_Builder {
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
     private final BuilderFactory builderFactory;
-    private final QualifiedName generatedBuilder;
+    private final ParameterizedType generatedBuilder;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
-    private final TypeElement optionalBuilder;
-    private final QualifiedName partialType;
+    private final ParameterizedType optionalBuilder;
+    private final ParameterizedType partialType;
     private final ImmutableList<Metadata.Property> properties;
-    private final QualifiedName propertyEnum;
+    private final ParameterizedType propertyEnum;
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel> standardMethodUnderrides;
-    private final TypeElement type;
-    private final QualifiedName valueType;
+    private final ParameterizedType type;
+    private final ParameterizedType valueType;
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final boolean builderSerializable;
     private final boolean gwtCompatible;
     private final boolean gwtSerializable;
+    private final boolean interfaceType;
     private final EnumSet<Metadata_Builder.Property> _unsetProperties;
 
     Partial(Metadata_Builder builder) {
@@ -883,6 +925,7 @@ abstract class Metadata_Builder {
       this.builderSerializable = builder.builderSerializable;
       this.gwtCompatible = builder.gwtCompatible;
       this.gwtSerializable = builder.gwtSerializable;
+      this.interfaceType = builder.interfaceType;
       this._unsetProperties = builder._unsetProperties.clone();
     }
 
@@ -892,7 +935,7 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public QualifiedName getGeneratedBuilder() {
+    public ParameterizedType getGeneratedBuilder() {
       if (_unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)) {
         throw new UnsupportedOperationException("generatedBuilder not set");
       }
@@ -900,12 +943,12 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public Optional<TypeElement> getOptionalBuilder() {
+    public Optional<ParameterizedType> getOptionalBuilder() {
       return Optional.fromNullable(optionalBuilder);
     }
 
     @Override
-    public QualifiedName getPartialType() {
+    public ParameterizedType getPartialType() {
       if (_unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)) {
         throw new UnsupportedOperationException("partialType not set");
       }
@@ -918,7 +961,7 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public QualifiedName getPropertyEnum() {
+    public ParameterizedType getPropertyEnum() {
       if (_unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)) {
         throw new UnsupportedOperationException("propertyEnum not set");
       }
@@ -931,7 +974,7 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public TypeElement getType() {
+    public ParameterizedType getType() {
       if (_unsetProperties.contains(Metadata_Builder.Property.TYPE)) {
         throw new UnsupportedOperationException("type not set");
       }
@@ -939,7 +982,7 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public QualifiedName getValueType() {
+    public ParameterizedType getValueType() {
       if (_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)) {
         throw new UnsupportedOperationException("valueType not set");
       }
@@ -973,6 +1016,14 @@ abstract class Metadata_Builder {
         throw new UnsupportedOperationException("gwtSerializable not set");
       }
       return gwtSerializable;
+    }
+
+    @Override
+    public boolean isInterfaceType() {
+      if (_unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)) {
+        throw new UnsupportedOperationException("interfaceType not set");
+      }
+      return interfaceType;
     }
 
     @Override
@@ -1027,12 +1078,15 @@ abstract class Metadata_Builder {
       if (gwtSerializable != other.gwtSerializable) {
         return false;
       }
+      if (interfaceType != other.interfaceType) {
+        return false;
+      }
       return _unsetProperties.equals(other._unsetProperties);
     }
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(new Object[] { builderFactory, generatedBuilder, optionalBuilder, partialType, properties, propertyEnum, standardMethodUnderrides, type, valueType, visibleNestedTypes, builderSerializable, gwtCompatible, gwtSerializable, _unsetProperties });
+      return Arrays.hashCode(new Object[] { builderFactory, generatedBuilder, optionalBuilder, partialType, properties, propertyEnum, standardMethodUnderrides, type, valueType, visibleNestedTypes, builderSerializable, gwtCompatible, gwtSerializable, interfaceType, _unsetProperties });
     }
 
     @Override
@@ -1059,7 +1113,9 @@ abstract class Metadata_Builder {
               (!_unsetProperties.contains(Metadata_Builder.Property.GWT_COMPATIBLE)
                   ? "gwtCompatible=" + gwtCompatible : null),
               (!_unsetProperties.contains(Metadata_Builder.Property.GWT_SERIALIZABLE)
-                  ? "gwtSerializable=" + gwtSerializable : null))
+                  ? "gwtSerializable=" + gwtSerializable : null),
+              (!_unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)
+                  ? "interfaceType=" + interfaceType : null))
           + "}";
     }
   }
