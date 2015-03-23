@@ -56,67 +56,6 @@ public class ImportManagerTest {
   }
 
   @Test
-  public void testClassShortening() {
-    ImportManager manager = new ImportManager.Builder().build();
-    assertEquals("String", manager.shorten(String.class));
-    assertEquals("List", manager.shorten(List.class));
-    assertEquals("java.awt.List", manager.shorten(java.awt.List.class));
-    assertEquals("Map", manager.shorten(Map.class));
-    assertEquals("Map.Entry", manager.shorten(Map.Entry.class));
-    assertThat(manager.getClassImports())
-        .containsExactly("java.util.List", "java.util.Map").inOrder();
-  }
-
-  @Test
-  public void testClassShortening_withConflicts() {
-    ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
-    ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
-    ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(QualifiedName.of(listType))
-        .addImplicitImport(QualifiedName.of(stringType))
-        .build();
-    assertEquals("java.lang.String", manager.shorten(String.class));
-    assertEquals("java.util.List", manager.shorten(List.class));
-    assertEquals("java.awt.List", manager.shorten(java.awt.List.class));
-    assertEquals("Map", manager.shorten(Map.class));
-    assertThat(manager.getClassImports()).containsExactly("java.util.Map");
-  }
-
-  @Test
-  public void testTypeElementShortening() {
-    ImportManager manager = new ImportManager.Builder().build();
-    assertEquals("String", manager.shorten(newTopLevelClass("java.lang.String").asElement()));
-    assertEquals("List", manager.shorten(newTopLevelClass("java.util.List").asElement()));
-    assertEquals("java.awt.List", manager.shorten(newTopLevelClass("java.awt.List").asElement()));
-    ClassElementImpl mapType = newTopLevelClass("java.util.Map").asElement();
-    assertEquals("Map", manager.shorten(mapType));
-    assertEquals("Map.Entry", manager.shorten(newNestedClass(mapType, "Entry").asElement()));
-    assertThat(manager.getClassImports())
-        .containsExactly("java.util.List", "java.util.Map").inOrder();
-  }
-
-  @Test
-  public void testTypeElementShortening_withConflicts() {
-    ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
-    ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
-    ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(QualifiedName.of(listType))
-        .addImplicitImport(QualifiedName.of(stringType))
-        .build();
-    assertEquals("java.lang.String",
-        manager.shorten(newTopLevelClass("java.lang.String").asElement()));
-    assertEquals("java.util.List", manager.shorten(newTopLevelClass("java.util.List").asElement()));
-    ClassElementImpl awtListType = newTopLevelClass("java.awt.List").asElement();
-    assertEquals("java.awt.List", manager.shorten(awtListType));
-    assertEquals("java.awt.List.Sucks",
-        manager.shorten(newNestedClass(awtListType, "Sucks").asElement()));
-    assertEquals("Map", manager.shorten(newTopLevelClass("java.util.Map").asElement()));
-    assertEquals("List", manager.shorten(listType));
-    assertEquals("List.String", manager.shorten(stringType));
-    assertThat(manager.getClassImports()).containsExactly("java.util.Map");
-  }
-
-  @Test
   public void testTypeMirrorShortening() {
     ImportManager manager = new ImportManager.Builder().build();
     assertEquals("String", manager.shorten(newTopLevelClass("java.lang.String")));
@@ -145,8 +84,8 @@ public class ImportManagerTest {
     assertEquals("java.awt.List.Sucks",
         manager.shorten(newNestedClass(awtListType.asElement(), "Sucks")));
     assertEquals("Map", manager.shorten(newTopLevelClass("java.util.Map")));
-    assertEquals("List", manager.shorten(listType));
-    assertEquals("List.String", manager.shorten(stringType));
+    assertEquals("List", manager.shorten(listType.asType()));
+    assertEquals("List.String", manager.shorten(stringType.asType()));
     assertThat(manager.getClassImports()).containsExactly("java.util.Map");
   }
 

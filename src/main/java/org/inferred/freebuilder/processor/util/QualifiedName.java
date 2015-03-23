@@ -21,6 +21,7 @@ import static com.google.common.collect.Iterables.getLast;
 
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -42,6 +43,19 @@ public class QualifiedName extends ValueType {
     Preconditions.checkArgument(!topLevelType.isEmpty());
     return new QualifiedName(
         packageName, ImmutableList.<String>builder().add(topLevelType).add(nestedTypes).build());
+  }
+
+  /**
+   * Returns a {@link QualifiedName} for {@code cls}.
+   */
+  public static QualifiedName of(Class<?> cls) {
+    if (cls.getEnclosingClass() != null) {
+      return QualifiedName.of(cls.getEnclosingClass()).nestedType(cls.getSimpleName());
+    } else if (cls.getPackage() != null) {
+      return QualifiedName.of(cls.getPackage().getName(), cls.getSimpleName());
+    } else {
+      return QualifiedName.of("", cls.getSimpleName());
+    }
   }
 
   /**
@@ -91,6 +105,14 @@ public class QualifiedName extends ValueType {
    */
   public QualifiedName nestedType(String simpleName) {
     return new QualifiedName(packageName, concat(simpleNames, ImmutableList.of(simpleName)));
+  }
+
+  public ParameterizedType withParameters(String... typeParameters) {
+    return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
+  }
+
+  public ParameterizedType withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
+    return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
   }
 
   /**

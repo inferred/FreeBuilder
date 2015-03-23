@@ -103,31 +103,6 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
   }
 
   @Override
-  public String shorten(Class<?> cls) {
-    if (cls.getEnclosingClass() != null) {
-      return shorten(cls.getEnclosingClass()) + "." + cls.getSimpleName();
-    } else if (cls.getPackage() != null) {
-      return getPrefixForTopLevelClass(cls.getPackage().getName(), cls.getSimpleName())
-          + cls.getSimpleName();
-    } else {
-      return cls.getSimpleName();
-    }
-  }
-
-  @Override
-  public String shorten(TypeElement type) {
-    Element parent = type.getEnclosingElement();
-    if (parent.getKind() == ElementKind.PACKAGE) {
-      return getPrefixForTopLevelClass(parent.toString(), type.getSimpleName())
-          + type.getSimpleName();
-    } else if (parent.getKind().isInterface() || parent.getKind().isClass()) {
-      return shorten((TypeElement) parent) + "." + type.getSimpleName();
-    } else {
-      return type.getQualifiedName().toString();
-    }
-  }
-
-  @Override
   public String shorten(TypeMirror mirror) {
     return mirror.accept(this, null);
   }
@@ -154,7 +129,7 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
       PackageElement pkg = (PackageElement) enclosingElement;
       prefix = getPrefixForTopLevelClass(pkg.getQualifiedName().toString(), name);
     } else if (enclosingElement.getKind().isClass() || enclosingElement.getKind().isInterface()) {
-      prefix = shorten((TypeElement) enclosingElement) + ".";
+      prefix = shorten(QualifiedName.of((TypeElement) enclosingElement)) + ".";
     } else {
       prefix = enclosingElement.toString() + ".";
     }
