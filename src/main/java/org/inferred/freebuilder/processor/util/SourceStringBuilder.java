@@ -90,12 +90,12 @@ public final class SourceStringBuilder implements SourceBuilder {
       if (kind == ElementKind.PACKAGE) {
         return ((PackageElement) arg).getQualifiedName();
       } else if (kind.isClass() || kind.isInterface()) {
-        return shortener.shorten((TypeElement) arg);
+        return shortener.shorten(QualifiedName.of((TypeElement) arg));
       } else {
         return arg;
       }
     } else if (arg instanceof Class<?>) {
-      return shortener.shorten((Class<?>) arg);
+      return shortener.shorten(QualifiedName.of((Class<?>) arg));
     } else if ((arg instanceof TypeMirror) && (((TypeMirror) arg).getKind() == TypeKind.DECLARED)) {
       DeclaredType mirror = (DeclaredType) arg;
       checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
