@@ -38,7 +38,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
-import org.inferred.freebuilder.processor.util.TypeReference;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.testing.FakeMessager;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -79,10 +79,10 @@ public class AnalyserTest {
 
     Metadata metadata = analyser.analyse(dataType);
 
-    TypeReference expectedBuilder = TypeReference.to("com.example", "DataType_Builder");
-    TypeReference partialType = expectedBuilder.nestedType("Partial");
-    TypeReference propertyType = expectedBuilder.nestedType("Property");
-    TypeReference valueType = expectedBuilder.nestedType("Value");
+    QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
+    QualifiedName partialType = expectedBuilder.nestedType("Partial");
+    QualifiedName propertyType = expectedBuilder.nestedType("Property");
+    QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
@@ -114,10 +114,10 @@ public class AnalyserTest {
 
     Metadata metadata = analyser.analyse(dataType);
 
-    TypeReference expectedBuilder = TypeReference.to("com.example", "DataType_Builder");
-    TypeReference partialType = expectedBuilder.nestedType("Partial");
-    TypeReference propertyType = expectedBuilder.nestedType("Property");
-    TypeReference valueType = expectedBuilder.nestedType("Value");
+    QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
+    QualifiedName partialType = expectedBuilder.nestedType("Partial");
+    QualifiedName propertyType = expectedBuilder.nestedType("Property");
+    QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
@@ -151,7 +151,7 @@ public class AnalyserTest {
     assertEquals("com.example.OuterClass.DataType",
         dataType.getType().getQualifiedName().toString());
     assertEquals("com.example", dataType.getPackage().getQualifiedName().toString());
-    assertEquals(TypeReference.to("com.example", "OuterClass_DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "OuterClass_DataType_Builder"),
         dataType.getGeneratedBuilder());
   }
 
@@ -168,7 +168,7 @@ public class AnalyserTest {
     assertEquals("com.example.OuterClass.InnerClass.DataType",
         dataType.getType().getQualifiedName().toString());
     assertEquals("com.example", dataType.getPackage().getQualifiedName().toString());
-    assertEquals(TypeReference.to("com.example", "OuterClass_InnerClass_DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "OuterClass_InnerClass_DataType_Builder"),
         dataType.getGeneratedBuilder());
   }
 
@@ -179,7 +179,7 @@ public class AnalyserTest {
         "public class DataType {",
         "  public static class Builder extends DataType_Builder { }",
         "}"));
-    assertEquals(TypeReference.to("com.example", "DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder"),
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
@@ -196,7 +196,7 @@ public class AnalyserTest {
         "  public static class Builder ",
         "      extends DataType_Builder implements java.io.Serializable { }",
         "}"));
-    assertEquals(TypeReference.to("com.example", "DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder"),
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
@@ -212,7 +212,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder { }",
         "  public static Builder builder() { return new Builder(); }",
         "}"));
-    assertEquals(TypeReference.to("com.example", "DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder"),
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
@@ -229,7 +229,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder { }",
         "  public static Builder newBuilder() { return new Builder(); }",
         "}"));
-    assertEquals(TypeReference.to("com.example", "DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder"),
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
@@ -1067,10 +1067,10 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     TypeElement concreteBuilder = model.typeElement("com.example.DataType.Builder");
-    TypeReference expectedBuilder = TypeReference.to("com.example", "DataType_Builder");
-    TypeReference partialType = expectedBuilder.nestedType("Partial");
-    TypeReference propertyType = expectedBuilder.nestedType("Property");
-    TypeReference valueType = expectedBuilder.nestedType("Value");
+    QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
+    QualifiedName partialType = expectedBuilder.nestedType("Partial");
+    QualifiedName propertyType = expectedBuilder.nestedType("Property");
+    QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
         .setBuilder(model.typeElement("com.example.DataType.Builder"))
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
@@ -1082,7 +1082,7 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType)
         .setType(dataType)
         .setValueType(valueType)
-        .addVisibleNestedTypes(TypeReference.to(concreteBuilder))
+        .addVisibleNestedTypes(QualifiedName.of(concreteBuilder))
         .addVisibleNestedTypes(partialType)
         .addVisibleNestedTypes(propertyType)
         .addVisibleNestedTypes(valueType)
@@ -1106,10 +1106,10 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     TypeElement concreteBuilder = model.typeElement("com.example.DataType.Builder");
-    TypeReference expectedBuilder = TypeReference.to("com.example", "DataType_Builder");
-    TypeReference partialType = expectedBuilder.nestedType("Partial");
-    TypeReference propertyType = expectedBuilder.nestedType("Property");
-    TypeReference valueType = expectedBuilder.nestedType("Value");
+    QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
+    QualifiedName partialType = expectedBuilder.nestedType("Partial");
+    QualifiedName propertyType = expectedBuilder.nestedType("Property");
+    QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
         .setBuilder(model.typeElement("com.example.DataType.Builder"))
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
@@ -1121,7 +1121,7 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType)
         .setType(dataType)
         .setValueType(valueType)
-        .addVisibleNestedTypes(TypeReference.to(concreteBuilder))
+        .addVisibleNestedTypes(QualifiedName.of(concreteBuilder))
         .addVisibleNestedTypes(partialType)
         .addVisibleNestedTypes(propertyType)
         .addVisibleNestedTypes(valueType)
@@ -1321,11 +1321,11 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getVisibleNestedTypes()).containsExactly(
-        TypeReference.to("com.example", "DataType", "Builder"),
-        TypeReference.to("com.example", "DataType", "Objects"),
-        TypeReference.to("com.example", "DataType_Builder", "Partial"),
-        TypeReference.to("com.example", "DataType_Builder", "Property"),
-        TypeReference.to("com.example", "DataType_Builder", "Value"));
+        QualifiedName.of("com.example", "DataType", "Builder"),
+        QualifiedName.of("com.example", "DataType", "Objects"),
+        QualifiedName.of("com.example", "DataType_Builder", "Partial"),
+        QualifiedName.of("com.example", "DataType_Builder", "Property"),
+        QualifiedName.of("com.example", "DataType_Builder", "Value"));
   }
 
   @Test
@@ -1347,11 +1347,11 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getVisibleNestedTypes()).containsExactly(
-        TypeReference.to("com.example", "SuperType", "Objects"),
-        TypeReference.to("com.example", "DataType", "Builder"),
-        TypeReference.to("com.example", "DataType_Builder", "Partial"),
-        TypeReference.to("com.example", "DataType_Builder", "Property"),
-        TypeReference.to("com.example", "DataType_Builder", "Value"));
+        QualifiedName.of("com.example", "SuperType", "Objects"),
+        QualifiedName.of("com.example", "DataType", "Builder"),
+        QualifiedName.of("com.example", "DataType_Builder", "Partial"),
+        QualifiedName.of("com.example", "DataType_Builder", "Property"),
+        QualifiedName.of("com.example", "DataType_Builder", "Value"));
   }
 
   private static final Function<Property, String> GET_NAME = new Function<Property, String>() {

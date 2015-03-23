@@ -30,8 +30,8 @@ import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirr
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.TypeReference;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -47,7 +47,7 @@ public class CodeGeneratorTest {
   public void testSimpleDataType_j6() {
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
     TypeMirror string = newTopLevelClass("java.lang.String");
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
@@ -343,7 +343,7 @@ public class CodeGeneratorTest {
   public void testNoRequiredProperties_j6() {
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
     TypeMirror string = newTopLevelClass("java.lang.String");
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
@@ -585,7 +585,7 @@ public class CodeGeneratorTest {
     ClassTypeImpl string = newTopLevelClass("java.lang.String");
     GenericTypeMirrorImpl optionalString = optional.newMirror(string);
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(optionalString)
@@ -925,7 +925,7 @@ public class CodeGeneratorTest {
     ClassTypeImpl string = newTopLevelClass("java.lang.String");
     ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
@@ -1180,7 +1180,7 @@ public class CodeGeneratorTest {
     ClassTypeImpl string = newTopLevelClass("java.lang.String");
     GenericTypeMirrorImpl listString = list.newMirror(string);
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(listString)
@@ -1507,7 +1507,7 @@ public class CodeGeneratorTest {
   public void testSimpleDataType_j7() {
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
     TypeMirror string = newTopLevelClass("java.lang.String");
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
@@ -1793,7 +1793,7 @@ public class CodeGeneratorTest {
   public void testNoRequiredProperties_j7() {
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
     TypeMirror string = newTopLevelClass("java.lang.String");
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
@@ -2025,7 +2025,7 @@ public class CodeGeneratorTest {
     ClassTypeImpl string = newTopLevelClass("java.lang.String");
     GenericTypeMirrorImpl optionalString = optional.newMirror(string);
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(optionalString)
@@ -2351,7 +2351,7 @@ public class CodeGeneratorTest {
     ClassTypeImpl string = newTopLevelClass("java.lang.String");
     ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
@@ -2592,7 +2592,7 @@ public class CodeGeneratorTest {
     ClassTypeImpl string = newTopLevelClass("java.lang.String");
     GenericTypeMirrorImpl listString = list.newMirror(string);
     TypeElement person = newTopLevelClass("com.example.Person").asElement();
-    TypeReference generatedBuilder = TypeReference.to("com.example", "Person_Builder");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property.Builder name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(listString)

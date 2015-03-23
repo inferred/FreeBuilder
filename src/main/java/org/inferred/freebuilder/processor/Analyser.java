@@ -71,7 +71,7 @@ import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
 import org.inferred.freebuilder.processor.util.ModelUtils;
-import org.inferred.freebuilder.processor.util.TypeReference;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Optional;
@@ -143,12 +143,12 @@ class Analyser {
     verifyType(type);
     PackageElement pkg = elements.getPackageOf(type);
     ImmutableSet<ExecutableElement> methods = methodsOn(type, elements);
-    TypeReference generatedBuilder = TypeReference.to(
+    QualifiedName generatedBuilder = QualifiedName.of(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
     Optional<TypeElement> builder = tryFindBuilder(generatedBuilder, type);
-    TypeReference valueType = generatedBuilder.nestedType("Value");
-    TypeReference partialType = generatedBuilder.nestedType("Partial");
-    TypeReference propertyType = generatedBuilder.nestedType("Property");
+    QualifiedName valueType = generatedBuilder.nestedType("Value");
+    QualifiedName partialType = generatedBuilder.nestedType("Partial");
+    QualifiedName propertyType = generatedBuilder.nestedType("Property");
     return new Metadata.Builder()
         .setType(type)
         .setBuilder(builder)
@@ -169,17 +169,17 @@ class Analyser {
         .build();
   }
 
-  private static Set<TypeReference> visibleTypesIn(TypeElement type) {
-    ImmutableSet.Builder<TypeReference> visibleTypes = ImmutableSet.builder();
+  private static Set<QualifiedName> visibleTypesIn(TypeElement type) {
+    ImmutableSet.Builder<QualifiedName> visibleTypes = ImmutableSet.builder();
     for (TypeElement nestedType : typesIn(type.getEnclosedElements())) {
-      visibleTypes.add(TypeReference.to(nestedType));
+      visibleTypes.add(QualifiedName.of(nestedType));
     }
     visibleTypes.addAll(visibleTypesIn(maybeType(type.getEnclosingElement())));
     visibleTypes.addAll(visibleTypesIn(maybeAsTypeElement(type.getSuperclass())));
     return visibleTypes.build();
   }
 
-  private static Set<TypeReference> visibleTypesIn(Optional<TypeElement> type) {
+  private static Set<QualifiedName> visibleTypesIn(Optional<TypeElement> type) {
     if (!type.isPresent()) {
       return ImmutableSet.of();
     } else {
@@ -316,7 +316,7 @@ class Analyser {
    * renaming an existing &#64;FreeBuilder type, or using one as a template.
    */
   private Optional<TypeElement> tryFindBuilder(
-      final TypeReference generatedBuilder, TypeElement type) {
+      final QualifiedName generatedBuilder, TypeElement type) {
     Optional<TypeElement> userClass =
         tryFind(typesIn(type.getEnclosedElements()), new Predicate<Element>() {
           @Override public boolean apply(Element input) {
@@ -738,9 +738,9 @@ class Analyser {
    */
   private static final class IsSubclassOfGeneratedTypeVisitor extends
       SimpleTypeVisitor6<Boolean, Void> {
-    private final TypeReference superclass;
+    private final QualifiedName superclass;
 
-    private IsSubclassOfGeneratedTypeVisitor(TypeReference superclass) {
+    private IsSubclassOfGeneratedTypeVisitor(QualifiedName superclass) {
       super(false);
       this.superclass = superclass;
     }
@@ -763,7 +763,7 @@ class Analyser {
     @Override
     public Boolean visitDeclared(DeclaredType t, Void p) {
       String qualifiedName = t.toString();
-      return equal(qualifiedName, superclass.getQualifiedName());
+      return equal(qualifiedName, superclass.toString());
     }
   }
 

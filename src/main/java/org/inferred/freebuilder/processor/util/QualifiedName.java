@@ -24,17 +24,17 @@ import javax.lang.model.element.TypeElement;
 import com.google.common.base.Preconditions;
 
 /**
- * A type reference holds the qualified name of a type, so it can be passed to
- * a {@link TypeShortener} without a Class or javax.lang.model reference.
+ * The qualified name of a type. Lets us pass a type to a {@link TypeShortener} without a Class or
+ * javax.lang.model reference.
  */
-public class TypeReference extends ValueType {
+public class QualifiedName extends ValueType {
 
   /**
-   * Returns a {@link TypeReference} for a type in {@code packageName}. If {@code nestedTypes} is
+   * Returns a {@link QualifiedName} for a type in {@code packageName}. If {@code nestedTypes} is
    * empty, it is a top level type called {@code topLevelType}; otherwise, it is nested in that
    * type.
    */
-  public static TypeReference to(String packageName, String topLevelType, String... nestedTypes) {
+  public static QualifiedName of(String packageName, String topLevelType, String... nestedTypes) {
     Preconditions.checkArgument(!packageName.isEmpty());
     Preconditions.checkArgument(!topLevelType.isEmpty());
     StringBuilder nestedSuffix = new StringBuilder();
@@ -42,19 +42,19 @@ public class TypeReference extends ValueType {
       Preconditions.checkArgument(!nestedType.isEmpty());
       nestedSuffix.append(".").append(nestedType);
     }
-    return new TypeReference(packageName, topLevelType, nestedSuffix.toString());
+    return new QualifiedName(packageName, topLevelType, nestedSuffix.toString());
   }
 
   /**
-   * Returns a {@link TypeReference} for {@code type}.
+   * Returns a {@link QualifiedName} for {@code type}.
    */
-  public static TypeReference to(TypeElement type) {
+  public static QualifiedName of(TypeElement type) {
     if (type.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
       PackageElement pkg = (PackageElement) type.getEnclosingElement();
-      return new TypeReference(
+      return new QualifiedName(
           pkg.getQualifiedName().toString(), type.getSimpleName().toString(), "");
     } else {
-      TypeReference enclosingElement = TypeReference.to((TypeElement) type.getEnclosingElement());
+      QualifiedName enclosingElement = QualifiedName.of((TypeElement) type.getEnclosingElement());
       return enclosingElement.nestedType(type.getSimpleName().toString());
     }
   }
@@ -64,7 +64,7 @@ public class TypeReference extends ValueType {
   private final String topLevelType;
   private final String nestedSuffix;
 
-  private TypeReference(String packageName, String topLevelType, String nestedSuffix) {
+  private QualifiedName(String packageName, String topLevelType, String nestedSuffix) {
     this.packageName = packageName;
     this.topLevelType = topLevelType;
     this.nestedSuffix = nestedSuffix;
@@ -93,10 +93,6 @@ public class TypeReference extends ValueType {
     return nestedSuffix;
   }
 
-  public String getQualifiedName() {
-    return packageName + "." + topLevelType + nestedSuffix;
-  }
-
   public String getSimpleName() {
     return nestedSuffix.isEmpty()
         ? topLevelType
@@ -107,24 +103,24 @@ public class TypeReference extends ValueType {
     return nestedSuffix.isEmpty();
   }
 
-  public TypeReference nestedType(String simpleName) {
-    return new TypeReference(packageName, topLevelType, nestedSuffix + "." + simpleName);
+  public QualifiedName nestedType(String simpleName) {
+    return new QualifiedName(packageName, topLevelType, nestedSuffix + "." + simpleName);
   }
 
   /**
-   * Returns a {@link TypeReference} to the type enclosing this one.
+   * Returns a {@link QualifiedName} to the type enclosing this one.
    *
    * @throws IllegalStateException if {@link #isTopLevel()} returns true
    */
-  public TypeReference getEnclosingType() {
+  public QualifiedName getEnclosingType() {
     checkState(!isTopLevel(), "%s has no enclosing type", this);
-    return new TypeReference(
+    return new QualifiedName(
         packageName, topLevelType, nestedSuffix.substring(0, nestedSuffix.lastIndexOf('.')));
   }
 
   @Override
   public String toString() {
-    return getQualifiedName();
+    return packageName + "." + topLevelType + nestedSuffix;
   }
 }
 

@@ -37,7 +37,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.TypeReference;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -53,14 +53,14 @@ import com.google.common.collect.Lists;
  */
 public class CodeGenerator {
 
-  private static final TypeReference CUSTOM_FIELD_SERIALIZER =
-      TypeReference.to("com.google.gwt.user.client.rpc", "CustomFieldSerializer");
-  private static final TypeReference SERIALIZATION_EXCEPTION =
-      TypeReference.to("com.google.gwt.user.client.rpc", "SerializationException");
-  private static final TypeReference SERIALIZATION_STREAM_READER =
-      TypeReference.to("com.google.gwt.user.client.rpc", "SerializationStreamReader");
-  private static final TypeReference SERIALIZATION_STREAM_WRITER =
-      TypeReference.to("com.google.gwt.user.client.rpc", "SerializationStreamWriter");
+  private static final QualifiedName CUSTOM_FIELD_SERIALIZER =
+      QualifiedName.of("com.google.gwt.user.client.rpc", "CustomFieldSerializer");
+  private static final QualifiedName SERIALIZATION_EXCEPTION =
+      QualifiedName.of("com.google.gwt.user.client.rpc", "SerializationException");
+  private static final QualifiedName SERIALIZATION_STREAM_READER =
+      QualifiedName.of("com.google.gwt.user.client.rpc", "SerializationStreamReader");
+  private static final QualifiedName SERIALIZATION_STREAM_WRITER =
+      QualifiedName.of("com.google.gwt.user.client.rpc", "SerializationStreamWriter");
 
   /** Write the source code for a generated builder. */
   void writeBuilderSource(SourceBuilder code, Metadata metadata) {
