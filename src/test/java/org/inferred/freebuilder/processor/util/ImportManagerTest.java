@@ -72,8 +72,8 @@ public class ImportManagerTest {
     ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
     ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
     ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(TypeReference.to(listType))
-        .addImplicitImport(TypeReference.to(stringType))
+        .addImplicitImport(QualifiedName.of(listType))
+        .addImplicitImport(QualifiedName.of(stringType))
         .build();
     assertEquals("java.lang.String", manager.shorten(String.class));
     assertEquals("java.util.List", manager.shorten(List.class));
@@ -100,8 +100,8 @@ public class ImportManagerTest {
     ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
     ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
     ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(TypeReference.to(listType))
-        .addImplicitImport(TypeReference.to(stringType))
+        .addImplicitImport(QualifiedName.of(listType))
+        .addImplicitImport(QualifiedName.of(stringType))
         .build();
     assertEquals("java.lang.String",
         manager.shorten(newTopLevelClass("java.lang.String").asElement()));
@@ -134,8 +134,8 @@ public class ImportManagerTest {
     ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
     ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
     ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(TypeReference.to(listType))
-        .addImplicitImport(TypeReference.to(stringType))
+        .addImplicitImport(QualifiedName.of(listType))
+        .addImplicitImport(QualifiedName.of(stringType))
         .build();
     assertEquals("java.lang.String",
         manager.shorten(newTopLevelClass("java.lang.String")));
@@ -195,11 +195,11 @@ public class ImportManagerTest {
   @Test
   public void testTypeReferenceShortening() {
     ImportManager manager = new ImportManager.Builder().build();
-    assertEquals("String", manager.shorten(TypeReference.to("java.lang", "String")));
-    assertEquals("List", manager.shorten(TypeReference.to("java.util", "List")));
-    assertEquals("java.awt.List", manager.shorten(TypeReference.to("java.awt", "List")));
-    assertEquals("Map", manager.shorten(TypeReference.to("java.util", "Map")));
-    assertEquals("Map.Entry", manager.shorten(TypeReference.to("java.util", "Map", "Entry")));
+    assertEquals("String", manager.shorten(QualifiedName.of("java.lang", "String")));
+    assertEquals("List", manager.shorten(QualifiedName.of("java.util", "List")));
+    assertEquals("java.awt.List", manager.shorten(QualifiedName.of("java.awt", "List")));
+    assertEquals("Map", manager.shorten(QualifiedName.of("java.util", "Map")));
+    assertEquals("Map.Entry", manager.shorten(QualifiedName.of("java.util", "Map", "Entry")));
     assertThat(manager.getClassImports())
         .containsExactly("java.util.List", "java.util.Map").inOrder();
   }
@@ -209,13 +209,13 @@ public class ImportManagerTest {
     ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
     ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
     ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(TypeReference.to(listType))
-        .addImplicitImport(TypeReference.to(stringType))
+        .addImplicitImport(QualifiedName.of(listType))
+        .addImplicitImport(QualifiedName.of(stringType))
         .build();
-    assertEquals("java.lang.String", manager.shorten(TypeReference.to("java.lang", "String")));
-    assertEquals("java.util.List", manager.shorten(TypeReference.to("java.util", "List")));
-    assertEquals("java.awt.List", manager.shorten(TypeReference.to("java.awt", "List")));
-    assertEquals("Map", manager.shorten(TypeReference.to("java.util", "Map")));
+    assertEquals("java.lang.String", manager.shorten(QualifiedName.of("java.lang", "String")));
+    assertEquals("java.util.List", manager.shorten(QualifiedName.of("java.util", "List")));
+    assertEquals("java.awt.List", manager.shorten(QualifiedName.of("java.awt", "List")));
+    assertEquals("Map", manager.shorten(QualifiedName.of("java.util", "Map")));
     assertThat(manager.getClassImports()).containsExactly("java.util.Map");
   }
 

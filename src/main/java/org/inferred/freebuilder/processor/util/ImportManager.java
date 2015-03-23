@@ -65,23 +65,23 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
      * Simple names of implicitly imported types, mapped to qualified name if that type is safe to
      * use, null otherwise.
      */
-    private final SetMultimap<String, TypeReference> implicitImports = LinkedHashMultimap.create();
+    private final SetMultimap<String, QualifiedName> implicitImports = LinkedHashMultimap.create();
 
     /**
      * Adds a type which is implicitly imported into the current compilation unit.
      */
-    public Builder addImplicitImport(TypeReference type) {
+    public Builder addImplicitImport(QualifiedName type) {
       implicitImports.put(type.getSimpleName(), type);
       return this;
     }
 
     public ImportManager build() {
       Set<String> nonConflictingImports = new LinkedHashSet<String>();
-      for (Set<TypeReference> importGroup : Multimaps.asMap(implicitImports).values()) {
+      for (Set<QualifiedName> importGroup : Multimaps.asMap(implicitImports).values()) {
         if (importGroup.size() == 1) {
-          TypeReference implicitImport = getOnlyElement(importGroup);
+          QualifiedName implicitImport = getOnlyElement(importGroup);
           if (implicitImport.isTopLevel()) {
-            nonConflictingImports.add(implicitImport.getQualifiedName());
+            nonConflictingImports.add(implicitImport.toString());
           }
         }
       }
@@ -133,7 +133,7 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
   }
 
   @Override
-  public String shorten(TypeReference type) {
+  public String shorten(QualifiedName type) {
     String prefix = getPrefixForTopLevelClass(type.getPackage(), type.getTopLevelTypeSimpleName());
     return prefix + type.getTopLevelTypeSimpleName() + type.getNestedSuffix();
   }

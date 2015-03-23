@@ -38,7 +38,7 @@ interface TypeShortener {
   String shorten(Class<?> cls);
   String shorten(TypeElement type);
   String shorten(TypeMirror mirror);
-  String shorten(TypeReference type);
+  String shorten(QualifiedName type);
 
   /** A {@link TypeShortener} that never shortens types. */
   class NeverShorten
@@ -61,8 +61,8 @@ interface TypeShortener {
     }
 
     @Override
-    public String shorten(TypeReference type) {
-      return type.getQualifiedName();
+    public String shorten(QualifiedName type) {
+      return type.toString();
     }
 
     @Override
@@ -126,8 +126,8 @@ interface TypeShortener {
     }
 
     @Override
-    public String shorten(TypeReference type) {
-      return type.getQualifiedName().substring(type.getPackage().length() + 1);
+    public String shorten(QualifiedName type) {
+      return type.toString().substring(type.getPackage().length() + 1);
     }
 
     @Override
