@@ -104,7 +104,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Associates {@code key} with {@code value} in the map to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Duplicate keys are not allowed.")
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
@@ -144,7 +144,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Associates all of {@code map}'s keys and values in the map to be returned")
-          .addLine(" * from {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * from %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Duplicate keys are not allowed.")
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
@@ -169,7 +169,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes the mapping for {@code key} from the map to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedKeyType.isPresent()) {
@@ -197,7 +197,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes all of the mappings from the map to be returned from ")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
@@ -213,7 +213,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the map that will be returned by")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
           .addLine("public %s<%s, %s> %s%s() {",

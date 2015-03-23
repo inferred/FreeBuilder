@@ -49,6 +49,7 @@ import org.junit.runners.JUnit4;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -86,13 +87,14 @@ public class AnalyserTest {
     Metadata expectedMetadata = new Metadata.Builder()
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
-        .setGeneratedBuilder(expectedBuilder)
+        .setGeneratedBuilder(expectedBuilder.withParameters())
         .setGwtCompatible(false)
         .setGwtSerializable(false)
-        .setPartialType(partialType)
-        .setPropertyEnum(propertyType)
-        .setType(dataType)
-        .setValueType(valueType)
+        .setInterfaceType(false)
+        .setPartialType(partialType.withParameters())
+        .setPropertyEnum(propertyType.withParameters())
+        .setType(QualifiedName.of("com.example", "DataType").withParameters())
+        .setValueType(valueType.withParameters())
         .addVisibleNestedTypes(partialType)
         .addVisibleNestedTypes(propertyType)
         .addVisibleNestedTypes(valueType)
@@ -104,7 +106,45 @@ public class AnalyserTest {
             "[NOTE] Add \"public static class Builder extends DataType_Builder {}\" to your class "
                 + "to enable the @FreeBuilder API"));
   }
+/*
+java.lang.AssertionError: expected:<
+Metadata{builderFactory=NO_ARGS_CONSTRUCTOR, generatedBuilder=org.inferred.freebuilder.processor.util.ParameterizedType@b9f370, partialType=org.inferred.freebuilder.processor.util.ParameterizedType@301d3e6f, properties=[], propertyEnum=org.inferred.freebuilder.processor.util.ParameterizedType@4fee0216, standardMethodUnderrides={}, type=org.inferred.freebuilder.processor.util.ParameterizedType@12cb1b59, valueType=org.inferred.freebuilder.processor.util.ParameterizedType@547079b2, builderSerializable=true, gwtCompatible=false, gwtSerializable=false, interfaceType=true}
+> but was:<
+Metadata{builderFactory=NO_ARGS_CONSTRUCTOR, generatedBuilder=org.inferred.freebuilder.processor.util.ParameterizedType@1d6caa31, partialType=org.inferred.freebuilder.processor.util.ParameterizedType@4919860e, properties=[], propertyEnum=org.inferred.freebuilder.processor.util.ParameterizedType@2ab026a0, standardMethodUnderrides={}, type=org.inferred.freebuilder.processor.util.ParameterizedType@12b7e845, valueType=org.inferred.freebuilder.processor.util.ParameterizedType@67f2139c, builderSerializable=true, gwtCompatible=false, gwtSerializable=false, interfaceType=true}>
+  at org.junit.Assert.fail(Assert.java:88)
+  at org.junit.Assert.failNotEquals(Assert.java:743)
+  at org.junit.Assert.assertEquals(Assert.java:118)
+  at org.junit.Assert.assertEquals(Assert.java:144)
+  at org.inferred.freebuilder.processor.AnalyserTest.emptyInterface(AnalyserTest.java:126)
+  at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+  at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+  at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+  at java.lang.reflect.Method.invoke(Method.java:606)
+  at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:47)
+  at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+  at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:44)
+  at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+  at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+  at org.inferred.freebuilder.processor.util.testing.ModelRule$1.evaluate(ModelRule.java:58)
+  at org.junit.rules.RunRules.evaluate(RunRules.java:20)
+  at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:271)
+  at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:70)
+  at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:50)
+  at org.junit.runners.ParentRunner$3.run(ParentRunner.java:238)
+  at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:63)
+  at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:236)
+  at org.junit.runners.ParentRunner.access$000(ParentRunner.java:53)
+  at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:229)
+  at org.junit.runners.ParentRunner.run(ParentRunner.java:309)
+  at org.eclipse.jdt.internal.junit4.runner.JUnit4TestReference.run(JUnit4TestReference.java:50)
+  at org.eclipse.jdt.internal.junit.runner.TestExecution.run(TestExecution.java:38)
+  at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:459)
+  at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:675)
+  at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.run(RemoteTestRunner.java:382)
+  at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.main(RemoteTestRunner.java:192)
 
+
+ */
   @Test
   public void emptyInterface() throws CannotGenerateCodeException {
     TypeElement dataType = model.newType(
@@ -121,13 +161,14 @@ public class AnalyserTest {
     Metadata expectedMetadata = new Metadata.Builder()
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
-        .setGeneratedBuilder(expectedBuilder)
+        .setGeneratedBuilder(expectedBuilder.withParameters())
         .setGwtCompatible(false)
         .setGwtSerializable(false)
-        .setPartialType(partialType)
-        .setPropertyEnum(propertyType)
-        .setType(dataType)
-        .setValueType(valueType)
+        .setInterfaceType(true)
+        .setPartialType(partialType.withParameters())
+        .setPropertyEnum(propertyType.withParameters())
+        .setType(QualifiedName.of("com.example", "DataType").withParameters())
+        .setValueType(valueType.withParameters())
         .addVisibleNestedTypes(partialType)
         .addVisibleNestedTypes(propertyType)
         .addVisibleNestedTypes(valueType)
@@ -150,8 +191,7 @@ public class AnalyserTest {
         "}"));
     assertEquals("com.example.OuterClass.DataType",
         dataType.getType().getQualifiedName().toString());
-    assertEquals("com.example", dataType.getPackage().getQualifiedName().toString());
-    assertEquals(QualifiedName.of("com.example", "OuterClass_DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "OuterClass_DataType_Builder").withParameters(),
         dataType.getGeneratedBuilder());
   }
 
@@ -167,8 +207,8 @@ public class AnalyserTest {
         "}"));
     assertEquals("com.example.OuterClass.InnerClass.DataType",
         dataType.getType().getQualifiedName().toString());
-    assertEquals("com.example", dataType.getPackage().getQualifiedName().toString());
-    assertEquals(QualifiedName.of("com.example", "OuterClass_InnerClass_DataType_Builder"),
+    assertEquals(
+        QualifiedName.of("com.example", "OuterClass_InnerClass_DataType_Builder").withParameters(),
         dataType.getGeneratedBuilder());
   }
 
@@ -179,7 +219,7 @@ public class AnalyserTest {
         "public class DataType {",
         "  public static class Builder extends DataType_Builder { }",
         "}"));
-    assertEquals(QualifiedName.of("com.example", "DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
@@ -196,7 +236,7 @@ public class AnalyserTest {
         "  public static class Builder ",
         "      extends DataType_Builder implements java.io.Serializable { }",
         "}"));
-    assertEquals(QualifiedName.of("com.example", "DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
@@ -212,7 +252,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder { }",
         "  public static Builder builder() { return new Builder(); }",
         "}"));
-    assertEquals(QualifiedName.of("com.example", "DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
@@ -229,7 +269,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder { }",
         "  public static Builder newBuilder() { return new Builder(); }",
         "}"));
-    assertEquals(QualifiedName.of("com.example", "DataType_Builder"),
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
@@ -1006,19 +1046,34 @@ public class AnalyserTest {
   }
 
   @Test
-  public void genericType() {
-    TypeElement dataType = model.newType(
+  public void genericType() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
-        "public class DataType<T> {}");
-
-    try {
-      analyser.analyse(dataType);
-      fail("Expected CannotGenerateCodeException");
-    } catch (CannotGenerateCodeException expected) { }
-
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] Generic @FreeBuilder types not yet supported (b/17278322)"));
+        "public class DataType<A, B> {",
+        "  public abstract A getName();",
+        "  public abstract B getAge();",
+        "  public static class Builder<A, B> extends DataType_Builder<A, B> {}",
+        "}"));
+    assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
+    assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR), dataType.getBuilderFactory());
+    assertEquals("com.example.DataType_Builder<A, B>", dataType.getGeneratedBuilder().toString());
+    assertEquals("com.example.DataType_Builder.Partial<A, B>",
+        dataType.getPartialType().toString());
+    assertEquals("com.example.DataType_Builder.Property", dataType.getPropertyEnum().toString());
+    assertEquals("com.example.DataType<A, B>", dataType.getType().toString());
+    assertEquals("com.example.DataType_Builder.Value<A, B>", dataType.getValueType().toString());
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("name", "age");
+    assertEquals("B", properties.get("age").getType().toString());
+    assertNull(properties.get("age").getBoxedType());
+    assertEquals("AGE", properties.get("age").getAllCapsName());
+    assertEquals("Age", properties.get("age").getCapitalizedName());
+    assertEquals("getAge", properties.get("age").getGetterName());
+    assertEquals("A", properties.get("name").getType().toString());
+    assertNull(properties.get("name").getBoxedType());
+    assertEquals("NAME", properties.get("name").getAllCapsName());
+    assertEquals("Name", properties.get("name").getCapitalizedName());
+    assertEquals("getName", properties.get("name").getGetterName());
   }
 
   @Test
@@ -1072,16 +1127,17 @@ public class AnalyserTest {
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
     QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
-        .setBuilder(model.typeElement("com.example.DataType.Builder"))
+        .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
-        .setGeneratedBuilder(expectedBuilder)
+        .setGeneratedBuilder(expectedBuilder.withParameters())
         .setGwtCompatible(false)
         .setGwtSerializable(false)
-        .setPartialType(partialType)
-        .setPropertyEnum(propertyType)
-        .setType(dataType)
-        .setValueType(valueType)
+        .setInterfaceType(false)
+        .setPartialType(partialType.withParameters())
+        .setPropertyEnum(propertyType.withParameters())
+        .setType(QualifiedName.of("com.example", "DataType").withParameters())
+        .setValueType(valueType.withParameters())
         .addVisibleNestedTypes(QualifiedName.of(concreteBuilder))
         .addVisibleNestedTypes(partialType)
         .addVisibleNestedTypes(propertyType)
@@ -1111,16 +1167,17 @@ public class AnalyserTest {
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
     QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
-        .setBuilder(model.typeElement("com.example.DataType.Builder"))
+    .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
-        .setGeneratedBuilder(expectedBuilder)
+        .setGeneratedBuilder(expectedBuilder.withParameters())
         .setGwtCompatible(false)
         .setGwtSerializable(false)
-        .setPartialType(partialType)
-        .setPropertyEnum(propertyType)
-        .setType(dataType)
-        .setValueType(valueType)
+        .setInterfaceType(false)
+        .setPartialType(partialType.withParameters())
+        .setPropertyEnum(propertyType.withParameters())
+        .setType(QualifiedName.of("com.example", "DataType").withParameters())
+        .setValueType(valueType.withParameters())
         .addVisibleNestedTypes(QualifiedName.of(concreteBuilder))
         .addVisibleNestedTypes(partialType)
         .addVisibleNestedTypes(propertyType)
