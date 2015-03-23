@@ -134,8 +134,8 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
 
   @Override
   public String shorten(QualifiedName type) {
-    String prefix = getPrefixForTopLevelClass(type.getPackage(), type.getTopLevelTypeSimpleName());
-    return prefix + type.getTopLevelTypeSimpleName() + type.getNestedSuffix();
+    String prefix = getPrefixForTopLevelClass(type.getPackage(), type.getSimpleNames().get(0));
+    return prefix + Joiner.on('.').join(type.getSimpleNames());
   }
 
   @Override

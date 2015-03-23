@@ -16,16 +16,19 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Iterables.getLast;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
- * The qualified name of a type. Lets us pass a type to a {@link TypeShortener} without a Class or
- * javax.lang.model reference.
+ * A type reference holds the qualified name of a type, so it can be passed to
+ * a {@link TypeShortener} without a Class or javax.lang.model reference.
  */
 public class QualifiedName extends ValueType {
 
@@ -35,92 +38,75 @@ public class QualifiedName extends ValueType {
    * type.
    */
   public static QualifiedName of(String packageName, String topLevelType, String... nestedTypes) {
-    Preconditions.checkArgument(!packageName.isEmpty());
+    Preconditions.checkNotNull(!packageName.isEmpty());
     Preconditions.checkArgument(!topLevelType.isEmpty());
-    StringBuilder nestedSuffix = new StringBuilder();
-    for (String nestedType : nestedTypes) {
-      Preconditions.checkArgument(!nestedType.isEmpty());
-      nestedSuffix.append(".").append(nestedType);
-    }
-    return new QualifiedName(packageName, topLevelType, nestedSuffix.toString());
+    return new QualifiedName(
+        packageName, ImmutableList.<String>builder().add(topLevelType).add(nestedTypes).build());
   }
 
   /**
    * Returns a {@link QualifiedName} for {@code type}.
    */
   public static QualifiedName of(TypeElement type) {
-    if (type.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
-      PackageElement pkg = (PackageElement) type.getEnclosingElement();
-      return new QualifiedName(
-          pkg.getQualifiedName().toString(), type.getSimpleName().toString(), "");
-    } else {
+    if (type.getNestingKind().isNested()) {
       QualifiedName enclosingElement = QualifiedName.of((TypeElement) type.getEnclosingElement());
       return enclosingElement.nestedType(type.getSimpleName().toString());
+    } else {
+      PackageElement pkg = (PackageElement) type.getEnclosingElement();
+      return QualifiedName.of(pkg.getQualifiedName().toString(), type.getSimpleName().toString());
     }
   }
 
-  // Currently, only top-level types are implemented.
   private final String packageName;
-  private final String topLevelType;
-  private final String nestedSuffix;
+  private final ImmutableList<String> simpleNames;
 
-  private QualifiedName(String packageName, String topLevelType, String nestedSuffix) {
+  private QualifiedName(String packageName, Iterable<String> simpleNames) {
     this.packageName = packageName;
-    this.topLevelType = topLevelType;
-    this.nestedSuffix = nestedSuffix;
+    this.simpleNames = ImmutableList.copyOf(simpleNames);
   }
 
   @Override
-  protected void addFields(FieldReceiver fields) {
-    fields.add("packageName", packageName);
-    fields.add("topLevelType", topLevelType);
-    fields.add("nestedSuffix", nestedSuffix);
+  public String toString() {
+    return packageName + "." + Joiner.on('.').join(simpleNames);
   }
 
   public String getPackage() {
     return packageName;
   }
 
-  public String getTopLevelTypeSimpleName() {
-    return topLevelType;
-  }
-
-  /**
-   * The part of the qualified name that comes after the top level type, including the period.
-   * Empty if this is a top-level type.
-   */
-  public String getNestedSuffix() {
-    return nestedSuffix;
+  public ImmutableList<String> getSimpleNames() {
+    return simpleNames;
   }
 
   public String getSimpleName() {
-    return nestedSuffix.isEmpty()
-        ? topLevelType
-        : nestedSuffix.substring(nestedSuffix.lastIndexOf('.') + 1);
+    return getLast(simpleNames);
   }
 
   public boolean isTopLevel() {
-    return nestedSuffix.isEmpty();
-  }
-
-  public QualifiedName nestedType(String simpleName) {
-    return new QualifiedName(packageName, topLevelType, nestedSuffix + "." + simpleName);
+    return simpleNames.size() == 1;
   }
 
   /**
-   * Returns a {@link QualifiedName} to the type enclosing this one.
+   * Returns the {@link QualifiedName} of a type called {@code simpleName} nested in this one.
+   */
+  public QualifiedName nestedType(String simpleName) {
+    return new QualifiedName(packageName, concat(simpleNames, ImmutableList.of(simpleName)));
+  }
+
+  /**
+   * Returns the {@link QualifiedName} of the type enclosing this one.
    *
    * @throws IllegalStateException if {@link #isTopLevel()} returns true
    */
   public QualifiedName getEnclosingType() {
     checkState(!isTopLevel(), "%s has no enclosing type", this);
-    return new QualifiedName(
-        packageName, topLevelType, nestedSuffix.substring(0, nestedSuffix.lastIndexOf('.')));
+    return new QualifiedName(packageName, simpleNames.subList(0, simpleNames.size() - 1));
   }
 
   @Override
-  public String toString() {
-    return packageName + "." + topLevelType + nestedSuffix;
+  protected void addFields(FieldReceiver fields) {
+    fields.add("packageName", packageName);
+    fields.add("simpleNames", simpleNames);
   }
 }
 
