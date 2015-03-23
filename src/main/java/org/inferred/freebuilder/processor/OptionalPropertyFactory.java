@@ -134,8 +134,8 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       // Setter (T, not nullable)
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Sets the value to be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
@@ -159,8 +159,8 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       // Setter (Optional<? extends T>)
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Sets the value to be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
@@ -180,8 +180,8 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       // Setter (nullable T)
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Sets the value to be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
@@ -201,8 +201,8 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       // Clear
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Sets the value to be returned by {@link %s#%s()}",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Sets the value to be returned by %s",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * to {@link %s#absent() Optional.absent()}.", Optional.class)
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
@@ -215,8 +215,8 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       // Getter
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Returns the value that will be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Returns the value that will be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" */")
           .addLine("public %s %s() {", property.getType(), property.getGetterName());
       code.add("  return %s.", Optional.class);

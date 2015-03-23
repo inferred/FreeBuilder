@@ -96,8 +96,8 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       // add(T element)
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Adds {@code element} to the list to be returned from {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Adds {@code element} to the list to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
@@ -122,7 +122,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the list to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
@@ -146,7 +146,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the list to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
@@ -171,8 +171,8 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       // clear()
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Clears the list to be returned from {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Clears the list to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
@@ -188,7 +188,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the list that will be returned by")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
           .addLine("public %s<%s> %s%s() {",

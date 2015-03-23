@@ -107,7 +107,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
-          .addLine(" * from {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * from %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
@@ -142,8 +142,8 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a collection of {@code values} with the same {@code key} to the")
-          .addLine(" * multimap to be returned from {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * multimap to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (unboxedKeyType.isPresent()) {
@@ -171,7 +171,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each entry of {@code multimap} to the multimap to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code multimap} is null or contains a")
@@ -197,7 +197,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes all of the mappings from the multimap to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
@@ -213,7 +213,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the multimap that will be returned by")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
           .addLine("public %s<%s, %s> %s%s() {",

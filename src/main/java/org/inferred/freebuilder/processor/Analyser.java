@@ -53,6 +53,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
@@ -71,6 +72,7 @@ import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
 import org.inferred.freebuilder.processor.util.ModelUtils;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import com.google.common.annotations.GwtCompatible;
@@ -149,14 +151,16 @@ class Analyser {
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
+    List<? extends TypeParameterElement> typeParameters = type.getTypeParameters();
     return new Metadata.Builder()
-        .setType(type)
-        .setBuilder(builder)
+        .setType(QualifiedName.of(type).withParameters(typeParameters))
+        .setInterfaceType(type.getKind().isInterface())
+        .setBuilder(parameterized(builder, typeParameters))
         .setBuilderFactory(builderFactory(builder))
-        .setGeneratedBuilder(generatedBuilder)
-        .setValueType(valueType)
-        .setPartialType(partialType)
-        .setPropertyEnum(propertyType)
+        .setGeneratedBuilder(generatedBuilder.withParameters(typeParameters))
+        .setValueType(valueType.withParameters(typeParameters))
+        .setPartialType(partialType.withParameters(typeParameters))
+        .setPropertyEnum(propertyType.withParameters())
         .addVisibleNestedTypes(valueType)
         .addVisibleNestedTypes(partialType)
         .addVisibleNestedTypes(propertyType)
@@ -223,11 +227,6 @@ class Analyser {
         messager.printMessage(
             ERROR, "Only top-level or static nested types can be @FreeBuilder types", type);
         throw new CannotGenerateCodeException();
-    }
-    if (!type.getTypeParameters().isEmpty()) {
-      messager.printMessage(
-          ERROR, "Generic @FreeBuilder types not yet supported (b/17278322)", type);
-      throw new CannotGenerateCodeException();
     }
     switch (type.getKind()) {
       case ANNOTATION_TYPE:
@@ -342,8 +341,9 @@ class Analyser {
       return Optional.absent();
     }
 
-    boolean extendsSuperclass = new IsSubclassOfGeneratedTypeVisitor(generatedBuilder)
-        .visit(userClass.get().getSuperclass());
+    boolean extendsSuperclass =
+        new IsSubclassOfGeneratedTypeVisitor(generatedBuilder, type.getTypeParameters())
+            .visit(userClass.get().getSuperclass());
     if (!extendsSuperclass) {
       messager.printMessage(
           ERROR,
@@ -739,10 +739,13 @@ class Analyser {
   private static final class IsSubclassOfGeneratedTypeVisitor extends
       SimpleTypeVisitor6<Boolean, Void> {
     private final QualifiedName superclass;
+    private final List<? extends TypeParameterElement> typeParameters;
 
-    private IsSubclassOfGeneratedTypeVisitor(QualifiedName superclass) {
+    private IsSubclassOfGeneratedTypeVisitor(
+        QualifiedName superclass, List<? extends TypeParameterElement> typeParameters) {
       super(false);
       this.superclass = superclass;
+      this.typeParameters = typeParameters;
     }
 
     /**
@@ -751,8 +754,14 @@ class Analyser {
      */
     @Override
     public Boolean visitError(ErrorType t, Void p) {
-      String simpleName = t.toString();
-      return equal(simpleName, superclass.getSimpleName());
+      if (typeParameters.isEmpty()) {
+        // For non-generic types, the ErrorType will have the correct name.
+        String simpleName = t.toString();
+        return equal(simpleName, superclass.getSimpleName());
+      }
+      // For generic types, we'll just have to hope for the best.
+      // TODO: Revalidate in a subsequent round?
+      return true;
     }
 
     /**
@@ -782,5 +791,13 @@ class Analyser {
         return types.isSameType(input, typeMirror);
       }
     };
+  }
+
+  private static Optional<ParameterizedType> parameterized(
+      Optional<TypeElement> type, List<? extends TypeParameterElement> typeParameters) {
+    if (!type.isPresent()) {
+      return Optional.absent();
+    }
+    return Optional.of(QualifiedName.of(type.get()).withParameters(typeParameters));
   }
 }
