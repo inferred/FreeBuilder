@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <link href='http://fonts.googleapis.com/css?family=Lato:300,700|Source+Code+Pro:200,400' rel='stylesheet' type='text/css'>
 
     <title>@FreeBuilder</title>
   </head>
@@ -15,7 +16,7 @@
 
     <header>
       <div class="container">
-        <h1>@FreeBuilder</h1>
+        <h1>@Free<em>Builder</em></h1>
         <h2>Automatic generation of the Builder pattern for Java 1.6+</h2>
 
         <section id="downloads">
@@ -29,9 +30,9 @@
     <div class="container">
       <section id="main_content">
         <blockquote>
-<p>The Builder pattern is a good choice when designing classes whose constructors
+The Builder pattern is a good choice when designing classes whose constructors
 or static factories would have more than a handful of parameters.
-— <em>Effective Java, Second Edition</em>, page 39</p>
+<cite>— <em>Effective Java, Second Edition</em>, page 39</cite>
 </blockquote>
 
 <h2 id="background">
@@ -52,14 +53,14 @@ their creation and maintenance burden in hand-crafted code. (We also reserve
 the right to add more awesome methods in future!)</p>
 
 <blockquote>
-<p>[The Builder pattern] is more verbose…so should only be used if there are
+[The Builder pattern] is more verbose…so should only be used if there are
 enough parameters, say, four or more. But keep in mind that you may want to add
 parameters in the future. If you start out with constructors or static
 factories, and add a builder when the class evolves to the point where the
 number of parameters starts to get out of hand, the obsolete constructors or
 static factories will stick out like a sore thumb. Therefore, it's often better
 to start with a builder in the first place.
-— <em>Effective Java, Second Edition</em>, page 39</p>
+<cite>— <em>Effective Java, Second Edition</em>, page 39</cite>
 </blockquote>
 
 <h2 id="how_to_use_freebuilder">
