@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
-    <link href='http://fonts.googleapis.com/css?family=Lato:300,700|Source+Code+Pro:200,400' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Lato:300,700|Source+Code+Pro:300,500' rel='stylesheet' type='text/css'>
 
     <title>@FreeBuilder</title>
   </head>
@@ -72,14 +72,14 @@ to start with a builder in the first place.
 
 <p>Add the <code>@FreeBuilder</code> artifact as an optional dependency to your Maven POM:</p>
 
-<div class="highlight highlight-xml"><pre>&lt;<span class="pl-ent">dependencies</span>&gt;
-  &lt;<span class="pl-ent">dependency</span>&gt;
-    &lt;<span class="pl-ent">groupId</span>&gt;org.inferred&lt;/<span class="pl-ent">groupId</span>&gt;
-    &lt;<span class="pl-ent">artifactId</span>&gt;freebuilder&lt;/<span class="pl-ent">artifactId</span>&gt;
-    &lt;<span class="pl-ent">version</span>&gt;1.0-rc5&lt;/<span class="pl-ent">version</span>&gt;
-    &lt;<span class="pl-ent">optional</span>&gt;true&lt;/<span class="pl-ent">optional</span>&gt;
-  &lt;/<span class="pl-ent">dependency</span>&gt;
-&lt;/<span class="pl-ent">dependencies</span>&gt;</pre></div>
+<div class="highlight highlight-xml"><pre>&lt;<span class="xml-tag">dependencies</span>&gt;
+  &lt;<span class="xml-tag">dependency</span>&gt;
+    &lt;<span class="xml-tag">groupId</span>&gt;org.inferred&lt;/<span class="xml-tag">groupId</span>&gt;
+    &lt;<span class="xml-tag">artifactId</span>&gt;freebuilder&lt;/<span class="xml-tag">artifactId</span>&gt;
+    &lt;<span class="xml-tag">version</span>&gt;1.0-rc5&lt;/<span class="xml-tag">version</span>&gt;
+    &lt;<span class="xml-tag">optional</span>&gt;true&lt;/<span class="xml-tag">optional</span>&gt;
+  &lt;/<span class="xml-tag">dependency</span>&gt;
+&lt;/<span class="xml-tag">dependencies</span>&gt;</pre></div>
 
 <p>Create your value type (e.g. <code>Person</code>) as an interface or abstract class,
 containing an abstract accessor method for each desired field. This accessor
@@ -88,16 +88,16 @@ must be non-void, parameterless, and start with 'get' or 'is'. Add the
 implementing class and a package-visible builder API (<code>Person_Builder</code>), which
 you must subclass. For instance:</p>
 
-<div class="highlight highlight-java"><pre><span class="pl-s">import</span> <span class="pl-smi">org.inferred.freebuilder.FreeBuilder</span>;
+<div class="highlight highlight-java"><pre><span class="keyword">import</span> org.inferred.freebuilder.FreeBuilder;
 
-@<span class="pl-stj">FreeBuilder</span>
-<span class="pl-s">public</span> <span class="pl-s">interface</span> <span class="pl-en">Person</span> {
-  <span class="pl-c">/** Returns the person's full (English) name. */</span>
-  <span class="pl-stj">String</span> <span class="pl-en">getName</span>();
-  <span class="pl-c">/** Returns the person's age in years, rounded down. */</span>
-  <span class="pl-st">int</span> <span class="pl-en">getAge</span>();
-  <span class="pl-c">/** Builder of {@link Person} instances. */</span>
-  <span class="pl-s">class</span> <span class="pl-en">Builder</span> <span class="pl-s">extends</span> <span class="pl-e">Person_Builder</span> { }
+@FreeBuilder
+<span class="keyword">public</span> <span class="keyword">interface</span> Person {
+  <span class="comment">/** Returns the person's full (English) name. */</span>
+  String getName();
+  <span class="comment">/** Returns the person's age in years, rounded down. */</span>
+  <span class="keyword">int</span> getAge();
+  <span class="comment">/** Builder of {@link Person} instances. */</span>
+  <span class="keyword">class</span> Builder <span class="keyword">extends</span> Person_Builder { }
 }</pre></div>
 
 <p>If you are writing an abstract class, or using Java 8, you may wish to hide the
@@ -149,11 +149,11 @@ on the value type (though <em>Effective Java</em> does not do this).</p>
 </li>
 </ul>
 
-<div class="highlight highlight-java"><pre><span class="pl-stj">Person</span> person <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-stj">Person</span>.<span class="pl-stj">Builder</span>()
-    .setName(<span class="pl-s1"><span class="pl-pds">"</span>Phil<span class="pl-pds">"</span></span>)
-    .setAge(<span class="pl-c1">31</span>)
+<div class="highlight highlight-java"><pre>Person person = <span class="keyword">new</span> Person.Builder()
+    .setName(<span class="constant">"Phil"</span>)
+    .setAge(31)
     .build();
-<span class="pl-stj">System</span><span class="pl-k">.</span>out<span class="pl-k">.</span>println(person);  <span class="pl-c">// Person{name=Phil, age=31}</span></pre></div>
+System.<span class="static">out</span>.println(person);  <span class="comment">// Person{name=Phil, age=31}</span></pre></div>
 
 <h3 id="defaults_and_constraints">
 <a id="defaults-and-constraints" class="anchor" href="#defaults-and-constraints" aria-hidden="true"><span class="octicon octicon-link"></span></a>Defaults and constraints</h3>
@@ -161,30 +161,30 @@ on the value type (though <em>Effective Java</em> does not do this).</p>
 <p>We use method overrides to add customization like default values and constraint
 checks. For instance:</p>
 
-<div class="highlight highlight-java"><pre>@<span class="pl-stj">FreeBuilder</span>
-<span class="pl-s">public</span> <span class="pl-s">interface</span> <span class="pl-en">Person</span> {
-  <span class="pl-c">/** Returns the person's full (English) name. */</span>
-  <span class="pl-stj">String</span> <span class="pl-en">getName</span>();
-  <span class="pl-c">/** Returns the person's age in years, rounded down. */</span>
-  <span class="pl-st">int</span> <span class="pl-en">getAge</span>();
-  <span class="pl-c">/** Returns a human-readable description of the person. */</span>
-  <span class="pl-stj">String</span> <span class="pl-en">getDescription</span>();
-  <span class="pl-c">/** Builder class for {@link Person}. */</span>
-  <span class="pl-s">class</span> <span class="pl-en">Builder</span> <span class="pl-s">extends</span> <span class="pl-e">Person_Builder</span> {
-    <span class="pl-s">public</span> <span class="pl-en">Builder</span>() {
-      <span class="pl-c">// Set defaults in the builder constructor.</span>
-      setDescription(<span class="pl-s1"><span class="pl-pds">"</span>Indescribable<span class="pl-pds">"</span></span>);
+<div class="highlight highlight-java"><pre>@FreeBuilder
+<span class="keyword">public</span> <span class="keyword">interface</span> Person {
+  <span class="comment">/** Returns the person's full (English) name. */</span>
+  String getName();
+  <span class="comment">/** Returns the person's age in years, rounded down. */</span>
+  <span class="keyword">int</span> getAge();
+  <span class="comment">/** Returns a human-readable description of the person. */</span>
+  String getDescription();
+  <span class="comment">/** Builder class for {@link Person}. */</span>
+  <span class="keyword">class</span> Builder <span class="keyword">extends</span> Person_Builder {
+    <span class="keyword">public</span> Builder() {
+      <span class="comment">// Set defaults in the builder constructor.</span>
+      setDescription(<span class="constant">"Indescribable"</span>);
     }
-    <span class="pl-st">@Override</span> <span class="pl-s">public</span> <span class="pl-stj">Builder</span> <span class="pl-en">setAge</span>(<span class="pl-st">int</span> <span class="pl-v">age</span>) {
-      <span class="pl-c">// Check single-field (argument) constraints in the setter methods.</span>
-      checkArgument(age <span class="pl-k">&gt;=</span> <span class="pl-c1">18</span>);
-      <span class="pl-k">return</span> <span class="pl-v">super</span><span class="pl-k">.</span>setAge(age);
+    @Override <span class="keyword">public</span> Builder setAge(<span class="keyword">int</span> age) {
+      <span class="comment">// Check single-field (argument) constraints in the setter methods.</span>
+      <span class="static">checkArgument</span>(age &gt;= 18);
+      <span class="keyword">return</span> <span class="keyword">super</span>.setAge(age);
     }
-    <span class="pl-st">@Override</span> <span class="pl-s">public</span> <span class="pl-stj">Person</span> <span class="pl-en">build</span>() {
-      <span class="pl-c">// Check cross-field (state) constraints in the build method.</span>
-      <span class="pl-stj">Person</span> person <span class="pl-k">=</span> <span class="pl-v">super</span><span class="pl-k">.</span>build();
-      checkState(<span class="pl-k">!</span>person<span class="pl-k">.</span>getDescription()<span class="pl-k">.</span>contains(person<span class="pl-k">.</span>getName()));
-      <span class="pl-k">return</span> person;
+    @Override <span class="keyword">public</span> Person build() {
+      <span class="comment">// Check cross-field (state) constraints in the build method.</span>
+      Person person = <span class="keyword">super</span>.build();
+      <span class="static">checkState</span>(!person.getDescription().contains(person.getName()));
+      <span class="keyword">return</span> person;
     }
   }
 }</pre></div>
@@ -196,8 +196,8 @@ checks. For instance:</p>
 use <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/base/Optional.html">the Optional type</a>. It will default to Optional.absent(), and the Builder
 will gain additional convenience setter methods.</p>
 
-<div class="highlight highlight-java"><pre>  <span class="pl-c">/** Returns an optional human-readable description of the person. */</span>
-  <span class="pl-st">Optional&lt;<span class="pl-stj">String</span>&gt;</span> getDescription();</pre></div>
+<div class="highlight highlight-java"><pre>  <span class="comment">/** Returns an optional human-readable description of the person. */</span>
+  Optional&lt;String&gt; getDescription();</pre></div>
 
 <p>Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
@@ -253,8 +253,8 @@ are required, this does not scale.</p>
 <p>If you want to follow <em>Effective Java</em> more faithfully in your own types,
 however, just create the appropriate constructor in your builder subclass:</p>
 
-<div class="highlight highlight-java"><pre>    <span class="pl-s">public</span> Builder(<span class="pl-stj">String</span> name, <span class="pl-st">int</span> age) {
-      <span class="pl-c">// Set all initial values in the builder constructor</span>
+<div class="highlight highlight-java"><pre>    <span class="keyword">public</span> Builder(String name, <span class="keyword">int</span> age) {
+      <span class="comment">// Set all initial values in the builder constructor</span>
       setName(name);
       setAge(age);
     }</pre></div>
@@ -269,11 +269,11 @@ constructor, and do not check again at runtime. </p>
 conform to the type's state constraints. It may be missing required fields, or
 it may violate a cross-field constraint.</p>
 
-<div class="highlight highlight-java"><pre><span class="pl-stj">Person</span> person <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-stj">Person</span>.<span class="pl-stj">Builder</span>()
-    .setName(<span class="pl-s1"><span class="pl-pds">"</span>Phil<span class="pl-pds">"</span></span>)
-    .buildPartial();  <span class="pl-c">// build() would throw an IllegalStateException here</span>
-<span class="pl-stj">System</span><span class="pl-k">.</span>out<span class="pl-k">.</span>println(person);  <span class="pl-c">// prints: partial Person{name="Phil"}</span>
-person<span class="pl-k">.</span>getAge();  <span class="pl-c">// throws UnsupportedOperationException</span></pre></div>
+<div class="highlight highlight-java"><pre>Person person = <span class="keyword">new</span> Person.Builder()
+    .setName(<span class="constant">"Phil"</span>)
+    .buildPartial();  <span class="comment">// build() would throw an IllegalStateException here</span>
+System.<span class="static">out</span>.println(person);  <span class="comment">// prints: partial Person{name="Phil"}</span>
+person.getAge();  <span class="comment">// throws UnsupportedOperationException</span></pre></div>
 
 <p>As partials violate the (legitimate) expectations of your program, they must
 <strong>not</strong> be created in production code. (They may also affect the

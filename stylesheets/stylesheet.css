@@ -4,10 +4,10 @@ body {
   text-size-adjust: 100%; 
   margin: 0;
   padding: 0;
-  font-size: 16px;
-  line-height: 1.3;
   font-family: Lato, sans-serif;
   font-weight: 300;
+  font-size: 16px;
+  line-height: 1.3;
 }
 
 @media screen and (max-width: 500px) {
@@ -47,16 +47,15 @@ header {
 }
 
 header h2 {
-    font-size: 112.5%;
+    font-family: "Century Gothic", "Gill Sans";
     font-weight: 300;
+    font-size: 112.5%;
     color: #666;
     text-align: center;
     margin: 0;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-weight: normal;
-    font-family: "Century Gothic", "Gill Sans";
     color: #539EE9;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1),
                  0 0   5px rgba(181, 232, 83, 0.1),
@@ -67,29 +66,29 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     margin: 0;
     padding: 0;
+    font-family: Lato, sans-serif;
+    font-weight: 300;
     text-align: center;
+    font-size: 312.5%;
+    line-height: 1.5;
+    letter-spacing: -1px;
     text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2),
                  0   0   5px rgba(181, 232, 83, 0.1),
                  0   0  10px rgba(181, 232, 83, 0.1);
-    font-size: 312.5%;
-    line-height: 1.5;
-    font-family: Lato, sans-serif;
-    letter-spacing: -1px;
-    -webkit-font-smoothing: subpixel-antialiased;
-    font-weight: 300;
 }
 
 h1 em {
   font-family: "Century Gothic", "Gill Sans";
-  font-style: normal;
   font-weight: 700;
+  font-style: normal;
 }
 
 h2 {
-    font-size: 150%;   
-    margin-top: 1.3333em;   
-    margin-bottom: 0.4167em;
-    font-weight: 700;
+  margin-top: 1.3333em;   
+  margin-bottom: 0.4167em;
+  font-family: "Century Gothic", "Gill Sans";
+  font-weight: 700;
+  font-size: 150%;
 }
 
 em {
@@ -98,18 +97,17 @@ em {
 
 
 h2 + h3 {
-    margin-top: 1.1111em;
+  margin-top: 1.1111em;
 }
 
 h3 {
-  font-size: 112.5%;
+  font-family: "Century Gothic", "Gill Sans";
   font-weight: 400;
+  font-size: 112.5%;
   display: table;
   width: auto;
   background: white;
-  margin-top: 1.6667em;
-  margin-left: 1.6667em;
-  margin-bottom: 0.5555em;
+  margin: 1.6667em 0 0.5555em 1.6667em;
   padding: 0 0.5555em;
 }
 
@@ -168,7 +166,7 @@ pre {
     padding: 0.3846em 0.7692em;
     font-family: "Source Code Pro", monospace;
     font-size: 81.25%;
-    font-weight: 400;
+    font-weight: 300;
     line-height: 1.4;
     border-radius: 2px;
     -moz-border-radius: 2px;
@@ -176,6 +174,16 @@ pre {
     text-wrap: normal;
     overflow: auto;
     overflow-y: hidden;
+}
+.keyword {
+  font-family: "Source Code Pro", monospace;
+  font-weight: 500;
+}
+.static {
+  font-style: italic;
+}
+.comment {
+  color: #46A94B;
 }
 
 /* Buttons
@@ -190,10 +198,10 @@ pre {
   padding: 0.5em 1.5em;
   border-radius: 2em;
   border: 2px solid rgba(0, 0, 0, 0.5);
-  color: aliceblue;
   font-family: "Century Gothic", "Gill Sans";
-  font-weight: bold;
+  font-weight: 700;
   font-size: 81.25%;
+  color: aliceblue;
   text-decoration: none;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.3);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -221,15 +229,15 @@ pre {
 }
 
 em strong {
-    font-family: Lato, sans-serif;
-    font-style: normal;
-    font-weight: 700;
+  font-family: Lato, sans-serif;
+  font-weight: 700;
+  font-style: normal;
 }
 
 em strong:before {
-    content: "″";
-    padding-right: 0.1em;
-    display: inline;
+  content: "″";
+  padding-right: 0.1em;
+  display: inline;
 }
 
 em strong:after {
@@ -272,12 +280,15 @@ a:hover {
 
 code {
     font-family: "Source Code Pro";
+    font-weight: 300;
 }
 
 code em {
+  font-family: "Source Code Pro";
+  font-weight: 500;
+  display: inline-block;
   font-style: normal;
-  font-weight: 600;
-  color: darkgray;
+  margin: 0 1px;
 }
 
 ul {
