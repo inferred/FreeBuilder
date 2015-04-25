@@ -47,7 +47,7 @@ header {
 }
 
 header h2 {
-    font-family: "Century Gothic", "Gill Sans";
+    font-family: "Century Gothic", "Gill Sans", sans-serif;
     font-weight: 300;
     font-size: 112.5%;
     color: #666;
@@ -78,7 +78,7 @@ h1 {
 }
 
 h1 em {
-  font-family: "Century Gothic", "Gill Sans";
+  font-family: "Century Gothic", "Gill Sans", sans-serif;
   font-weight: 700;
   font-style: normal;
 }
@@ -86,13 +86,13 @@ h1 em {
 h2 {
   margin-top: 1.3333em;   
   margin-bottom: 0.4167em;
-  font-family: "Century Gothic", "Gill Sans";
+  font-family: "Century Gothic", "Gill Sans", sans-serif;
   font-weight: 700;
   font-size: 150%;
 }
 
 em {
-  font-family: "Century Gothic", "Gill Sans";
+  font-family: "Century Gothic", "Gill Sans", sans-serif;
 }
 
 
@@ -101,7 +101,7 @@ h2 + h3 {
 }
 
 h3 {
-  font-family: "Century Gothic", "Gill Sans";
+  font-family: "Century Gothic", "Gill Sans", sans-serif;
   font-weight: 400;
   font-size: 112.5%;
   display: table;
@@ -198,7 +198,7 @@ pre {
   padding: 0.5em 1.5em;
   border-radius: 2em;
   border: 2px solid rgba(0, 0, 0, 0.5);
-  font-family: "Century Gothic", "Gill Sans";
+  font-family: "Century Gothic", "Gill Sans", sans-serif;
   font-weight: 700;
   font-size: 81.25%;
   color: aliceblue;
@@ -279,12 +279,12 @@ a:hover {
 }
 
 code {
-    font-family: "Source Code Pro";
+    font-family: "Source Code Pro", monospace;
     font-weight: 300;
 }
 
 code em {
-  font-family: "Source Code Pro";
+  font-family: "Source Code Pro", monospace;
   font-weight: 500;
   display: inline-block;
   font-style: normal;
@@ -311,7 +311,7 @@ ul li:before {
   content: "#";
   position: absolute;
   left: -1.23em;
-  font-family: "Century Gothic", "Gill Sans";
+  font-family: "Century Gothic", "Gill Sans", sans-serif;
   font-size: 81.25%;
   margin-top: 2px;  /* Weirdly the same for Android. */
   color: #539ee8;
