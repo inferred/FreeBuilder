@@ -46,7 +46,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
@@ -265,6 +264,9 @@ public class Model {
       }
       return request.resultFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (ExecutionException e) {
+      if (e.getCause() instanceof CompilationException) {
+        throw new CompilationException((CompilationException) e.getCause());
+      }
       throw new IllegalArgumentException("Code generation failed: " + e.getMessage(), e.getCause());
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -355,15 +357,15 @@ public class Model {
         elementFuture.setException(e);
       } finally {
         if (!processingEnvFuture.isDone()) {
-          processingEnvFuture.setException(new IllegalStateException(
-              "Failed to start up compilation thread, reason unknown"));
+          processingEnvFuture.setException(new CompilationException(diagnostics.getDiagnostics()));
         }
         if (!elementFuture.isDone()) {
-          for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-            System.err.println(diagnostic);
+          if (diagnostics.getDiagnostics().isEmpty()) {
+            elementFuture.setException(new IllegalStateException(
+                "Code generation terminated abnormally. Was there no annotated element?"));
+          } else {
+            elementFuture.setException(new CompilationException(diagnostics.getDiagnostics()));
           }
-          elementFuture.setException(new IllegalStateException(
-              "Code generation terminated abnormally. Was there no annotated element?"));
         }
         fileManager.close();
       }

@@ -15,15 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Iterator;
 
 import javax.tools.JavaFileObject;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.CompilationException;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -419,20 +417,14 @@ public class MultisetPropertyFactoryTest {
 
   @Test
   public void testAddVarargs_null_primitive() {
-    boolean caughtException = false;
-    try {
-      behaviorTester
-          .with(new Processor())
-          .with(MULTISET_PRIMITIVES_TYPE)
-          .with(new TestBuilder()
-              .addLine("new com.example.DataType.Builder().addItems(1, null);")
-              .build())
-          .runTest();
-    } catch (AssertionError e) {
-      caughtException = true;
-      assertEquals("Compilation failed", e.getMessage());
-    }
-    assertTrue("Expected exception", caughtException);
+    behaviorTester
+        .with(new Processor())
+        .with(MULTISET_PRIMITIVES_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder().addItems(1, null);")
+            .build());
+    thrown.expect(CompilationException.class);
+    behaviorTester.runTest();
   }
 
   @Test
