@@ -64,6 +64,11 @@ public class SourceBuilders {
       }
       return this;
     }
+
+    @Override
+    public SourceLevel getSourceLevel() {
+      return delegate.getSourceLevel();
+    }
   }
 
   private SourceBuilders() {}

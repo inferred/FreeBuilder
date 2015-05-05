@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -254,6 +255,6 @@ public class CompilationUnitWriterTest {
         model.elementUtils().getName(typename.substring(lastdot + 1)),
         originatingElement,
         model.elementUtils());
-    return new CompilationUnitWriter(filer, classToWrite, originatingElement);
+    return new CompilationUnitWriter(filer, classToWrite, JAVA_6, originatingElement);
   }
 }

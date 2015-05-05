@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
 import static org.junit.Assert.assertEquals;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -41,7 +42,7 @@ public class SourceStringBuilderTest {
   @Rule public final ModelRule model = new ModelRule();
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final ImportManager shortener = new ImportManager.Builder().build();
-  private final SourceStringBuilder builder = new SourceStringBuilder(shortener);
+  private final SourceStringBuilder builder = new SourceStringBuilder(JAVA_6, shortener);
 
   @Test
   public void testConstructor() {

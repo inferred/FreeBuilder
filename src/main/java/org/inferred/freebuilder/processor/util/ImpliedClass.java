@@ -87,14 +87,16 @@ public class ImpliedClass extends AbstractImpliedClass<PackageElement> implement
   /**
    * Returns a {@link CompilationUnitWriter} for creating this class. The file preamble (package and
    * imports) will be generated automatically.
+   * @param sourceLevel
    *
    * @throws FilerException if a Filer guarantee is violated (see the {@link FilerException}
    *     JavaDoc for more information); propagated because this is often seen in GUIDE projects,
    *     so should be downgraded to a warning, whereas runtime exceptions should be flagged as an
    *     internal error to the user
    */
-  public CompilationUnitWriter openSourceWriter(Filer filer) throws FilerException {
-    return new CompilationUnitWriter(filer, this, originatingElement);
+  public CompilationUnitWriter openSourceWriter(
+      Filer filer, SourceLevel sourceLevel) throws FilerException {
+    return new CompilationUnitWriter(filer, this, sourceLevel, originatingElement);
   }
 
   /**

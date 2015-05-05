@@ -50,5 +50,7 @@ public interface SourceBuilder {
    *      necessary, or shorter versions if possible.
    * </ul>
    */
-  public SourceBuilder addLine(String fmt, Object... args);
+  SourceBuilder addLine(String fmt, Object... args);
+
+  SourceLevel getSourceLevel();
 }

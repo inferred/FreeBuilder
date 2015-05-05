@@ -79,8 +79,11 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.addLine("  private %1$s<%2$s> %3$s = new %1$s<%2$s>();",
-          ArrayList.class, elementType, property.getName());
+      code.addLine("  private %1$s<%2$s> %3$s = new %1$s<%4$s>();",
+          ArrayList.class,
+          elementType,
+          property.getName(),
+          code.getSourceLevel().supportsDiamondOperator() ? "" : elementType);
     }
 
     @Override
