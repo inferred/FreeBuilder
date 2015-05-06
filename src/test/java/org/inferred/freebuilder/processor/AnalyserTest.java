@@ -604,10 +604,52 @@ public class AnalyserTest {
     assertEquals("java.lang.String", properties.get("name").getType().toString());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
-    assertThat(messager.getMessagesByElement().keys())
-        .containsExactly("getName@Nullable");
-    assertThat(messager.getMessagesByElement().get("getName@Nullable")).containsExactly(
-        "[ERROR] Nullable properties not supported on @FreeBuilder types (b/16057590)");
+    assertThat(properties.get("name").getNullableAnnotations())
+        .containsExactly(model.typeElement(Nullable.class));
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
+  public void arbitraryNullableAnnotation() throws CannotGenerateCodeException {
+    model.newType(
+        "package foo.bar;",
+        "public @interface Nullable {}");
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract @foo.bar.Nullable String getName();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("name");
+    assertEquals("java.lang.String", properties.get("name").getType().toString());
+    assertEquals("Name", properties.get("name").getCapitalizedName());
+    assertEquals("getName", properties.get("name").getGetterName());
+    assertThat(properties.get("name").getNullableAnnotations())
+        .containsExactly(model.typeElement("foo.bar.Nullable"));
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
+  public void multipleNullableAnnotations() throws CannotGenerateCodeException {
+    model.newType(
+        "package foo.bar;",
+        "public @interface Nullable {}");
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract @" + Nullable.class.getName() + " @foo.bar.Nullable String getName();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("name");
+    assertEquals("java.lang.String", properties.get("name").getType().toString());
+    assertEquals("Name", properties.get("name").getCapitalizedName());
+    assertEquals("getName", properties.get("name").getGetterName());
+    assertThat(properties.get("name").getNullableAnnotations())
+        .containsExactly(model.typeElement(Nullable.class), model.typeElement("foo.bar.Nullable"))
+        .inOrder();
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test

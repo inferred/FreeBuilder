@@ -63,6 +63,11 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
+    // No @Nullable properties
+    if (!config.getProperty().getNullableAnnotations().isEmpty()) {
+      return Optional.absent();
+    }
+
     // Check this is a declared type
     TypeMirror type = config.getProperty().getType();
     if (type.getKind() != TypeKind.DECLARED) {

@@ -47,6 +47,11 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
   public Optional<CodeGenerator> create(Config config) {
+    // No @Nullable properties
+    if (!config.getProperty().getNullableAnnotations().isEmpty()) {
+      return Optional.absent();
+    }
+
     if (config.getProperty().getType().getKind() == TypeKind.DECLARED) {
       DeclaredType type = (DeclaredType) config.getProperty().getType();
       if (erasesToAnyOf(type, Set.class, ImmutableSet.class)) {

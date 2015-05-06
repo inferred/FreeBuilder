@@ -115,7 +115,7 @@ public class ClassTypeImpl implements DeclaredType {
   /**
    * Fake implementation of {@link TypeElement} for unit tests.
    */
-  class ClassElementImpl implements TypeElement {
+  public class ClassElementImpl implements TypeElement {
 
     @Override
     public ClassTypeImpl asType() {

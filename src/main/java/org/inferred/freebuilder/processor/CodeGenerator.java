@@ -142,8 +142,11 @@ public class CodeGenerator {
     // Getters
     for (Property property : metadata.getProperties()) {
       code.addLine("")
-          .addLine("    @%s", Override.class)
-          .addLine("    public %s %s() {", property.getType(), property.getGetterName());
+          .addLine("    @%s", Override.class);
+      for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
+        code.addLine("    @%s", nullableAnnotation);
+      }
+      code.addLine("    public %s %s() {", property.getType(), property.getGetterName());
       code.add("      return ");
       property.getCodeGenerator().addReadValueFragment(code, property.getName());
       code.add(";\n");
@@ -453,8 +456,11 @@ public class CodeGenerator {
     // Getters
     for (Property property : metadata.getProperties()) {
       code.addLine("")
-          .addLine("    @%s", Override.class)
-          .addLine("    public %s %s() {", property.getType(), property.getGetterName());
+          .addLine("    @%s", Override.class);
+      for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
+        code.addLine("    @%s", nullableAnnotation);
+      }
+      code.addLine("    public %s %s() {", property.getType(), property.getGetterName());
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("      if (_unsetProperties.contains(%s.%s)) {",
                 metadata.getPropertyEnum(), property.getAllCapsName())
