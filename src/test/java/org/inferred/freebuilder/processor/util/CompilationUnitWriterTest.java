@@ -51,6 +51,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /** Tests for {@link CompilationUnitWriter}. */
 @RunWith(MockitoJUnitRunner.class)
@@ -72,7 +73,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testConstructor() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       // Do nothing
     }
     assertEquals(
@@ -98,7 +99,7 @@ public class CompilationUnitWriterTest {
       }});
     when(sourceFile.openWriter()).thenReturn(mockWriter);
 
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       // Do nothing
     }
     verify(mockWriter).close();
@@ -106,7 +107,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter
           .addLine("public class Bar {")
           .addLine("  // %s %d", "Foo", 100)
@@ -123,7 +124,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_typeInSamePackage() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be short: %s", originatingElement);
     }
     assertThat(source.toString()).contains("// This should be short: Foo\n");
@@ -131,7 +132,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_typeInJavaLangPackage() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be short: %s", String.class);
     }
     assertThat(source.toString()).contains("// This should be short: String\n");
@@ -139,7 +140,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_primitiveType() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be short: %s", int.class);
     }
     assertThat(source.toString()).contains("// This should be short: int\n");
@@ -147,7 +148,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_typeInDifferentPackage() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be imported: %s", AtomicLong.class);
     }
     assertThat(source.toString()).contains("import java.util.concurrent.atomic.AtomicLong;\n");
@@ -156,7 +157,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_nestedTypeInDifferentPackage() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be imported: %s", ImmutableList.Builder.class);
     }
     assertThat(source.toString()).contains("import com.google.common.collect.ImmutableList;\n");
@@ -165,7 +166,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_typesWithSameName() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be imported: %s", java.util.List.class);
       sourceWriter.addLine("// This should be explicit: %s", java.awt.List.class);
     }
@@ -177,7 +178,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_typeMirrorInJavaLangPackage() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be short: %s", model.typeMirror(String.class));
     }
     assertThat(source.toString()).contains("// This should be short: String\n");
@@ -185,7 +186,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_typeMirrorInDifferentPackage() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be imported: %s", model.typeMirror(AtomicLong.class));
     }
     assertThat(source.toString()).contains("import java.util.concurrent.atomic.AtomicLong;");
@@ -194,7 +195,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_genericTypeMirror() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be imported: %s",
           model.typeMirror("java.util.List<java.lang.String>"));
     }
@@ -204,7 +205,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_typeElementInJavaLangPackage() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be short: %s",
           model.typeUtils().asElement(model.typeMirror(String.class)));
     }
@@ -213,7 +214,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_typeElementInDifferentPackage() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be imported: %s",
           model.typeUtils().asElement(model.typeMirror(AtomicLong.class)));
     }
@@ -223,7 +224,7 @@ public class CompilationUnitWriterTest {
 
   @Test
   public void testAddLine_genericTypeElement() throws FilerException {
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       sourceWriter.addLine("// This should be imported: %s",
           model.typeUtils().asElement(model.typeMirror("java.util.List<java.lang.String>")));
     }
@@ -242,19 +243,20 @@ public class CompilationUnitWriterTest {
         getOnlyElement(fieldsIn(myType.getEnclosedElements())).asType();
     assertEquals(TypeKind.ERROR, errorType.getTypeArguments().get(0).getKind());
     // Note: myType.toString() returns "java.util.List<<any>>" on current compilers. Weird.
-    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example.Bar")) {
+    try (CompilationUnitWriter sourceWriter = newSourceWriter("com.example", "Bar")) {
       thrown.expect(IllegalArgumentException.class);
       sourceWriter.addLine("%s", errorType);
     }
   }
 
-  private CompilationUnitWriter newSourceWriter(String typename) throws FilerException {
-    int lastdot = typename.lastIndexOf(".");
-    ImpliedClass classToWrite = new ImpliedClass(
-        model.elementUtils().getPackageElement(typename.substring(0, lastdot)),
-        model.elementUtils().getName(typename.substring(lastdot + 1)),
-        originatingElement,
-        model.elementUtils());
-    return new CompilationUnitWriter(filer, classToWrite, JAVA_6, originatingElement);
+  private CompilationUnitWriter newSourceWriter(String pkg, String simpleName)
+      throws FilerException {
+    return new CompilationUnitWriter(
+        filer,
+        model.elementUtils(),
+        JAVA_6,
+        TypeReference.to(pkg, simpleName),
+        ImmutableSet.<TypeReference>of(),
+        originatingElement);
   }
 }

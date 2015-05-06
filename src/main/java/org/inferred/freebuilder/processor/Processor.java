@@ -75,8 +75,14 @@ public class Processor extends AbstractProcessor {
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
         Metadata metadata = analyser.analyse(type);
-        CompilationUnitWriter code = metadata.getGeneratedBuilder().openSourceWriter(
-            processingEnv.getFiler(), SourceLevel.from(processingEnv.getSourceVersion()));
+        CompilationUnitWriter code = new CompilationUnitWriter(
+            processingEnv.getFiler(),
+            processingEnv.getElementUtils(),
+            SourceLevel.from(processingEnv.getSourceVersion()),
+            metadata.getGeneratedBuilder(),
+            ImmutableSet.of(
+                metadata.getPartialType(), metadata.getPropertyEnum(), metadata.getValueType()),
+            type);
         try {
           codeGenerator.writeBuilderSource(code, metadata);
         } finally {

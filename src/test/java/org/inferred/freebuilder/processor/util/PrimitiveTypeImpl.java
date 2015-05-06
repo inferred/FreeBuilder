@@ -17,10 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
-
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeVisitor;
@@ -28,13 +24,12 @@ import javax.lang.model.type.TypeVisitor;
 /**
  * Fake implementation of {@link PrimitiveType} for unit tests.
  */
-public enum PrimitiveTypeImpl implements PrimitiveType {
+public abstract class PrimitiveTypeImpl implements PrimitiveType {
 
-  CHAR(TypeKind.CHAR),
-  INT(TypeKind.INT),
-  FLOAT(TypeKind.FLOAT),
-  DOUBLE(TypeKind.DOUBLE),
-  ;
+  public static final PrimitiveType CHAR = Partial.of(PrimitiveTypeImpl.class, TypeKind.CHAR);
+  public static final PrimitiveType INT = Partial.of(PrimitiveTypeImpl.class, TypeKind.INT);
+  public static final PrimitiveType FLOAT = Partial.of(PrimitiveTypeImpl.class, TypeKind.FLOAT);
+  public static final PrimitiveType DOUBLE = Partial.of(PrimitiveTypeImpl.class, TypeKind.DOUBLE);
 
   private final TypeKind kind;
 
@@ -48,21 +43,6 @@ public enum PrimitiveTypeImpl implements PrimitiveType {
     return kind;
   }
 
-  // Override
-  public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
-    throw new UnsupportedOperationException();
-  }
-
-  // Override
-  public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-    throw new UnsupportedOperationException();
-  }
-
-  // Override
-  public List<? extends AnnotationMirror> getAnnotationMirrors() {
-    throw new UnsupportedOperationException();
-  }
-
   @Override
   public <R, P> R accept(TypeVisitor<R, P> v, P p) {
     return v.visitPrimitive(this, p);
@@ -73,4 +53,3 @@ public enum PrimitiveTypeImpl implements PrimitiveType {
     return kind.toString().toLowerCase();
   }
 }
-

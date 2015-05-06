@@ -1,10 +1,5 @@
 package org.inferred.freebuilder.processor;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.Set;
-
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
@@ -24,25 +19,26 @@ import javax.lang.model.util.AbstractElementVisitor6;
 import org.inferred.freebuilder.processor.util.NameImpl;
 import org.inferred.freebuilder.processor.util.NoTypes;
 import org.inferred.freebuilder.processor.util.PackageElementImpl;
+import org.inferred.freebuilder.processor.util.Partial;
 import org.inferred.freebuilder.processor.util.ValueType;
 
 import com.google.common.collect.ImmutableList;
 
-class GenericTypeElementImpl extends ValueType
+abstract class GenericTypeElementImpl extends ValueType
     implements javax.lang.model.element.TypeElement {
 
   static GenericTypeElementImpl newTopLevelGenericType(String qualifiedName) {
     String pkg = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
     String simpleName = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
     PackageElement enclosingElement = new PackageElementImpl(pkg);
-    return new GenericTypeElementImpl(enclosingElement, NoTypes.NONE, simpleName);
+    return Partial.of(GenericTypeElementImpl.class, enclosingElement, NoTypes.NONE, simpleName);
   }
 
   private final Element enclosingElement;
   private final TypeMirror enclosingType;
   private final String simpleName;
 
-  private GenericTypeElementImpl(
+  public GenericTypeElementImpl(
       Element enclosingElement, TypeMirror enclosingType, String simpleName) {
     this.enclosingElement = enclosingElement;
     this.enclosingType = enclosingType;
@@ -61,28 +57,13 @@ class GenericTypeElementImpl extends ValueType
   }
 
   @Override
-  public TypeMirror asType() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public ElementKind getKind() {
     return ElementKind.CLASS;
   }
 
   @Override
-  public Set<javax.lang.model.element.Modifier> getModifiers() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public <R, P> R accept(ElementVisitor<R, P> v, P p) {
     return v.visitType(this, p);
-  }
-
-  @Override
-  public List<? extends Element> getEnclosedElements() {
-    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -102,43 +83,8 @@ class GenericTypeElementImpl extends ValueType
   }
 
   @Override
-  public TypeMirror getSuperclass() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public List<? extends TypeMirror> getInterfaces() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public List<? extends TypeParameterElement> getTypeParameters() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public Element getEnclosingElement() {
     return enclosingElement;
-  }
-
-  // Override
-  public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
-    // TODO: handle Java 8 type annotations
-    throw new UnsupportedOperationException();
-  }
-
-  // Override
-  @Override
-  public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-    // TODO: handle Java 8 type annotations
-    throw new UnsupportedOperationException();
-  }
-
-  // Override
-  @Override
-  public List<? extends AnnotationMirror> getAnnotationMirrors() {
-    // TODO: handle Java 8 type annotations
-    throw new UnsupportedOperationException();
   }
 
   class GenericTypeMirrorImpl extends ValueType implements DeclaredType {

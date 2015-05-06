@@ -30,8 +30,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
-import org.inferred.freebuilder.processor.util.ImpliedClass;
-import org.inferred.freebuilder.processor.util.ImpliedClass.ImpliedNestedClass;
+import org.inferred.freebuilder.processor.util.TypeReference;
 import org.inferred.freebuilder.processor.util.ValueType;
 
 import com.google.common.base.Function;
@@ -61,12 +60,12 @@ public class Metadata extends ValueType {
 
   private final Elements elements;
   private final TypeElement type;
-  private final TypeElement builder;
+  @Nullable private final TypeElement builder;
   @Nullable private final BuilderFactory builderFactory;
-  private final ImpliedClass generatedBuilder;
-  private final ImpliedNestedClass valueType;
-  private final ImpliedNestedClass partialType;
-  private final ImpliedNestedClass propertyEnum;
+  private final TypeReference generatedBuilder;
+  private final TypeReference valueType;
+  private final TypeReference partialType;
+  private final TypeReference propertyEnum;
   private final ImmutableList<Property> properties;
   private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
   private final boolean builderSerializable;
@@ -99,8 +98,20 @@ public class Metadata extends ValueType {
     return type;
   }
 
-  /** Returns the builder type that users will see. */
+  /**
+   * Returns true if there is a user-visible Builder subclass defined.
+   */
+  public boolean hasBuilder() {
+    return (builder != null);
+  }
+
+  /**
+   * Returns the builder type that users will see.
+   *
+   * @throws IllegalStateException if {@link #hasBuilder} returns false.
+   */
   public TypeElement getBuilder() {
+    checkState(hasBuilder());
     return builder;
   }
 
@@ -110,22 +121,22 @@ public class Metadata extends ValueType {
   }
 
   /** Returns the builder class that should be generated. */
-  public ImpliedClass getGeneratedBuilder() {
+  public TypeReference getGeneratedBuilder() {
     return generatedBuilder;
   }
 
   /** Returns the value class that should be generated. */
-  public ImpliedNestedClass getValueType() {
+  public TypeReference getValueType() {
     return valueType;
   }
 
   /** Returns the partial value class that should be generated. */
-  public ImpliedNestedClass getPartialType() {
+  public TypeReference getPartialType() {
     return partialType;
   }
 
   /** Returns the Property enum that may be generated. */
-  public ImpliedNestedClass getPropertyEnum() {
+  public TypeReference getPropertyEnum() {
     return propertyEnum;
   }
 
@@ -325,7 +336,7 @@ public class Metadata extends ValueType {
   @Override
   protected void addFields(FieldReceiver fields) {
     fields.add("type", type.toString());
-    fields.add("builder", builder.toString());
+    fields.add("builder", hasBuilder() ? builder.toString() : null);
     fields.add("builderFactory", builderFactory);
     fields.add("generatedBuilder", generatedBuilder.toString());
     fields.add("valueType", valueType.toString());
@@ -345,10 +356,10 @@ public class Metadata extends ValueType {
     private TypeElement type;
     private TypeElement builder;
     private BuilderFactory builderFactory;
-    private ImpliedClass generatedBuilder;
-    public ImpliedNestedClass valueType;
-    public ImpliedNestedClass partialType;
-    public ImpliedNestedClass propertyEnum;
+    private TypeReference generatedBuilder;
+    public TypeReference valueType;
+    public TypeReference partialType;
+    public TypeReference propertyEnum;
     private final List<Property> properties = new ArrayList<Property>();
     private final Map<StandardMethod, UnderrideLevel> standardMethodUnderrides = noUnderrides();
     private Boolean builderSerializable;
@@ -362,6 +373,12 @@ public class Metadata extends ValueType {
     /** Sets the type the metadata object being built is referring to. */
     public Builder setType(TypeElement type) {
       this.type = checkNotNull(type);
+      return this;
+    }
+
+    /** Sets the builder class that users will see, if any. */
+    public Builder setBuilder(Optional<TypeElement> builder) {
+      this.builder = builder.orNull();
       return this;
     }
 
@@ -384,25 +401,25 @@ public class Metadata extends ValueType {
     }
 
     /** Sets the builder class that should be generated. */
-    public Builder setGeneratedBuilder(ImpliedClass generatedBuilder) {
+    public Builder setGeneratedBuilder(TypeReference generatedBuilder) {
       this.generatedBuilder = checkNotNull(generatedBuilder);
       return this;
     }
 
     /** Sets the value type that should be generated. */
-    public Builder setValueType(ImpliedNestedClass valueType) {
+    public Builder setValueType(TypeReference valueType) {
       this.valueType = valueType;
       return this;
     }
 
     /** Sets the partial type that should be generated. */
-    public Builder setPartialType(ImpliedNestedClass partialType) {
+    public Builder setPartialType(TypeReference partialType) {
       this.partialType = partialType;
       return this;
     }
 
     /** Sets the property enum that may be generated.  */
-    public Builder setPropertyEnum(ImpliedNestedClass propertyEnum) {
+    public Builder setPropertyEnum(TypeReference propertyEnum) {
       this.propertyEnum = propertyEnum;
       return this;
     }
@@ -455,18 +472,17 @@ public class Metadata extends ValueType {
      * Returns a newly-built {@link Metadata} based on the content of the {@code Builder}.
      */
     public Metadata build() {
-      checkState(builder != null, "builder not set");
       checkState(generatedBuilder != null, "generatedBuilder not set");
       checkState(type != null, "type not set");
       checkState(valueType != null, "valueType not set");
-      checkState(valueType.getEnclosingElement().equals(generatedBuilder),
-          "valueType not a nested class of generatedBuilder");
+      checkState(valueType.getEnclosingType().equals(generatedBuilder),
+          "%s not a nested class of %s", valueType, generatedBuilder);
       checkState(partialType != null, "partialType not set");
-      checkState(partialType.getEnclosingElement().equals(generatedBuilder),
-          "partialType not a nested class of generatedBuilder");
+      checkState(partialType.getEnclosingType().equals(generatedBuilder),
+          "%s not a nested class of %s", partialType, generatedBuilder);
       checkState(propertyEnum != null, "propertyEnum not set");
-      checkState(propertyEnum.getEnclosingElement().equals(generatedBuilder),
-          "propertyEnum not a nested class of generatedBuilder");
+      checkState(propertyEnum.getEnclosingType().equals(generatedBuilder),
+          "%s not a nested class of %s", propertyEnum, generatedBuilder);
       checkState(builderSerializable != null, "builderSerializable not set");
       checkState(gwtCompatible != null, "gwtCompatible not set");
       checkState(gwtSerializable != null, "gwtSerializable not set");

@@ -72,8 +72,8 @@ public class ImportManagerTest {
     ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
     ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
     ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(listType)
-        .addImplicitImport(stringType)
+        .addImplicitImport(TypeReference.to(listType))
+        .addImplicitImport(TypeReference.to(stringType))
         .build();
     assertEquals("java.lang.String", manager.shorten(String.class));
     assertEquals("java.util.List", manager.shorten(List.class));
@@ -100,8 +100,8 @@ public class ImportManagerTest {
     ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
     ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
     ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(listType)
-        .addImplicitImport(stringType)
+        .addImplicitImport(TypeReference.to(listType))
+        .addImplicitImport(TypeReference.to(stringType))
         .build();
     assertEquals("java.lang.String",
         manager.shorten(newTopLevelClass("java.lang.String").asElement()));
@@ -134,8 +134,8 @@ public class ImportManagerTest {
     ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
     ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
     ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(listType)
-        .addImplicitImport(stringType)
+        .addImplicitImport(TypeReference.to(listType))
+        .addImplicitImport(TypeReference.to(stringType))
         .build();
     assertEquals("java.lang.String",
         manager.shorten(newTopLevelClass("java.lang.String")));
@@ -209,8 +209,8 @@ public class ImportManagerTest {
     ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
     ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
     ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(listType)
-        .addImplicitImport(stringType)
+        .addImplicitImport(TypeReference.to(listType))
+        .addImplicitImport(TypeReference.to(stringType))
         .build();
     assertEquals("java.lang.String", manager.shorten(TypeReference.to("java.lang", "String")));
     assertEquals("java.util.List", manager.shorten(TypeReference.to("java.util", "List")));
