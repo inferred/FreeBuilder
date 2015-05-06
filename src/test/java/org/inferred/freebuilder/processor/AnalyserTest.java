@@ -83,7 +83,7 @@ public class AnalyserTest {
     TypeReference partialType = expectedBuilder.nestedType("Partial");
     TypeReference propertyType = expectedBuilder.nestedType("Property");
     TypeReference valueType = expectedBuilder.nestedType("Value");
-    Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
+    Metadata expectedMetadata = new Metadata.Builder()
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder)
@@ -93,9 +93,9 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType)
         .setType(dataType)
         .setValueType(valueType)
-        .addVisibleNestedType(partialType)
-        .addVisibleNestedType(propertyType)
-        .addVisibleNestedType(valueType)
+        .addVisibleNestedTypes(partialType)
+        .addVisibleNestedTypes(propertyType)
+        .addVisibleNestedTypes(valueType)
         .build();
 
     assertEquals(expectedMetadata, metadata);
@@ -118,7 +118,7 @@ public class AnalyserTest {
     TypeReference partialType = expectedBuilder.nestedType("Partial");
     TypeReference propertyType = expectedBuilder.nestedType("Property");
     TypeReference valueType = expectedBuilder.nestedType("Value");
-    Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
+    Metadata expectedMetadata = new Metadata.Builder()
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder)
@@ -128,9 +128,9 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType)
         .setType(dataType)
         .setValueType(valueType)
-        .addVisibleNestedType(partialType)
-        .addVisibleNestedType(propertyType)
-        .addVisibleNestedType(valueType)
+        .addVisibleNestedTypes(partialType)
+        .addVisibleNestedTypes(propertyType)
+        .addVisibleNestedTypes(valueType)
         .build();
 
     assertEquals(expectedMetadata, metadata);
@@ -678,9 +678,7 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE,
-        StandardMethod.HASH_CODE, UnderrideLevel.ABSENT,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+        StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("equals", ImmutableList.of(
             "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
@@ -700,9 +698,7 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.ABSENT,
-        StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+        StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("hashCode", ImmutableList.of(
             "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
@@ -726,8 +722,7 @@ public class AnalyserTest {
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE,
-        StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+        StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
@@ -745,8 +740,6 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.ABSENT,
-        StandardMethod.HASH_CODE, UnderrideLevel.ABSENT,
         StandardMethod.TO_STRING, UnderrideLevel.OVERRIDEABLE));
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
@@ -791,9 +784,7 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.FINAL,
-        StandardMethod.HASH_CODE, UnderrideLevel.ABSENT,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+        StandardMethod.EQUALS, UnderrideLevel.FINAL));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("equals", ImmutableList.of(
             "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
@@ -813,9 +804,7 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.ABSENT,
-        StandardMethod.HASH_CODE, UnderrideLevel.FINAL,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+        StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("hashCode", ImmutableList.of(
             "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
@@ -839,8 +828,7 @@ public class AnalyserTest {
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL,
-        StandardMethod.HASH_CODE, UnderrideLevel.FINAL,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+        StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
@@ -858,8 +846,6 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.ABSENT,
-        StandardMethod.HASH_CODE, UnderrideLevel.ABSENT,
         StandardMethod.TO_STRING, UnderrideLevel.FINAL));
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
@@ -902,10 +888,7 @@ public class AnalyserTest {
 
     Metadata metadata = analyser.analyse(dataType);
 
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.ABSENT,
-        StandardMethod.HASH_CODE, UnderrideLevel.ABSENT,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+    assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
@@ -921,10 +904,7 @@ public class AnalyserTest {
 
     Metadata metadata = analyser.analyse(dataType);
 
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.ABSENT,
-        StandardMethod.HASH_CODE, UnderrideLevel.ABSENT,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+    assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
@@ -940,10 +920,7 @@ public class AnalyserTest {
 
     Metadata metadata = analyser.analyse(dataType);
 
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
-        StandardMethod.EQUALS, UnderrideLevel.ABSENT,
-        StandardMethod.HASH_CODE, UnderrideLevel.ABSENT,
-        StandardMethod.TO_STRING, UnderrideLevel.ABSENT));
+    assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
@@ -1094,8 +1071,8 @@ public class AnalyserTest {
     TypeReference partialType = expectedBuilder.nestedType("Partial");
     TypeReference propertyType = expectedBuilder.nestedType("Property");
     TypeReference valueType = expectedBuilder.nestedType("Value");
-    Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
-        .setBuilder(concreteBuilder)
+    Metadata expectedMetadata = new Metadata.Builder()
+        .setBuilder(model.typeElement("com.example.DataType.Builder"))
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder)
@@ -1105,10 +1082,10 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType)
         .setType(dataType)
         .setValueType(valueType)
-        .addVisibleNestedType(TypeReference.to(concreteBuilder))
-        .addVisibleNestedType(partialType)
-        .addVisibleNestedType(propertyType)
-        .addVisibleNestedType(valueType)
+        .addVisibleNestedTypes(TypeReference.to(concreteBuilder))
+        .addVisibleNestedTypes(partialType)
+        .addVisibleNestedTypes(propertyType)
+        .addVisibleNestedTypes(valueType)
         .build();
 
     assertEquals(expectedMetadata, metadata);
@@ -1133,8 +1110,8 @@ public class AnalyserTest {
     TypeReference partialType = expectedBuilder.nestedType("Partial");
     TypeReference propertyType = expectedBuilder.nestedType("Property");
     TypeReference valueType = expectedBuilder.nestedType("Value");
-    Metadata expectedMetadata = new Metadata.Builder(model.elementUtils())
-        .setBuilder(concreteBuilder)
+    Metadata expectedMetadata = new Metadata.Builder()
+        .setBuilder(model.typeElement("com.example.DataType.Builder"))
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder)
@@ -1144,10 +1121,10 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType)
         .setType(dataType)
         .setValueType(valueType)
-        .addVisibleNestedType(TypeReference.to(concreteBuilder))
-        .addVisibleNestedType(partialType)
-        .addVisibleNestedType(propertyType)
-        .addVisibleNestedType(valueType)
+        .addVisibleNestedTypes(TypeReference.to(concreteBuilder))
+        .addVisibleNestedTypes(partialType)
+        .addVisibleNestedTypes(propertyType)
+        .addVisibleNestedTypes(valueType)
         .build();
 
     assertEquals(expectedMetadata, metadata);

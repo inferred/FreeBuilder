@@ -144,7 +144,7 @@ class Analyser {
     TypeReference valueType = generatedBuilder.nestedType("Value");
     TypeReference partialType = generatedBuilder.nestedType("Partial");
     TypeReference propertyType = generatedBuilder.nestedType("Property");
-    return new Metadata.Builder(elements)
+    return new Metadata.Builder()
         .setType(type)
         .setBuilder(builder)
         .setBuilderFactory(builderFactory(builder))
@@ -152,9 +152,9 @@ class Analyser {
         .setValueType(valueType)
         .setPartialType(partialType)
         .setPropertyEnum(propertyType)
-        .addVisibleNestedType(valueType)
-        .addVisibleNestedType(partialType)
-        .addVisibleNestedType(propertyType)
+        .addVisibleNestedTypes(valueType)
+        .addVisibleNestedTypes(partialType)
+        .addVisibleNestedTypes(propertyType)
         .addAllVisibleNestedTypes(visibleTypesIn(type))  // Because we inherit from type
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
