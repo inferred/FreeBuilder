@@ -29,6 +29,7 @@ import org.junit.runners.JUnit4;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
 
 /** Behavioral tests for {@code Optional<?>} properties. */
@@ -796,6 +797,72 @@ public class OptionalPropertyFactoryTest {
             .addLine("assertEquals(\"partial DataType{item1=x}\", pa.toString());")
             .addLine("assertEquals(\"partial DataType{item2=y}\", ap.toString());")
             .addLine("assertEquals(\"partial DataType{item1=x, item2=y}\", pp.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testWildcardHandling_noWildcard() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+              .addLine("package com.example;")
+              .addLine("@%s", FreeBuilder.class)
+              .addLine("public abstract class DataType {")
+              .addLine("  public abstract %s<%s<%s>> getItems();",
+                      Optional.class, ImmutableList.class, Number.class)
+              .addLine("  public static class Builder extends DataType_Builder {}")
+              .addLine("}")
+              .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setItems(%s.of((%s) 1, 2, 3, 4))", ImmutableList.class, Number.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems().get()).containsExactly(1, 2, 3, 4).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testWildcardHandling_unboundedWildcard() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+              .addLine("package com.example;")
+              .addLine("@%s", FreeBuilder.class)
+              .addLine("public abstract class DataType {")
+              .addLine("  public abstract %s<%s<?>> getItems();",
+                      Optional.class, ImmutableList.class)
+              .addLine("  public static class Builder extends DataType_Builder {}")
+              .addLine("}")
+              .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setItems(%s.of(1, 2, 3, 4))", ImmutableList.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems().get()).containsExactly(1, 2, 3, 4).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testWildcardHandling_wildcardWithExtendsBound() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+              .addLine("package com.example;")
+              .addLine("@%s", FreeBuilder.class)
+              .addLine("public abstract class DataType {")
+              .addLine("  public abstract %s<%s<? extends %s>> getItems();",
+                      Optional.class, ImmutableList.class, Number.class)
+              .addLine("  public static class Builder extends DataType_Builder {}")
+              .addLine("}")
+              .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setItems(%s.of(1, 2, 3, 4))", ImmutableList.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems().get()).containsExactly(1, 2, 3, 4).inOrder();")
             .build())
         .runTest();
   }
