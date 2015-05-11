@@ -28,7 +28,6 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
-import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
 import java.beans.Introspector;
 import java.io.Serializable;
@@ -380,7 +379,6 @@ class Analyser {
     if (getterNameMatchResult == null) {
       return null;
     }
-    verifyNotNullable(valueType, method);
     String getterName = getterNameMatchResult.group(0);
 
     TypeMirror propertyType = getReturnType(valueType, method);
@@ -391,7 +389,8 @@ class Analyser {
             .setCapitalizedName(getterNameMatchResult.group(2))
             .setAllCapsName(camelCaseToAllCaps(camelCaseName))
             .setGetterName(getterName)
-            .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType));
+            .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType))
+            .addAllNullableAnnotations(nullableAnnotationsOn(method));
     if (propertyType.getKind().isPrimitive()) {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
       TypeMirror boxedType = types.erasure(types.boxedClass(unboxedType).asType());
@@ -428,24 +427,17 @@ class Analyser {
     }
   }
 
-  private void verifyNotNullable(TypeElement valueType, ExecutableElement getterMethod) {
-    Optional<AnnotationMirror> nullableAnnotation =
-        findAnnotationMirror(getterMethod, "javax.annotation.Nullable");
-    if (nullableAnnotation.isPresent()) {
-      if (getterMethod.getEnclosingElement().equals(valueType)) {
-        messager.printMessage(
-            ERROR,
-            "Nullable properties not supported on @FreeBuilder types (b/16057590)",
-            getterMethod,
-            nullableAnnotation.get());
-      } else {
-        messager.printMessage(
-            ERROR,
-            "Method '" + getterMethod + "' declared @Nullable, but Nullable properties are not "
-                + "supported on @FreeBuilder types (b/16057590)",
-            valueType);
+  private static ImmutableSet<TypeElement> nullableAnnotationsOn(ExecutableElement getterMethod) {
+    ImmutableSet.Builder<TypeElement> nullableAnnotations = ImmutableSet.builder();
+    for (AnnotationMirror mirror : getterMethod.getAnnotationMirrors()) {
+      if (mirror.getElementValues().isEmpty()) {
+        TypeElement type = (TypeElement) mirror.getAnnotationType().asElement();
+        if (type.getSimpleName().contentEquals("Nullable")) {
+          nullableAnnotations.add(type);
+        }
       }
     }
+    return nullableAnnotations.build();
   }
 
   private PropertyCodeGenerator createCodeGenerator(

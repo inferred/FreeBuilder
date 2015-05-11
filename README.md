@@ -16,8 +16,8 @@ _Automatic generation of the Builder pattern for Java 1.6+_
   - [What you get](#what-you-get)
   - [Defaults and constraints](#defaults-and-constraints)
   - [Optional values](#optional-values)
+    - [Using `@Nullable`](#using-nullable)
     - [Converting from `@Nullable`](#converting-from-nullable)
-    - [Converting widely-used types](#converting-widely-used-types)
   - [Collections and Maps](#collections-and-maps)
   - [Nested buildable types](#nested-buildable-types)
   - [Builder construction](#builder-construction)
@@ -190,10 +190,31 @@ will gain additional convenience setter methods.
 Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
 the empty string, as it forces the user to think about those edge cases.
-`@FreeBuilder` does <strong>not</strong> support nulls and will throw a
-NullPointerException if one is passed to `setDescription`. Instead, call
+Note that `setDescription` will not accept a null; instead, call
 `clearDescription() to reset the field, or `setNullableDescription(Value)`
 if you have a potentially-null value.
+
+#### Using `@Nullable`
+
+As Java currently stands, **you should strongly prefer Optional to returning
+nulls**. Using null to represent unset properties is the classic example of
+[Hoare's billion-dollar mistake][Hoare]: a silent source of errors that users
+won't remember to write test cases for, and which won't be spotted in code reviews.
+The large "air gap" between the declaration of the getter and the usage is the
+cause of this problem. Optional uses the compiler to force the call sites to
+perform explicit null handling, giving reviewers a better chance of seeing
+mistakes. See also [Using and Avoiding Null][].
+
+Obviously, greenfield code can trivially adopt Optional, but even existing APIs
+can be converted to Optional via a simple refactoring sequence; see below.
+However, if you have **compelling legacy reasons** that mandate using nulls,
+you can disable null-checking by marking the getter method `@Nullable`. (Any
+annotation type named "Nullable" will do, but you may wish to use
+`javax.annotation.Nullable`, as used in [Google Guava][].)
+
+[Google Guava]: https://github.com/google/guava
+[Hoare]: http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare
+[Using and Avoiding Null]: https://code.google.com/p/guava-libraries/wiki/UsingAndAvoidingNullExplained
 
 #### Converting from `@Nullable`
 
@@ -215,17 +236,6 @@ optimal yet (e.g.  `if (foo.getX().orNull() != null)`  instead of  `if
  * _[IDE REFACTOR]_ Rename all your `@Nullable` setters to `setNullableX`.
 
 Your API is now `@FreeBuilder`-compatible :)
-
-#### Converting widely-used types
-
-Each step above is protected by the compiler; if you need to, you can do them by
-hand across multiple commits. This is of course a total pain, but if your API
-is widely-used, **you should consider using Optional anyway**. `@Nullable`
-getter methods are the classic example of [Hoare's billion-dollar
-mistake][Hoare]: a silent source of errors that users won't remember to write
-test cases for, and which won't be spotted in code reviews.
-
-[Hoare]: http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare
 
 
 ### Collections and Maps

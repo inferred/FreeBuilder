@@ -49,6 +49,11 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
+    // No @Nullable properties
+    if (!config.getProperty().getNullableAnnotations().isEmpty()) {
+      return Optional.absent();
+    }
+
     if (config.getProperty().getType().getKind() == TypeKind.DECLARED) {
       DeclaredType type = (DeclaredType) config.getProperty().getType();
       if (erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
