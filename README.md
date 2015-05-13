@@ -340,10 +340,10 @@ Build tools and IDEs
 
 ### javac
 
-Download [freebuilder-1.0-rc7.jar][] and add it to the classpath (or
+Download [freebuilder-1.0-rc8.jar][] and add it to the classpath (or
 processorpath, if you supply one) on the command line.
 
-[freebuilder-1.0-rc7.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.0-rc7/freebuilder-1.0-rc7.jar
+[freebuilder-1.0-rc8.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.0-rc8/freebuilder-1.0-rc8.jar
 
 ### Maven
 
@@ -354,7 +354,7 @@ Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
   <dependency>
     <groupId>org.inferred</groupId>
     <artifactId>freebuilder</artifactId>
-    <version>1.0-rc7</version>
+    <version>1.0-rc8</version>
     <optional>true</optional>
   </dependency>
 </dependencies>
@@ -365,20 +365,20 @@ Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
 Add the following line to your dependencies:
 
 ```
-compile 'org.inferred:freebuilder:1.0-rc7'
+compile 'org.inferred:freebuilder:1.0-rc8'
 ```
 
 ### Eclipse
 
 _Condensed from [Eclipse Indigo's documentation][]._
 
-Download [freebuilder-1.0-rc7.jar][] and add it to your project. Right-click it
+Download [freebuilder-1.0-rc8.jar][] and add it to your project. Right-click it
 and select **Build path > Add to Build path**.
 
 In your projects properties dialog, go to **Java Compiler > Annotation
 Processing** and ensure **Enable annotation processing** is checked.
 Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
-**Add JARs**, and select `freebuilder-1.0-rc7.jar`.
+**Add JARs**, and select `freebuilder-1.0-rc8.jar`.
 
 [Eclipse Indigo's documentation]: http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm
 
@@ -386,7 +386,7 @@ Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
 
 _Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
 
-Download [freebuilder-1.0-rc7.jar][], add it to your project, right-click it and
+Download [freebuilder-1.0-rc8.jar][], add it to your project, right-click it and
 select **Use as Project Library**.
 
 In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation
