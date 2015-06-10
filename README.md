@@ -191,7 +191,7 @@ Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
 the empty string, as it forces the user to think about those edge cases.
 Note that `setDescription` will not accept a null; instead, call
-`clearDescription() to reset the field, or `setNullableDescription(Value)`
+`clearDescription()` to reset the field, or `setNullableDescription(Value)`
 if you have a potentially-null value.
 
 #### Using `@Nullable`
