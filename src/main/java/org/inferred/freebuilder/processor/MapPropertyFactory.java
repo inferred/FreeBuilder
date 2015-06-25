@@ -90,7 +90,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.add("private %1$s<%2$s, %3$s> %4$s = new %1$s<",
+      code.add("private final %1$s<%2$s, %3$s> %4$s = new %1$s<",
           LinkedHashMap.class, keyType, valueType, property.getName());
       if (!code.getSourceLevel().supportsDiamondOperator()) {
         code.add("%s, %s", keyType, valueType);
