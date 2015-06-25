@@ -69,6 +69,7 @@ public class Metadata extends ValueType {
   private final TypeReference valueType;
   private final TypeReference partialType;
   private final TypeReference propertyEnum;
+  private final ImmutableSet<TypeReference> visibleNestedTypes;
   private final ImmutableList<Property> properties;
   private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
   private final boolean builderSerializable;
@@ -84,6 +85,7 @@ public class Metadata extends ValueType {
     this.valueType = builder.valueType;
     this.partialType = builder.partialType;
     this.propertyEnum = builder.propertyEnum;
+    this.visibleNestedTypes = ImmutableSet.copyOf(builder.visibleNestedTypes);
     this.properties = ImmutableList.copyOf(builder.properties);
     this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
     this.builderSerializable = builder.builderSerializable;
@@ -136,6 +138,14 @@ public class Metadata extends ValueType {
   /** Returns the partial value class that should be generated. */
   public TypeReference getPartialType() {
     return partialType;
+  }
+
+  /**
+   * Returns a set of nested types that will be visible in the generated class, either because they
+   * will be generated, or because they are present in a superclass.
+   */
+  public ImmutableSet<TypeReference> getVisibleNestedTypes() {
+    return visibleNestedTypes;
   }
 
   /** Returns the Property enum that may be generated. */
@@ -362,10 +372,11 @@ public class Metadata extends ValueType {
     fields.add("type", type.toString());
     fields.add("builder", hasBuilder() ? builder.toString() : null);
     fields.add("builderFactory", builderFactory);
-    fields.add("generatedBuilder", generatedBuilder.toString());
-    fields.add("valueType", valueType.toString());
-    fields.add("partialType", partialType.toString());
-    fields.add("propertyEnum", propertyEnum.toString());
+    fields.add("generatedBuilder", generatedBuilder);
+    fields.add("valueType", valueType);
+    fields.add("partialType", partialType);
+    fields.add("propertyEnum", propertyEnum);
+    fields.add("visibleNestedTypes", visibleNestedTypes);
     fields.add("properties", properties);
     fields.add("standardMethodUnderrides", standardMethodUnderrides);
     fields.add("builderSerializable", builderSerializable);
@@ -381,9 +392,10 @@ public class Metadata extends ValueType {
     private TypeElement builder;
     private BuilderFactory builderFactory;
     private TypeReference generatedBuilder;
-    public TypeReference valueType;
-    public TypeReference partialType;
-    public TypeReference propertyEnum;
+    private TypeReference valueType;
+    private TypeReference partialType;
+    private TypeReference propertyEnum;
+    private final Set<TypeReference> visibleNestedTypes = new LinkedHashSet<TypeReference>();
     private final List<Property> properties = new ArrayList<Property>();
     private final Map<StandardMethod, UnderrideLevel> standardMethodUnderrides = noUnderrides();
     private Boolean builderSerializable;
@@ -445,6 +457,18 @@ public class Metadata extends ValueType {
     /** Sets the property enum that may be generated.  */
     public Builder setPropertyEnum(TypeReference propertyEnum) {
       this.propertyEnum = propertyEnum;
+      return this;
+    }
+
+    /** Adds a nested type that will be visible in the generated class. */
+    public Builder addVisibleNestedType(TypeReference nestedType) {
+      this.visibleNestedTypes.add(nestedType);
+      return this;
+    }
+
+    /** Adds nested types that will be visible in the generated class. */
+    public Builder addAllVisibleNestedTypes(Iterable<TypeReference> nestedType) {
+      addAll(this.visibleNestedTypes, nestedType);
       return this;
     }
 

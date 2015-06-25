@@ -28,6 +28,8 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
 
 import java.beans.Introspector;
 import java.io.Serializable;
@@ -139,20 +141,45 @@ class Analyser {
     TypeReference generatedBuilder = TypeReference.to(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
     Optional<TypeElement> builder = tryFindBuilder(generatedBuilder, type);
+    TypeReference valueType = generatedBuilder.nestedType("Value");
+    TypeReference partialType = generatedBuilder.nestedType("Partial");
+    TypeReference propertyType = generatedBuilder.nestedType("Property");
     return new Metadata.Builder(elements)
         .setType(type)
         .setBuilder(builder)
         .setBuilderFactory(builderFactory(builder))
         .setGeneratedBuilder(generatedBuilder)
-        .setValueType(generatedBuilder.nestedType("Value"))
-        .setPartialType(generatedBuilder.nestedType("Partial"))
-        .setPropertyEnum(generatedBuilder.nestedType("Property"))
+        .setValueType(valueType)
+        .setPartialType(partialType)
+        .setPropertyEnum(propertyType)
+        .addVisibleNestedType(valueType)
+        .addVisibleNestedType(partialType)
+        .addVisibleNestedType(propertyType)
+        .addAllVisibleNestedTypes(visibleTypesIn(type))  // Because we inherit from type
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .setGwtCompatible(isGwtCompatible(type))
         .setGwtSerializable(isGwtSerializable(type))
         .addAllProperties(findProperties(type, methods, builder).values())
         .build();
+  }
+
+  private static Set<TypeReference> visibleTypesIn(TypeElement type) {
+    ImmutableSet.Builder<TypeReference> visibleTypes = ImmutableSet.builder();
+    for (TypeElement nestedType : typesIn(type.getEnclosedElements())) {
+      visibleTypes.add(TypeReference.to(nestedType));
+    }
+    visibleTypes.addAll(visibleTypesIn(maybeType(type.getEnclosingElement())));
+    visibleTypes.addAll(visibleTypesIn(maybeAsTypeElement(type.getSuperclass())));
+    return visibleTypes.build();
+  }
+
+  private static Set<TypeReference> visibleTypesIn(Optional<TypeElement> type) {
+    if (!type.isPresent()) {
+      return ImmutableSet.of();
+    } else {
+      return visibleTypesIn(type.get());
+    }
   }
 
   /** Basic sanity-checking to ensure we can fulfil the &#64;FreeBuilder contract for this type. */

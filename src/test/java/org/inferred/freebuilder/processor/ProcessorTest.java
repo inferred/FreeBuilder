@@ -22,6 +22,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import javax.tools.JavaFileObject;
@@ -897,7 +898,17 @@ public class ProcessorTest {
    * Server-side deserialize does not match server-side serialize, so we can't test a round trip.
    */
   public static <T> void gwtSerialize(T object) throws SerializationException {
-    RPC.encodeResponseForSuccess(ProcessorTest.class.getMethods()[0], object);
+    RPC.encodeResponseForSuccess(arbitraryVoidReturningMethod(), object);
+  }
+
+  private static Method arbitraryVoidReturningMethod() {
+    try {
+      return ProcessorTest.class.getMethod("gwtSerialize", Object.class);
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    } catch (SecurityException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static <T> T reserialize(final T object) {
@@ -1178,4 +1189,32 @@ public class ProcessorTest {
         .runTest();
 
   }
+
+  @Test
+  public void testNestedClassHidingType() {
+    // See also https://github.com/google/FreeBuilder/issues/61
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract int getPropertyA();")
+            .addLine("  public abstract boolean isPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static class Preconditions {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
 }
