@@ -80,8 +80,7 @@ public class Processor extends AbstractProcessor {
             processingEnv.getElementUtils(),
             SourceLevel.from(processingEnv.getSourceVersion()),
             metadata.getGeneratedBuilder(),
-            ImmutableSet.of(
-                metadata.getPartialType(), metadata.getPropertyEnum(), metadata.getValueType()),
+            metadata.getVisibleNestedTypes(),
             type);
         try {
           codeGenerator.writeBuilderSource(code, metadata);
