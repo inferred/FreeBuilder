@@ -174,7 +174,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.add("  private final %s %s = ", builderType, property.getName());
+      code.add("private final %s %s = ", builderType, property.getName());
       builderFactory.addNewBuilder(code, builderType);
       code.add(";\n");
     }
@@ -183,70 +183,69 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       // set(T)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Sets the value to be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   * @throws NullPointerException if {@code %s} is null", property.getName())
-          .addLine("   */")
-          .addLine("  public %s %s(%s %s) {",
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code %s} is null", property.getName())
+          .addLine(" */")
+          .addLine("public %s %s(%s %s) {",
               metadata.getBuilder(),
               setterName,
               property.getType(),
               property.getName())
-          .addLine("    this.%s.clear();", property.getName())
-          .addLine("    this.%1$s.mergeFrom(%2$s.checkNotNull(%1$s));",
+          .addLine("  this.%s.clear();", property.getName())
+          .addLine("  this.%1$s.mergeFrom(%2$s.checkNotNull(%1$s));",
               property.getName(), Preconditions.class)
-          .addLine("    return (%s) this;", metadata.getBuilder())
-          .addLine("  }");
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
 
       // set(T.Builder)
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Sets the value to be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   *")
-          .addLine("   * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine("   * @throws NullPointerException if {@code builder} is null")
-          .addLine("   */")
-          .addLine("  public %s %s(%s.Builder builder) {",
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code builder} is null")
+          .addLine(" */")
+          .addLine("public %s %s(%s.Builder builder) {",
               metadata.getBuilder(),
               setterName,
               property.getType())
-          .addLine("    return %s(builder.build());", setterName)
-          .addLine("  }");
+          .addLine("  return %s(builder.build());", setterName)
+          .addLine("}");
 
       // getBuilder()
       code.addLine("")
-          .addLine("  /**")
-          .addLine("   * Returns a builder for the value that will be returned by {@link %s#%s()}.",
+          .addLine("/**")
+          .addLine(" * Returns a builder for the value that will be returned by {@link %s#%s()}.",
               metadata.getType(), property.getGetterName())
-          .addLine("   */")
-          .addLine("  public %s %s() {", builderType, getBuilderName)
-          .addLine("    return %s;", property.getName())
-          .addLine("  }");
+          .addLine(" */")
+          .addLine("public %s %s() {", builderType, getBuilderName)
+          .addLine("  return %s;", property.getName())
+          .addLine("}");
     }
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("      %s = %s.%s.build();", finalField, builder, property.getName());
+      code.addLine("%s = %s.%s.build();", finalField, builder, property.getName());
     }
 
     @Override
     public void addPartialFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("      %s = %s.%s.buildPartial();", finalField, builder, property.getName());
+      code.addLine("%s = %s.%s.buildPartial();", finalField, builder, property.getName());
     }
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("    %s.mergeFrom(%s.%s());",
-          property.getName(), value, property.getGetterName());
+      code.addLine("%s.mergeFrom(%s.%s());", property.getName(), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.add("    %s.mergeFrom(%s.%s()", property.getName(), builder, getBuilderName);
+      code.add("%s.mergeFrom(%s.%s()", property.getName(), builder, getBuilderName);
       if (mergeFromBuilderMethod == MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE) {
         code.add(".buildPartial()");
       }
@@ -255,7 +254,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("        %s.%s(%s);", builder, setterName, variable);
+      code.addLine("%s.%s(%s);", builder, setterName, variable);
     }
 
     @Override
@@ -265,12 +264,12 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addClear(SourceBuilder code, String template) {
-      code.addLine("    %s.clear();", property.getName());
+      code.addLine("%s.clear();", property.getName());
     }
 
     @Override
     public void addPartialClear(SourceBuilder code) {
-      code.addLine("    %s.clear();", property.getName());
+      code.addLine("%s.clear();", property.getName());
     }
   }
 

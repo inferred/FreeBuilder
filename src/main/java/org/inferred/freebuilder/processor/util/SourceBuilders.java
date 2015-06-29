@@ -39,10 +39,10 @@ public class SourceBuilders {
     @Override
     public SourceBuilder addLine(String fmt, Object... args) {
       StringBuilder indentedFormatString = new StringBuilder();
-      if (atNewline) {
+      if (atNewline && fmt.length() > 0 && fmt.charAt(0) != '\n') {
         indentedFormatString.append(indentChars);
       }
-      indentedFormatString.append(fmt.replace("\n", "\n" + indentChars));
+      indentedFormatString.append(fmt.replaceAll("(\n+)", "$1" + indentChars));
       indentedFormatString.append("\n");
       atNewline = true;
       delegate.add(indentedFormatString.toString(), args);
