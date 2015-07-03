@@ -25,6 +25,8 @@ import javax.lang.model.util.SimpleTypeVisitor6;
 /** Utility class for common static methods. */
 public class Util {
 
+  private static final String SHADE_PACKAGE = "org.inferred.freebuilder.shaded.";
+
   private Util() { } // COV_NF_LINE
 
   /**
@@ -55,10 +57,18 @@ public class Util {
       }
     }, null);
     for (Class<?> possibility : possibilities) {
-      if (possibility.getName().equals(erasedType)) {
+      if (unshadedName(possibility).equals(erasedType)) {
         return true;
       }
     }
     return false;
+  }
+
+  private static String unshadedName(Class<?> cls) {
+    String name = cls.getName();
+    if (name.startsWith(SHADE_PACKAGE)) {
+      name = name.substring(SHADE_PACKAGE.length());
+    }
+    return name;
   }
 }

@@ -55,6 +55,7 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
 
   private static final String JAVA_LANG_PACKAGE = "java.lang";
   private static final String PACKAGE_PREFIX = "package ";
+  private static final String SHADE_PACKAGE = "org.inferred.freebuilder.shaded.";
 
   /**
    * Builder of {@link ImportManager} instances.
@@ -171,6 +172,9 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
   private String getPrefixForTopLevelClass(String pkg, CharSequence name) {
     if (pkg.startsWith(PACKAGE_PREFIX)) {
       pkg = pkg.substring(PACKAGE_PREFIX.length());
+    }
+    if (pkg.startsWith(SHADE_PACKAGE)) {
+      pkg = pkg.substring(SHADE_PACKAGE.length());
     }
     String qualifiedName = pkg + "." + name;
     if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {

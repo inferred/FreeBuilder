@@ -341,9 +341,11 @@ Build tools and IDEs
 ### javac
 
 Download [freebuilder-1.0-rc9.jar][] and add it to the classpath (or
-processorpath, if you supply one) on the command line.
+processorpath, if you supply one) on the command line. You will also need to add
+[guava-18.0.jar][] to the classpath, as it is used in the generated code.
 
 [freebuilder-1.0-rc9.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.0-rc9/freebuilder-1.0-rc9.jar
+[guava-18.0.jar]: http://repo1.maven.org/maven2/com/google/guava/guava/18.0/guava-18.0.jar
 
 ### Maven
 
@@ -357,23 +359,33 @@ Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
     <version>1.0-rc9</version>
     <optional>true</optional>
   </dependency>
+  <dependency>
+    <groupId>com.google.guava</groupId>
+    <artifactId>guava</artifactId>
+    <version>18.0</version>
+  </dependency>
 </dependencies>
 ```
 
+You may already have Guava, or want to use a different version; adjust accordingly.
+
 ### Gradle
 
-Add the following line to your dependencies:
+Add the following lines to your dependencies:
 
 ```
 compile 'org.inferred:freebuilder:1.0-rc9'
+compile 'com.google.guava:guava:18.0'
 ```
+
+You may already have Guava, or want to use a different version; adjust accordingly.
 
 ### Eclipse
 
 _Condensed from [Eclipse Indigo's documentation][]._
 
-Download [freebuilder-1.0-rc9.jar][] and add it to your project. Right-click it
-and select **Build path > Add to Build path**.
+Download [freebuilder-1.0-rc9.jar][] and [guava-18.0.jar][] and add them to your
+project. Select them, right-click and choose **Build path > Add to Build path**.
 
 In your projects properties dialog, go to **Java Compiler > Annotation
 Processing** and ensure **Enable annotation processing** is checked.
@@ -386,8 +398,8 @@ Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
 
 _Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
 
-Download [freebuilder-1.0-rc9.jar][], add it to your project, right-click it and
-select **Use as Project Library**.
+Download [freebuilder-1.0-rc9.jar][] and [guava-18.0][], add them to your project,
+right-click them and select **Use as Project Library**.
 
 In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation
 Processors** and ensure **Enable annotation processing** is selected, and
