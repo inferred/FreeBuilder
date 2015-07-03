@@ -225,11 +225,31 @@
             <configuration>
               <minimizeJar>true</minimizeJar>
               <artifactSet>
-                <excludes>
-                  <exclude>com.google.auto.service:auto-service</exclude>
-                  <exclude>org.jvnet.sorcerer:sorcerer-javac</exclude>
-                </excludes>
+                <includes>
+                  <include>com.google.guava:guava</include>
+                  <include>com.google.code.findbugs:jsr305</include>
+                </includes>
               </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>com.google.code.findbugs:jsr305</artifact>
+                  <includes>
+                    <include>javax/annotation/Nullable.class</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/maven/com.google.guava/**</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <relocations>
+                <relocation>
+                  <pattern>com.google</pattern>
+                  <shadedPattern>org.inferred.freebuilder.shaded.com.google</shadedPattern>
+                </relocation>
+              </relocations>
             </configuration>
           </execution>
         </executions>
