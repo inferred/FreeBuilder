@@ -17,6 +17,7 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.addAll;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -55,8 +56,6 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
 
   private static final String JAVA_LANG_PACKAGE = "java.lang";
   private static final String PACKAGE_PREFIX = "package ";
-  private static final String SHADE_PACKAGE = "org.inferred.freebuilder.shaded.";
-
   /**
    * Builder of {@link ImportManager} instances.
    */
@@ -173,9 +172,7 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
     if (pkg.startsWith(PACKAGE_PREFIX)) {
       pkg = pkg.substring(PACKAGE_PREFIX.length());
     }
-    if (pkg.startsWith(SHADE_PACKAGE)) {
-      pkg = pkg.substring(SHADE_PACKAGE.length());
-    }
+    pkg = unshadedName(pkg);
     String qualifiedName = pkg + "." + name;
     if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {
       return "";
