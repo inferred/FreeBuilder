@@ -197,7 +197,7 @@
             <test.version>${project.version}</test.version>
           </filterProperties>
           <pomIncludes>
-            <pomInclude>pom.xml</pomInclude>
+            <pomInclude>*/pom.xml</pomInclude>
           </pomIncludes>
           <streamLogs>true</streamLogs>
         </configuration>
