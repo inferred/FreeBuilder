@@ -28,11 +28,14 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
+import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
+import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
 
 import java.beans.Introspector;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +46,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -66,6 +70,7 @@ import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
+import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.TypeReference;
 
 import com.google.common.annotations.GwtCompatible;
@@ -685,13 +690,19 @@ class Analyser {
   }
 
   private static boolean isGwtCompatible(TypeElement type) {
-    GwtCompatible gwtCompatible = type.getAnnotation(GwtCompatible.class);
-    return (gwtCompatible != null);
+    return findAnnotationMirror(type, GwtCompatible.class).isPresent();
   }
 
   private static boolean isGwtSerializable(TypeElement type) {
-    GwtCompatible gwtCompatible = type.getAnnotation(GwtCompatible.class);
-    return ((gwtCompatible != null) && (gwtCompatible.serializable()));
+    Optional<AnnotationMirror> annotation = findAnnotationMirror(type, GwtCompatible.class);
+    if (!annotation.isPresent()) {
+      return false;
+    }
+    Optional<AnnotationValue> serializable = findProperty(annotation.get(), "serializable");
+    if (!serializable.isPresent()) {
+      return false;
+    }
+    return serializable.get().getValue().equals(Boolean.TRUE);
   }
 
   /** Returns whether a method is one of the {@link StandardMethod}s, and if so, which. */

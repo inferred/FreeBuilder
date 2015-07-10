@@ -15,8 +15,13 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import java.lang.annotation.Annotation;
+import java.util.Map.Entry;
+
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -31,6 +36,15 @@ import com.google.common.base.Optional;
 public class ModelUtils {
 
   /**
+   * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClass} on
+   * {@code element}, or {@link Optional#absent()} if no such annotation exists.
+   */
+  public static Optional<AnnotationMirror> findAnnotationMirror(
+      Element element, Class<? extends Annotation> annotationClass) {
+    return findAnnotationMirror(element, Shading.unshadedName(annotationClass.getName()));
+  }
+
+  /**
    * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClassName} on
    * {@code element}, or {@link Optional#absent()} if no such annotation exists.
    */
@@ -41,6 +55,16 @@ public class ModelUtils {
           (TypeElement) (annotationMirror.getAnnotationType().asElement());
       if (annotationTypeElement.getQualifiedName().contentEquals(annotationClassName)) {
         return Optional.of(annotationMirror);
+      }
+    }
+    return Optional.absent();
+  }
+
+  public static Optional<AnnotationValue> findProperty(AnnotationMirror annotation, String propertyName) {
+    for (Entry<? extends ExecutableElement, ? extends AnnotationValue> element
+        : annotation.getElementValues().entrySet()) {
+      if (element.getKey().getSimpleName().contentEquals(propertyName)) {
+        return Optional.<AnnotationValue>of(element.getValue());
       }
     }
     return Optional.absent();
