@@ -1,8 +1,6 @@
 package org.inferred.freebuilder.processor.util.testing;
 
-import java.io.File;
 import java.util.List;
-import java.util.Locale;
 
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -31,14 +29,8 @@ public class CompilationException extends RuntimeException {
     StringBuilder fullMessage = new StringBuilder("Compilation failed");
     int i = 1;
     for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics) {
-      fullMessage.append("\n    ").append(i++).append(") ")
-          .append(diagnostic.getMessage(Locale.getDefault()));
-      JavaFileObject source = diagnostic.getSource();
-      long line = diagnostic.getLineNumber();
-      if (source != null && line != Diagnostic.NOPOS) {
-        File sourceFile = new File(source.getName());
-        fullMessage.append(" (").append(sourceFile.getName()).append(":").append(line).append(")");
-      }
+      fullMessage.append("\n    ").append(i++).append(") ");
+      Diagnostics.appendTo(fullMessage, diagnostic, 8);
     }
     return fullMessage.toString();
   }

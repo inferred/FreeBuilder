@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
+import static com.google.common.base.Predicates.not;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
 import static org.junit.Assert.fail;
 
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.processing.Processor;
+import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
@@ -39,6 +41,7 @@ import org.junit.Test;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -133,6 +136,51 @@ public class BehaviorTester {
   }
 
   /**
+   * Assertions that can be made about a compilation run.
+   */
+  public static class CompilationSubject {
+
+    private final List<Diagnostic<? extends JavaFileObject>> diagnostics;
+
+    private CompilationSubject(List<Diagnostic<? extends JavaFileObject>> diagnostics) {
+      this.diagnostics = diagnostics;
+    }
+
+    /**
+     * Fails if the compiler issued warnings.
+     */
+    public CompilationSubject withNoWarnings() {
+      ImmutableList<Diagnostic<? extends JavaFileObject>> warnings = FluentIterable
+          .from(diagnostics)
+          .filter(Diagnostics.isKind(Diagnostic.Kind.WARNING, Diagnostic.Kind.MANDATORY_WARNING))
+          .toList();
+      if (!warnings.isEmpty()) {
+        StringBuilder message =
+            new StringBuilder("The following warnings were issued by the compiler:");
+        for (int i = 0; i < warnings.size(); ++i) {
+          message.append("\n    ").append(i + 1).append(") ");
+          Diagnostics.appendTo(message, warnings.get(i), 8);
+        }
+        throw new AssertionError(message.toString());
+      }
+      return this;
+    }
+  }
+
+  /**
+   * Compiles everything given to {@link #with}.
+   *
+   * @return a {@link CompilationSubject} with which to make further assertions
+   */
+  public CompilationSubject compiles() {
+    try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
+      List<Diagnostic<? extends JavaFileObject>> diagnostics =
+          compile(fileManager, compilationUnits, processors);
+      return new CompilationSubject(diagnostics);
+    }
+  }
+
+  /**
    * Compiles, loads and tests everything given to {@link #with}.
    *
    * <p>Runs the compiler with the provided sources and processors. Loads the generated code into a
@@ -218,7 +266,7 @@ public class BehaviorTester {
     return resultBuilder.build();
   }
 
-  private static void compile(
+  private static ImmutableList<Diagnostic<? extends JavaFileObject>> compile(
       JavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits,
       Iterable<? extends Processor> processors) {
@@ -227,7 +275,7 @@ public class BehaviorTester {
         null,
         fileManager,
         diagnostics,
-        null,
+        ImmutableList.of("-Xlint:unchecked"),
         null,
         compilationUnits);
     task.setProcessors(processors);
@@ -235,6 +283,11 @@ public class BehaviorTester {
     if (!successful) {
       throw new CompilationException(diagnostics.getDiagnostics());
     }
+    // Filter out any errors: if compilation succeeded, they're probably "cannot find symbol"
+    // errors erroneously emitted by the compiler prior to running annotation processing.
+    return FluentIterable.from(diagnostics.getDiagnostics())
+        .filter(not(Diagnostics.isKind(Diagnostic.Kind.ERROR)))
+        .toList();
   }
 
   private static JavaCompiler getCompiler() {

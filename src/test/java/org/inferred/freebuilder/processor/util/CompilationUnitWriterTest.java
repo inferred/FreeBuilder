@@ -255,8 +255,8 @@ public class CompilationUnitWriterTest {
         filer,
         model.elementUtils(),
         JAVA_6,
-        TypeReference.to(pkg, simpleName),
-        ImmutableSet.<TypeReference>of(),
+        QualifiedName.of(pkg, simpleName),
+        ImmutableSet.<QualifiedName>of(),
         originatingElement);
   }
 }
