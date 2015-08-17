@@ -398,8 +398,8 @@ Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
 
 _Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
 
-Download [freebuilder-1.0.jar][] and [guava-18.0][], add them to your project,
-right-click them and select **Use as Project Library**.
+Download [freebuilder-1.0.jar][] and [guava-18.0.jar][], add them to your
+project, right-click them and select **Use as Project Library**.
 
 In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation
 Processors** and ensure **Enable annotation processing** is selected, and
