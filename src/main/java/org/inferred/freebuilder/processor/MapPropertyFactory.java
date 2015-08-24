@@ -159,8 +159,10 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
               Map.class,
               keyType,
               valueType)
-          .addLine("  for (%s key : map.keySet()) {", unboxedKeyType.or(keyType))
-          .addLine("    %s%s(key, map.get(key));", PUT_PREFIX, property.getCapitalizedName())
+          .addLine("  for (%s<? extends %s, ? extends %s> entry : map.entrySet()) {",
+              Map.Entry.class, keyType, valueType)
+          .addLine("    %s%s(entry.getKey(), entry.getValue());",
+              PUT_PREFIX, property.getCapitalizedName())
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
