@@ -340,11 +340,11 @@ Build tools and IDEs
 
 ### javac
 
-Download [freebuilder-1.0.jar][] and add it to the classpath (or
+Download [freebuilder-1.0.1.jar][] and add it to the classpath (or
 processorpath, if you supply one) on the command line. You will also need to add
 [guava-18.0.jar][] to the classpath, as it is used in the generated code.
 
-[freebuilder-1.0.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.0/freebuilder-1.0.jar
+[freebuilder-1.0.1.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.0.1/freebuilder-1.0.1.jar
 [guava-18.0.jar]: http://repo1.maven.org/maven2/com/google/guava/guava/18.0/guava-18.0.jar
 
 ### Maven
@@ -356,7 +356,7 @@ Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
   <dependency>
     <groupId>org.inferred</groupId>
     <artifactId>freebuilder</artifactId>
-    <version>1.0</version>
+    <version>1.0.1</version>
     <optional>true</optional>
   </dependency>
   <dependency>
@@ -374,7 +374,7 @@ You may already have Guava, or want to use a different version; adjust according
 Add the following lines to your dependencies:
 
 ```
-compile 'org.inferred:freebuilder:1.0'
+compile 'org.inferred:freebuilder:1.0.1'
 compile 'com.google.guava:guava:18.0'
 ```
 
@@ -384,13 +384,13 @@ You may already have Guava, or want to use a different version; adjust according
 
 _Condensed from [Eclipse Indigo's documentation][]._
 
-Download [freebuilder-1.0.jar][] and [guava-18.0.jar][] and add them to your
+Download [freebuilder-1.0.1.jar][] and [guava-18.0.jar][] and add them to your
 project. Select them, right-click and choose **Build path > Add to Build path**.
 
 In your projects properties dialog, go to **Java Compiler > Annotation
 Processing** and ensure **Enable annotation processing** is checked.
 Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
-**Add JARs**, and select `freebuilder-1.0.jar`.
+**Add JARs**, and select `freebuilder-1.0.1.jar`.
 
 [Eclipse Indigo's documentation]: http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm
 
@@ -398,7 +398,7 @@ Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
 
 _Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
 
-Download [freebuilder-1.0.jar][] and [guava-18.0.jar][], add them to your
+Download [freebuilder-1.0.1.jar][] and [guava-18.0.jar][], add them to your
 project, right-click them and select **Use as Project Library**.
 
 In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation
