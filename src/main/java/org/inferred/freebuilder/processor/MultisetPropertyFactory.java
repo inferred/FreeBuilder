@@ -82,7 +82,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.addLine("private %1$s<%2$s> %3$s = %1$s.create();",
+      code.addLine("private final %1$s<%2$s> %3$s = %1$s.create();",
           LinkedHashMultiset.class, elementType, property.getName());
     }
 
