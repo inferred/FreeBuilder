@@ -21,11 +21,7 @@ import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
 import static org.junit.Assert.assertEquals;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
+import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Rule;
@@ -34,7 +30,15 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SourceStringBuilderTest {
@@ -173,5 +177,70 @@ public class SourceStringBuilderTest {
       }
     });
     assertThat(builder.toString()).isEqualTo("Foo bar = null;\n");
+  }
+
+  @Test
+  public void testAddLine_emptyAnnotation() {
+    testAnnotation("@MyAnnotation", "@interface MyAnnotation { }");
+  }
+
+  @Test
+  public void testAddLine_annotationWithStringValueParameter() {
+    testAnnotation("@MyAnnotation(\"hi there!\\\"\\n\")",
+        "@interface MyAnnotation { String value(); }");
+  }
+
+  @Test
+  public void testAddLine_annotationWithIntegerValueParameter() {
+    testAnnotation("@MyAnnotation(42)", "@interface MyAnnotation { int value(); }");
+  }
+
+  @Test
+  public void testAddLine_annotationWithIntegerParameter() {
+    testAnnotation("@MyAnnotation(p = 42)", "@interface MyAnnotation { int p(); }");
+  }
+
+  @Test
+  public void testAddLine_annotationWithIntegerArrayParameter_noIntegers() {
+    testAnnotation("@MyAnnotation(p = {})", "@interface MyAnnotation { int[] p(); }");
+  }
+
+  @Test
+  public void testAddLine_annotationWithIntegerArrayParameter_oneInteger() {
+    testAnnotation("@MyAnnotation(p = 10)", "@interface MyAnnotation { int[] p(); }");
+  }
+
+  @Test
+  public void testAddLine_annotationWithIntegerArrayParameter_twoIntegers() {
+    testAnnotation("@MyAnnotation(p = {10, 66})", "@interface MyAnnotation { int[] p(); }");
+  }
+
+  @Test
+  public void testAddLine_nestedAnnotations() {
+    testAnnotation("@OuterAnnotation(@InnerAnnotation(2))",
+        "@interface InnerAnnotation { int value(); }",
+        "@interface OuterAnnotation { InnerAnnotation value(); }");
+  }
+
+  private void testAnnotation(String annotationUsage, String... annotationDefinitions) {
+    for (String annotationDefinition : annotationDefinitions) {
+      model.newType("package com.example; " + annotationDefinition);
+    }
+    TypeElement annotatedType = model.newType(
+        "package com.example; " + annotationUsage + " class MyType { }");
+    AnnotationMirror annotation = getOnlyAnnotation(annotatedType);
+    builder.addLine("%s", annotation);
+    assertThat(builder.toString()).isEqualTo(annotationUsage + "\n");
+  }
+
+  private static AnnotationMirror getOnlyAnnotation(Element element) {
+    // Ignore @Target, as it's added by the model framework
+    List<AnnotationMirror> annotations = new ArrayList<AnnotationMirror>();
+    for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
+      if (!annotation.getAnnotationType().asElement().getSimpleName().contentEquals("Target")) {
+        annotations.add(annotation);
+      }
+    }
+    return getOnlyElement(annotations);
   }
 }

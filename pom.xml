@@ -91,6 +91,11 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.4</version>
+    </dependency>
+    <dependency>
       <groupId>org.jvnet.sorcerer</groupId>
       <artifactId>sorcerer-javac</artifactId>
       <version>0.8</version>
@@ -228,6 +233,7 @@
                 <includes>
                   <include>com.google.guava:guava</include>
                   <include>com.google.code.findbugs:jsr305</include>
+                  <include>org.apache.commons:commons-lang3</include>
                 </includes>
               </artifactSet>
               <filters>
@@ -248,6 +254,10 @@
                 <relocation>
                   <pattern>com.google</pattern>
                   <shadedPattern>org.inferred.freebuilder.shaded.com.google</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache</pattern>
+                  <shadedPattern>org.inferred.freebuilder.shaded.org.apache</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>
