@@ -95,6 +95,11 @@ public class ModelUtils {
     }
   }
 
+  /** Returns the {@link TypeElement} corresponding to {@code type}. */
+  public static TypeElement asElement(DeclaredType type) {
+    return maybeType(type.asElement()).get();
+  }
+
   private static final SimpleElementVisitor6<Optional<TypeElement>, ?> TYPE_ELEMENT_VISITOR =
       new SimpleElementVisitor6<Optional<TypeElement>, Void>() {
 

@@ -28,6 +28,7 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
+import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
@@ -35,7 +36,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
 
 import java.beans.Introspector;
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +71,6 @@ import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
-import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
@@ -115,6 +114,8 @@ class Analyser {
       new OptionalPropertyFactory(),
       new BuildablePropertyFactory(),
       new DefaultPropertyFactory());
+
+  private static final String JSON_PROPERTY = "com.fasterxml.jackson.annotation.JsonProperty";
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
@@ -422,7 +423,8 @@ class Analyser {
             .setAllCapsName(camelCaseToAllCaps(camelCaseName))
             .setGetterName(getterName)
             .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType))
-            .addAllNullableAnnotations(nullableAnnotationsOn(method));
+            .addAllNullableAnnotations(nullableAnnotationsOn(method))
+            .addAllAccessorAnnotations(accessorAnnotationsOn(method));
     if (propertyType.getKind().isPrimitive()) {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
       TypeMirror boxedType = types.erasure(types.boxedClass(unboxedType).asType());
@@ -470,6 +472,17 @@ class Analyser {
       }
     }
     return nullableAnnotations.build();
+  }
+
+  private ImmutableList<AnnotationMirror> accessorAnnotationsOn(ExecutableElement getterMethod) {
+    ImmutableList.Builder<AnnotationMirror> accessorAnnotations = ImmutableList.builder();
+    for (AnnotationMirror annotation : elements.getAllAnnotationMirrors(getterMethod)) {
+      Name type = asElement(annotation.getAnnotationType()).getQualifiedName();
+      if (type.contentEquals(JSON_PROPERTY)) {
+        accessorAnnotations.add(annotation);
+      }
+    }
+    return accessorAnnotations.build();
   }
 
   private PropertyCodeGenerator createCodeGenerator(

@@ -15,17 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamClass;
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.List;
-
-import javax.tools.JavaFileObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.annotations.GwtCompatible;
+import com.google.common.testing.EqualsTester;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.server.rpc.RPC;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -39,10 +35,17 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.annotations.GwtCompatible;
-import com.google.common.testing.EqualsTester;
-import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.server.rpc.RPC;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.List;
+
+import javax.tools.JavaFileObject;
 
 @RunWith(JUnit4.class)
 public class ProcessorTest {
@@ -1257,6 +1260,37 @@ public class ProcessorTest {
             .addLine("    .build();")
             .addLine("assertEquals(11, value.getPropertyA());")
             .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testJacksonInteroperability() {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  @%s(\"a\") public abstract int getPropertyA();", JsonProperty.class)
+            .addLine("  @%s(\"b\") public abstract boolean isPropertyB();", JsonProperty.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .build();")
+            .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
+            .addLine("String json = mapper.writeValueAsString(value);")
+            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+            .addLine("assertEquals(11, clone.getPropertyA());")
+            .addLine("assertTrue(clone.isPropertyB());")
             .build())
         .runTest();
   }
