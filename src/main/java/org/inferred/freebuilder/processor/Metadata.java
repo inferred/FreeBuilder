@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.base.Preconditions.checkState;
 
 import javax.annotation.Nullable;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
