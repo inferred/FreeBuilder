@@ -15,7 +15,14 @@
  */
 package org.inferred.freebuilder.processor;
 
-import javax.tools.JavaFileObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -27,10 +34,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.testing.EqualsTester;
+import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code Optional<?>} properties. */
 @RunWith(JUnit4.class)
@@ -863,6 +867,36 @@ public class OptionalPropertyFactoryTest {
             .addLine("    .setItems(%s.of(1, 2, 3, 4))", ImmutableList.class)
             .addLine("    .build();")
             .addLine("assertThat(value.getItems().get()).containsExactly(1, 2, 3, 4).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testJacksonInteroperability() {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("import " + JsonProperty.class.getName() + ";")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+            .addLine("public interface DataType {")
+            .addLine("  @JsonProperty(\"stuff\") %s<%s> getItem();", Optional.class, String.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setItem(\"item\")")
+            .addLine("    .build();")
+            .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
+            .addLine("    .registerModule(new %s());", GuavaModule.class)
+            .addLine("String json = mapper.writeValueAsString(value);")
+            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+            .addLine("assertEquals(%s.of(\"item\"), clone.getItem());", Optional.class)
             .build())
         .runTest();
   }

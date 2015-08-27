@@ -2,7 +2,7 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeJava;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
+import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
 import java.util.List;
 import java.util.Map.Entry;
@@ -38,7 +38,7 @@ public class AnnotationSource {
     public Void visitAnnotation(AnnotationMirror annotation, AnnotationValue unused) {
       // By explicitly adding annotations rather than relying on AnnotationMirror.toString(),
       // we can import the types and make the code (hopefully) more readable.
-      code.add("@%s", QualifiedName.of(maybeAsTypeElement(annotation.getAnnotationType()).get()));
+      code.add("@%s", QualifiedName.of(asElement(annotation.getAnnotationType())));
       if (annotation.getElementValues().isEmpty()) {
         return null;
       }

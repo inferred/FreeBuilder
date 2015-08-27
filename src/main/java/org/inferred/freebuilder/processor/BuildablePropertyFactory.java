@@ -190,8 +190,9 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code %s} is null", property.getName())
-          .addLine(" */")
-          .addLine("public %s %s(%s %s) {",
+          .addLine(" */");
+      addAccessorAnnotations(code);
+      code.addLine("public %s %s(%s %s) {",
               metadata.getBuilder(),
               setterName,
               property.getType(),

@@ -85,6 +85,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine(" * @throws NullPointerException if {@code %s} is null", property.getName());
       }
       code.addLine(" */");
+      addAccessorAnnotations(code);
       code.add("public %s %s(", metadata.getBuilder(), setterName);
       for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
         code.add("@%s ", nullableAnnotation);

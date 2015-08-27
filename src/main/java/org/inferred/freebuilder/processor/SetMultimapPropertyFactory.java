@@ -177,8 +177,9 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code multimap} is null or contains a")
           .addLine(" *     null key or value")
-          .addLine(" */")
-          .addLine("public %s %s%s(%s<? extends %s, ? extends %s> multimap) {",
+          .addLine(" */");
+      addAccessorAnnotations(code);
+      code.addLine("public %s %s%s(%s<? extends %s, ? extends %s> multimap) {",
               metadata.getBuilder(),
               PUT_ALL_PREFIX,
               property.getCapitalizedName(),

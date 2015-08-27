@@ -15,10 +15,10 @@
  */
 package org.inferred.freebuilder.processor;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.tools.JavaFileObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -30,7 +30,10 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.tools.JavaFileObject;
 
 @RunWith(JUnit4.class)
 public class BuildablePropertyFactoryTest {
@@ -767,6 +770,55 @@ public class BuildablePropertyFactoryTest {
             .addLine("    .build());")
             .addLine("assertThat(builder.build().getItem().getNames())")
             .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testJacksonInteroperability() {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("import " + JsonProperty.class.getName() + ";")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s", FreeBuilder.class)
+            .addLine("  @%s(builder = Item.Builder.class)", JsonDeserialize.class)
+            .addLine("  interface Item {")
+            .addLine("    @JsonProperty(\"name\") String getName();")
+            .addLine("    @JsonProperty(\"price\") int getPrice();")
+            .addLine("")
+            .addLine("    class Builder extends DataType_Item_Builder {}")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  @JsonProperty(\"one\") Item getItem1();")
+            .addLine("  @JsonProperty(\"two\") Item getItem2();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setItem1(new DataType.Item.Builder()")
+            .addLine("        .setName(\"Foo\")")
+            .addLine("        .setPrice(1)")
+            .addLine("        .build())")
+            .addLine("    .setItem2(new DataType.Item.Builder()")
+            .addLine("        .setName(\"Bar\")")
+            .addLine("        .setPrice(2)")
+            .addLine("        .build())")
+            .addLine("    .build();")
+            .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
+            .addLine("String json = mapper.writeValueAsString(value);")
+            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+            .addLine("assertEquals(\"Foo\", clone.getItem1().getName());")
+            .addLine("assertEquals(1, clone.getItem1().getPrice());")
+            .addLine("assertEquals(\"Bar\", clone.getItem2().getName());")
+            .addLine("assertEquals(2, clone.getItem2().getPrice());")
             .build())
         .runTest();
   }
