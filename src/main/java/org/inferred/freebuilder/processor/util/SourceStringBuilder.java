@@ -17,9 +17,12 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -76,16 +79,24 @@ public final class SourceStringBuilder implements SourceBuilder {
   }
 
   private Object substitute(Object arg) {
-    if (arg instanceof Package) {
+    if (arg instanceof Excerpt) {
+      SourceStringBuilder excerptBuilder = new SourceStringBuilder(sourceLevel, shortener);
+      ((Excerpt) arg).addTo(excerptBuilder);
+      return excerptBuilder.toString();
+    } else if (arg instanceof Package) {
       return ((Package) arg).getName();
-    } else if (arg instanceof PackageElement) {
-      return ((PackageElement) arg).getQualifiedName();
+    } else if (arg instanceof Element) {
+      ElementKind kind = ((Element) arg).getKind();
+      if (kind == ElementKind.PACKAGE) {
+        return ((PackageElement) arg).getQualifiedName();
+      } else if (kind.isClass() || kind.isInterface()) {
+        return shortener.shorten((TypeElement) arg);
+      } else {
+        return arg;
+      }
     } else if (arg instanceof Class<?>) {
       return shortener.shorten((Class<?>) arg);
-    } else if (arg instanceof TypeElement) {
-      return shortener.shorten((TypeElement) arg);
-    } else if (arg instanceof DeclaredType
-        && ((DeclaredType) arg).asElement() instanceof TypeElement) {
+    } else if ((arg instanceof TypeMirror) && (((TypeMirror) arg).getKind() == TypeKind.DECLARED)) {
       DeclaredType mirror = (DeclaredType) arg;
       checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
       return shortener.shorten(mirror);
