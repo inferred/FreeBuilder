@@ -17,10 +17,8 @@ package org.inferred.freebuilder.processor.util;
 
 import java.util.List;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -35,10 +33,8 @@ import com.google.common.collect.Lists;
  */
 interface TypeShortener {
 
-  String shorten(Class<?> cls);
-  String shorten(TypeElement type);
   String shorten(TypeMirror mirror);
-  String shorten(TypeReference type);
+  String shorten(QualifiedName type);
 
   /** A {@link TypeShortener} that never shortens types. */
   class NeverShorten
@@ -46,23 +42,13 @@ interface TypeShortener {
       implements Function<TypeMirror, String>, TypeShortener {
 
     @Override
-    public String shorten(Class<?> cls) {
-      return cls.getCanonicalName();
-    }
-
-    @Override
-    public String shorten(TypeElement type) {
-      return type.getQualifiedName().toString();
-    }
-
-    @Override
     public String shorten(TypeMirror mirror) {
       return mirror.accept(this, null);
     }
 
     @Override
-    public String shorten(TypeReference type) {
-      return type.getQualifiedName();
+    public String shorten(QualifiedName type) {
+      return type.toString();
     }
 
     @Override
@@ -102,32 +88,13 @@ interface TypeShortener {
       implements Function<TypeMirror, String>, TypeShortener {
 
     @Override
-    public String shorten(Class<?> cls) {
-      if (cls.getEnclosingClass() != null) {
-        return shorten(cls.getEnclosingClass()) + "." + cls.getSimpleName();
-      } else {
-        return cls.getSimpleName();
-      }
-    }
-
-    @Override
-    public String shorten(TypeElement type) {
-      Element parent = type.getEnclosingElement();
-      if (parent.getKind().isInterface() || parent.getKind().isClass()) {
-        return shorten((TypeElement) parent) + "." + type.getSimpleName();
-      } else {
-        return type.getSimpleName().toString();
-      }
-    }
-
-    @Override
     public String shorten(TypeMirror mirror) {
       return mirror.accept(this, null);
     }
 
     @Override
-    public String shorten(TypeReference type) {
-      return type.getQualifiedName().substring(type.getPackage().length() + 1);
+    public String shorten(QualifiedName type) {
+      return type.toString().substring(type.getPackage().length() + 1);
     }
 
     @Override

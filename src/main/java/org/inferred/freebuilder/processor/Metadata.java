@@ -24,7 +24,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
-import org.inferred.freebuilder.processor.util.TypeReference;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -86,22 +86,22 @@ public abstract class Metadata {
   public abstract Optional<BuilderFactory> getBuilderFactory();
 
   /** Returns the builder class that should be generated. */
-  public abstract TypeReference getGeneratedBuilder();
+  public abstract QualifiedName getGeneratedBuilder();
 
   /** Returns the value class that should be generated. */
-  public abstract TypeReference getValueType();
+  public abstract QualifiedName getValueType();
 
   /** Returns the partial value class that should be generated. */
-  public abstract TypeReference getPartialType();
+  public abstract QualifiedName getPartialType();
 
   /**
    * Returns a set of nested types that will be visible in the generated class, either because they
    * will be generated, or because they are present in a superclass.
    */
-  public abstract ImmutableSet<TypeReference> getVisibleNestedTypes();
+  public abstract ImmutableSet<QualifiedName> getVisibleNestedTypes();
 
   /** Returns the Property enum that may be generated. */
-  public abstract TypeReference getPropertyEnum();
+  public abstract QualifiedName getPropertyEnum();
 
   /** Returns metadata about the properies of the type. */
   public abstract ImmutableList<Property> getProperties();
@@ -192,7 +192,7 @@ public abstract class Metadata {
     @Override
     public Metadata build() {
       Metadata metadata = super.build();
-      TypeReference generatedBuilder = metadata.getGeneratedBuilder();
+      QualifiedName generatedBuilder = metadata.getGeneratedBuilder();
       checkState(metadata.getValueType().getEnclosingType().equals(generatedBuilder),
           "%s not a nested class of %s", metadata.getValueType(), generatedBuilder);
       checkState(metadata.getPartialType().getEnclosingType().equals(generatedBuilder),
