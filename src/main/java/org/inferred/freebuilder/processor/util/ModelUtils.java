@@ -25,6 +25,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleElementVisitor6;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
@@ -80,6 +81,10 @@ public class ModelUtils {
     return DECLARED_TYPE_VISITOR.visit(type);
   }
 
+  public static Optional<TypeVariable> maybeVariable(TypeMirror type) {
+    return TYPE_VARIABLE_VISITOR.visit(type);
+  }
+
   /** Returns the {@link TypeElement} corresponding to {@code type}, if there is one. */
   public static Optional<TypeElement> maybeAsTypeElement(TypeMirror type) {
     Optional<DeclaredType> declaredType = maybeDeclared(type);
@@ -117,5 +122,19 @@ public class ModelUtils {
           return Optional.absent();
         }
       };
-}
 
+  private static final SimpleTypeVisitor6<Optional<TypeVariable>, ?> TYPE_VARIABLE_VISITOR =
+      new SimpleTypeVisitor6<Optional<TypeVariable>, Void>() {
+
+        @Override
+        public Optional<TypeVariable> visitTypeVariable(TypeVariable t, Void p) {
+          return Optional.of(t);
+        }
+
+        @Override
+        protected Optional<TypeVariable> defaultAction(TypeMirror e, Void p) {
+          return Optional.absent();
+        }
+      };
+
+}

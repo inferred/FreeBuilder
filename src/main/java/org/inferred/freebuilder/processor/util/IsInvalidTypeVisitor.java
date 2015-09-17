@@ -17,6 +17,11 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.any;
 
+import com.google.common.base.Predicate;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -30,11 +35,12 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.AbstractTypeVisitor6;
 
-import com.google.common.base.Predicate;
-
 /** A type visitor that returns true if the type will be invalid if we write it out. */
 public class IsInvalidTypeVisitor
     extends AbstractTypeVisitor6<Boolean, Void> implements Predicate<TypeMirror> {
+
+  /** Handles self-referential types like Comparable<E extends Comparable<E>>. */
+  private final Map<DeclaredType, Boolean> invalidity = new LinkedHashMap<DeclaredType, Boolean>();
 
   /** Returns true if input is neither null nor invalid. */
   @Override
@@ -59,7 +65,13 @@ public class IsInvalidTypeVisitor
 
   @Override
   public Boolean visitDeclared(DeclaredType t, Void p) {
-    return any(t.getTypeArguments(), this);
+    if (invalidity.containsKey(t)) {
+      return invalidity.get(t);
+    }
+    invalidity.put(t, false);
+    boolean isInvalid = any(t.getTypeArguments(), this);
+    invalidity.put(t, isInvalid);
+    return isInvalid;
   }
 
   @Override
