@@ -240,12 +240,20 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s.mergeFrom(%s.%s());", property.getName(), value, property.getGetterName());
+      String propertyName = property.getName();
+      if (propertyName.equals(value)) {
+        propertyName = "this." + propertyName;  // see issue #78
+      }
+      code.addLine("%s.mergeFrom(%s.%s());", propertyName, value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.add("%s.mergeFrom(%s.%s()", property.getName(), builder, getBuilderName);
+      String propertyName = property.getName();
+      if (propertyName.equals(builder)) {
+        propertyName = "this." + propertyName;  // see issue #78
+      }
+      code.add("%s.mergeFrom(%s.%s()", propertyName, builder, getBuilderName);
       if (mergeFromBuilderMethod == MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE) {
         code.add(".buildPartial()");
       }
