@@ -91,8 +91,8 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       // add(T element)
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Adds {@code element} to the multiset to be returned from {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Adds {@code element} to the multiset to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
@@ -112,7 +112,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
@@ -135,7 +135,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
@@ -157,8 +157,8 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a number of occurrences of {@code element} to the multiset to be")
-          .addLine(" * returned from {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
@@ -181,8 +181,8 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       // clear()
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Clears the multiset to be returned from {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Clears the multiset to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
@@ -198,8 +198,8 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds or removes the necessary occurrences of {@code element} to/from the")
-          .addLine(" * multiset to be returned from {@link %s#%s()}, such that it attains the",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * multiset to be returned from %s, such that it attains the",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * desired count.")
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
@@ -224,7 +224,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the multiset that will be returned by")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
           .addLine("public %s<%s> %s%s() {",

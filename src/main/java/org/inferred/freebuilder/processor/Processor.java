@@ -79,7 +79,7 @@ public class Processor extends AbstractProcessor {
             processingEnv.getFiler(),
             processingEnv.getElementUtils(),
             SourceLevel.from(processingEnv.getSourceVersion()),
-            metadata.getGeneratedBuilder(),
+            metadata.getGeneratedBuilder().getQualifiedName(),
             metadata.getVisibleNestedTypes(),
             type);
         try {

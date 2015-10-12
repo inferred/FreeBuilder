@@ -18,12 +18,10 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.base.Preconditions.checkState;
 
 import javax.annotation.Nullable;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import com.google.common.base.Function;
@@ -52,19 +50,13 @@ public abstract class Metadata {
     FINAL;
   }
 
-  /** Returns the package the type is in. */
-  public PackageElement getPackage() {
-    Element element = getType();
-    while (element.getKind() != ElementKind.PACKAGE) {
-      element = element.getEnclosingElement();
-    }
-    return (PackageElement) element;
-  }
-
   /** Returns the type itself. */
-  public abstract TypeElement getType();
+  public abstract ParameterizedType getType();
 
-  abstract Optional<TypeElement> getOptionalBuilder();
+  /** Returns true if the type is an interface. */
+  public abstract boolean isInterfaceType();
+
+  abstract Optional<ParameterizedType> getOptionalBuilder();
 
   /**
    * Returns true if there is a user-visible Builder subclass defined.
@@ -78,7 +70,7 @@ public abstract class Metadata {
    *
    * @throws IllegalStateException if {@link #hasBuilder} returns false.
    */
-  public TypeElement getBuilder() {
+  public ParameterizedType getBuilder() {
     return getOptionalBuilder().get();
   }
 
@@ -86,13 +78,13 @@ public abstract class Metadata {
   public abstract Optional<BuilderFactory> getBuilderFactory();
 
   /** Returns the builder class that should be generated. */
-  public abstract QualifiedName getGeneratedBuilder();
+  public abstract ParameterizedType getGeneratedBuilder();
 
   /** Returns the value class that should be generated. */
-  public abstract QualifiedName getValueType();
+  public abstract ParameterizedType getValueType();
 
   /** Returns the partial value class that should be generated. */
-  public abstract QualifiedName getPartialType();
+  public abstract ParameterizedType getPartialType();
 
   /**
    * Returns a set of nested types that will be visible in the generated class, either because they
@@ -101,9 +93,9 @@ public abstract class Metadata {
   public abstract ImmutableSet<QualifiedName> getVisibleNestedTypes();
 
   /** Returns the Property enum that may be generated. */
-  public abstract QualifiedName getPropertyEnum();
+  public abstract ParameterizedType getPropertyEnum();
 
-  /** Returns metadata about the properies of the type. */
+  /** Returns metadata about the properties of the type. */
   public abstract ImmutableList<Property> getProperties();
 
   public UnderrideLevel standardMethodUnderride(StandardMethod standardMethod) {
@@ -177,12 +169,12 @@ public abstract class Metadata {
   public static class Builder extends Metadata_Builder {
 
     /** Sets the builder class that users will see, if any. */
-    public Builder setBuilder(Optional<TypeElement> builder) {
+    public Builder setBuilder(Optional<ParameterizedType> builder) {
       return setOptionalBuilder(builder);
     }
 
     /** Sets the builder class that users will see. */
-    public Builder setBuilder(TypeElement builder) {
+    public Builder setBuilder(ParameterizedType builder) {
       return setOptionalBuilder(builder);
     }
 
@@ -192,12 +184,15 @@ public abstract class Metadata {
     @Override
     public Metadata build() {
       Metadata metadata = super.build();
-      QualifiedName generatedBuilder = metadata.getGeneratedBuilder();
-      checkState(metadata.getValueType().getEnclosingType().equals(generatedBuilder),
+      QualifiedName generatedBuilder = metadata.getGeneratedBuilder().getQualifiedName();
+      checkState(metadata.getValueType().getQualifiedName().getEnclosingType()
+              .equals(generatedBuilder),
           "%s not a nested class of %s", metadata.getValueType(), generatedBuilder);
-      checkState(metadata.getPartialType().getEnclosingType().equals(generatedBuilder),
+      checkState(metadata.getPartialType().getQualifiedName().getEnclosingType()
+              .equals(generatedBuilder),
           "%s not a nested class of %s", metadata.getPartialType(), generatedBuilder);
-      checkState(metadata.getPropertyEnum().getEnclosingType().equals(generatedBuilder),
+      checkState(metadata.getPropertyEnum().getQualifiedName().getEnclosingType()
+              .equals(generatedBuilder),
           "%s not a nested class of %s", metadata.getPropertyEnum(), generatedBuilder);
       return metadata;
     }

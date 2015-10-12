@@ -102,7 +102,7 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
-          .addLine(" * from {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * from %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * If the multimap already contains this mapping, then {@code %s%s}",
               PUT_PREFIX, property.getCapitalizedName())
           .addLine(" * has no effect (only the previously added mapping is retained).")
@@ -140,8 +140,8 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a collection of {@code values} with the same {@code key} to the")
-          .addLine(" * multimap to be returned from {@link %s#%s()}, ignoring duplicate values",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * multimap to be returned from %s, ignoring duplicate values",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * (only the first duplicate value is added).")
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
@@ -170,8 +170,8 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each mapping in {@code multimap} to the multimap to be returned from")
-          .addLine(" * {@link %s#%s()}, ignoring duplicate mappings",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * %s, ignoring duplicate mappings",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * (only the first duplicate mapping is added).")
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
@@ -198,7 +198,7 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes all of the mappings from the multimap to be returned from")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
@@ -214,7 +214,7 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the multimap that will be returned by")
-          .addLine(" * {@link %s#%s()}.", metadata.getType(), property.getGetterName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
           .addLine("public %s<%s, %s> %s%s() {",

@@ -77,8 +77,8 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       // Setter
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Sets the value to be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName())
+          .addLine(" * Sets the value to be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!isNullable && !isPrimitive) {
@@ -110,8 +110,8 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       // Getter
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Returns the value that will be returned by {@link %s#%s()}.",
-              metadata.getType(), property.getGetterName());
+          .addLine(" * Returns the value that will be returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()));
       if (!hasDefault) {
         code.addLine(" *")
             .addLine(" * @throws IllegalStateException if the field has not been set");
