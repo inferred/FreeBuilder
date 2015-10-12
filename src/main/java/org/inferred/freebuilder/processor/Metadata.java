@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.base.Preconditions.checkState;
 
 import javax.annotation.Nullable;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -152,6 +153,14 @@ public abstract class Metadata {
      * Returns the {@code @Nullable} annotations that have been applied to this property.
      */
     ImmutableSet<TypeElement> getNullableAnnotations();
+
+    /**
+     * Returns a list of annotations that should be applied to the accessor methods of this
+     * property; that is, the getter method, and a single setter method that will accept the result
+     * of the getter method as its argument. For a list, for example, that would be getX() and
+     * addAllX().
+     */
+    ImmutableList<AnnotationMirror> getAccessorAnnotations();
 
     /** Builder for {@link Property}. */
     class Builder extends Metadata_Property_Builder {}

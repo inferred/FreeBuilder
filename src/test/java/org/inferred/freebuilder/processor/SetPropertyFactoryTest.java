@@ -15,10 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
-import java.util.Iterator;
-import java.util.Set;
-
-import javax.tools.JavaFileObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -31,9 +33,10 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.testing.EqualsTester;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code List<?>} properties. */
 @RunWith(JUnit4.class)
@@ -626,6 +629,36 @@ public class SetPropertyFactoryTest {
             .addLine("            .addItems(\"one\")")
             .addLine("            .build())")
             .addLine("    .testEquals();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testJacksonInteroperability() {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("import " + JsonProperty.class.getName() + ";")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+            .addLine("public interface DataType {")
+            .addLine("  @JsonProperty(\"stuff\") %s<%s> getItems();", Set.class, String.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
+            .addLine("String json = mapper.writeValueAsString(value);")
+            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }

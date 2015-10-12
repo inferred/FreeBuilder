@@ -154,8 +154,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
           .addLine(" *     null element")
-          .addLine(" */")
-          .addLine("public %s %s%s(%s<? extends %s> elements) {",
+          .addLine(" */");
+      addAccessorAnnotations(code);
+      code.addLine("public %s %s%s(%s<? extends %s> elements) {",
               metadata.getBuilder(),
               ADD_ALL_PREFIX,
               property.getCapitalizedName(),

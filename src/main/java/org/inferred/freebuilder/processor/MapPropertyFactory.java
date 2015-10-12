@@ -151,8 +151,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * @throws NullPointerException if {@code map} is null or contains a")
           .addLine(" *     null key or value")
           .addLine(" * @throws IllegalArgumentException if any key is already present")
-          .addLine(" */")
-          .addLine("public %s %s%s(%s<? extends %s, ? extends %s> map) {",
+          .addLine(" */");
+      addAccessorAnnotations(code);
+      code.addLine("public %s %s%s(%s<? extends %s, ? extends %s> map) {",
               metadata.getBuilder(),
               PUT_ALL_PREFIX,
               property.getCapitalizedName(),

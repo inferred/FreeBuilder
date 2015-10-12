@@ -15,10 +15,11 @@
  */
 package org.inferred.freebuilder.processor;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.tools.JavaFileObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -30,8 +31,10 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.testing.EqualsTester;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code List<?>} properties. */
 @RunWith(JUnit4.class)
@@ -694,6 +697,38 @@ public class MapPropertyFactoryTest {
             .addLine("            .putItems(\"c\", \"d\")")
             .addLine("            .build())")
             .addLine("    .testEquals();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testJacksonInteroperability() {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("import " + JsonProperty.class.getName() + ";")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+            .addLine("public interface DataType {")
+            .addLine("  @JsonProperty(\"stuff\") %s<String, Object> getItems();", Map.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(\"bar\", \"baz\")")
+            .addLine("    .putItems(\"three\", 3)")
+            .addLine("    .build();")
+            .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
+            .addLine("String json = mapper.writeValueAsString(value);")
+            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+            .addLine("assertThat(clone.getItems())")
+            .addLine("    .isEqualTo(%s.of(\"bar\", \"baz\", \"three\", 3));",
+                ImmutableMap.class)
             .build())
         .runTest();
   }

@@ -17,6 +17,7 @@ package org.inferred.freebuilder.processor;
 
 import java.util.Set;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -115,6 +116,12 @@ public abstract class PropertyCodeGenerator {
 
   /** Adds a partial clear call for the property to the builder's source code. */
   public abstract void addPartialClear(SourceBuilder code);
+
+  protected void addAccessorAnnotations(SourceBuilder code) {
+    for (AnnotationMirror annotation : property.getAccessorAnnotations()) {
+      code.addLine("%s", annotation);
+    }
+  }
 
   public static final Predicate<PropertyCodeGenerator> IS_TEMPLATE_REQUIRED_IN_CLEAR =
       new Predicate<PropertyCodeGenerator>() {

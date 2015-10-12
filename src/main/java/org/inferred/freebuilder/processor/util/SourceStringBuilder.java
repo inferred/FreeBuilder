@@ -16,7 +16,9 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
@@ -102,6 +104,10 @@ public final class SourceStringBuilder implements SourceBuilder {
       return shortener.shorten(mirror);
     } else if (arg instanceof QualifiedName) {
       return shortener.shorten((QualifiedName) arg);
+    } else if (arg instanceof AnnotationMirror) {
+      SourceStringBuilder excerptBuilder = new SourceStringBuilder(sourceLevel, shortener);
+      addSource(excerptBuilder, (AnnotationMirror) arg);
+      return excerptBuilder.toString();
     } else {
       return arg;
     }

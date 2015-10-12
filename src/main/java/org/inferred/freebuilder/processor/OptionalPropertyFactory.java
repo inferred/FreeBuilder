@@ -163,8 +163,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine(" */")
-          .addLine("public %s %s(%s<? extends %s> %s) {",
+          .addLine(" */");
+      addAccessorAnnotations(code);
+      code.addLine("public %s %s(%s<? extends %s> %s) {",
               metadata.getBuilder(),
               setterName,
               Optional.class,
