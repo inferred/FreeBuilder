@@ -22,12 +22,20 @@ import javax.lang.model.type.TypeVisitor;
 /**
  * Fake implementation of {@link NoType} for unit tests.
  */
-public enum NoTypes implements NoType {
-  NONE() {
-    @Override public TypeKind getKind() {
-      return TypeKind.NONE;
-    }
-  };
+public abstract class NoTypes implements NoType {
+
+  public static final NoType NONE = Partial.of(NoTypes.class, TypeKind.NONE);
+
+  private final TypeKind kind;
+
+  NoTypes(TypeKind kind) {
+    this.kind = kind;
+  }
+
+  @Override
+  public TypeKind getKind() {
+    return kind;
+  }
 
   @Override
   public <R, P> R accept(TypeVisitor<R, P> v, P p) {

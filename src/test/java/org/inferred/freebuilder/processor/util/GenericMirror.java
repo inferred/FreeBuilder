@@ -31,7 +31,12 @@ import javax.lang.model.type.TypeVisitor;
 /**
  * Fake representation of a generic top-level type.
  */
-public class GenericMirror implements DeclaredType {
+public abstract class GenericMirror implements DeclaredType {
+
+  static GenericMirror create(
+      AtomicReference<GenericElement> element, Iterable<? extends TypeMirror> typeArguments) {
+    return Partial.of(GenericMirror.class, element, typeArguments);
+  }
 
   private final AtomicReference<GenericElement> element;
   private final ImmutableList<TypeMirror> typeArguments;

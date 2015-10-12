@@ -15,15 +15,9 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.Set;
-
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.type.NoType;
@@ -31,11 +25,15 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 
-public class PackageElementImpl implements PackageElement {
+public abstract class PackageElementImpl implements PackageElement {
+
+  public static PackageElementImpl create(String qualifiedName) {
+    return Partial.of(PackageElementImpl.class, qualifiedName);
+  }
 
   private final String qualifiedName;
 
-  public PackageElementImpl(String qualifiedName) {
+  PackageElementImpl(String qualifiedName) {
     this.qualifiedName = qualifiedName;
   }
 
@@ -57,7 +55,7 @@ public class PackageElementImpl implements PackageElement {
 
   @Override
   public TypeMirror asType() {
-    return new PackageTypeImpl();
+    return Partial.of(PackageTypeImpl.class, qualifiedName);
   }
 
   @Override
@@ -66,28 +64,8 @@ public class PackageElementImpl implements PackageElement {
   }
 
   @Override
-  public List<? extends AnnotationMirror> getAnnotationMirrors() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Set<Modifier> getModifiers() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public <R, P> R accept(ElementVisitor<R, P> v, P p) {
     return v.visitPackage(this, p);
-  }
-
-  @Override
-  public List<? extends Element> getEnclosedElements() {
-    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -111,7 +89,13 @@ public class PackageElementImpl implements PackageElement {
     return false;
   }
 
-  class PackageTypeImpl implements NoType {
+  abstract static class PackageTypeImpl implements NoType {
+
+    private final String qualifiedName;
+
+    private PackageTypeImpl(String qualifiedName) {
+      this.qualifiedName = qualifiedName;
+    }
 
     @Override
     public TypeKind getKind() {

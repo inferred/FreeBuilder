@@ -19,11 +19,11 @@ import javax.lang.model.type.NullType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeVisitor;
 
-public class NullTypeImpl implements NullType {
+public abstract class NullTypeImpl implements NullType {
 
-  public static final NullType NULL = new NullTypeImpl();
+  public static final NullType NULL = Partial.of(NullTypeImpl.class);
 
-  private NullTypeImpl() {}
+  NullTypeImpl() {}
 
   @Override
   public TypeKind getKind() {
