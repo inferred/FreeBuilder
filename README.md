@@ -22,6 +22,7 @@ _Automatic generation of the Builder pattern for Java 1.6+_
   - [Nested buildable types](#nested-buildable-types)
   - [Builder construction](#builder-construction)
   - [Partials](#partials)
+  - [Jackson](#jackson)
   - [GWT](#gwt)
 - [Build tools and IDEs](#build-tools-and-ides)
   - [javac](#javac)
@@ -322,6 +323,32 @@ However, when testing a component which does not rely on the full state
 restrictions of the value type, partials can reduce the fragility of your test
 suite, allowing you to add new required fields or other constraints to an
 existing value type without breaking swathes of test code.
+
+
+### Jackson
+
+To create types compatible with the [Jackson JSON serialization
+library][Jackson], use the [@JsonProperty] annotation on your getter methods as
+normal, and use the builder property of [@JsonDeserialize] to point Jackson at
+your Builder class. For instance:
+
+```java
+// This type can be freely converted to and from JSON with Jackson
+@JsonDeserialize(builder = Address.Builder.class)
+interface Address {
+    @JsonProperty("city") String getCity();
+    @JsonProperty("state") String getState();
+
+    class Builder extends Address_Builder {}
+}
+```
+
+`@FreeBuilder` will copy the [@JsonProperty] annotations to the relevant setter
+methods on the builder.
+
+[Jackson]: http://wiki.fasterxml.com/JacksonHome
+[@JsonProperty]: http://fasterxml.github.io/jackson-annotations/javadoc/2.6/com/fasterxml/jackson/annotation/JsonProperty.html
+[@JsonDeserialize]: http://fasterxml.github.io/jackson-databind/javadoc/2.6/com/fasterxml/jackson/databind/annotation/JsonDeserialize.html
 
 
 ### GWT
