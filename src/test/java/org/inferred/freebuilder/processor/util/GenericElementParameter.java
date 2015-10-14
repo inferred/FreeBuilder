@@ -44,7 +44,7 @@ import javax.lang.model.type.TypeVisitor;
 /**
  * Fake implementation of a formal type parameter of a {@link GenericElement}.
  */
-public class GenericElementParameter implements TypeParameterElement {
+public abstract class GenericElementParameter implements TypeParameterElement {
 
   /**
    * Builder of {@link GenericElementParameter} instances.
@@ -66,12 +66,12 @@ public class GenericElementParameter implements TypeParameterElement {
     }
 
     public TypeVariableImpl asType() {
-      return new TypeVariableImpl(element);
+      return Partial.of(TypeVariableImpl.class, element);
     }
 
     GenericElementParameter build(GenericElement genericElement) {
       GenericElementParameter impl =
-          new GenericElementParameter(genericElement, simpleName, bounds);
+          Partial.of(GenericElementParameter.class, genericElement, simpleName, bounds);
       boolean notYetSet = element.compareAndSet(null, impl);
       checkState(notYetSet, "Cannot call build() twice on a %s", Builder.class.getName());
       return impl;
@@ -83,7 +83,7 @@ public class GenericElementParameter implements TypeParameterElement {
   private final String simpleName;
   private final ImmutableList<TypeMirror> bounds;
 
-  private GenericElementParameter(
+  GenericElementParameter(
       GenericElement genericElement, String simpleName, Iterable<? extends TypeMirror> bounds) {
     this.genericElement = genericElement;
     this.simpleName = simpleName;
@@ -92,7 +92,7 @@ public class GenericElementParameter implements TypeParameterElement {
 
   @Override
   public TypeVariableImpl asType() {
-    return new TypeVariableImpl(new AtomicReference<>(this));
+    return Partial.of(TypeVariableImpl.class, new AtomicReference<>(this));
   }
 
   @Override
@@ -153,11 +153,11 @@ public class GenericElementParameter implements TypeParameterElement {
   /**
    * Fake implementation of a type variable declared by a {@link GenericElement}.
    */
-  public static class TypeVariableImpl implements TypeVariable {
+  public abstract static class TypeVariableImpl implements TypeVariable {
 
     private final AtomicReference<GenericElementParameter> element;
 
-    private TypeVariableImpl(AtomicReference<GenericElementParameter> element) {
+    TypeVariableImpl(AtomicReference<GenericElementParameter> element) {
       this.element = element;
     }
 

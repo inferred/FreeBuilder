@@ -15,15 +15,11 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
-import java.util.Set;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
@@ -39,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Fake implementation of {@link DeclaredType} for unit tests.
  */
-public class ClassTypeImpl implements DeclaredType {
+public abstract class ClassTypeImpl implements DeclaredType {
 
   private final Element enclosingElement;
   private final TypeMirror enclosingType;
@@ -48,19 +44,19 @@ public class ClassTypeImpl implements DeclaredType {
   public static ClassTypeImpl newTopLevelClass(String qualifiedName) {
     String pkg = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
     String simpleName = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-    PackageElement enclosingElement = new PackageElementImpl(pkg);
-    return new ClassTypeImpl(enclosingElement, NoTypes.NONE, simpleName);
+    PackageElement enclosingElement = PackageElementImpl.create(pkg);
+    return Partial.of(ClassTypeImpl.class, enclosingElement, NoTypes.NONE, simpleName);
   }
 
   public static ClassTypeImpl newNestedClass(TypeElement enclosingType, String simpleName) {
-    return new ClassTypeImpl(enclosingType, NoTypes.NONE, simpleName);
+    return Partial.of(ClassTypeImpl.class, enclosingType, NoTypes.NONE, simpleName);
   }
 
   public static ClassTypeImpl newInnerClass(DeclaredType enclosingType, String simpleName) {
-    return new ClassTypeImpl(enclosingType.asElement(), enclosingType, simpleName);
+    return Partial.of(ClassTypeImpl.class, enclosingType.asElement(), enclosingType, simpleName);
   }
 
-  private ClassTypeImpl(Element enclosingElement, TypeMirror enclosingType, String simpleName) {
+  ClassTypeImpl(Element enclosingElement, TypeMirror enclosingType, String simpleName) {
     this.enclosingElement = enclosingElement;
     this.enclosingType = enclosingType;
     this.simpleName = simpleName;
@@ -78,7 +74,7 @@ public class ClassTypeImpl implements DeclaredType {
 
   @Override
   public ClassElementImpl asElement() {
-    return new ClassElementImpl();
+    return Partial.of(ClassElementImpl.class, this);
   }
 
   @Override
@@ -115,7 +111,7 @@ public class ClassTypeImpl implements DeclaredType {
   /**
    * Fake implementation of {@link TypeElement} for unit tests.
    */
-  public class ClassElementImpl implements TypeElement {
+  public abstract class ClassElementImpl implements TypeElement {
 
     @Override
     public ClassTypeImpl asType() {
@@ -128,28 +124,8 @@ public class ClassTypeImpl implements DeclaredType {
     }
 
     @Override
-    public List<? extends AnnotationMirror> getAnnotationMirrors() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<Modifier> getModifiers() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
     public <R, P> R accept(ElementVisitor<R, P> v, P p) {
       return v.visitType(this, p);
-    }
-
-    @Override
-    public List<? extends Element> getEnclosedElements() {
-      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -171,11 +147,6 @@ public class ClassTypeImpl implements DeclaredType {
     @Override
     public TypeMirror getSuperclass() {
       return NoTypes.NONE;
-    }
-
-    @Override
-    public List<? extends TypeMirror> getInterfaces() {
-      throw new UnsupportedOperationException();
     }
 
     @Override

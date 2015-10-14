@@ -23,8 +23,6 @@ import com.google.common.testing.EqualsTester;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
@@ -611,46 +609,6 @@ public class ProcessorTest {
             .addLine("com.example.DataType.builder()")
             .addLine("    .setPropertyA(11)")
             .addLine("    .isPropertyB();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testNoDefaultsOptimization() {
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.Builder.class.getSuperclass()")
-            .addLine("    .getDeclaredField(\"_unsetProperties\");")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testDefaultsOptimization() {
-    thrown.expect(new BaseMatcher<Throwable>() {
-
-      @Override
-      public boolean matches(Object obj) {
-        if (!(obj instanceof Throwable)) {
-          return false;
-        }
-        Throwable cause = ((Throwable) obj).getCause();
-        return ((cause instanceof NoSuchFieldException)
-            && cause.getMessage().equals("_unsetProperties"));
-      }
-
-      @Override
-      public void describeTo(Description desc) {
-        desc.appendText("caused by: java.lang.NoSuchFieldException: _unsetProperties");
-      }});
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_DEFAULTS_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.Builder.class.getSuperclass()")
-            .addLine("    .getDeclaredField(\"_unsetProperties\");")
             .build())
         .runTest();
   }

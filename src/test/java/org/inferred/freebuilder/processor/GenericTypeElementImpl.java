@@ -42,10 +42,10 @@ import com.google.common.collect.ImmutableList;
 abstract class GenericTypeElementImpl extends ValueType
     implements javax.lang.model.element.TypeElement {
 
-  static GenericTypeElementImpl newTopLevelGenericType(String qualifiedName) {
+  public static GenericTypeElementImpl newTopLevelGenericType(String qualifiedName) {
     String pkg = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
     String simpleName = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-    PackageElement enclosingElement = new PackageElementImpl(pkg);
+    PackageElement enclosingElement = PackageElementImpl.create(pkg);
     return Partial.of(GenericTypeElementImpl.class, enclosingElement, NoTypes.NONE, simpleName);
   }
 
@@ -53,8 +53,7 @@ abstract class GenericTypeElementImpl extends ValueType
   private final TypeMirror enclosingType;
   private final String simpleName;
 
-  public GenericTypeElementImpl(
-      Element enclosingElement, TypeMirror enclosingType, String simpleName) {
+  GenericTypeElementImpl(Element enclosingElement, TypeMirror enclosingType, String simpleName) {
     this.enclosingElement = enclosingElement;
     this.enclosingType = enclosingType;
     this.simpleName = simpleName;
@@ -68,7 +67,7 @@ abstract class GenericTypeElementImpl extends ValueType
   }
 
   public GenericTypeMirrorImpl newMirror(TypeMirror... typeArguments) {
-    return new GenericTypeMirrorImpl(ImmutableList.copyOf(typeArguments));
+    return Partial.of(GenericTypeMirrorImpl.class, this, ImmutableList.copyOf(typeArguments));
   }
 
   @Override
@@ -102,7 +101,7 @@ abstract class GenericTypeElementImpl extends ValueType
     return enclosingElement;
   }
 
-  class GenericTypeMirrorImpl extends ValueType implements DeclaredType {
+  abstract class GenericTypeMirrorImpl extends ValueType implements DeclaredType {
     private final ImmutableList<TypeMirror> typeArguments;
 
     GenericTypeMirrorImpl(ImmutableList<TypeMirror> typeArguments) {

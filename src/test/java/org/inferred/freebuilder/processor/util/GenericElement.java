@@ -42,7 +42,7 @@ import javax.lang.model.type.TypeVariable;
 /**
  * Fake representation of a generic top-level class element.
  */
-public class GenericElement implements TypeElement {
+public abstract class GenericElement implements TypeElement {
 
   /**
    * Builder of {@link GenericElement} instances.
@@ -113,7 +113,7 @@ public class GenericElement implements TypeElement {
       for (GenericElementParameter.Builder typeParameter : typeParameters.values()) {
         typeArguments.add(typeParameter.asType());
       }
-      return new GenericMirror(element, typeArguments);
+      return GenericMirror.create(element, typeArguments);
     }
 
     public GenericElement build() {
@@ -121,7 +121,8 @@ public class GenericElement implements TypeElement {
         element = new AtomicReference<>();
       }
       checkState(element.get() == null, "Cannot call build() twice");
-      GenericElement impl = new GenericElement(qualifiedName, typeParameters.values());
+      GenericElement impl =
+          Partial.of(GenericElement.class, qualifiedName, typeParameters.values());
       element.set(impl);
       return impl;
     }
@@ -147,7 +148,7 @@ public class GenericElement implements TypeElement {
     for (GenericElementParameter typeParameter : typeParameters) {
       typeArguments.add(typeParameter.asType());
     }
-    return new GenericMirror(new AtomicReference<>(this), typeArguments);
+    return GenericMirror.create(new AtomicReference<>(this), typeArguments);
   }
 
   @Override
@@ -212,7 +213,7 @@ public class GenericElement implements TypeElement {
 
   @Override
   public PackageElementImpl getEnclosingElement() {
-    return new PackageElementImpl(qualifiedName.getPackage());
+    return PackageElementImpl.create(qualifiedName.getPackage());
   }
 
 }
