@@ -17,6 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 
+import org.inferred.freebuilder.processor.util.QualifiedName;
+
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -49,18 +51,31 @@ public class Util {
   }
 
   /** Returns true if {@code type} erases to any of {@code possibilities}. */
-  static boolean erasesToAnyOf(DeclaredType type, Class<?>... possibilities) {
-    String erasedType = type.accept(new SimpleTypeVisitor6<String, Object>() {
-      @Override
-      public String visitDeclared(DeclaredType t, Object p) {
-        return t.asElement().toString();
+  static boolean erasesToAnyOf(DeclaredType type, QualifiedName... possibilities) {
+    String erasedType = new TypeToStringVisitor().visit(type);
+    for (QualifiedName possibility : possibilities) {
+      if (unshadedName(possibility.toString()).equals(erasedType)) {
+        return true;
       }
-    }, null);
+    }
+    return false;
+  }
+
+  /** Returns true if {@code type} erases to any of {@code possibilities}. */
+  static boolean erasesToAnyOf(DeclaredType type, Class<?>... possibilities) {
+    String erasedType = new TypeToStringVisitor().visit(type);
     for (Class<?> possibility : possibilities) {
       if (unshadedName(possibility.getName()).equals(erasedType)) {
         return true;
       }
     }
     return false;
+  }
+
+  private static final class TypeToStringVisitor extends SimpleTypeVisitor6<String, Object> {
+    @Override
+    public String visitDeclared(DeclaredType t, Object p) {
+      return t.asElement().toString();
+    }
   }
 }

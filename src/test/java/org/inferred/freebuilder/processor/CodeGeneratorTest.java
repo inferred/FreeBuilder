@@ -27,6 +27,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
+import org.inferred.freebuilder.processor.OptionalPropertyFactory.OptionalType;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
@@ -615,12 +616,12 @@ public class CodeGeneratorTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                name.build(), "setName", "setNullableName", "clearName", string,
+                name.build(), OptionalType.GUAVA, "setName", "setNullableName", "clearName", string,
                 Optional.<TypeMirror>absent(), false))
             .build())
         .addProperties(age
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                age.build(), "setAge", "setNullableAge", "clearAge", integer,
+                age.build(), OptionalType.GUAVA, "setAge", "setNullableAge", "clearAge", integer,
                 Optional.<TypeMirror>of(INT), false))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
@@ -2358,12 +2359,12 @@ public class CodeGeneratorTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                name.build(), "setName", "setNullableName", "clearName", string,
+                name.build(), OptionalType.GUAVA, "setName", "setNullableName", "clearName", string,
                 Optional.<TypeMirror>absent(), false))
             .build())
         .addProperties(age
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                age.build(), "setAge", "setNullableAge", "clearAge", integer,
+                age.build(), OptionalType.GUAVA, "setAge", "setNullableAge", "clearAge", integer,
                 Optional.<TypeMirror>of(INT), false))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
