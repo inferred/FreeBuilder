@@ -132,12 +132,6 @@ h3:after {
   border-image-slice: 1;
 }
 
-#downloads .btn {
-  display: inline-block;
-  text-align: center;
-  margin: 0 0.5385em;
-}
-
 /* Main Content
 */
 
@@ -198,12 +192,14 @@ pre {
       rgba(83, 158, 232, 0.2), rgba(83, 158, 232, 0.45) 50%,
       rgba(83, 158, 232, 0.5) 50%, rgba(83, 158, 232, 0.9));
   padding: 0.5em 1.5em;
+  margin: 0 0.5385em;
   border-radius: 2em;
   border: 2px solid rgba(0, 0, 0, 0.5);
   font-family: "Century Gothic", "Gill Sans", sans-serif;
   font-weight: 700;
   font-size: 81.25%;
   color: aliceblue;
+  text-align: center;
   text-decoration: none;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.3);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -259,7 +255,7 @@ section#downloads {
     display: none;
   }
 
-  section#downloads .btn + .btn + .btn {
+  section#downloads .btn-github {
     display: inline-block
   }
 }
