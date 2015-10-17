@@ -26,6 +26,7 @@ import javax.lang.model.util.SimpleTypeVisitor6;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -37,6 +38,22 @@ import com.google.common.base.Preconditions;
  * setter methods for {@link Optional} properties.
  */
 public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
+
+  @VisibleForTesting
+  static enum OptionalType {
+    GUAVA(QualifiedName.of(Optional.class), "absent", "fromNullable"),
+    JAVA8(QualifiedName.of("java.util", "Optional"), "empty", "ofNullable");
+
+    private final QualifiedName cls;
+    private final String empty;
+    private final String ofNullable;
+
+    private OptionalType(QualifiedName cls, String empty, String ofNullable) {
+      this.cls = cls;
+      this.empty = empty;
+      this.ofNullable = ofNullable;
+    }
+  }
 
   private static final String SET_PREFIX = "set";
   private static final String NULLABLE_SET_PREFIX = "setNullable";
@@ -51,32 +68,35 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     if (config.getProperty().getType().getKind() == TypeKind.DECLARED) {
       DeclaredType type = (DeclaredType) config.getProperty().getType();
-      if (erasesToAnyOf(type, Optional.class)) {
-        TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
-        Optional<TypeMirror> unboxedType;
-        try {
-          unboxedType = Optional.<TypeMirror>of(config.getTypes().unboxedType(elementType));
-        } catch (IllegalArgumentException e) {
-          unboxedType = Optional.absent();
+      for (OptionalType optional : OptionalType.values()) {
+        if (erasesToAnyOf(type, optional.cls)) {
+          TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+          Optional<TypeMirror> unboxedType;
+          try {
+            unboxedType = Optional.<TypeMirror>of(config.getTypes().unboxedType(elementType));
+          } catch (IllegalArgumentException e) {
+            unboxedType = Optional.absent();
+          }
+          String capitalizedName = config.getProperty().getCapitalizedName();
+          String setterName = SET_PREFIX + capitalizedName;
+          String nullableSetterName = NULLABLE_SET_PREFIX + capitalizedName;
+          String clearName = CLEAR_PREFIX + capitalizedName;
+
+          // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
+          // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
+          // type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
+          boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
+
+          return Optional.of(new CodeGenerator(
+              config.getProperty(),
+              optional,
+              setterName,
+              nullableSetterName,
+              clearName,
+              elementType,
+              unboxedType,
+              requiresExplicitTypeParameters));
         }
-        String capitalizedName = config.getProperty().getCapitalizedName();
-        String setterName = SET_PREFIX + capitalizedName;
-        String nullableSetterName = NULLABLE_SET_PREFIX + capitalizedName;
-        String clearName = CLEAR_PREFIX + capitalizedName;
-
-        // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
-        // type parameter of a static method (like Optional.fromNullable(t), in this case). We need
-        // to set the type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
-        boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
-
-        return Optional.of(new CodeGenerator(
-            config.getProperty(),
-            setterName,
-            nullableSetterName,
-            clearName,
-            elementType,
-            unboxedType,
-            requiresExplicitTypeParameters));
       }
     }
     return Optional.absent();
@@ -84,6 +104,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
+    private final OptionalType optional;
     private final String setterName;
     private final String nullableSetterName;
     private final String clearName;
@@ -93,6 +114,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @VisibleForTesting CodeGenerator(
         Property property,
+        OptionalType optional,
         String setterName,
         String nullableSetterName,
         String clearName,
@@ -100,6 +122,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
         Optional<TypeMirror> unboxedType,
         boolean requiresExplicitTypeParametersInJava7) {
       super(property);
+      this.optional = optional;
       this.setterName = setterName;
       this.nullableSetterName = nullableSetterName;
       this.clearName = clearName;
@@ -168,7 +191,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("public %s %s(%s<? extends %s> %s) {",
               metadata.getBuilder(),
               setterName,
-              Optional.class,
+              optional.cls,
               elementType,
               property.getName())
           .addLine("  if (%s.isPresent()) {", property.getName())
@@ -204,7 +227,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s",
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-          .addLine(" * to {@link %s#absent() Optional.absent()}.", Optional.class)
+          .addLine(" * to {@link %1$s#%2$s() Optional.%2$s()}.", optional.cls, optional.empty)
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
@@ -220,11 +243,11 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" */")
           .addLine("public %s %s() {", property.getType(), property.getGetterName());
-      code.add("  return %s.", Optional.class);
+      code.add("  return %s.", optional.cls);
       if (requiresExplicitTypeParameters) {
         code.add("<%s>", elementType);
       }
-      code.add("fromNullable(%s);\n", property.getName())
+      code.add("%s(%s);\n", optional.ofNullable, property.getName())
           .addLine("}");
     }
 
@@ -245,11 +268,11 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addReadValueFragment(SourceBuilder code, String finalField) {
-      code.add("%s.", Optional.class);
+      code.add("%s.", optional.cls);
       if (requiresExplicitTypeParameters) {
         code.add("<%s>", elementType);
       }
-      code.add("fromNullable(%s)", finalField);
+      code.add("%s(%s)", optional.ofNullable, finalField);
     }
 
     @Override

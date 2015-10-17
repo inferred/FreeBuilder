@@ -38,7 +38,7 @@ import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code Optional<?>} properties. */
 @RunWith(JUnit4.class)
-public class OptionalPropertyFactoryTest {
+public class GuavaOptionalPropertyTest {
 
   private static final JavaFileObject TWO_OPTIONAL_PROPERTIES_TYPE = new SourceBuilder()
       .addLine("package com.example;")

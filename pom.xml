@@ -145,6 +145,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jdk8</artifactId>
+      <version>2.6.1</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
       <version>0.24</version>
@@ -174,8 +179,8 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
-          <testSource>1.7</testSource>
-          <testTarget>1.7</testTarget>
+          <testSource>1.8</testSource>
+          <testTarget>1.8</testTarget>
         </configuration>
       </plugin>
 
