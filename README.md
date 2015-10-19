@@ -177,10 +177,12 @@ public interface Person {
 ### Optional values
 
 If a property is optional&mdash;that is, has no reasonable default&mdash;then
-use [the Optional type][]. It will default to Optional.absent(), and the Builder
+use [the Java 8 Optional type][] (or [the Guava Optional type][] for
+backwards-compatibility). It will default to Optional.empty(), and the Builder
 will gain additional convenience setter methods.
 
-[the Optional type]: http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/base/Optional.html
+[the Java 8 Optional type]: https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html
+[the Guava Optional type]: http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/base/Optional.html
 
 
 ```java
@@ -226,12 +228,13 @@ This is the O(1), non-tedious, non&ndash;error-prone way we recomment converting
     inlining.
  * _[IDE REFACTOR]_ Rename all your `@Nullable` getters to `getNullableX`.
  * Add an Optional-returning getX
- * Implement your getNullableX methods as:  `return getX().orNull()`
+ * Implement your getNullableX methods as:  `return getX().orElse(null)`
+   <br>(Guava: `return getX().orNull()`)
  * _[IDE REFACTOR]_ Inline your getNullableX methods
 
 At this point, you have effectively performed an automatic translation of a
 `@Nullable` method to an Optional-returning one. Of course, your code is not
-optimal yet (e.g.  `if (foo.getX().orNull() != null)`  instead of  `if
+optimal yet (e.g.  `if (foo.getX().orElse(null) != null)`  instead of  `if
 (foo.getX().isPresent())` ). Search-and-replace should get most of these issues.
 
  * _[IDE REFACTOR]_ Rename all your `@Nullable` setters to `setNullableX`.
