@@ -1,4 +1,4 @@
 language: java
-script: mvn integration-test
+script: mvn verify
 jdk:
   - oraclejdk8

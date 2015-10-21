@@ -17,14 +17,15 @@ package org.inferred.freebuilder.processor.util;
 
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 
 /**
  * Source code builder, using format strings for readability, with sensible formatting for
  * type objects.
  *
- * <pre><code>
+ * <pre>
  * // Imports StringBuilder and appends "  StringBuilder foo;\n" to the source code.
- * builder.addLine("  %s foo;", StringBuilder.class);</pre></code>
+ * builder.addLine("  %s foo;", StringBuilder.class);</pre>
  */
 public interface SourceBuilder {
 
