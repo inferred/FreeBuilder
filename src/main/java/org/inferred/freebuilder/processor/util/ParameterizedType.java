@@ -67,7 +67,7 @@ public class ParameterizedType extends ValueType implements Excerpt {
   }
 
   /**
-   * Returns a new {@link TypeParameters} of the same length as this type, filled with wildcards
+   * Returns a new {@link ParameterizedType} of the same length as this type, filled with wildcards
    * ("?").
    */
   public ParameterizedType withWildcards() {
@@ -97,7 +97,7 @@ public class ParameterizedType extends ValueType implements Excerpt {
   }
 
   /**
-   * Returns a source excerpt suitable for declaring this type, i.e. SimpleName<...>
+   * Returns a source excerpt suitable for declaring this type, i.e. {@code SimpleName<...>}
    */
   public Excerpt declaration() {
     return new Excerpt() {

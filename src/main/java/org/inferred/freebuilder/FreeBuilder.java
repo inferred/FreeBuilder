@@ -31,23 +31,23 @@ import java.lang.annotation.Target;
  * class, and it will automatically generate an implementing class and a package-visible builder API
  * ({@code Person_Builder}), which you must subclass. For instance:
  *
- * <p><blockquote><pre> {@literal @}FreeBuilder
+ * <blockquote><pre>&#64;FreeBuilder
  * public interface Person {
- *   /** Returns the person's full (English) name. *{@literal /}
+ *   /** Returns the person's full (English) name. *&#47;
  *   String getName();
- *   /** Returns the person's age in years, rounded down. *{@literal /}
+ *   /** Returns the person's age in years, rounded down. *&#47;
  *   int getAge();
- *   /** Builder of {{@literal @}link Person} instances. *{@literal /}
+ *   /** Builder of {&#64;link Person} instances. *&#47;
  *   class Builder extends Person_Builder { }
  * }</pre></blockquote>
  *
  * <p>You can now use the {@code Builder} class:
  *
- * <p><blockquote><pre> Person person = new Person.Builder()
+ * <blockquote><pre>Person person = new Person.Builder()
  *     .setName("Phil")
  *     .setAge(31)
  *     .build();
- * System.out.println(person);  // Person{name=Phil, age=31}</pre></blockquote></p>
+ * System.out.println(person);  // Person{name=Phil, age=31}</pre></blockquote>
  *
  * @see
  * <a href="http://freebuilder.inferred.org/">Full documentation at freebuilder.inferred.org</a>
