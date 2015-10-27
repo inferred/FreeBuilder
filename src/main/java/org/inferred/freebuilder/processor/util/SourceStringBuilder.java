@@ -51,6 +51,12 @@ public final class SourceStringBuilder implements SourceBuilder {
   }
 
   @Override
+  public SourceBuilder add(Excerpt excerpt) {
+    excerpt.addTo(this);
+    return this;
+  }
+
+  @Override
   public SourceBuilder add(String fmt, Object... args) {
     Object[] substituteArgs = new Object[args.length];
     for (int i = 0; i < args.length; i++) {

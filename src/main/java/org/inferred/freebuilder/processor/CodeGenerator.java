@@ -18,10 +18,30 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
+
 import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.PropertyCodeGenerator.IS_TEMPLATE_REQUIRED_IN_CLEAR;
+import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.StateCondition.IS;
+
+import com.google.common.annotations.GwtCompatible;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Metadata.StandardMethod;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
+import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -30,24 +50,6 @@ import java.util.List;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
-
-import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.Metadata.StandardMethod;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-
-import com.google.common.annotations.GwtCompatible;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
@@ -151,9 +153,8 @@ public class CodeGenerator {
     code.addLine(" */")
         .addLine("public %s build() {", metadata.getType());
     if (hasRequiredProperties) {
-      code.addLine(
-          "  %s.checkState(_unsetProperties.isEmpty(), \"Not set: %%s\", _unsetProperties);",
-          Preconditions.class);
+      code.add(PreconditionExcerpts.checkState(
+          IS, "_unsetProperties.isEmpty()", "Not set: %s", "_unsetProperties"));
     }
     code.addLine("  return %s(this);", metadata.getValueType().constructor())
         .addLine("}");

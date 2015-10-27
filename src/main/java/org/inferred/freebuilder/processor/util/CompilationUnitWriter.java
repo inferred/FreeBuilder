@@ -90,6 +90,12 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
   }
 
   @Override
+  public SourceBuilder add(Excerpt excerpt) {
+    source.add(excerpt);
+    return this;
+  }
+
+  @Override
   public CompilationUnitWriter addLine(String fmt, Object... args) {
     source.addLine(fmt, args);
     return this;

@@ -17,6 +17,18 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.StateCondition.IS;
+import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.StateCondition.IS_NOT;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -26,15 +38,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing append-only semantics for {@link Map}
@@ -130,14 +133,19 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
               unboxedKeyType.or(keyType),
               unboxedValueType.or(valueType));
       if (!unboxedKeyType.isPresent()) {
-        code.addLine("  %s.checkNotNull(key);", Preconditions.class);
+        code.add(PreconditionExcerpts.checkNotNull("key"));
       }
       if (!unboxedValueType.isPresent()) {
-        code.addLine("  %s.checkNotNull(value);", Preconditions.class);
+        code.add(PreconditionExcerpts.checkNotNull("value"));
       }
-      code.addLine("  %s.checkArgument(!%s.containsKey(key),",
-              Preconditions.class, property.getName())
-          .addLine("      \"Key already present in %s: %%s\", key);", property.getName())
+      Excerpt containsKey = new Excerpt() {
+        @Override
+        public void addTo(SourceBuilder source) {
+          source.add("%s.containsKey(key)", property.getName());
+        }
+      };
+      code.add(PreconditionExcerpts.checkArgument(
+              IS_NOT, containsKey, "Key already present in " + property.getName() + ": %s", "key"))
           .addLine("  %s.put(key, value);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -189,11 +197,10 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
               unboxedKeyType.or(keyType),
               valueType);
       if (!unboxedKeyType.isPresent()) {
-        code.addLine("  %s.checkNotNull(key);", Preconditions.class);
+        code.add(PreconditionExcerpts.checkNotNull("key"));
       }
-      code.addLine("  %s.checkArgument(%s.containsKey(key),",
-              Preconditions.class, property.getName())
-          .addLine("      \"Key not present in %s: %%s\", key);", property.getName())
+      code.add(PreconditionExcerpts.checkArgument(
+              IS, containsKey, "Key not present in " + property.getName() + ": %s", "key"))
           .addLine("  %s.remove(key);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
