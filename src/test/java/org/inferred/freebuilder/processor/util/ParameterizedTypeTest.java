@@ -73,7 +73,7 @@ public class ParameterizedTypeTest {
   }
 
   private static String prettyPrint(Excerpt type, SourceLevel sourceLevel) {
-    return SourceStringBuilder.simple(sourceLevel).add("%s", type).toString();
+    return SourceStringBuilder.simple(sourceLevel, true).add("%s", type).toString();
   }
 
 }

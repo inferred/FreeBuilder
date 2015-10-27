@@ -21,6 +21,7 @@ import static org.inferred.freebuilder.processor.Util.upperBound;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
@@ -31,6 +32,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -244,8 +246,13 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("%s = %s.copyOf(%s.%s);",
-          finalField, ImmutableMap.class, builder, property.getName());
+      code.add("%s = ", finalField);
+      if (code.isGuavaAvailable()) {
+        code.add("%s.copyOf", ImmutableMap.class);
+      } else {
+        code.add("immutableMap");
+      }
+      code.add("(%s.%s);\n", builder, property.getName());
     }
 
     @Override
@@ -284,6 +291,11 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addPartialClear(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
     }
+
+    @Override
+    public Set<StaticMethod> getStaticMethods() {
+      return ImmutableSet.copyOf(StaticMethod.values());
+    }
   }
 
   private static Optional<TypeMirror> unboxed(Types types, TypeMirror elementType) {
@@ -294,5 +306,34 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       unboxedType = Optional.absent();
     }
     return unboxedType;
+  }
+
+  private enum StaticMethod implements Excerpt {
+    IMMUTABLE_MAP() {
+      @Override
+      public void addTo(SourceBuilder code) {
+        if (!code.isGuavaAvailable()) {
+          code.addLine("")
+              .addLine("private static <K, V> %1$s<K, V> immutableMap(%1$s<K, V> entries) {",
+                  Map.class)
+              .addLine("  switch (entries.size()) {")
+              .addLine("  case 0:")
+              .addLine("    return %s.emptyMap();", Collections.class)
+              .addLine("  case 1:")
+              .addLine("    %s<K, V> entry = entries.entrySet().iterator().next();",
+                  Map.Entry.class)
+              .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
+                  Collections.class)
+              .addLine("  default:")
+              .add("    return %s.unmodifiableMap(new %s<", Collections.class, LinkedHashMap.class);
+          if (!code.getSourceLevel().supportsDiamondOperator()) {
+            code.add("K, V");
+          }
+          code.add(">(entries));\n")
+              .addLine("  }")
+              .addLine("}");
+        }
+      }
+    }
   }
 }

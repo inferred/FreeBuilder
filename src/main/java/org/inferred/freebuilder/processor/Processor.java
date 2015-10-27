@@ -31,10 +31,12 @@ import javax.tools.Diagnostic.Kind;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.CompilationUnitWriter;
+import org.inferred.freebuilder.processor.util.Shading;
 import org.inferred.freebuilder.processor.util.SourceLevel;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -79,6 +81,7 @@ public class Processor extends AbstractProcessor {
             processingEnv.getFiler(),
             processingEnv.getElementUtils(),
             SourceLevel.from(processingEnv.getSourceVersion()),
+            isGuavaAvailable(),
             metadata.getGeneratedBuilder().getQualifiedName(),
             metadata.getVisibleNestedTypes(),
             type);
@@ -104,5 +107,11 @@ public class Processor extends AbstractProcessor {
       }
     }
     return false;
+  }
+
+  private boolean isGuavaAvailable() {
+    String name = Shading.unshadedName(ImmutableList.class.getName());
+    TypeElement element = processingEnv.getElementUtils().getTypeElement(name);
+    return (element != null);
   }
 }

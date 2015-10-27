@@ -36,7 +36,7 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
 
   private final Writer writer;
   private final ImportManager importManager;
-  private final SourceStringBuilder source;
+  private final SourceBuilder source;
 
   /**
    * Returns a {@link CompilationUnitWriter} for {@code classToWrite}. The file preamble (package
@@ -51,6 +51,7 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
       Filer filer,
       Elements elements,
       SourceLevel sourceLevel,
+      boolean isGuavaAvailable,
       QualifiedName classToWrite,
       Collection<QualifiedName> nestedClasses,
       Element originatingElement) throws FilerException {
@@ -80,7 +81,7 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
       importManagerBuilder.addImplicitImport(nestedClass);
     }
     importManager = importManagerBuilder.build();
-    source = new SourceStringBuilder(sourceLevel, importManager);
+    source = new SourceStringBuilder(sourceLevel, isGuavaAvailable, importManager);
   }
 
   @Override
@@ -102,8 +103,18 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
   }
 
   @Override
+  public SourceStringBuilder subBuilder() {
+    return source.subBuilder();
+  }
+
+  @Override
   public SourceLevel getSourceLevel() {
     return source.getSourceLevel();
+  }
+
+  @Override
+  public boolean isGuavaAvailable() {
+    return source.isGuavaAvailable();
   }
 
   @Override

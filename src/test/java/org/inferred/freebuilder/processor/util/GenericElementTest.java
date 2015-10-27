@@ -44,7 +44,7 @@ public class GenericElementTest {
         new GenericElement.Builder(FOO_BAR_NAME).build();
     assertThat(foobar.getSimpleName().toString()).isEqualTo("FooBar");
     assertThat(foobar.getTypeParameters()).isEmpty();
-    assertThat(SourceStringBuilder.simple(SourceLevel.JAVA_7).add("%s", foobar).toString())
+    assertThat(SourceStringBuilder.simple(SourceLevel.JAVA_7, true).add("%s", foobar).toString())
         .isEqualTo("FooBar");
   }
 
@@ -92,7 +92,7 @@ public class GenericElementTest {
       @Override public Void apply(DeclaredType foobar) {
         assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
         assertThat(foobar.getTypeArguments()).hasSize(2);
-        assertThat(SourceStringBuilder.simple(SourceLevel.JAVA_7).add("%s", foobar).toString())
+        assertThat(SourceStringBuilder.simple(SourceLevel.JAVA_7, true).add("%s", foobar).toString())
             .isEqualTo("FooBar<T, C>");
         return null;
       }
@@ -114,7 +114,7 @@ public class GenericElementTest {
       @Override public Void apply(DeclaredType foobar) {
         assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
         assertThat(foobar.getTypeArguments()).hasSize(2);
-        assertThat(SourceStringBuilder.simple(SourceLevel.JAVA_7).add("%s", foobar).toString())
+        assertThat(SourceStringBuilder.simple(SourceLevel.JAVA_7, true).add("%s", foobar).toString())
             .isEqualTo("FooBar<T, C>");
         return null;
       }
@@ -138,7 +138,7 @@ public class GenericElementTest {
         TypeElement foobarElement = maybeAsTypeElement(foobar).get();
         assertThat(foobarElement.getSimpleName().toString()).isEqualTo("FooBar");
         assertThat(foobar.getTypeArguments()).hasSize(1);
-        assertThat(SourceStringBuilder.simple(SourceLevel.JAVA_7).add("%s", foobar).toString())
+        assertThat(SourceStringBuilder.simple(SourceLevel.JAVA_7, true).add("%s", foobar).toString())
             .isEqualTo("FooBar<E>");
         // E extends FooBar<E>
         TypeParameterElement typeParameter = foobarElement.getTypeParameters().get(0);

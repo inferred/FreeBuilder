@@ -62,5 +62,15 @@ public interface SourceBuilder {
    */
   SourceBuilder add(Excerpt excerpt);
 
+  /**
+   * Returns a {@code SourceStringBuilder} with the same configuration as this builder. In
+   * particular, the {@code TypeShortener} will be shared, so any types added to the sub-builder
+   * will be included in the imports for this builder (and its parents).
+   */
+  SourceStringBuilder subBuilder();
+
   SourceLevel getSourceLevel();
+
+  boolean isGuavaAvailable();
+
 }

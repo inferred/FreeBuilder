@@ -46,7 +46,7 @@ public class SourceStringBuilderTest {
   @Rule public final ModelRule model = new ModelRule();
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final ImportManager shortener = new ImportManager.Builder().build();
-  private final SourceStringBuilder builder = new SourceStringBuilder(JAVA_6, shortener);
+  private final SourceBuilder builder = new SourceStringBuilder(JAVA_6, true, shortener);
 
   @Test
   public void testConstructor() {

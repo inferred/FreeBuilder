@@ -149,7 +149,7 @@ public class ParameterizedType extends ValueType implements Excerpt {
 
   @Override
   public String toString() {
-    return new SourceStringBuilder(SourceLevel.JAVA_6, new TypeShortener.NeverShorten())
+    return new SourceStringBuilder(SourceLevel.JAVA_6, true, new TypeShortener.NeverShorten())
         .add("%s", this)
         .toString();
   }
