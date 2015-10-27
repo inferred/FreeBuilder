@@ -15,6 +15,9 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
@@ -106,9 +109,11 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
         }
         writer.append("\n");
       }
-      writer.append(source.toString());
+      writer.append(new Formatter().formatSource(source.toString()));
       writer.close();
     } catch (IOException e) {
+      throw new RuntimeException(e);
+    } catch (FormatterException e) {
       throw new RuntimeException(e);
     }
   }
