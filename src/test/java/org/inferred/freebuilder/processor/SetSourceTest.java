@@ -24,11 +24,14 @@ import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_7;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceLevel;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,10 +44,9 @@ public class SetSourceTest {
 
   @Test
   public void test_j6() {
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, createMetadata());
+    Metadata metadata = createMetadata();
 
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -187,7 +189,7 @@ public class SetSourceTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name });",
+        "      return Arrays.hashCode(new Object[] {name});",
         "    }",
         "",
         "    @Override",
@@ -222,7 +224,7 @@ public class SetSourceTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name });",
+        "      return Arrays.hashCode(new Object[] {name});",
         "    }",
         "",
         "    @Override",
@@ -235,10 +237,9 @@ public class SetSourceTest {
 
   @Test
   public void test_j7() {
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_7);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, createMetadata());
+    Metadata metadata = createMetadata();
 
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -419,6 +420,16 @@ public class SetSourceTest {
         "    }",
         "  }",
         "}\n"));
+  }
+
+  private static String generateSource(Metadata metadata, SourceLevel sourceLevel) {
+    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(sourceLevel);
+    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
+    try {
+      return new Formatter().formatSource(sourceBuilder.toString());
+    } catch (FormatterException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**

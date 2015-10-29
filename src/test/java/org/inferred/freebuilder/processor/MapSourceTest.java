@@ -25,11 +25,14 @@ import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_7;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceLevel;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,10 +45,9 @@ public class MapSourceTest {
 
   @Test
   public void test_j6() {
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, createMetadata());
+    Metadata metadata = createMetadata();
 
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -67,8 +69,8 @@ public class MapSourceTest {
         "   */",
         "  public Person.Builder putName(int key, String value) {",
         "    Preconditions.checkNotNull(value);",
-        "    Preconditions.checkArgument(!name.containsKey(key),",
-        "        \"Key already present in name: %s\", key);",
+        "    Preconditions.checkArgument(!name.containsKey(key), "
+            + "\"Key already present in name: %s\", key);",
         "    name.put(key, value);",
         "    return (Person.Builder) this;",
         "  }",
@@ -98,14 +100,14 @@ public class MapSourceTest {
         "   * @throws IllegalArgumentException if {@code key} is not present",
         "   */",
         "  public Person.Builder removeName(int key) {",
-        "    Preconditions.checkArgument(name.containsKey(key),",
-        "        \"Key not present in name: %s\", key);",
+        "    Preconditions.checkArgument(name.containsKey(key), "
+            + "\"Key not present in name: %s\", key);",
         "    name.remove(key);",
         "    return (Person.Builder) this;",
         "  }",
         "",
         "  /**",
-        "   * Removes all of the mappings from the map to be returned from ",
+        "   * Removes all of the mappings from the map to be returned from",
         "   * {@link Person#getName()}.",
         "   *",
         "   * @return this {@code Builder} object",
@@ -193,7 +195,7 @@ public class MapSourceTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name });",
+        "      return Arrays.hashCode(new Object[] {name});",
         "    }",
         "",
         "    @Override",
@@ -228,7 +230,7 @@ public class MapSourceTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name });",
+        "      return Arrays.hashCode(new Object[] {name});",
         "    }",
         "",
         "    @Override",
@@ -241,10 +243,9 @@ public class MapSourceTest {
 
   @Test
   public void test_j7() {
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_7);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, createMetadata());
+    Metadata metadata = createMetadata();
 
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -265,8 +266,8 @@ public class MapSourceTest {
         "   */",
         "  public Person.Builder putName(int key, String value) {",
         "    Preconditions.checkNotNull(value);",
-        "    Preconditions.checkArgument(!name.containsKey(key),",
-        "        \"Key already present in name: %s\", key);",
+        "    Preconditions.checkArgument(!name.containsKey(key), "
+            + "\"Key already present in name: %s\", key);",
         "    name.put(key, value);",
         "    return (Person.Builder) this;",
         "  }",
@@ -296,14 +297,14 @@ public class MapSourceTest {
         "   * @throws IllegalArgumentException if {@code key} is not present",
         "   */",
         "  public Person.Builder removeName(int key) {",
-        "    Preconditions.checkArgument(name.containsKey(key),",
-        "        \"Key not present in name: %s\", key);",
+        "    Preconditions.checkArgument(name.containsKey(key), "
+            + "\"Key not present in name: %s\", key);",
         "    name.remove(key);",
         "    return (Person.Builder) this;",
         "  }",
         "",
         "  /**",
-        "   * Removes all of the mappings from the map to be returned from ",
+        "   * Removes all of the mappings from the map to be returned from",
         "   * {@link Person#getName()}.",
         "   *",
         "   * @return this {@code Builder} object",
@@ -429,6 +430,16 @@ public class MapSourceTest {
         "    }",
         "  }",
         "}\n"));
+  }
+
+  private static String generateSource(Metadata metadata, SourceLevel sourceLevel) {
+    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(sourceLevel);
+    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
+    try {
+      return new Formatter().formatSource(sourceBuilder.toString());
+    } catch (FormatterException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
