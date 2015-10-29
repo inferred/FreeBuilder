@@ -80,7 +80,7 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
       importManagerBuilder.addImplicitImport(nestedClass);
     }
     importManager = importManagerBuilder.build();
-    source = new SourceStringBuilder(sourceLevel, importManager, new StringBuilder());
+    source = new SourceStringBuilder(sourceLevel, importManager);
   }
 
   @Override

@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
+
 import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -33,8 +34,8 @@ import javax.lang.model.type.TypeMirror;
 public final class SourceStringBuilder implements SourceBuilder {
 
   private final SourceLevel sourceLevel;
-  private final StringBuilder destination;
   private final TypeShortener shortener;
+  private final StringBuilder destination = new StringBuilder();
 
   /**
    * Returns a {@link SourceStringBuilder} that always shortens types, even if that causes
@@ -45,12 +46,7 @@ public final class SourceStringBuilder implements SourceBuilder {
   }
 
   SourceStringBuilder(SourceLevel sourceLevel, TypeShortener shortener) {
-    this(sourceLevel, shortener, new StringBuilder());
-  }
-
-  SourceStringBuilder(SourceLevel sourceLevel, TypeShortener shortener, StringBuilder destination) {
     this.sourceLevel = sourceLevel;
-    this.destination = destination;
     this.shortener = shortener;
   }
 
