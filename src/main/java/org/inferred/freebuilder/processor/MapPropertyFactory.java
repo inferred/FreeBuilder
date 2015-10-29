@@ -136,7 +136,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("  %s.checkArgument(!%s.containsKey(key),",
               Preconditions.class, property.getName())
           .addLine("      \"Key already present in %s: %%s\", key);", property.getName())
-          .addLine("  this.%s.put(key, value);", property.getName())
+          .addLine("  %s.put(key, value);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
 
@@ -208,7 +208,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
               metadata.getBuilder(),
               CLEAR_PREFIX,
               property.getCapitalizedName())
-          .addLine("  this.%s.clear();", property.getName())
+          .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
 
