@@ -22,7 +22,6 @@ import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.PropertyCodeGenerator.IS_TEMPLATE_REQUIRED_IN_CLEAR;
-import static org.inferred.freebuilder.processor.util.SourceBuilders.withIndent;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -73,28 +72,26 @@ public class CodeGenerator {
 
     addBuilderTypeDeclaration(code, metadata);
     code.addLine(" {");
-    SourceBuilder body = withIndent(code, 2);
-
-    addConstantDeclarations(metadata, body);
+    addConstantDeclarations(metadata, code);
     if (any(metadata.getProperties(), IS_REQUIRED)) {
-      addPropertyEnum(metadata, body);
+      addPropertyEnum(metadata, code);
     }
 
-    addFieldDeclarations(body, metadata);
+    addFieldDeclarations(code, metadata);
 
-    addAccessors(metadata, body);
-    addMergeFromValueMethod(body, metadata);
-    addMergeFromBuilderMethod(body, metadata);
-    addClearMethod(body, metadata);
-    addBuildMethod(body, metadata);
-    addBuildPartialMethod(body, metadata);
+    addAccessors(metadata, code);
+    addMergeFromValueMethod(code, metadata);
+    addMergeFromBuilderMethod(code, metadata);
+    addClearMethod(code, metadata);
+    addBuildMethod(code, metadata);
+    addBuildPartialMethod(code, metadata);
 
-    addValueType(body, metadata);
+    addValueType(code, metadata);
     if (metadata.isGwtSerializable()) {
-      addCustomValueSerializer(body, metadata);
-      addGwtWhitelistType(body, metadata);
+      addCustomValueSerializer(code, metadata);
+      addGwtWhitelistType(code, metadata);
     }
-    addPartialType(body, metadata);
+    addPartialType(code, metadata);
     code.addLine("}");
   }
 
@@ -170,7 +167,7 @@ public class CodeGenerator {
         .addLine(" */")
         .addLine("public %s mergeFrom(%s value) {", metadata.getBuilder(), metadata.getType());
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addMergeFromValue(withIndent(code, 2), "value");
+      property.getCodeGenerator().addMergeFromValue(code, "value");
     }
     code.add("  return (%s) this;\n", metadata.getBuilder());
     code.addLine("}");
@@ -199,10 +196,10 @@ public class CodeGenerator {
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("  if (!_templateUnset.contains(%s.%s)) {",
             metadata.getPropertyEnum(), property.getAllCapsName());
-        property.getCodeGenerator().addMergeFromBuilder(withIndent(code, 4), metadata, "template");
+        property.getCodeGenerator().addMergeFromBuilder(code, metadata, "template");
         code.addLine("  }");
       } else {
-        property.getCodeGenerator().addMergeFromBuilder(withIndent(code, 2), metadata, "template");
+        property.getCodeGenerator().addMergeFromBuilder(code, metadata, "template");
       }
     }
     code.addLine("  return (%s) this;", metadata.getBuilder());
@@ -225,9 +222,9 @@ public class CodeGenerator {
       }
       for (PropertyCodeGenerator codeGenerator : codeGenerators) {
         if (codeGenerator.isTemplateRequiredInClear()) {
-          codeGenerator.addClear(withIndent(code, 2), "_template");
+          codeGenerator.addClear(code, "_template");
         } else {
-          codeGenerator.addClear(withIndent(code, 2), null);
+          codeGenerator.addClear(code, null);
         }
       }
       if (any(metadata.getProperties(), IS_REQUIRED)) {
@@ -247,7 +244,7 @@ public class CodeGenerator {
           .addLine(" */")
           .addLine("public %s clear() {", metadata.getBuilder());
       for (Property property : metadata.getProperties()) {
-        property.getCodeGenerator().addPartialClear(withIndent(code, 2));
+        property.getCodeGenerator().addPartialClear(code);
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -312,7 +309,7 @@ public class CodeGenerator {
         extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addValueFieldDeclaration(withIndent(code, 2), property.getName());
+      property.getCodeGenerator().addValueFieldDeclaration(code, property.getName());
     }
     // Constructor
     code.addLine("")
@@ -321,7 +318,7 @@ public class CodeGenerator {
             metadata.getGeneratedBuilder());
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator()
-          .addFinalFieldAssignment(withIndent(code, 4), "this." + property.getName(), "builder");
+          .addFinalFieldAssignment(code, "this." + property.getName(), "builder");
     }
     code.addLine("  }");
     // Getters
@@ -511,12 +508,12 @@ public class CodeGenerator {
         code.addLine("      %s %s = reader.read%s();",
             property.getType(), property.getName(), withInitialCapital(property.getType()));
         property.getCodeGenerator()
-            .addSetFromResult(withIndent(code, 6), "builder", property.getName());
+            .addSetFromResult(code, "builder", property.getName());
       } else if (String.class.getName().equals(property.getType().toString())) {
         code.addLine("      %s %s = reader.readString();",
             property.getType(), property.getName());
         property.getCodeGenerator()
-            .addSetFromResult(withIndent(code, 6), "builder", property.getName());
+            .addSetFromResult(code, "builder", property.getName());
       } else {
         code.addLine("    try {");
         if (!property.isFullyCheckedCast()) {
@@ -525,7 +522,7 @@ public class CodeGenerator {
         code.addLine("      %1$s %2$s = (%1$s) reader.readObject();",
                 property.getType(), property.getName());
         property.getCodeGenerator()
-            .addSetFromResult(withIndent(code, 8), "builder", property.getName());
+            .addSetFromResult(code, "builder", property.getName());
         code.addLine("    } catch (%s e) {", ClassCastException.class)
             .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
             .addLine("          \"Wrong type for property '%s'\", e);", property.getName())
@@ -609,7 +606,7 @@ public class CodeGenerator {
             extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addValueFieldDeclaration(withIndent(code, 2), property.getName());
+      property.getCodeGenerator().addValueFieldDeclaration(code, property.getName());
     }
     if (hasRequiredProperties) {
       code.addLine("  private final %s<%s> _unsetProperties;",
@@ -622,7 +619,7 @@ public class CodeGenerator {
             metadata.getGeneratedBuilder());
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator()
-          .addPartialFieldAssignment(withIndent(code, 4), "this." + property.getName(), "builder");
+          .addPartialFieldAssignment(code, "this." + property.getName(), "builder");
     }
     if (hasRequiredProperties) {
       code.addLine("    this._unsetProperties = builder._unsetProperties.clone();");

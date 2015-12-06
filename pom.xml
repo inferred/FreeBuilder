@@ -20,7 +20,7 @@
 
   <groupId>org.inferred</groupId>
   <artifactId>freebuilder</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.4-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>@FreeBuilder</name>
@@ -83,6 +83,11 @@
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
       <version>3.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.googlejavaformat</groupId>
+      <artifactId>google-java-format</artifactId>
+      <version>0.1-alpha</version>
     </dependency>
     <dependency>
       <groupId>com.google.auto.service</groupId>
@@ -275,19 +280,43 @@
                   <include>com.google.guava:guava</include>
                   <include>com.google.code.findbugs:jsr305</include>
                   <include>org.apache.commons:commons-lang3</include>
+                  <include>com.google.googlejavaformat:google-java-format</include>
                 </includes>
               </artifactSet>
               <filters>
                 <filter>
-                  <artifact>com.google.code.findbugs:jsr305</artifact>
-                  <includes>
-                    <include>javax/annotation/Nullable.class</include>
-                  </includes>
-                </filter>
-                <filter>
                   <artifact>*:*</artifact>
                   <excludes>
-                    <exclude>META-INF/maven/com.google.guava/**</exclude>
+                    <!-- Exclude upstream META-INF data -->
+                    <exclude>META-INF/maven/**/*</exclude>
+
+                    <!-- Exclude all of jsr305 except Nullable -->
+                    <exclude>javax/annotation/*/**/*</exclude>
+                    <exclude>javax/annotation/C*</exclude>
+                    <exclude>javax/annotation/D*</exclude>
+                    <exclude>javax/annotation/M*</exclude>
+                    <exclude>javax/annotation/No*</exclude>
+                    <exclude>javax/annotation/O*</exclude>
+                    <exclude>javax/annotation/P*</exclude>
+                    <exclude>javax/annotation/R*</exclude>
+                    <exclude>javax/annotation/S*</exclude>
+                    <exclude>javax/annotation/T*</exclude>
+                    <exclude>javax/annotation/U*</exclude>
+                    <exclude>javax/annotation/W*</exclude>
+
+                    <!-- Exclude Eclipse (via google-java-format) detritus -->
+                    <exclude>META-INF/*</exclude>
+                    <exclude>META-INF/services/org.osgi.*</exclude>
+                    <exclude>.api_description</exclude>
+                    <exclude>.options</exclude>
+                    <exclude>about.html</exclude>
+                    <exclude>about_files/**</exclude>
+                    <exclude>ant_tasks/**</exclude>
+                    <exclude>*.jar</exclude>
+                    <exclude>*.profile</exclude>
+                    <exclude>*.properties</exclude>
+                    <exclude>plugin.xml</exclude>
+                    <exclude>*.list</exclude>
                   </excludes>
                 </filter>
               </filters>
@@ -299,6 +328,14 @@
                 <relocation>
                   <pattern>org.apache</pattern>
                   <shadedPattern>org.inferred.freebuilder.shaded.org.apache</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.eclipse</pattern>
+                  <shadedPattern>org.inferred.freebuilder.shaded.org.eclipse</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.osgi</pattern>
+                  <shadedPattern>org.inferred.freebuilder.shaded.org.osgi</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>

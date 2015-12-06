@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
@@ -23,23 +24,26 @@ import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
 import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.TypeVariableImpl.newTypeVariable;
 
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
+import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
-import org.inferred.freebuilder.processor.OptionalPropertyFactory.OptionalType;
 import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.OptionalPropertyFactory.OptionalType;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceLevel;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 
 @RunWith(JUnit4.class)
 public class CodeGeneratorTest {
@@ -87,10 +91,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -111,7 +112,8 @@ public class CodeGeneratorTest {
         "      this.name = name;",
         "    }",
         "",
-        "    @Override public String toString() {",
+        "    @Override",
+        "    public String toString() {",
         "      return name;",
         "    }",
         "  }",
@@ -140,8 +142,7 @@ public class CodeGeneratorTest {
         "   */",
         "  public String getName() {",
         "    Preconditions.checkState(",
-        "        !_unsetProperties.contains(Person_Builder.Property.NAME),",
-        "        \"name not set\");",
+        "        !_unsetProperties.contains(Person_Builder.Property.NAME), \"name not set\");",
         "    return name;",
         "  }",
         "",
@@ -163,8 +164,7 @@ public class CodeGeneratorTest {
         "   */",
         "  public int getAge() {",
         "    Preconditions.checkState(",
-        "        !_unsetProperties.contains(Person_Builder.Property.AGE),",
-        "        \"age not set\");",
+        "        !_unsetProperties.contains(Person_Builder.Property.AGE), \"age not set\");",
         "    return age;",
         "  }",
         "",
@@ -184,8 +184,8 @@ public class CodeGeneratorTest {
         "  public Person.Builder mergeFrom(Person.Builder template) {",
         "    // Upcast to access the private _unsetProperties field.",
         "    // Otherwise, oddly, we get an access violation.",
-        "    EnumSet<Person_Builder.Property> _templateUnset = ((Person_Builder) template)"
-            + "._unsetProperties;",
+        "    EnumSet<Person_Builder.Property> _templateUnset = "
+            + "((Person_Builder) template)._unsetProperties;",
         "    if (!_templateUnset.contains(Person_Builder.Property.NAME)) {",
         "      setName(template.getName());",
         "    }",
@@ -268,14 +268,12 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + \"name=\" + name + \", \"",
-        "          + \"age=\" + age + \"}\";",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -312,8 +310,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      if (name != other.name",
-        "          && (name == null || !name.equals(other.name))) {",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
         "        return false;",
         "      }",
         "      if (age != other.age) {",
@@ -324,17 +321,17 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age, _unsetProperties });",
+        "      return Arrays.hashCode(new Object[] {name, age, _unsetProperties});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (!_unsetProperties.contains(Person_Builder.Property.NAME)",
-        "                  ? \"name=\" + name : null),",
-        "              (!_unsetProperties.contains(Person_Builder.Property.AGE)",
-        "                  ? \"age=\" + age : null))",
+        "              (!_unsetProperties.contains(Person_Builder.Property.NAME) "
+            + "? \"name=\" + name : null),",
+        "              (!_unsetProperties.contains(Person_Builder.Property.AGE) "
+            + "? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -384,10 +381,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -518,14 +512,12 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + \"name=\" + name + \", \"",
-        "          + \"age=\" + age + \"}\";",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -565,16 +557,13 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              \"name=\" + name,",
-        "              \"age=\" + age)",
-        "          + \"}\";",
+        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
+            + "+ \"}\";",
         "    }",
         "  }",
         "}\n"));
@@ -629,10 +618,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -838,12 +824,10 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      if (name != other.name",
-        "          && (name == null || !name.equals(other.name))) {",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
         "        return false;",
         "      }",
-        "      if (age != other.age",
-        "          && (age == null || !age.equals(other.age))) {",
+        "      if (age != other.age && (age == null || !age.equals(other.age))) {",
         "        return false;",
         "      }",
         "      return true;",
@@ -851,15 +835,15 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
         "      return \"Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null),",
-        "              (age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), " +
+            "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -895,12 +879,10 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      if (name != other.name",
-        "          && (name == null || !name.equals(other.name))) {",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
         "        return false;",
         "      }",
-        "      if (age != other.age",
-        "          && (age == null || !age.equals(other.age))) {",
+        "      if (age != other.age && (age == null || !age.equals(other.age))) {",
         "        return false;",
         "      }",
         "      return true;",
@@ -908,15 +890,15 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null),",
-        "              (age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), " +
+            "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -970,10 +952,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -1096,12 +1075,10 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      if (name != other.name",
-        "          && (name == null || !name.equals(other.name))) {",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
         "        return false;",
         "      }",
-        "      if (age != other.age",
-        "          && (age == null || !age.equals(other.age))) {",
+        "      if (age != other.age && (age == null || !age.equals(other.age))) {",
         "        return false;",
         "      }",
         "      return true;",
@@ -1109,15 +1086,15 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
         "      return \"Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null),",
-        "              (age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), " +
+            "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -1149,12 +1126,10 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      if (name != other.name",
-        "          && (name == null || !name.equals(other.name))) {",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
         "        return false;",
         "      }",
-        "      if (age != other.age",
-        "          && (age == null || !age.equals(other.age))) {",
+        "      if (age != other.age && (age == null || !age.equals(other.age))) {",
         "        return false;",
         "      }",
         "      return true;",
@@ -1162,15 +1137,15 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null),",
-        "              (age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), " +
+            "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -1224,10 +1199,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -1447,14 +1419,12 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + \"name=\" + name + \", \"",
-        "          + \"age=\" + age + \"}\";",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -1494,16 +1464,13 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              \"name=\" + name,",
-        "              \"age=\" + age)",
-        "          + \"}\";",
+        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
+            + "+ \"}\";",
         "    }",
         "  }",
         "}\n"));
@@ -1551,10 +1518,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters("A", "B"))
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_6);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -1575,7 +1539,8 @@ public class CodeGeneratorTest {
         "      this.name = name;",
         "    }",
         "",
-        "    @Override public String toString() {",
+        "    @Override",
+        "    public String toString() {",
         "      return name;",
         "    }",
         "  }",
@@ -1604,8 +1569,7 @@ public class CodeGeneratorTest {
         "   */",
         "  public A getName() {",
         "    Preconditions.checkState(",
-        "        !_unsetProperties.contains(Person_Builder.Property.NAME),",
-        "        \"name not set\");",
+        "        !_unsetProperties.contains(Person_Builder.Property.NAME), \"name not set\");",
         "    return name;",
         "  }",
         "",
@@ -1628,8 +1592,7 @@ public class CodeGeneratorTest {
         "   */",
         "  public B getAge() {",
         "    Preconditions.checkState(",
-        "        !_unsetProperties.contains(Person_Builder.Property.AGE),",
-        "        \"age not set\");",
+        "        !_unsetProperties.contains(Person_Builder.Property.AGE), \"age not set\");",
         "    return age;",
         "  }",
         "",
@@ -1649,8 +1612,8 @@ public class CodeGeneratorTest {
         "  public Person.Builder<A, B> mergeFrom(Person.Builder<A, B> template) {",
         "    // Upcast to access the private _unsetProperties field.",
         "    // Otherwise, oddly, we get an access violation.",
-        "    EnumSet<Person_Builder.Property> _templateUnset = ((Person_Builder<A, B>) template)"
-            + "._unsetProperties;",
+        "    EnumSet<Person_Builder.Property> _templateUnset =",
+        "        ((Person_Builder<A, B>) template)._unsetProperties;",
         "    if (!_templateUnset.contains(Person_Builder.Property.NAME)) {",
         "      setName(template.getName());",
         "    }",
@@ -1733,14 +1696,12 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age });",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + \"name=\" + name + \", \"",
-        "          + \"age=\" + age + \"}\";",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -1777,12 +1738,10 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial<?, ?> other = (Person_Builder.Partial<?, ?>) obj;",
-        "      if (name != other.name",
-        "          && (name == null || !name.equals(other.name))) {",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
         "        return false;",
         "      }",
-        "      if (age != other.age",
-        "          && (age == null || !age.equals(other.age))) {",
+        "      if (age != other.age && (age == null || !age.equals(other.age))) {",
         "        return false;",
         "      }",
         "      return _unsetProperties.equals(other._unsetProperties);",
@@ -1790,17 +1749,17 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] { name, age, _unsetProperties });",
+        "      return Arrays.hashCode(new Object[] {name, age, _unsetProperties});",
         "    }",
         "",
         "    @Override",
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (!_unsetProperties.contains(Person_Builder.Property.NAME)",
-        "                  ? \"name=\" + name : null),",
-        "              (!_unsetProperties.contains(Person_Builder.Property.AGE)",
-        "                  ? \"age=\" + age : null))",
+        "              (!_unsetProperties.contains(Person_Builder.Property.NAME) "
+            + "? \"name=\" + name : null),",
+        "              (!_unsetProperties.contains(Person_Builder.Property.AGE) "
+            + "? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -1850,10 +1809,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_7);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -1874,7 +1830,8 @@ public class CodeGeneratorTest {
         "      this.name = name;",
         "    }",
         "",
-        "    @Override public String toString() {",
+        "    @Override",
+        "    public String toString() {",
         "      return name;",
         "    }",
         "  }",
@@ -1903,8 +1860,7 @@ public class CodeGeneratorTest {
         "   */",
         "  public String getName() {",
         "    Preconditions.checkState(",
-        "        !_unsetProperties.contains(Person_Builder.Property.NAME),",
-        "        \"name not set\");",
+        "        !_unsetProperties.contains(Person_Builder.Property.NAME), \"name not set\");",
         "    return name;",
         "  }",
         "",
@@ -1926,8 +1882,7 @@ public class CodeGeneratorTest {
         "   */",
         "  public int getAge() {",
         "    Preconditions.checkState(",
-        "        !_unsetProperties.contains(Person_Builder.Property.AGE),",
-        "        \"age not set\");",
+        "        !_unsetProperties.contains(Person_Builder.Property.AGE), \"age not set\");",
         "    return age;",
         "  }",
         "",
@@ -1947,8 +1902,8 @@ public class CodeGeneratorTest {
         "  public Person.Builder mergeFrom(Person.Builder template) {",
         "    // Upcast to access the private _unsetProperties field.",
         "    // Otherwise, oddly, we get an access violation.",
-        "    EnumSet<Person_Builder.Property> _templateUnset = ((Person_Builder) template)"
-            + "._unsetProperties;",
+        "    EnumSet<Person_Builder.Property> _templateUnset = "
+            + "((Person_Builder) template)._unsetProperties;",
         "    if (!_templateUnset.contains(Person_Builder.Property.NAME)) {",
         "      setName(template.getName());",
         "    }",
@@ -2020,8 +1975,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -2031,9 +1985,7 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + \"name=\" + name + \", \"",
-        "          + \"age=\" + age + \"}\";",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -2084,10 +2036,11 @@ public class CodeGeneratorTest {
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (!_unsetProperties.contains(Person_Builder.Property.NAME)",
-        "                  ? \"name=\" + name : null),",
-        "              (!_unsetProperties.contains(Person_Builder.Property.AGE)",
-        "                  ? \"age=\" + age : null))",
+        "              (!_unsetProperties.contains(Person_Builder.Property.NAME) "
+            + "? \"name=\" + name : null),",
+        "              (!_unsetProperties.contains(Person_Builder.Property.AGE) "
+            + "? \"age=\" + age : null))",
+
         "          + \"}\";",
         "    }",
         "  }",
@@ -2137,10 +2090,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_7);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -2260,8 +2210,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -2271,9 +2220,7 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + \"name=\" + name + \", \"",
-        "          + \"age=\" + age + \"}\";",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -2302,8 +2249,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -2313,11 +2259,8 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              \"name=\" + name,",
-        "              \"age=\" + age)",
-        "          + \"}\";",
+        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
+            + "+ \"}\";",
         "    }",
         "  }",
         "}\n"));
@@ -2372,10 +2315,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_7);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -2581,8 +2521,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -2594,8 +2533,8 @@ public class CodeGeneratorTest {
         "    public String toString() {",
         "      return \"Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null),",
-        "              (age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), " +
+            "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -2631,8 +2570,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -2644,8 +2582,8 @@ public class CodeGeneratorTest {
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null),",
-        "              (age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), " +
+            "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -2699,10 +2637,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_7);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -2825,8 +2760,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -2838,8 +2772,8 @@ public class CodeGeneratorTest {
         "    public String toString() {",
         "      return \"Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null),",
-        "              (age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), "
+            + "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -2871,8 +2805,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -2884,8 +2817,8 @@ public class CodeGeneratorTest {
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null),",
-        "              (age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), "
+            + "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -2939,10 +2872,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_7);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -3151,8 +3081,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -3162,9 +3091,7 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + \"name=\" + name + \", \"",
-        "          + \"age=\" + age + \"}\";",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -3193,8 +3120,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -3204,11 +3130,8 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              \"name=\" + name,",
-        "              \"age=\" + age)",
-        "          + \"}\";",
+        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
+            + "+ \"}\";",
         "    }",
         "  }",
         "}\n"));
@@ -3256,10 +3179,7 @@ public class CodeGeneratorTest {
         .setValueType(generatedBuilder.nestedType("Value").withParameters("A", "B"))
         .build();
 
-    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(JAVA_7);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-
-    assertThat(sourceBuilder.toString()).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -3280,7 +3200,8 @@ public class CodeGeneratorTest {
         "      this.name = name;",
         "    }",
         "",
-        "    @Override public String toString() {",
+        "    @Override",
+        "    public String toString() {",
         "      return name;",
         "    }",
         "  }",
@@ -3309,8 +3230,7 @@ public class CodeGeneratorTest {
         "   */",
         "  public A getName() {",
         "    Preconditions.checkState(",
-        "        !_unsetProperties.contains(Person_Builder.Property.NAME),",
-        "        \"name not set\");",
+        "        !_unsetProperties.contains(Person_Builder.Property.NAME), \"name not set\");",
         "    return name;",
         "  }",
         "",
@@ -3333,8 +3253,7 @@ public class CodeGeneratorTest {
         "   */",
         "  public B getAge() {",
         "    Preconditions.checkState(",
-        "        !_unsetProperties.contains(Person_Builder.Property.AGE),",
-        "        \"age not set\");",
+        "        !_unsetProperties.contains(Person_Builder.Property.AGE), \"age not set\");",
         "    return age;",
         "  }",
         "",
@@ -3354,8 +3273,8 @@ public class CodeGeneratorTest {
         "  public Person.Builder<A, B> mergeFrom(Person.Builder<A, B> template) {",
         "    // Upcast to access the private _unsetProperties field.",
         "    // Otherwise, oddly, we get an access violation.",
-        "    EnumSet<Person_Builder.Property> _templateUnset = ((Person_Builder<A, B>) template)"
-            + "._unsetProperties;",
+        "    EnumSet<Person_Builder.Property> _templateUnset =",
+        "        ((Person_Builder<A, B>) template)._unsetProperties;",
         "    if (!_templateUnset.contains(Person_Builder.Property.NAME)) {",
         "      setName(template.getName());",
         "    }",
@@ -3427,8 +3346,7 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value<?, ?> other = (Person_Builder.Value<?, ?>) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age);",
+        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
         "    }",
         "",
         "    @Override",
@@ -3438,9 +3356,7 @@ public class CodeGeneratorTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + \"name=\" + name + \", \"",
-        "          + \"age=\" + age + \"}\";",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -3491,14 +3407,25 @@ public class CodeGeneratorTest {
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (!_unsetProperties.contains(Person_Builder.Property.NAME)",
-        "                  ? \"name=\" + name : null),",
-        "              (!_unsetProperties.contains(Person_Builder.Property.AGE)",
-        "                  ? \"age=\" + age : null))",
+        "              (!_unsetProperties.contains(Person_Builder.Property.NAME) "
+            + "? \"name=\" + name : null),",
+        "              (!_unsetProperties.contains(Person_Builder.Property.AGE) "
+            + "? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
         "}\n"));
   }
+
+  private static String generateSource(Metadata metadata, SourceLevel sourceLevel) {
+    SourceStringBuilder sourceBuilder = SourceStringBuilder.simple(sourceLevel);
+    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
+    try {
+      return new Formatter().formatSource(sourceBuilder.toString());
+    } catch (FormatterException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
 }
 
