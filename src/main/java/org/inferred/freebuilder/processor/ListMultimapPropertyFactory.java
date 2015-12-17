@@ -206,7 +206,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
               metadata.getBuilder(),
               CLEAR_PREFIX,
               property.getCapitalizedName())
-          .addLine("  this.%s.clear();", property.getName())
+          .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
 
