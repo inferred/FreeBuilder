@@ -47,6 +47,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
   private static final String ADD_ALL_PREFIX = "addAll";
   private static final String CLEAR_PREFIX = "clear";
   private static final String GET_PREFIX = "get";
+  private static final String REMOVE_PREFIX = "remove";
 
   @Override
   public Optional<CodeGenerator> create(Config config) {
@@ -170,6 +171,31 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("    %s%s(element);", ADD_PREFIX, property.getCapitalizedName())
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+
+      // remove(T element)
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Removes {@code element} from the set to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+      if (!unboxedType.isPresent()) {
+        code.addLine(" * @throws NullPointerException if {@code element} is null");
+      }
+      code.addLine(" */")
+          .addLine("public %s %s%s(%s element) {",
+              metadata.getBuilder(),
+              REMOVE_PREFIX,
+              property.getCapitalizedName(),
+              unboxedType.or(elementType));
+      if (unboxedType.isPresent()) {
+        code.addLine("  this.%s.remove(element);", property.getName());
+      } else {
+        code.add(checkNotNullPreamble("element"))
+            .addLine("  this.%s.remove(%s);", property.getName(), checkNotNullInline("element"));
+      }
+      code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
 
       // clear()
