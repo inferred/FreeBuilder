@@ -47,6 +47,8 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
 
   private static final String PUT_PREFIX = "put";
   private static final String PUT_ALL_PREFIX = "putAll";
+  private static final String REMOVE_PREFIX = "remove";
+  private static final String REMOVE_ALL_PREFIX = "removeAll";
   private static final String CLEAR_PREFIX = "clear";
   private static final String GET_PREFIX = "get";
 
@@ -191,6 +193,69 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
           .addLine("    %s%s(entry.getKey(), entry.getValue());",
               PUT_ALL_PREFIX, property.getCapitalizedName())
           .addLine("  }")
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+
+      // remove(K key, V value)
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Removes a single key-value pair with the key {@code key} and the value"
+              + " {@code value}")
+          .addLine(" * from the multimap to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" * If multiple key-value pairs in the multimap fit this description, which one")
+          .addLine(" * is removed is unspecified.")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+      if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
+        code.add(" * @throws NullPointerException if ");
+        if (unboxedKeyType.isPresent()) {
+          code.add("{@code value}");
+        } else if (unboxedValueType.isPresent()) {
+          code.add("{@code key}");
+        } else {
+          code.add("either {@code key} or {@code value}");
+        }
+        code.add(" is null\n");
+      }
+      code.addLine(" */")
+          .addLine("public %s %s%s(%s key, %s value) {",
+              metadata.getBuilder(),
+              REMOVE_PREFIX,
+              property.getCapitalizedName(),
+              unboxedKeyType.or(keyType),
+              unboxedValueType.or(valueType));
+      if (!unboxedKeyType.isPresent()) {
+        code.addLine("  %s.checkNotNull(key);", Preconditions.class);
+      }
+      if (!unboxedValueType.isPresent()) {
+        code.addLine("  %s.checkNotNull(value);", Preconditions.class);
+      }
+      code.addLine("  this.%s.remove(key, value);", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+
+      // removeAll(K key)
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Removes all values associated with the key {@code key} from the multimap to")
+          .addLine(" * be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+      if (!unboxedKeyType.isPresent()) {
+        code.add(" * @throws NullPointerException if {@code key} is null\n");
+      }
+      code.addLine(" */")
+          .addLine("public %s %s%s(%s key) {",
+              metadata.getBuilder(),
+              REMOVE_ALL_PREFIX,
+              property.getCapitalizedName(),
+              unboxedKeyType.or(keyType));
+      if (!unboxedKeyType.isPresent()) {
+        code.addLine("  %s.checkNotNull(key);", Preconditions.class);
+      }
+      code.addLine("  this.%s.removeAll(key);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
 
