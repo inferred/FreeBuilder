@@ -46,50 +46,11 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 
 @RunWith(JUnit4.class)
-public class CodeGeneratorTest {
+public class DefaultSourceTest {
 
   @Test
-  public void testSimpleDataType_j6() {
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(string)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(string);
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(INT);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", false))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
+  public void testRequiredProperties_j6() {
+    Metadata metadata = createMetadataWithRequiredProperties();
 
     assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -340,46 +301,7 @@ public class CodeGeneratorTest {
 
   @Test
   public void testNoRequiredProperties_j6() {
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(string)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(string);
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(INT);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", true))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
+    Metadata metadata = createMetadataWithDefaults();
 
     assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -571,52 +493,7 @@ public class CodeGeneratorTest {
 
   @Test
   public void testOptionalProperties_j6() {
-    GenericTypeElementImpl optional = newTopLevelGenericType("com.google.common.base.Optional");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    GenericTypeMirrorImpl optionalInteger = optional.newMirror(integer);
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl optionalString = optional.newMirror(string);
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(optionalString)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(optionalString);
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(optionalInteger)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(optionalInteger);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                name.build(), OptionalType.GUAVA, "setName", "setNullableName", "clearName", string,
-                Optional.<TypeMirror>absent(), false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                age.build(), OptionalType.GUAVA, "setAge", "setNullableAge", "clearAge", integer,
-                Optional.<TypeMirror>of(INT), false))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
+    Metadata metadata = createMetadataWithOptionalProperties();
 
     assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -907,50 +784,7 @@ public class CodeGeneratorTest {
 
   @Test
   public void testNullableProperties_j6() {
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(string)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(string)
-        .addAllNullableAnnotations(ImmutableSet.of(nullable));
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(integer)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(integer)
-        .addAllNullableAnnotations(ImmutableSet.of(nullable));
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", true))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
+    Metadata metadata = createMetadataWithNullableProperties();
 
     assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -1153,370 +987,8 @@ public class CodeGeneratorTest {
   }
 
   @Test
-  public void testListProperties_j6() {
-    GenericTypeElementImpl list = newTopLevelGenericType("com.google.common.base.List");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    GenericTypeMirrorImpl listInteger = list.newMirror(integer);
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl listString = list.newMirror(string);
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(listString)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(listString);
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(listInteger)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(listInteger);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
-                name.build(), string, Optional.<TypeMirror>absent()))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
-                age.build(), integer, Optional.<TypeMirror>of(INT)))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
-
-    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
-        "/**",
-        " * Auto-generated superclass of {@link Person.Builder},",
-        " * derived from the API of {@link Person}.",
-        " */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
-        "abstract class Person_Builder {",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
-        "",
-        "  private final ArrayList<String> name = new ArrayList<String>();",
-        "  private final ArrayList<Integer> age = new ArrayList<Integer>();",
-        "",
-        "  /**",
-        "   * Adds {@code element} to the list to be returned from {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code element} is null",
-        "   */",
-        "  public Person.Builder addName(String element) {",
-        "    this.name.add(Preconditions.checkNotNull(element));",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds each element of {@code elements} to the list to be returned from",
-        "   * {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code elements} is null or contains a",
-        "   *     null element",
-        "   */",
-        "  public Person.Builder addName(String... elements) {",
-        "    name.ensureCapacity(name.size() + elements.length);",
-        "    for (String element : elements) {",
-        "      addName(element);",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds each element of {@code elements} to the list to be returned from",
-        "   * {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code elements} is null or contains a",
-        "   *     null element",
-        "   */",
-        "  public Person.Builder addAllName(Iterable<? extends String> elements) {",
-        "    if (elements instanceof Collection) {",
-        "      name.ensureCapacity(name.size() + ((Collection<?>) elements).size());",
-        "    }",
-        "    for (String element : elements) {",
-        "      addName(element);",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Clears the list to be returned from {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder clearName() {",
-        "    this.name.clear();",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns an unmodifiable view of the list that will be returned by",
-        "   * {@link Person#getName()}.",
-        "   * Changes to this builder will be reflected in the view.",
-        "   */",
-        "  public List<String> getName() {",
-        "    return Collections.unmodifiableList(name);",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds {@code element} to the list to be returned from {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder addAge(int element) {",
-        "    this.age.add(element);",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds each element of {@code elements} to the list to be returned from",
-        "   * {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder addAge(int... elements) {",
-        "    age.ensureCapacity(age.size() + elements.length);",
-        "    for (int element : elements) {",
-        "      addAge(element);",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds each element of {@code elements} to the list to be returned from",
-        "   * {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code elements} is null or contains a",
-        "   *     null element",
-        "   */",
-        "  public Person.Builder addAllAge(Iterable<? extends Integer> elements) {",
-        "    if (elements instanceof Collection) {",
-        "      age.ensureCapacity(age.size() + ((Collection<?>) elements).size());",
-        "    }",
-        "    for (int element : elements) {",
-        "      addAge(element);",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Clears the list to be returned from {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder clearAge() {",
-        "    this.age.clear();",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns an unmodifiable view of the list that will be returned by",
-        "   * {@link Person#getAge()}.",
-        "   * Changes to this builder will be reflected in the view.",
-        "   */",
-        "  public List<Integer> getAge() {",
-        "    return Collections.unmodifiableList(age);",
-        "  }",
-        "",
-        "  /**",
-        "   * Sets all property values using the given {@code Person} as a template.",
-        "   */",
-        "  public Person.Builder mergeFrom(Person value) {",
-        "    addAllName(value.getName());",
-        "    addAllAge(value.getAge());",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Copies values from the given {@code Builder}.",
-        "   */",
-        "  public Person.Builder mergeFrom(Person.Builder template) {",
-        "    addAllName(((Person_Builder) template).name);",
-        "    addAllAge(((Person_Builder) template).age);",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Resets the state of this builder.",
-        "   */",
-        "  public Person.Builder clear() {",
-        "    name.clear();",
-        "    age.clear();",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns a newly-created {@link Person} based on the contents of the {@code Builder}.",
-        "   */",
-        "  public Person build() {",
-        "    return new Person_Builder.Value(this);",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns a newly-created partial {@link Person}",
-        "   * based on the contents of the {@code Builder}.",
-        "   * State checking will not be performed.",
-        "   *",
-        "   * <p>Partials should only ever be used in tests.",
-        "   */",
-        "  @VisibleForTesting()",
-        "  public Person buildPartial() {",
-        "    return new Person_Builder.Partial(this);",
-        "  }",
-        "",
-        "  private static final class Value extends Person {",
-        "    private final List<String> name;",
-        "    private final List<Integer> age;",
-        "",
-        "    private Value(Person_Builder builder) {",
-        "      this.name = ImmutableList.copyOf(builder.name);",
-        "      this.age = ImmutableList.copyOf(builder.age);",
-        "    }",
-        "",
-        "    @Override",
-        "    public List<String> getName() {",
-        "      return name;",
-        "    }",
-        "",
-        "    @Override",
-        "    public List<Integer> getAge() {",
-        "      return age;",
-        "    }",
-        "",
-        "    @Override",
-        "    public boolean equals(Object obj) {",
-        "      if (!(obj instanceof Person_Builder.Value)) {",
-        "        return false;",
-        "      }",
-        "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      if (!name.equals(other.name)) {",
-        "        return false;",
-        "      }",
-        "      if (!age.equals(other.age)) {",
-        "        return false;",
-        "      }",
-        "      return true;",
-        "    }",
-        "",
-        "    @Override",
-        "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] {name, age});",
-        "    }",
-        "",
-        "    @Override",
-        "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
-        "    }",
-        "  }",
-        "",
-        "  private static final class Partial extends Person {",
-        "    private final List<String> name;",
-        "    private final List<Integer> age;",
-        "",
-        "    Partial(Person_Builder builder) {",
-        "      this.name = ImmutableList.copyOf(builder.name);",
-        "      this.age = ImmutableList.copyOf(builder.age);",
-        "    }",
-        "",
-        "    @Override",
-        "    public List<String> getName() {",
-        "      return name;",
-        "    }",
-        "",
-        "    @Override",
-        "    public List<Integer> getAge() {",
-        "      return age;",
-        "    }",
-        "",
-        "    @Override",
-        "    public boolean equals(Object obj) {",
-        "      if (!(obj instanceof Person_Builder.Partial)) {",
-        "        return false;",
-        "      }",
-        "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      if (!name.equals(other.name)) {",
-        "        return false;",
-        "      }",
-        "      if (!age.equals(other.age)) {",
-        "        return false;",
-        "      }",
-        "      return true;",
-        "    }",
-        "",
-        "    @Override",
-        "    public int hashCode() {",
-        "      return Arrays.hashCode(new Object[] {name, age});",
-        "    }",
-        "",
-        "    @Override",
-        "    public String toString() {",
-        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
-            + "+ \"}\";",
-        "    }",
-        "  }",
-        "}\n"));
-  }
-
-  @Test
   public void testGenericType_j6() {
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    TypeVariable typeVariableA = newTypeVariable("A");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(typeVariableA);
-    TypeVariable typeVariableB = newTypeVariable("B");
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(typeVariableB);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters("A", "B"))
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters("A", "B"))
-        .addProperties(name
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", false))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters("A", "B"))
-        .setValueType(generatedBuilder.nestedType("Value").withParameters("A", "B"))
-        .build();
+    Metadata metadata = createMetadataWithGenerics();
 
     assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -1767,49 +1239,10 @@ public class CodeGeneratorTest {
   }
 
   @Test
-  public void testSimpleDataType_j7() {
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(string)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(string);
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(INT);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", false))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
+  public void testRequiredProperties_j7() {
+    Metadata metadata = createMetadataWithRequiredProperties();
 
-    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_6)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -1902,8 +1335,8 @@ public class CodeGeneratorTest {
         "  public Person.Builder mergeFrom(Person.Builder template) {",
         "    // Upcast to access the private _unsetProperties field.",
         "    // Otherwise, oddly, we get an access violation.",
-        "    EnumSet<Person_Builder.Property> _templateUnset = "
-            + "((Person_Builder) template)._unsetProperties;",
+        "    EnumSet<Person_Builder.Property> _templateUnset = ((Person_Builder) template)"
+            + "._unsetProperties;",
         "    if (!_templateUnset.contains(Person_Builder.Property.NAME)) {",
         "      setName(template.getName());",
         "    }",
@@ -1975,12 +1408,18 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
+        "      if (!name.equals(other.name)) {",
+        "        return false;",
+        "      }",
+        "      if (age != other.age) {",
+        "        return false;",
+        "      }",
+        "      return true;",
         "    }",
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Objects.hash(name, age);",
+        "      return Arrays.hashCode(new Object[] {name, age});",
         "    }",
         "",
         "    @Override",
@@ -2022,14 +1461,18 @@ public class CodeGeneratorTest {
         "        return false;",
         "      }",
         "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && Objects.equals(age, other.age)",
-        "          && Objects.equals(_unsetProperties, other._unsetProperties);",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
+        "        return false;",
+        "      }",
+        "      if (age != other.age) {",
+        "        return false;",
+        "      }",
+        "      return _unsetProperties.equals(other._unsetProperties);",
         "    }",
         "",
         "    @Override",
         "    public int hashCode() {",
-        "      return Objects.hash(name, age, _unsetProperties);",
+        "      return Arrays.hashCode(new Object[] {name, age, _unsetProperties});",
         "    }",
         "",
         "    @Override",
@@ -2040,7 +1483,6 @@ public class CodeGeneratorTest {
             + "? \"name=\" + name : null),",
         "              (!_unsetProperties.contains(Person_Builder.Property.AGE) "
             + "? \"age=\" + age : null))",
-
         "          + \"}\";",
         "    }",
         "  }",
@@ -2049,46 +1491,7 @@ public class CodeGeneratorTest {
 
   @Test
   public void testNoRequiredProperties_j7() {
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(string)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(string);
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(INT);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", true))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
+    Metadata metadata = createMetadataWithDefaults();
 
     assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -2268,52 +1671,7 @@ public class CodeGeneratorTest {
 
   @Test
   public void testOptionalProperties_j7() {
-    GenericTypeElementImpl optional = newTopLevelGenericType("com.google.common.base.Optional");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    GenericTypeMirrorImpl optionalInteger = optional.newMirror(integer);
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl optionalString = optional.newMirror(string);
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(optionalString)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(optionalString);
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(optionalInteger)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(optionalInteger);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                name.build(), OptionalType.GUAVA, "setName", "setNullableName", "clearName", string,
-                Optional.<TypeMirror>absent(), false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                age.build(), OptionalType.GUAVA, "setAge", "setNullableAge", "clearAge", integer,
-                Optional.<TypeMirror>of(INT), false))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
+    Metadata metadata = createMetadataWithOptionalProperties();
 
     assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -2592,50 +1950,7 @@ public class CodeGeneratorTest {
 
   @Test
   public void testNullableProperties_j7() {
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(string)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(string)
-        .addAllNullableAnnotations(ImmutableSet.of(nullable));
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(integer)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(integer)
-        .addAllNullableAnnotations(ImmutableSet.of(nullable));
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", true))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
+    Metadata metadata = createMetadataWithNullableProperties();
 
     assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -2826,358 +2141,8 @@ public class CodeGeneratorTest {
   }
 
   @Test
-  public void testListProperties_j7() {
-    GenericTypeElementImpl list = newTopLevelGenericType("com.google.common.base.List");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    GenericTypeMirrorImpl listInteger = list.newMirror(integer);
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl listString = list.newMirror(string);
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(listString)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(listString);
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(listInteger)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(listInteger);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
-                name.build(), string, Optional.<TypeMirror>absent()))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
-                age.build(), integer, Optional.<TypeMirror>of(INT)))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
-
-    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
-        "/**",
-        " * Auto-generated superclass of {@link Person.Builder},",
-        " * derived from the API of {@link Person}.",
-        " */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
-        "abstract class Person_Builder {",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
-        "",
-        "  private final ArrayList<String> name = new ArrayList<>();",
-        "  private final ArrayList<Integer> age = new ArrayList<>();",
-        "",
-        "  /**",
-        "   * Adds {@code element} to the list to be returned from {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code element} is null",
-        "   */",
-        "  public Person.Builder addName(String element) {",
-        "    this.name.add(Preconditions.checkNotNull(element));",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds each element of {@code elements} to the list to be returned from",
-        "   * {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code elements} is null or contains a",
-        "   *     null element",
-        "   */",
-        "  public Person.Builder addName(String... elements) {",
-        "    name.ensureCapacity(name.size() + elements.length);",
-        "    for (String element : elements) {",
-        "      addName(element);",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds each element of {@code elements} to the list to be returned from",
-        "   * {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code elements} is null or contains a",
-        "   *     null element",
-        "   */",
-        "  public Person.Builder addAllName(Iterable<? extends String> elements) {",
-        "    if (elements instanceof Collection) {",
-        "      name.ensureCapacity(name.size() + ((Collection<?>) elements).size());",
-        "    }",
-        "    for (String element : elements) {",
-        "      addName(element);",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Clears the list to be returned from {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder clearName() {",
-        "    this.name.clear();",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns an unmodifiable view of the list that will be returned by",
-        "   * {@link Person#getName()}.",
-        "   * Changes to this builder will be reflected in the view.",
-        "   */",
-        "  public List<String> getName() {",
-        "    return Collections.unmodifiableList(name);",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds {@code element} to the list to be returned from {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder addAge(int element) {",
-        "    this.age.add(element);",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds each element of {@code elements} to the list to be returned from",
-        "   * {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder addAge(int... elements) {",
-        "    age.ensureCapacity(age.size() + elements.length);",
-        "    for (int element : elements) {",
-        "      addAge(element);",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Adds each element of {@code elements} to the list to be returned from",
-        "   * {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code elements} is null or contains a",
-        "   *     null element",
-        "   */",
-        "  public Person.Builder addAllAge(Iterable<? extends Integer> elements) {",
-        "    if (elements instanceof Collection) {",
-        "      age.ensureCapacity(age.size() + ((Collection<?>) elements).size());",
-        "    }",
-        "    for (int element : elements) {",
-        "      addAge(element);",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Clears the list to be returned from {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder clearAge() {",
-        "    this.age.clear();",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns an unmodifiable view of the list that will be returned by",
-        "   * {@link Person#getAge()}.",
-        "   * Changes to this builder will be reflected in the view.",
-        "   */",
-        "  public List<Integer> getAge() {",
-        "    return Collections.unmodifiableList(age);",
-        "  }",
-        "",
-        "  /**",
-        "   * Sets all property values using the given {@code Person} as a template.",
-        "   */",
-        "  public Person.Builder mergeFrom(Person value) {",
-        "    addAllName(value.getName());",
-        "    addAllAge(value.getAge());",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Copies values from the given {@code Builder}.",
-        "   */",
-        "  public Person.Builder mergeFrom(Person.Builder template) {",
-        "    addAllName(((Person_Builder) template).name);",
-        "    addAllAge(((Person_Builder) template).age);",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Resets the state of this builder.",
-        "   */",
-        "  public Person.Builder clear() {",
-        "    name.clear();",
-        "    age.clear();",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns a newly-created {@link Person} based on the contents of the {@code Builder}.",
-        "   */",
-        "  public Person build() {",
-        "    return new Person_Builder.Value(this);",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns a newly-created partial {@link Person}",
-        "   * based on the contents of the {@code Builder}.",
-        "   * State checking will not be performed.",
-        "   *",
-        "   * <p>Partials should only ever be used in tests.",
-        "   */",
-        "  @VisibleForTesting()",
-        "  public Person buildPartial() {",
-        "    return new Person_Builder.Partial(this);",
-        "  }",
-        "",
-        "  private static final class Value extends Person {",
-        "    private final List<String> name;",
-        "    private final List<Integer> age;",
-        "",
-        "    private Value(Person_Builder builder) {",
-        "      this.name = ImmutableList.copyOf(builder.name);",
-        "      this.age = ImmutableList.copyOf(builder.age);",
-        "    }",
-        "",
-        "    @Override",
-        "    public List<String> getName() {",
-        "      return name;",
-        "    }",
-        "",
-        "    @Override",
-        "    public List<Integer> getAge() {",
-        "      return age;",
-        "    }",
-        "",
-        "    @Override",
-        "    public boolean equals(Object obj) {",
-        "      if (!(obj instanceof Person_Builder.Value)) {",
-        "        return false;",
-        "      }",
-        "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
-        "    }",
-        "",
-        "    @Override",
-        "    public int hashCode() {",
-        "      return Objects.hash(name, age);",
-        "    }",
-        "",
-        "    @Override",
-        "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
-        "    }",
-        "  }",
-        "",
-        "  private static final class Partial extends Person {",
-        "    private final List<String> name;",
-        "    private final List<Integer> age;",
-        "",
-        "    Partial(Person_Builder builder) {",
-        "      this.name = ImmutableList.copyOf(builder.name);",
-        "      this.age = ImmutableList.copyOf(builder.age);",
-        "    }",
-        "",
-        "    @Override",
-        "    public List<String> getName() {",
-        "      return name;",
-        "    }",
-        "",
-        "    @Override",
-        "    public List<Integer> getAge() {",
-        "      return age;",
-        "    }",
-        "",
-        "    @Override",
-        "    public boolean equals(Object obj) {",
-        "      if (!(obj instanceof Person_Builder.Partial)) {",
-        "        return false;",
-        "      }",
-        "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      return Objects.equals(name, other.name) && Objects.equals(age, other.age);",
-        "    }",
-        "",
-        "    @Override",
-        "    public int hashCode() {",
-        "      return Objects.hash(name, age);",
-        "    }",
-        "",
-        "    @Override",
-        "    public String toString() {",
-        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
-            + "+ \"}\";",
-        "    }",
-        "  }",
-        "}\n"));
-  }
-
-  @Test
   public void testGenericType_j7() {
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    TypeVariable typeVariableA = newTypeVariable("A");
-    Property.Builder name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(typeVariableA);
-    TypeVariable typeVariableB = newTypeVariable("B");
-    Property.Builder age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(typeVariableB);
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters("A", "B"))
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters("A", "B"))
-        .addProperties(name
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", false))
-            .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters("A", "B"))
-        .setValueType(generatedBuilder.nestedType("Value").withParameters("A", "B"))
-        .build();
+    Metadata metadata = createMetadataWithGenerics();
 
     assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -3427,5 +2392,233 @@ public class CodeGeneratorTest {
     }
   }
 
-}
+  private static Metadata createMetadataWithRequiredProperties() {
+    QualifiedName person = QualifiedName.of("com.example", "Person");
+    TypeMirror string = newTopLevelClass("java.lang.String");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+    Property.Builder name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setBoxedType(string)
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName("getName")
+        .setName("name")
+        .setType(string);
+    Property.Builder age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setBoxedType(newTopLevelClass("java.lang.Integer"))
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName("getAge")
+        .setName("age")
+        .setType(INT);
+    Metadata metadata = new Metadata.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters())
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters())
+        .setGwtCompatible(false)
+        .setGwtSerializable(false)
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
+        .addProperties(name
+            .setCodeGenerator(
+                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
+            .build())
+        .addProperties(age
+            .setCodeGenerator(
+                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", false))
+            .build())
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters())
+        .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .build();
+    return metadata;
+  }
 
+  private static Metadata createMetadataWithDefaults() {
+    QualifiedName person = QualifiedName.of("com.example", "Person");
+    TypeMirror string = newTopLevelClass("java.lang.String");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+    Property.Builder name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setBoxedType(string)
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName("getName")
+        .setName("name")
+        .setType(string);
+    Property.Builder age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setBoxedType(newTopLevelClass("java.lang.Integer"))
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName("getAge")
+        .setName("age")
+        .setType(INT);
+    Metadata metadata = new Metadata.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters())
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters())
+        .setGwtCompatible(false)
+        .setGwtSerializable(false)
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
+        .addProperties(name
+            .setCodeGenerator(
+                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", true))
+            .build())
+        .addProperties(age
+            .setCodeGenerator(
+                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
+            .build())
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters())
+        .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .build();
+    return metadata;
+  }
+
+  private static Metadata createMetadataWithOptionalProperties() {
+    GenericTypeElementImpl optional = newTopLevelGenericType("com.google.common.base.Optional");
+    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
+    GenericTypeMirrorImpl optionalInteger = optional.newMirror(integer);
+    ClassTypeImpl string = newTopLevelClass("java.lang.String");
+    GenericTypeMirrorImpl optionalString = optional.newMirror(string);
+    QualifiedName person = QualifiedName.of("com.example", "Person");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+    Property.Builder name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setBoxedType(optionalString)
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName("getName")
+        .setName("name")
+        .setType(optionalString);
+    Property.Builder age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setBoxedType(optionalInteger)
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName("getAge")
+        .setName("age")
+        .setType(optionalInteger);
+    Metadata metadata = new Metadata.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters())
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters())
+        .setGwtCompatible(false)
+        .setGwtSerializable(false)
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
+        .addProperties(name
+            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
+                name.build(), OptionalType.GUAVA, "setName", "setNullableName", "clearName", string,
+                Optional.<TypeMirror>absent(), false))
+            .build())
+        .addProperties(age
+            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
+                age.build(), OptionalType.GUAVA, "setAge", "setNullableAge", "clearAge", integer,
+                Optional.<TypeMirror>of(INT), false))
+            .build())
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters())
+        .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .build();
+    return metadata;
+  }
+
+  private static Metadata createMetadataWithNullableProperties() {
+    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
+    ClassTypeImpl string = newTopLevelClass("java.lang.String");
+    ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
+    QualifiedName person = QualifiedName.of("com.example", "Person");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+    Property.Builder name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setBoxedType(string)
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName("getName")
+        .setName("name")
+        .setType(string)
+        .addAllNullableAnnotations(ImmutableSet.of(nullable));
+    Property.Builder age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setBoxedType(integer)
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName("getAge")
+        .setName("age")
+        .setType(integer)
+        .addAllNullableAnnotations(ImmutableSet.of(nullable));
+    Metadata metadata = new Metadata.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters())
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters())
+        .setGwtCompatible(false)
+        .setGwtSerializable(false)
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
+        .addProperties(name
+            .setCodeGenerator(
+                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", true))
+            .build())
+        .addProperties(age
+            .setCodeGenerator(
+                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
+            .build())
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters())
+        .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .build();
+    return metadata;
+  }
+
+  private static Metadata createMetadataWithGenerics() {
+    QualifiedName person = QualifiedName.of("com.example", "Person");
+    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+    TypeVariable typeVariableA = newTypeVariable("A");
+    Property.Builder name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName("getName")
+        .setName("name")
+        .setType(typeVariableA);
+    TypeVariable typeVariableB = newTypeVariable("B");
+    Property.Builder age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName("getAge")
+        .setName("age")
+        .setType(typeVariableB);
+    Metadata metadata = new Metadata.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters("A", "B"))
+        .setGwtCompatible(false)
+        .setGwtSerializable(false)
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters("A", "B"))
+        .addProperties(name
+            .setCodeGenerator(
+                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
+            .build())
+        .addProperties(age
+            .setCodeGenerator(
+                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", false))
+            .build())
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters("A", "B"))
+        .setValueType(generatedBuilder.nestedType("Value").withParameters("A", "B"))
+        .build();
+    return metadata;
+  }
+
+}
