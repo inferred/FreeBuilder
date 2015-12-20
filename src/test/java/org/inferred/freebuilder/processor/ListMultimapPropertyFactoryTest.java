@@ -573,6 +573,27 @@ public class ListMultimapPropertyFactoryTest {
   }
 
   @Test
+  public void testRemove_doesNotThrowIfEntryNotPresent() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        \"one\", \"A\",")
+            .addLine("        \"two\", \"Blue\"))")
+            .addLine("    .removeItems(\"one\", \"Blue\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(\"one\", \"A\")")
+            .addLine("    .and(\"two\", \"Blue\")")
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testRemove_primitiveKey() {
     behaviorTester
         .with(new Processor())
@@ -676,6 +697,24 @@ public class ListMultimapPropertyFactoryTest {
             .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
             .addLine("        \"one\", \"A\",")
             .addLine("        \"one\", \"Blue\",")
+            .addLine("        \"two\", \"Blue\"))")
+            .addLine("    .removeAllItems(\"one\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(\"two\", \"Blue\")")
+            .addLine("    .andNothingElse();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemoveAll_doesNotThrowIfKeyNotPresent() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
             .addLine("        \"two\", \"Blue\"))")
             .addLine("    .removeAllItems(\"one\")")
             .addLine("    .build();")
