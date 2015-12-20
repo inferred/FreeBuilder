@@ -547,6 +547,255 @@ public class SetMultimapPropertyFactoryTest {
   }
 
   @Test
+  public void testRemove() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        \"one\", \"A\",")
+            .addLine("        \"one\", \"Blue\",")
+            .addLine("        \"two\", \"Blue\"))")
+            .addLine("    .removeItems(\"one\", \"Blue\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(\"one\", \"A\")")
+            .addLine("    .and(\"two\", \"Blue\")")
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_doesNotThrowIfEntryNotPresent() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        \"one\", \"A\",")
+            .addLine("        \"two\", \"Blue\"))")
+            .addLine("    .removeItems(\"one\", \"Blue\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(\"one\", \"A\")")
+            .addLine("    .and(\"two\", \"Blue\")")
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_primitiveKey() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PRIMITIVE_KEY)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        1, \"A\",")
+            .addLine("        1, \"Blue\",")
+            .addLine("        2, \"Blue\"))")
+            .addLine("    .removeItems(1, \"Blue\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(1, \"A\")")
+            .addLine("    .and(2, \"Blue\")")
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_primitiveValue() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PRIMITIVE_VALUE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        \"one\", \'A\',")
+            .addLine("        \"one\", \'B\',")
+            .addLine("        \"two\", \'B\'))")
+            .addLine("    .removeItems(\"one\", \'B\')")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(\"one\", \'A\')")
+            .addLine("    .and(\"two\", \'B\')")
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_primitives() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PRIMITIVES)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        1, \'A\',")
+            .addLine("        1, \'B\',")
+            .addLine("        2, \'B\'))")
+            .addLine("    .removeItems(1, \'B\')")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(1, \'A\')")
+            .addLine("    .and(2, \'B\')")
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_nullKey() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(\"one\", \"A\")")
+            .addLine("    .removeItems((String) null, \"A\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_nullValue() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(\"one\", \"A\")")
+            .addLine("    .removeItems(\"one\", (String) null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemoveAll() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        \"one\", \"A\",")
+            .addLine("        \"one\", \"Blue\",")
+            .addLine("        \"two\", \"Blue\"))")
+            .addLine("    .removeAllItems(\"one\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(\"two\", \"Blue\")")
+            .addLine("    .andNothingElse();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemoveAll_doesNotThrowIfKeyNotPresent() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        \"two\", \"Blue\"))")
+            .addLine("    .removeAllItems(\"one\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(\"two\", \"Blue\")")
+            .addLine("    .andNothingElse();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemoveAll_primitiveKey() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PRIMITIVE_KEY)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        1, \"A\",")
+            .addLine("        1, \"Blue\",")
+            .addLine("        2, \"Blue\"))")
+            .addLine("    .removeAllItems(1)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(2, \"Blue\")")
+            .addLine("    .andNothingElse();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemoveAll_primitiveValue() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PRIMITIVE_VALUE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        \"one\", \'A\',")
+            .addLine("        \"one\", \'B\',")
+            .addLine("        \"two\", \'B\'))")
+            .addLine("    .removeAllItems(\"one\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(\"two\", \'B\')")
+            .addLine("    .andNothingElse();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemoveAll_primitives() {
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PRIMITIVES)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+            .addLine("        1, \'A\',")
+            .addLine("        1, \'B\',")
+            .addLine("        2, \'B\'))")
+            .addLine("    .removeAllItems(1)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .contains(2, \'B\')")
+            .addLine("    .andNothingElse();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemoveAll_nullKey() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(MULTIMAP_PROPERTY)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(\"one\", \"A\")")
+            .addLine("    .removeAllItems((String) null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testClear() {
     behaviorTester
         .with(new Processor())
