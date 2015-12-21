@@ -13,21 +13,6 @@ public class PreconditionExcerpts {
       Escapers.builder().addEscape('"', "\"").build();
 
   /**
-   * Whether to check that a condition {@code IS} or {@code IS_NOT} true.
-   *
-   * <p>Lets us generate code without double negatives (i.e. '!!')
-   */
-  public static enum StateCondition {
-    IS(""), IS_NOT("!");
-
-    private final String trueIfConditionHolds;
-
-    private StateCondition(String trueIfConditionHolds) {
-      this.trueIfConditionHolds = trueIfConditionHolds;
-    }
-  }
-
-  /**
    * Returns an excerpt of the preamble required to emulate an inline call to Guava's
    * {@link Preconditions#checkNotNull(Object)} method.
    *
@@ -93,24 +78,19 @@ public class PreconditionExcerpts {
    *
    * <pre>code.add(checkArgument(IS, "age >= 0", "age must be non-negative (got %s)", "age"));</pre>
    *
-   * @param isOrIsNot whether to negate {@code condition} or not
    * @param condition an excerpt containing the expression to pass to the checkArgument method
    * @param message the error message template to pass to the checkArgument method
    * @param args excerpts containing the error message arguments to pass to the checkArgument method
    */
   public static Excerpt checkArgument(
-      final StateCondition isOrIsNot,
       final Object condition,
       final String message,
       final Object... args) {
     return new Excerpt() {
       @Override
       public void addTo(SourceBuilder code) {
-        code.add("%s.checkArgument(%s%s, \"%s\"",
-            Preconditions.class,
-            isOrIsNot.trueIfConditionHolds,
-            condition,
-            JAVA_STRING_ESCAPER.escape(message));
+        code.add("%s.checkArgument(%s, \"%s\"",
+            Preconditions.class, condition, JAVA_STRING_ESCAPER.escape(message));
         for (Object arg : args) {
           code.add(", %s", arg);
         }
@@ -126,22 +106,19 @@ public class PreconditionExcerpts {
    * <pre>code.add(checkState(IS, "start < end",
    *        "start must be before end (got %s and %s)", "start", "end"));</pre>
    *
-   * @param isOrIsNot whether to negate {@code condition} or not
    * @param condition an excerpt containing the expression to pass to the checkState method
    * @param message the error message template to pass to the checkState method
    * @param args excerpts containing the error message arguments to pass to the checkState method
    */
   public static Excerpt checkState(
-      final StateCondition isOrIsNot,
       final Object condition,
       final String message,
       final Object... args) {
     return new Excerpt() {
       @Override
       public void addTo(SourceBuilder code) {
-        code.add("%s.checkState(%s%s, \"%s\"",
+        code.add("%s.checkState(%s, \"%s\"",
             Preconditions.class,
-            isOrIsNot.trueIfConditionHolds,
             condition,
             JAVA_STRING_ESCAPER.escape(message));
         for (Object arg : args) {

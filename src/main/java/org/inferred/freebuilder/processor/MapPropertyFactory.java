@@ -17,8 +17,6 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.StateCondition.IS;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.StateCondition.IS_NOT;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -138,14 +136,14 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       if (!unboxedValueType.isPresent()) {
         code.add(PreconditionExcerpts.checkNotNull("value"));
       }
-      Excerpt containsKey = new Excerpt() {
+      Excerpt keyNotPresent = new Excerpt() {
         @Override
         public void addTo(SourceBuilder source) {
-          source.add("%s.containsKey(key)", property.getName());
+          source.add("!%s.containsKey(key)", property.getName());
         }
       };
       code.add(PreconditionExcerpts.checkArgument(
-              IS_NOT, containsKey, "Key already present in " + property.getName() + ": %s", "key"))
+              keyNotPresent, "Key already present in " + property.getName() + ": %s", "key"))
           .addLine("  %s.put(key, value);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -199,8 +197,14 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       if (!unboxedKeyType.isPresent()) {
         code.add(PreconditionExcerpts.checkNotNull("key"));
       }
+      Excerpt keyPresent = new Excerpt() {
+        @Override
+        public void addTo(SourceBuilder source) {
+          source.add("%s.containsKey(key)", property.getName());
+        }
+      };
       code.add(PreconditionExcerpts.checkArgument(
-              IS, containsKey, "Key not present in " + property.getName() + ": %s", "key"))
+              keyPresent, "Key not present in " + property.getName() + ": %s", "key"))
           .addLine("  %s.remove(key);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");

@@ -17,7 +17,6 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.StateCondition.IS_NOT;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -128,15 +127,14 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("public %s %s() {", property.getType(), property.getGetterName());
       if (!hasDefault) {
-        Excerpt condition = new Excerpt() {
+        Excerpt propertyIsSet = new Excerpt() {
           @Override
           public void addTo(SourceBuilder source) {
-            source.add("_unsetProperties.contains(%s.%s)",
+            source.add("!_unsetProperties.contains(%s.%s)",
                 metadata.getPropertyEnum(), property.getAllCapsName());
           }
         };
-        code.add(PreconditionExcerpts.checkState(
-            IS_NOT, condition, property.getName() + " not set"));
+        code.add(PreconditionExcerpts.checkState(propertyIsSet, property.getName() + " not set"));
       }
       code.addLine("  return %s;", property.getName())
           .addLine("}");

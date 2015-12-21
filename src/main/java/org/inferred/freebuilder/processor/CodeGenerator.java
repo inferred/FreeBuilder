@@ -23,7 +23,6 @@ import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.PropertyCodeGenerator.IS_TEMPLATE_REQUIRED_IN_CLEAR;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.StateCondition.IS;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -154,7 +153,7 @@ public class CodeGenerator {
         .addLine("public %s build() {", metadata.getType());
     if (hasRequiredProperties) {
       code.add(PreconditionExcerpts.checkState(
-          IS, "_unsetProperties.isEmpty()", "Not set: %s", "_unsetProperties"));
+          "_unsetProperties.isEmpty()", "Not set: %s", "_unsetProperties"));
     }
     code.addLine("  return %s(this);", metadata.getValueType().constructor())
         .addLine("}");
