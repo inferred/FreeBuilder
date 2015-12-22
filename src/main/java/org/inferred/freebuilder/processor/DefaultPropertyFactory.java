@@ -15,15 +15,19 @@
  */
 package org.inferred.freebuilder.processor;
 
-import javax.lang.model.element.TypeElement;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
+import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
+import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import javax.lang.model.element.TypeElement;
 
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
 public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
@@ -73,7 +77,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
       // Setter
       code.addLine("")
           .addLine("/**")
@@ -94,8 +98,8 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       if (isNullable || isPrimitive) {
         code.addLine("  this.%1$s = %1$s;", property.getName());
       } else {
-        code.addLine("  this.%1$s = %2$s.checkNotNull(%1$s);",
-            property.getName(), Preconditions.class);
+        code.add("%s", checkNotNullPreamble(property.getName()))
+            .addLine("  this.%s = %s;", property.getName(), checkNotNullInline(property.getName()));
       }
       if (!hasDefault) {
         code.addLine("  _unsetProperties.remove(%s.%s);",
@@ -123,10 +127,14 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("public %s %s() {", property.getType(), property.getGetterName());
       if (!hasDefault) {
-        code.addLine("  %s.checkState(", Preconditions.class)
-            .addLine("      !_unsetProperties.contains(%s.%s),",
-                metadata.getPropertyEnum(), property.getAllCapsName())
-            .addLine("      \"%s not set\");", property.getName());
+        Excerpt propertyIsSet = new Excerpt() {
+          @Override
+          public void addTo(SourceBuilder source) {
+            source.add("!_unsetProperties.contains(%s.%s)",
+                metadata.getPropertyEnum(), property.getAllCapsName());
+          }
+        };
+        code.add(PreconditionExcerpts.checkState(propertyIsSet, property.getName() + " not set"));
       }
       code.addLine("  return %s;", property.getName())
           .addLine("}");

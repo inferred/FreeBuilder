@@ -57,5 +57,10 @@ public interface SourceBuilder {
    */
   SourceBuilder addLine(String fmt, Object... args);
 
+  /**
+   * Equivalent to {@code add("%s", excerpt)}.
+   */
+  SourceBuilder add(Excerpt excerpt);
+
   SourceLevel getSourceLevel();
 }

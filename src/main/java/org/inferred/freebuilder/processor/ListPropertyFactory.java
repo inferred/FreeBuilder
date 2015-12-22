@@ -17,6 +17,16 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
+import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,15 +36,6 @@ import java.util.List;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing append-only semantics for {@link List}
@@ -112,8 +113,8 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       if (unboxedType.isPresent()) {
         code.addLine("  this.%s.add(element);", property.getName());
       } else {
-        code.addLine("  this.%s.add(%s.checkNotNull(element));",
-            property.getName(), Preconditions.class);
+        code.add(checkNotNullPreamble("element"))
+            .addLine("  this.%s.add(%s);", property.getName(), checkNotNullInline("element"));
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
