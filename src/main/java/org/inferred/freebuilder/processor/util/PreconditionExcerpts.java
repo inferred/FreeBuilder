@@ -76,7 +76,7 @@ public class PreconditionExcerpts {
    * Returns an excerpt equivalent to Guava's
    * {@link Preconditions#checkArgument(boolean, String, Object...)}.
    *
-   * <pre>code.add(checkArgument(IS, "age >= 0", "age must be non-negative (got %s)", "age"));</pre>
+   * <pre>code.add(checkArgument("age &gt;= 0", "age must be non-negative (got %s)", "age"));</pre>
    *
    * @param condition an excerpt containing the expression to pass to the checkArgument method
    * @param message the error message template to pass to the checkArgument method
@@ -103,8 +103,8 @@ public class PreconditionExcerpts {
    * Returns an excerpt equivalent to Guava's
    * {@link Preconditions#checkState(boolean, String, Object...)}.
    *
-   * <pre>code.add(checkState(IS, "start < end",
-   *        "start must be before end (got %s and %s)", "start", "end"));</pre>
+   * <pre>code.add(checkState("start &lt; end",
+   *         "start must be before end (got %s and %s)", "start", "end"));</pre>
    *
    * @param condition an excerpt containing the expression to pass to the checkState method
    * @param message the error message template to pass to the checkState method
