@@ -9,8 +9,11 @@ import com.google.common.escape.Escapers;
  */
 public class PreconditionExcerpts {
 
-  private static final Escaper JAVA_STRING_ESCAPER =
-      Escapers.builder().addEscape('"', "\"").build();
+  private static final Escaper JAVA_STRING_ESCAPER = Escapers.builder()
+      .addEscape('"', "\"")
+      .addEscape('\\', "\\\\")
+      .addEscape('\n', "\\n")
+      .build();
 
   /**
    * Returns an excerpt of the preamble required to emulate an inline call to Guava's
@@ -86,17 +89,7 @@ public class PreconditionExcerpts {
       final Object condition,
       final String message,
       final Object... args) {
-    return new Excerpt() {
-      @Override
-      public void addTo(SourceBuilder code) {
-        code.add("%s.checkArgument(%s, \"%s\"",
-            Preconditions.class, condition, JAVA_STRING_ESCAPER.escape(message));
-        for (Object arg : args) {
-          code.add(", %s", arg);
-        }
-        code.add(");\n");
-      }
-    };
+    return guavaCheckExcerpt("checkArgument", condition, message, args);
   }
 
   /**
@@ -114,13 +107,16 @@ public class PreconditionExcerpts {
       final Object condition,
       final String message,
       final Object... args) {
+    return guavaCheckExcerpt("checkState", condition, message, args);
+  }
+
+  private static Excerpt guavaCheckExcerpt(
+      final String methodName, final Object condition, final String message, final Object... args) {
     return new Excerpt() {
       @Override
       public void addTo(SourceBuilder code) {
-        code.add("%s.checkState(%s, \"%s\"",
-            Preconditions.class,
-            condition,
-            JAVA_STRING_ESCAPER.escape(message));
+        code.add("%s.%s(%s, \"%s\"",
+            Preconditions.class, methodName, condition, JAVA_STRING_ESCAPER.escape(message));
         for (Object arg : args) {
           code.add(", %s", arg);
         }
