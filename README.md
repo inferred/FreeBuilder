@@ -182,7 +182,7 @@ backwards-compatibility). It will default to Optional.empty(), and the Builder
 will gain additional convenience setter methods.
 
 [the Java 8 Optional type]: https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html
-[the Guava Optional type]: http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/base/Optional.html
+[the Guava Optional type]: http://google.github.io/guava/releases/19.0/api/docs/com/google/common/base/Optional.html
 
 
 ```java
@@ -217,7 +217,7 @@ annotation type named "Nullable" will do, but you may wish to use
 
 [Google Guava]: https://github.com/google/guava
 [Hoare]: http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare
-[Using and Avoiding Null]: https://code.google.com/p/guava-libraries/wiki/UsingAndAvoidingNullExplained
+[Using and Avoiding Null]: https://github.com/google/guava/wiki/UsingAndAvoidingNullExplained
 
 #### Converting from `@Nullable`
 
@@ -258,9 +258,9 @@ Your API is now `@FreeBuilder`-compatible :)
 
 [List]: http://docs.oracle.com/javase/tutorial/collections/interfaces/list.html
 [Set]: http://docs.oracle.com/javase/tutorial/collections/interfaces/set.html
-[Multiset]: https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained#Multiset
+[Multiset]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multiset
 [Map]: http://docs.oracle.com/javase/tutorial/collections/interfaces/map.html
-[Multimap]: https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained#Multimap
+[Multimap]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multimap
 
 
 ### Nested buildable types
@@ -371,11 +371,12 @@ Build tools and IDEs
 ### javac
 
 Download [freebuilder-1.4.jar][] and add it to the classpath (or
-processorpath, if you supply one) on the command line. You will also need to add
-[guava-18.0.jar][] to the classpath, as it is used in the generated code.
+processorpath, if you supply one) on the command line. If [Guava] is
+available, FreeBuilder will use it to generate cleaner, more
+interoperable implementation code (e.g returning [immutable collections]).
 
 [freebuilder-1.4.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.4/freebuilder-1.4.jar
-[guava-18.0.jar]: http://repo1.maven.org/maven2/com/google/guava/guava/18.0/guava-18.0.jar
+[immutable collections]: https://github.com/google/guava/wiki/ImmutableCollectionsExplained
 
 ### Maven
 
@@ -389,15 +390,11 @@ Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
     <version>1.4</version>
     <optional>true</optional>
   </dependency>
-  <dependency>
-    <groupId>com.google.guava</groupId>
-    <artifactId>guava</artifactId>
-    <version>18.0</version>
-  </dependency>
 </dependencies>
 ```
 
-You may already have Guava, or want to use a different version; adjust accordingly.
+If [Guava] is available, FreeBuilder will use it to generate cleaner, more
+interoperable implementation code (e.g returning [immutable collections]).
 
 ### Gradle
 
@@ -405,17 +402,17 @@ Add the following lines to your dependencies:
 
 ```
 compile 'org.inferred:freebuilder:1.4'
-compile 'com.google.guava:guava:18.0'
 ```
 
-You may already have Guava, or want to use a different version; adjust accordingly.
+If [Guava] is available, FreeBuilder will use it to generate cleaner, more
+interoperable implementation code (e.g returning [immutable collections]).
 
 ### Eclipse
 
 _Condensed from [Eclipse Indigo's documentation][]._
 
-Download [freebuilder-1.4.jar][] and [guava-18.0.jar][] and add them to your
-project. Select them, right-click and choose **Build path > Add to Build path**.
+Download [freebuilder-1.4.jar][] and add it to your project. Select it,
+right-click and choose **Build path > Add to Build path**.
 
 In your projects properties dialog, go to **Java Compiler > Annotation
 Processing** and ensure **Enable annotation processing** is checked.
@@ -428,8 +425,8 @@ Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
 
 _Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
 
-Download [freebuilder-1.4.jar][] and [guava-18.0.jar][], add them to your
-project, right-click them and select **Use as Project Library**.
+Download [freebuilder-1.4.jar][], add it to your project, right-click it
+and select **Use as Project Library**.
 
 In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation
 Processors** and ensure **Enable annotation processing** is selected, and
@@ -551,7 +548,7 @@ for your use-case.
 
 [Protocol buffers]: https://developers.google.com/protocol-buffers/
 [Instant]: http://docs.oracle.com/javase/8/docs/api/java/time/Instant.html
-[Range]: http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/Range.html
+[Range]: http://google.github.io/guava/releases/19.0/api/docs/com/google/common/collect/Range.html
 
 
 Wait, why "free"?
