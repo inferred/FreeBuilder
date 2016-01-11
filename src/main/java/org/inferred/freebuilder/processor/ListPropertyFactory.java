@@ -209,17 +209,13 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.add("%s = ", finalField);
       if (code.isGuavaAvailable()) {
-        code.add("%s.copyOf", ImmutableList.class);
+        code.addLine("%s = %s.copyOf(%s.%s);",
+            finalField, ImmutableList.class, builder, property.getName());
       } else {
-        code.add("immutableList");
+        code.addLine("%s = immutableList(%s.%s, %s.class);",
+            finalField, builder, property.getName(), elementType);
       }
-      code.add("(%s.%s",  builder, property.getName());
-      if (!code.isGuavaAvailable()) {
-        code.add(", %s.class", elementType);
-      }
-      code.add(");\n");
     }
 
     @Override

@@ -867,7 +867,7 @@ public class CodeGenerator {
       staticMethods.addAll(property.getCodeGenerator().getStaticMethods());
     }
     for (Excerpt staticMethod : staticMethods) {
-      code.add("%s", staticMethod);
+      code.add(staticMethod);
     }
   }
 

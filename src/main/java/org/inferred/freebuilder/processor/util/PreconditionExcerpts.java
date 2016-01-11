@@ -197,8 +197,7 @@ public class PreconditionExcerpts {
               }
             });
           }
-          String messageConcatenated = SourceStringBuilder
-              .simple(code.getSourceLevel(), code.isGuavaAvailable())
+          String messageConcatenated = code.subBuilder()
               .add("\"" + JAVA_STRING_ESCAPER.escape(message) + "\"", escapedArgs.toArray())
               .toString()
               .replace("\"\" + ", "")

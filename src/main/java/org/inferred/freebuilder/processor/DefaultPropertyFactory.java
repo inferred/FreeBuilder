@@ -98,7 +98,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       if (isNullable || isPrimitive) {
         code.addLine("  this.%1$s = %1$s;", property.getName());
       } else {
-        code.add("%s", checkNotNullPreamble(property.getName()))
+        code.add(checkNotNullPreamble(property.getName()))
             .addLine("  this.%s = %s;", property.getName(), checkNotNullInline(property.getName()));
       }
       if (!hasDefault) {
