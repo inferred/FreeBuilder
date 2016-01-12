@@ -15,17 +15,19 @@
  */
 package org.inferred.freebuilder.processor;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 
 /** Property-type-specific code generation interface. */
 public abstract class PropertyCodeGenerator {
@@ -116,6 +118,11 @@ public abstract class PropertyCodeGenerator {
 
   /** Adds a partial clear call for the property to the builder's source code. */
   public abstract void addPartialClear(SourceBuilder code);
+
+  /** Returns excerpts for any static methods added by this generator. */
+  public Set<? extends Excerpt> getStaticMethods() {
+    return ImmutableSet.of();
+  }
 
   protected void addAccessorAnnotations(SourceBuilder code) {
     for (AnnotationMirror annotation : property.getAccessorAnnotations()) {

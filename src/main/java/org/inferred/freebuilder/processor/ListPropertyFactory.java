@@ -23,15 +23,20 @@ import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.check
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -204,8 +209,13 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("%s = %s.copyOf(%s.%s);",
-          finalField, ImmutableList.class, builder, property.getName());
+      if (code.isGuavaAvailable()) {
+        code.addLine("%s = %s.copyOf(%s.%s);",
+            finalField, ImmutableList.class, builder, property.getName());
+      } else {
+        code.addLine("%s = immutableList(%s.%s, %s.class);",
+            finalField, builder, property.getName(), elementType);
+      }
     }
 
     @Override
@@ -243,6 +253,36 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
     @Override
     public void addPartialClear(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
+    }
+
+    @Override
+    public Set<StaticMethod> getStaticMethods() {
+      return ImmutableSet.copyOf(StaticMethod.values());
+    }
+  }
+
+  private static enum StaticMethod implements Excerpt {
+    IMMUTABLE_LIST() {
+      @Override
+      public void addTo(SourceBuilder code) {
+        if (!code.isGuavaAvailable()) {
+          code.addLine("")
+              .addLine("@%s(\"unchecked\")", SuppressWarnings.class)
+              .addLine("private static <E> %1$s<E> immutableList(%1$s<E> elements, %2$s<E> type) {",
+                  List.class, Class.class)
+              .addLine("  switch (elements.size()) {")
+              .addLine("  case 0:")
+              .addLine("    return %s.emptyList();", Collections.class)
+              .addLine("  case 1:")
+              .addLine("    return %s.singletonList(elements.get(0));", Collections.class)
+              .addLine("  default:")
+              .addLine("    return %s.unmodifiableList(%s.asList(elements.toArray(",
+                  Collections.class, Arrays.class)
+              .addLine("        (E[]) %s.newInstance(type, elements.size()))));", Array.class)
+              .addLine("  }")
+              .addLine("}");
+        }
+      }
     }
   }
 }

@@ -255,6 +255,7 @@ public class CompilationUnitWriterTest {
         filer,
         model.elementUtils(),
         JAVA_6,
+        true,
         QualifiedName.of(pkg, simpleName),
         ImmutableSet.<QualifiedName>of(),
         originatingElement);

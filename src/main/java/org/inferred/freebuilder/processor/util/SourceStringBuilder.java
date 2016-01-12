@@ -34,6 +34,7 @@ import javax.lang.model.type.TypeMirror;
 public final class SourceStringBuilder implements SourceBuilder {
 
   private final SourceLevel sourceLevel;
+  private final boolean guavaAvailable;
   private final TypeShortener shortener;
   private final StringBuilder destination = new StringBuilder();
 
@@ -41,12 +42,17 @@ public final class SourceStringBuilder implements SourceBuilder {
    * Returns a {@link SourceStringBuilder} that always shortens types, even if that causes
    * conflicts.
    */
-  public static SourceStringBuilder simple(SourceLevel sourceLevel) {
-    return new SourceStringBuilder(sourceLevel, new TypeShortener.AlwaysShorten());
+  public static SourceBuilder simple(SourceLevel sourceLevel, boolean isGuavaAvailable) {
+    return new SourceStringBuilder(
+        sourceLevel, isGuavaAvailable, new TypeShortener.AlwaysShorten());
   }
 
-  SourceStringBuilder(SourceLevel sourceLevel, TypeShortener shortener) {
+  SourceStringBuilder(
+      SourceLevel sourceLevel,
+      boolean isGuavaAvailable,
+      TypeShortener shortener) {
     this.sourceLevel = sourceLevel;
+    this.guavaAvailable = isGuavaAvailable;
     this.shortener = shortener;
   }
 
@@ -72,8 +78,18 @@ public final class SourceStringBuilder implements SourceBuilder {
   }
 
   @Override
+  public SourceStringBuilder subBuilder() {
+    return new SourceStringBuilder(sourceLevel, guavaAvailable, shortener);
+  }
+
+  @Override
   public SourceLevel getSourceLevel() {
     return sourceLevel;
+  }
+
+  @Override
+  public boolean isGuavaAvailable() {
+    return guavaAvailable;
   }
 
   /** Returns the source code written so far. */
@@ -84,7 +100,7 @@ public final class SourceStringBuilder implements SourceBuilder {
 
   private Object substitute(Object arg) {
     if (arg instanceof Excerpt) {
-      SourceStringBuilder excerptBuilder = new SourceStringBuilder(sourceLevel, shortener);
+      SourceBuilder excerptBuilder = subBuilder();
       ((Excerpt) arg).addTo(excerptBuilder);
       return excerptBuilder.toString();
     } else if (arg instanceof Package) {
@@ -107,7 +123,7 @@ public final class SourceStringBuilder implements SourceBuilder {
     } else if (arg instanceof QualifiedName) {
       return shortener.shorten((QualifiedName) arg);
     } else if (arg instanceof AnnotationMirror) {
-      SourceStringBuilder excerptBuilder = new SourceStringBuilder(sourceLevel, shortener);
+      SourceBuilder excerptBuilder = subBuilder();
       addSource(excerptBuilder, (AnnotationMirror) arg);
       return excerptBuilder.toString();
     } else {

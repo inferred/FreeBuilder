@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collections;
@@ -205,8 +206,13 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      code.addLine("%s = %s.copyOf(%s.%s);",
-              finalField, ImmutableSet.class, builder, property.getName());
+      code.add("%s = ", finalField);
+      if (code.isGuavaAvailable()) {
+        code.add("%s.copyOf", ImmutableSet.class);
+      } else {
+        code.add("immutableSet");
+      }
+      code.add("(%s.%s);\n", builder, property.getName());
     }
 
     @Override
@@ -244,6 +250,37 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     @Override
     public void addPartialClear(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
+    }
+
+    @Override
+    public Set<StaticMethod> getStaticMethods() {
+      return ImmutableSet.copyOf(StaticMethod.values());
+    }
+  }
+
+  private enum StaticMethod implements Excerpt {
+    IMMUTABLE_SET {
+      @Override
+      public void addTo(SourceBuilder code) {
+        if (!code.isGuavaAvailable()) {
+          code.addLine("")
+              .addLine("private static <E> %1$s<E> immutableSet(%1$s<E> elements) {",
+                  Set.class, Class.class)
+              .addLine("  switch (elements.size()) {")
+              .addLine("  case 0:")
+              .addLine("    return %s.emptySet();", Collections.class)
+              .addLine("  case 1:")
+              .addLine("    return %s.singleton(elements.iterator().next());", Collections.class)
+              .addLine("  default:")
+              .add("    return %s.unmodifiableSet(new %s<", Collections.class, LinkedHashSet.class);
+          if (!code.getSourceLevel().supportsDiamondOperator()) {
+            code.add("E");
+          }
+          code.add(">(elements));\n")
+              .addLine("  }")
+              .addLine("}");
+        }
+      }
     }
   }
 }
