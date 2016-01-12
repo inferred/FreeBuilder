@@ -213,9 +213,9 @@ can be converted to Optional via a simple refactoring sequence; see below.
 However, if you have **compelling legacy reasons** that mandate using nulls,
 you can disable null-checking by marking the getter method `@Nullable`. (Any
 annotation type named "Nullable" will do, but you may wish to use
-`javax.annotation.Nullable`, as used in [Google Guava][].)
+`javax.annotation.Nullable`, as used in [Google Guava][Guava].)
 
-[Google Guava]: https://github.com/google/guava
+[Guava]: https://github.com/google/guava
 [Hoare]: http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare
 [Using and Avoiding Null]: https://github.com/google/guava/wiki/UsingAndAvoidingNullExplained
 
