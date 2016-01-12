@@ -17,19 +17,22 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import javax.annotation.Nullable;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
+
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import javax.annotation.Nullable;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * Metadata about a &#64;{@link org.inferred.freebuilder.FreeBuilder FreeBuilder} type.
@@ -49,6 +52,28 @@ public abstract class Metadata {
     OVERRIDEABLE,
     /** The underride is declared final. */
     FINAL;
+  }
+
+  public enum Visibility implements Excerpt {
+    PUBLIC("public "), PROTECTED("protected "), PACKAGE(""), PRIVATE("private ");
+
+    private final String excerpt;
+
+    private Visibility(String excerpt) {
+      this.excerpt = excerpt;
+    }
+
+    /**
+     * Returns the most permissive visibility of this and {@code other}.
+     */
+    public Visibility or(Visibility other) {
+      return Ordering.natural().min(this, other);
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      code.add(excerpt);
+    }
   }
 
   /** Returns the type itself. */
@@ -109,11 +134,17 @@ public abstract class Metadata {
   /** Returns whether the builder type should be serializable. */
   public abstract boolean isBuilderSerializable();
 
-  /** Returns whether the type (and hence the generated builder type) is GWT compatible. */
-  public abstract boolean isGwtCompatible();
+  /** Returns a list of annotations that should be applied to the generated builder class. */
+  public abstract ImmutableList<Excerpt> getGeneratedBuilderAnnotations();
 
-  /** Returns whether the type (and hence the generated value type) is GWT serializable. */
-  public abstract boolean isGwtSerializable();
+  /** Returns a list of annotations that should be applied to the generated value class. */
+  public abstract ImmutableList<Excerpt> getValueTypeAnnotations();
+
+  /** Returns the visibility of the generated value class. */
+  public abstract Visibility getValueTypeVisibility();
+
+  /** Returns a list of nested classes that should be added to the generated builder class. */
+  public abstract ImmutableList<Function<Metadata, Excerpt>> getNestedClasses();
 
   /** Metadata about a property of a {@link Metadata}. */
   public interface Property {
@@ -176,6 +207,22 @@ public abstract class Metadata {
 
   /** Builder for {@link Metadata}. */
   public static class Builder extends Metadata_Builder {
+
+    public Builder() {
+      super.setValueTypeVisibility(Visibility.PRIVATE);
+    }
+
+  /**
+   * Sets the value to be returned by {@link Metadata#getValueTypeVisibility()} to at least as
+   * visible as {@code valueTypeVisibility}. Will not decrease visibility.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code valueTypeVisibility} is null
+   */
+    @Override
+    public Builder setValueTypeVisibility(Visibility visibility) {
+      return super.setValueTypeVisibility(getValueTypeVisibility().or(visibility));
+    }
 
     /** Sets the builder class that users will see, if any. */
     public Builder setBuilder(Optional<ParameterizedType> builder) {

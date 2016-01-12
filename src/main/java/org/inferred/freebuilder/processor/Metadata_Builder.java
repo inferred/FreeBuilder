@@ -2,6 +2,7 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -22,6 +23,7 @@ import javax.annotation.Generated;
 import javax.annotation.Nullable;
 import org.inferred.freebuilder.processor.BuilderFactory;
 import org.inferred.freebuilder.processor.Metadata;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
@@ -42,8 +44,7 @@ abstract class Metadata_Builder {
     PARTIAL_TYPE("partialType"),
     PROPERTY_ENUM("propertyEnum"),
     BUILDER_SERIALIZABLE("builderSerializable"),
-    GWT_COMPATIBLE("gwtCompatible"),
-    GWT_SERIALIZABLE("gwtSerializable"),
+    VALUE_TYPE_VISIBILITY("valueTypeVisibility"),
     ;
 
     private final String name;
@@ -79,8 +80,11 @@ abstract class Metadata_Builder {
       standardMethodUnderrides =
           new LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>();
   private boolean builderSerializable;
-  private boolean gwtCompatible;
-  private boolean gwtSerializable;
+  private final ArrayList<Excerpt> generatedBuilderAnnotations = new ArrayList<Excerpt>();
+  private final ArrayList<Excerpt> valueTypeAnnotations = new ArrayList<Excerpt>();
+  private Metadata.Visibility valueTypeVisibility;
+  private final ArrayList<Function<Metadata, Excerpt>> nestedClasses =
+      new ArrayList<Function<Metadata, Excerpt>>();
   private final EnumSet<Metadata_Builder.Property> _unsetProperties =
       EnumSet.allOf(Metadata_Builder.Property.class);
 
@@ -565,49 +569,223 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata#isGwtCompatible()}.
+   * Adds {@code element} to the list to be returned from {@link Metadata#getGeneratedBuilderAnnotations()}.
    *
    * @return this {@code Builder} object
+   * @throws NullPointerException if {@code element} is null
    */
-  public Metadata.Builder setGwtCompatible(boolean gwtCompatible) {
-    this.gwtCompatible = gwtCompatible;
-    _unsetProperties.remove(Metadata_Builder.Property.GWT_COMPATIBLE);
+  public Metadata.Builder addGeneratedBuilderAnnotations(Excerpt element) {
+    this.generatedBuilderAnnotations.add(Preconditions.checkNotNull(element));
     return (Metadata.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata#isGwtCompatible()}.
-   *
-   * @throws IllegalStateException if the field has not been set
-   */
-  public boolean isGwtCompatible() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Builder.Property.GWT_COMPATIBLE),
-        "gwtCompatible not set");
-    return gwtCompatible;
-  }
-
-  /**
-   * Sets the value to be returned by {@link Metadata#isGwtSerializable()}.
+   * Adds each element of {@code elements} to the list to be returned from
+   * {@link Metadata#getGeneratedBuilderAnnotations()}.
    *
    * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a
+   *     null element
    */
-  public Metadata.Builder setGwtSerializable(boolean gwtSerializable) {
-    this.gwtSerializable = gwtSerializable;
-    _unsetProperties.remove(Metadata_Builder.Property.GWT_SERIALIZABLE);
+  public Metadata.Builder addGeneratedBuilderAnnotations(Excerpt... elements) {
+    generatedBuilderAnnotations.ensureCapacity(
+        generatedBuilderAnnotations.size() + elements.length);
+    for (Excerpt element : elements) {
+      addGeneratedBuilderAnnotations(element);
+    }
     return (Metadata.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata#isGwtSerializable()}.
+   * Adds each element of {@code elements} to the list to be returned from
+   * {@link Metadata#getGeneratedBuilderAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a
+   *     null element
+   */
+  public Metadata.Builder addAllGeneratedBuilderAnnotations(Iterable<? extends Excerpt> elements) {
+    if (elements instanceof Collection) {
+      generatedBuilderAnnotations.ensureCapacity(
+          generatedBuilderAnnotations.size() + ((Collection<?>) elements).size());
+    }
+    for (Excerpt element : elements) {
+      addGeneratedBuilderAnnotations(element);
+    }
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Clears the list to be returned from {@link Metadata#getGeneratedBuilderAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Builder clearGeneratedBuilderAnnotations() {
+    this.generatedBuilderAnnotations.clear();
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns an unmodifiable view of the list that will be returned by
+   * {@link Metadata#getGeneratedBuilderAnnotations()}.
+   * Changes to this builder will be reflected in the view.
+   */
+  public List<Excerpt> getGeneratedBuilderAnnotations() {
+    return Collections.unmodifiableList(generatedBuilderAnnotations);
+  }
+
+  /**
+   * Adds {@code element} to the list to be returned from {@link Metadata#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code element} is null
+   */
+  public Metadata.Builder addValueTypeAnnotations(Excerpt element) {
+    this.valueTypeAnnotations.add(Preconditions.checkNotNull(element));
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from
+   * {@link Metadata#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a
+   *     null element
+   */
+  public Metadata.Builder addValueTypeAnnotations(Excerpt... elements) {
+    valueTypeAnnotations.ensureCapacity(valueTypeAnnotations.size() + elements.length);
+    for (Excerpt element : elements) {
+      addValueTypeAnnotations(element);
+    }
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from
+   * {@link Metadata#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a
+   *     null element
+   */
+  public Metadata.Builder addAllValueTypeAnnotations(Iterable<? extends Excerpt> elements) {
+    if (elements instanceof Collection) {
+      valueTypeAnnotations.ensureCapacity(
+          valueTypeAnnotations.size() + ((Collection<?>) elements).size());
+    }
+    for (Excerpt element : elements) {
+      addValueTypeAnnotations(element);
+    }
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Clears the list to be returned from {@link Metadata#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Builder clearValueTypeAnnotations() {
+    this.valueTypeAnnotations.clear();
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns an unmodifiable view of the list that will be returned by
+   * {@link Metadata#getValueTypeAnnotations()}.
+   * Changes to this builder will be reflected in the view.
+   */
+  public List<Excerpt> getValueTypeAnnotations() {
+    return Collections.unmodifiableList(valueTypeAnnotations);
+  }
+
+  /**
+   * Sets the value to be returned by {@link Metadata#getValueTypeVisibility()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code valueTypeVisibility} is null
+   */
+  public Metadata.Builder setValueTypeVisibility(Metadata.Visibility valueTypeVisibility) {
+    this.valueTypeVisibility = Preconditions.checkNotNull(valueTypeVisibility);
+    _unsetProperties.remove(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Metadata#getValueTypeVisibility()}.
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public boolean isGwtSerializable() {
+  public Metadata.Visibility getValueTypeVisibility() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Builder.Property.GWT_SERIALIZABLE),
-        "gwtSerializable not set");
-    return gwtSerializable;
+        !_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY),
+        "valueTypeVisibility not set");
+    return valueTypeVisibility;
+  }
+
+  /**
+   * Adds {@code element} to the list to be returned from {@link Metadata#getNestedClasses()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code element} is null
+   */
+  public Metadata.Builder addNestedClasses(Function<Metadata, Excerpt> element) {
+    this.nestedClasses.add(Preconditions.checkNotNull(element));
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from
+   * {@link Metadata#getNestedClasses()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a
+   *     null element
+   */
+  public Metadata.Builder addNestedClasses(Function<Metadata, Excerpt>... elements) {
+    nestedClasses.ensureCapacity(nestedClasses.size() + elements.length);
+    for (Function<Metadata, Excerpt> element : elements) {
+      addNestedClasses(element);
+    }
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from
+   * {@link Metadata#getNestedClasses()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a
+   *     null element
+   */
+  public Metadata.Builder addAllNestedClasses(
+      Iterable<? extends Function<Metadata, Excerpt>> elements) {
+    if (elements instanceof Collection) {
+      nestedClasses.ensureCapacity(nestedClasses.size() + ((Collection<?>) elements).size());
+    }
+    for (Function<Metadata, Excerpt> element : elements) {
+      addNestedClasses(element);
+    }
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Clears the list to be returned from {@link Metadata#getNestedClasses()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Builder clearNestedClasses() {
+    this.nestedClasses.clear();
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns an unmodifiable view of the list that will be returned by
+   * {@link Metadata#getNestedClasses()}.
+   * Changes to this builder will be reflected in the view.
+   */
+  public List<Function<Metadata, Excerpt>> getNestedClasses() {
+    return Collections.unmodifiableList(nestedClasses);
   }
 
   /**
@@ -626,8 +804,10 @@ abstract class Metadata_Builder {
     addAllProperties(value.getProperties());
     putAllStandardMethodUnderrides(value.getStandardMethodUnderrides());
     setBuilderSerializable(value.isBuilderSerializable());
-    setGwtCompatible(value.isGwtCompatible());
-    setGwtSerializable(value.isGwtSerializable());
+    addAllGeneratedBuilderAnnotations(value.getGeneratedBuilderAnnotations());
+    addAllValueTypeAnnotations(value.getValueTypeAnnotations());
+    setValueTypeVisibility(value.getValueTypeVisibility());
+    addAllNestedClasses(value.getNestedClasses());
     return (Metadata.Builder) this;
   }
 
@@ -666,12 +846,12 @@ abstract class Metadata_Builder {
     if (!_templateUnset.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)) {
       setBuilderSerializable(template.isBuilderSerializable());
     }
-    if (!_templateUnset.contains(Metadata_Builder.Property.GWT_COMPATIBLE)) {
-      setGwtCompatible(template.isGwtCompatible());
+    addAllGeneratedBuilderAnnotations(((Metadata_Builder) template).generatedBuilderAnnotations);
+    addAllValueTypeAnnotations(((Metadata_Builder) template).valueTypeAnnotations);
+    if (!_templateUnset.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)) {
+      setValueTypeVisibility(template.getValueTypeVisibility());
     }
-    if (!_templateUnset.contains(Metadata_Builder.Property.GWT_SERIALIZABLE)) {
-      setGwtSerializable(template.isGwtSerializable());
-    }
+    addAllNestedClasses(((Metadata_Builder) template).nestedClasses);
     return (Metadata.Builder) this;
   }
 
@@ -692,8 +872,10 @@ abstract class Metadata_Builder {
     properties.clear();
     standardMethodUnderrides.clear();
     builderSerializable = _template.builderSerializable;
-    gwtCompatible = _template.gwtCompatible;
-    gwtSerializable = _template.gwtSerializable;
+    generatedBuilderAnnotations.clear();
+    valueTypeAnnotations.clear();
+    valueTypeVisibility = _template.valueTypeVisibility;
+    nestedClasses.clear();
     _unsetProperties.clear();
     _unsetProperties.addAll(_template._unsetProperties);
     return (Metadata.Builder) this;
@@ -743,8 +925,10 @@ abstract class Metadata_Builder {
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
-    private final boolean gwtCompatible;
-    private final boolean gwtSerializable;
+    private final ImmutableList<Excerpt> generatedBuilderAnnotations;
+    private final ImmutableList<Excerpt> valueTypeAnnotations;
+    private final Metadata.Visibility valueTypeVisibility;
+    private final ImmutableList<Function<Metadata, Excerpt>> nestedClasses;
 
     private Value(Metadata_Builder builder) {
       this.type = builder.type;
@@ -759,8 +943,10 @@ abstract class Metadata_Builder {
       this.properties = ImmutableList.copyOf(builder.properties);
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
-      this.gwtCompatible = builder.gwtCompatible;
-      this.gwtSerializable = builder.gwtSerializable;
+      this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
+      this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
+      this.valueTypeVisibility = builder.valueTypeVisibility;
+      this.nestedClasses = ImmutableList.copyOf(builder.nestedClasses);
     }
 
     @Override
@@ -825,13 +1011,23 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public boolean isGwtCompatible() {
-      return gwtCompatible;
+    public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
+      return generatedBuilderAnnotations;
     }
 
     @Override
-    public boolean isGwtSerializable() {
-      return gwtSerializable;
+    public ImmutableList<Excerpt> getValueTypeAnnotations() {
+      return valueTypeAnnotations;
+    }
+
+    @Override
+    public Metadata.Visibility getValueTypeVisibility() {
+      return valueTypeVisibility;
+    }
+
+    @Override
+    public ImmutableList<Function<Metadata, Excerpt>> getNestedClasses() {
+      return nestedClasses;
     }
 
     @Override
@@ -878,10 +1074,16 @@ abstract class Metadata_Builder {
       if (builderSerializable != other.builderSerializable) {
         return false;
       }
-      if (gwtCompatible != other.gwtCompatible) {
+      if (!generatedBuilderAnnotations.equals(other.generatedBuilderAnnotations)) {
         return false;
       }
-      if (gwtSerializable != other.gwtSerializable) {
+      if (!valueTypeAnnotations.equals(other.valueTypeAnnotations)) {
+        return false;
+      }
+      if (!valueTypeVisibility.equals(other.valueTypeVisibility)) {
+        return false;
+      }
+      if (!nestedClasses.equals(other.nestedClasses)) {
         return false;
       }
       return true;
@@ -903,8 +1105,10 @@ abstract class Metadata_Builder {
             properties,
             standardMethodUnderrides,
             builderSerializable,
-            gwtCompatible,
-            gwtSerializable
+            generatedBuilderAnnotations,
+            valueTypeAnnotations,
+            valueTypeVisibility,
+            nestedClasses
           });
     }
 
@@ -924,8 +1128,10 @@ abstract class Metadata_Builder {
               "properties=" + properties,
               "standardMethodUnderrides=" + standardMethodUnderrides,
               "builderSerializable=" + builderSerializable,
-              "gwtCompatible=" + gwtCompatible,
-              "gwtSerializable=" + gwtSerializable)
+              "generatedBuilderAnnotations=" + generatedBuilderAnnotations,
+              "valueTypeAnnotations=" + valueTypeAnnotations,
+              "valueTypeVisibility=" + valueTypeVisibility,
+              "nestedClasses=" + nestedClasses)
           + "}";
     }
   }
@@ -950,8 +1156,10 @@ abstract class Metadata_Builder {
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
-    private final boolean gwtCompatible;
-    private final boolean gwtSerializable;
+    private final ImmutableList<Excerpt> generatedBuilderAnnotations;
+    private final ImmutableList<Excerpt> valueTypeAnnotations;
+    private final Metadata.Visibility valueTypeVisibility;
+    private final ImmutableList<Function<Metadata, Excerpt>> nestedClasses;
     private final EnumSet<Metadata_Builder.Property> _unsetProperties;
 
     Partial(Metadata_Builder builder) {
@@ -967,8 +1175,10 @@ abstract class Metadata_Builder {
       this.properties = ImmutableList.copyOf(builder.properties);
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
-      this.gwtCompatible = builder.gwtCompatible;
-      this.gwtSerializable = builder.gwtSerializable;
+      this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
+      this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
+      this.valueTypeVisibility = builder.valueTypeVisibility;
+      this.nestedClasses = ImmutableList.copyOf(builder.nestedClasses);
       this._unsetProperties = builder._unsetProperties.clone();
     }
 
@@ -1055,19 +1265,26 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public boolean isGwtCompatible() {
-      if (_unsetProperties.contains(Metadata_Builder.Property.GWT_COMPATIBLE)) {
-        throw new UnsupportedOperationException("gwtCompatible not set");
-      }
-      return gwtCompatible;
+    public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
+      return generatedBuilderAnnotations;
     }
 
     @Override
-    public boolean isGwtSerializable() {
-      if (_unsetProperties.contains(Metadata_Builder.Property.GWT_SERIALIZABLE)) {
-        throw new UnsupportedOperationException("gwtSerializable not set");
+    public ImmutableList<Excerpt> getValueTypeAnnotations() {
+      return valueTypeAnnotations;
+    }
+
+    @Override
+    public Metadata.Visibility getValueTypeVisibility() {
+      if (_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)) {
+        throw new UnsupportedOperationException("valueTypeVisibility not set");
       }
-      return gwtSerializable;
+      return valueTypeVisibility;
+    }
+
+    @Override
+    public ImmutableList<Function<Metadata, Excerpt>> getNestedClasses() {
+      return nestedClasses;
     }
 
     @Override
@@ -1118,10 +1335,18 @@ abstract class Metadata_Builder {
       if (builderSerializable != other.builderSerializable) {
         return false;
       }
-      if (gwtCompatible != other.gwtCompatible) {
+      if (!generatedBuilderAnnotations.equals(other.generatedBuilderAnnotations)) {
         return false;
       }
-      if (gwtSerializable != other.gwtSerializable) {
+      if (!valueTypeAnnotations.equals(other.valueTypeAnnotations)) {
+        return false;
+      }
+      if (valueTypeVisibility != other.valueTypeVisibility
+          && (valueTypeVisibility == null
+              || !valueTypeVisibility.equals(other.valueTypeVisibility))) {
+        return false;
+      }
+      if (!nestedClasses.equals(other.nestedClasses)) {
         return false;
       }
       return _unsetProperties.equals(other._unsetProperties);
@@ -1143,8 +1368,10 @@ abstract class Metadata_Builder {
             properties,
             standardMethodUnderrides,
             builderSerializable,
-            gwtCompatible,
-            gwtSerializable,
+            generatedBuilderAnnotations,
+            valueTypeAnnotations,
+            valueTypeVisibility,
+            nestedClasses,
             _unsetProperties
           });
     }
@@ -1177,12 +1404,12 @@ abstract class Metadata_Builder {
               (!_unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
                   ? "builderSerializable=" + builderSerializable
                   : null),
-              (!_unsetProperties.contains(Metadata_Builder.Property.GWT_COMPATIBLE)
-                  ? "gwtCompatible=" + gwtCompatible
+              "generatedBuilderAnnotations=" + generatedBuilderAnnotations,
+              "valueTypeAnnotations=" + valueTypeAnnotations,
+              (!_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
+                  ? "valueTypeVisibility=" + valueTypeVisibility
                   : null),
-              (!_unsetProperties.contains(Metadata_Builder.Property.GWT_SERIALIZABLE)
-                  ? "gwtSerializable=" + gwtSerializable
-                  : null))
+              "nestedClasses=" + nestedClasses)
           + "}";
     }
   }
