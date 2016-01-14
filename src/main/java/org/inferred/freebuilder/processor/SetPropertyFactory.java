@@ -178,6 +178,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("/**")
           .addLine(" * Removes {@code element} from the set to be returned from %s.",
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" * Does nothing if {@code element} is not a member of the set.")
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedType.isPresent()) {
