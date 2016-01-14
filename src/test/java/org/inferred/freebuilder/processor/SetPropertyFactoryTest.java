@@ -270,6 +270,21 @@ public class SetPropertyFactoryTest {
   }
 
   @Test
+  public void testRemove_missingElement() {
+    behaviorTester
+        .with(new Processor())
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .removeItems(\"three\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testClear() {
     behaviorTester
         .with(new Processor())
