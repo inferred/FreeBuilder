@@ -241,6 +241,50 @@ public class SetPropertyFactoryTest {
   }
 
   @Test
+  public void testRemove() {
+    behaviorTester
+        .with(new Processor())
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .removeItems(\"one\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).containsExactly(\"two\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .removeItems((String) null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_missingElement() {
+    behaviorTester
+        .with(new Processor())
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .removeItems(\"three\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testClear() {
     behaviorTester
         .with(new Processor())
@@ -389,6 +433,21 @@ public class SetPropertyFactoryTest {
             .addLine("    .addAllItems(%s.of(1, 1))", ImmutableList.class)
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testRemove_primitive() {
+    behaviorTester
+        .with(new Processor())
+        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addItems(1, 2)")
+            .addLine("    .removeItems(1)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).containsExactly(2);")
             .build())
         .runTest();
   }
