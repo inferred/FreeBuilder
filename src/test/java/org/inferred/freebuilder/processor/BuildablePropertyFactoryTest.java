@@ -918,4 +918,62 @@ public class BuildablePropertyFactoryTest {
             .build())
         .runTest();
   }
+
+  @Test
+  public void hiddenBuilderNotIllegallyReferenced() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example.foo;")
+            .addLine("public abstract class Item {")
+            .addLine("  public abstract %s<String> getNames();", List.class)
+            .addLine("  static class Builder extends Item_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new SourceBuilder()
+            .addLine("package com.example.bar;")
+            .addLine("import com.example.foo.Item;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  Item getItem();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new SourceBuilder()
+            .addLine("package com.example.foo;")
+            .addLine("class Item_Builder {")
+            .addLine("  private final %s<String> names = new %s<String>();", List.class, ArrayList.class)
+            .addLine("  public Item.Builder addNames(String... names) {")
+            .addLine("    for (String name : names) {")
+            .addLine("      this.names.add(name);")
+            .addLine("    }")
+            .addLine("    return (Item.Builder) this;")
+            .addLine("  }")
+            .addLine("  public Item.Builder clear() {")
+            .addLine("    names.clear();")
+            .addLine("    return (Item.Builder) this;")
+            .addLine("  }")
+            .addLine("  public Item.Builder mergeFrom(Item.Builder builder) {")
+            .addLine("    names.addAll(((Item_Builder) builder).names);")
+            .addLine("    return (Item.Builder) this;")
+            .addLine("  }")
+            .addLine("  public Item.Builder mergeFrom(Item item) {")
+            .addLine("    names.addAll(item.getNames());")
+            .addLine("    return (Item.Builder) this;")
+            .addLine("  }")
+            .addLine("  public Item build() { return new Value(this); }")
+            .addLine("  public Item buildPartial() { return new Value(this); }")
+            .addLine("  private class Value extends Item {")
+            .addLine("    private %s<String> names;", ImmutableList.class)
+            .addLine("    Value(Item_Builder builder) {")
+            .addLine("      names = %s.copyOf(builder.names);",
+                ImmutableList.class)
+            .addLine("    }")
+            .addLine("    @%s public %s<String> getNames() { return names; }",
+                Override.class, ImmutableList.class)
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .compiles();
+  }
 }

@@ -17,6 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.tryFind;
+
+import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
@@ -356,7 +358,8 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
   private static final Predicate<Element> IS_BUILDER_TYPE = new Predicate<Element>() {
     @Override public boolean apply(Element element) {
-      return element.getSimpleName().contentEquals("Builder");
+      return element.getSimpleName().contentEquals("Builder")
+          && element.getModifiers().contains(PUBLIC);
     }
   };
 
