@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
@@ -34,6 +35,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Map;
 
 import javax.lang.model.element.TypeElement;
 
@@ -103,6 +106,23 @@ public class JacksonSupportTest {
 
     Property property = getOnlyElement(metadata.getProperties());
     assertPropertyHasJsonPropertyAnnotation(property, "fooBar");
+  }
+
+  @Test
+  public void jsonAnyGetterAnnotationDisablesImplicitProperty() throws CannotGenerateCodeException {
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
+        "public interface DataType {",
+        "  @" + JsonAnyGetter.class.getName(),
+        "  " + Map.class.getName() + "<Integer, String> getFooBar();",
+        "  class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    Property property = getOnlyElement(metadata.getProperties());
+    assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
   private static void assertPropertyHasJsonPropertyAnnotation(
