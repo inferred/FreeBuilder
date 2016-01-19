@@ -24,8 +24,8 @@ import static com.google.common.collect.Iterables.tryFind;
 
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.GwtSupport.addGwtMetadata;
+import static org.inferred.freebuilder.processor.JacksonSupport.addJacksonAnnotations;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
 
@@ -113,8 +113,6 @@ class Analyser {
       new OptionalPropertyFactory(),
       new BuildablePropertyFactory(),
       new DefaultPropertyFactory());
-
-  private static final String JSON_PROPERTY = "com.fasterxml.jackson.annotation.JsonProperty";
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
@@ -426,8 +424,8 @@ class Analyser {
             .setAllCapsName(camelCaseToAllCaps(camelCaseName))
             .setGetterName(getterName)
             .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType))
-            .addAllNullableAnnotations(nullableAnnotationsOn(method))
-            .addAllAccessorAnnotations(accessorAnnotationsOn(method));
+            .addAllNullableAnnotations(nullableAnnotationsOn(method));
+    addJacksonAnnotations(resultBuilder, method);
     if (propertyType.getKind().isPrimitive()) {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
       TypeMirror boxedType = types.erasure(types.boxedClass(unboxedType).asType());
@@ -475,17 +473,6 @@ class Analyser {
       }
     }
     return nullableAnnotations.build();
-  }
-
-  private ImmutableList<AnnotationMirror> accessorAnnotationsOn(ExecutableElement getterMethod) {
-    ImmutableList.Builder<AnnotationMirror> accessorAnnotations = ImmutableList.builder();
-    for (AnnotationMirror annotation : elements.getAllAnnotationMirrors(getterMethod)) {
-      Name type = asElement(annotation.getAnnotationType()).getQualifiedName();
-      if (type.contentEquals(JSON_PROPERTY)) {
-        accessorAnnotations.add(annotation);
-      }
-    }
-    return accessorAnnotations.build();
   }
 
   private PropertyCodeGenerator createCodeGenerator(

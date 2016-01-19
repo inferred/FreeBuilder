@@ -24,7 +24,6 @@ import static org.inferred.freebuilder.processor.BuilderFactory.NEW_BUILDER_METH
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.Metadata.Visibility.PACKAGE;
 import static org.inferred.freebuilder.processor.Metadata.Visibility.PRIVATE;
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,7 +31,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -59,7 +57,6 @@ import java.util.Map;
 
 import javax.annotation.Generated;
 import javax.annotation.Nullable;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 
 /** Unit tests for {@link Analyser}. */
@@ -1403,25 +1400,6 @@ public class AnalyserTest {
         QualifiedName.of("com.example", "DataType_Builder", "Partial"),
         QualifiedName.of("com.example", "DataType_Builder", "Property"),
         QualifiedName.of("com.example", "DataType_Builder", "Value"));
-  }
-
-  @Test
-  public void jacksonAnnotationAddedToAccessorAnnotations() throws CannotGenerateCodeException {
-     TypeElement dataType = model.newType(
-        "package com.example;",
-        "public interface DataType {",
-        "  @" + JsonProperty.class.getName() + "(\"foobar\")",
-        "  int getFooBar();",
-        "  class Builder extends DataType_Builder {}",
-        "}");
-
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
-    assertThat(property.getAccessorAnnotations()).hasSize(1);
-    AnnotationMirror accessorAnnotation = getOnlyElement(property.getAccessorAnnotations());
-    assertThat(asElement(accessorAnnotation.getAnnotationType()).getSimpleName().toString())
-        .isEqualTo("JsonProperty");
   }
 
   private static String asSource(Excerpt annotation) {
