@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Generated;
 import javax.annotation.Nullable;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.Metadata;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator;
+import org.inferred.freebuilder.processor.util.Excerpt;
 
 /**
  * Auto-generated superclass of {@link Metadata.Property.Builder},
@@ -61,7 +61,7 @@ abstract class Metadata_Property_Builder {
   @Nullable private PropertyCodeGenerator codeGenerator = null;
   private boolean fullyCheckedCast;
   private final LinkedHashSet<TypeElement> nullableAnnotations = new LinkedHashSet<TypeElement>();
-  private final ArrayList<AnnotationMirror> accessorAnnotations = new ArrayList<AnnotationMirror>();
+  private final ArrayList<Excerpt> accessorAnnotations = new ArrayList<Excerpt>();
   private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties =
       EnumSet.allOf(Metadata_Property_Builder.Property.class);
 
@@ -313,7 +313,7 @@ abstract class Metadata_Property_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code element} is null
    */
-  public Metadata.Property.Builder addAccessorAnnotations(AnnotationMirror element) {
+  public Metadata.Property.Builder addAccessorAnnotations(Excerpt element) {
     this.accessorAnnotations.add(Preconditions.checkNotNull(element));
     return (Metadata.Property.Builder) this;
   }
@@ -326,9 +326,9 @@ abstract class Metadata_Property_Builder {
    * @throws NullPointerException if {@code elements} is null or contains a
    *     null element
    */
-  public Metadata.Property.Builder addAccessorAnnotations(AnnotationMirror... elements) {
+  public Metadata.Property.Builder addAccessorAnnotations(Excerpt... elements) {
     accessorAnnotations.ensureCapacity(accessorAnnotations.size() + elements.length);
-    for (AnnotationMirror element : elements) {
+    for (Excerpt element : elements) {
       addAccessorAnnotations(element);
     }
     return (Metadata.Property.Builder) this;
@@ -342,13 +342,12 @@ abstract class Metadata_Property_Builder {
    * @throws NullPointerException if {@code elements} is null or contains a
    *     null element
    */
-  public Metadata.Property.Builder addAllAccessorAnnotations(
-      Iterable<? extends AnnotationMirror> elements) {
+  public Metadata.Property.Builder addAllAccessorAnnotations(Iterable<? extends Excerpt> elements) {
     if (elements instanceof Collection) {
       accessorAnnotations.ensureCapacity(
           accessorAnnotations.size() + ((Collection<?>) elements).size());
     }
-    for (AnnotationMirror element : elements) {
+    for (Excerpt element : elements) {
       addAccessorAnnotations(element);
     }
     return (Metadata.Property.Builder) this;
@@ -369,7 +368,7 @@ abstract class Metadata_Property_Builder {
    * {@link Metadata.Property#getAccessorAnnotations()}.
    * Changes to this builder will be reflected in the view.
    */
-  public List<AnnotationMirror> getAccessorAnnotations() {
+  public List<Excerpt> getAccessorAnnotations() {
     return Collections.unmodifiableList(accessorAnnotations);
   }
 
@@ -478,7 +477,7 @@ abstract class Metadata_Property_Builder {
     @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
     private final ImmutableSet<TypeElement> nullableAnnotations;
-    private final ImmutableList<AnnotationMirror> accessorAnnotations;
+    private final ImmutableList<Excerpt> accessorAnnotations;
 
     private Value(Metadata_Property_Builder builder) {
       this.type = builder.type;
@@ -541,7 +540,7 @@ abstract class Metadata_Property_Builder {
     }
 
     @Override
-    public ImmutableList<AnnotationMirror> getAccessorAnnotations() {
+    public ImmutableList<Excerpt> getAccessorAnnotations() {
       return accessorAnnotations;
     }
 
@@ -631,7 +630,7 @@ abstract class Metadata_Property_Builder {
     @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
     private final ImmutableSet<TypeElement> nullableAnnotations;
-    private final ImmutableList<AnnotationMirror> accessorAnnotations;
+    private final ImmutableList<Excerpt> accessorAnnotations;
     private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties;
 
     Partial(Metadata_Property_Builder builder) {
@@ -714,7 +713,7 @@ abstract class Metadata_Property_Builder {
     }
 
     @Override
-    public ImmutableList<AnnotationMirror> getAccessorAnnotations() {
+    public ImmutableList<Excerpt> getAccessorAnnotations() {
       return accessorAnnotations;
     }
 

@@ -79,6 +79,12 @@ public class QualifiedName extends ValueType {
     this.simpleNames = ImmutableList.copyOf(simpleNames);
   }
 
+  /**
+   * Returns this qualified name as a string.
+   *
+   * <p>Returns the same as {@link Class#getName()} and {@link TypeElement#getQualifiedName()}
+   * would for the same type, e.g. "java.lang.Integer" or "com.example.OuterType.InnerType".
+   */
   @Override
   public String toString() {
     return packageName + "." + Joiner.on('.').join(simpleNames);

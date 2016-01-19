@@ -331,23 +331,22 @@ existing value type without breaking swathes of test code.
 ### Jackson
 
 To create types compatible with the [Jackson JSON serialization
-library][Jackson], use the [@JsonProperty] annotation on your getter methods as
-normal, and use the builder property of [@JsonDeserialize] to point Jackson at
-your Builder class. For instance:
+library][Jackson], use the builder property of [@JsonDeserialize] to point Jackson
+at your Builder class. For instance:
 
 ```java
 // This type can be freely converted to and from JSON with Jackson
 @JsonDeserialize(builder = Address.Builder.class)
 interface Address {
-    @JsonProperty("city") String getCity();
-    @JsonProperty("state") String getState();
+    String getCity();
+    String getState();
 
     class Builder extends Address_Builder {}
 }
 ```
 
-`@FreeBuilder` will copy the [@JsonProperty] annotations to the relevant setter
-methods on the builder.
+`@FreeBuilder` will generate appropriate [@JsonProperty] annotations on the
+builder.
 
 [Jackson]: http://wiki.fasterxml.com/JacksonHome
 [@JsonProperty]: http://fasterxml.github.io/jackson-annotations/javadoc/2.6/com/fasterxml/jackson/annotation/JsonProperty.html

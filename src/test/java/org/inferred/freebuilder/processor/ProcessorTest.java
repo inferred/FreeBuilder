@@ -1232,7 +1232,7 @@ public class ProcessorTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public abstract class DataType {")
-            .addLine("  @%s(\"a\") public abstract int getPropertyA();", JsonProperty.class)
+            .addLine("  public abstract int getPropertyA();", JsonProperty.class)
             .addLine("  @%s(\"b\") public abstract boolean isPropertyB();", JsonProperty.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")

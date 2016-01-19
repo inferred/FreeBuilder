@@ -18,12 +18,15 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.SourceLevel;
+import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.inferred.freebuilder.processor.util.testing.FakeMessager;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -32,7 +35,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 
 /** Unit tests for {@link Analyser}. */
@@ -54,11 +56,10 @@ public class JacksonSupportTest {
   }
 
   @Test
-  public void jacksonAnnotationAddedToAccessorAnnotations() throws CannotGenerateCodeException {
-     TypeElement dataType = model.newType(
+  public void noAnnotationAddedIfJsonDeserializeMissing() throws CannotGenerateCodeException {
+    TypeElement dataType = model.newType(
         "package com.example;",
         "public interface DataType {",
-        "  @" + JsonProperty.class.getName() + "(\"foobar\")",
         "  int getFooBar();",
         "  class Builder extends DataType_Builder {}",
         "}");
@@ -66,9 +67,54 @@ public class JacksonSupportTest {
     Metadata metadata = analyser.analyse(dataType);
 
     Property property = getOnlyElement(metadata.getProperties());
-    assertThat(property.getAccessorAnnotations()).hasSize(1);
-    AnnotationMirror accessorAnnotation = getOnlyElement(property.getAccessorAnnotations());
-    assertThat(asElement(accessorAnnotation.getAnnotationType()).getSimpleName().toString())
-        .isEqualTo("JsonProperty");
+    assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
+  }
+
+  @Test
+  public void jacksonAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "import " + JsonProperty.class.getName() + ";",
+        "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
+        "public interface DataType {",
+        "  @JsonProperty(\"bob\") int getFooBar();",
+        "  class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    Property property = getOnlyElement(metadata.getProperties());
+    assertPropertyHasJsonPropertyAnnotation(property, "bob");
+  }
+
+  @Test
+  public void jacksonAnnotationAddedWithImplicitName() throws CannotGenerateCodeException {
+    // See also https://github.com/google/FreeBuilder/issues/90
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
+        "public interface DataType {",
+        "  int getFooBar();",
+        "  class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    Property property = getOnlyElement(metadata.getProperties());
+    assertPropertyHasJsonPropertyAnnotation(property, "fooBar");
+  }
+
+  private static void assertPropertyHasJsonPropertyAnnotation(
+      Property property, String propertyName) {
+    assertThat(property.getAccessorAnnotations()).named("property accessor annotations").hasSize(1);
+    Excerpt accessorAnnotation = getOnlyElement(property.getAccessorAnnotations());
+    assertThat(asString(accessorAnnotation)).isEqualTo("@JsonProperty(\"" + propertyName + "\")\n");
+  }
+
+  private static String asString(Excerpt excerpt) {
+    SourceBuilder code = SourceStringBuilder.simple(SourceLevel.JAVA_6, true);
+    code.add(excerpt);
+    return code.toString();
   }
 }

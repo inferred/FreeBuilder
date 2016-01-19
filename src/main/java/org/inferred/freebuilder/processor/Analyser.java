@@ -24,7 +24,6 @@ import static com.google.common.collect.Iterables.tryFind;
 
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.GwtSupport.addGwtMetadata;
-import static org.inferred.freebuilder.processor.JacksonSupport.addJacksonAnnotations;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
@@ -372,8 +371,10 @@ class Analyser {
       TypeElement type, Iterable<ExecutableElement> methods, Optional<TypeElement> builder) {
     Set<String> methodsInvokedInBuilderConstructor = getMethodsInvokedInBuilderConstructor(builder);
     Map<String, Property> propertiesByName = new LinkedHashMap<String, Property>();
+    Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
-      Property property = asPropertyOrNull(type, method, methodsInvokedInBuilderConstructor);
+      Property property =
+          asPropertyOrNull(type, method, methodsInvokedInBuilderConstructor, jacksonSupport);
       if (property != null) {
         propertiesByName.put(property.getName(), property);
       }
@@ -408,7 +409,8 @@ class Analyser {
   private Property asPropertyOrNull(
       TypeElement valueType,
       ExecutableElement method,
-      Set<String> methodsInvokedInBuilderConstructor) {
+      Set<String> methodsInvokedInBuilderConstructor,
+      Optional<JacksonSupport> jacksonSupport) {
     MatchResult getterNameMatchResult = getterNameMatchResult(valueType, method);
     if (getterNameMatchResult == null) {
       return null;
@@ -425,7 +427,9 @@ class Analyser {
             .setGetterName(getterName)
             .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType))
             .addAllNullableAnnotations(nullableAnnotationsOn(method));
-    addJacksonAnnotations(resultBuilder, method);
+    if (jacksonSupport.isPresent()) {
+      jacksonSupport.get().addJacksonAnnotations(resultBuilder, method);
+    }
     if (propertyType.getKind().isPrimitive()) {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
       TypeMirror boxedType = types.erasure(types.boxedClass(unboxedType).asType());
