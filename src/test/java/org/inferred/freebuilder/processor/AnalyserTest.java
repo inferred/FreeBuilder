@@ -1206,6 +1206,21 @@ public class AnalyserTest {
   }
 
   @Test
+  public void unnamedPackage() {
+    TypeElement dataType = model.newType(
+        "public class DataType {}");
+
+    try {
+      analyser.analyse(dataType);
+      fail("Expected CannotGenerateCodeException");
+    } catch (CannotGenerateCodeException expected) { }
+
+    assertThat(messager.getMessagesByElement().asMap())
+        .containsEntry("DataType", ImmutableList.of(
+            "[ERROR] @FreeBuilder does not support types in unnamed packages"));
+  }
+
+  @Test
   public void freeAnnotationBuilder() {
     TypeElement dataType = model.newType(
         "package com.example;",

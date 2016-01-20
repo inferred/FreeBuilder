@@ -143,8 +143,8 @@ class Analyser {
    * @throws CannotGenerateCodeException if code cannot be generated, e.g. if the type is private
    */
   Metadata analyse(TypeElement type) throws CannotGenerateCodeException {
-    verifyType(type);
     PackageElement pkg = elements.getPackageOf(type);
+    verifyType(type, pkg);
     ImmutableSet<ExecutableElement> methods = methodsOn(type, elements);
     QualifiedName generatedBuilder = QualifiedName.of(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
@@ -193,7 +193,11 @@ class Analyser {
   }
 
   /** Basic sanity-checking to ensure we can fulfil the &#64;FreeBuilder contract for this type. */
-  private void verifyType(TypeElement type) throws CannotGenerateCodeException {
+  private void verifyType(TypeElement type, PackageElement pkg) throws CannotGenerateCodeException {
+    if (pkg.isUnnamed()) {
+      messager.printMessage(ERROR, "@FreeBuilder does not support types in unnamed packages", type);
+      throw new CannotGenerateCodeException();
+    }
     switch (type.getNestingKind()) {
       case TOP_LEVEL:
         break;
