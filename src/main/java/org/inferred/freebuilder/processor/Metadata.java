@@ -63,11 +63,8 @@ public abstract class Metadata {
       this.excerpt = excerpt;
     }
 
-    /**
-     * Returns the most permissive visibility of this and {@code other}.
-     */
-    public Visibility or(Visibility other) {
-      return Ordering.natural().min(this, other);
+    public static Visibility mostVisible(Visibility a, Visibility b) {
+      return Ordering.natural().min(a, b);
     }
 
     @Override
@@ -213,15 +210,16 @@ public abstract class Metadata {
     }
 
   /**
-   * Sets the value to be returned by {@link Metadata#getValueTypeVisibility()} to at least as
-   * visible as {@code valueTypeVisibility}. Will not decrease visibility.
+   * Sets the value to be returned by {@link Metadata#getValueTypeVisibility()} to the most visible
+   * of the current value and {@code visibility}. Will not decrease visibility.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code valueTypeVisibility} is null
+   * @throws NullPointerException if {@code visibility} is null
    */
     @Override
     public Builder setValueTypeVisibility(Visibility visibility) {
-      return super.setValueTypeVisibility(getValueTypeVisibility().or(visibility));
+      return super.setValueTypeVisibility(
+          Visibility.mostVisible(getValueTypeVisibility(), visibility));
     }
 
     /** Sets the builder class that users will see, if any. */
