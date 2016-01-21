@@ -3112,8 +3112,6 @@ public class DefaultSourceTest {
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
@@ -3467,8 +3465,6 @@ public class DefaultSourceTest {
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
@@ -3511,8 +3507,6 @@ public class DefaultSourceTest {
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
@@ -3559,8 +3553,6 @@ public class DefaultSourceTest {
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
@@ -3609,8 +3601,6 @@ public class DefaultSourceTest {
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
@@ -3652,8 +3642,6 @@ public class DefaultSourceTest {
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters("A", "B"))
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters("A", "B"))
         .addProperties(name

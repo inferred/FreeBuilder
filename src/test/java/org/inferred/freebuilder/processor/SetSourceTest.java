@@ -911,8 +911,6 @@ public class SetSourceTest {
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name

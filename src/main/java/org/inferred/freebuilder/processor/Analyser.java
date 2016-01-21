@@ -21,18 +21,34 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
+
+import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
+import static org.inferred.freebuilder.processor.GwtSupport.addGwtMetadata;
+import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
+import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
+
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
-import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
-import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
-import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Metadata.StandardMethod;
+import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import java.beans.Introspector;
 import java.io.Serializable;
@@ -46,7 +62,6 @@ import java.util.regex.Pattern;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -65,22 +80,6 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.lang.model.util.Types;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.Metadata.StandardMethod;
-import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-
-import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 /**
  * Analyses a {@link org.inferred.freebuilder.FreeBuilder FreeBuilder}
@@ -153,7 +152,7 @@ class Analyser {
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
     List<? extends TypeParameterElement> typeParameters = type.getTypeParameters();
-    return new Metadata.Builder()
+    Metadata.Builder metadata = new Metadata.Builder()
         .setType(QualifiedName.of(type).withParameters(typeParameters))
         .setInterfaceType(type.getKind().isInterface())
         .setBuilder(parameterized(builder, typeParameters))
@@ -167,9 +166,9 @@ class Analyser {
         .addVisibleNestedTypes(propertyType)
         .addAllVisibleNestedTypes(visibleTypesIn(type))  // Because we inherit from type
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
-        .setBuilderSerializable(shouldBuilderBeSerializable(builder))
-        .setGwtCompatible(isGwtCompatible(type))
-        .setGwtSerializable(isGwtSerializable(type))
+        .setBuilderSerializable(shouldBuilderBeSerializable(builder));
+    addGwtMetadata(type, metadata);
+    return metadata
         .addAllProperties(findProperties(type, methods, builder).values())
         .build();
   }
@@ -704,22 +703,6 @@ class Analyser {
 
   private static final boolean hasUpperCase(int codepoint) {
     return Character.toUpperCase(codepoint) != codepoint;
-  }
-
-  private static boolean isGwtCompatible(TypeElement type) {
-    return findAnnotationMirror(type, GwtCompatible.class).isPresent();
-  }
-
-  private static boolean isGwtSerializable(TypeElement type) {
-    Optional<AnnotationMirror> annotation = findAnnotationMirror(type, GwtCompatible.class);
-    if (!annotation.isPresent()) {
-      return false;
-    }
-    Optional<AnnotationValue> serializable = findProperty(annotation.get(), "serializable");
-    if (!serializable.isPresent()) {
-      return false;
-    }
-    return serializable.get().getValue().equals(Boolean.TRUE);
   }
 
   /** Returns whether a method is one of the {@link StandardMethod}s, and if so, which. */

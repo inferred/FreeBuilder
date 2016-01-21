@@ -46,7 +46,8 @@ abstract class Metadata_Property_Builder {
       this.name = name;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return name;
     }
   }
@@ -83,8 +84,7 @@ abstract class Metadata_Property_Builder {
    */
   public TypeMirror getType() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE),
-        "type not set");
+        !_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE), "type not set");
     return type;
   }
 
@@ -125,8 +125,7 @@ abstract class Metadata_Property_Builder {
    */
   public String getName() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.NAME),
-        "name not set");
+        !_unsetProperties.contains(Metadata_Property_Builder.Property.NAME), "name not set");
     return name;
   }
 
@@ -281,7 +280,8 @@ abstract class Metadata_Property_Builder {
    * @throws NullPointerException if {@code elements} is null or contains a
    *     null element
    */
-  public Metadata.Property.Builder addAllNullableAnnotations(Iterable<? extends TypeElement> elements) {
+  public Metadata.Property.Builder addAllNullableAnnotations(
+      Iterable<? extends TypeElement> elements) {
     for (TypeElement element : elements) {
       addNullableAnnotations(element);
     }
@@ -294,7 +294,7 @@ abstract class Metadata_Property_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Property.Builder clearNullableAnnotations() {
-    this.nullableAnnotations.clear();
+    nullableAnnotations.clear();
     return (Metadata.Property.Builder) this;
   }
 
@@ -342,9 +342,11 @@ abstract class Metadata_Property_Builder {
    * @throws NullPointerException if {@code elements} is null or contains a
    *     null element
    */
-  public Metadata.Property.Builder addAllAccessorAnnotations(Iterable<? extends AnnotationMirror> elements) {
+  public Metadata.Property.Builder addAllAccessorAnnotations(
+      Iterable<? extends AnnotationMirror> elements) {
     if (elements instanceof Collection) {
-      accessorAnnotations.ensureCapacity(accessorAnnotations.size() + ((Collection<?>) elements).size());
+      accessorAnnotations.ensureCapacity(
+          accessorAnnotations.size() + ((Collection<?>) elements).size());
     }
     for (AnnotationMirror element : elements) {
       addAccessorAnnotations(element);
@@ -395,7 +397,8 @@ abstract class Metadata_Property_Builder {
   public Metadata.Property.Builder mergeFrom(Metadata.Property.Builder template) {
     // Upcast to access the private _unsetProperties field.
     // Otherwise, oddly, we get an access violation.
-    EnumSet<Metadata_Property_Builder.Property> _templateUnset = ((Metadata_Property_Builder) template)._unsetProperties;
+    EnumSet<Metadata_Property_Builder.Property> _templateUnset =
+        ((Metadata_Property_Builder) template)._unsetProperties;
     if (!_templateUnset.contains(Metadata_Property_Builder.Property.TYPE)) {
       setType(template.getType());
     }
@@ -585,7 +588,19 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(new Object[] { type, boxedType, name, capitalizedName, allCapsName, getterName, codeGenerator, fullyCheckedCast, nullableAnnotations, accessorAnnotations });
+      return Arrays.hashCode(
+          new Object[] {
+            type,
+            boxedType,
+            name,
+            capitalizedName,
+            allCapsName,
+            getterName,
+            codeGenerator,
+            fullyCheckedCast,
+            nullableAnnotations,
+            accessorAnnotations
+          });
     }
 
     @Override
@@ -709,16 +724,14 @@ abstract class Metadata_Property_Builder {
         return false;
       }
       Metadata_Property_Builder.Partial other = (Metadata_Property_Builder.Partial) obj;
-      if (type != other.type
-          && (type == null || !type.equals(other.type))) {
+      if (type != other.type && (type == null || !type.equals(other.type))) {
         return false;
       }
       if (boxedType != other.boxedType
           && (boxedType == null || !boxedType.equals(other.boxedType))) {
         return false;
       }
-      if (name != other.name
-          && (name == null || !name.equals(other.name))) {
+      if (name != other.name && (name == null || !name.equals(other.name))) {
         return false;
       }
       if (capitalizedName != other.capitalizedName
@@ -751,7 +764,20 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(new Object[] { type, boxedType, name, capitalizedName, allCapsName, getterName, codeGenerator, fullyCheckedCast, nullableAnnotations, accessorAnnotations, _unsetProperties });
+      return Arrays.hashCode(
+          new Object[] {
+            type,
+            boxedType,
+            name,
+            capitalizedName,
+            allCapsName,
+            getterName,
+            codeGenerator,
+            fullyCheckedCast,
+            nullableAnnotations,
+            accessorAnnotations,
+            _unsetProperties
+          });
     }
 
     @Override
@@ -759,19 +785,25 @@ abstract class Metadata_Property_Builder {
       return "partial Property{"
           + COMMA_JOINER.join(
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
-                  ? "type=" + type : null),
+                  ? "type=" + type
+                  : null),
               (boxedType != null ? "boxedType=" + boxedType : null),
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
-                  ? "name=" + name : null),
+                  ? "name=" + name
+                  : null),
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
-                  ? "capitalizedName=" + capitalizedName : null),
+                  ? "capitalizedName=" + capitalizedName
+                  : null),
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
-                  ? "allCapsName=" + allCapsName : null),
+                  ? "allCapsName=" + allCapsName
+                  : null),
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
-                  ? "getterName=" + getterName : null),
+                  ? "getterName=" + getterName
+                  : null),
               (codeGenerator != null ? "codeGenerator=" + codeGenerator : null),
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
-                  ? "fullyCheckedCast=" + fullyCheckedCast : null),
+                  ? "fullyCheckedCast=" + fullyCheckedCast
+                  : null),
               "nullableAnnotations=" + nullableAnnotations,
               "accessorAnnotations=" + accessorAnnotations)
           + "}";

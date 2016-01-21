@@ -18,10 +18,14 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.inferred.freebuilder.processor.BuilderFactory.BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NEW_BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
+import static org.inferred.freebuilder.processor.Metadata.Visibility.PACKAGE;
+import static org.inferred.freebuilder.processor.Metadata.Visibility.PRIVATE;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
+import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -40,7 +44,9 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.inferred.freebuilder.processor.util.testing.FakeMessager;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -91,8 +97,6 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(partialType.withParameters())
         .setPropertyEnum(propertyType.withParameters())
@@ -127,8 +131,6 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(true)
         .setPartialType(partialType.withParameters())
         .setPropertyEnum(propertyType.withParameters())
@@ -590,8 +592,15 @@ public class AnalyserTest {
         "public interface DataType {",
         "  class Builder extends DataType_Builder {}",
         "}"));
-    assertTrue(dataType.isGwtCompatible());
-    assertFalse(dataType.isGwtSerializable());
+    assertThat(dataType.getGeneratedBuilderAnnotations()).hasSize(1);
+    assertThat(asSource(dataType.getGeneratedBuilderAnnotations().get(0)))
+        .isEqualTo("@GwtCompatible");
+    assertThat(dataType.getValueTypeVisibility()).isEqualTo(PRIVATE);
+    assertThat(dataType.getValueTypeAnnotations()).isEmpty();
+    assertThat(dataType.getNestedClasses()).isEmpty();
+    assertThat(dataType.getVisibleNestedTypes()).containsNoneOf(
+        QualifiedName.of("com.example", "DataType", "Value_CustomFieldSerializer"),
+        QualifiedName.of("com.example", "DataType", "GwtWhitelist"));
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
@@ -603,8 +612,17 @@ public class AnalyserTest {
         "public interface DataType {",
         "  class Builder extends DataType_Builder {}",
         "}"));
-    assertTrue(dataType.isGwtCompatible());
-    assertTrue(dataType.isGwtSerializable());
+    assertThat(dataType.getGeneratedBuilderAnnotations()).hasSize(1);
+    assertThat(asSource(dataType.getGeneratedBuilderAnnotations().get(0)))
+        .isEqualTo("@GwtCompatible");
+    assertThat(dataType.getValueTypeVisibility()).isEqualTo(PACKAGE);
+    assertThat(dataType.getValueTypeAnnotations()).hasSize(1);
+    assertThat(asSource(dataType.getValueTypeAnnotations().get(0)))
+        .isEqualTo("@GwtCompatible(serializable = true)");
+    assertThat(dataType.getNestedClasses()).hasSize(2);
+    assertThat(dataType.getVisibleNestedTypes()).containsAllOf(
+        QualifiedName.of("com.example", "DataType_Builder", "Value_CustomFieldSerializer"),
+        QualifiedName.of("com.example", "DataType_Builder", "GwtWhitelist"));
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
@@ -1096,8 +1114,6 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(partialType.withParameters())
         .setPropertyEnum(propertyType.withParameters())
@@ -1136,8 +1152,6 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder.withParameters())
-        .setGwtCompatible(false)
-        .setGwtSerializable(false)
         .setInterfaceType(false)
         .setPartialType(partialType.withParameters())
         .setPropertyEnum(propertyType.withParameters())
@@ -1408,6 +1422,10 @@ public class AnalyserTest {
     AnnotationMirror accessorAnnotation = getOnlyElement(property.getAccessorAnnotations());
     assertThat(asElement(accessorAnnotation.getAnnotationType()).getSimpleName().toString())
         .isEqualTo("JsonProperty");
+  }
+
+  private static String asSource(Excerpt annotation) {
+    return SourceStringBuilder.simple(JAVA_6, true).add(annotation).toString().trim();
   }
 
   private static final Function<Property, String> GET_NAME = new Function<Property, String>() {
