@@ -46,6 +46,15 @@ public class ModelUtils {
   }
 
   /**
+   * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClass} on
+   * {@code element}, or {@link Optional#absent()} if no such annotation exists.
+   */
+  public static Optional<AnnotationMirror> findAnnotationMirror(
+      Element element, QualifiedName annotationClass) {
+    return findAnnotationMirror(element, Shading.unshadedName(annotationClass.toString()));
+  }
+
+  /**
    * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClassName} on
    * {@code element}, or {@link Optional#absent()} if no such annotation exists.
    */

@@ -25,7 +25,6 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Set;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -125,8 +124,8 @@ public abstract class PropertyCodeGenerator {
   }
 
   protected void addAccessorAnnotations(SourceBuilder code) {
-    for (AnnotationMirror annotation : property.getAccessorAnnotations()) {
-      code.addLine("%s", annotation);
+    for (Excerpt annotation : property.getAccessorAnnotations()) {
+      code.add(annotation);
     }
   }
 

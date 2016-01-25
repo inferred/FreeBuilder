@@ -25,7 +25,6 @@ import static com.google.common.collect.Iterables.tryFind;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.GwtSupport.addGwtMetadata;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
 
@@ -113,8 +112,6 @@ class Analyser {
       new OptionalPropertyFactory(),
       new BuildablePropertyFactory(),
       new DefaultPropertyFactory());
-
-  private static final String JSON_PROPERTY = "com.fasterxml.jackson.annotation.JsonProperty";
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
@@ -374,8 +371,10 @@ class Analyser {
       TypeElement type, Iterable<ExecutableElement> methods, Optional<TypeElement> builder) {
     Set<String> methodsInvokedInBuilderConstructor = getMethodsInvokedInBuilderConstructor(builder);
     Map<String, Property> propertiesByName = new LinkedHashMap<String, Property>();
+    Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
-      Property property = asPropertyOrNull(type, method, methodsInvokedInBuilderConstructor);
+      Property property =
+          asPropertyOrNull(type, method, methodsInvokedInBuilderConstructor, jacksonSupport);
       if (property != null) {
         propertiesByName.put(property.getName(), property);
       }
@@ -410,7 +409,8 @@ class Analyser {
   private Property asPropertyOrNull(
       TypeElement valueType,
       ExecutableElement method,
-      Set<String> methodsInvokedInBuilderConstructor) {
+      Set<String> methodsInvokedInBuilderConstructor,
+      Optional<JacksonSupport> jacksonSupport) {
     MatchResult getterNameMatchResult = getterNameMatchResult(valueType, method);
     if (getterNameMatchResult == null) {
       return null;
@@ -426,8 +426,10 @@ class Analyser {
             .setAllCapsName(camelCaseToAllCaps(camelCaseName))
             .setGetterName(getterName)
             .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType))
-            .addAllNullableAnnotations(nullableAnnotationsOn(method))
-            .addAllAccessorAnnotations(accessorAnnotationsOn(method));
+            .addAllNullableAnnotations(nullableAnnotationsOn(method));
+    if (jacksonSupport.isPresent()) {
+      jacksonSupport.get().addJacksonAnnotations(resultBuilder, method);
+    }
     if (propertyType.getKind().isPrimitive()) {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
       TypeMirror boxedType = types.erasure(types.boxedClass(unboxedType).asType());
@@ -475,17 +477,6 @@ class Analyser {
       }
     }
     return nullableAnnotations.build();
-  }
-
-  private ImmutableList<AnnotationMirror> accessorAnnotationsOn(ExecutableElement getterMethod) {
-    ImmutableList.Builder<AnnotationMirror> accessorAnnotations = ImmutableList.builder();
-    for (AnnotationMirror annotation : elements.getAllAnnotationMirrors(getterMethod)) {
-      Name type = asElement(annotation.getAnnotationType()).getQualifiedName();
-      if (type.contentEquals(JSON_PROPERTY)) {
-        accessorAnnotations.add(annotation);
-      }
-    }
-    return accessorAnnotations.build();
   }
 
   private PropertyCodeGenerator createCodeGenerator(

@@ -30,7 +30,6 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import javax.annotation.Nullable;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -188,7 +187,7 @@ public abstract class Metadata {
      * of the getter method as its argument. For a list, for example, that would be getX() and
      * addAllX().
      */
-    ImmutableList<AnnotationMirror> getAccessorAnnotations();
+    ImmutableList<Excerpt> getAccessorAnnotations();
 
     /** Builder for {@link Property}. */
     class Builder extends Metadata_Property_Builder {}
