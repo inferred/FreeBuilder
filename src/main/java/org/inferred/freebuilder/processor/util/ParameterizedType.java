@@ -17,7 +17,15 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
+
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+
 import static java.util.Collections.nCopies;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.util.List;
 
@@ -27,9 +35,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor6;
 import javax.lang.model.util.SimpleTypeVisitor6;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 
 public class ParameterizedType extends ValueType implements Excerpt {
 
@@ -87,7 +92,7 @@ public class ParameterizedType extends ValueType implements Excerpt {
   public Excerpt constructor() {
     return new Excerpt() {
       @Override public void addTo(SourceBuilder source) {
-        if (isParameterized() && source.getSourceLevel().supportsDiamondOperator()) {
+        if (isParameterized() && source.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
           source.add("new %s<>", qualifiedName);
         } else {
           source.add("new %s", ParameterizedType.this);
@@ -149,8 +154,8 @@ public class ParameterizedType extends ValueType implements Excerpt {
 
   @Override
   public String toString() {
-    // Only used when debugging, so using J6/Guava is fine.
-    return new SourceStringBuilder(SourceLevel.JAVA_6, true, new TypeShortener.NeverShorten())
+    // Only used when debugging, so an empty feature set is fine.
+    return new SourceStringBuilder(new TypeShortener.NeverShorten(), new StaticFeatureSet())
         .add(this)
         .toString();
   }

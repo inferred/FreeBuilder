@@ -19,6 +19,8 @@ import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -94,7 +96,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
           ArrayList.class,
           elementType,
           property.getName(),
-          code.getSourceLevel().supportsDiamondOperator() ? "" : elementType);
+          code.feature(SOURCE_LEVEL).supportsDiamondOperator() ? "" : elementType);
     }
 
     @Override
@@ -209,7 +211,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-      if (code.isGuavaAvailable()) {
+      if (code.feature(GUAVA).isAvailable()) {
         code.addLine("%s = %s.copyOf(%s.%s);",
             finalField, ImmutableList.class, builder, property.getName());
       } else {
@@ -265,7 +267,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
     IMMUTABLE_LIST() {
       @Override
       public void addTo(SourceBuilder code) {
-        if (!code.isGuavaAvailable()) {
+        if (!code.feature(GUAVA).isAvailable()) {
           code.addLine("")
               .addLine("@%s(\"unchecked\")", SuppressWarnings.class)
               .addLine("private static <E> %1$s<E> immutableList(%1$s<E> elements, %2$s<E> type) {",

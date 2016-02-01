@@ -1,5 +1,8 @@
 package org.inferred.freebuilder.processor.util;
 
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+
 import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.escape.Escapers;
@@ -46,9 +49,9 @@ public class PreconditionExcerpts {
     return new Excerpt() {
       @Override
       public void addTo(SourceBuilder code) {
-        if (code.isGuavaAvailable()) {
+        if (code.feature(GUAVA).isAvailable()) {
           // No preamble needed
-        } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+        } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
           // No preamble needed
         } else {
           code.addLine("if (%s == null) {", reference)
@@ -80,11 +83,11 @@ public class PreconditionExcerpts {
     return new Excerpt() {
       @Override
       public void addTo(SourceBuilder code) {
-        if (code.isGuavaAvailable()) {
+        if (code.feature(GUAVA).isAvailable()) {
           code.add("%s.checkNotNull(%s)", Preconditions.class, reference);
-        } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+        } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
           code.add("%s.requireNonNull(%s)",
-              code.getSourceLevel().javaUtilObjects().get(), reference);
+              code.feature(SOURCE_LEVEL).javaUtilObjects().get(), reference);
         } else {
           code.add("%s", reference);
         }
@@ -110,11 +113,11 @@ public class PreconditionExcerpts {
     return new Excerpt() {
       @Override
       public void addTo(SourceBuilder code) {
-        if (code.isGuavaAvailable()) {
+        if (code.feature(GUAVA).isAvailable()) {
           code.addLine("%s.checkNotNull(%s);", Preconditions.class, reference);
-        } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+        } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
           code.addLine("%s.requireNonNull(%s);",
-              code.getSourceLevel().javaUtilObjects().get(), reference);
+              code.feature(SOURCE_LEVEL).javaUtilObjects().get(), reference);
         } else {
           code.addLine("if (%s == null) {", reference)
               .addLine("  throw new NullPointerException();")
@@ -177,7 +180,7 @@ public class PreconditionExcerpts {
     return new Excerpt() {
       @Override
       public void addTo(SourceBuilder code) {
-        if (code.isGuavaAvailable()) {
+        if (code.feature(GUAVA).isAvailable()) {
           code.add("%s.%s(%s, \"%s\"",
               Preconditions.class,
               methodName,

@@ -18,6 +18,10 @@ package org.inferred.freebuilder.processor.util;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
+import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
+import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.util.feature.FeatureType;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
@@ -25,11 +29,11 @@ import java.util.Collection;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.FilerException;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
 
 /** Convenience wrapper around the {@link Writer} instances returned by {@link Filer}. */
 public class CompilationUnitWriter implements SourceBuilder, Closeable {
@@ -48,15 +52,12 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
    *     internal error to the user
    */
   public CompilationUnitWriter(
-      Filer filer,
-      Elements elements,
-      SourceLevel sourceLevel,
-      boolean isGuavaAvailable,
+      ProcessingEnvironment env,
       QualifiedName classToWrite,
       Collection<QualifiedName> nestedClasses,
       Element originatingElement) throws FilerException {
     try {
-      writer = filer
+      writer = env.getFiler()
           .createSourceFile(classToWrite.toString(), originatingElement)
           .openWriter();
       writer
@@ -73,7 +74,7 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
     // written first, but aren't known yet.
     ImportManager.Builder importManagerBuilder = new ImportManager.Builder();
     importManagerBuilder.addImplicitImport(classToWrite);
-    PackageElement pkg = elements.getPackageElement(classToWrite.getPackage());
+    PackageElement pkg = env.getElementUtils().getPackageElement(classToWrite.getPackage());
     for (TypeElement sibling : ElementFilter.typesIn(pkg.getEnclosedElements())) {
       importManagerBuilder.addImplicitImport(QualifiedName.of(sibling));
     }
@@ -81,7 +82,7 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
       importManagerBuilder.addImplicitImport(nestedClass);
     }
     importManager = importManagerBuilder.build();
-    source = new SourceStringBuilder(sourceLevel, isGuavaAvailable, importManager);
+    source = new SourceStringBuilder(importManager, new EnvironmentFeatureSet(env));
   }
 
   @Override
@@ -108,13 +109,8 @@ public class CompilationUnitWriter implements SourceBuilder, Closeable {
   }
 
   @Override
-  public SourceLevel getSourceLevel() {
-    return source.getSourceLevel();
-  }
-
-  @Override
-  public boolean isGuavaAvailable() {
-    return source.isGuavaAvailable();
+  public <T extends Feature<T>> T feature(FeatureType<T> feature) {
+    return source.feature(feature);
   }
 
   @Override

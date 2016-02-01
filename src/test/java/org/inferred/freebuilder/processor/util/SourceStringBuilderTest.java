@@ -17,12 +17,14 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
-import static javax.lang.model.util.ElementFilter.fieldsIn;
-import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
+
 import static org.junit.Assert.assertEquals;
+
+import static javax.lang.model.util.ElementFilter.fieldsIn;
 
 import com.google.common.collect.ImmutableList;
 
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,7 +48,7 @@ public class SourceStringBuilderTest {
   @Rule public final ModelRule model = new ModelRule();
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final ImportManager shortener = new ImportManager.Builder().build();
-  private final SourceBuilder builder = new SourceStringBuilder(JAVA_6, true, shortener);
+  private final SourceBuilder builder = new SourceStringBuilder(shortener, new StaticFeatureSet());
 
   @Test
   public void testConstructor() {
