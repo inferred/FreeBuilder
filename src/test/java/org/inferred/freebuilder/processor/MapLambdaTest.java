@@ -1,0 +1,229 @@
+/*
+ * Copyright 2014 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.inferred.freebuilder.processor;
+
+import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
+import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+import javax.annotation.Nullable;
+import javax.tools.JavaFileObject;
+
+@RunWith(JUnit4.class)
+public class MapLambdaTest {
+
+  private static final JavaFileObject REQUIRED_INTEGER_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  int getProperty();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject DEFAULT_INTEGER_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  int getProperty();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    public Builder() {")
+      .addLine("      setProperty(11);")
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject NULLABLE_INTEGER_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  @%s Integer getProperty();", Nullable.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("}")
+      .build();
+
+  @Rule public final ExpectedException thrown = ExpectedException.none();
+  private final BehaviorTester behaviorTester = new BehaviorTester();
+
+  @Test
+  public void mapReplacesValueToBeReturnedFromGetterForRequiredProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(REQUIRED_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, value.getProperty());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapReplacesValueToBeReturnedFromGetterForDefaultProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULT_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, value.getProperty());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapReplacesValueToBeReturnedFromGetterForNullableProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(NULLABLE_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, (int) value.getProperty());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapThrowsNpeIfMapperIsNullForRequiredProperty() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(REQUIRED_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapThrowsNpeIfMapperIsNullForDefaultProperty() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULT_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .mapProperty(null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapThrowsNpeIfMapperIsNullForNullableProperty() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(NULLABLE_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapThrowsNpeIfMapperReturnsNullWhenRequiredPropertyIsSet() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(REQUIRED_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapThrowsNpeIfMapperReturnsNullForDefaultProperty() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULT_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .mapProperty(a -> null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapAllowsNullReturnIfNullablePropertyIsSet() {
+    behaviorTester
+        .with(new Processor())
+        .with(NULLABLE_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> null)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getProperty()).isNull();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapThrowsIllegalStateExceptionIfRequiredPropertyIsUnset() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("property not set");
+    behaviorTester
+        .with(new Processor())
+        .with(REQUIRED_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .mapProperty(a -> 14);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapPassesInNullIfNullablePropertyIsUnset() {
+    behaviorTester
+        .with(new Processor())
+        .with(NULLABLE_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .mapProperty(a -> {")
+            .addLine("        assertThat(a).isNull();")
+            .addLine("        return 14;")
+            .addLine("    })")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, (int) value.getProperty());")
+            .build())
+        .runTest();
+  }
+
+}

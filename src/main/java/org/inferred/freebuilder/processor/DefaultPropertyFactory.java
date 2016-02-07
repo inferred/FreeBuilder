@@ -15,8 +15,11 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.Objects.firstNonNull;
+
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -24,15 +27,18 @@ import com.google.common.base.Optional;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
 public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
   private static final String SET_PREFIX = "set";
+  private static final String MAP_PREFIX = "map";
 
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
@@ -40,19 +46,22 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     boolean hasDefault =
         !config.getProperty().getNullableAnnotations().isEmpty()
             || config.getMethodsInvokedInBuilderConstructor().contains(setterName);
-    return Optional.of(new CodeGenerator(config.getProperty(), setterName, hasDefault));
+    return Optional.of(new CodeGenerator(
+        config.getProperty(), hasDefault));
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     final String setterName;
+    final String mapName;
     final boolean hasDefault;
     final boolean isPrimitive;
     final boolean isNullable;
 
-    CodeGenerator(Property property, String setterName, boolean hasDefault) {
+    CodeGenerator(Property property, boolean hasDefault) {
       super(property);
-      this.setterName = setterName;
+      this.setterName = SET_PREFIX + property.getCapitalizedName();
+      this.mapName = MAP_PREFIX + property.getCapitalizedName();
       this.hasDefault = hasDefault;
       this.isPrimitive = property.getType().getKind().isPrimitive();
       this.isNullable = !property.getNullableAnnotations().isEmpty();
@@ -78,7 +87,12 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
-      // Setter
+      addSetter(code, metadata);
+      addMapper(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addSetter(SourceBuilder code, final Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -111,8 +125,39 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine("  return (%s) this;", metadata.getBuilder());
       }
       code.addLine("}");
+    }
 
-      // Getter
+    private void addMapper(SourceBuilder code, final Metadata metadata) {
+      Optional<ParameterizedType> unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator();
+      if (unaryOperator.isPresent()) {
+        code.addLine("")
+            .addLine("/**")
+            .addLine(" * Replaces the value to be returned by %s",
+                metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            .addLine(" * by applying {@code mapper} to it and using the result.")
+            .addLine(" *");
+        code.addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        if (isNullable) {
+          code.addLine(" * @throws NullPointerException if {@code mapper} is null");
+        } else {
+          code.addLine(" * @throws NullPointerException if {@code mapper} is null"
+              + " or returns null");
+        }
+        if (!hasDefault) {
+          code.addLine(" * @throws IllegalStateException if the field has not been set");
+        }
+        TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
+        code.addLine(" */")
+            .add("public %s %s(%s mapper) {",
+                metadata.getBuilder(),
+                mapName,
+                unaryOperator.get().withParameters(typeParam))
+            .addLine("  return %s(mapper.apply(%s()));", setterName, property.getGetterName())
+            .addLine("}");
+      }
+    }
+
+    private void addGetter(SourceBuilder code, final Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns the value that will be returned by %s.",
