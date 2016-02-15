@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
-
-import javax.lang.model.SourceVersion;
+package org.inferred.freebuilder.processor.util.feature;
 
 import com.google.common.base.Optional;
+
+import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.SourceVersion;
 
 /**
  * Compliance levels which are idiomatically supported by this processor.
@@ -27,17 +31,31 @@ import com.google.common.base.Optional;
  * Additionally, {@code sourceLevel.supportsDiamondOperator()} is far more readable than
  * {@code sourceVersion.compareTo(SourceLevel.RELEASE_7) >= 0}.
  */
-public enum SourceLevel {
+public enum SourceLevel implements Feature<SourceLevel> {
+
   JAVA_6, JAVA_7;
 
-  public static SourceLevel from(SourceVersion sourceVersion) {
-    // RELEASE_6 is always available, as previous releases did not support annotation processing.
-    if (sourceVersion.compareTo(SourceVersion.RELEASE_6) <= 0) {
+  /**
+   * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current
+   * {@link SourceLevel}.
+   */
+  public static final FeatureType<SourceLevel> SOURCE_LEVEL = new FeatureType<SourceLevel>() {
+
+    @Override
+    protected SourceLevel testDefault() {
       return JAVA_6;
-    } else {
-      return JAVA_7;
     }
-  }
+
+    @Override
+    protected SourceLevel forEnvironment(ProcessingEnvironment env) {
+      // RELEASE_6 is always available, as previous releases did not support annotation processing.
+      if (env.getSourceVersion().compareTo(SourceVersion.RELEASE_6) <= 0) {
+        return JAVA_6;
+      } else {
+        return JAVA_7;
+      }
+    }
+  };
 
   public Optional<QualifiedName> javaUtilObjects() {
     switch (this) {

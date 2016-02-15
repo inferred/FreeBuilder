@@ -13,23 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.util.feature;
 
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assert.assertEquals;
-
-import javax.lang.model.SourceVersion;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.SourceVersion;
+
 @RunWith(JUnit4.class)
 public class SourceLevelTest {
 
   @Test
-  public void testFrom() {
-    // Tests are currently run with JDK 7, so we can test up to RELEASE_7.
-    assertEquals(SourceLevel.JAVA_6, SourceLevel.from(SourceVersion.RELEASE_6));
-    assertEquals(SourceLevel.JAVA_7, SourceLevel.from(SourceVersion.RELEASE_7));
+  public void java6() {
+    assertEquals(SourceLevel.JAVA_6, sourceLevelFrom(SourceVersion.RELEASE_6));
+  }
+
+  @Test
+  public void java7() {
+    assertEquals(SourceLevel.JAVA_7, sourceLevelFrom(SourceVersion.RELEASE_7));
+  }
+
+  private static SourceLevel sourceLevelFrom(SourceVersion version) {
+    ProcessingEnvironment env = mock(ProcessingEnvironment.class);
+    when(env.getSourceVersion()).thenReturn(version);
+    return SOURCE_LEVEL.forEnvironment(env);
   }
 }

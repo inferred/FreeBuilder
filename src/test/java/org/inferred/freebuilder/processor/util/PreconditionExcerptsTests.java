@@ -1,9 +1,9 @@
 package org.inferred.freebuilder.processor.util;
 
-import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
-import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_7;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.junit.Assert.assertEquals;
 
+import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -13,7 +13,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckNotNull_guava() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkNotNull("foo"))
         .toString();
     assertEquals("Preconditions.checkNotNull(foo);\n", source);
@@ -21,7 +21,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckNotNull_j6() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkNotNull("foo"))
         .toString();
     assertEquals("if (foo == null) {\n  throw new NullPointerException();\n}\n", source);
@@ -29,7 +29,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckNotNull_j7() {
-    String source = SourceStringBuilder.simple(JAVA_7, false)
+    String source = SourceStringBuilder.simple(JAVA_7)
         .add(PreconditionExcerpts.checkNotNull("foo"))
         .toString();
     assertEquals("Objects.requireNonNull(foo);\n", source);
@@ -37,7 +37,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckNotNullInline_guava() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkNotNullPreamble("foo"))
         .addLine("this.foo = %s;", PreconditionExcerpts.checkNotNullInline("foo"))
         .toString();
@@ -46,7 +46,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckNotNullInline_j6() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkNotNullPreamble("foo"))
         .addLine("this.foo = %s;", PreconditionExcerpts.checkNotNullInline("foo"))
         .toString();
@@ -56,7 +56,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckNotNullInline_j7() {
-    String source = SourceStringBuilder.simple(JAVA_7, false)
+    String source = SourceStringBuilder.simple(JAVA_7)
         .add(PreconditionExcerpts.checkNotNullPreamble("foo"))
         .addLine("this.foo = %s;", PreconditionExcerpts.checkNotNullInline("foo"))
         .toString();
@@ -65,7 +65,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_simpleMessage() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument("foo != 0", "foo must not be zero"))
         .toString();
     assertEquals("Preconditions.checkArgument(foo != 0, \"foo must not be zero\");\n", source);
@@ -73,7 +73,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_singleParameter() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument("foo > 0", "foo must be positive, but got %s", "foo"))
         .toString();
     assertEquals("Preconditions.checkArgument(foo > 0, "
@@ -82,7 +82,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_twoParameters() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo > bar", "foo must be greater than bar, but got %s <= %s", "foo", "bar"))
         .toString();
@@ -92,7 +92,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_doubleNegative() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument("!foo.isEmpty()", "foo must not be empty"))
         .toString();
     assertEquals("Preconditions.checkArgument(!foo.isEmpty(), \"foo must not be empty\");\n", source);
@@ -100,7 +100,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_doubleQuotes() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\"\")", "foo must contain at least one double quote ('\"')"))
         .toString();
@@ -110,7 +110,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_backslashes() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\")", "foo must contain at least one backslash ('\\')"))
         .toString();
@@ -120,7 +120,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_newLines() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo.length() <= 80", "foo should not be more than 80 characters, but got:\n%s", "foo"))
         .toString();
@@ -130,7 +130,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_simpleMessage() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "message"))
         .toString();
     assertEquals(
@@ -139,7 +139,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_singleParameterAtEnd() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "message about %s", "foo"))
         .toString();
     assertEquals(
@@ -149,7 +149,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_singleParameterInMiddle() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "bar %s baz", "foo"))
         .toString();
     assertEquals(
@@ -159,7 +159,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_singleParameterAtStart() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "%s is wrong", "foo"))
         .toString();
     assertEquals(
@@ -169,7 +169,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_twoParametersInMiddle() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "a %s c %s e", "b", "d"))
         .toString();
     assertEquals(
@@ -180,7 +180,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_doubleQuotes() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\"\")", "foo must contain at least one double quote ('\"')"))
         .toString();
@@ -192,7 +192,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_backslashes() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\\\")", "foo must contain at least one backslash ('\\')"))
         .toString();
@@ -204,7 +204,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_newLines() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\n\")", "foo must contain at least one newline ('\n')"))
         .toString();
@@ -216,7 +216,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_doubleNegative() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("!foo.isEmpty()", "foo must not be empty"))
         .toString();
     assertEquals(
@@ -227,7 +227,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_complexCondition() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("a % 3 > 0", "message"))
         .toString();
     assertEquals(
@@ -236,7 +236,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_complexConditionWithMultipleBrackets() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("(a || b) && (c || d)", "message"))
         .toString();
     assertEquals(
@@ -246,7 +246,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_j6_instanceOf() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("a instanceof Integer", "message"))
         .toString();
     assertEquals(
@@ -256,7 +256,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckState_guava_simpleMessage() {
-    String source = SourceStringBuilder.simple(JAVA_6, true)
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkState("foo != 0", "foo must not be zero"))
         .toString();
     assertEquals("Preconditions.checkState(foo != 0, \"foo must not be zero\");\n", source);
@@ -264,7 +264,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckState_j6_simpleMessage() {
-    String source = SourceStringBuilder.simple(JAVA_6, false)
+    String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkState("foo != 0", "foo must not be zero"))
         .toString();
     assertEquals(

@@ -15,9 +15,17 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.RoundEnvironments.annotatedElementsIn;
+
+import static javax.lang.model.util.ElementFilter.typesIn;
+
+import com.google.auto.service.AutoService;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
+
+import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitWriter;
 
 import java.util.Set;
 
@@ -28,16 +36,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic.Kind;
-
-import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitWriter;
-import org.inferred.freebuilder.processor.util.Shading;
-import org.inferred.freebuilder.processor.util.SourceLevel;
-
-import com.google.auto.service.AutoService;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Processor for the &#64;{@link FreeBuilder} annotation.
@@ -78,10 +76,7 @@ public class Processor extends AbstractProcessor {
       try {
         Metadata metadata = analyser.analyse(type);
         CompilationUnitWriter code = new CompilationUnitWriter(
-            processingEnv.getFiler(),
-            processingEnv.getElementUtils(),
-            SourceLevel.from(processingEnv.getSourceVersion()),
-            isGuavaAvailable(),
+            processingEnv,
             metadata.getGeneratedBuilder().getQualifiedName(),
             metadata.getVisibleNestedTypes(),
             type);
@@ -107,11 +102,5 @@ public class Processor extends AbstractProcessor {
       }
     }
     return false;
-  }
-
-  private boolean isGuavaAvailable() {
-    String name = Shading.unshadedName(ImmutableList.class.getName());
-    TypeElement element = processingEnv.getElementUtils().getTypeElement(name);
-    return (element != null);
   }
 }

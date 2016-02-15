@@ -24,7 +24,6 @@ import static org.inferred.freebuilder.processor.BuilderFactory.NEW_BUILDER_METH
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.Metadata.Visibility.PACKAGE;
 import static org.inferred.freebuilder.processor.Metadata.Visibility.PRIVATE;
-import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -1403,7 +1402,7 @@ public class AnalyserTest {
   }
 
   private static String asSource(Excerpt annotation) {
-    return SourceStringBuilder.simple(JAVA_6, true).add(annotation).toString().trim();
+    return SourceStringBuilder.simple().add(annotation).toString().trim();
   }
 
   private static final Function<Property, String> GET_NAME = new Function<Property, String>() {

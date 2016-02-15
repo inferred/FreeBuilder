@@ -19,6 +19,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
+import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
+import org.inferred.freebuilder.processor.util.feature.FeatureType;
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
+
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -33,27 +38,21 @@ import javax.lang.model.type.TypeMirror;
  */
 public final class SourceStringBuilder implements SourceBuilder {
 
-  private final SourceLevel sourceLevel;
-  private final boolean guavaAvailable;
   private final TypeShortener shortener;
   private final StringBuilder destination = new StringBuilder();
+  private final FeatureSet features;
 
   /**
    * Returns a {@link SourceStringBuilder} that always shortens types, even if that causes
    * conflicts.
    */
-  public static SourceBuilder simple(SourceLevel sourceLevel, boolean isGuavaAvailable) {
-    return new SourceStringBuilder(
-        sourceLevel, isGuavaAvailable, new TypeShortener.AlwaysShorten());
+  public static SourceBuilder simple(Feature<?>... features) {
+    return new SourceStringBuilder(new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features));
   }
 
-  SourceStringBuilder(
-      SourceLevel sourceLevel,
-      boolean isGuavaAvailable,
-      TypeShortener shortener) {
-    this.sourceLevel = sourceLevel;
-    this.guavaAvailable = isGuavaAvailable;
+  SourceStringBuilder(TypeShortener shortener, FeatureSet features) {
     this.shortener = shortener;
+    this.features = features;
   }
 
   @Override
@@ -79,17 +78,12 @@ public final class SourceStringBuilder implements SourceBuilder {
 
   @Override
   public SourceStringBuilder subBuilder() {
-    return new SourceStringBuilder(sourceLevel, guavaAvailable, shortener);
+    return new SourceStringBuilder(shortener, features);
   }
 
   @Override
-  public SourceLevel getSourceLevel() {
-    return sourceLevel;
-  }
-
-  @Override
-  public boolean isGuavaAvailable() {
-    return guavaAvailable;
+  public <T extends Feature<T>> T feature(FeatureType<T> feature) {
+    return features.get(feature);
   }
 
   /** Returns the source code written so far. */

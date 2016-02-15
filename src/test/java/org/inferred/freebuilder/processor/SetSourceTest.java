@@ -19,8 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
-import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
-import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_7;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -32,8 +31,9 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceLevel;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -47,7 +47,7 @@ public class SetSourceTest {
   public void test_guava_j6() {
     Metadata metadata = createMetadata();
 
-    assertThat(generateSource(metadata, JAVA_6, true)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -252,7 +252,8 @@ public class SetSourceTest {
   public void test_guava_j7() {
     Metadata metadata = createMetadata();
 
-    assertThat(generateSource(metadata, JAVA_7, true)).isEqualTo(Joiner.on('\n').join(
+    String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
+    assertThat(source).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -451,7 +452,7 @@ public class SetSourceTest {
   public void test_noGuava_j6() {
     Metadata metadata = createMetadata();
 
-    assertThat(generateSource(metadata, JAVA_6, false)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -672,7 +673,7 @@ public class SetSourceTest {
   public void test_noGuava_j7() {
     Metadata metadata = createMetadata();
 
-    assertThat(generateSource(metadata, JAVA_7, false)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -877,9 +878,8 @@ public class SetSourceTest {
         "}\n"));
   }
 
-  private static String generateSource(
-      Metadata metadata, SourceLevel sourceLevel, boolean isGuavaAvailable) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(sourceLevel, isGuavaAvailable);
+  private static String generateSource(Metadata metadata, Feature<?>... features) {
+    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
     new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
     try {
       return new Formatter().formatSource(sourceBuilder.toString());

@@ -17,25 +17,17 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
-import static javax.lang.model.util.ElementFilter.fieldsIn;
-import static org.inferred.freebuilder.processor.util.SourceLevel.JAVA_6;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.concurrent.atomic.AtomicLong;
+import static javax.lang.model.util.ElementFilter.fieldsIn;
 
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.FilerException;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.tools.JavaFileObject;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -50,8 +42,19 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.FilerException;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.tools.JavaFileObject;
 
 /** Tests for {@link CompilationUnitWriter}. */
 @RunWith(MockitoJUnitRunner.class)
@@ -251,11 +254,10 @@ public class CompilationUnitWriterTest {
 
   private CompilationUnitWriter newSourceWriter(String pkg, String simpleName)
       throws FilerException {
+    ProcessingEnvironment environment = Mockito.spy(model.environment());
+    doReturn(filer).when(environment).getFiler();
     return new CompilationUnitWriter(
-        filer,
-        model.elementUtils(),
-        JAVA_6,
-        true,
+        environment,
         QualifiedName.of(pkg, simpleName),
         ImmutableSet.<QualifiedName>of(),
         originatingElement);

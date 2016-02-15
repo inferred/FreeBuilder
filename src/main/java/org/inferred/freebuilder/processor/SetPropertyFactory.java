@@ -19,6 +19,8 @@ import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -90,7 +92,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           LinkedHashSet.class,
           elementType,
           property.getName(),
-          code.getSourceLevel().supportsDiamondOperator() ? "" : elementType);
+          code.feature(SOURCE_LEVEL).supportsDiamondOperator() ? "" : elementType);
     }
 
     @Override
@@ -234,7 +236,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
       code.add("%s = ", finalField);
-      if (code.isGuavaAvailable()) {
+      if (code.feature(GUAVA).isAvailable()) {
         code.add("%s.copyOf", ImmutableSet.class);
       } else {
         code.add("immutableSet");
@@ -289,7 +291,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     IMMUTABLE_SET {
       @Override
       public void addTo(SourceBuilder code) {
-        if (!code.isGuavaAvailable()) {
+        if (!code.feature(GUAVA).isAvailable()) {
           code.addLine("")
               .addLine("private static <E> %1$s<E> immutableSet(%1$s<E> elements) {",
                   Set.class, Class.class)
@@ -300,7 +302,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
               .addLine("    return %s.singleton(elements.iterator().next());", Collections.class)
               .addLine("  default:")
               .add("    return %s.unmodifiableSet(new %s<", Collections.class, LinkedHashSet.class);
-          if (!code.getSourceLevel().supportsDiamondOperator()) {
+          if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
             code.add("E");
           }
           code.add(">(elements));\n")

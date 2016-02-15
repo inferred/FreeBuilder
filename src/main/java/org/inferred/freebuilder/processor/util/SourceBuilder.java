@@ -15,6 +15,11 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.util.feature.FeatureType;
+import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
+
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -69,8 +74,17 @@ public interface SourceBuilder {
    */
   SourceStringBuilder subBuilder();
 
-  SourceLevel getSourceLevel();
-
-  boolean isGuavaAvailable();
+  /**
+   * Returns the instance of {@code featureType} appropriate for the source being written. For
+   * instance, <code>code.feature({@link GuavaLibrary#GUAVA
+   * GUAVA}).{@link GuavaLibrary#isAvailable() isAvailable()}</code> returns true if the Guava
+   * library can be used in the generated source code.
+   *
+   * <p>Fluent extension point for features dynamically determined based on the current
+   * {@link ProcessingEnvironment}.
+   *
+   * @see Feature
+   */
+  <T extends Feature<T>> T feature(FeatureType<T> featureType);
 
 }

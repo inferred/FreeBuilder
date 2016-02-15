@@ -23,6 +23,8 @@ import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.PropertyCodeGenerator.IS_TEMPLATE_REQUIRED_IN_CLEAR;
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -103,7 +105,7 @@ public class CodeGenerator {
   }
 
   private static void addConstantDeclarations(Metadata metadata, SourceBuilder body) {
-    if (body.isGuavaAvailable() && metadata.getProperties().size() > 1) {
+    if (body.feature(GUAVA).isAvailable() && metadata.getProperties().size() > 1) {
       body.addLine("")
           .addLine("private static final %1$s COMMA_JOINER = %1$s.on(\", \").skipNulls();",
               Joiner.class);
@@ -257,7 +259,7 @@ public class CodeGenerator {
     code.addLine(" *")
         .addLine(" * <p>Partials should only ever be used in tests.")
         .addLine(" */");
-    if (code.isGuavaAvailable()) {
+    if (code.feature(GUAVA).isAvailable()) {
       code.addLine("@%s()", VisibleForTesting.class);
     }
     code.addLine("public %s buildPartial() {", metadata.getType())
@@ -337,12 +339,12 @@ public class CodeGenerator {
             .addLine("    %1$s other = (%1$s) obj;", metadata.getValueType().withWildcards());
         if (metadata.getProperties().isEmpty()) {
           code.addLine("    return true;");
-        } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+        } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
           String prefix = "    return ";
           for (Property property : metadata.getProperties()) {
             code.add(prefix);
             code.add("%1$s.equals(%2$s, other.%2$s)",
-                code.getSourceLevel().javaUtilObjects().get(), property.getName());
+                code.feature(SOURCE_LEVEL).javaUtilObjects().get(), property.getName());
             prefix = "\n        && ";
           }
           code.add(";\n");
@@ -395,9 +397,9 @@ public class CodeGenerator {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public int hashCode() {");
-      if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+      if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
         code.addLine("    return %s.hash(%s);",
-            code.getSourceLevel().javaUtilObjects().get(), properties);
+            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), properties);
       } else {
         code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, properties);
       }
@@ -528,18 +530,18 @@ public class CodeGenerator {
           .addLine("    %1$s other = (%1$s) obj;", metadata.getPartialType().withWildcards());
       if (metadata.getProperties().isEmpty()) {
         code.addLine("    return true;");
-      } else if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+      } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
         String prefix = "    return ";
         for (Property property : metadata.getProperties()) {
           code.add(prefix);
           code.add("%1$s.equals(%2$s, other.%2$s)",
-              code.getSourceLevel().javaUtilObjects().get(), property.getName());
+              code.feature(SOURCE_LEVEL).javaUtilObjects().get(), property.getName());
           prefix = "\n        && ";
         }
         if (hasRequiredProperties) {
           code.add(prefix);
           code.add("%1$s.equals(_unsetProperties, other._unsetProperties)",
-              code.getSourceLevel().javaUtilObjects().get());
+              code.feature(SOURCE_LEVEL).javaUtilObjects().get());
         }
         code.add(";\n");
       } else {
@@ -587,9 +589,9 @@ public class CodeGenerator {
       }
       String properties = Joiner.on(", ").join(namesList);
 
-      if (code.getSourceLevel().javaUtilObjects().isPresent()) {
+      if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
         code.addLine("    return %s.hash(%s);",
-            code.getSourceLevel().javaUtilObjects().get(), properties);
+            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), properties);
       } else {
         code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, properties);
       }
@@ -600,7 +602,7 @@ public class CodeGenerator {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public %s toString() {", String.class);
-      if (metadata.getProperties().size() > 1 && !code.isGuavaAvailable()) {
+      if (metadata.getProperties().size() > 1 && !code.feature(GUAVA).isAvailable()) {
         writePartialToStringWithBuilder(code, metadata);
       } else {
         writePartialToStringWithConcatenation(code, metadata);

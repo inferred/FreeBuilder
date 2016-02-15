@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.*;
 
+import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.junit.Test;
 
 public class ParameterizedTypeTest {
@@ -73,7 +74,7 @@ public class ParameterizedTypeTest {
   }
 
   private static String prettyPrint(Excerpt type, SourceLevel sourceLevel) {
-    return SourceStringBuilder.simple(sourceLevel, true).add(type).toString();
+    return SourceStringBuilder.simple(sourceLevel).add(type).toString();
   }
 
 }

@@ -17,6 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -97,7 +99,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldDeclaration(SourceBuilder code) {
       code.add("private final %1$s<%2$s, %3$s> %4$s = new %1$s<",
           LinkedHashMap.class, keyType, valueType, property.getName());
-      if (!code.getSourceLevel().supportsDiamondOperator()) {
+      if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
         code.add("%s, %s", keyType, valueType);
       }
       code.add(">();\n");
@@ -247,7 +249,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     @Override
     public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
       code.add("%s = ", finalField);
-      if (code.isGuavaAvailable()) {
+      if (code.feature(GUAVA).isAvailable()) {
         code.add("%s.copyOf", ImmutableMap.class);
       } else {
         code.add("immutableMap");
@@ -312,7 +314,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     IMMUTABLE_MAP() {
       @Override
       public void addTo(SourceBuilder code) {
-        if (!code.isGuavaAvailable()) {
+        if (!code.feature(GUAVA).isAvailable()) {
           code.addLine("")
               .addLine("private static <K, V> %1$s<K, V> immutableMap(%1$s<K, V> entries) {",
                   Map.class)
@@ -326,7 +328,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
                   Collections.class)
               .addLine("  default:")
               .add("    return %s.unmodifiableMap(new %s<", Collections.class, LinkedHashMap.class);
-          if (!code.getSourceLevel().supportsDiamondOperator()) {
+          if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
             code.add("K, V");
           }
           code.add(">(entries));\n")
