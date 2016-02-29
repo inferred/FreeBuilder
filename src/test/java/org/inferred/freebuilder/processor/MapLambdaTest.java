@@ -65,6 +65,26 @@ public class MapLambdaTest {
       .addLine("}")
       .build();
 
+  private static final JavaFileObject J8_OPTIONAL_INTEGER_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  %s<Integer> getProperty();", java.util.Optional.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject GUAVA_OPTIONAL_INTEGER_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  %s<Integer> getProperty();", com.google.common.base.Optional.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("}")
+      .build();
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
@@ -113,6 +133,36 @@ public class MapLambdaTest {
   }
 
   @Test
+  public void mapReplacesValueToBeReturnedFromGetterForJ8OptionalProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(J8_OPTIONAL_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, (int) value.getProperty().get());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapReplacesValueToBeReturnedFromGetterForGuavaOptionalProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, (int) value.getProperty().get());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void mapThrowsNpeIfMapperIsNullForRequiredProperty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
@@ -154,7 +204,35 @@ public class MapLambdaTest {
   }
 
   @Test
-  public void mapThrowsNpeIfMapperReturnsNullWhenRequiredPropertyIsSet() {
+  public void mapThrowsNpeIfMapperIsNullForJ8OptionalProperty() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(J8_OPTIONAL_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapThrowsNpeIfMapperIsNullForGuavaOptionalProperty() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor())
+        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapThrowsNpeIfMapperReturnsNullForRequiredProperty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor())
@@ -181,7 +259,7 @@ public class MapLambdaTest {
   }
 
   @Test
-  public void mapAllowsNullReturnIfNullablePropertyIsSet() {
+  public void mapAllowsNullReturnForNullableProperty() {
     behaviorTester
         .with(new Processor())
         .with(NULLABLE_INTEGER_TYPE)
@@ -191,6 +269,36 @@ public class MapLambdaTest {
             .addLine("    .mapProperty(a -> null)")
             .addLine("    .build();")
             .addLine("assertThat(value.getProperty()).isNull();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapAllowsNullReturnForJ8OptionalProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(J8_OPTIONAL_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> null)")
+            .addLine("    .build();")
+            .addLine("assertFalse(value.getProperty().isPresent());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapAllowsNullReturnForGuavaOptionalProperty() {
+    behaviorTester
+        .with(new Processor())
+        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> null)")
+            .addLine("    .build();")
+            .addLine("assertFalse(value.getProperty().isPresent());")
             .build())
         .runTest();
   }
@@ -222,6 +330,34 @@ public class MapLambdaTest {
             .addLine("    })")
             .addLine("    .build();")
             .addLine("assertEquals(14, (int) value.getProperty());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapSkipsMapperIfJ8OptionalPropertyIsEmpty() {
+    behaviorTester
+        .with(new Processor())
+        .with(J8_OPTIONAL_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .mapProperty(a -> { fail(\"mapper called\"); return null; })")
+            .addLine("    .build();")
+            .addLine("assertFalse(value.getProperty().isPresent());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapSkipsMapperIfGuavaOptionalPropertyIsAbsent() {
+    behaviorTester
+        .with(new Processor())
+        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .mapProperty(a -> { fail(\"mapper called\"); return null; })")
+            .addLine("    .build();")
+            .addLine("assertFalse(value.getProperty().isPresent());")
             .build())
         .runTest();
   }

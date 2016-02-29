@@ -17,21 +17,23 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor6;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing a default value (absent) and convenience
@@ -57,6 +59,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
   private static final String SET_PREFIX = "set";
   private static final String NULLABLE_SET_PREFIX = "setNullable";
+  private static final String MAP_PREFIX = "map";
   private static final String CLEAR_PREFIX = "clear";
 
   @Override
@@ -77,10 +80,6 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           } catch (IllegalArgumentException e) {
             unboxedType = Optional.absent();
           }
-          String capitalizedName = config.getProperty().getCapitalizedName();
-          String setterName = SET_PREFIX + capitalizedName;
-          String nullableSetterName = NULLABLE_SET_PREFIX + capitalizedName;
-          String clearName = CLEAR_PREFIX + capitalizedName;
 
           // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
           // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
@@ -90,9 +89,6 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           return Optional.of(new CodeGenerator(
               config.getProperty(),
               optional,
-              setterName,
-              nullableSetterName,
-              clearName,
               elementType,
               unboxedType,
               requiresExplicitTypeParameters));
@@ -107,6 +103,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     private final OptionalType optional;
     private final String setterName;
     private final String nullableSetterName;
+    private final String mapperName;
     private final String clearName;
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
@@ -115,17 +112,15 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     @VisibleForTesting CodeGenerator(
         Property property,
         OptionalType optional,
-        String setterName,
-        String nullableSetterName,
-        String clearName,
         TypeMirror elementType,
         Optional<TypeMirror> unboxedType,
         boolean requiresExplicitTypeParametersInJava7) {
       super(property);
       this.optional = optional;
-      this.setterName = setterName;
-      this.nullableSetterName = nullableSetterName;
-      this.clearName = clearName;
+      this.setterName = SET_PREFIX + property.getCapitalizedName();
+      this.nullableSetterName = NULLABLE_SET_PREFIX + property.getCapitalizedName();
+      this.mapperName = MAP_PREFIX + property.getCapitalizedName();
+      this.clearName = CLEAR_PREFIX + property.getCapitalizedName();
       this.elementType = elementType;
       this.unboxedType = unboxedType;
       this.requiresExplicitTypeParameters = requiresExplicitTypeParametersInJava7;
@@ -154,6 +149,15 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
+      addNotNullSetter(code, metadata);
+      addOptionalSetter(code, metadata);
+      addNullableSetter(code, metadata);
+      addMapper(code, metadata);
+      addClear(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addNotNullSetter(SourceBuilder code, Metadata metadata) {
       // Setter (T, not nullable)
       code.addLine("")
           .addLine("/**")
@@ -178,8 +182,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // Setter (Optional<? extends T>)
+    private void addOptionalSetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -200,8 +205,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("    return %s();", clearName)
           .addLine("  }")
           .addLine("}");
+    }
 
-      // Setter (nullable T)
+    private void addNullableSetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -221,8 +227,51 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("    return %s();", clearName)
           .addLine("  }")
           .addLine("}");
+    }
 
-      // Clear
+    private void addMapper(SourceBuilder code, Metadata metadata) {
+      Optional<ParameterizedType> unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator();
+      if (unaryOperator.isPresent()) {
+        code.addLine("")
+            .addLine("/**")
+            .addLine(" * If the value to be returned by %s is present,",
+                metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            .addLine(" * replaces it by applying {@code mapper} to it and using the result.")
+            .addLine(" *")
+            .addLine(" * <p>If the result is null, clears the value.")
+            .addLine(" *")
+            .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+            .addLine(" * @throws NullPointerException if {@code mapper} is null")
+            .addLine(" */")
+            .addLine("public %s %s(%s mapper) {",
+                metadata.getBuilder(),
+                mapperName,
+                unaryOperator.get().withParameters(elementType));
+          applyMapper(code, metadata);
+          code.addLine("}");
+      }
+    }
+
+    private void applyMapper(SourceBuilder code, Metadata metadata) {
+      switch (optional) {
+      case JAVA8:
+        code.addLine("  return %s(%s().map(mapper));", setterName, property.getGetterName());
+        return;
+      case GUAVA:
+        code.addLine("  %s old%s = %s();",
+                property.getType(), property.getCapitalizedName(), property.getGetterName())
+            .addLine("  if (old%s.isPresent()) {", property.getCapitalizedName())
+            .addLine("     %s(mapper.apply(old%s.get()));",
+                nullableSetterName, property.getCapitalizedName())
+            .addLine("  }")
+            .addLine("  return (%s) this;", metadata.getBuilder())
+            ;
+        return;
+      }
+      throw new IllegalStateException("Unexpected optional type " + optional);
+    }
+
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s",
@@ -235,8 +284,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  this.%s = null;", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // Getter
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns the value that will be returned by %s.",
