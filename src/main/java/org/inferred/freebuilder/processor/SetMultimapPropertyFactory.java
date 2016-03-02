@@ -17,18 +17,7 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
-
-import java.util.Collection;
-import java.util.Map.Entry;
-
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -37,6 +26,17 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import java.util.Collection;
+import java.util.Map.Entry;
+
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing append-only semantics for {@link SetMultimap}
@@ -63,8 +63,8 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
       if (erasesToAnyOf(type, SetMultimap.class, ImmutableSetMultimap.class)) {
         TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
         TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
-        Optional<TypeMirror> unboxedKeyType = unboxed(config.getTypes(), keyType);
-        Optional<TypeMirror> unboxedValueType = unboxed(config.getTypes(), valueType);
+        Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
+        Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
         return Optional.of(new CodeGenerator(
             config.getProperty(), keyType, unboxedKeyType, valueType, unboxedValueType));
       }
@@ -334,15 +334,5 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
     public void addPartialClear(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
     }
-  }
-
-  private static Optional<TypeMirror> unboxed(Types types, TypeMirror elementType) {
-    Optional<TypeMirror> unboxedType;
-    try {
-      unboxedType = Optional.<TypeMirror>of(types.unboxedType(elementType));
-    } catch (IllegalArgumentException e) {
-      unboxedType = Optional.absent();
-    }
-    return unboxedType;
   }
 }

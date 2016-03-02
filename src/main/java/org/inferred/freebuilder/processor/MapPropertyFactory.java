@@ -17,6 +17,7 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
@@ -39,7 +40,6 @@ import java.util.Set;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing append-only semantics for {@link Map}
@@ -65,8 +65,8 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       if (erasesToAnyOf(type, Map.class, ImmutableMap.class)) {
         TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
         TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
-        Optional<TypeMirror> unboxedKeyType = unboxed(config.getTypes(), keyType);
-        Optional<TypeMirror> unboxedValueType = unboxed(config.getTypes(), valueType);
+        Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
+        Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
         return Optional.of(new CodeGenerator(
             config.getProperty(), keyType, unboxedKeyType, valueType, unboxedValueType));
       }
@@ -298,16 +298,6 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     public Set<StaticMethod> getStaticMethods() {
       return ImmutableSet.copyOf(StaticMethod.values());
     }
-  }
-
-  private static Optional<TypeMirror> unboxed(Types types, TypeMirror elementType) {
-    Optional<TypeMirror> unboxedType;
-    try {
-      unboxedType = Optional.<TypeMirror>of(types.unboxedType(elementType));
-    } catch (IllegalArgumentException e) {
-      unboxedType = Optional.absent();
-    }
-    return unboxedType;
   }
 
   private enum StaticMethod implements Excerpt {

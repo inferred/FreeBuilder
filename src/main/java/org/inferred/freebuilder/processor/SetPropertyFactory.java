@@ -17,8 +17,12 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
@@ -29,15 +33,21 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
+import java.util.AbstractSet;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing append-only semantics for {@link Set}
@@ -49,6 +59,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
   private static final String ADD_ALL_PREFIX = "addAll";
   private static final String CLEAR_PREFIX = "clear";
   private static final String GET_PREFIX = "get";
+  private static final String MUTATE_PREFIX = "mutate";
   private static final String REMOVE_PREFIX = "remove";
 
   @Override
@@ -58,32 +69,53 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       return Optional.absent();
     }
 
-    if (config.getProperty().getType().getKind() == TypeKind.DECLARED) {
-      DeclaredType type = (DeclaredType) config.getProperty().getType();
-      if (erasesToAnyOf(type, Set.class, ImmutableSet.class)) {
-        TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
-        Optional<TypeMirror> unboxedType;
-        try {
-          unboxedType = Optional.<TypeMirror>of(config.getTypes().unboxedType(elementType));
-        } catch (IllegalArgumentException e) {
-          unboxedType = Optional.absent();
-        }
-        return Optional.of(new CodeGenerator(config.getProperty(), elementType, unboxedType));
-      }
+    DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+    if (type != null && erasesToAnyOf(type, Set.class, ImmutableSet.class)) {
+        return Optional.of(createForSetType(config, type));
     }
     return Optional.absent();
+  }
+
+  private static CodeGenerator createForSetType(Config config, DeclaredType type) {
+    TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+    Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
+    boolean overridesAddMethod = hasAddMethodOverride(config.getBuilder(), config.getProperty(), elementType, unboxedType, config.getTypes());
+    return new CodeGenerator(config.getProperty(), elementType, unboxedType, overridesAddMethod);
+  }
+
+  private static boolean hasAddMethodOverride(
+      Optional<TypeElement> builder,
+      Property property,
+      TypeMirror elementType,
+      Optional<TypeMirror> unboxedType,
+      Types types) {
+    if (!builder.isPresent()) {
+      return false;
+    }
+    return overrides(
+        builder.get(),
+        types,
+        ADD_PREFIX + property.getCapitalizedName(),
+        unboxedType.or(elementType));
   }
 
   @VisibleForTesting
   static class CodeGenerator extends PropertyCodeGenerator {
 
+    private static final ParameterizedType COLLECTION = QualifiedName.of(Collection.class).withParameters();
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
+    private final boolean overridesAddMethod;
 
-    CodeGenerator(Property property, TypeMirror elementType, Optional<TypeMirror> unboxedType) {
+    CodeGenerator(
+        Property property,
+        TypeMirror elementType,
+        Optional<TypeMirror> unboxedType,
+        boolean overridesAddMethod) {
       super(property);
       this.elementType = elementType;
       this.unboxedType = unboxedType;
+      this.overridesAddMethod = overridesAddMethod;
     }
 
     @Override
@@ -97,7 +129,16 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // add(T element)
+      addAdd(code, metadata);
+      addVarargsAdd(code, metadata);
+      addAddAll(code, metadata);
+      addRemove(code, metadata);
+      addMutator(code, metadata);
+      addClear(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addAdd(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds {@code element} to the set to be returned from %s.",
@@ -124,8 +165,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // add(T... elements)
+    private void addVarargsAdd(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the set to be returned from")
@@ -149,8 +191,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // addAll(Iterable<? extends T> elements)
+    private void addAddAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the set to be returned from")
@@ -174,8 +217,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // remove(T element)
+    private void addRemove(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes {@code element} from the set to be returned from %s.",
@@ -200,8 +244,65 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // clear()
+    private void addMutator(SourceBuilder code, Metadata metadata) {
+      Optional<ParameterizedType> consumer = code.feature(FUNCTION_PACKAGE).consumer();
+      if (consumer.isPresent()) {
+        code.addLine("")
+            .addLine("/**")
+            .addLine(" * Applies {@code mutator} to the set to be returned from %s.",
+                metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            .addLine(" *")
+            .addLine(" * This method mutates the set in-place. {@code mutator} is a void consumer,")
+            .addLine(" * so any value returned from a lambda will be ignored. Take care not to")
+            .addLine(" * call pure functions, like %s.",
+                COLLECTION.javadocNoArgMethodLink("stream"))
+            .addLine(" *")
+            .addLine(" * @return this {@code Builder} object")
+            .addLine(" * @throws NullPointerException if {@code mutator} is null")
+            .addLine(" */")
+            .addLine("public %s %s%s(%s<? super %s<%s>> mutator) {",
+                metadata.getBuilder(),
+                MUTATE_PREFIX,
+                property.getCapitalizedName(),
+                consumer.get().getQualifiedName(),
+                Set.class,
+                elementType);
+        if (overridesAddMethod) {
+          code.addLine("  mutator.accept(new %s<%s>() {", AbstractSet.class, elementType)
+              .addLine("    @Override public %s<%s> iterator() {", Iterator.class, elementType)
+              .addLine("      return %s.iterator();", property.getName())
+              .addLine("    }")
+              .addLine("    @Override public int size() {")
+              .addLine("      return %s.size();", property.getName())
+              .addLine("    }")
+              .addLine("    @Override public boolean contains(Object e) {")
+              .addLine("      return %s.contains(e);", property.getName())
+              .addLine("    }")
+              .addLine("    @Override public boolean add(%s e) {", elementType)
+              .addLine("      if (!%s.contains(e)) {", property.getName())
+              .addLine("        %s%s(e);", ADD_PREFIX, property.getCapitalizedName())
+              .addLine("        return true;")
+              .addLine("      } else {")
+              .addLine("        return false;")
+              .addLine("      }")
+              .addLine("    }")
+              .addLine("    @Override public boolean remove(Object e) {")
+              .addLine("      return %s.remove(e);", property.getName())
+              .addLine("    }")
+              .addLine("  });");
+        } else {
+          code.addLine("  // If %s%s is overridden, this method will be updated to delegate to it",
+                  ADD_PREFIX, property.getCapitalizedName())
+              .addLine("  mutator.accept(%s);", property.getName());
+        }
+        code.addLine("  return (%s) this;", metadata.getBuilder())
+            .addLine("}");
+      }
+    }
+
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Clears the set to be returned from %s.",
@@ -216,8 +317,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // get()
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the set that will be returned by")

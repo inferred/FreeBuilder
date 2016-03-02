@@ -25,6 +25,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Set;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -35,6 +36,9 @@ public abstract class PropertyCodeGenerator {
   interface Config {
     /** Returns metadata about the property requiring code generation. */
     Metadata.Property getProperty();
+
+    /** The user's Builder type (if they have written one yet). */
+    Optional<TypeElement> getBuilder();
 
     /**
      * A set of methods that are definitely invoked in the builder constructor. This may have false
