@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
+import com.google.common.base.Preconditions;
+
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
@@ -29,7 +31,7 @@ import javax.annotation.Nullable;
 import javax.tools.JavaFileObject;
 
 @RunWith(JUnit4.class)
-public class MapLambdaTest {
+public class MapMethodTest {
 
   private static final JavaFileObject REQUIRED_INTEGER_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -158,6 +160,156 @@ public class MapLambdaTest {
             .addLine("    .mapProperty(a -> a + 3)")
             .addLine("    .build();")
             .addLine("assertEquals(14, (int) value.getProperty().get());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapDelegatesToSetterForValidationForRequiredProperty() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("property must be non-negative");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  int getProperty();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder setProperty(int property) {")
+            .addLine("      %s.checkArgument(property >= 0, \"property must be non-negative\");",
+                Preconditions.class)
+            .addLine("      return super.setProperty(property);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> -3);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapDelegatesToSetterForValidationForDefaultProperty() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("property must be non-negative");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  int getProperty();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    public Builder() {")
+            .addLine("      setProperty(11);")
+            .addLine("    }")
+            .addLine("")
+            .addLine("    @Override public Builder setProperty(int property) {")
+            .addLine("      %s.checkArgument(property >= 0, \"property must be non-negative\");",
+                Preconditions.class)
+            .addLine("      return super.setProperty(property);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .mapProperty(a -> -3);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapDelegatesToSetterForValidationForNullableProperty() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("property must be non-negative");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s Integer getProperty();", Nullable.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder setProperty(@%s Integer property) {",
+                Nullable.class)
+            .addLine("      %s.checkArgument(property == null || property >= 0,",
+                Preconditions.class)
+            .addLine("              \"property must be non-negative\");")
+            .addLine("      return super.setProperty(property);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> -3);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapDelegatesToSetterForValidationForJ8OptionalProperty() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("property must be non-negative");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<Integer> getProperty();", java.util.Optional.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder setProperty(int property) {")
+            .addLine("      %s.checkArgument(property >= 0, \"property must be non-negative\");",
+                Preconditions.class)
+            .addLine("      return super.setProperty(property);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> -3);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapDelegatesToSetterForValidationForGuavaOptionalProperty() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("property must be non-negative");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<Integer> getProperty();", com.google.common.base.Optional.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder setProperty(int property) {")
+            .addLine("      %s.checkArgument(property >= 0, \"property must be non-negative\");",
+                Preconditions.class)
+            .addLine("      return super.setProperty(property);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .setProperty(11)")
+            .addLine("    .mapProperty(a -> -3);")
             .build())
         .runTest();
   }
