@@ -111,6 +111,8 @@
               <goal>process</goal>
             </goals>
             <configuration>
+              <source>1.7</source>
+              <target>1.7</target>
               <outputDirectory>${generated-sources}</outputDirectory>
             </configuration>
           </execution>
