@@ -863,7 +863,7 @@ public class MapSourceTest {
 
   /**
    * Returns a {@link Metadata} instance for a FreeBuilder type with a single property, name, of
-   * type {@code Map<Integer, String>}.
+   * type {@code Map<Integer, String>}, and which does not override Builder.putName.
    */
   private static Metadata createMetadata() {
     GenericTypeElementImpl map = newTopLevelGenericType("java.util.Map");
@@ -890,6 +890,7 @@ public class MapSourceTest {
         .addProperties(name
             .setCodeGenerator(new MapPropertyFactory.CodeGenerator(
                 name.build(),
+                false,
                 integer, Optional.<TypeMirror>of(INT),
                 string, Optional.<TypeMirror>absent()))
             .build())

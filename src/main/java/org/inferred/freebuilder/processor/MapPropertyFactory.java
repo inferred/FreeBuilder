@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
@@ -29,16 +30,21 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ModelUtils;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.feature.FunctionPackage;
 
+import java.util.AbstractMap;
+import java.util.AbstractSet;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -50,6 +56,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
   private static final String PUT_PREFIX = "put";
   private static final String PUT_ALL_PREFIX = "putAll";
   private static final String REMOVE_PREFIX = "remove";
+  private static final String MUTATE_PREFIX = "mutate";
   private static final String CLEAR_PREFIX = "clear";
   private static final String GET_PREFIX = "get";
 
@@ -60,23 +67,48 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       return Optional.absent();
     }
 
-    if (config.getProperty().getType().getKind() == TypeKind.DECLARED) {
-      DeclaredType type = (DeclaredType) config.getProperty().getType();
-      if (erasesToAnyOf(type, Map.class, ImmutableMap.class)) {
-        TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
-        TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
-        Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
-        Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
-        return Optional.of(new CodeGenerator(
-            config.getProperty(), keyType, unboxedKeyType, valueType, unboxedValueType));
+    Optional<DeclaredType> type = ModelUtils.maybeDeclared(config.getProperty().getType());
+    if (type.isPresent()) {
+      if (erasesToAnyOf(type.get(), Map.class, ImmutableMap.class)) {
+        return Optional.of(createForMapType(config, type.get()));
       }
     }
     return Optional.absent();
   }
 
+  private static CodeGenerator createForMapType(Config config, DeclaredType type) {
+    TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+    TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
+    Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
+    Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
+    boolean overridesPutMethod = hasPutMethodOverride(
+        config, unboxedKeyType.or(keyType), unboxedValueType.or(valueType));
+    return new CodeGenerator(
+        config.getProperty(),
+        overridesPutMethod,
+        keyType,
+        unboxedKeyType,
+        valueType,
+        unboxedValueType);
+  }
+
+  private static boolean hasPutMethodOverride(
+      Config config, TypeMirror keyType, TypeMirror valueType) {
+    if (!config.getBuilder().isPresent()) {
+      return false;
+    }
+    return ModelUtils.overrides(
+        config.getBuilder().get(),
+        config.getTypes(),
+        PUT_PREFIX + config.getProperty().getCapitalizedName(),
+        keyType,
+        valueType);
+  }
+
   @VisibleForTesting
   static class CodeGenerator extends PropertyCodeGenerator {
 
+    private final boolean overridesPutMethod;
     private final TypeMirror keyType;
     private final Optional<TypeMirror> unboxedKeyType;
     private final TypeMirror valueType;
@@ -84,11 +116,13 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     CodeGenerator(
         Property property,
+        boolean overridesPutMethod,
         TypeMirror keyType,
         Optional<TypeMirror> unboxedKeyType,
         TypeMirror valueType,
         Optional<TypeMirror> unboxedValueType) {
       super(property);
+      this.overridesPutMethod = overridesPutMethod;
       this.keyType = keyType;
       this.unboxedKeyType = unboxedKeyType;
       this.valueType = valueType;
@@ -103,11 +137,28 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
         code.add("%s, %s", keyType, valueType);
       }
       code.add(">();\n");
+      FunctionPackage functionPackage = code.feature(FUNCTION_PACKAGE);
+      if (overridesPutMethod && functionPackage.consumer().isPresent()) {
+        code.addLine("private final %s<%s> putInto%s =",
+                ThreadLocal.class,
+                functionPackage.biConsumer().get().withParameters(keyType, valueType),
+                property.getCapitalizedName())
+            .addLine("    %s.withInitial(() -> (key, value) -> %s.put(key, value));",
+                ThreadLocal.class, property.getName());
+      }
     }
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // put(K key, V value)
+      addPut(code, metadata);
+      addPutAll(code, metadata);
+      addRemove(code, metadata);
+      addMutate(code, metadata);
+      addClear(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addPut(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Associates {@code key} with {@code value} in the map to be returned from")
@@ -147,12 +198,17 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
         }
       };
       code.add(PreconditionExcerpts.checkArgument(
-              keyNotPresent, "Key already present in " + property.getName() + ": %s", "key"))
-          .addLine("  %s.put(key, value);", property.getName())
-          .addLine("  return (%s) this;", metadata.getBuilder())
+          keyNotPresent, "Key already present in " + property.getName() + ": %s", "key"));
+      if (overridesPutMethod && code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
+        code.addLine("putInto%s.get().accept(key, value);", property.getCapitalizedName());
+      } else {
+        code.addLine("%s.put(key, value);", property.getName());
+      }
+      code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // putAll(Map<? extends K, ? extends V> map)
+    private void addPutAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Associates all of {@code map}'s keys and values in the map to be returned")
@@ -179,8 +235,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // remove(K key)
+    private void addRemove(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes the mapping for {@code key} from the map to be returned from")
@@ -196,8 +253,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
               metadata.getBuilder(),
               REMOVE_PREFIX,
               property.getCapitalizedName(),
-              unboxedKeyType.or(keyType),
-              valueType);
+              unboxedKeyType.or(keyType));
       if (!unboxedKeyType.isPresent()) {
         code.add(PreconditionExcerpts.checkNotNull("key"));
       }
@@ -212,8 +268,92 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  %s.remove(key);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // clear()
+    private void addMutate(SourceBuilder code, Metadata metadata) {
+      FunctionPackage functionPackage = code.feature(FUNCTION_PACKAGE);
+      Optional<ParameterizedType> consumer = functionPackage.consumer();
+      if (consumer.isPresent()) {
+        code.addLine("public %s %s%s(%s<? super %s<%s, %s>> mutator) {",
+            metadata.getBuilder(),
+            MUTATE_PREFIX,
+            property.getCapitalizedName(),
+            consumer.get().getQualifiedName(),
+            Map.class,
+            keyType,
+            valueType);
+        if (overridesPutMethod) {
+          code.addLine("  mutator.accept(new %s<%s, %s>() {",
+                  AbstractMap.class, keyType, valueType)
+              .addLine("    @Override public %s<%s<%s, %s>> entrySet() {",
+                  Set.class, Map.Entry.class, keyType, valueType)
+              .addLine("      return new %s<%s<%s, %s>>() {",
+                  AbstractSet.class, Map.Entry.class, keyType, valueType)
+              .addLine("        @Override public int size() {")
+              .addLine("          return %s.size();", property.getName())
+              .addLine("        }")
+              .addLine("        @Override public %s<%s<%s, %s>> iterator() {",
+                  Iterator.class, Map.Entry.class, keyType, valueType)
+              .addLine("          return new %s<%s<%s, %s>>() {",
+                  Iterator.class, Map.Entry.class, keyType, valueType)
+              .addLine("            private final %s<%s<%s, %s>> iterator =",
+                  Iterator.class, Map.Entry.class, keyType, valueType)
+              .addLine("                %s.entrySet().iterator();", property.getName())
+              .addLine("            @Override public boolean hasNext() {")
+              .addLine("              return iterator.hasNext();")
+              .addLine("            }")
+              .addLine("            @Override public %s<%s, %s> next() {",
+                  Map.Entry.class, keyType, valueType)
+              .addLine("              return new %s<%s, %s>() {",
+                  Map.Entry.class, keyType, valueType)
+              .addLine("                private final %s<%s, %s> entry = iterator.next();",
+                  Map.Entry.class, keyType, valueType)
+              .addLine("                @Override public %s getKey() {", keyType)
+              .addLine("                  return entry.getKey();")
+              .addLine("                }")
+              .addLine("                @Override public %s getValue() {", valueType)
+              .addLine("                  return entry.getValue();")
+              .addLine("                }")
+              .addLine("                @Override public %1$s setValue(%1$s value) {", valueType)
+              .addLine("                  %s key = entry.getKey();", keyType)
+              .addLine("                  %s oldValue = entry.getValue();", valueType)
+              .addLine("                  %1$s oldPutInto%2$s = putInto%2$s.get();",
+                  functionPackage.biConsumer().get().withParameters(keyType, valueType),
+                  property.getCapitalizedName())
+              .addLine("                  putInto%s.set((k, v) -> {", property.getCapitalizedName())
+              .addLine("                    if (k.equals(key)) {")
+              .addLine("                      entry.setValue(v);")
+              .addLine("                    } else {")
+              .addLine("                      %s.put(k, v);", property.getName())
+              .addLine("                    }")
+              .addLine("                  });")
+              .addLine("                  try {")
+              .addLine("                    %s%s(entry.getKey(), value);",
+                  PUT_PREFIX, property.getCapitalizedName())
+              .addLine("                  } finally {")
+              .addLine("                    putInto%1$s.set(oldPutInto%1$s);",
+                  property.getCapitalizedName())
+              .addLine("                  }")
+              .addLine("                  return oldValue;")
+              .addLine("                }")
+              .addLine("              };")
+              .addLine("            }")
+              .addLine("          };")
+              .addLine("        }")
+              .addLine("      };")
+              .addLine("    }")
+              .addLine("  });");
+        } else {
+          code.addLine("  // If %s%s is overridden, this method will be updated to delegate to it",
+                  PUT_PREFIX, property.getCapitalizedName())
+              .addLine("  mutator.accept(%s);", property.getName());
+        }
+        code.addLine("  return (%s) this;", metadata.getBuilder())
+            .addLine("}");
+      }
+    }
+
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes all of the mappings from the map to be returned from ")
@@ -228,8 +368,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // get()
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the map that will be returned by")

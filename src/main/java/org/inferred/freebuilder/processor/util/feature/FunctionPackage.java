@@ -38,6 +38,8 @@ public enum FunctionPackage implements Feature<FunctionPackage> {
 
   private static final ParameterizedType CONSUMER =
       QualifiedName.of("java.util.function", "Consumer").withParameters("T");
+  private static final ParameterizedType BI_CONSUMER =
+      QualifiedName.of("java.util.function", "BiConsumer").withParameters("T", "U");
   private static final ParameterizedType UNARY_OPERATOR =
       QualifiedName.of("java.util.function", "UnaryOperator").withParameters("T");
 
@@ -45,13 +47,24 @@ public enum FunctionPackage implements Feature<FunctionPackage> {
    * Parameterized type for {@code java.util.function.Consumer<T>}, if available.
    */
   public Optional<ParameterizedType> consumer() {
-    return (this == AVAILABLE) ? Optional.of(CONSUMER) : Optional.<ParameterizedType>absent();
+    return ifAvailable(CONSUMER);
+  }
+
+  /**
+   * Parameterized type for {@code java.util.function.BiConsumer<T>}, if available.
+   */
+  public Optional<ParameterizedType> biConsumer() {
+    return ifAvailable(BI_CONSUMER);
   }
 
   /**
    * Parameterized type for {@code java.util.function.UnaryOperator<T>}, if available.
    */
   public Optional<ParameterizedType> unaryOperator() {
-    return (this == AVAILABLE) ? Optional.of(UNARY_OPERATOR) : Optional.<ParameterizedType>absent();
+    return ifAvailable(UNARY_OPERATOR);
+  }
+
+  private <T> Optional<T> ifAvailable(T value) {
+    return (this == AVAILABLE) ? Optional.of(value) : Optional.<T>absent();
   }
 }
