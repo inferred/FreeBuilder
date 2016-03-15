@@ -25,8 +25,10 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitWriter;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.FilerUtils;
 
+import java.io.IOException;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -75,22 +77,28 @@ public class Processor extends AbstractProcessor {
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
         Metadata metadata = analyser.analyse(type);
-        CompilationUnitWriter code = new CompilationUnitWriter(
+        CompilationUnitBuilder code = new CompilationUnitBuilder(
             processingEnv,
             metadata.getGeneratedBuilder().getQualifiedName(),
-            metadata.getVisibleNestedTypes(),
-            type);
-        try {
-          codeGenerator.writeBuilderSource(code, metadata);
-        } finally {
-          code.close();
-        }
+            metadata.getVisibleNestedTypes());
+        codeGenerator.writeBuilderSource(code, metadata);
+        FilerUtils.writeCompilationUnit(
+            processingEnv.getFiler(),
+            metadata.getGeneratedBuilder().getQualifiedName(),
+            type,
+            code.toString());
       } catch (Analyser.CannotGenerateCodeException e) {
         // Thrown to skip writing the builder source; the error will already have been issued.
       } catch (FilerException e) {
         processingEnv.getMessager().printMessage(
             Kind.WARNING,
             "Error producing Builder: " + e.getMessage(),
+            type,
+            findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
+      } catch (IOException e) {
+        processingEnv.getMessager().printMessage(
+            Kind.ERROR,
+            "I/O error: " + Throwables.getStackTraceAsString(e),
             type,
             findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
       } catch (RuntimeException e) {
