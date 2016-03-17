@@ -103,6 +103,7 @@ class Analyser {
    * factory should always be last.
    */
   private static final List<PropertyCodeGenerator.Factory> PROPERTY_FACTORIES = ImmutableList.of(
+      new NullablePropertyFactory(), // Must be first
       new ListPropertyFactory(),
       new SetPropertyFactory(),
       new MapPropertyFactory(),
@@ -111,7 +112,7 @@ class Analyser {
       new SetMultimapPropertyFactory(),
       new OptionalPropertyFactory(),
       new BuildablePropertyFactory(),
-      new DefaultPropertyFactory());
+      new DefaultPropertyFactory()); // Must be last
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
