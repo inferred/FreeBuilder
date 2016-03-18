@@ -15,6 +15,10 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
+import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 
@@ -55,19 +59,17 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
   }
 
-  private static final String SET_PREFIX = "set";
-  private static final String NULLABLE_SET_PREFIX = "setNullable";
-  private static final String CLEAR_PREFIX = "clear";
-
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
+    Property property = config.getProperty();
+
     // No @Nullable properties
-    if (!config.getProperty().getNullableAnnotations().isEmpty()) {
+    if (!property.getNullableAnnotations().isEmpty()) {
       return Optional.absent();
     }
 
-    if (config.getProperty().getType().getKind() == TypeKind.DECLARED) {
-      DeclaredType type = (DeclaredType) config.getProperty().getType();
+    if (property.getType().getKind() == TypeKind.DECLARED) {
+      DeclaredType type = (DeclaredType) property.getType();
       for (OptionalType optional : OptionalType.values()) {
         if (erasesToAnyOf(type, optional.cls)) {
           TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
@@ -77,10 +79,6 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           } catch (IllegalArgumentException e) {
             unboxedType = Optional.absent();
           }
-          String capitalizedName = config.getProperty().getCapitalizedName();
-          String setterName = SET_PREFIX + capitalizedName;
-          String nullableSetterName = NULLABLE_SET_PREFIX + capitalizedName;
-          String clearName = CLEAR_PREFIX + capitalizedName;
 
           // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
           // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
@@ -88,11 +86,8 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
 
           return Optional.of(new CodeGenerator(
-              config.getProperty(),
+              property,
               optional,
-              setterName,
-              nullableSetterName,
-              clearName,
               elementType,
               unboxedType,
               requiresExplicitTypeParameters));
@@ -105,9 +100,6 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     private final OptionalType optional;
-    private final String setterName;
-    private final String nullableSetterName;
-    private final String clearName;
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
     private final boolean requiresExplicitTypeParameters;
@@ -115,17 +107,11 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     @VisibleForTesting CodeGenerator(
         Property property,
         OptionalType optional,
-        String setterName,
-        String nullableSetterName,
-        String clearName,
         TypeMirror elementType,
         Optional<TypeMirror> unboxedType,
         boolean requiresExplicitTypeParametersInJava7) {
       super(property);
       this.optional = optional;
-      this.setterName = setterName;
-      this.nullableSetterName = nullableSetterName;
-      this.clearName = clearName;
       this.elementType = elementType;
       this.unboxedType = unboxedType;
       this.requiresExplicitTypeParameters = requiresExplicitTypeParametersInJava7;
@@ -167,7 +153,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine(" */")
           .addLine("public %s %s(%s %s) {",
               metadata.getBuilder(),
-              setterName,
+              setter(property),
               unboxedType.or(elementType),
               property.getName());
       if (unboxedType.isPresent()) {
@@ -190,14 +176,14 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       addAccessorAnnotations(code);
       code.addLine("public %s %s(%s<? extends %s> %s) {",
               metadata.getBuilder(),
-              setterName,
+              setter(property),
               optional.cls,
               elementType,
               property.getName())
           .addLine("  if (%s.isPresent()) {", property.getName())
-          .addLine("    return %s(%s.get());", setterName, property.getName())
+          .addLine("    return %s(%s.get());", setter(property), property.getName())
           .addLine("  } else {")
-          .addLine("    return %s();", clearName)
+          .addLine("    return %s();", clearMethod(property))
           .addLine("  }")
           .addLine("}");
 
@@ -211,14 +197,14 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" */")
           .addLine("public %s %s(@%s %s %s) {",
               metadata.getBuilder(),
-              nullableSetterName,
+              nullableSetter(property),
               javax.annotation.Nullable.class,
               elementType,
               property.getName())
           .addLine("  if (%s != null) {", property.getName())
-          .addLine("    return %s(%s);", setterName, property.getName())
+          .addLine("    return %s(%s);", setter(property), property.getName())
           .addLine("  } else {")
-          .addLine("    return %s();", clearName)
+          .addLine("    return %s();", clearMethod(property))
           .addLine("  }")
           .addLine("}");
 
@@ -231,7 +217,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
-          .addLine("public %s %s() {", metadata.getBuilder(), clearName)
+          .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
           .addLine("  this.%s = null;", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -242,7 +228,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * Returns the value that will be returned by %s.",
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" */")
-          .addLine("public %s %s() {", property.getType(), property.getGetterName());
+          .addLine("public %s %s() {", property.getType(), getter(property));
       code.add("  return %s.", optional.cls);
       if (requiresExplicitTypeParameters) {
         code.add("<%s>", elementType);
@@ -258,12 +244,12 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s(%s.%s());", setterName, value, property.getGetterName());
+      code.addLine("%s(%s.%s());", setter(property), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("%s(%s.%s());", setterName, builder, property.getGetterName());
+      code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
     }
 
     @Override
@@ -277,7 +263,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("%s.%s(%s);", builder, setterName, variable);
+      code.addLine("%s.%s(%s);", builder, setter(property), variable);
     }
 
     @Override

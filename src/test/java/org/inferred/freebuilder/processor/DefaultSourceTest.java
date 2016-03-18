@@ -3121,15 +3121,15 @@ public class DefaultSourceTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
+                new DefaultPropertyFactory.CodeGenerator(name.build(), false))
             .build())
         .addProperties(age
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
+                new DefaultPropertyFactory.CodeGenerator(age.build(), true))
             .build())
         .addProperties(shoeSize
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(shoeSize.build(), "setShoeSize", false))
+                new DefaultPropertyFactory.CodeGenerator(shoeSize.build(), false))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
@@ -3473,11 +3473,11 @@ public class DefaultSourceTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
+                new DefaultPropertyFactory.CodeGenerator(name.build(), false))
             .build())
         .addProperties(age
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", false))
+                new DefaultPropertyFactory.CodeGenerator(age.build(), false))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
@@ -3515,11 +3515,11 @@ public class DefaultSourceTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", true))
+                new DefaultPropertyFactory.CodeGenerator(name.build(), true))
             .build())
         .addProperties(age
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
+                new DefaultPropertyFactory.CodeGenerator(age.build(), true))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
@@ -3561,13 +3561,11 @@ public class DefaultSourceTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                name.build(), OptionalType.GUAVA, "setName", "setNullableName", "clearName", string,
-                Optional.<TypeMirror>absent(), false))
+                name.build(), OptionalType.GUAVA, string, Optional.<TypeMirror>absent(), false))
             .build())
         .addProperties(age
             .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                age.build(), OptionalType.GUAVA, "setAge", "setNullableAge", "clearAge", integer,
-                Optional.<TypeMirror>of(INT), false))
+                age.build(), OptionalType.GUAVA, integer, Optional.<TypeMirror>of(INT), false))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
@@ -3609,11 +3607,11 @@ public class DefaultSourceTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", true))
+                new DefaultPropertyFactory.CodeGenerator(name.build(), true))
             .build())
         .addProperties(age
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", true))
+                new DefaultPropertyFactory.CodeGenerator(age.build(), true))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
@@ -3650,11 +3648,11 @@ public class DefaultSourceTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters("A", "B"))
         .addProperties(name
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(name.build(), "setName", false))
+                new DefaultPropertyFactory.CodeGenerator(name.build(), false))
             .build())
         .addProperties(age
             .setCodeGenerator(
-                new DefaultPropertyFactory.CodeGenerator(age.build(), "setAge", false))
+                new DefaultPropertyFactory.CodeGenerator(age.build(), false))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters("A", "B"))
