@@ -101,7 +101,14 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // add(T element)
+      addAdd(code, metadata);
+      addVarargsAdd(code, metadata);
+      addAddAll(code, metadata);
+      addClear(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addAdd(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds {@code element} to the list to be returned from %s.",
@@ -125,8 +132,9 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // add(T... elements)
+    private void addVarargsAdd(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the list to be returned from")
@@ -149,8 +157,9 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // addAll(Iterable<? extends T> elements)
+    private void addAddAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the list to be returned from")
@@ -176,8 +185,9 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // clear()
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Clears the list to be returned from %s.",
@@ -192,8 +202,9 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  this.%s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // get()
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the list that will be returned by")

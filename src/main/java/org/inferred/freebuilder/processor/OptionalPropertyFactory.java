@@ -154,7 +154,14 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // Setter (T, not nullable)
+      addSetter(code, metadata);
+      addOptionalSetter(code, metadata);
+      addNullableSetter(code, metadata);
+      addClear(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addSetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -178,8 +185,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // Setter (Optional<? extends T>)
+    private void addOptionalSetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -200,8 +208,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("    return %s();", clearName)
           .addLine("  }")
           .addLine("}");
+    }
 
-      // Setter (nullable T)
+    private void addNullableSetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -221,8 +230,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("    return %s();", clearName)
           .addLine("  }")
           .addLine("}");
+    }
 
-      // Clear
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s",
@@ -235,8 +245,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  this.%s = null;", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // Getter
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns the value that will be returned by %s.",

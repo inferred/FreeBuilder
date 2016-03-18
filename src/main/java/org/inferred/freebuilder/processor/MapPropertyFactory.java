@@ -107,7 +107,14 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // put(K key, V value)
+      addPut(code, metadata);
+      addPutAll(code, metadata);
+      addRemove(code, metadata);
+      addClear(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addPut(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Associates {@code key} with {@code value} in the map to be returned from")
@@ -151,8 +158,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  %s.put(key, value);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // putAll(Map<? extends K, ? extends V> map)
+    private void addPutAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Associates all of {@code map}'s keys and values in the map to be returned")
@@ -179,8 +187,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // remove(K key)
+    private void addRemove(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes the mapping for {@code key} from the map to be returned from")
@@ -212,8 +221,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  %s.remove(key);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // clear()
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes all of the mappings from the map to be returned from ")
@@ -228,8 +238,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // get()
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the map that will be returned by")

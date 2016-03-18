@@ -97,7 +97,15 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // add(T element)
+      addAdd(code, metadata);
+      addVarargsAdd(code, metadata);
+      addAddAll(code, metadata);
+      addRemove(code, metadata);
+      addClear(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addAdd(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds {@code element} to the set to be returned from %s.",
@@ -124,8 +132,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // add(T... elements)
+    private void addVarargsAdd(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the set to be returned from")
@@ -149,8 +158,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // addAll(Iterable<? extends T> elements)
+    private void addAddAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the set to be returned from")
@@ -174,8 +184,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // remove(T element)
+    private void addRemove(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes {@code element} from the set to be returned from %s.",
@@ -200,8 +211,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // clear()
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Clears the set to be returned from %s.",
@@ -216,8 +228,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // get()
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the set that will be returned by")

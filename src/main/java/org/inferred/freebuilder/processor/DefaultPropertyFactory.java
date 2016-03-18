@@ -78,7 +78,11 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
-      // Setter
+      addSetter(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addSetter(SourceBuilder code, final Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -111,8 +115,9 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine("  return (%s) this;", metadata.getBuilder());
       }
       code.addLine("}");
+    }
 
-      // Getter
+    private void addGetter(SourceBuilder code, final Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns the value that will be returned by %s.",
