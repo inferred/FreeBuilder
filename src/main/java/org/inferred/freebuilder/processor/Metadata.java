@@ -30,7 +30,6 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import javax.annotation.Nullable;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -175,11 +174,6 @@ public abstract class Metadata {
      * wildcards, such as {@code Integer}, {@code List} or {@code Map<?, ?>}.
      */
     boolean isFullyCheckedCast();
-
-    /**
-     * Returns the {@code @Nullable} annotations that have been applied to this property.
-     */
-    ImmutableSet<TypeElement> getNullableAnnotations();
 
     /**
      * Returns a list of annotations that should be applied to the accessor methods of this

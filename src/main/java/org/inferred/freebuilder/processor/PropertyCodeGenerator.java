@@ -28,9 +28,11 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -41,6 +43,9 @@ public abstract class PropertyCodeGenerator {
   interface Config {
     /** Returns metadata about the property requiring code generation. */
     Metadata.Property getProperty();
+
+    /** Returns annotations on the property requiring code generation. */
+    List<? extends AnnotationMirror> getAnnotations();
 
     /**
      * A set of methods that are definitely invoked in the builder constructor. This may have false
@@ -106,6 +111,9 @@ public abstract class PropertyCodeGenerator {
 
   /** Add a merge from builder for the property to the builder's source code. */
   public abstract void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder);
+
+  /** Adds method annotations for the value type getter method. */
+  public void addGetterAnnotations(@SuppressWarnings("unused") SourceBuilder code) {}
 
   /** Adds a fragment converting the value object's field to the property's type. */
   public void addReadValueFragment(SourceBuilder code, String finalField) {

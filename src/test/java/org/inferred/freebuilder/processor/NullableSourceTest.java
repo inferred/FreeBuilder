@@ -456,8 +456,7 @@ public class NullableSourceTest {
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(string)
-        .addAllNullableAnnotations(ImmutableSet.of(nullable));
+        .setType(string);
     Property.Builder age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(integer)
@@ -465,8 +464,7 @@ public class NullableSourceTest {
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(integer)
-        .addAllNullableAnnotations(ImmutableSet.of(nullable));
+        .setType(integer);
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -475,10 +473,12 @@ public class NullableSourceTest {
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
-            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(name.build()))
+            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(
+                name.build(), ImmutableSet.of(nullable)))
             .build())
         .addProperties(age
-            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(age.build()))
+            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(
+                age.build(), ImmutableSet.of(nullable)))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())

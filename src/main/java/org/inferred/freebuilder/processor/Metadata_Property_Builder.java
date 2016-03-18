@@ -5,22 +5,19 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+
+import org.inferred.freebuilder.processor.util.Excerpt;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+
 import javax.annotation.Generated;
 import javax.annotation.Nullable;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import org.inferred.freebuilder.processor.Metadata;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator;
-import org.inferred.freebuilder.processor.util.Excerpt;
 
 /**
  * Auto-generated superclass of {@link Metadata.Property.Builder},
@@ -60,7 +57,6 @@ abstract class Metadata_Property_Builder {
   private String getterName;
   @Nullable private PropertyCodeGenerator codeGenerator = null;
   private boolean fullyCheckedCast;
-  private final LinkedHashSet<TypeElement> nullableAnnotations = new LinkedHashSet<TypeElement>();
   private final ArrayList<Excerpt> accessorAnnotations = new ArrayList<Excerpt>();
   private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties =
       EnumSet.allOf(Metadata_Property_Builder.Property.class);
@@ -243,71 +239,6 @@ abstract class Metadata_Property_Builder {
   }
 
   /**
-   * Adds {@code element} to the set to be returned from {@link Metadata.Property#getNullableAnnotations()}.
-   * If the set already contains {@code element}, then {@code addNullableAnnotations}
-   * has no effect (only the previously added element is retained).
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code element} is null
-   */
-  public Metadata.Property.Builder addNullableAnnotations(TypeElement element) {
-    this.nullableAnnotations.add(Preconditions.checkNotNull(element));
-    return (Metadata.Property.Builder) this;
-  }
-
-  /**
-   * Adds each element of {@code elements} to the set to be returned from
-   * {@link Metadata.Property#getNullableAnnotations()}, ignoring duplicate elements
-   * (only the first duplicate element is added).
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
-   */
-  public Metadata.Property.Builder addNullableAnnotations(TypeElement... elements) {
-    for (TypeElement element : elements) {
-      addNullableAnnotations(element);
-    }
-    return (Metadata.Property.Builder) this;
-  }
-
-  /**
-   * Adds each element of {@code elements} to the set to be returned from
-   * {@link Metadata.Property#getNullableAnnotations()}, ignoring duplicate elements
-   * (only the first duplicate element is added).
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
-   */
-  public Metadata.Property.Builder addAllNullableAnnotations(
-      Iterable<? extends TypeElement> elements) {
-    for (TypeElement element : elements) {
-      addNullableAnnotations(element);
-    }
-    return (Metadata.Property.Builder) this;
-  }
-
-  /**
-   * Clears the set to be returned from {@link Metadata.Property#getNullableAnnotations()}.
-   *
-   * @return this {@code Builder} object
-   */
-  public Metadata.Property.Builder clearNullableAnnotations() {
-    nullableAnnotations.clear();
-    return (Metadata.Property.Builder) this;
-  }
-
-  /**
-   * Returns an unmodifiable view of the set that will be returned by
-   * {@link Metadata.Property#getNullableAnnotations()}.
-   * Changes to this builder will be reflected in the view.
-   */
-  public Set<TypeElement> getNullableAnnotations() {
-    return Collections.unmodifiableSet(nullableAnnotations);
-  }
-
-  /**
    * Adds {@code element} to the list to be returned from {@link Metadata.Property#getAccessorAnnotations()}.
    *
    * @return this {@code Builder} object
@@ -384,7 +315,6 @@ abstract class Metadata_Property_Builder {
     setGetterName(value.getGetterName());
     setCodeGenerator(value.getCodeGenerator());
     setFullyCheckedCast(value.isFullyCheckedCast());
-    addAllNullableAnnotations(value.getNullableAnnotations());
     addAllAccessorAnnotations(value.getAccessorAnnotations());
     return (Metadata.Property.Builder) this;
   }
@@ -418,7 +348,6 @@ abstract class Metadata_Property_Builder {
     if (!_templateUnset.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)) {
       setFullyCheckedCast(template.isFullyCheckedCast());
     }
-    addAllNullableAnnotations(((Metadata_Property_Builder) template).nullableAnnotations);
     addAllAccessorAnnotations(((Metadata_Property_Builder) template).accessorAnnotations);
     return (Metadata.Property.Builder) this;
   }
@@ -436,7 +365,6 @@ abstract class Metadata_Property_Builder {
     getterName = _template.getterName;
     codeGenerator = _template.codeGenerator;
     fullyCheckedCast = _template.fullyCheckedCast;
-    nullableAnnotations.clear();
     accessorAnnotations.clear();
     _unsetProperties.clear();
     _unsetProperties.addAll(_template._unsetProperties);
@@ -476,7 +404,6 @@ abstract class Metadata_Property_Builder {
     private final String getterName;
     @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
-    private final ImmutableSet<TypeElement> nullableAnnotations;
     private final ImmutableList<Excerpt> accessorAnnotations;
 
     private Value(Metadata_Property_Builder builder) {
@@ -488,7 +415,6 @@ abstract class Metadata_Property_Builder {
       this.getterName = builder.getterName;
       this.codeGenerator = builder.codeGenerator;
       this.fullyCheckedCast = builder.fullyCheckedCast;
-      this.nullableAnnotations = ImmutableSet.copyOf(builder.nullableAnnotations);
       this.accessorAnnotations = ImmutableList.copyOf(builder.accessorAnnotations);
     }
 
@@ -535,11 +461,6 @@ abstract class Metadata_Property_Builder {
     }
 
     @Override
-    public ImmutableSet<TypeElement> getNullableAnnotations() {
-      return nullableAnnotations;
-    }
-
-    @Override
     public ImmutableList<Excerpt> getAccessorAnnotations() {
       return accessorAnnotations;
     }
@@ -576,9 +497,6 @@ abstract class Metadata_Property_Builder {
       if (fullyCheckedCast != other.fullyCheckedCast) {
         return false;
       }
-      if (!nullableAnnotations.equals(other.nullableAnnotations)) {
-        return false;
-      }
       if (!accessorAnnotations.equals(other.accessorAnnotations)) {
         return false;
       }
@@ -597,7 +515,6 @@ abstract class Metadata_Property_Builder {
             getterName,
             codeGenerator,
             fullyCheckedCast,
-            nullableAnnotations,
             accessorAnnotations
           });
     }
@@ -614,7 +531,6 @@ abstract class Metadata_Property_Builder {
               "getterName=" + getterName,
               (codeGenerator != null ? "codeGenerator=" + codeGenerator : null),
               "fullyCheckedCast=" + fullyCheckedCast,
-              "nullableAnnotations=" + nullableAnnotations,
               "accessorAnnotations=" + accessorAnnotations)
           + "}";
     }
@@ -629,7 +545,6 @@ abstract class Metadata_Property_Builder {
     private final String getterName;
     @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
-    private final ImmutableSet<TypeElement> nullableAnnotations;
     private final ImmutableList<Excerpt> accessorAnnotations;
     private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties;
 
@@ -642,7 +557,6 @@ abstract class Metadata_Property_Builder {
       this.getterName = builder.getterName;
       this.codeGenerator = builder.codeGenerator;
       this.fullyCheckedCast = builder.fullyCheckedCast;
-      this.nullableAnnotations = ImmutableSet.copyOf(builder.nullableAnnotations);
       this.accessorAnnotations = ImmutableList.copyOf(builder.accessorAnnotations);
       this._unsetProperties = builder._unsetProperties.clone();
     }
@@ -708,11 +622,6 @@ abstract class Metadata_Property_Builder {
     }
 
     @Override
-    public ImmutableSet<TypeElement> getNullableAnnotations() {
-      return nullableAnnotations;
-    }
-
-    @Override
     public ImmutableList<Excerpt> getAccessorAnnotations() {
       return accessorAnnotations;
     }
@@ -752,9 +661,6 @@ abstract class Metadata_Property_Builder {
       if (fullyCheckedCast != other.fullyCheckedCast) {
         return false;
       }
-      if (!nullableAnnotations.equals(other.nullableAnnotations)) {
-        return false;
-      }
       if (!accessorAnnotations.equals(other.accessorAnnotations)) {
         return false;
       }
@@ -773,7 +679,6 @@ abstract class Metadata_Property_Builder {
             getterName,
             codeGenerator,
             fullyCheckedCast,
-            nullableAnnotations,
             accessorAnnotations,
             _unsetProperties
           });
@@ -803,7 +708,6 @@ abstract class Metadata_Property_Builder {
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
                   ? "fullyCheckedCast=" + fullyCheckedCast
                   : null),
-              "nullableAnnotations=" + nullableAnnotations,
               "accessorAnnotations=" + accessorAnnotations)
           + "}";
     }
