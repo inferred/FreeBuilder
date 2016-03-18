@@ -15,14 +15,20 @@
  */
 package org.inferred.freebuilder.processor;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
+import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.Set;
 
 import javax.lang.model.util.Elements;
@@ -135,4 +141,47 @@ public abstract class PropertyCodeGenerator {
           return input.isTemplateRequiredInClear();
         }
       };
+
+  @Override
+  public boolean equals(final Object obj) {
+    if (obj == null || !getClass().isInstance(obj)) {
+      return false;
+    }
+    PropertyCodeGenerator other = (PropertyCodeGenerator) obj;
+    return fieldValues().equals(other.fieldValues());
+  }
+
+  @Override
+  public int hashCode() {
+    return ImmutableList.copyOf(fieldValues().values()).hashCode();
+  }
+
+  @Override
+  public String toString() {
+    ToStringHelper stringHelper = Objects.toStringHelper(this);
+    for (Map.Entry<String, Object> fieldValue : fieldValues().entrySet()) {
+      stringHelper.add(fieldValue.getKey(), fieldValue.getValue());
+    }
+    return stringHelper.toString();
+  }
+
+  private Map<String, Object> fieldValues() {
+    ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
+    addFieldValues(getClass(), valuesBuilder);
+    return valuesBuilder.build();
+  }
+
+  private void addFieldValues(Class<?> cls, ImmutableMap.Builder<String, Object> valuesBuilder) {
+    try {
+      if (cls.getSuperclass() != null) {
+        addFieldValues(cls.getSuperclass(), valuesBuilder);
+      }
+      for (Field field : cls.getDeclaredFields()) {
+        field.setAccessible(true);
+        valuesBuilder.put(field.getName(), field.get(this));
+      }
+    } catch (IllegalAccessException e) {
+      throw new AssertionError(e);
+    }
+  }
 }
