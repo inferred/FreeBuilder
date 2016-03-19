@@ -14,6 +14,7 @@ _Automatic generation of the Builder pattern for Java 1.6+_
 - [How to use `@FreeBuilder`](#how-to-use-freebuilder)
   - [Quick start](#quick-start)
   - [What you get](#what-you-get)
+  - [Accessor methods](#accessor-methods)
   - [Defaults and constraints](#defaults-and-constraints)
   - [Optional values](#optional-values)
     - [Using `@Nullable`](#using-nullable)
@@ -137,6 +138,14 @@ System.out.println(person);  // Person{name=Phil, age=31}
 ```
 
 
+### Accessor methods
+
+For each property `foo`, the builder gets:
+
+  * A setter method, `setFoo`. Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.)
+  * A getter method, `getFoo`. Throws an IllegalStateException if the property value has not yet been set.
+
+
 ### Defaults and constraints
 
 We use method overrides to add customization like default values and constraint
@@ -158,10 +167,9 @@ public interface Person {
       // Set defaults in the builder constructor.
       setDescription("Indescribable");
     }
-    @Override public Builder setAge(int age) {
-      // Check single-field (argument) constraints in the setter methods.
-      checkArgument(age >= 18);
-      return super.setAge(age);
+    @Override void checkAge(int age) {
+      // Check single-field (argument) constraints in the check method.
+      checkArgument(age >= 0);
     }
     @Override public Person build() {
       // Check cross-field (state) constraints in the build method.
@@ -178,8 +186,7 @@ public interface Person {
 
 If a property is optional&mdash;that is, has no reasonable default&mdash;then
 use [the Java 8 Optional type][] (or [the Guava Optional type][] for
-backwards-compatibility). It will default to Optional.empty(), and the Builder
-will gain additional convenience setter methods.
+backwards-compatibility).
 
 [the Java 8 Optional type]: https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html
 [the Guava Optional type]: http://google.github.io/guava/releases/19.0/api/docs/com/google/common/base/Optional.html
@@ -190,12 +197,17 @@ will gain additional convenience setter methods.
   Optional<String> getDescription();
 ```
 
+This property will now default to Optional.empty(), and the Builder
+will gain additional convenience setter methods:
+
+  * `setDescription(String value)`: Sets the property to `Optional.of(value)`. Throws a NullPointerException if value is null; this avoids users accidentally clearing an optional value in a way that peer review is unlikely to catch.
+  * `clearDescription()`: Sets the property to `Optional.empty()`.
+  * `setDescription(Optional<String> value)`: Sets the property to `value`.
+  * `setNullableDescription(String value)`: Sets the property to `Optional.ofNullable(value)`.
+
 Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
 the empty string, as it forces the user to think about those edge cases.
-Note that `setDescription` will not accept a null; instead, call
-`clearDescription()` to reset the field, or `setNullableDescription(Value)`
-if you have a potentially-null value.
 
 #### Using `@Nullable`
 
@@ -244,17 +256,83 @@ Your API is now `@FreeBuilder`-compatible :)
 
 ### Collections and Maps
 
-`@FreeBuilder` has special support for <code>[List][]</code>,
-<code>[Set][]</code>, <code>[Multiset][]</code>, <code>[Map][]</code> and
-<code>[Multimap][]</code> properties:
+`@FreeBuilder` has special support for collection and map properties, removing
+the `setFoo` accessor method and generating new ones appropriate to the type.
+Collection and map properties default to an empty collection/map and cannot hold
+nulls.
 
-  * The Builder's <code>set<em>X</em></code> method is removed
-  * Mutation methods are added instead: <code>add<em>X</em></code> (collections),
-    <code>put<em>X</em></code> (maps) and <code>clear<em>X</em></code>
-  * The Builder's <code>get<em>X</em></code> method returns an unmodifiable view
-    of the current values: when the Builder is changed, the view also changes
-  * The property defaults to an empty collection
-  * The value type returns immutable collections
+```java
+  /** Returns a list of descendents for this person. **/
+  List<String> getDescendants();
+```
+
+A <code>[List][]</code>, <code>[Set][]</code> or <code>[Multiset][]</code>
+property called 'descendants' would generate:
+
+  * `addDescendants(String element)`: Appends `element` to the collection of
+    descendants. If descendants is a set and the element is already present, it
+    is ignored. Throws a NullPointerException if element is null.
+  * `addDescendants(String... elements)`: Appends all `elements` to the
+    collection of descendants. If descendants is a set, any elements already
+    present are ignored. Throws a NullPointerException if elements, or any of
+    the values it holds, is null.
+  * `addAllDescendants(Iterable<String> elements)`: Appends all `elements` to
+    the collection of descendants. If descendants is a set, any elements already
+    present are ignored. Throws a NullPointerException if elements, or any of
+    the values it holds, is null.
+  * `clearDescendants()`: Removes all elements from the collection of
+    descendants, leaving it empty.
+  * `getDescendants()`: Returns an unmodifiable view of the collection of
+    descendants. Changes to the collection held by the builder will be reflected
+    in the view.
+
+```java
+  /** Returns a map of favourite albums by year. **/
+  Map<Integer, String> getAlbums();
+```
+
+A <code>[Map][]</code> property called 'albums' would generate:
+
+  * `putAlbums(int key, String value)`: Associates `key` with `value` in albums.
+    Throws a NullPointerException if either parameter is null. Throws an
+    IllegalArgumentException if the key is already present.
+  * `putAllAlbums(Map<? extends Integer, ? extends String> map)`: Associates all
+    of `map`'s keys and values in albums. Throws a NullPointerException if the
+    map is null or contains a null key or value. Throws an
+    IllegalArgumentException if any key is already present.
+  * `removeAlbums(int key)`: Removes the mapping for `key` from albums. Throws a
+    NullPointerException if the parameter is null. Throws an
+    IllegalArgumentException if the key is not present.
+  * `clearAlbums()`: Removes all mappings from albums, leaving it empty.
+  * `getAlbums()`: Returns an unmodifiable view of the map of albums. Changes to
+    the map held by the builder will be reflected in this view.
+
+```java
+  /** Returns a multimap of all awards by year. **/
+  SetMultimap<Integer, String> getAwards();
+```
+
+A <code>[Multimap][]</code> property called 'awards' would generate:
+
+  * `putAwards(int key, String value)`: Associates `key` with `value` in awards.
+    Throws a NullPointerException if either parameter is null.
+  * `pulAllAwards(int key, Iterable<? extends String> values)`: Associates `key`
+    with every element of `values` in awards. Throws a NullPointerException if
+    either parameter, or any value, is null.
+  * `putAllAwards(Map<? extends Integer, ? extends String> map)`: Associates all
+    of `map`'s keys and values in awards. Throws a NullPointerException if the
+    map is null or contains a null key or value. If awards is a map, an
+    IllegalArgumentException will be thrown if any key is already present.
+  * `removeAwards(int key, String value)`: Removes the single pair `key`-`value`
+    from awards. If multiple pairs match, which is removed is unspecified.
+    Throws a NullPointerException if either parameter is null.
+  * `removeAllAwards(int key)`: Removes all values associated with `key` from
+    awards. Throws a NullPointerException if the key is null.
+  * `clearAwards()`: Removes all mappings from awards, leaving it empty.
+  * `getAwards()`: Returns an unmodifiable view of the multimap of albums.
+    Changes to the multimap held by the builder will be reflected in this view.
+
+In all cases, the value type will return immutable objects from its getter.
 
 [List]: http://docs.oracle.com/javase/tutorial/collections/interfaces/list.html
 [Set]: http://docs.oracle.com/javase/tutorial/collections/interfaces/set.html
@@ -265,15 +343,22 @@ Your API is now `@FreeBuilder`-compatible :)
 
 ### Nested buildable types
 
-`@FreeBuilder` has special support for buildable types like [protos][] and other
-`@FreeBuilder` types:
+```java
+  /** Returns the person responsible for this project. */
+  Person getOwner();
+```
 
-  * The <code>set<em>X</em></code> method gains an overload for the property
-    type's Builder, as shorthand for <code>set<em>X</em>(x.build())</code>
-  * The <code>get<em>X</em></code> method is removed
-  * A <code>get<em>X</em>Builder</code> method is added instead, returning a
-    mutable Builder for the property
-  * The property inherits the defaults of its Builder type
+`@FreeBuilder` has special support for buildable types like [protos][] and other
+`@FreeBuilder` types. A buildable property called 'owner' would generate:
+
+  * `setOwner(Person owner)`: Sets the owner. Throws a NullPointerException if
+    provided a null.
+  * `setOwner(Person.Builder builder)`: Calls `build()` on `builder` and sets
+    the owner to the result. Throws a NullPointerException if builder or the
+    result of calling `build()` is null.
+  * `getOwnerBuilder()`: Returns a builder for the owner property. Unlike other
+    getter methods in FreeBuilder-generated API, this object is mutable, and
+    modifying it **will modify the underlying property**.
 
 [protos]: https://developers.google.com/protocol-buffers/
 
@@ -576,5 +661,3 @@ License
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
