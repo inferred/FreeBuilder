@@ -142,8 +142,10 @@ System.out.println(person);  // Person{name=Phil, age=31}
 
 For each property `foo`, the builder gets:
 
-  * A setter method, `setFoo`. Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.)
-  * A getter method, `getFoo`. Throws an IllegalStateException if the property value has not yet been set.
+| Method | Description |
+|:------:| ----------- |
+| A setter method, `setFoo` | Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.) |
+| A getter method, `getFoo` | Throws an IllegalStateException if the property value has not yet been set. |
 
 
 ### Defaults and constraints
@@ -200,10 +202,12 @@ backwards-compatibility).
 This property will now default to Optional.empty(), and the Builder
 will gain additional convenience setter methods:
 
-  * `setDescription(String value)`: Sets the property to `Optional.of(value)`. Throws a NullPointerException if value is null; this avoids users accidentally clearing an optional value in a way that peer review is unlikely to catch.
-  * `clearDescription()`: Sets the property to `Optional.empty()`.
-  * `setDescription(Optional<String> value)`: Sets the property to `value`.
-  * `setNullableDescription(String value)`: Sets the property to `Optional.ofNullable(value)`.
+| Method | Description |
+|:------:| ----------- |
+| `setDescription(String value)` | Sets the property to `Optional.of(value)`. Throws a NullPointerException if value is null; this avoids users accidentally clearing an optional value in a way that peer review is unlikely to catch. |
+| `clearDescription()` | Sets the property to `Optional.empty()`. |
+| `setDescription(Optional<String> value)` | Sets the property to `value`. |
+| `setNullableDescription(String value)` | Sets the property to `Optional.ofNullable(value)`. |
 
 Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
@@ -269,22 +273,13 @@ nulls.
 A <code>[List][]</code>, <code>[Set][]</code> or <code>[Multiset][]</code>
 property called 'descendants' would generate:
 
-  * `addDescendants(String element)`: Appends `element` to the collection of
-    descendants. If descendants is a set and the element is already present, it
-    is ignored. Throws a NullPointerException if element is null.
-  * `addDescendants(String... elements)`: Appends all `elements` to the
-    collection of descendants. If descendants is a set, any elements already
-    present are ignored. Throws a NullPointerException if elements, or any of
-    the values it holds, is null.
-  * `addAllDescendants(Iterable<String> elements)`: Appends all `elements` to
-    the collection of descendants. If descendants is a set, any elements already
-    present are ignored. Throws a NullPointerException if elements, or any of
-    the values it holds, is null.
-  * `clearDescendants()`: Removes all elements from the collection of
-    descendants, leaving it empty.
-  * `getDescendants()`: Returns an unmodifiable view of the collection of
-    descendants. Changes to the collection held by the builder will be reflected
-    in the view.
+| Method | Description |
+|:------:| ----------- |
+| `addDescendants(String element)` | Appends `element` to the collection of descendants. If descendants is a set and the element is already present, it is ignored. Throws a NullPointerException if element is null. |
+| `addDescendants(String... elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
+| `addAllDescendants(Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
+| `clearDescendants()` | Removes all elements from the collection of descendants, leaving it empty. |
+| `getDescendants()` | Returns an unmodifiable view of the collection of descendants. Changes to the collection held by the builder will be reflected in the view. |
 
 ```java
   /** Returns a map of favourite albums by year. **/
@@ -293,19 +288,13 @@ property called 'descendants' would generate:
 
 A <code>[Map][]</code> property called 'albums' would generate:
 
-  * `putAlbums(int key, String value)`: Associates `key` with `value` in albums.
-    Throws a NullPointerException if either parameter is null. Throws an
-    IllegalArgumentException if the key is already present.
-  * `putAllAlbums(Map<? extends Integer, ? extends String> map)`: Associates all
-    of `map`'s keys and values in albums. Throws a NullPointerException if the
-    map is null or contains a null key or value. Throws an
-    IllegalArgumentException if any key is already present.
-  * `removeAlbums(int key)`: Removes the mapping for `key` from albums. Throws a
-    NullPointerException if the parameter is null. Throws an
-    IllegalArgumentException if the key is not present.
-  * `clearAlbums()`: Removes all mappings from albums, leaving it empty.
-  * `getAlbums()`: Returns an unmodifiable view of the map of albums. Changes to
-    the map held by the builder will be reflected in this view.
+| Method | Description |
+|:------:| ----------- |
+| `putAlbums(int key, String value)` | Associates `key` with `value` in albums.  Throws a NullPointerException if either parameter is null. Throws an IllegalArgumentException if the key is already present. |
+| `putAllAlbums(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in albums. Throws a NullPointerException if the map is null or contains a null key or value. Throws an IllegalArgumentException if any key is already present. |
+| `removeAlbums(int key)` | Removes the mapping for `key` from albums. Throws a NullPointerException if the parameter is null. Throws an IllegalArgumentException if the key is not present. |
+| `clearAlbums()` | Removes all mappings from albums, leaving it empty. |
+| `getAlbums()` | Returns an unmodifiable view of the map of albums. Changes to the map held by the builder will be reflected in this view. |
 
 ```java
   /** Returns a multimap of all awards by year. **/
@@ -314,23 +303,15 @@ A <code>[Map][]</code> property called 'albums' would generate:
 
 A <code>[Multimap][]</code> property called 'awards' would generate:
 
-  * `putAwards(int key, String value)`: Associates `key` with `value` in awards.
-    Throws a NullPointerException if either parameter is null.
-  * `pulAllAwards(int key, Iterable<? extends String> values)`: Associates `key`
-    with every element of `values` in awards. Throws a NullPointerException if
-    either parameter, or any value, is null.
-  * `putAllAwards(Map<? extends Integer, ? extends String> map)`: Associates all
-    of `map`'s keys and values in awards. Throws a NullPointerException if the
-    map is null or contains a null key or value. If awards is a map, an
-    IllegalArgumentException will be thrown if any key is already present.
-  * `removeAwards(int key, String value)`: Removes the single pair `key`-`value`
-    from awards. If multiple pairs match, which is removed is unspecified.
-    Throws a NullPointerException if either parameter is null.
-  * `removeAllAwards(int key)`: Removes all values associated with `key` from
-    awards. Throws a NullPointerException if the key is null.
-  * `clearAwards()`: Removes all mappings from awards, leaving it empty.
-  * `getAwards()`: Returns an unmodifiable view of the multimap of albums.
-    Changes to the multimap held by the builder will be reflected in this view.
+| Method | Description |
+|:------:| ----------- |
+| `putAwards(int key, String value)` | Associates `key` with `value` in awards. Throws a NullPointerException if either parameter is null. |
+| `putAllAwards(int key, Iterable<? extends String> values)` | Associates `key` with every element of `values` in awards. Throws a NullPointerException if either parameter, or any value, is null. |
+| `putAllAwards(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in awards. Throws a NullPointerException if the map is null or contains a null key or value. If awards is a map, an IllegalArgumentException will be thrown if any key is already present. |
+| `removeAwards(int key, String value)` | Removes the single pair `key`-`value` from awards. If multiple pairs match, which is removed is unspecified. Throws a NullPointerException if either parameter is null. |
+| `removeAllAwards(int key)` | Removes all values associated with `key` from awards. Throws a NullPointerException if the key is null. |
+| `clearAwards()` | Removes all mappings from awards, leaving it empty. |
+| `getAwards()` | Returns an unmodifiable view of the multimap of albums. Changes to the multimap held by the builder will be reflected in this view. |
 
 In all cases, the value type will return immutable objects from its getter.
 
@@ -351,14 +332,11 @@ In all cases, the value type will return immutable objects from its getter.
 `@FreeBuilder` has special support for buildable types like [protos][] and other
 `@FreeBuilder` types. A buildable property called 'owner' would generate:
 
-  * `setOwner(Person owner)`: Sets the owner. Throws a NullPointerException if
-    provided a null.
-  * `setOwner(Person.Builder builder)`: Calls `build()` on `builder` and sets
-    the owner to the result. Throws a NullPointerException if builder or the
-    result of calling `build()` is null.
-  * `getOwnerBuilder()`: Returns a builder for the owner property. Unlike other
-    getter methods in FreeBuilder-generated API, this object is mutable, and
-    modifying it **will modify the underlying property**.
+| Method | Description |
+|:------:| ----------- |
+| `setOwner(Person owner)` | Sets the owner. Throws a NullPointerException if provided a null. |
+| `setOwner(Person.Builder builder)` | Calls `build()` on `builder` and sets the owner to the result. Throws a NullPointerException if builder or the result of calling `build()` is null. |
+| `getOwnerBuilder()` | Returns a builder for the owner property. Unlike other getter methods in FreeBuilder-generated API, this object is mutable, and modifying it **will modify the underlying property**. |
 
 [protos]: https://developers.google.com/protocol-buffers/
 
