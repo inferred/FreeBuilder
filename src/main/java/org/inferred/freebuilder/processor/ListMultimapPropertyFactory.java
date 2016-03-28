@@ -104,7 +104,16 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // put(K key, V value)
+      addPut(code, metadata);
+      addSingleKeyPutAll(code, metadata);
+      addMultimapPutAll(code, metadata);
+      addRemove(code, metadata);
+      addRemoveAll(code, metadata);
+      addClear(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addPut(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
@@ -138,8 +147,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("  this.%s.put(key, value);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // putAll(K key, Iterable<? extends V> values)
+    private void addSingleKeyPutAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a collection of {@code values} with the same {@code key} to the")
@@ -166,8 +176,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // putAll(Multimap<? extends K, ? extends V> multimap)
+    private void addMultimapPutAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each entry of {@code multimap} to the multimap to be returned from")
@@ -191,8 +202,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // remove(K key, V value)
+    private void addRemove(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes a single key-value pair with the key {@code key} and the value"
@@ -229,8 +241,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("  this.%s.remove(key, value);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // removeAll(K key)
+    private void addRemoveAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes all values associated with the key {@code key} from the multimap to")
@@ -252,8 +265,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("  this.%s.removeAll(key);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // clear()
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes all of the mappings from the multimap to be returned from")
@@ -265,8 +279,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
           .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // get()
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the multimap that will be returned by")

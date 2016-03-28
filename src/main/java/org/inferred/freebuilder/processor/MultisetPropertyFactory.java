@@ -87,7 +87,16 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // add(T element)
+      addAdd(code, metadata);
+      addVarargsAdd(code, metadata);
+      addAddAll(code, metadata);
+      addAddCopiesTo(code, metadata);
+      addClear(code, metadata);
+      addSetCountOf(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addAdd(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds {@code element} to the multiset to be returned from %s.",
@@ -105,8 +114,9 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  %s(element, 1);", addCopiesMethod(property))
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // add(T... elements)
+    private void addVarargsAdd(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
@@ -127,8 +137,9 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // addAll(Iterable<? extends T> elements)
+    private void addAddAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
@@ -149,8 +160,9 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // addCopiesTo(T element, int occurrences)
+    private void addAddCopiesTo(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a number of occurrences of {@code element} to the multiset to be")
@@ -172,8 +184,9 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
               property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // clear()
+    private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Clears the multiset to be returned from %s.",
@@ -185,8 +198,9 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  this.%s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // setCountOf(T element, int occurrences)
+    private void addSetCountOf(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds or removes the necessary occurrences of {@code element} to/from the")
@@ -210,8 +224,9 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("  this.%s.setCount(element, occurrences);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // get()
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns an unmodifiable view of the multiset that will be returned by")

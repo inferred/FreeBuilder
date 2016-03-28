@@ -172,7 +172,12 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
-      // set(T)
+      addSetter(code, metadata);
+      addSetterTakingBuilder(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addSetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -192,8 +197,9 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
               property.getName(), Preconditions.class)
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // set(T.Builder)
+    private void addSetterTakingBuilder(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -208,8 +214,9 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
               property.getType())
           .addLine("  return %s(builder.build());", setter(property))
           .addLine("}");
+    }
 
-      // getBuilder()
+    private void addGetter(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns a builder for the value that will be returned by %s.",
