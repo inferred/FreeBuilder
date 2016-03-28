@@ -15,6 +15,11 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.putAllMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.putMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
@@ -46,12 +51,6 @@ import javax.lang.model.util.Types;
  * properties.
  */
 public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
-
-  private static final String PUT_PREFIX = "put";
-  private static final String PUT_ALL_PREFIX = "putAll";
-  private static final String REMOVE_PREFIX = "remove";
-  private static final String CLEAR_PREFIX = "clear";
-  private static final String GET_PREFIX = "get";
 
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
@@ -128,10 +127,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine(" * @throws IllegalArgumentException if {@code key} is already present")
           .addLine(" */")
-          .addLine("public %s %s%s(%s key, %s value) {",
+          .addLine("public %s %s(%s key, %s value) {",
               metadata.getBuilder(),
-              PUT_PREFIX,
-              property.getCapitalizedName(),
+              putMethod(property),
               unboxedKeyType.or(keyType),
               unboxedValueType.or(valueType));
       if (!unboxedKeyType.isPresent()) {
@@ -165,17 +163,15 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * @throws IllegalArgumentException if any key is already present")
           .addLine(" */");
       addAccessorAnnotations(code);
-      code.addLine("public %s %s%s(%s<? extends %s, ? extends %s> map) {",
+      code.addLine("public %s %s(%s<? extends %s, ? extends %s> map) {",
               metadata.getBuilder(),
-              PUT_ALL_PREFIX,
-              property.getCapitalizedName(),
+              putAllMethod(property),
               Map.class,
               keyType,
               valueType)
           .addLine("  for (%s<? extends %s, ? extends %s> entry : map.entrySet()) {",
               Map.Entry.class, keyType, valueType)
-          .addLine("    %s%s(entry.getKey(), entry.getValue());",
-              PUT_PREFIX, property.getCapitalizedName())
+          .addLine("    %s(entry.getKey(), entry.getValue());", putMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -192,10 +188,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine(" * @throws IllegalArgumentException if {@code key} is not present")
           .addLine(" */")
-          .addLine("public %s %s%s(%s key) {",
+          .addLine("public %s %s(%s key) {",
               metadata.getBuilder(),
-              REMOVE_PREFIX,
-              property.getCapitalizedName(),
+              removeMethod(property),
               unboxedKeyType.or(keyType),
               valueType);
       if (!unboxedKeyType.isPresent()) {
@@ -221,10 +216,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
-          .addLine("public %s %s%s() {",
-              metadata.getBuilder(),
-              CLEAR_PREFIX,
-              property.getCapitalizedName())
+          .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
           .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -236,12 +228,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
-          .addLine("public %s<%s, %s> %s%s() {",
-              Map.class,
-              keyType,
-              valueType,
-              GET_PREFIX,
-              property.getCapitalizedName())
+          .addLine("public %s<%s, %s> %s() {", Map.class, keyType, valueType, getter(property))
           .addLine("  return %s.unmodifiableMap(%s);", Collections.class, property.getName())
           .addLine("}");
     }
@@ -259,15 +246,13 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s%s(%s.%s());",
-          PUT_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
+      code.addLine("%s(%s.%s());", putAllMethod(property), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("%s%s(((%s) %s).%s);",
-          PUT_ALL_PREFIX,
-          property.getCapitalizedName(),
+      code.addLine("%s(((%s) %s).%s);",
+          putAllMethod(property),
           metadata.getGeneratedBuilder(),
           builder,
           property.getName());
@@ -275,8 +260,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("%s.%s%s(%s);",
-          builder, PUT_ALL_PREFIX, property.getCapitalizedName(), variable);
+      code.addLine("%s.%s(%s);", builder, putAllMethod(property), variable);
     }
 
     @Override

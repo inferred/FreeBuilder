@@ -18,9 +18,12 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.tryFind;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
+
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.util.ElementFilter.typesIn;
-import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
 import java.util.List;
 
@@ -54,10 +57,6 @@ import com.google.common.collect.FluentIterable;
  * </ul>
  */
 public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
-
-  private static final String SET_PREFIX = "set";
-  private static final String GET_BUILDER_PREFIX = "get";
-  private static final String GET_BUILDER_SUFFIX = "Builder";
 
   /** How to merge the values from one Builder into another. */
   private enum MergeBuilderMethod {
@@ -140,15 +139,10 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
       }
     }
 
-    String setterName = SET_PREFIX + config.getProperty().getCapitalizedName();
-    String getBuilderName =
-        GET_BUILDER_PREFIX + config.getProperty().getCapitalizedName() + GET_BUILDER_SUFFIX;
     return Optional.of(new CodeGenerator(
         config.getProperty(),
         ParameterizedType.from(builder.get()),
         builderFactory.get(),
-        setterName,
-        getBuilderName,
         mergeFromBuilderMethod));
   }
 
@@ -156,22 +150,16 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     final ParameterizedType builderType;
     final BuilderFactory builderFactory;
-    final String setterName;
-    final String getBuilderName;
     final MergeBuilderMethod mergeFromBuilderMethod;
 
     CodeGenerator(
         Property property,
         ParameterizedType builderType,
         BuilderFactory builderFactory,
-        String setterName,
-        String getBuilderName,
         MergeBuilderMethod mergeFromBuilderMethod) {
       super(property);
       this.builderType = builderType;
       this.builderFactory = builderFactory;
-      this.setterName = setterName;
-      this.getBuilderName = getBuilderName;
       this.mergeFromBuilderMethod = mergeFromBuilderMethod;
     }
 
@@ -196,7 +184,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
       addAccessorAnnotations(code);
       code.addLine("public %s %s(%s %s) {",
               metadata.getBuilder(),
-              setterName,
+              setter(property),
               property.getType(),
               property.getName())
           .addLine("  this.%s.clear();", property.getName())
@@ -216,9 +204,9 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" */")
           .addLine("public %s %s(%s.Builder builder) {",
               metadata.getBuilder(),
-              setterName,
+              setter(property),
               property.getType())
-          .addLine("  return %s(builder.build());", setterName)
+          .addLine("  return %s(builder.build());", setter(property))
           .addLine("}");
 
       // getBuilder()
@@ -227,7 +215,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * Returns a builder for the value that will be returned by %s.",
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" */")
-          .addLine("public %s %s() {", builderType, getBuilderName)
+          .addLine("public %s %s() {", builderType, getBuilderMethod(property))
           .addLine("  return %s;", property.getName())
           .addLine("}");
     }
@@ -257,7 +245,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
       if (propertyName.equals(builder)) {
         propertyName = "this." + propertyName;  // see issue #78
       }
-      code.add("%s.mergeFrom(%s.%s()", propertyName, builder, getBuilderName);
+      code.add("%s.mergeFrom(%s.%s()", propertyName, builder, getBuilderMethod(property));
       if (mergeFromBuilderMethod == MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE) {
         code.add(".buildPartial()");
       }
@@ -266,7 +254,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("%s.%s(%s);", builder, setterName, variable);
+      code.addLine("%s.%s(%s);", builder, setter(property), variable);
     }
 
     @Override

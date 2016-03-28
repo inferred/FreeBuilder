@@ -15,6 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.putAllMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.putMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.removeAllMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 
@@ -44,13 +50,6 @@ import com.google.common.collect.Multimaps;
  * properties.
  */
 public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factory {
-
-  private static final String PUT_PREFIX = "put";
-  private static final String PUT_ALL_PREFIX = "putAll";
-  private static final String REMOVE_PREFIX = "remove";
-  private static final String REMOVE_ALL_PREFIX = "removeAll";
-  private static final String CLEAR_PREFIX = "clear";
-  private static final String GET_PREFIX = "get";
 
   @Override
   public Optional<CodeGenerator> create(Config config) {
@@ -109,7 +108,8 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
-          .addLine(" * from %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" * from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
@@ -124,10 +124,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
         code.add(" is null\n");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s key, %s value) {",
+          .addLine("public %s %s(%s key, %s value) {",
               metadata.getBuilder(),
-              PUT_PREFIX,
-              property.getCapitalizedName(),
+              putMethod(property),
               unboxedKeyType.or(keyType),
               unboxedValueType.or(valueType));
       if (!unboxedKeyType.isPresent()) {
@@ -156,15 +155,14 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
             .addLine(" *     null, or if {@code values} contains a null element");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s key, %s<? extends %s> values) {",
+          .addLine("public %s %s(%s key, %s<? extends %s> values) {",
               metadata.getBuilder(),
-              PUT_ALL_PREFIX,
-              property.getCapitalizedName(),
+              putAllMethod(property),
               unboxedKeyType.or(keyType),
               Iterable.class,
               valueType)
           .addLine("  for (%s value : values) {", unboxedValueType.or(valueType))
-          .addLine("    %s%s(key, value);", PUT_PREFIX, property.getCapitalizedName())
+          .addLine("    %s(key, value);", putMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -180,18 +178,16 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
           .addLine(" *     null key or value")
           .addLine(" */");
       addAccessorAnnotations(code);
-      code.addLine("public %s %s%s(%s<? extends %s, ? extends %s> multimap) {",
+      code.addLine("public %s %s(%s<? extends %s, ? extends %s> multimap) {",
               metadata.getBuilder(),
-              PUT_ALL_PREFIX,
-              property.getCapitalizedName(),
+              putAllMethod(property),
               Multimap.class,
               keyType,
               valueType)
           .addLine("  for (%s<? extends %s, ? extends %s<? extends %s>> entry",
               Entry.class, keyType, Collection.class, valueType)
           .addLine("      : multimap.asMap().entrySet()) {")
-          .addLine("    %s%s(entry.getKey(), entry.getValue());",
-              PUT_ALL_PREFIX, property.getCapitalizedName())
+          .addLine("    %s(entry.getKey(), entry.getValue());", putAllMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -219,10 +215,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
         code.add(" is null\n");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s key, %s value) {",
+          .addLine("public %s %s(%s key, %s value) {",
               metadata.getBuilder(),
-              REMOVE_PREFIX,
-              property.getCapitalizedName(),
+              removeMethod(property),
               unboxedKeyType.or(keyType),
               unboxedValueType.or(valueType));
       if (!unboxedKeyType.isPresent()) {
@@ -247,10 +242,9 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
         code.add(" * @throws NullPointerException if {@code key} is null\n");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s key) {",
+          .addLine("public %s %s(%s key) {",
               metadata.getBuilder(),
-              REMOVE_ALL_PREFIX,
-              property.getCapitalizedName(),
+              removeAllMethod(property),
               unboxedKeyType.or(keyType));
       if (!unboxedKeyType.isPresent()) {
         code.addLine("  %s.checkNotNull(key);", Preconditions.class);
@@ -267,10 +261,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
-          .addLine("public %s %s%s() {",
-              metadata.getBuilder(),
-              CLEAR_PREFIX,
-              property.getCapitalizedName())
+          .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
           .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -282,12 +273,11 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
           .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
-          .addLine("public %s<%s, %s> %s%s() {",
+          .addLine("public %s<%s, %s> %s() {",
               ListMultimap.class,
               keyType,
               valueType,
-              GET_PREFIX,
-              property.getCapitalizedName())
+              getter(property))
           .addLine("  return %s.unmodifiableListMultimap(%s);",
               Multimaps.class, property.getName())
           .addLine("}");
@@ -301,15 +291,13 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s%s(%s.%s());",
-          PUT_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
+      code.addLine("%s(%s.%s());", putAllMethod(property), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("%s%s(((%s) %s).%s);",
-          PUT_ALL_PREFIX,
-          property.getCapitalizedName(),
+      code.addLine("%s(((%s) %s).%s);",
+          putAllMethod(property),
           metadata.getGeneratedBuilder(),
           builder,
           property.getName());
@@ -317,8 +305,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("%s.%s%s(%s);",
-          builder, PUT_ALL_PREFIX, property.getCapitalizedName(), variable);
+      code.addLine("%s.%s(%s);", builder, putAllMethod(property), variable);
     }
 
     @Override

@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
 
@@ -32,27 +34,23 @@ import javax.lang.model.element.TypeElement;
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
 public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
-  private static final String SET_PREFIX = "set";
-
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
-    String setterName = SET_PREFIX + config.getProperty().getCapitalizedName();
+    Property property = config.getProperty();
     boolean hasDefault =
-        !config.getProperty().getNullableAnnotations().isEmpty()
-            || config.getMethodsInvokedInBuilderConstructor().contains(setterName);
-    return Optional.of(new CodeGenerator(config.getProperty(), setterName, hasDefault));
+        !property.getNullableAnnotations().isEmpty()
+            || config.getMethodsInvokedInBuilderConstructor().contains(setter(property));
+    return Optional.of(new CodeGenerator(property, hasDefault));
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
-    final String setterName;
     final boolean hasDefault;
     final boolean isPrimitive;
     final boolean isNullable;
 
-    CodeGenerator(Property property, String setterName, boolean hasDefault) {
+    CodeGenerator(Property property, boolean hasDefault) {
       super(property);
-      this.setterName = setterName;
       this.hasDefault = hasDefault;
       this.isPrimitive = property.getType().getKind().isPrimitive();
       this.isNullable = !property.getNullableAnnotations().isEmpty();
@@ -90,7 +88,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine(" */");
       addAccessorAnnotations(code);
-      code.add("public %s %s(", metadata.getBuilder(), setterName);
+      code.add("public %s %s(", metadata.getBuilder(), setter(property));
       for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
         code.add("@%s ", nullableAnnotation);
       }
@@ -125,7 +123,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
         code.addLine("@%s", nullableAnnotation);
       }
-      code.addLine("public %s %s() {", property.getType(), property.getGetterName());
+      code.addLine("public %s %s() {", property.getType(), getter(property));
       if (!hasDefault) {
         Excerpt propertyIsSet = new Excerpt() {
           @Override
@@ -155,17 +153,17 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s(%s.%s());", setterName, value, property.getGetterName());
+      code.addLine("%s(%s.%s());", setter(property), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("%s(%s.%s());", setterName, builder, property.getGetterName());
+      code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
     }
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("%s.%s(%s);", builder, setterName, variable);
+      code.addLine("%s.%s(%s);", builder, setter(property), variable);
     }
 
     @Override

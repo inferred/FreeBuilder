@@ -15,6 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.addAllMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.addCopiesMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.setCountMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 
@@ -38,13 +44,6 @@ import com.google.common.collect.Multisets;
  * properties.
  */
 public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
-
-  private static final String ADD_PREFIX = "add";
-  private static final String ADD_ALL_PREFIX = "addAll";
-  private static final String ADD_COPIES_PREFIX = "addCopiesTo";
-  private static final String CLEAR_PREFIX = "clear";
-  private static final String GET_PREFIX = "get";
-  private static final String SET_COUNT_PREFIX = "setCountOf";
 
   @Override
   public Optional<CodeGenerator> create(Config config) {
@@ -99,12 +98,11 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine(" * @throws NullPointerException if {@code element} is null");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s element) {",
+          .addLine("public %s %s(%s element) {",
               metadata.getBuilder(),
-              ADD_PREFIX,
-              property.getCapitalizedName(),
+              addMethod(property),
               unboxedType.or(elementType))
-          .addLine("  %s%s(element, 1);", ADD_COPIES_PREFIX, property.getCapitalizedName())
+          .addLine("  %s(element, 1);", addCopiesMethod(property))
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
 
@@ -120,13 +118,12 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
             .addLine(" *     null element");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s... elements) {",
+          .addLine("public %s %s(%s... elements) {",
               metadata.getBuilder(),
-              ADD_PREFIX,
-              property.getCapitalizedName(),
+              addMethod(property),
               unboxedType.or(elementType))
           .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("    %s%s(element, 1);", ADD_COPIES_PREFIX, property.getCapitalizedName())
+          .addLine("    %s(element, 1);", addCopiesMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -142,14 +139,13 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" *     null element")
           .addLine(" */");
       addAccessorAnnotations(code);
-      code.addLine("public %s %s%s(%s<? extends %s> elements) {",
+      code.addLine("public %s %s(%s<? extends %s> elements) {",
               metadata.getBuilder(),
-              ADD_ALL_PREFIX,
-              property.getCapitalizedName(),
+              addAllMethod(property),
               Iterable.class,
               elementType)
           .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("    %s%s(element, 1);", ADD_COPIES_PREFIX, property.getCapitalizedName())
+          .addLine("    %s(element, 1);", addCopiesMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -167,14 +163,12 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine(" * @throws IllegalArgumentException if {@code occurrences} is negative")
           .addLine(" */")
-          .addLine("public %s %s%s(%s element, int occurrences) {",
+          .addLine("public %s %s(%s element, int occurrences) {",
               metadata.getBuilder(),
-              ADD_COPIES_PREFIX,
-              property.getCapitalizedName(),
+              addCopiesMethod(property),
               unboxedType.or(elementType))
-          .addLine("  %s%s(element, this.%s.count(element) + occurrences);",
-              SET_COUNT_PREFIX,
-              property.getCapitalizedName(),
+          .addLine("  %s(element, this.%s.count(element) + occurrences);",
+              setCountMethod(property),
               property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -187,10 +181,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
-          .addLine("public %s %s%s() {",
-              metadata.getBuilder(),
-              CLEAR_PREFIX,
-              property.getCapitalizedName())
+          .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
           .addLine("  this.%s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -209,10 +200,9 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine(" * @throws IllegalArgumentException if {@code occurrences} is negative")
           .addLine(" */")
-          .addLine("public %s %s%s(%s element, int occurrences) {",
+          .addLine("public %s %s(%s element, int occurrences) {",
               metadata.getBuilder(),
-              SET_COUNT_PREFIX,
-              property.getCapitalizedName(),
+              setCountMethod(property),
               unboxedType.or(elementType));
       if (!unboxedType.isPresent()) {
         code.addLine("  %s.checkNotNull(element);", Preconditions.class, property.getName());
@@ -228,11 +218,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
-          .addLine("public %s<%s> %s%s() {",
-              Multiset.class,
-              elementType,
-              GET_PREFIX,
-              property.getCapitalizedName())
+          .addLine("public %s<%s> %s() {", Multiset.class, elementType, getter(property))
           .addLine("  return %s.unmodifiableMultiset(%s);", Multisets.class, property.getName())
           .addLine("}");
     }
@@ -245,15 +231,13 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s%s(%s.%s());",
-          ADD_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
+      code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("%s%s(((%s) %s).%s);",
-          ADD_ALL_PREFIX,
-          property.getCapitalizedName(),
+      code.addLine("%s(((%s) %s).%s);",
+          addAllMethod(property),
           metadata.getGeneratedBuilder(),
           builder,
           property.getName());
@@ -261,8 +245,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("%s.%s%s(%s);",
-          builder, ADD_ALL_PREFIX, property.getCapitalizedName(), variable);
+      code.addLine("%s.%s%s(%s);", builder, addAllMethod(property), variable);
     }
 
     @Override

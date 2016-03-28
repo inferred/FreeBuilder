@@ -15,6 +15,11 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.addAllMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
@@ -44,12 +49,6 @@ import javax.lang.model.type.TypeMirror;
  * properties.
  */
 public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
-
-  private static final String ADD_PREFIX = "add";
-  private static final String ADD_ALL_PREFIX = "addAll";
-  private static final String CLEAR_PREFIX = "clear";
-  private static final String GET_PREFIX = "get";
-  private static final String REMOVE_PREFIX = "remove";
 
   @Override
   public Optional<CodeGenerator> create(Config config) {
@@ -102,8 +101,8 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("/**")
           .addLine(" * Adds {@code element} to the set to be returned from %s.",
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-          .addLine(" * If the set already contains {@code element}, then {@code %s%s}",
-              ADD_PREFIX, property.getCapitalizedName())
+          .addLine(" * If the set already contains {@code element}, then {@code %s}",
+              addMethod(property))
           .addLine(" * has no effect (only the previously added element is retained).")
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
@@ -111,10 +110,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine(" * @throws NullPointerException if {@code element} is null");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s element) {",
+          .addLine("public %s %s(%s element) {",
               metadata.getBuilder(),
-              ADD_PREFIX,
-              property.getCapitalizedName(),
+              addMethod(property),
               unboxedType.or(elementType));
       if (unboxedType.isPresent()) {
         code.addLine("  this.%s.add(element);", property.getName());
@@ -139,13 +137,12 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
             .addLine(" *     null element");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s... elements) {",
+          .addLine("public %s %s(%s... elements) {",
               metadata.getBuilder(),
-              ADD_PREFIX,
-              property.getCapitalizedName(),
+              addMethod(property),
               unboxedType.or(elementType))
           .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("    %s%s(element);", ADD_PREFIX, property.getCapitalizedName())
+          .addLine("    %s(element);", addMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -163,14 +160,13 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" *     null element")
           .addLine(" */");
       addAccessorAnnotations(code);
-      code.addLine("public %s %s%s(%s<? extends %s> elements) {",
+      code.addLine("public %s %s(%s<? extends %s> elements) {",
               metadata.getBuilder(),
-              ADD_ALL_PREFIX,
-              property.getCapitalizedName(),
+              addAllMethod(property),
               Iterable.class,
               elementType)
           .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("    %s%s(element);", ADD_PREFIX, property.getCapitalizedName())
+          .addLine("    %s(element);", addMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -187,10 +183,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine(" * @throws NullPointerException if {@code element} is null");
       }
       code.addLine(" */")
-          .addLine("public %s %s%s(%s element) {",
+          .addLine("public %s %s(%s element) {",
               metadata.getBuilder(),
-              REMOVE_PREFIX,
-              property.getCapitalizedName(),
+              removeMethod(property),
               unboxedType.or(elementType));
       if (unboxedType.isPresent()) {
         code.addLine("  this.%s.remove(element);", property.getName());
@@ -209,10 +204,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" */")
-          .addLine("public %s %s%s() {",
-              metadata.getBuilder(),
-              CLEAR_PREFIX,
-              property.getCapitalizedName())
+          .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
           .addLine("  %s.clear();", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
@@ -224,11 +216,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * Changes to this builder will be reflected in the view.")
           .addLine(" */")
-          .addLine("public %s<%s> %s%s() {",
-              Set.class,
-              elementType,
-              GET_PREFIX,
-              property.getCapitalizedName())
+          .addLine("public %s<%s> %s() {", Set.class, elementType, getter(property))
           .addLine("  return %s.unmodifiableSet(%s);", Collections.class, property.getName())
           .addLine("}");
     }
@@ -246,15 +234,13 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s%s(%s.%s());",
-          ADD_ALL_PREFIX, property.getCapitalizedName(), value, property.getGetterName());
+      code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("%s%s(((%s) %s).%s);",
-          ADD_ALL_PREFIX,
-          property.getCapitalizedName(),
+      code.addLine("%s(((%s) %s).%s);",
+          addAllMethod(property),
           metadata.getGeneratedBuilder(),
           builder,
           property.getName());
@@ -262,8 +248,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("%s.%s%s(%s);",
-          builder, ADD_ALL_PREFIX, property.getCapitalizedName(), variable);
+      code.addLine("%s.%s(%s);", builder, addAllMethod(property), variable);
     }
 
     @Override
