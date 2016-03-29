@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Generated;
-import javax.lang.model.element.TypeElement;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
@@ -317,9 +316,7 @@ public class CodeGenerator {
     for (Property property : metadata.getProperties()) {
       code.addLine("")
           .addLine("  @%s", Override.class);
-      for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
-        code.addLine("  @%s", nullableAnnotation);
-      }
+      property.getCodeGenerator().addGetterAnnotations(code);
       code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
       code.add("    return ");
       property.getCodeGenerator().addReadValueFragment(code, property.getName());
@@ -503,9 +500,7 @@ public class CodeGenerator {
     for (Property property : metadata.getProperties()) {
       code.addLine("")
           .addLine("  @%s", Override.class);
-      for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
-        code.addLine("  @%s", nullableAnnotation);
-      }
+      property.getCodeGenerator().addGetterAnnotations(code);
       code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("    if (_unsetProperties.contains(%s.%s)) {",

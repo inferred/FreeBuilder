@@ -103,6 +103,7 @@ class Analyser {
    * factory should always be last.
    */
   private static final List<PropertyCodeGenerator.Factory> PROPERTY_FACTORIES = ImmutableList.of(
+      new NullablePropertyFactory(), // Must be first, as no other factory supports nulls
       new ListPropertyFactory(),
       new SetPropertyFactory(),
       new MapPropertyFactory(),
@@ -111,7 +112,7 @@ class Analyser {
       new SetMultimapPropertyFactory(),
       new OptionalPropertyFactory(),
       new BuildablePropertyFactory(),
-      new DefaultPropertyFactory());
+      new DefaultPropertyFactory()); // Must be last, as it will always return a CodeGenerator
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
@@ -425,8 +426,7 @@ class Analyser {
             .setCapitalizedName(getterNameMatchResult.group(2))
             .setAllCapsName(camelCaseToAllCaps(camelCaseName))
             .setGetterName(getterName)
-            .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType))
-            .addAllNullableAnnotations(nullableAnnotationsOn(method));
+            .setFullyCheckedCast(CAST_IS_FULLY_CHECKED.visit(propertyType));
     if (jacksonSupport.isPresent()) {
       jacksonSupport.get().addJacksonAnnotations(resultBuilder, method);
     }
@@ -437,7 +437,7 @@ class Analyser {
     }
     Property propertyWithoutCodeGenerator = resultBuilder.build();
     resultBuilder.setCodeGenerator(createCodeGenerator(
-        propertyWithoutCodeGenerator, methodsInvokedInBuilderConstructor));
+        propertyWithoutCodeGenerator, method, methodsInvokedInBuilderConstructor));
     return resultBuilder.build();
   }
 
@@ -466,24 +466,12 @@ class Analyser {
     }
   }
 
-  private static ImmutableSet<TypeElement> nullableAnnotationsOn(ExecutableElement getterMethod) {
-    ImmutableSet.Builder<TypeElement> nullableAnnotations = ImmutableSet.builder();
-    for (AnnotationMirror mirror : getterMethod.getAnnotationMirrors()) {
-      if (mirror.getElementValues().isEmpty()) {
-        TypeElement type = (TypeElement) mirror.getAnnotationType().asElement();
-        if (type.getSimpleName().contentEquals("Nullable")) {
-          nullableAnnotations.add(type);
-        }
-      }
-    }
-    return nullableAnnotations.build();
-  }
-
   private PropertyCodeGenerator createCodeGenerator(
       Property propertyWithoutCodeGenerator,
+      ExecutableElement getterMethod,
       Set<String> methodsInvokedInBuilderConstructor) {
     Config config = new ConfigImpl(
-        propertyWithoutCodeGenerator, methodsInvokedInBuilderConstructor);
+        propertyWithoutCodeGenerator, getterMethod, methodsInvokedInBuilderConstructor);
     for (PropertyCodeGenerator.Factory factory : PROPERTY_FACTORIES) {
       Optional<? extends PropertyCodeGenerator> codeGenerator = factory.create(config);
       if (codeGenerator.isPresent()) {
@@ -495,19 +483,27 @@ class Analyser {
 
   private class ConfigImpl implements Config {
 
-    final Property property;
-    final Set<String> methodsInvokedInBuilderConstructor;
+    private final Property property;
+    private final ExecutableElement getterMethod;
+    private final Set<String> methodsInvokedInBuilderConstructor;
 
     ConfigImpl(
         Property property,
+        ExecutableElement getterMethod,
         Set<String> methodsInvokedInBuilderConstructor) {
       this.property = property;
+      this.getterMethod = getterMethod;
       this.methodsInvokedInBuilderConstructor = methodsInvokedInBuilderConstructor;
     }
 
     @Override
     public Property getProperty() {
       return property;
+    }
+
+    @Override
+    public List<? extends AnnotationMirror> getAnnotations() {
+      return getterMethod.getAnnotationMirrors();
     }
 
     @Override

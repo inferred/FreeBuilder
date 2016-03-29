@@ -63,11 +63,6 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
     Property property = config.getProperty();
 
-    // No @Nullable properties
-    if (!property.getNullableAnnotations().isEmpty()) {
-      return Optional.absent();
-    }
-
     if (property.getType().getKind() == TypeKind.DECLARED) {
       DeclaredType type = (DeclaredType) property.getType();
       for (OptionalType optional : OptionalType.values()) {

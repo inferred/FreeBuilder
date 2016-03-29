@@ -47,7 +47,7 @@ public class NullablePropertyTest {
       .addLine("}")
       .build();
 
-  private static final JavaFileObject NULLABLE_PROPERTY_AUTO_BUILT_TYPE = new SourceBuilder()
+  private static final JavaFileObject NULLABLE_PROPERTY_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
@@ -60,7 +60,7 @@ public class NullablePropertyTest {
       .addLine("}")
       .build();
 
-  private static final JavaFileObject NULLABLE_INTEGER_AUTO_BUILT_TYPE = new SourceBuilder()
+  private static final JavaFileObject NULLABLE_INTEGER_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
@@ -80,7 +80,7 @@ public class NullablePropertyTest {
   public void testConstructor_defaultAbsent() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
             .addLine("assertEquals(null, value.getItem());")
@@ -92,7 +92,7 @@ public class NullablePropertyTest {
   public void testConstructor_primitive_defaultAbsent() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_INTEGER_AUTO_BUILT_TYPE)
+        .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
             .addLine("assertEquals(null, value.getItem());")
@@ -104,7 +104,7 @@ public class NullablePropertyTest {
   public void testBuilderGetter_defaultValue() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
             .addLine("assertEquals(null, builder.getItem());")
@@ -116,7 +116,7 @@ public class NullablePropertyTest {
   public void testBuilderGetter_nonDefaultValue() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
             .addLine("    .setItem(\"item\");")
@@ -129,7 +129,7 @@ public class NullablePropertyTest {
   public void testSet_notNull() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(\"item\")")
@@ -143,7 +143,7 @@ public class NullablePropertyTest {
   public void testSet_null() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(null)")
@@ -157,7 +157,7 @@ public class NullablePropertyTest {
   public void testSet_primitive_notNull() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_INTEGER_AUTO_BUILT_TYPE)
+        .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(5)")
@@ -171,7 +171,7 @@ public class NullablePropertyTest {
   public void testSet_primitive_null() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_INTEGER_AUTO_BUILT_TYPE)
+        .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(null)")
@@ -185,7 +185,7 @@ public class NullablePropertyTest {
   public void testMergeFrom_valueInstance() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
             .addLine("    .setItem(\"item\")")
@@ -201,7 +201,7 @@ public class NullablePropertyTest {
   public void testMergeFrom_builder() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
             .addLine("    .setItem(\"item\");")
@@ -216,7 +216,7 @@ public class NullablePropertyTest {
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(\"item\")")
@@ -283,7 +283,7 @@ public class NullablePropertyTest {
   public void testEquality() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new %s()", EqualsTester.class)
             .addLine("    .addEqualityGroup(")
@@ -307,7 +307,7 @@ public class NullablePropertyTest {
   public void testValueToString_singleField() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType absent = com.example.DataType.builder()")
             .addLine("    .build();")
@@ -350,7 +350,7 @@ public class NullablePropertyTest {
   public void testPartialToString_singleField() {
     behaviorTester
         .with(new Processor())
-        .with(NULLABLE_PROPERTY_AUTO_BUILT_TYPE)
+        .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType absent = com.example.DataType.builder()")
             .addLine("    .buildPartial();")

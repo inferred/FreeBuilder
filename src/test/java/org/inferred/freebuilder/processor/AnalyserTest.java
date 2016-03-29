@@ -55,7 +55,6 @@ import org.junit.runners.JUnit4;
 import java.util.Map;
 
 import javax.annotation.Generated;
-import javax.annotation.Nullable;
 import javax.lang.model.element.TypeElement;
 
 /** Unit tests for {@link Analyser}. */
@@ -619,67 +618,6 @@ public class AnalyserTest {
     assertThat(dataType.getVisibleNestedTypes()).containsAllOf(
         QualifiedName.of("com.example", "DataType_Builder", "Value_CustomFieldSerializer"),
         QualifiedName.of("com.example", "DataType_Builder", "GwtWhitelist"));
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
-  }
-
-  @Test
-  public void nullable() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  public abstract @" + Nullable.class.getName() + " String getName();",
-        "  public static class Builder extends DataType_Builder {}",
-        "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
-    assertThat(properties.keySet()).containsExactly("name");
-    assertEquals("java.lang.String", properties.get("name").getType().toString());
-    assertEquals("Name", properties.get("name").getCapitalizedName());
-    assertEquals("getName", properties.get("name").getGetterName());
-    assertThat(properties.get("name").getNullableAnnotations())
-        .containsExactly(model.typeElement(Nullable.class));
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
-  }
-
-  @Test
-  public void arbitraryNullableAnnotation() throws CannotGenerateCodeException {
-    model.newType(
-        "package foo.bar;",
-        "public @interface Nullable {}");
-    Metadata dataType = analyser.analyse(model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  public abstract @foo.bar.Nullable String getName();",
-        "  public static class Builder extends DataType_Builder {}",
-        "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
-    assertThat(properties.keySet()).containsExactly("name");
-    assertEquals("java.lang.String", properties.get("name").getType().toString());
-    assertEquals("Name", properties.get("name").getCapitalizedName());
-    assertEquals("getName", properties.get("name").getGetterName());
-    assertThat(properties.get("name").getNullableAnnotations())
-        .containsExactly(model.typeElement("foo.bar.Nullable"));
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
-  }
-
-  @Test
-  public void multipleNullableAnnotations() throws CannotGenerateCodeException {
-    model.newType(
-        "package foo.bar;",
-        "public @interface Nullable {}");
-    Metadata dataType = analyser.analyse(model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  public abstract @" + Nullable.class.getName() + " @foo.bar.Nullable String getName();",
-        "  public static class Builder extends DataType_Builder {}",
-        "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
-    assertThat(properties.keySet()).containsExactly("name");
-    assertEquals("java.lang.String", properties.get("name").getType().toString());
-    assertEquals("Name", properties.get("name").getCapitalizedName());
-    assertEquals("getName", properties.get("name").getGetterName());
-    assertThat(properties.get("name").getNullableAnnotations())
-        .containsExactly(model.typeElement(Nullable.class), model.typeElement("foo.bar.Nullable"))
-        .inOrder();
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 

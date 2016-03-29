@@ -29,49 +29,35 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
-import javax.lang.model.element.TypeElement;
-
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
 public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
     Property property = config.getProperty();
-    boolean hasDefault =
-        !property.getNullableAnnotations().isEmpty()
-            || config.getMethodsInvokedInBuilderConstructor().contains(setter(property));
+    boolean hasDefault = config.getMethodsInvokedInBuilderConstructor().contains(setter(property));
     return Optional.of(new CodeGenerator(property, hasDefault));
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
-    final boolean hasDefault;
-    final boolean isPrimitive;
-    final boolean isNullable;
+    private final boolean hasDefault;
+    private final boolean isPrimitive;
 
     CodeGenerator(Property property, boolean hasDefault) {
       super(property);
       this.hasDefault = hasDefault;
       this.isPrimitive = property.getType().getKind().isPrimitive();
-      this.isNullable = !property.getNullableAnnotations().isEmpty();
     }
 
     @Override
     public Type getType() {
-      return isNullable ? Type.OPTIONAL : hasDefault ? Type.HAS_DEFAULT : Type.REQUIRED;
+      return hasDefault ? Type.HAS_DEFAULT : Type.REQUIRED;
     }
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.add("");
-      for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
-        code.add("@%s ", nullableAnnotation);
-      }
-      code.add("private %s %s", property.getType(), property.getName());
-      if (isNullable) {
-        code.add(" = null");
-      }
-      code.add(";\n");
+      code.addLine("private %s %s;", property.getType(), property.getName());
     }
 
     @Override
@@ -87,17 +73,14 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
-      if (!isNullable && !isPrimitive) {
+      if (!isPrimitive) {
         code.addLine(" * @throws NullPointerException if {@code %s} is null", property.getName());
       }
       code.addLine(" */");
       addAccessorAnnotations(code);
-      code.add("public %s %s(", metadata.getBuilder(), setter(property));
-      for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
-        code.add("@%s ", nullableAnnotation);
-      }
-      code.add("%s %s) {\n", property.getType(), property.getName());
-      if (isNullable || isPrimitive) {
+      code.addLine("public %s %s(%s %s) {",
+          metadata.getBuilder(), setter(property), property.getType(), property.getName());
+      if (isPrimitive) {
         code.addLine("  this.%1$s = %1$s;", property.getName());
       } else {
         code.add(checkNotNullPreamble(property.getName()))
@@ -124,11 +107,8 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine(" *")
             .addLine(" * @throws IllegalStateException if the field has not been set");
       }
-      code.addLine(" */");
-      for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
-        code.addLine("@%s", nullableAnnotation);
-      }
-      code.addLine("public %s %s() {", property.getType(), getter(property));
+      code.addLine(" */")
+          .addLine("public %s %s() {", property.getType(), getter(property));
       if (!hasDefault) {
         Excerpt propertyIsSet = new Excerpt() {
           @Override
@@ -145,9 +125,6 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
-      for (TypeElement nullableAnnotation : property.getNullableAnnotations()) {
-        code.add("@%s ", nullableAnnotation);
-      }
       code.add("private final %s %s;\n", property.getType(), finalField);
     }
 
@@ -183,9 +160,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addPartialClear(SourceBuilder code) {
-      if (isNullable) {
-        code.addLine("%s = null;", property.getName());
-      }
+      // Cannot clear property without a template
     }
   }
 }
