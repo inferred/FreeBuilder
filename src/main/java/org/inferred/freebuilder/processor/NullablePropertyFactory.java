@@ -31,7 +31,7 @@ import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 
-/** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
+/** {@link PropertyCodeGenerator.Factory} providing reference semantics for Nullable properties. */
 public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
