@@ -25,6 +25,7 @@ import static com.google.common.collect.Iterables.tryFind;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.GwtSupport.addGwtMetadata;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
+import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
 
@@ -758,8 +759,7 @@ class Analyser {
      */
     @Override
     public Boolean visitDeclared(DeclaredType t, Void p) {
-      String qualifiedName = t.toString();
-      return equal(qualifiedName, superclass.toString());
+      return asElement(t).getQualifiedName().contentEquals(superclass.toString());
     }
   }
 
