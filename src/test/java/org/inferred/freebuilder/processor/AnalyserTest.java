@@ -993,6 +993,42 @@ public class AnalyserTest {
     assertEquals("getName", properties.get("name").getGetterName());
   }
 
+  /** @see <a href="https://github.com/google/FreeBuilder/issues/111">Issue 111</a> */
+  @Test
+  public void genericType_rebuilt() throws CannotGenerateCodeException {
+    model.newType(
+        "package com.example;",
+        "abstract class DataType_Builder<A, B> {}");
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType<A, B> {",
+        "  public abstract A getName();",
+        "  public abstract B getAge();",
+        "  public static class Builder<A, B> extends DataType_Builder<A, B> {}",
+        "}"));
+    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
+    assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
+    assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR), dataType.getBuilderFactory());
+    assertEquals("com.example.DataType_Builder<A, B>", dataType.getGeneratedBuilder().toString());
+    assertEquals("com.example.DataType_Builder.Partial<A, B>",
+        dataType.getPartialType().toString());
+    assertEquals("com.example.DataType_Builder.Property", dataType.getPropertyEnum().toString());
+    assertEquals("com.example.DataType<A, B>", dataType.getType().toString());
+    assertEquals("com.example.DataType_Builder.Value<A, B>", dataType.getValueType().toString());
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("name", "age");
+    assertEquals("B", properties.get("age").getType().toString());
+    assertNull(properties.get("age").getBoxedType());
+    assertEquals("AGE", properties.get("age").getAllCapsName());
+    assertEquals("Age", properties.get("age").getCapitalizedName());
+    assertEquals("getAge", properties.get("age").getGetterName());
+    assertEquals("A", properties.get("name").getType().toString());
+    assertNull(properties.get("name").getBoxedType());
+    assertEquals("NAME", properties.get("name").getAllCapsName());
+    assertEquals("Name", properties.get("name").getCapitalizedName());
+    assertEquals("getName", properties.get("name").getGetterName());
+  }
+
   @Test
   public void wrongBuilderSuperclass_errorType() throws CannotGenerateCodeException {
     TypeElement dataType = model.newType(
