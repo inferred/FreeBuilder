@@ -15,16 +15,13 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
+import com.google.common.base.Strings;
+
 import java.io.File;
-import java.util.EnumSet;
 import java.util.Locale;
 
 import javax.tools.Diagnostic;
-import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 
 /**
  * Static utilities for {@link Diagnostic} instances.
@@ -46,19 +43,6 @@ public class Diagnostics {
       File sourceFile = new File(source.getName());
       appendable.append(" (").append(sourceFile.getName()).append(":").append(line).append(")");
     }
-  }
-
-  /**
-   * Predicate that returns true if its argument is of kind {@code kind} or any of
-   * {@code otherKinds}.
-   */
-  public static final Predicate<Diagnostic<?>> isKind(Kind kind, Kind... otherKinds) {
-    final EnumSet<Kind> allKinds = EnumSet.of(kind, otherKinds);
-    return new Predicate<Diagnostic<?>>() {
-      @Override public boolean apply(Diagnostic<?> diagnostic) {
-        return allKinds.contains(diagnostic.getKind());
-      }
-    };
   }
 
   private Diagnostics() {}

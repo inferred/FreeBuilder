@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
 
@@ -406,6 +407,64 @@ public class ListPropertyFactoryTest {
             .addLine("    .addAllItems(%s.of(3, 4))", ImmutableList.class)
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testOverrideCheck() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("element cannot be empty");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s> getItems();", List.class, String.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override void checkItems(String element) {")
+            .addLine("      %s.checkArgument(!element.isEmpty(), \"element cannot be empty\");",
+                Preconditions.class)
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder().addItems(\"\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testOverrideCheck_primitive() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("element must be non-negative");
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<Integer> getItems();", List.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override void checkItems(int element) {")
+            .addLine("      %s.checkArgument(element >= 0, \"element must be non-negative\");",
+                Preconditions.class)
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder().addItems(-3);")
             .build())
         .runTest();
   }

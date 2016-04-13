@@ -15,6 +15,10 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static javax.lang.model.util.ElementFilter.methodsIn;
+
+import com.google.common.base.Optional;
+
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;
 
@@ -28,8 +32,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleElementVisitor6;
 import javax.lang.model.util.SimpleTypeVisitor6;
-
-import com.google.common.base.Optional;
+import javax.lang.model.util.Types;
 
 /**
  * Utility methods for the javax.lang.model package.
@@ -107,6 +110,48 @@ public class ModelUtils {
   /** Returns the {@link TypeElement} corresponding to {@code type}. */
   public static TypeElement asElement(DeclaredType type) {
     return maybeType(type.asElement()).get();
+  }
+
+  /** Applies unboxing conversion to {@code mirror}, if it can be unboxed. */
+  public static Optional<TypeMirror> maybeUnbox(TypeMirror mirror, Types types) {
+    try {
+      return Optional.<TypeMirror>of(types.unboxedType(mirror));
+    } catch (IllegalArgumentException e) {
+      return Optional.absent();
+    }
+  }
+
+  /** Returns the method in {@code type} with signature {@code methodName(params)}, if any. */
+  public static Optional<ExecutableElement> findMethod(
+      TypeElement type, Types types, String methodName, TypeMirror... params) {
+    for (ExecutableElement method : methodsIn(type.getEnclosedElements())) {
+      if (signatureMatches(method, types, methodName, params)) {
+        return Optional.of(method);
+      }
+    }
+    return Optional.absent();
+  }
+
+  /** Returns whether {@code type} overrides method {@code methodName(params)}. */
+  public static boolean overrides(
+      TypeElement type, Types types, String methodName, TypeMirror... params) {
+    return findMethod(type, types, methodName, params).isPresent();
+  }
+
+  private static boolean signatureMatches(
+      ExecutableElement method, Types types, String name, TypeMirror... params) {
+    if (!method.getSimpleName().contentEquals(name)) {
+      return false;
+    }
+    if (method.getParameters().size() != params.length) {
+      return false;
+    }
+    for (int i = 0; i < params.length; ++i) {
+      if (!types.isSameType(params[i], method.getParameters().get(i).asType())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static final SimpleElementVisitor6<Optional<TypeElement>, ?> TYPE_ELEMENT_VISITOR =

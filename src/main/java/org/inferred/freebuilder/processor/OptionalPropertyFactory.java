@@ -15,21 +15,27 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.checkMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
@@ -61,32 +67,28 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
-    Property property = config.getProperty();
+    DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+    if (type == null) {
+      return Optional.absent();
+    }
 
-    if (property.getType().getKind() == TypeKind.DECLARED) {
-      DeclaredType type = (DeclaredType) property.getType();
-      for (OptionalType optional : OptionalType.values()) {
-        if (erasesToAnyOf(type, optional.cls)) {
-          TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
-          Optional<TypeMirror> unboxedType;
-          try {
-            unboxedType = Optional.<TypeMirror>of(config.getTypes().unboxedType(elementType));
-          } catch (IllegalArgumentException e) {
-            unboxedType = Optional.absent();
-          }
+    for (OptionalType optional : OptionalType.values()) {
+      if (erasesToAnyOf(type, optional.cls)) {
+        TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+        Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
 
-          // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
-          // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
-          // type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
-          boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
+        // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
+        // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
+        // type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
+        boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
 
-          return Optional.of(new CodeGenerator(
-              property,
-              optional,
-              elementType,
-              unboxedType,
-              requiresExplicitTypeParameters));
-        }
+        CodeGenerator codeGenerator = new CodeGenerator(
+            config.getProperty(),
+            optional,
+            elementType,
+            unboxedType,
+            requiresExplicitTypeParameters);
+        return Optional.of(codeGenerator);
       }
     }
     return Optional.absent();
@@ -138,8 +140,10 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       addSetter(code, metadata);
       addOptionalSetter(code, metadata);
       addNullableSetter(code, metadata);
+      addMapper(code, metadata);
       addClear(code, metadata);
       addGetter(code, metadata);
+      addCheck(code, metadata);
     }
 
     private void addSetter(SourceBuilder code, Metadata metadata) {
@@ -159,12 +163,13 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
               unboxedType.or(elementType),
               property.getName());
       if (unboxedType.isPresent()) {
-        code.addLine("  this.%1$s = %1$s;", property.getName());
+        code.addLine("  %s(%s);", checkMethod(property), property.getName());
       } else {
-        code.addLine("  this.%1$s = %2$s.checkNotNull(%1$s);",
-            property.getName(), Preconditions.class);
+        code.addLine("  %s(%s.checkNotNull(%s));",
+            checkMethod(property), Preconditions.class, property.getName());
       }
-      code.addLine("  return (%s) this;", metadata.getBuilder())
+      code.addLine("  this.%1$s = %1$s;", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
 
@@ -213,6 +218,48 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("}");
     }
 
+    private void addMapper(SourceBuilder code, Metadata metadata) {
+      Optional<ParameterizedType> unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator();
+      if (unaryOperator.isPresent()) {
+        code.addLine("")
+            .addLine("/**")
+            .addLine(" * If the value to be returned by %s is present,",
+                metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            .addLine(" * replaces it by applying {@code mapper} to it and using the result.")
+            .addLine(" *")
+            .addLine(" * <p>If the result is null, clears the value.")
+            .addLine(" *")
+            .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+            .addLine(" * @throws NullPointerException if {@code mapper} is null")
+            .addLine(" */")
+            .addLine("public %s %s(%s mapper) {",
+                metadata.getBuilder(),
+                mapper(property),
+                unaryOperator.get().withParameters(elementType));
+          applyMapper(code, metadata);
+          code.addLine("}");
+      }
+    }
+
+    private void applyMapper(SourceBuilder code, Metadata metadata) {
+      switch (optional) {
+      case JAVA8:
+        code.addLine("  return %s(%s().map(mapper));", setter(property), getter(property));
+        return;
+      case GUAVA:
+        code.add(PreconditionExcerpts.checkNotNull("mapper"))
+            .addLine("  %s old%s = %s();",
+                property.getType(), property.getCapitalizedName(), getter(property))
+            .addLine("  if (old%s.isPresent()) {", property.getCapitalizedName())
+            .addLine("     %s(mapper.apply(old%s.get()));",
+                nullableSetter(property), property.getCapitalizedName())
+            .addLine("  }")
+            .addLine("  return (%s) this;", metadata.getBuilder());
+        return;
+      }
+      throw new IllegalStateException("Unexpected optional type " + optional);
+    }
+
     private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
@@ -241,6 +288,21 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.add("%s(%s);\n", optional.ofNullable, property.getName())
           .addLine("}");
+    }
+
+    private void addCheck(SourceBuilder code, Metadata metadata) {
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Checks that {@code %s} can be returned from", property.getName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * <p>Override this to perform argument validation, throwing an")
+          .addLine(" * %s if validation fails.", IllegalArgumentException.class)
+          .addLine(" */")
+          .addLine("@%s(\"unused\")  // %s may be used in an overriding method",
+              SuppressWarnings.class, property.getName());
+      code.add("void %s(%s %s) {}\n",
+          checkMethod(property), unboxedType.or(elementType), property.getName());
     }
 
     @Override

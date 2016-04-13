@@ -15,11 +15,13 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
 
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
 
 import com.google.common.base.Function;
@@ -46,6 +48,10 @@ public class ParameterizedType extends ValueType implements Excerpt {
     return new ParameterisedTypeForMirrorVisitor().visitDeclared(declaredType, null);
   }
 
+  public static ParameterizedType from(Class<?> cls) {
+    return new ParameterizedType(QualifiedName.of(cls), asList(cls.getTypeParameters()));
+  }
+
   private final QualifiedName qualifiedName;
   private final List<?> typeParameters;
 
@@ -69,6 +75,17 @@ public class ParameterizedType extends ValueType implements Excerpt {
   @Override
   public void addTo(SourceBuilder source) {
     source.add("%s%s", qualifiedName, typeParameters());
+  }
+
+  /**
+   * Returns a new {@link ParameterizedType} of the same length as this type, filled with
+   * {@code parameters}.
+   */
+  public ParameterizedType withParameters(TypeMirror... parameters) {
+    checkNotNull(parameters);
+    checkArgument(typeParameters.size() == parameters.length,
+        "Need %s parameters for %s but got %s", typeParameters.size(), this, parameters.length);
+    return new ParameterizedType(qualifiedName, ImmutableList.copyOf(parameters));
   }
 
   /**

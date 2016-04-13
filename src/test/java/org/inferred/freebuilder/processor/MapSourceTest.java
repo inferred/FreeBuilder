@@ -70,6 +70,7 @@ public class MapSourceTest {
         "   */",
         "  public Person.Builder putName(int key, String value) {",
         "    Preconditions.checkNotNull(value);",
+        "    checkName(key, value);",
         "    Preconditions.checkArgument(!name.containsKey(key), "
             + "\"Key already present in name: %s\", key);",
         "    name.put(key, value);",
@@ -126,6 +127,16 @@ public class MapSourceTest {
         "  public Map<Integer, String> getName() {",
         "    return Collections.unmodifiableMap(name);",
         "  }",
+        "",
+        "  /**",
+        "   * Checks that {@code key} and {@code value} can be put into the map",
+        "   * to be returned from {@link Person#getName()}.",
+        "   *",
+        "   * <p>Override this to perform argument validation, throwing an",
+        "   * IllegalArgumentException if validation fails.",
+        "   */",
+        "  @SuppressWarnings(\"unused\") // key and value may be used in an overriding method",
+        "  void checkName(int key, String value) {}",
         "",
         "  /**",
         "   * Sets all property values using the given {@code Person} as a template.",
@@ -268,6 +279,7 @@ public class MapSourceTest {
         "   */",
         "  public Person.Builder putName(int key, String value) {",
         "    Preconditions.checkNotNull(value);",
+        "    checkName(key, value);",
         "    Preconditions.checkArgument(!name.containsKey(key), "
             + "\"Key already present in name: %s\", key);",
         "    name.put(key, value);",
@@ -324,6 +336,16 @@ public class MapSourceTest {
         "  public Map<Integer, String> getName() {",
         "    return Collections.unmodifiableMap(name);",
         "  }",
+        "",
+        "  /**",
+        "   * Checks that {@code key} and {@code value} can be put into the map",
+        "   * to be returned from {@link Person#getName()}.",
+        "   *",
+        "   * <p>Override this to perform argument validation, throwing an",
+        "   * IllegalArgumentException if validation fails.",
+        "   */",
+        "  @SuppressWarnings(\"unused\") // key and value may be used in an overriding method",
+        "  void checkName(int key, String value) {}",
         "",
         "  /**",
         "   * Sets all property values using the given {@code Person} as a template.",
@@ -462,6 +484,7 @@ public class MapSourceTest {
         "    if (value == null) {",
         "      throw new NullPointerException();",
         "    }",
+        "    checkName(key, value);",
         "    if (name.containsKey(key)) {",
         "      throw new IllegalArgumentException(\"Key already present in name: \" + key);",
         "    }",
@@ -520,6 +543,16 @@ public class MapSourceTest {
         "  public Map<Integer, String> getName() {",
         "    return Collections.unmodifiableMap(name);",
         "  }",
+        "",
+        "  /**",
+        "   * Checks that {@code key} and {@code value} can be put into the map",
+        "   * to be returned from {@link Person#getName()}.",
+        "   *",
+        "   * <p>Override this to perform argument validation, throwing an",
+        "   * IllegalArgumentException if validation fails.",
+        "   */",
+        "  @SuppressWarnings(\"unused\") // key and value may be used in an overriding method",
+        "  void checkName(int key, String value) {}",
         "",
         "  /**",
         "   * Sets all property values using the given {@code Person} as a template.",
@@ -672,6 +705,7 @@ public class MapSourceTest {
         "   */",
         "  public Person.Builder putName(int key, String value) {",
         "    Objects.requireNonNull(value);",
+        "    checkName(key, value);",
         "    if (name.containsKey(key)) {",
         "      throw new IllegalArgumentException(\"Key already present in name: \" + key);",
         "    }",
@@ -730,6 +764,16 @@ public class MapSourceTest {
         "  public Map<Integer, String> getName() {",
         "    return Collections.unmodifiableMap(name);",
         "  }",
+        "",
+        "  /**",
+        "   * Checks that {@code key} and {@code value} can be put into the map",
+        "   * to be returned from {@link Person#getName()}.",
+        "   *",
+        "   * <p>Override this to perform argument validation, throwing an",
+        "   * IllegalArgumentException if validation fails.",
+        "   */",
+        "  @SuppressWarnings(\"unused\") // key and value may be used in an overriding method",
+        "  void checkName(int key, String value) {}",
         "",
         "  /**",
         "   * Sets all property values using the given {@code Person} as a template.",
@@ -863,7 +907,7 @@ public class MapSourceTest {
 
   /**
    * Returns a {@link Metadata} instance for a FreeBuilder type with a single property, name, of
-   * type {@code Map<Integer, String>}.
+   * type {@code Map<Integer, String>}, and which does not override any methods.
    */
   private static Metadata createMetadata() {
     GenericTypeElementImpl map = newTopLevelGenericType("java.util.Map");
@@ -890,8 +934,12 @@ public class MapSourceTest {
         .addProperties(name
             .setCodeGenerator(new MapPropertyFactory.CodeGenerator(
                 name.build(),
-                integer, Optional.<TypeMirror>of(INT),
-                string, Optional.<TypeMirror>absent()))
+                false,
+                false,
+                integer,
+                Optional.<TypeMirror>of(INT),
+                string,
+                Optional.<TypeMirror>absent()))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())

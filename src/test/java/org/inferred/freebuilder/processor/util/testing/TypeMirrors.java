@@ -234,7 +234,7 @@ public class TypeMirrors {
     return declaredType;
   }
 
-  /** Check that all %d references in the given type snippet are within bounds. */
+  /** Checks that all %d references in the given type snippet are within bounds. */
   private static void checkArgReferences(String typeSnippet, int numberOfArgs) {
     Matcher argRefMatcher = ARG_REF_PATTERN.matcher(typeSnippet);
     while (argRefMatcher.find()) {

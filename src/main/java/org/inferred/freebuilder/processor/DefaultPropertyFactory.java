@@ -15,10 +15,16 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.Objects.firstNonNull;
+
+import static org.inferred.freebuilder.processor.BuilderMethods.checkMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -26,8 +32,11 @@ import com.google.common.base.Optional;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import javax.lang.model.type.TypeMirror;
 
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
 public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
@@ -36,18 +45,21 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
     Property property = config.getProperty();
     boolean hasDefault = config.getMethodsInvokedInBuilderConstructor().contains(setter(property));
-    return Optional.of(new CodeGenerator(property, hasDefault));
+    Optional<TypeMirror> maybeUnboxed = maybeUnbox(property.getType(), config.getTypes());
+    return Optional.of(new CodeGenerator(property, hasDefault, maybeUnboxed));
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     private final boolean hasDefault;
     private final boolean isPrimitive;
+    private final Optional<TypeMirror> maybeUnboxed;
 
-    CodeGenerator(Property property, boolean hasDefault) {
+    CodeGenerator(Property property, boolean hasDefault, Optional<TypeMirror> maybeUnboxed) {
       super(property);
       this.hasDefault = hasDefault;
       this.isPrimitive = property.getType().getKind().isPrimitive();
+      this.maybeUnboxed = maybeUnboxed;
     }
 
     @Override
@@ -63,7 +75,9 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
       addSetter(code, metadata);
+      addMapper(code, metadata);
       addGetter(code, metadata);
+      addCheck(code, metadata);
     }
 
     private void addSetter(SourceBuilder code, final Metadata metadata) {
@@ -81,11 +95,12 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("public %s %s(%s %s) {",
           metadata.getBuilder(), setter(property), property.getType(), property.getName());
       if (isPrimitive) {
-        code.addLine("  this.%1$s = %1$s;", property.getName());
+        code.addLine("  %s(%s);", checkMethod(property), property.getName());
       } else {
         code.add(checkNotNullPreamble(property.getName()))
-            .addLine("  this.%s = %s;", property.getName(), checkNotNullInline(property.getName()));
+            .addLine("  %s(%s);", checkMethod(property), checkNotNullInline(property.getName()));
       }
+      code.addLine("  this.%1$s = %1$s;", property.getName());
       if (!hasDefault) {
         code.addLine("  _unsetProperties.remove(%s.%s);",
             metadata.getPropertyEnum(), property.getAllCapsName());
@@ -96,6 +111,35 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine("  return (%s) this;", metadata.getBuilder());
       }
       code.addLine("}");
+    }
+
+    private void addMapper(SourceBuilder code, final Metadata metadata) {
+      Optional<ParameterizedType> unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator();
+      if (unaryOperator.isPresent()) {
+        code.addLine("")
+            .addLine("/**")
+            .addLine(" * Replaces the value to be returned by %s",
+                metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            .addLine(" * by applying {@code mapper} to it and using the result.")
+            .addLine(" *")
+            .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+            .addLine(" * @throws NullPointerException if {@code mapper} is null"
+            + " or returns null");
+        if (!hasDefault) {
+          code.addLine(" * @throws IllegalStateException if the field has not been set");
+        }
+        TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
+        code.addLine(" */")
+            .add("public %s %s(%s mapper) {",
+                metadata.getBuilder(),
+                mapper(property),
+                unaryOperator.get().withParameters(typeParam));
+        if (!hasDefault) {
+          code.add(PreconditionExcerpts.checkNotNull("mapper"));
+        }
+        code.addLine("  return %s(mapper.apply(%s()));", setter(property), getter(property))
+            .addLine("}");
+      }
     }
 
     private void addGetter(SourceBuilder code, final Metadata metadata) {
@@ -121,6 +165,21 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return %s;", property.getName())
           .addLine("}");
+    }
+
+    private void addCheck(SourceBuilder code, Metadata metadata) {
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Checks that {@code %s} can be returned from", property.getName())
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * <p>Override this to perform argument validation, throwing an")
+          .addLine(" * %s if validation fails.", IllegalArgumentException.class)
+          .addLine(" */")
+          .addLine("@%s(\"unused\")  // %s may be used in an overriding method",
+              SuppressWarnings.class, property.getName());
+      code.add("void %s(%s %s) {}\n",
+          checkMethod(property), maybeUnboxed.or(property.getType()), property.getName());
     }
 
     @Override

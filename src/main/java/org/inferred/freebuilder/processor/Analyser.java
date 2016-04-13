@@ -375,8 +375,8 @@ class Analyser {
     Map<String, Property> propertiesByName = new LinkedHashMap<String, Property>();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
-      Property property =
-          asPropertyOrNull(type, method, methodsInvokedInBuilderConstructor, jacksonSupport);
+      Property property = asPropertyOrNull(
+          type, builder, method, methodsInvokedInBuilderConstructor, jacksonSupport);
       if (property != null) {
         propertiesByName.put(property.getName(), property);
       }
@@ -410,6 +410,7 @@ class Analyser {
    */
   private Property asPropertyOrNull(
       TypeElement valueType,
+      Optional<TypeElement> builder,
       ExecutableElement method,
       Set<String> methodsInvokedInBuilderConstructor,
       Optional<JacksonSupport> jacksonSupport) {
@@ -438,7 +439,7 @@ class Analyser {
     }
     Property propertyWithoutCodeGenerator = resultBuilder.build();
     resultBuilder.setCodeGenerator(createCodeGenerator(
-        propertyWithoutCodeGenerator, method, methodsInvokedInBuilderConstructor));
+        builder, propertyWithoutCodeGenerator, method, methodsInvokedInBuilderConstructor));
     return resultBuilder.build();
   }
 
@@ -468,11 +469,12 @@ class Analyser {
   }
 
   private PropertyCodeGenerator createCodeGenerator(
+      Optional<TypeElement> builder,
       Property propertyWithoutCodeGenerator,
       ExecutableElement getterMethod,
       Set<String> methodsInvokedInBuilderConstructor) {
     Config config = new ConfigImpl(
-        propertyWithoutCodeGenerator, getterMethod, methodsInvokedInBuilderConstructor);
+        builder, propertyWithoutCodeGenerator, getterMethod, methodsInvokedInBuilderConstructor);
     for (PropertyCodeGenerator.Factory factory : PROPERTY_FACTORIES) {
       Optional<? extends PropertyCodeGenerator> codeGenerator = factory.create(config);
       if (codeGenerator.isPresent()) {
@@ -484,17 +486,25 @@ class Analyser {
 
   private class ConfigImpl implements Config {
 
+    private final Optional<TypeElement> builder;
     private final Property property;
     private final ExecutableElement getterMethod;
     private final Set<String> methodsInvokedInBuilderConstructor;
 
     ConfigImpl(
+        Optional<TypeElement> builder,
         Property property,
         ExecutableElement getterMethod,
         Set<String> methodsInvokedInBuilderConstructor) {
+      this.builder = builder;
       this.property = property;
       this.getterMethod = getterMethod;
       this.methodsInvokedInBuilderConstructor = methodsInvokedInBuilderConstructor;
+    }
+
+    @Override
+    public Optional<TypeElement> getBuilder() {
+      return builder;
     }
 
     @Override
@@ -520,6 +530,11 @@ class Analyser {
     @Override
     public Types getTypes() {
       return types;
+    }
+
+    @Override
+    public Messager getMessager() {
+      return messager;
     }
   }
 

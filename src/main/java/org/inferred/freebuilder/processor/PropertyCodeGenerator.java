@@ -32,7 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -47,6 +49,9 @@ public abstract class PropertyCodeGenerator {
     /** Returns annotations on the property requiring code generation. */
     List<? extends AnnotationMirror> getAnnotations();
 
+    /** The user's Builder type (if they have written one yet). */
+    Optional<TypeElement> getBuilder();
+
     /**
      * A set of methods that are definitely invoked in the builder constructor. This may have false
      * negatives (e.g. if method introspection has not been implemented for the current compiler),
@@ -59,6 +64,9 @@ public abstract class PropertyCodeGenerator {
 
     /** The compiler's {@link Types} implementation. */
     Types getTypes();
+
+    /** The compiler's {@link Messager} implementation. */
+    Messager getMessager();
   }
 
   /** Factory interface for {@link PropertyCodeGenerator}. */

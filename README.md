@@ -55,7 +55,7 @@ lines of code for the most basic builder API, or 72 lines if you don't use a
 utility like [AutoValue][] to generate the value boilerplate.
 
 `@FreeBuilder` produces all the boilerplate for you, as well as free extras like
-JavaDoc, getter methods, [collections support](#collections-and-maps),
+JavaDoc, getter methods, mapper methods (Java 8+), [collections support](#collections-and-maps),
 [nested builders](#nested-buildable-types), and [partial values](#partials)
 (used in testing), which are highly useful, but would very rarely justify
 their creation and maintenance burden in hand-crafted code. (We also reserve
@@ -117,6 +117,7 @@ If you write the Person interface shown above, you get:
      * JavaDoc
      * getters (throwing `IllegalStateException` for unset fields)
      * setters
+     * lambda-accepting mapper methods (Java 8+)
      * `mergeFrom` methods to copy data from existing values or builders
      * a `build` method that verifies all fields have been set
         * [see below for default values and constraint checking](#defaults-and-constraints)
@@ -146,6 +147,18 @@ For each property `foo`, the builder gets:
 |:------:| ----------- |
 | A setter method, `setFoo` | Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.) |
 | A getter method, `getFoo` | Throws an IllegalStateException if the property value has not yet been set. |
+| A mapper method, `mapFoo` | *Java 8+* Takes a [UnaryOperator]. If the property value has been set, replaces the value with the result of invoking the operator with the existing value. Throws an IllegalStateException if the operator, or the value it returns, is null. |
+
+The mapper methods are very useful when modifying existing values, e.g.
+
+```java
+Person olderPerson = new Person.Builder()
+    .mergeFrom(person)
+    .mapAge(age -> age + 1)
+    .build();
+```
+
+[UnaryOperator]: https://docs.oracle.com/javase/8/docs/api/java/util/function/UnaryOperator.html
 
 
 ### Defaults and constraints
@@ -208,6 +221,8 @@ will gain additional convenience setter methods:
 | `clearDescription()` | Sets the property to `Optional.empty()`. |
 | `setDescription(Optional<String> value)` | Sets the property to `value`. |
 | `setNullableDescription(String value)` | Sets the property to `Optional.ofNullable(value)`. |
+| `mapDescription([UnaryOperator]<String> mapper` | *Java 8+* If the property value is not empty, this replaces the value with the result of invoking the operator with the existing value, or clears it if the mapper returns null. Throws a NullPointerException if mapper is null. |
+| `checkDescription(String value)` | Called whenever the property is changed to a non-empty value. Package-scoped. |
 
 Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or

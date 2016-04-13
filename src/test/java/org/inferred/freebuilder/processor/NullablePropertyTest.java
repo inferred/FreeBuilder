@@ -28,6 +28,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import com.google.common.base.Preconditions;
 import com.google.common.testing.EqualsTester;
 
 @RunWith(JUnit4.class)
@@ -69,6 +70,36 @@ public class NullablePropertyTest {
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
       .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject CHECKED_NULLABLE_PROPERTY = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  @%s public abstract String getItem();", Nullable.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    @Override void checkItem(String item) {")
+      .addLine("      %s.checkArgument(!item.isEmpty(), \"item cannot be empty\");",
+          Preconditions.class)
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject CHECKED_NULLABLE_INTEGER_PROPERTY = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  @%s public abstract Integer getItem();", Nullable.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    @Override void checkItem(int item) {")
+      .addLine("      %s.checkArgument(item >= 0, \"item cannot be negative\");",
+          Preconditions.class)
+      .addLine("    }")
       .addLine("  }")
       .addLine("}")
       .build();
@@ -385,6 +416,43 @@ public class NullablePropertyTest {
             .addLine("assertEquals(\"partial DataType{item1=x}\", pa.toString());")
             .addLine("assertEquals(\"partial DataType{item2=y}\", ap.toString());")
             .addLine("assertEquals(\"partial DataType{item1=x, item2=y}\", pp.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCheckMethodCalledForStringProperty() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("item cannot be empty");
+    behaviorTester
+        .with(new Processor())
+        .with(CHECKED_NULLABLE_PROPERTY)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder().setItem(\"\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCheckMethodCalledForIntegerProperty() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("item cannot be negative");
+    behaviorTester
+        .with(new Processor())
+        .with(CHECKED_NULLABLE_INTEGER_PROPERTY)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder().setItem(-1);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCheckMethodNotCalledForNull() {
+    behaviorTester
+        .with(new Processor())
+        .with(CHECKED_NULLABLE_PROPERTY)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder().setItem(null);")
             .build())
         .runTest();
   }

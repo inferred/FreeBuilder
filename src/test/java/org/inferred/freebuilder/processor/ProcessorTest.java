@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.annotations.GwtCompatible;
+import com.google.common.base.Preconditions;
 import com.google.common.testing.EqualsTester;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
@@ -119,6 +120,41 @@ public class ProcessorTest {
       .addLine("}")
       .build();
 
+  private static final JavaFileObject CHECKED_STRING_PROPERTY_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  public abstract String getName();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    @Override void checkName(String name) {")
+      .addLine("      %s.checkArgument(!name.isEmpty(), \"name cannot be empty\");",
+          Preconditions.class)
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("  public static Builder builder() {")
+      .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject CHECKED_INTEGER_PROPERTY_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  public abstract int getAge();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    @Override void checkAge(int age) {")
+      .addLine("      %s.checkArgument(age >= 0, \"age cannot be negative\");", Preconditions.class)
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("  public static Builder builder() {")
+      .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
@@ -164,6 +200,32 @@ public class ProcessorTest {
             .addLine("  com.example.DataType.builder().setName(null);")
             .addLine("  fail(\"Expected NPE\");")
             .addLine("} catch (NullPointerException expected) { }")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void test_checkMethodCalledWhenStringPropertySet() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("name cannot be empty");
+    behaviorTester
+        .with(new Processor())
+        .with(CHECKED_STRING_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.builder().setName(\"\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void test_checkMethodCalledWhenPrimitivePropertySet() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("age cannot be negative");
+    behaviorTester
+        .with(new Processor())
+        .with(CHECKED_INTEGER_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.builder().setAge(-1);")
             .build())
         .runTest();
   }
