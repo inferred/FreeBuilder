@@ -15,6 +15,10 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static javax.lang.model.util.ElementFilter.methodsIn;
+
+import com.google.common.base.Optional;
+
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;
 
@@ -22,14 +26,13 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleElementVisitor6;
 import javax.lang.model.util.SimpleTypeVisitor6;
-
-import com.google.common.base.Optional;
 
 /**
  * Utility methods for the javax.lang.model package.
@@ -70,7 +73,8 @@ public class ModelUtils {
     return Optional.absent();
   }
 
-  public static Optional<AnnotationValue> findProperty(AnnotationMirror annotation, String propertyName) {
+  public static Optional<AnnotationValue> findProperty(
+      AnnotationMirror annotation, String propertyName) {
     for (Entry<? extends ExecutableElement, ? extends AnnotationValue> element
         : annotation.getElementValues().entrySet()) {
       if (element.getKey().getSimpleName().contentEquals(propertyName)) {
@@ -107,6 +111,21 @@ public class ModelUtils {
   /** Returns the {@link TypeElement} corresponding to {@code type}. */
   public static TypeElement asElement(DeclaredType type) {
     return maybeType(type.asElement()).get();
+  }
+
+  /**
+   * Returns true if {@code type} has a static method called {@code methodName} with
+   * {@code numParams} parameters.
+   */
+  public static boolean hasStaticMethod(TypeElement type, String methodName, int numParams) {
+    for (ExecutableElement method : methodsIn(type.getEnclosedElements())) {
+      if (method.getModifiers().contains(Modifier.STATIC)
+          && method.getSimpleName().contentEquals(methodName)
+          && method.getParameters().size() == numParams) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static final SimpleElementVisitor6<Optional<TypeElement>, ?> TYPE_ELEMENT_VISITOR =

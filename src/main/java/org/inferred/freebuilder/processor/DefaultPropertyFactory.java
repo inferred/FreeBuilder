@@ -15,8 +15,10 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuilderMethods.checkMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.util.ModelUtils.hasStaticMethod;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
 
@@ -36,17 +38,20 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
     Property property = config.getProperty();
     boolean hasDefault = config.getMethodsInvokedInBuilderConstructor().contains(setter(property));
-    return Optional.of(new CodeGenerator(property, hasDefault));
+    boolean hidesCheck = hasStaticMethod(config.getBuilder(), checkMethod(property), 1);
+    return Optional.of(new CodeGenerator(property, hasDefault, hidesCheck));
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     private final boolean hasDefault;
     private final boolean isPrimitive;
+    private final boolean hidesCheck;
 
-    CodeGenerator(Property property, boolean hasDefault) {
+    CodeGenerator(Property property, boolean hasDefault, boolean hidesCheck) {
       super(property);
       this.hasDefault = hasDefault;
+      this.hidesCheck = hidesCheck;
       this.isPrimitive = property.getType().getKind().isPrimitive();
     }
 
@@ -64,6 +69,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
       addSetter(code, metadata);
       addGetter(code, metadata);
+      addCheck(code, metadata);
     }
 
     private void addSetter(SourceBuilder code, final Metadata metadata) {
@@ -76,16 +82,25 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       if (!isPrimitive) {
         code.addLine(" * @throws NullPointerException if {@code %s} is null", property.getName());
       }
+      if (hidesCheck) {
+        code.addLine(" * @throws IllegalArgumentException if {@code %s} is invalid",
+            property.getName());
+      }
       code.addLine(" */");
       addAccessorAnnotations(code);
       code.addLine("public %s %s(%s %s) {",
           metadata.getBuilder(), setter(property), property.getType(), property.getName());
       if (isPrimitive) {
-        code.addLine("  this.%1$s = %1$s;", property.getName());
+        code.addLine("  %s.%s(%s);",
+            metadata.getBuilder().getQualifiedName(), checkMethod(property), property.getName());
       } else {
         code.add(checkNotNullPreamble(property.getName()))
-            .addLine("  this.%s = %s;", property.getName(), checkNotNullInline(property.getName()));
+            .addLine("  %s.%s(%s);",
+                metadata.getBuilder().getQualifiedName(),
+                checkMethod(property),
+                checkNotNullInline(property.getName()));
       }
+      code.addLine("  this.%1$s = %1$s;", property.getName());
       if (!hasDefault) {
         code.addLine("  _unsetProperties.remove(%s.%s);",
             metadata.getPropertyEnum(), property.getAllCapsName());
@@ -121,6 +136,20 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine("  return %s;", property.getName())
           .addLine("}");
+    }
+
+    private void addCheck(SourceBuilder code, final Metadata metadata) {
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Checks that {@code %s} may be returned by %s.",
+              property.getName(),
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" * Redefine this method in %s to perform argument validation,",
+              metadata.getBuilder().javadocLink())
+          .addLine(" * throwing an %s if validation fails.", IllegalArgumentException.class)
+          .addLine(" */")
+          .addLine("static void %s(%s %s) {}",
+              checkMethod(property), property.getType(), property.getName());
     }
 
     @Override

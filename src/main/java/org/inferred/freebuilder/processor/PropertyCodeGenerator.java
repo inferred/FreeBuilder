@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -41,6 +42,9 @@ public abstract class PropertyCodeGenerator {
 
   /** Data available to {@link Factory} instances when creating a {@link PropertyCodeGenerator}. */
   interface Config {
+    /** Returns the builder type that users will see. */
+    TypeElement getBuilder();
+
     /** Returns metadata about the property requiring code generation. */
     Metadata.Property getProperty();
 

@@ -167,9 +167,10 @@ class Analyser {
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder));
     addGwtMetadata(type, metadata);
-    return metadata
-        .addAllProperties(findProperties(type, methods, builder).values())
-        .build();
+    if (builder.isPresent()) {
+      metadata.addAllProperties(findProperties(type, methods, builder.get()).values());
+    }
+    return metadata.build();
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {
@@ -370,13 +371,13 @@ class Analyser {
   }
 
   private Map<String, Property> findProperties(
-      TypeElement type, Iterable<ExecutableElement> methods, Optional<TypeElement> builder) {
+      TypeElement type, Iterable<ExecutableElement> methods, TypeElement builder) {
     Set<String> methodsInvokedInBuilderConstructor = getMethodsInvokedInBuilderConstructor(builder);
     Map<String, Property> propertiesByName = new LinkedHashMap<String, Property>();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
       Property property =
-          asPropertyOrNull(type, method, methodsInvokedInBuilderConstructor, jacksonSupport);
+          asPropertyOrNull(type, builder, method, methodsInvokedInBuilderConstructor, jacksonSupport);
       if (property != null) {
         propertiesByName.put(property.getName(), property);
       }
@@ -384,11 +385,8 @@ class Analyser {
     return propertiesByName;
   }
 
-  private Set<String> getMethodsInvokedInBuilderConstructor(Optional<TypeElement> builder) {
-    if (!builder.isPresent()) {
-      return ImmutableSet.of();
-    }
-    List<ExecutableElement> constructors = constructorsIn(builder.get().getEnclosedElements());
+  private Set<String> getMethodsInvokedInBuilderConstructor(TypeElement builder) {
+    List<ExecutableElement> constructors = constructorsIn(builder.getEnclosedElements());
     if (constructors.isEmpty()) {
       return ImmutableSet.of();
     }
@@ -405,11 +403,13 @@ class Analyser {
 
   /**
    * Introspects {@code method}, as found on {@code valueType}.
+   * @param builder
    *
    * @return a {@link Property} metadata object, or null if the method is not a valid getter
    */
   private Property asPropertyOrNull(
       TypeElement valueType,
+      TypeElement builder,
       ExecutableElement method,
       Set<String> methodsInvokedInBuilderConstructor,
       Optional<JacksonSupport> jacksonSupport) {
@@ -438,7 +438,7 @@ class Analyser {
     }
     Property propertyWithoutCodeGenerator = resultBuilder.build();
     resultBuilder.setCodeGenerator(createCodeGenerator(
-        propertyWithoutCodeGenerator, method, methodsInvokedInBuilderConstructor));
+        builder, propertyWithoutCodeGenerator, method, methodsInvokedInBuilderConstructor));
     return resultBuilder.build();
   }
 
@@ -468,11 +468,12 @@ class Analyser {
   }
 
   private PropertyCodeGenerator createCodeGenerator(
+      TypeElement builder,
       Property propertyWithoutCodeGenerator,
       ExecutableElement getterMethod,
       Set<String> methodsInvokedInBuilderConstructor) {
     Config config = new ConfigImpl(
-        propertyWithoutCodeGenerator, getterMethod, methodsInvokedInBuilderConstructor);
+        builder, propertyWithoutCodeGenerator, getterMethod, methodsInvokedInBuilderConstructor);
     for (PropertyCodeGenerator.Factory factory : PROPERTY_FACTORIES) {
       Optional<? extends PropertyCodeGenerator> codeGenerator = factory.create(config);
       if (codeGenerator.isPresent()) {
@@ -484,17 +485,25 @@ class Analyser {
 
   private class ConfigImpl implements Config {
 
+    private final TypeElement builder;
     private final Property property;
     private final ExecutableElement getterMethod;
     private final Set<String> methodsInvokedInBuilderConstructor;
 
     ConfigImpl(
+        TypeElement builder,
         Property property,
         ExecutableElement getterMethod,
         Set<String> methodsInvokedInBuilderConstructor) {
+      this.builder = builder;
       this.property = property;
       this.getterMethod = getterMethod;
       this.methodsInvokedInBuilderConstructor = methodsInvokedInBuilderConstructor;
+    }
+
+    @Override
+    public TypeElement getBuilder() {
+      return builder;
     }
 
     @Override

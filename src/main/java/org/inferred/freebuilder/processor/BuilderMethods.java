@@ -57,5 +57,9 @@ public class BuilderMethods {
     return "clear" + property.getCapitalizedName();
   }
 
+  public static String checkMethod(Property property) {
+    return "check" + property.getCapitalizedName();
+  }
+
   private BuilderMethods() {}
 }
