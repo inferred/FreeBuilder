@@ -364,8 +364,20 @@ In all cases, the value type will return immutable objects from its getter.
 | `setOwner(Person owner)` | Sets the owner. Throws a NullPointerException if provided a null. |
 | `setOwner(Person.Builder builder)` | Calls `build()` on `builder` and sets the owner to the result. Throws a NullPointerException if builder or the result of calling `build()` is null. |
 | `getOwnerBuilder()` | Returns a builder for the owner property. Unlike other getter methods in FreeBuilder-generated API, this object is mutable, and modifying it **will modify the underlying property**. |
+| `mutateOwner(Consumer<Person.Builder> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the builder for the property. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored. |
+
+The mutate method allows the buildable property to be set up or modified succinctly and readably in Java 8+:
+
+```java
+Project project = new Project.Builder()
+    .mutateOwner(b -> b
+        .setName("Phil")
+        .setDepartment("HR"))
+    .build();
+```
 
 [protos]: https://developers.google.com/protocol-buffers/
+[Consumer]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html
 
 
 ### Builder construction
