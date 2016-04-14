@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor.util;
 
 import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
 import org.inferred.freebuilder.processor.util.feature.Feature;
@@ -100,12 +99,19 @@ public class CompilationUnitBuilder implements SourceBuilder {
       }
       unit.append("\n");
     }
+    unit.append(formatSource(source.toString()));
+    return unit.toString();
+  }
+
+  private static String formatSource(String source) {
     try {
-      unit.append(new Formatter().formatSource(source.toString()));
-    } catch (FormatterException e) {
+      return new Formatter().formatSource(source);
+    } catch (UnsupportedClassVersionError e) {
+      // Formatter requires Java 7+; do no formatting in Java 6.
+      return source;
+    } catch (Exception e) {
       throw new RuntimeException(
           "Formatter failed:\n" + e.getMessage() + "\nGenerated source:\n" + source, e);
     }
-    return unit.toString();
   }
 }
