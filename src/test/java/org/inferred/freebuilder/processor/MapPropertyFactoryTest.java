@@ -214,15 +214,16 @@ public class MapPropertyFactoryTest {
 
   @Test
   public void testPut_duplicate() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Key already present in items: bar");
     behaviorTester
         .with(new Processor())
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .putItems(\"bar\", \"baz\")")
-            .addLine("    .putItems(\"bar\", \"bam\");")
+            .addLine("    .putItems(\"bar\", \"bam\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .isEqualTo(%s.of(\"bar\", \"bam\"));", ImmutableMap.class)
             .build())
         .runTest();
   }
@@ -280,16 +281,17 @@ public class MapPropertyFactoryTest {
 
   @Test
   public void testPutAll_duplicate() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Key already present in items: bar");
     behaviorTester
         .with(new Processor())
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .putItems(\"bar\", \"baz\")")
-            .addLine("    .putAllItems(%s.of(\"bar\", \"baz\", \"three\", 3));",
+            .addLine("    .putAllItems(%s.of(\"bar\", \"bam\", \"three\", 3))",
                 ImmutableMap.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .isEqualTo(%s.of(\"bar\", \"bam\", \"three\", 3));", ImmutableMap.class)
             .build())
         .runTest();
   }
@@ -316,16 +318,17 @@ public class MapPropertyFactoryTest {
 
   @Test
   public void testRemove_missingKey() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Key not present in items: baz");
     behaviorTester
         .with(new Processor())
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .putItems(\"bar\", \"baz\")")
             .addLine("    .putItems(\"three\", 3)")
-            .addLine("    .removeItems(\"baz\");")
+            .addLine("    .removeItems(\"baz\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .isEqualTo(%s.of(\"bar\", \"baz\", \"three\", 3));", ImmutableMap.class)
             .build())
         .runTest();
   }
@@ -352,16 +355,17 @@ public class MapPropertyFactoryTest {
 
   @Test
   public void testRemove_primitiveKeyType_missingKey() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Key not present in items: 3");
     behaviorTester
         .with(new Processor())
         .with(PRIMITIVE_KEY_TYPE)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .putItems(1, \"baz\")")
             .addLine("    .putItems(2, \"3\")")
-            .addLine("    .removeItems(3);")
+            .addLine("    .removeItems(3)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems())")
+            .addLine("    .isEqualTo(%s.of(1, \"baz\", 2, \"3\"));", ImmutableMap.class)
             .build())
         .runTest();
   }

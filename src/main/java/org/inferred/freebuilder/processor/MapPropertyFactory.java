@@ -113,7 +113,8 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("/**")
           .addLine(" * Associates {@code key} with {@code value} in the map to be returned from")
           .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-          .addLine(" * Duplicate keys are not allowed.")
+          .addLine(" * If the map previously contained a mapping for the key,")
+          .addLine(" * the old value is replaced by the specified value.")
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
@@ -127,8 +128,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
         }
         code.add(" null\n");
       }
-      code.addLine(" * @throws IllegalArgumentException if {@code key} is already present")
-          .addLine(" */")
+      code.addLine(" */")
           .addLine("public %s %s(%s key, %s value) {",
               metadata.getBuilder(),
               putMethod(property),
@@ -140,15 +140,7 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       if (!unboxedValueType.isPresent()) {
         code.add(PreconditionExcerpts.checkNotNull("value"));
       }
-      Excerpt keyNotPresent = new Excerpt() {
-        @Override
-        public void addTo(SourceBuilder source) {
-          source.add("!%s.containsKey(key)", property.getName());
-        }
-      };
-      code.add(PreconditionExcerpts.checkArgument(
-              keyNotPresent, "Key already present in " + property.getName() + ": %s", "key"))
-          .addLine("  %s.put(key, value);", property.getName())
+      code.addLine("  %s.put(key, value);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
@@ -156,14 +148,12 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     private void addPutAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
-          .addLine(" * Associates all of {@code map}'s keys and values in the map to be returned")
-          .addLine(" * from %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-          .addLine(" * Duplicate keys are not allowed.")
+          .addLine(" * Copies all of the mappings from {@code map} to the map to be returned from")
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code map} is null or contains a")
           .addLine(" *     null key or value")
-          .addLine(" * @throws IllegalArgumentException if any key is already present")
           .addLine(" */");
       addAccessorAnnotations(code);
       code.addLine("public %s %s(%s<? extends %s, ? extends %s> map) {",
@@ -184,31 +174,22 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Removes the mapping for {@code key} from the map to be returned from")
-          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" * %s, if one is present.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
       if (!unboxedKeyType.isPresent()) {
         code.addLine(" * @throws NullPointerException if {@code key} is null");
       }
-      code.addLine(" * @throws IllegalArgumentException if {@code key} is not present")
-          .addLine(" */")
+      code.addLine(" */")
           .addLine("public %s %s(%s key) {",
               metadata.getBuilder(),
               removeMethod(property),
-              unboxedKeyType.or(keyType),
-              valueType);
+              unboxedKeyType.or(keyType));
       if (!unboxedKeyType.isPresent()) {
         code.add(PreconditionExcerpts.checkNotNull("key"));
       }
-      Excerpt keyPresent = new Excerpt() {
-        @Override
-        public void addTo(SourceBuilder source) {
-          source.add("%s.containsKey(key)", property.getName());
-        }
-      };
-      code.add(PreconditionExcerpts.checkArgument(
-              keyPresent, "Key not present in " + property.getName() + ": %s", "key"))
-          .addLine("  %s.remove(key);", property.getName())
+      code.addLine("  %s.remove(key);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
