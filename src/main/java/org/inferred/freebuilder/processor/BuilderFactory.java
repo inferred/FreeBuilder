@@ -66,7 +66,9 @@ public enum BuilderFactory {
   /** Determines the correct way of constructing a default {@code builderType} instance, if any. */
   public static Optional<BuilderFactory> from(TypeElement builderType) {
     ImmutableSet<String> staticMethods = findPotentialStaticFactoryMethods(builderType);
-    if (staticMethods.contains("builder")) {
+    if (typeIsAbstract(builderType)) {
+      return Optional.absent();
+    } else if (staticMethods.contains("builder")) {
       return Optional.of(BUILDER_METHOD);
     } else if (staticMethods.contains("newBuilder")) {
       return Optional.of(NEW_BUILDER_METHOD);
@@ -79,6 +81,10 @@ public enum BuilderFactory {
 
   /** Adds a code snippet calling the Builder factory method. */
   public abstract void addNewBuilder(SourceBuilder code, ParameterizedType builderType);
+
+  private static boolean typeIsAbstract(TypeElement type) {
+    return type.getModifiers().contains(Modifier.ABSTRACT);
+  }
 
   private static boolean hasExplicitNoArgsConstructor(TypeElement type) {
     for (ExecutableElement constructor : constructorsIn(type.getEnclosedElements())) {

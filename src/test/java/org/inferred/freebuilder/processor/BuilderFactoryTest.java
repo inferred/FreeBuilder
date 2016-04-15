@@ -47,6 +47,18 @@ public class BuilderFactoryTest {
   }
 
   @Test
+  public void testAbstractInnerClass() {
+    TypeElement builderType = (TypeElement) model.newElementWithMarker(
+        "package com.example;",
+        "class AbstractInnerClass {",
+        "  ---> abstract class Builder {}",
+        "}");
+
+    Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
+    assertThat(factory).isAbsent();
+  }
+
+  @Test
   public void testExplicitNoArgsConstructor() {
     TypeElement builderType = (TypeElement) model.newElementWithMarker(
         "package com.example;",
