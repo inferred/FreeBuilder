@@ -275,7 +275,7 @@ public class BehaviorTester {
         null,
         fileManager,
         diagnostics,
-        ImmutableList.of("-Xlint:unchecked"),
+        ImmutableList.of("-Xlint:unchecked", "-Xdiags:verbose"),
         null,
         compilationUnits);
     task.setProcessors(processors);
