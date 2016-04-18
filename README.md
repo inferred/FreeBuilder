@@ -55,7 +55,7 @@ lines of code for the most basic builder API, or 72 lines if you don't use a
 utility like [AutoValue][] to generate the value boilerplate.
 
 `@FreeBuilder` produces all the boilerplate for you, as well as free extras like
-JavaDoc, getter methods, [collections support](#collections-and-maps),
+JavaDoc, getter methods, mapper methods (Java 8+), [collections support](#collections-and-maps),
 [nested builders](#nested-buildable-types), and [partial values](#partials)
 (used in testing), which are highly useful, but would very rarely justify
 their creation and maintenance burden in hand-crafted code. (We also reserve
@@ -117,6 +117,7 @@ If you write the Person interface shown above, you get:
      * JavaDoc
      * getters (throwing `IllegalStateException` for unset fields)
      * setters
+     * lambda-accepting mapper methods (Java 8+)
      * `mergeFrom` methods to copy data from existing values or builders
      * a `build` method that verifies all fields have been set
         * [see below for default values and constraint checking](#defaults-and-constraints)
@@ -146,6 +147,18 @@ For each property `foo`, the builder gets:
 |:------:| ----------- |
 | A setter method, `setFoo` | Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.) |
 | A getter method, `getFoo` | Throws an IllegalStateException if the property value has not yet been set. |
+| A mapper method, `mapFoo` | *Java 8+* Takes a [UnaryOperator]. Replaces the current property value with the result of invoking the unary operator on it. Throws a NullPointerException if the operator, or the value it returns, is null. Throws an IllegalStateException if the property value has not yet been set. |
+
+The mapper methods are very useful when modifying existing values, e.g.
+
+```java
+Person olderPerson = new Person.Builder()
+    .mergeFrom(person)
+    .mapAge(age -> age + 1)
+    .build();
+```
+
+[UnaryOperator]: https://docs.oracle.com/javase/8/docs/api/java/util/function/UnaryOperator.html
 
 
 ### Defaults and constraints
