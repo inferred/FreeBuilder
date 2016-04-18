@@ -23,14 +23,14 @@ import static org.inferred.freebuilder.processor.BuilderMethods.removeAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 
 import java.util.Collection;
 import java.util.Map.Entry;
 
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
@@ -53,22 +53,24 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
 
   @Override
   public Optional<CodeGenerator> create(Config config) {
-    if (config.getProperty().getType().getKind() == TypeKind.DECLARED) {
-      DeclaredType type = (DeclaredType) config.getProperty().getType();
-      if (erasesToAnyOf(type,
-          Multimap.class,
-          ImmutableMultimap.class,
-          ListMultimap.class,
-          ImmutableListMultimap.class)) {
-        TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
-        TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
-        Optional<TypeMirror> unboxedKeyType = unboxed(config.getTypes(), keyType);
-        Optional<TypeMirror> unboxedValueType = unboxed(config.getTypes(), valueType);
-        return Optional.of(new CodeGenerator(
-            config.getProperty(), keyType, unboxedKeyType, valueType, unboxedValueType));
-      }
+    DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+    if (type == null) {
+      return Optional.absent();
     }
-    return Optional.absent();
+    if (!erasesToAnyOf(type,
+        Multimap.class,
+        ImmutableMultimap.class,
+        ListMultimap.class,
+        ImmutableListMultimap.class)) {
+      return Optional.absent();
+    }
+
+    TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+    TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
+    Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
+    Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
+    return Optional.of(new CodeGenerator(
+        config.getProperty(), keyType, unboxedKeyType, valueType, unboxedValueType));
   }
 
   private static class CodeGenerator extends PropertyCodeGenerator {
@@ -332,15 +334,5 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     public void addPartialClear(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
     }
-  }
-
-  private static Optional<TypeMirror> unboxed(Types types, TypeMirror elementType) {
-    Optional<TypeMirror> unboxedType;
-    try {
-      unboxedType = Optional.<TypeMirror>of(types.unboxedType(elementType));
-    } catch (IllegalArgumentException e) {
-      unboxedType = Optional.absent();
-    }
-    return unboxedType;
   }
 }
