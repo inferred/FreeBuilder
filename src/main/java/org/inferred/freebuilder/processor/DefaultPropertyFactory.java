@@ -15,10 +15,14 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.Objects.firstNonNull;
+
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -26,8 +30,11 @@ import com.google.common.base.Optional;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import javax.lang.model.type.TypeMirror;
 
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
 public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
@@ -63,6 +70,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
       addSetter(code, metadata);
+      addMapper(code, metadata);
       addGetter(code, metadata);
     }
 
@@ -96,6 +104,35 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine("  return (%s) this;", metadata.getBuilder());
       }
       code.addLine("}");
+    }
+
+    private void addMapper(SourceBuilder code, final Metadata metadata) {
+      Optional<ParameterizedType> unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator();
+      if (unaryOperator.isPresent()) {
+        code.addLine("")
+            .addLine("/**")
+            .addLine(" * Replaces the value to be returned by %s",
+                metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            .addLine(" * by applying {@code mapper} to it and using the result.")
+            .addLine(" *")
+            .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+            .addLine(" * @throws NullPointerException if {@code mapper} is null"
+            + " or returns null");
+        if (!hasDefault) {
+          code.addLine(" * @throws IllegalStateException if the field has not been set");
+        }
+        TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
+        code.addLine(" */")
+            .add("public %s %s(%s mapper) {",
+                metadata.getBuilder(),
+                mapper(property),
+                unaryOperator.get().withParameters(typeParam));
+        if (!hasDefault) {
+          code.add(PreconditionExcerpts.checkNotNull("mapper"));
+        }
+        code.addLine("  return %s(mapper.apply(%s()));", setter(property), getter(property))
+            .addLine("}");
+      }
     }
 
     private void addGetter(SourceBuilder code, final Metadata metadata) {
