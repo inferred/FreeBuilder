@@ -20,22 +20,34 @@ import static org.inferred.freebuilder.processor.BuilderMethods.addCopiesMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setCountMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+
+import java.util.Collection;
+import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.excerpt.CheckedMultiset;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
@@ -55,16 +67,37 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
     Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-    return Optional.of(new CodeGenerator(config.getProperty(), elementType, unboxedType));
+    boolean overridesSetCountMethod =
+        hasSetCountMethodOverride(config, unboxedType.or(elementType));
+    return Optional.of(new CodeGenerator(
+        config.getProperty(), overridesSetCountMethod, elementType, unboxedType));
+  }
+
+  private static boolean hasSetCountMethodOverride(
+      Config config, TypeMirror type) {
+    return overrides(
+        config.getBuilder(),
+        config.getTypes(),
+        setCountMethod(config.getProperty()),
+        type,
+        config.getTypes().getPrimitiveType(TypeKind.INT));
   }
 
   private static class CodeGenerator extends PropertyCodeGenerator {
 
+    private static final ParameterizedType COLLECTION =
+        QualifiedName.of(Collection.class).withParameters("E");
+    private final boolean overridesSetCountMethod;
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
 
-    CodeGenerator(Property property, TypeMirror elementType, Optional<TypeMirror> unboxedType) {
+    CodeGenerator(
+        Property property,
+        boolean overridesSetCountMethod,
+        TypeMirror elementType,
+        Optional<TypeMirror> unboxedType) {
       super(property);
+      this.overridesSetCountMethod = overridesSetCountMethod;
       this.elementType = elementType;
       this.unboxedType = unboxedType;
     }
@@ -81,6 +114,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
       addVarargsAdd(code, metadata);
       addAddAll(code, metadata);
       addAddCopiesTo(code, metadata);
+      addMutate(code, metadata);
       addClear(code, metadata);
       addSetCountOf(code, metadata);
       addGetter(code, metadata);
@@ -176,6 +210,42 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("}");
     }
 
+    private void addMutate(SourceBuilder code, Metadata metadata) {
+      ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
+      if (consumer == null) {
+        return;
+      }
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Applies {@code mutator} to the multiset to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * <p>This method mutates the multiset in-place. {@code mutator} is a void")
+          .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
+          .addLine(" * not to call pure functions, like %s.",
+              COLLECTION.javadocNoArgMethodLink("stream"))
+          .addLine(" *")
+          .addLine(" * @return this {@code Builder} object")
+          .addLine(" * @throws NullPointerException if {@code mutator} is null")
+          .addLine(" */")
+          .addLine("public %s %s(%s<%s<%s>> mutator) {",
+              metadata.getBuilder(),
+              mutator(property),
+              consumer.getQualifiedName(),
+              Multiset.class,
+              elementType);
+      if (overridesSetCountMethod) {
+        code.addLine("  mutator.accept(new CheckedMultiset<>(%s, this::%s));",
+            property.getName(), setCountMethod(property));
+      } else {
+        code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+                setCountMethod(property))
+            .addLine("  mutator.accept(%s);", property.getName());
+      }
+      code.addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+    }
+
     private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
@@ -266,6 +336,15 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
     @Override
     public void addPartialClear(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
+    }
+
+    @Override
+    public Set<? extends Excerpt> getStaticMethods() {
+      ImmutableSet.Builder<Excerpt> staticMethods = ImmutableSet.builder();
+      if (overridesSetCountMethod) {
+        staticMethods.addAll(CheckedMultiset.excerpts());
+      }
+      return staticMethods.build();
     }
   }
 }
