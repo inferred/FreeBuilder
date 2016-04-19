@@ -21,6 +21,8 @@ import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
@@ -45,7 +47,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -56,20 +57,14 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
-    if (config.getProperty().getType().getKind() == TypeKind.DECLARED) {
-      DeclaredType type = (DeclaredType) config.getProperty().getType();
-      if (erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
-        TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
-        Optional<TypeMirror> unboxedType;
-        try {
-          unboxedType = Optional.<TypeMirror>of(config.getTypes().unboxedType(elementType));
-        } catch (IllegalArgumentException e) {
-          unboxedType = Optional.absent();
-        }
-        return Optional.of(new CodeGenerator(config.getProperty(), elementType, unboxedType));
-      }
+    DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+    if (type == null || !erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
+      return Optional.absent();
     }
-    return Optional.absent();
+
+    TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+    Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
+    return Optional.of(new CodeGenerator(config.getProperty(), elementType, unboxedType));
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {

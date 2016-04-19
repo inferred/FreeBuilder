@@ -21,9 +21,10 @@ import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor6;
@@ -61,32 +62,36 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
-    Property property = config.getProperty();
+    DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+    if (type == null) {
+      return Optional.absent();
+    }
 
-    if (property.getType().getKind() == TypeKind.DECLARED) {
-      DeclaredType type = (DeclaredType) property.getType();
-      for (OptionalType optional : OptionalType.values()) {
-        if (erasesToAnyOf(type, optional.cls)) {
-          TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
-          Optional<TypeMirror> unboxedType;
-          try {
-            unboxedType = Optional.<TypeMirror>of(config.getTypes().unboxedType(elementType));
-          } catch (IllegalArgumentException e) {
-            unboxedType = Optional.absent();
-          }
+    OptionalType optionalType = maybeOptional(type).orNull();
+    if (optionalType == null) {
+      return Optional.absent();
+    }
 
-          // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
-          // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
-          // type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
-          boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
+    TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+    Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
 
-          return Optional.of(new CodeGenerator(
-              property,
-              optional,
-              elementType,
-              unboxedType,
-              requiresExplicitTypeParameters));
-        }
+    // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
+    // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
+    // type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
+    boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
+
+    return Optional.of(new CodeGenerator(
+        config.getProperty(),
+        optionalType,
+        elementType,
+        unboxedType,
+        requiresExplicitTypeParameters));
+  }
+
+  private static Optional<OptionalType> maybeOptional(DeclaredType type) {
+    for (OptionalType optionalType : OptionalType.values()) {
+      if (erasesToAnyOf(type, optionalType.cls)) {
+        return Optional.of(optionalType);
       }
     }
     return Optional.absent();

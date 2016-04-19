@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import com.google.common.base.Optional;
+
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;
 
@@ -28,8 +30,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleElementVisitor6;
 import javax.lang.model.util.SimpleTypeVisitor6;
-
-import com.google.common.base.Optional;
+import javax.lang.model.util.Types;
 
 /**
  * Utility methods for the javax.lang.model package.
@@ -107,6 +108,15 @@ public class ModelUtils {
   /** Returns the {@link TypeElement} corresponding to {@code type}. */
   public static TypeElement asElement(DeclaredType type) {
     return maybeType(type.asElement()).get();
+  }
+
+  /** Applies unboxing conversion to {@code mirror}, if it can be unboxed. */
+  public static Optional<TypeMirror> maybeUnbox(TypeMirror mirror, Types types) {
+    try {
+      return Optional.<TypeMirror>of(types.unboxedType(mirror));
+    } catch (IllegalArgumentException e) {
+      return Optional.absent();
+    }
   }
 
   private static final SimpleElementVisitor6<Optional<TypeElement>, ?> TYPE_ELEMENT_VISITOR =
