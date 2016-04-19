@@ -110,8 +110,19 @@ public class CompilationUnitBuilder implements SourceBuilder {
       // Formatter requires Java 7+; do no formatting in Java 6.
       return source;
     } catch (Exception e) {
-      throw new RuntimeException(
-          "Formatter failed:\n" + e.getMessage() + "\nGenerated source:\n" + source, e);
+      StringBuilder message = new StringBuilder()
+          .append("Formatter failed:\n")
+          .append(e.getMessage())
+          .append("\nGenerated source:");
+      int lineNo = 0;
+      for (String line : source.split("\n")) {
+        message
+            .append("\n")
+            .append(++lineNo)
+            .append(": ")
+            .append(line);
+      }
+      throw new RuntimeException(message.toString());
     }
   }
 }
