@@ -221,6 +221,7 @@ will gain additional convenience setter methods:
 | `clearDescription()` | Sets the property to `Optional.empty()`. |
 | `setDescription(Optional<String> value)` | Sets the property to `value`. |
 | `setNullableDescription(String value)` | Sets the property to `Optional.ofNullable(value)`. |
+| `mapDescription(UnaryOperator<String> mapper` | *Java 8+* If the property value is not empty, this replaces the value with the result of invoking `mapper` with the existing value, or clears it if `mapper` returns null. Throws a NullPointerException if `mapper` is null. |
 
 Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
