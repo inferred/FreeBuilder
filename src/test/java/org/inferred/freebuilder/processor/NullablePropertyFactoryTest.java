@@ -28,7 +28,6 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.NullablePropertyFactory.CodeGenerator;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,13 +43,7 @@ public class NullablePropertyFactoryTest {
 
   @Rule public final ModelRule model = new ModelRule();
   @Mock(answer = RETURNS_SMART_NULLS) private Config config;
-  private final Property property = new Property.Builder().buildPartial();
   private final NullablePropertyFactory factory = new NullablePropertyFactory();
-
-  @Before
-  public void setup() {
-    when(config.getProperty()).thenReturn(property);
-  }
 
   @Test
   public void notNullable() {
@@ -60,6 +53,10 @@ public class NullablePropertyFactoryTest {
         "  ---> public abstract String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}");
+    Property property = new Property.Builder()
+        .setType(getterMethod.getReturnType())
+        .buildPartial();
+    when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
     Optional<CodeGenerator> codeGenerator = factory.create(config);
@@ -75,6 +72,10 @@ public class NullablePropertyFactoryTest {
         "  ---> public abstract @" + Nullable.class.getName() + " String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}");
+    Property property = new Property.Builder()
+        .setType(getterMethod.getReturnType())
+        .buildPartial();
+    when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
     Optional<CodeGenerator> codeGenerator = factory.create(config);
@@ -94,6 +95,10 @@ public class NullablePropertyFactoryTest {
         "  ---> public abstract @foo.bar.Nullable String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}");
+    Property property = new Property.Builder()
+        .setType(getterMethod.getReturnType())
+        .buildPartial();
+    when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
     Optional<CodeGenerator> codeGenerator = factory.create(config);
@@ -116,6 +121,10 @@ public class NullablePropertyFactoryTest {
         "",
         "  public static class Builder extends DataType_Builder {}",
         "}");
+    Property property = new Property.Builder()
+        .setType(getterMethod.getReturnType())
+        .buildPartial();
+    when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
     Optional<CodeGenerator> codeGenerator = factory.create(config);
@@ -123,5 +132,24 @@ public class NullablePropertyFactoryTest {
     assertThat(codeGenerator).hasValue(new NullablePropertyFactory.CodeGenerator(
         property, ImmutableSet.of(
             model.typeElement(Nullable.class), model.typeElement("foo.bar.Nullable"))));
+  }
+
+  @Test
+  public void nullablePrimitive() {
+    ExecutableElement getterMethod = (ExecutableElement) model.newElementWithMarker(
+        "package com.example;",
+        "public class DataType {",
+        "  ---> public abstract @" + Nullable.class.getName() + " int getAge();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}");
+    Property property = new Property.Builder()
+        .setType(getterMethod.getReturnType())
+        .buildPartial();
+    when(config.getProperty()).thenReturn(property);
+    doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
+
+    Optional<CodeGenerator> codeGenerator = factory.create(config);
+
+    assertThat(codeGenerator).isAbsent();
   }
 }

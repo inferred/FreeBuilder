@@ -244,6 +244,20 @@ you can disable null-checking by marking the getter method `@Nullable`. (Any
 annotation type named "Nullable" will do, but you may wish to use
 `javax.annotation.Nullable`, as used in [Google Guava][Guava].)
 
+```java
+  /** Returns an optional title to use when addressing the person. */
+  @Nullable String getTitle();
+```
+
+This property will now default to null, and the Builder's setter methods will
+change their null-handling behaviour:
+
+| Method | Description |
+|:------:| ----------- |
+| `setTitle(@Nullable String title)` | Sets the property to `title`. |
+| `getTitle()` | Returns the current value of the property. May be null. |
+| `mapTitle(UnaryOperator<String> mapper)` | *Java 8+* Takes a [UnaryOperator]. Replaces the current property value, if it is not null, with the result of invoking `mapper` on it. Throws a NullPointerException if `mapper` is null. `mapper` may return a null. |
+
 [Guava]: https://github.com/google/guava
 [Hoare]: http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare
 [Using and Avoiding Null]: https://github.com/google/guava/wiki/UsingAndAvoidingNullExplained
