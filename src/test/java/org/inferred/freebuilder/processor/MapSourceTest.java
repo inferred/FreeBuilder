@@ -858,6 +858,7 @@ public class MapSourceTest {
         .addProperties(name
             .setCodeGenerator(new MapPropertyFactory.CodeGenerator(
                 name.build(),
+                false,
                 integer,
                 Optional.<TypeMirror>of(INT),
                 string,
