@@ -19,10 +19,12 @@ import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.tryFind;
 
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.util.ElementFilter.typesIn;
@@ -169,6 +171,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
       addSetter(code, metadata);
       addSetterTakingBuilder(code, metadata);
+      addMutate(code, metadata);
       addGetter(code, metadata);
     }
 
@@ -208,6 +211,33 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
               setter(property),
               property.getType())
           .addLine("  return %s(builder.build());", setter(property))
+          .addLine("}");
+    }
+
+    private void addMutate(SourceBuilder code, Metadata metadata) {
+      ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
+      if (consumer == null) {
+        return;
+      }
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Applies {@code mutator} to the builder for the value that will be")
+          .addLine(" * returned by %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * <p>This method mutates the builder in-place. {@code mutator} is a void")
+          .addLine(" * consumer, so any value returned from a lambda will be ignored.")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code mutator} is null")
+          .addLine(" */")
+          .addLine("public %s %s(%s<%s.Builder> mutator) {",
+              metadata.getBuilder(),
+              mutator(property),
+              consumer.getQualifiedName(),
+              property.getType())
+          .addLine("  mutator.accept(%s);", property.getName())
+          .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
 
