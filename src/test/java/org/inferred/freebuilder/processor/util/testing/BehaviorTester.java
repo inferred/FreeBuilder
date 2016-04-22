@@ -15,9 +15,19 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
-import static com.google.common.base.Predicates.not;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
+
 import static org.junit.Assert.fail;
+
+import static java.util.stream.Collectors.toList;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -25,6 +35,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
@@ -36,13 +47,6 @@ import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
-
-import org.junit.Test;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Convenience class for performing behavioral tests of API-generating
@@ -140,6 +144,9 @@ public class BehaviorTester {
    */
   public static class CompilationSubject {
 
+    private final Set<Diagnostic.Kind> WARNINGS =
+        ImmutableSet.of(Diagnostic.Kind.WARNING, Diagnostic.Kind.MANDATORY_WARNING);
+
     private final List<Diagnostic<? extends JavaFileObject>> diagnostics;
 
     private CompilationSubject(List<Diagnostic<? extends JavaFileObject>> diagnostics) {
@@ -150,10 +157,9 @@ public class BehaviorTester {
      * Fails if the compiler issued warnings.
      */
     public CompilationSubject withNoWarnings() {
-      ImmutableList<Diagnostic<? extends JavaFileObject>> warnings = FluentIterable
-          .from(diagnostics)
-          .filter(Diagnostics.isKind(Diagnostic.Kind.WARNING, Diagnostic.Kind.MANDATORY_WARNING))
-          .toList();
+      List<Diagnostic<? extends JavaFileObject>> warnings = diagnostics.stream()
+          .filter(diagnostic -> WARNINGS.contains(diagnostic.getKind()))
+          .collect(toList());
       if (!warnings.isEmpty()) {
         StringBuilder message =
             new StringBuilder("The following warnings were issued by the compiler:");
@@ -163,6 +169,18 @@ public class BehaviorTester {
         }
         throw new AssertionError(message.toString());
       }
+      return this;
+    }
+
+    /**
+     * Fails if the compiler did not issue a specific warning.
+     */
+    public CompilationSubject withWarning(String message) {
+      List<String> warningMessages = diagnostics.stream()
+          .filter(diagnostic -> WARNINGS.contains(diagnostic.getKind()))
+          .map(diagnostic -> diagnostic.getMessage(null))
+          .collect(toList());
+      assertThat(warningMessages).contains(message);
       return this;
     }
   }
@@ -193,12 +211,7 @@ public class BehaviorTester {
       final ClassLoader classLoader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
       final List<Throwable> exceptions = new ArrayList<Throwable>();
       if (shouldSetContextClassLoader) {
-        Thread t = new Thread() {
-          @Override
-          public void run() {
-            runTests(classLoader, exceptions);
-          }
-        };
+        Thread t = new Thread(() -> runTests(classLoader, exceptions));
         t.setContextClassLoader(classLoader);
         t.start();
         joinUninterruptibly(t);
@@ -221,7 +234,7 @@ public class BehaviorTester {
     }
   }
 
-  private void runTests(final ClassLoader classLoader, final List<Throwable> throwables) {
+  private void runTests(ClassLoader classLoader, List<Throwable> throwables) {
     for (Class<?> compiledClass : loadCompiledClasses(classLoader, compilationUnits)) {
       for (Method testMethod : getTestMethods(compiledClass)) {
         try {
@@ -266,7 +279,7 @@ public class BehaviorTester {
     return resultBuilder.build();
   }
 
-  private static ImmutableList<Diagnostic<? extends JavaFileObject>> compile(
+  private static List<Diagnostic<? extends JavaFileObject>> compile(
       JavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits,
       Iterable<? extends Processor> processors) {
@@ -285,9 +298,11 @@ public class BehaviorTester {
     }
     // Filter out any errors: if compilation succeeded, they're probably "cannot find symbol"
     // errors erroneously emitted by the compiler prior to running annotation processing.
-    return FluentIterable.from(diagnostics.getDiagnostics())
-        .filter(not(Diagnostics.isKind(Diagnostic.Kind.ERROR)))
-        .toList();
+    return diagnostics
+        .getDiagnostics()
+        .stream()
+        .filter(diagnostic -> diagnostic.getKind() != Diagnostic.Kind.ERROR)
+        .collect(toList());
   }
 
   private static JavaCompiler getCompiler() {
