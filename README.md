@@ -304,7 +304,8 @@ property called 'descendants' would generate:
 |:------:| ----------- |
 | `addDescendants(String element)` | Appends `element` to the collection of descendants. If descendants is a set and the element is already present, it is ignored. Throws a NullPointerException if element is null. |
 | `addDescendants(String... elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
-| `addAllDescendants(Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
+| `addAllDescendants(​Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
+| `mutateDescendants(​Consumer<‌.‌.‌.‌<String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the collection of descendants. (The mutator takes a list, set or map as appropriate.) Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned collection to replace the existing collection. |
 | `clearDescendants()` | Removes all elements from the collection of descendants, leaving it empty. |
 | `getDescendants()` | Returns an unmodifiable view of the collection of descendants. Changes to the collection held by the builder will be reflected in the view. |
 
@@ -342,11 +343,24 @@ A <code>[Multimap][]</code> property called 'awards' would generate:
 
 In all cases, the value type will return immutable objects from its getter.
 
+The mutator methods are useful for invoking methods not directly exposed on the builder, like [subList], or methods that take a mutable collection, like [sort]:
+
+```java
+personBuilder
+    // Delete the fourth and fifth descendants in the list
+    .mutateDescendants(d -> d.subList(3,5).clear())
+    // Sort the remaining descendants
+    .mutateDescendants(Collections::sort);
+```
+
 [List]: http://docs.oracle.com/javase/tutorial/collections/interfaces/list.html
 [Set]: http://docs.oracle.com/javase/tutorial/collections/interfaces/set.html
 [Multiset]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multiset
 [Map]: http://docs.oracle.com/javase/tutorial/collections/interfaces/map.html
 [Multimap]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multimap
+[sort]: http://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#sort-java.util.List-
+[stream]: https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#stream--
+[subList]: http://docs.oracle.com/javase/8/docs/api/java/util/List.html#subList-int-int-
 
 
 ### Nested buildable types

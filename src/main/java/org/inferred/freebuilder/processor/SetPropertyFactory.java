@@ -19,13 +19,16 @@ import static org.inferred.freebuilder.processor.BuilderMethods.addAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
@@ -35,9 +38,13 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.excerpt.CheckedSet;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -60,19 +67,37 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
     Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-    return Optional.of(new CodeGenerator(config.getProperty(), elementType, unboxedType));
+    boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
+    return Optional.of(new CodeGenerator(
+        config.getProperty(), elementType, unboxedType, overridesAddMethod));
+  }
+
+  private static boolean hasAddMethodOverride( Config config, TypeMirror elementType) {
+    return overrides(
+        config.getBuilder(),
+        config.getTypes(),
+        addMethod(config.getProperty()),
+        elementType);
   }
 
   @VisibleForTesting
   static class CodeGenerator extends PropertyCodeGenerator {
 
+    private static final ParameterizedType COLLECTION =
+        QualifiedName.of(Collection.class).withParameters("E");
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
+    private final boolean overridesAddMethod;
 
-    CodeGenerator(Property property, TypeMirror elementType, Optional<TypeMirror> unboxedType) {
+    CodeGenerator(
+        Property property,
+        TypeMirror elementType,
+        Optional<TypeMirror> unboxedType,
+        boolean overridesAddMethod) {
       super(property);
       this.elementType = elementType;
       this.unboxedType = unboxedType;
+      this.overridesAddMethod = overridesAddMethod;
     }
 
     @Override
@@ -90,6 +115,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       addVarargsAdd(code, metadata);
       addAddAll(code, metadata);
       addRemove(code, metadata);
+      addMutator(code, metadata);
       addClear(code, metadata);
       addGetter(code, metadata);
     }
@@ -198,6 +224,41 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("}");
     }
 
+    private void addMutator(SourceBuilder code, Metadata metadata) {
+      Optional<ParameterizedType> consumer = code.feature(FUNCTION_PACKAGE).consumer();
+      if (consumer.isPresent()) {
+        code.addLine("")
+            .addLine("/**")
+            .addLine(" * Applies {@code mutator} to the set to be returned from %s.",
+                metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            .addLine(" *")
+            .addLine(" * <p>This method mutates the set in-place. {@code mutator} is a void")
+            .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
+            .addLine(" * not to call pure functions, like %s.",
+                COLLECTION.javadocNoArgMethodLink("stream"))
+            .addLine(" *")
+            .addLine(" * @return this {@code Builder} object")
+            .addLine(" * @throws NullPointerException if {@code mutator} is null")
+            .addLine(" */")
+            .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
+                metadata.getBuilder(),
+                mutator(property),
+                consumer.get().getQualifiedName(),
+                Set.class,
+                elementType);
+        if (overridesAddMethod) {
+          code.addLine("  mutator.accept(new CheckedSet<%s>(%s, this::%s));",
+                  elementType, property.getName(), addMethod(property));
+        } else {
+          code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+                  addMethod(property))
+              .addLine("  mutator.accept(%s);", property.getName());
+        }
+        code.addLine("  return (%s) this;", metadata.getBuilder())
+            .addLine("}");
+      }
+    }
+
     private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
@@ -270,8 +331,13 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public Set<StaticMethod> getStaticMethods() {
-      return ImmutableSet.copyOf(StaticMethod.values());
+    public Set<Excerpt> getStaticMethods() {
+      ImmutableSet.Builder<Excerpt> staticMethods = ImmutableSet.builder();
+      staticMethods.add(StaticMethod.values());
+      if (overridesAddMethod) {
+        staticMethods.addAll(CheckedSet.excerpts());
+      }
+      return staticMethods.build();
     }
   }
 
