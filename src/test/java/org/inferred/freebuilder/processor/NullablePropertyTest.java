@@ -15,8 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import javax.annotation.Nullable;
-import javax.tools.JavaFileObject;
+import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -28,7 +27,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.testing.EqualsTester;
+import javax.annotation.Nullable;
+import javax.tools.JavaFileObject;
 
 @RunWith(JUnit4.class)
 public class NullablePropertyTest {

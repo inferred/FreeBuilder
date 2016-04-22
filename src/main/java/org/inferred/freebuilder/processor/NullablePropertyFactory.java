@@ -15,8 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.Objects.firstNonNull;
+
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -24,23 +28,28 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
 /** {@link PropertyCodeGenerator.Factory} providing reference semantics for Nullable properties. */
 public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
 
   @Override
   public Optional<CodeGenerator> create(Config config) {
+    Property property = config.getProperty();
+    boolean isPrimitive = property.getType().getKind().isPrimitive();
     Set<TypeElement> nullableAnnotations = nullablesIn(config.getAnnotations());
-    if (nullableAnnotations.isEmpty()) {
+    if (isPrimitive || nullableAnnotations.isEmpty()) {
       return Optional.absent();
     }
-    return Optional.of(new CodeGenerator(config.getProperty(), nullableAnnotations));
+    return Optional.of(new CodeGenerator(property, nullableAnnotations));
   }
 
   private static Set<TypeElement> nullablesIn(Iterable<? extends AnnotationMirror> annotations) {
@@ -59,8 +68,9 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     private final Set<TypeElement> nullables;
-
-    CodeGenerator(Property property, Iterable<TypeElement> nullableAnnotations) {
+    CodeGenerator(
+        Property property,
+        Iterable<TypeElement> nullableAnnotations) {
       super(property);
       this.nullables = ImmutableSet.copyOf(nullableAnnotations);
     }
@@ -78,7 +88,12 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
-      // Setter
+      addSetter(code, metadata);
+      addMapper(code, metadata);
+      addGetter(code, metadata);
+    }
+
+    private void addSetter(SourceBuilder code, final Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Sets the value to be returned by %s.",
@@ -93,8 +108,38 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  this.%1$s = %1$s;", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
 
-      // Getter
+    private void addMapper(SourceBuilder code, final Metadata metadata) {
+      ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
+      if (unaryOperator == null) {
+        return;
+      }
+      TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * If the value to be returned by %s is not",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" * null, replaces it by applying {@code mapper} to it and using the result.")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code mapper} is null")
+          .addLine(" */")
+          .addLine("public %s %s(%s mapper) {",
+              metadata.getBuilder(),
+              mapper(property),
+              unaryOperator.withParameters(typeParam))
+          .add(PreconditionExcerpts.checkNotNull("mapper"))
+          .addLine("  %s %s = %s();",
+              property.getType(), property.getName(), getter(property))
+          .addLine("  if (%s != null) {", property.getName())
+          .addLine("    %s(mapper.apply(%s));", setter(property), property.getName())
+          .addLine("  }")
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+    }
+
+    private void addGetter(SourceBuilder code, final Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Returns the value that will be returned by %s.",
@@ -124,7 +169,7 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("%s(%s.%s());", setter(property), builder, property.getGetterName());
+      code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
     }
 
     @Override
@@ -151,9 +196,7 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addPartialClear(SourceBuilder code) {
-      if (true) {
-        code.addLine("%s = null;", property.getName());
-      }
+      code.addLine("%s = null;", property.getName());
     }
   }
 }
