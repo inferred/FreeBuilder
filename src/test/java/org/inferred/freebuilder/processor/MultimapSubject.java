@@ -56,27 +56,37 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
   }
 
   /**
-   * Fails if the subject does not contain the given key-value pair.
+   * Fails if the subject does not contain the given key-value pair(s).
    *
    * <p>First part of a fluent API for containment assertions. Example:<pre><code>
    * assertThat(multimap)
    *     .contains("fore", 3.22)
-   *     .and("aft", 4.4)
+   *     .and("aft", 4.4, 5.2)
    *     .andNothingElse()
    *     .inOrder();</pre></code>
    */
-  public ContainmentAssertion<K, V> contains(K key, V value) {
-    return new InOrderContainmentAssertion().and(key, value);
+  @SafeVarargs
+  public final ContainmentAssertion<K, V> contains(K key, V value, V... values) {
+    return new InOrderContainmentAssertion().and(key, value, values);
   }
 
-  public interface ContainmentAssertion<K, V> {
+  public abstract static class ContainmentAssertion<K, V> {
     /**
-     * Fails if the subject does not contain the given key-value pair, <em>in addition</em> to any
-     * entries found by previous {@link #contains} and {@link #and} calls.
+     * Fails if the subject does not contain the given key-value pair(s), <em>in addition</em> to
+     * any entries found by previous {@link #contains} and {@link #and} calls.
      *
      * @see #contains
      */
-    ContainmentAssertion<K, V> and(K key, V value);
+    @SafeVarargs
+    public final ContainmentAssertion<K, V> and(K key, V value, V... values) {
+      ContainmentAssertion<K, V> result = this.and(immutableEntry(key, value));
+      for (V otherValue : values) {
+        result = result.and(immutableEntry(key, otherValue));
+      }
+      return result;
+    }
+
+    protected abstract ContainmentAssertion<K, V> and(Entry<K, V> entry);
 
     /**
      * Fails if the subject contains any entries that have not already been matched by previous
@@ -85,7 +95,7 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
      *
      * @see #contains
      */
-    Ordered andNothingElse();
+    public abstract Ordered andNothingElse();
   }
 
   private MultimapSubject(FailureStrategy failureStrategy, Multimap<K, V> subject) {
@@ -93,7 +103,7 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
   }
 
   /** Implementation of {@code ContainmentAssertion} for a subject that may still be in order. */
-  private class InOrderContainmentAssertion implements ContainmentAssertion<K, V> {
+  private class InOrderContainmentAssertion extends ContainmentAssertion<K, V> {
 
     final Iterator<Entry<K, V>> entryIterator;
     final List<Entry<K, V>> expected = new ArrayList<Entry<K, V>>();
@@ -102,11 +112,7 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
       entryIterator = getSubject().entries().iterator();
     }
 
-    @Override public ContainmentAssertion<K, V> and(K key, V value) {
-      return and(immutableEntry(key, value));
-    }
-
-    ContainmentAssertion<K, V> and(Entry<K, V> entry) {
+    @Override protected ContainmentAssertion<K, V> and(Entry<K, V> entry) {
       expected.add(entry);
       if (!entryIterator.hasNext()) {
         fail("contains", expected, "is missing", entry);
@@ -139,7 +145,7 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
   }
 
   /** Implementation of {@code ContainmentAssertion} for a subject that is mis-ordered. */
-  private class OutOfOrderContainmentAssertion implements ContainmentAssertion<K, V> {
+  private class OutOfOrderContainmentAssertion extends ContainmentAssertion<K, V> {
 
     final List<Entry<K, V>> expected;
     final Multimap<K, V> remaining;
@@ -149,11 +155,7 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
       this.remaining = remaining;
     }
 
-    @Override public ContainmentAssertion<K, V> and(K key, V value) {
-      return and(immutableEntry(key, value));
-    }
-
-    ContainmentAssertion<K, V> and(Entry<K, V> entry) {
+    @Override protected ContainmentAssertion<K, V> and(Entry<K, V> entry) {
       expected.add(entry);
       if (!remaining.remove(entry.getKey(), entry.getValue())) {
         fail("contains", expected, "is missing", entry);
@@ -172,9 +174,10 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
   }
 
   /** Implementation of {@code ContainmentAssertion} for a subject that has already failed. */
-  private class FailedContainmentAssertion implements ContainmentAssertion<K, V> {
+  private class FailedContainmentAssertion extends ContainmentAssertion<K, V> {
 
-    @Override public ContainmentAssertion<K, V> and(K key, V value) {
+    @Override
+    protected ContainmentAssertion<K, V> and(Entry<K, V> entry) {
       return this;
     }
 
