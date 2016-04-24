@@ -45,8 +45,8 @@ public class JavaUtilOptionalPropertyTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> getItem1();", Optional.class, String.class)
-      .addLine("  public abstract %s<%s> getItem2();", Optional.class, String.class)
+      .addLine("  public abstract %s<String> getItem1();", Optional.class)
+      .addLine("  public abstract %s<String> getItem2();", Optional.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -55,11 +55,11 @@ public class JavaUtilOptionalPropertyTest {
       .addLine("}")
       .build();
 
-  private static final JavaFileObject OPTIONAL_PROPERTY_AUTO_BUILT_TYPE = new SourceBuilder()
+  private static final JavaFileObject OPTIONAL_PROPERTY_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> getItem();", Optional.class, String.class)
+      .addLine("  public abstract %s<String> getItem();", Optional.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -68,7 +68,7 @@ public class JavaUtilOptionalPropertyTest {
       .addLine("}")
       .build();
 
-  private static final JavaFileObject OPTIONAL_INTEGER_AUTO_BUILT_TYPE = new SourceBuilder()
+  private static final JavaFileObject OPTIONAL_INTEGER_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
@@ -88,7 +88,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testConstructor_defaultEmpty() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
             .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
@@ -100,7 +100,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testConstructor_primitive_defaultEmpty() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
             .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
@@ -112,7 +112,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testBuilderGetter_defaultValue() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
             .addLine("assertEquals(%s.empty(), builder.getItem());", Optional.class)
@@ -124,7 +124,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testBuilderGetter_nonDefaultValue() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
             .addLine("    .setItem(\"item\");")
@@ -137,7 +137,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSet_notNull() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(\"item\")")
@@ -152,7 +152,7 @@ public class JavaUtilOptionalPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().setItem((String) null);")
             .build())
@@ -163,7 +163,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSet_optionalOf() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(%s.of(\"item\"))", Optional.class)
@@ -177,7 +177,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSet_empty() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(%s.<String>empty())", Optional.class)
@@ -192,7 +192,7 @@ public class JavaUtilOptionalPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().setItem((%s<String>) null);",
                 Optional.class)
@@ -204,7 +204,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSetNullable_notNull() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setNullableItem(\"item\")")
@@ -218,7 +218,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSetNullable_null() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setNullableItem(null)")
@@ -232,7 +232,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testClear() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(\"item\")")
@@ -247,7 +247,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSet_primitive_notNull() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(5)")
@@ -262,7 +262,7 @@ public class JavaUtilOptionalPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().setItem((Integer) null);")
             .build())
@@ -273,7 +273,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSet_primitive_optionalOf() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(%s.of(5))", Optional.class)
@@ -287,7 +287,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSet_primitive_empty() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(%s.<Integer>empty())", Optional.class)
@@ -302,7 +302,7 @@ public class JavaUtilOptionalPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().setItem((%s<Integer>) null);",
                 Optional.class)
@@ -314,7 +314,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSetNullable_primitive_notNull() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setNullableItem(5)")
@@ -328,7 +328,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testSetNullable_primitive_null() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setNullableItem(null)")
@@ -342,7 +342,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testClear_primitive() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_INTEGER_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(5)")
@@ -357,7 +357,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testMergeFrom_valueInstance() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
             .addLine("    .setItem(\"item\")")
@@ -373,7 +373,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testMergeFrom_builder() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
             .addLine("    .setItem(\"item\");")
@@ -388,7 +388,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setItem(\"item\")")
@@ -697,7 +697,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testEquality() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new %s()", EqualsTester.class)
             .addLine("    .addEqualityGroup(")
@@ -724,7 +724,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testValueToString_singleField() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType empty = com.example.DataType.builder()")
             .addLine("    .build();")
@@ -767,7 +767,7 @@ public class JavaUtilOptionalPropertyTest {
   public void testPartialToString_singleField() {
     behaviorTester
         .with(new Processor())
-        .with(OPTIONAL_PROPERTY_AUTO_BUILT_TYPE)
+        .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType empty = com.example.DataType.builder()")
             .addLine("    .buildPartial();")
