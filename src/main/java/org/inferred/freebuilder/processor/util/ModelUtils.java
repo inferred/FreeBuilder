@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static javax.lang.model.util.ElementFilter.methodsIn;
+
 import com.google.common.base.Optional;
 
 import java.lang.annotation.Annotation;
@@ -117,6 +119,33 @@ public class ModelUtils {
     } catch (IllegalArgumentException e) {
       return Optional.absent();
     }
+  }
+
+  /** Returns whether {@code type} overrides method {@code methodName(params)}. */
+  public static boolean overrides(
+      TypeElement type, Types types, String methodName, TypeMirror... params) {
+    for (ExecutableElement method : methodsIn(type.getEnclosedElements())) {
+      if (signatureMatches(method, types, methodName, params)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean signatureMatches(
+      ExecutableElement method, Types types, String name, TypeMirror... params) {
+    if (!method.getSimpleName().contentEquals(name)) {
+      return false;
+    }
+    if (method.getParameters().size() != params.length) {
+      return false;
+    }
+    for (int i = 0; i < params.length; ++i) {
+      if (!types.isSameType(params[i], method.getParameters().get(i).asType())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static final SimpleElementVisitor6<Optional<TypeElement>, ?> TYPE_ELEMENT_VISITOR =
