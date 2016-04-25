@@ -45,9 +45,9 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.annotation.Generated;
 
@@ -726,9 +726,9 @@ public class CodeGenerator {
   }
 
   private static void addStaticMethods(SourceBuilder code, Metadata metadata) {
-    Set<Excerpt> staticMethods = new LinkedHashSet<Excerpt>();
+    SortedSet<Excerpt> staticMethods = new TreeSet<Excerpt>();
     for (Property property : metadata.getProperties()) {
-      staticMethods.addAll(property.getCodeGenerator().getStaticMethods());
+      staticMethods.addAll(property.getCodeGenerator().getStaticExcerpts());
     }
     for (Excerpt staticMethod : staticMethods) {
       code.add(staticMethod);

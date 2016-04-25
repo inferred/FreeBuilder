@@ -1,12 +1,13 @@
 package org.inferred.freebuilder.processor.excerpt;
 
+import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.TYPE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.AbstractSet;
 import java.util.Iterator;
@@ -18,11 +19,11 @@ import java.util.Set;
  */
 public class CheckedSet {
 
-  public static Set<Excerpt> excerpts() {
+  public static Set<StaticExcerpt> excerpts() {
     return ImmutableSet.of(CHECKED_SET);
   }
 
-  private static final Excerpt CHECKED_SET = new Excerpt() {
+  private static final StaticExcerpt CHECKED_SET = new StaticExcerpt(TYPE, "CheckedSet") {
     @Override
     public void addTo(SourceBuilder code) {
       ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();

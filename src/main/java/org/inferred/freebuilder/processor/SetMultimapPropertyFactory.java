@@ -39,9 +39,9 @@ import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedSetMultimap;
-import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -395,8 +395,8 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
     }
 
     @Override
-    public Set<? extends Excerpt> getStaticMethods() {
-      ImmutableSet.Builder<Excerpt> staticMethods = ImmutableSet.builder();
+    public Set<StaticExcerpt> getStaticExcerpts() {
+      ImmutableSet.Builder<StaticExcerpt> staticMethods = ImmutableSet.builder();
       if (overridesPutMethod) {
         staticMethods.addAll(CheckedSetMultimap.excerpts());
       }

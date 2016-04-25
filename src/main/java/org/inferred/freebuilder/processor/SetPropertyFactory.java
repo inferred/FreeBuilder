@@ -28,6 +28,7 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
@@ -39,10 +40,10 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedSet;
-import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -331,9 +332,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public Set<Excerpt> getStaticMethods() {
-      ImmutableSet.Builder<Excerpt> staticMethods = ImmutableSet.builder();
-      staticMethods.add(StaticMethod.values());
+    public Set<StaticExcerpt> getStaticExcerpts() {
+      ImmutableSet.Builder<StaticExcerpt> staticMethods = ImmutableSet.builder();
+      staticMethods.add(IMMUTABLE_SET);
       if (overridesAddMethod) {
         staticMethods.addAll(CheckedSet.excerpts());
       }
@@ -341,29 +342,27 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
   }
 
-  private enum StaticMethod implements Excerpt {
-    IMMUTABLE_SET {
-      @Override
-      public void addTo(SourceBuilder code) {
-        if (!code.feature(GUAVA).isAvailable()) {
-          code.addLine("")
-              .addLine("private static <E> %1$s<E> immutableSet(%1$s<E> elements) {",
-                  Set.class, Class.class)
-              .addLine("  switch (elements.size()) {")
-              .addLine("  case 0:")
-              .addLine("    return %s.emptySet();", Collections.class)
-              .addLine("  case 1:")
-              .addLine("    return %s.singleton(elements.iterator().next());", Collections.class)
-              .addLine("  default:")
-              .add("    return %s.unmodifiableSet(new %s<", Collections.class, LinkedHashSet.class);
-          if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
-            code.add("E");
-          }
-          code.add(">(elements));\n")
-              .addLine("  }")
-              .addLine("}");
+  private static final StaticExcerpt IMMUTABLE_SET = new StaticExcerpt(METHOD, "immutableSet") {
+    @Override
+    public void addTo(SourceBuilder code) {
+      if (!code.feature(GUAVA).isAvailable()) {
+        code.addLine("")
+            .addLine("private static <E> %1$s<E> immutableSet(%1$s<E> elements) {",
+                Set.class, Class.class)
+            .addLine("  switch (elements.size()) {")
+            .addLine("  case 0:")
+            .addLine("    return %s.emptySet();", Collections.class)
+            .addLine("  case 1:")
+            .addLine("    return %s.singleton(elements.iterator().next());", Collections.class)
+            .addLine("  default:")
+            .add("    return %s.unmodifiableSet(new %s<", Collections.class, LinkedHashSet.class);
+        if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
+          code.add("E");
         }
+        code.add(">(elements));\n")
+            .addLine("  }")
+            .addLine("}");
       }
     }
-  }
+  };
 }

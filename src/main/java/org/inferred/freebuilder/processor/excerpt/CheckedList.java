@@ -1,12 +1,13 @@
 package org.inferred.freebuilder.processor.excerpt;
 
+import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.TYPE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.AbstractList;
 import java.util.List;
@@ -18,11 +19,11 @@ import java.util.RandomAccess;
  */
 public class CheckedList {
 
-  public static List<Excerpt> excerpts() {
-    return ImmutableList.<Excerpt>of(CHECKED_LIST);
+  public static List<StaticExcerpt> excerpts() {
+    return ImmutableList.<StaticExcerpt>of(CHECKED_LIST);
   }
 
-  private static final Excerpt CHECKED_LIST = new Excerpt() {
+  private static final StaticExcerpt CHECKED_LIST = new StaticExcerpt(TYPE, "CheckedList") {
     @Override
     public void addTo(SourceBuilder code) {
       ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
