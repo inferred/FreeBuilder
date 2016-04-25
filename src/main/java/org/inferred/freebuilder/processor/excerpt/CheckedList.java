@@ -60,6 +60,8 @@ public class CheckedList {
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public void add(int index, E element) {")
+          .addLine("    // Append to the end of the list with add, then move the inserted element")
+          .addLine("    // to the desired location.")
           .addLine("    int endIndex = list.size();")
           .addLine("    add.accept(element);")
           .addLine("    if (index != endIndex) {")
