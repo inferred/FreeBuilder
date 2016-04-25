@@ -1189,8 +1189,8 @@ public class ListSourceTest {
   }
 
   /**
-   * Returns a {@link Metadata} instance for a FreeBuilder type with a single property, name, of
-   * type {@code List<String>}.
+   * Returns a {@link Metadata} instance for a FreeBuilder type with two properties: name, of
+   * type {@code List<String>}; and age, of type {@code List<Integer>}.
    */
   private static Metadata createMetadata() {
     GenericTypeElementImpl list = newTopLevelGenericType("java.util.List");
@@ -1225,11 +1225,11 @@ public class ListSourceTest {
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name
             .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
-                name.build(), string, Optional.<TypeMirror>absent()))
+                name.build(), false, string, Optional.<TypeMirror>absent()))
             .build())
         .addProperties(age
             .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
-                age.build(), integer, Optional.<TypeMirror>of(INT)))
+                age.build(), false, integer, Optional.<TypeMirror>of(INT)))
             .build())
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
