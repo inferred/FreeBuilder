@@ -1,5 +1,6 @@
 package org.inferred.freebuilder.processor.excerpt;
 
+import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.TYPE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Preconditions;
@@ -7,9 +8,9 @@ import com.google.common.collect.ForwardingMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.Collection;
 import java.util.Set;
@@ -22,11 +23,11 @@ import javax.annotation.Nullable;
  */
 public class CheckedMultiset {
 
-  public static Set<Excerpt> excerpts() {
+  public static Set<StaticExcerpt> excerpts() {
     return ImmutableSet.of(CHECKED_MULTISET);
   }
 
-  private static final Excerpt CHECKED_MULTISET = new Excerpt() {
+  private static final StaticExcerpt CHECKED_MULTISET = new StaticExcerpt(TYPE, "CheckedMultiset") {
     @Override
     public void addTo(SourceBuilder code) {
       ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().orNull();

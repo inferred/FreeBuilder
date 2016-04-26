@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -136,8 +137,8 @@ public abstract class PropertyCodeGenerator {
   /** Adds a partial clear call for the property to the builder's source code. */
   public abstract void addPartialClear(SourceBuilder code);
 
-  /** Returns excerpts for any static methods added by this generator. */
-  public Set<? extends Excerpt> getStaticMethods() {
+  /** Returns excerpts for any static types or methods added by this generator. */
+  public Set<? extends StaticExcerpt> getStaticExcerpts() {
     return ImmutableSet.of();
   }
 

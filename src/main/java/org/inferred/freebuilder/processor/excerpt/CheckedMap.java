@@ -1,13 +1,14 @@
 package org.inferred.freebuilder.processor.excerpt;
 
+import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.TYPE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -21,11 +22,11 @@ import java.util.Set;
  */
 public class CheckedMap {
 
-  public static final Set<Excerpt> excerpts() {
+  public static final Set<StaticExcerpt> excerpts() {
     return ImmutableSet.of(CHECKED_ENTRY, CHECKED_ENTRY_ITERATOR, CHECKED_ENTRY_SET, CHECKED_MAP);
   }
 
-  private static final Excerpt CHECKED_ENTRY = new Excerpt() {
+  private static final StaticExcerpt CHECKED_ENTRY = new StaticExcerpt(TYPE, "CheckedEntry") {
     @Override
     public void addTo(SourceBuilder code) {
       ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().orNull();
@@ -71,87 +72,89 @@ public class CheckedMap {
     }
   };
 
-  private static final Excerpt CHECKED_ENTRY_ITERATOR = new Excerpt() {
-    @Override
-    public void addTo(SourceBuilder code) {
-      ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().orNull();
-      if (biConsumer == null) {
-        return;
-      }
-      code.addLine("")
-          .addLine("private static class CheckedEntryIterator<K, V> implements %s<%s<K, V>> {",
-              Iterator.class, Map.Entry.class)
-          .addLine("")
-          .addLine("  private final %s<%s<K, V>> iterator;", Iterator.class, Map.Entry.class)
-          .addLine("  private final %s<K, V> put;", biConsumer.getQualifiedName())
-          .addLine("")
-          .addLine("  CheckedEntryIterator(")
-          .addLine("      %s<%s<K, V>> iterator,", Iterator.class, Map.Entry.class)
-          .addLine("      %s<K, V> put) {", biConsumer.getQualifiedName())
-          .addLine("    this.iterator = iterator;")
-          .addLine("    this.put = put;")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @Override public boolean hasNext() {")
-          .addLine("    return iterator.hasNext();")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @Override public %s<K, V> next() {", Map.Entry.class)
-          .addLine("    return new CheckedEntry<K, V>(iterator.next(), put);")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @Override public void remove() {")
-          .addLine("    iterator.remove();")
-          .addLine("  }")
-          .addLine("}");
-    }
-  };
+  private static final StaticExcerpt CHECKED_ENTRY_ITERATOR =
+      new StaticExcerpt(TYPE, "CheckedEntryIterator") {
+        @Override
+        public void addTo(SourceBuilder code) {
+          ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().orNull();
+          if (biConsumer == null) {
+            return;
+          }
+          code.addLine("")
+              .addLine("private static class CheckedEntryIterator<K, V> implements %s<%s<K, V>> {",
+                  Iterator.class, Map.Entry.class)
+              .addLine("")
+              .addLine("  private final %s<%s<K, V>> iterator;", Iterator.class, Map.Entry.class)
+              .addLine("  private final %s<K, V> put;", biConsumer.getQualifiedName())
+              .addLine("")
+              .addLine("  CheckedEntryIterator(")
+              .addLine("      %s<%s<K, V>> iterator,", Iterator.class, Map.Entry.class)
+              .addLine("      %s<K, V> put) {", biConsumer.getQualifiedName())
+              .addLine("    this.iterator = iterator;")
+              .addLine("    this.put = put;")
+              .addLine("  }")
+              .addLine("")
+              .addLine("  @Override public boolean hasNext() {")
+              .addLine("    return iterator.hasNext();")
+              .addLine("  }")
+              .addLine("")
+              .addLine("  @Override public %s<K, V> next() {", Map.Entry.class)
+              .addLine("    return new CheckedEntry<K, V>(iterator.next(), put);")
+              .addLine("  }")
+              .addLine("")
+              .addLine("  @Override public void remove() {")
+              .addLine("    iterator.remove();")
+              .addLine("  }")
+              .addLine("}");
+        }
+      };
 
-  private static final Excerpt CHECKED_ENTRY_SET = new Excerpt() {
-    @Override
-    public void addTo(SourceBuilder code) {
-      ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().orNull();
-      if (biConsumer == null) {
-        return;
-      }
-      code.addLine("")
-          .addLine("private static class CheckedEntrySet<K, V> extends %s<%s<K, V>> {",
-              AbstractSet.class, Map.Entry.class)
-          .addLine("")
-          .addLine("  private final %s<%s<K, V>> set;", Set.class, Map.Entry.class)
-          .addLine("  private final %s<K, V> put;", biConsumer.getQualifiedName())
-          .addLine("")
-          .addLine("  CheckedEntrySet(%s<%s<K, V>> set, %s<K, V> put) {",
-              Set.class, Map.Entry.class, biConsumer.getQualifiedName())
-          .addLine("    this.set = set;")
-          .addLine("    this.put = put;")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @Override public int size() {")
-          .addLine("    return set.size();")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @Override public %s<%s<K, V>> iterator() {",
-              Iterator.class, Map.Entry.class)
-          .addLine("    return new CheckedEntryIterator<K, V>(set.iterator(), put);")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @Override public boolean contains(Object o) {")
-          .addLine("    return set.contains(o);")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @Override public boolean remove(Object o) {")
-          .addLine("    return set.remove(o);")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @Override public void clear() {")
-          .addLine("    set.clear();")
-          .addLine("  }")
-          .addLine("}");
-    }
-  };
+  private static final StaticExcerpt CHECKED_ENTRY_SET =
+      new StaticExcerpt(TYPE, "CheckedEntrySet") {
+        @Override
+        public void addTo(SourceBuilder code) {
+          ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().orNull();
+          if (biConsumer == null) {
+            return;
+          }
+          code.addLine("")
+              .addLine("private static class CheckedEntrySet<K, V> extends %s<%s<K, V>> {",
+                  AbstractSet.class, Map.Entry.class)
+              .addLine("")
+              .addLine("  private final %s<%s<K, V>> set;", Set.class, Map.Entry.class)
+              .addLine("  private final %s<K, V> put;", biConsumer.getQualifiedName())
+              .addLine("")
+              .addLine("  CheckedEntrySet(%s<%s<K, V>> set, %s<K, V> put) {",
+                  Set.class, Map.Entry.class, biConsumer.getQualifiedName())
+              .addLine("    this.set = set;")
+              .addLine("    this.put = put;")
+              .addLine("  }")
+              .addLine("")
+              .addLine("  @Override public int size() {")
+              .addLine("    return set.size();")
+              .addLine("  }")
+              .addLine("")
+              .addLine("  @Override public %s<%s<K, V>> iterator() {",
+                  Iterator.class, Map.Entry.class)
+              .addLine("    return new CheckedEntryIterator<K, V>(set.iterator(), put);")
+              .addLine("  }")
+              .addLine("")
+              .addLine("  @Override public boolean contains(Object o) {")
+              .addLine("    return set.contains(o);")
+              .addLine("  }")
+              .addLine("")
+              .addLine("  @Override public boolean remove(Object o) {")
+              .addLine("    return set.remove(o);")
+              .addLine("  }")
+              .addLine("")
+              .addLine("  @Override public void clear() {")
+              .addLine("    set.clear();")
+              .addLine("  }")
+              .addLine("}");
+        }
+      };
 
-  private static final Excerpt CHECKED_MAP = new Excerpt() {
+  private static final StaticExcerpt CHECKED_MAP = new StaticExcerpt(TYPE, "CheckedMap") {
     @Override
     public void addTo(SourceBuilder code) {
       ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().orNull();

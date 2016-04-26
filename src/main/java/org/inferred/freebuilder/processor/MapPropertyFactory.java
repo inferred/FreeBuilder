@@ -26,6 +26,7 @@ import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
@@ -38,11 +39,11 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
-import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -332,9 +333,9 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public Set<Excerpt> getStaticMethods() {
-      ImmutableSet.Builder<Excerpt> result = ImmutableSet.builder();
-      result.add(StaticMethod.values());
+    public Set<StaticExcerpt> getStaticExcerpts() {
+      ImmutableSet.Builder<StaticExcerpt> result = ImmutableSet.builder();
+      result.add(IMMUTABLE_MAP);
       if (overridesPutMethod) {
         result.addAll(CheckedMap.excerpts());
       }
@@ -342,32 +343,29 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
     }
   }
 
-  private enum StaticMethod implements Excerpt {
-    IMMUTABLE_MAP() {
-      @Override
-      public void addTo(SourceBuilder code) {
-        if (!code.feature(GUAVA).isAvailable()) {
-          code.addLine("")
-              .addLine("private static <K, V> %1$s<K, V> immutableMap(%1$s<K, V> entries) {",
-                  Map.class)
-              .addLine("  switch (entries.size()) {")
-              .addLine("  case 0:")
-              .addLine("    return %s.emptyMap();", Collections.class)
-              .addLine("  case 1:")
-              .addLine("    %s<K, V> entry = entries.entrySet().iterator().next();",
-                  Map.Entry.class)
-              .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
-                  Collections.class)
-              .addLine("  default:")
-              .add("    return %s.unmodifiableMap(new %s<", Collections.class, LinkedHashMap.class);
-          if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
-            code.add("K, V");
-          }
-          code.add(">(entries));\n")
-              .addLine("  }")
-              .addLine("}");
+  private static final StaticExcerpt IMMUTABLE_MAP = new StaticExcerpt(METHOD, "immutableMap") {
+    @Override
+    public void addTo(SourceBuilder code) {
+      if (!code.feature(GUAVA).isAvailable()) {
+        code.addLine("")
+            .addLine("private static <K, V> %1$s<K, V> immutableMap(%1$s<K, V> entries) {",
+                Map.class)
+            .addLine("  switch (entries.size()) {")
+            .addLine("  case 0:")
+            .addLine("    return %s.emptyMap();", Collections.class)
+            .addLine("  case 1:")
+            .addLine("    %s<K, V> entry = entries.entrySet().iterator().next();", Map.Entry.class)
+            .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
+                Collections.class)
+            .addLine("  default:")
+            .add("    return %s.unmodifiableMap(new %s<", Collections.class, LinkedHashMap.class);
+        if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
+          code.add("K, V");
         }
+        code.add(">(entries));\n")
+            .addLine("  }")
+            .addLine("}");
       }
     }
-  }
+  };
 }
