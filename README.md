@@ -488,12 +488,12 @@ Build tools and IDEs
 
 ### javac
 
-Download [freebuilder-1.8.jar][] and add it to the classpath (or
+Download [freebuilder-1.9.jar][] and add it to the classpath (or
 processorpath, if you supply one) on the command line. If [Guava] is
 available, FreeBuilder will use it to generate cleaner, more
 interoperable implementation code (e.g returning [immutable collections]).
 
-[freebuilder-1.8.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.8/freebuilder-1.8.jar
+[freebuilder-1.9.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.9/freebuilder-1.9.jar
 [immutable collections]: https://github.com/google/guava/wiki/ImmutableCollectionsExplained
 
 ### Maven
@@ -505,7 +505,7 @@ Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
   <dependency>
     <groupId>org.inferred</groupId>
     <artifactId>freebuilder</artifactId>
-    <version>1.8</version>
+    <version>1.9</version>
     <optional>true</optional>
   </dependency>
 </dependencies>
@@ -519,7 +519,7 @@ interoperable implementation code (e.g returning [immutable collections]).
 Add the following lines to your dependencies:
 
 ```
-compile 'org.inferred:freebuilder:1.8'
+compile 'org.inferred:freebuilder:1.9'
 ```
 
 If [Guava] is available, FreeBuilder will use it to generate cleaner, more
@@ -529,13 +529,13 @@ interoperable implementation code (e.g returning [immutable collections]).
 
 _Condensed from [Eclipse Indigo's documentation][]._
 
-Download [freebuilder-1.8.jar][] and add it to your project. Select it,
+Download [freebuilder-1.9.jar][] and add it to your project. Select it,
 right-click and choose **Build path > Add to Build path**.
 
 In your projects properties dialog, go to **Java Compiler > Annotation
 Processing** and ensure **Enable annotation processing** is checked.
 Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
-**Add JARs**, and select `freebuilder-1.8.jar`.
+**Add JARs**, and select `freebuilder-1.9.jar`.
 
 [Eclipse Indigo's documentation]: http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm
 
@@ -543,7 +543,7 @@ Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
 
 _Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
 
-Download [freebuilder-1.8.jar][], add it to your project, right-click it
+Download [freebuilder-1.9.jar][], add it to your project, right-click it
 and select **Use as Project Library**.
 
 In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation
