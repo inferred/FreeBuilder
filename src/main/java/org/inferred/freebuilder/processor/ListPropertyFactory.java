@@ -19,12 +19,16 @@ import static org.inferred.freebuilder.processor.BuilderMethods.addAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
+import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
@@ -35,8 +39,11 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.excerpt.CheckedList;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -64,17 +71,39 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
     Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-    return Optional.of(new CodeGenerator(config.getProperty(), elementType, unboxedType));
+    boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
+    return Optional.of(new CodeGenerator(
+        config.getProperty(),
+        overridesAddMethod,
+        elementType,
+        unboxedType));
+  }
+
+  private static boolean hasAddMethodOverride(Config config, TypeMirror keyType) {
+    return overrides(
+        config.getBuilder(),
+        config.getTypes(),
+        addMethod(config.getProperty()),
+        keyType);
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
+    private static final ParameterizedType COLLECTION =
+        QualifiedName.of(Collection.class).withParameters("E");
+
+    private final boolean overridesAddMethod;
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
 
     @VisibleForTesting
-    CodeGenerator(Property property, TypeMirror elementType, Optional<TypeMirror> unboxedType) {
+    CodeGenerator(
+        Property property,
+        boolean overridesAddMethod,
+        TypeMirror elementType,
+        Optional<TypeMirror> unboxedType) {
       super(property);
+      this.overridesAddMethod = overridesAddMethod;
       this.elementType = elementType;
       this.unboxedType = unboxedType;
     }
@@ -93,6 +122,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       addAdd(code, metadata);
       addVarargsAdd(code, metadata);
       addAddAll(code, metadata);
+      addMutate(code, metadata);
       addClear(code, metadata);
       addGetter(code, metadata);
     }
@@ -109,9 +139,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       }
       code.addLine(" */")
           .addLine("public %s %s(%s element) {",
-              metadata.getBuilder(),
-              addMethod(property),
-              unboxedType.or(elementType));
+              metadata.getBuilder(), addMethod(property), unboxedType.or(elementType));
       if (unboxedType.isPresent()) {
         code.addLine("  this.%s.add(element);", property.getName());
       } else {
@@ -170,6 +198,42 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("    %s(element);", addMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+    }
+
+    private void addMutate(SourceBuilder code, Metadata metadata) {
+      ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
+      if (consumer == null) {
+        return;
+      }
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Applies {@code mutator} to the list to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * <p>This method mutates the list in-place. {@code mutator} is a void")
+          .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
+          .addLine(" * not to call pure functions, like %s.",
+              COLLECTION.javadocNoArgMethodLink("stream"))
+          .addLine(" *")
+          .addLine(" * @return this {@code Builder} object")
+          .addLine(" * @throws NullPointerException if {@code mutator} is null")
+          .addLine(" */")
+          .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
+              metadata.getBuilder(),
+              mutator(property),
+              consumer.getQualifiedName(),
+              List.class,
+              elementType);
+      if (overridesAddMethod) {
+        code.addLine("  mutator.accept(new CheckedList<>(%s, this::%s));",
+            property.getName(), addMethod(property));
+      } else {
+        code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+                addMethod(property))
+            .addLine("  mutator.accept(%s);", property.getName());
+      }
+      code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
 
@@ -245,33 +309,36 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public Set<StaticMethod> getStaticMethods() {
-      return ImmutableSet.copyOf(StaticMethod.values());
+    public Set<StaticExcerpt> getStaticExcerpts() {
+      ImmutableSet.Builder<StaticExcerpt> methods = ImmutableSet.builder();
+      methods.add(IMMUTABLE_LIST);
+      if (overridesAddMethod) {
+        methods.addAll(CheckedList.excerpts());
+      }
+      return methods.build();
     }
   }
 
-  private static enum StaticMethod implements Excerpt {
-    IMMUTABLE_LIST() {
-      @Override
-      public void addTo(SourceBuilder code) {
-        if (!code.feature(GUAVA).isAvailable()) {
-          code.addLine("")
-              .addLine("@%s(\"unchecked\")", SuppressWarnings.class)
-              .addLine("private static <E> %1$s<E> immutableList(%1$s<E> elements, %2$s<E> type) {",
-                  List.class, Class.class)
-              .addLine("  switch (elements.size()) {")
-              .addLine("  case 0:")
-              .addLine("    return %s.emptyList();", Collections.class)
-              .addLine("  case 1:")
-              .addLine("    return %s.singletonList(elements.get(0));", Collections.class)
-              .addLine("  default:")
-              .addLine("    return %s.unmodifiableList(%s.asList(elements.toArray(",
-                  Collections.class, Arrays.class)
-              .addLine("        (E[]) %s.newInstance(type, elements.size()))));", Array.class)
-              .addLine("  }")
-              .addLine("}");
-        }
+  private static final StaticExcerpt IMMUTABLE_LIST = new StaticExcerpt(METHOD, "immutableList") {
+    @Override
+    public void addTo(SourceBuilder code) {
+      if (!code.feature(GUAVA).isAvailable()) {
+        code.addLine("")
+            .addLine("@%s(\"unchecked\")", SuppressWarnings.class)
+            .addLine("private static <E> %1$s<E> immutableList(%1$s<E> elements, %2$s<E> type) {",
+                List.class, Class.class)
+            .addLine("  switch (elements.size()) {")
+            .addLine("  case 0:")
+            .addLine("    return %s.emptyList();", Collections.class)
+            .addLine("  case 1:")
+            .addLine("    return %s.singletonList(elements.get(0));", Collections.class)
+            .addLine("  default:")
+            .addLine("    return %s.unmodifiableList(%s.asList(elements.toArray(",
+                Collections.class, Arrays.class)
+            .addLine("        (E[]) %s.newInstance(type, elements.size()))));", Array.class)
+            .addLine("  }")
+            .addLine("}");
       }
     }
-  }
+  };
 }

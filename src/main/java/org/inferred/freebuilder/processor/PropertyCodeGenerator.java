@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -46,6 +48,9 @@ public abstract class PropertyCodeGenerator {
 
     /** Returns annotations on the property requiring code generation. */
     List<? extends AnnotationMirror> getAnnotations();
+
+    /** The user's Builder type. */
+    TypeElement getBuilder();
 
     /**
      * A set of methods that are definitely invoked in the builder constructor. This may have false
@@ -132,8 +137,8 @@ public abstract class PropertyCodeGenerator {
   /** Adds a partial clear call for the property to the builder's source code. */
   public abstract void addPartialClear(SourceBuilder code);
 
-  /** Returns excerpts for any static methods added by this generator. */
-  public Set<? extends Excerpt> getStaticMethods() {
+  /** Returns excerpts for any static types or methods added by this generator. */
+  public Set<? extends StaticExcerpt> getStaticExcerpts() {
     return ImmutableSet.of();
   }
 

@@ -332,6 +332,7 @@ public class AnalyserTest {
         "package com.example;",
         "interface DataType {",
         "  String getName();",
+        "  class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = uniqueIndex(metadata.getProperties(), GET_NAME);
     assertEquals(

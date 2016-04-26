@@ -77,6 +77,14 @@ public class TestBuilder {
     return this;
   }
 
+  public TestBuilder addPackageImport(String pkg) {
+    imports
+        .append("import ")
+        .append(pkg)
+        .append(".*; ");
+    return this;
+  }
+
   /**
    * Appends a formatted line of code to the source. Formatting is done by {@link String#format},
    * except that {@link Class} instances use their entity's name unadorned, rather than the usual

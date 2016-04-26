@@ -17,12 +17,14 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -31,6 +33,8 @@ import javax.lang.model.util.SimpleTypeVisitor6;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
@@ -46,8 +50,29 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @VisibleForTesting
   static enum OptionalType {
-    GUAVA(QualifiedName.of(Optional.class), "absent", "fromNullable"),
-    JAVA8(QualifiedName.of("java.util", "Optional"), "empty", "ofNullable");
+    GUAVA(QualifiedName.of(Optional.class), "absent", "fromNullable") {
+      @Override
+      protected void applyMapper(SourceBuilder code, Metadata metadata, Property property) {
+        // Guava's transform method throws a NullPointerException if mapper returns null,
+        // and it has no flatMap-equivalent. We choose to follow the Java 8 convention of
+        // turning a null into an empty (absent) optional as that is the de facto standard
+        // now.
+        code.add(PreconditionExcerpts.checkNotNull("mapper"))
+            .addLine("  %s old%s = %s();",
+                property.getType(), property.getCapitalizedName(), getter(property))
+            .addLine("  if (old%s.isPresent()) {", property.getCapitalizedName())
+            .addLine("     %s(mapper.apply(old%s.get()));",
+                nullableSetter(property), property.getCapitalizedName())
+            .addLine("  }")
+            .addLine("  return (%s) this;", metadata.getBuilder());
+      }
+    },
+    JAVA8(QualifiedName.of("java.util", "Optional"), "empty", "ofNullable") {
+      @Override
+      protected void applyMapper(SourceBuilder code, Metadata metadata, Property property) {
+        code.addLine("  return %s(%s().map(mapper));", setter(property), getter(property));
+      }
+    };
 
     private final QualifiedName cls;
     private final String empty;
@@ -58,6 +83,8 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       this.empty = empty;
       this.ofNullable = ofNullable;
     }
+
+    protected abstract void applyMapper(SourceBuilder code, Metadata metadata, Property property);
   }
 
   @Override
@@ -143,6 +170,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       addSetter(code, metadata);
       addOptionalSetter(code, metadata);
       addNullableSetter(code, metadata);
+      addMapper(code, metadata);
       addClear(code, metadata);
       addGetter(code, metadata);
     }
@@ -216,6 +244,30 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("    return %s();", clearMethod(property))
           .addLine("  }")
           .addLine("}");
+    }
+
+    private void addMapper(SourceBuilder code, Metadata metadata) {
+      ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
+      if (unaryOperator == null) {
+        return;
+      }
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * If the value to be returned by %s is present,",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" * replaces it by applying {@code mapper} to it and using the result.")
+          .addLine(" *")
+          .addLine(" * <p>If the result is null, clears the value.")
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code mapper} is null")
+          .addLine(" */")
+          .addLine("public %s %s(%s mapper) {",
+              metadata.getBuilder(),
+              mapper(property),
+              unaryOperator.withParameters(elementType));
+      optional.applyMapper(code, metadata, property);
+      code.addLine("}");
     }
 
     private void addClear(SourceBuilder code, Metadata metadata) {

@@ -55,7 +55,7 @@ lines of code for the most basic builder API, or 72 lines if you don't use a
 utility like [AutoValue][] to generate the value boilerplate.
 
 `@FreeBuilder` produces all the boilerplate for you, as well as free extras like
-JavaDoc, getter methods, [collections support](#collections-and-maps),
+JavaDoc, getter methods, mapper methods (Java 8+), [collections support](#collections-and-maps),
 [nested builders](#nested-buildable-types), and [partial values](#partials)
 (used in testing), which are highly useful, but would very rarely justify
 their creation and maintenance burden in hand-crafted code. (We also reserve
@@ -117,6 +117,7 @@ If you write the Person interface shown above, you get:
      * JavaDoc
      * getters (throwing `IllegalStateException` for unset fields)
      * setters
+     * lambda-accepting mapper methods (Java 8+)
      * `mergeFrom` methods to copy data from existing values or builders
      * a `build` method that verifies all fields have been set
         * [see below for default values and constraint checking](#defaults-and-constraints)
@@ -146,6 +147,18 @@ For each property `foo`, the builder gets:
 |:------:| ----------- |
 | A setter method, `setFoo` | Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.) |
 | A getter method, `getFoo` | Throws an IllegalStateException if the property value has not yet been set. |
+| A mapper method, `mapFoo` | *Java 8+* Takes a [UnaryOperator]. Replaces the current property value with the result of invoking the unary operator on it. Throws a NullPointerException if the operator, or the value it returns, is null. Throws an IllegalStateException if the property value has not yet been set. |
+
+The mapper methods are very useful when modifying existing values, e.g.
+
+```java
+Person olderPerson = new Person.Builder()
+    .mergeFrom(person)
+    .mapAge(age -> age + 1)
+    .build();
+```
+
+[UnaryOperator]: https://docs.oracle.com/javase/8/docs/api/java/util/function/UnaryOperator.html
 
 
 ### Defaults and constraints
@@ -208,6 +221,7 @@ will gain additional convenience setter methods:
 | `clearDescription()` | Sets the property to `Optional.empty()`. |
 | `setDescription(Optional<String> value)` | Sets the property to `value`. |
 | `setNullableDescription(String value)` | Sets the property to `Optional.ofNullable(value)`. |
+| `mapDescription(UnaryOperator<String> mapper` | *Java 8+* If the property value is not empty, this replaces the value with the result of invoking `mapper` with the existing value, or clears it if `mapper` returns null. Throws a NullPointerException if `mapper` is null. |
 
 Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
@@ -230,6 +244,20 @@ However, if you have **compelling legacy reasons** that mandate using nulls,
 you can disable null-checking by marking the getter method `@Nullable`. (Any
 annotation type named "Nullable" will do, but you may wish to use
 `javax.annotation.Nullable`, as used in [Google Guava][Guava].)
+
+```java
+  /** Returns an optional title to use when addressing the person. */
+  @Nullable String getTitle();
+```
+
+This property will now default to null, and the Builder's setter methods will
+change their null-handling behaviour:
+
+| Method | Description |
+|:------:| ----------- |
+| `setTitle(@Nullable String title)` | Sets the property to `title`. |
+| `getTitle()` | Returns the current value of the property. May be null. |
+| `mapTitle(UnaryOperator<String> mapper)` | *Java 8+* Takes a [UnaryOperator]. Replaces the current property value, if it is not null, with the result of invoking `mapper` on it. Throws a NullPointerException if `mapper` is null. `mapper` may return a null. |
 
 [Guava]: https://github.com/google/guava
 [Hoare]: http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare
@@ -277,7 +305,8 @@ property called 'descendants' would generate:
 |:------:| ----------- |
 | `addDescendants(String element)` | Appends `element` to the collection of descendants. If descendants is a set and the element is already present, it is ignored. Throws a NullPointerException if element is null. |
 | `addDescendants(String... elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
-| `addAllDescendants(Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
+| `addAllDescendants(​Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
+| `mutateDescendants(​Consumer<‌.‌.‌.‌<String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the collection of descendants. (The mutator takes a list, set or map as appropriate.) Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned collection to replace the existing collection. |
 | `clearDescendants()` | Removes all elements from the collection of descendants, leaving it empty. |
 | `getDescendants()` | Returns an unmodifiable view of the collection of descendants. Changes to the collection held by the builder will be reflected in the view. |
 
@@ -293,6 +322,7 @@ A <code>[Map][]</code> property called 'albums' would generate:
 | `putAlbums(int key, String value)` | Associates `key` with `value` in albums.  Throws a NullPointerException if either parameter is null. Replaces any existing entry. |
 | `putAllAlbums(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in albums. Throws a NullPointerException if the map is null or contains a null key or value. Throws an IllegalArgumentException if any key is already present. |
 | `removeAlbums(int key)` | Removes the mapping for `key` from albums. Throws a NullPointerException if the parameter is null. Does nothing if the key is not present. |
+| `mutateAlbums(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the map of albums. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned map to replace the existing map. |
 | `clearAlbums()` | Removes all mappings from albums, leaving it empty. |
 | `getAlbums()` | Returns an unmodifiable view of the map of albums. Changes to the map held by the builder will be reflected in this view. |
 
@@ -310,16 +340,30 @@ A <code>[Multimap][]</code> property called 'awards' would generate:
 | `putAllAwards(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in awards. Throws a NullPointerException if the map is null or contains a null key or value. If awards is a map, an IllegalArgumentException will be thrown if any key is already present. |
 | `removeAwards(int key, String value)` | Removes the single pair `key`-`value` from awards. If multiple pairs match, which is removed is unspecified. Throws a NullPointerException if either parameter is null. |
 | `removeAllAwards(int key)` | Removes all values associated with `key` from awards. Throws a NullPointerException if the key is null. |
+| `mutateAwards(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the multimap of awards. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned multimap to replace the existing multimap. |
 | `clearAwards()` | Removes all mappings from awards, leaving it empty. |
-| `getAwards()` | Returns an unmodifiable view of the multimap of albums. Changes to the multimap held by the builder will be reflected in this view. |
+| `getAwards()` | Returns an unmodifiable view of the multimap of awards. Changes to the multimap held by the builder will be reflected in this view. |
 
 In all cases, the value type will return immutable objects from its getter.
+
+The mutator methods are useful for invoking methods not directly exposed on the builder, like [subList], or methods that take a mutable collection, like [sort]:
+
+```java
+personBuilder
+    // Delete the fourth and fifth descendants in the list
+    .mutateDescendants(d -> d.subList(3,5).clear())
+    // Sort the remaining descendants
+    .mutateDescendants(Collections::sort);
+```
 
 [List]: http://docs.oracle.com/javase/tutorial/collections/interfaces/list.html
 [Set]: http://docs.oracle.com/javase/tutorial/collections/interfaces/set.html
 [Multiset]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multiset
 [Map]: http://docs.oracle.com/javase/tutorial/collections/interfaces/map.html
 [Multimap]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multimap
+[sort]: http://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#sort-java.util.List-
+[stream]: https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#stream--
+[subList]: http://docs.oracle.com/javase/8/docs/api/java/util/List.html#subList-int-int-
 
 
 ### Nested buildable types
@@ -337,8 +381,20 @@ In all cases, the value type will return immutable objects from its getter.
 | `setOwner(Person owner)` | Sets the owner. Throws a NullPointerException if provided a null. |
 | `setOwner(Person.Builder builder)` | Calls `build()` on `builder` and sets the owner to the result. Throws a NullPointerException if builder or the result of calling `build()` is null. |
 | `getOwnerBuilder()` | Returns a builder for the owner property. Unlike other getter methods in FreeBuilder-generated API, this object is mutable, and modifying it **will modify the underlying property**. |
+| `mutateOwner(Consumer<Person.Builder> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the builder for the property. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored. |
+
+The mutate method allows the buildable property to be set up or modified succinctly and readably in Java 8+:
+
+```java
+Project project = new Project.Builder()
+    .mutateOwner(b -> b
+        .setName("Phil")
+        .setDepartment("HR"))
+    .build();
+```
 
 [protos]: https://developers.google.com/protocol-buffers/
+[Consumer]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html
 
 
 ### Builder construction

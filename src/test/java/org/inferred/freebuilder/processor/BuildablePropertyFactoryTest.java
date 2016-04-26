@@ -446,6 +446,28 @@ public class BuildablePropertyFactoryTest {
   }
 
   @Test
+  public void testMutateMethod() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTS_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .mutateItem1(b -> b")
+            .addLine("        .setName(\"Bananas\")")
+            .addLine("        .setPrice(5))")
+            .addLine("    .mutateItem2(b -> b")
+            .addLine("        .setName(\"Pears\")")
+            .addLine("        .setPrice(15))")
+            .addLine("    .build();")
+            .addLine("assertEquals(\"Bananas\", value.getItem1().getName());")
+            .addLine("assertEquals(5, value.getItem1().getPrice());")
+            .addLine("assertEquals(\"Pears\", value.getItem2().getName());")
+            .addLine("assertEquals(15, value.getItem2().getPrice());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testGetBuilder() {
     behaviorTester
         .with(new Processor())

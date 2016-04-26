@@ -375,8 +375,8 @@ class Analyser {
     Map<String, Property> propertiesByName = new LinkedHashMap<String, Property>();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
-      Property property =
-          asPropertyOrNull(type, method, methodsInvokedInBuilderConstructor, jacksonSupport);
+      Property property = asPropertyOrNull(
+          type, builder, method, methodsInvokedInBuilderConstructor, jacksonSupport);
       if (property != null) {
         propertiesByName.put(property.getName(), property);
       }
@@ -410,6 +410,7 @@ class Analyser {
    */
   private Property asPropertyOrNull(
       TypeElement valueType,
+      Optional<TypeElement> builder,
       ExecutableElement method,
       Set<String> methodsInvokedInBuilderConstructor,
       Optional<JacksonSupport> jacksonSupport) {
@@ -437,8 +438,10 @@ class Analyser {
       resultBuilder.setBoxedType(boxedType);
     }
     Property propertyWithoutCodeGenerator = resultBuilder.build();
-    resultBuilder.setCodeGenerator(createCodeGenerator(
-        propertyWithoutCodeGenerator, method, methodsInvokedInBuilderConstructor));
+    if (builder.isPresent()) {
+      resultBuilder.setCodeGenerator(createCodeGenerator(
+          builder.get(), propertyWithoutCodeGenerator, method, methodsInvokedInBuilderConstructor));
+    }
     return resultBuilder.build();
   }
 
@@ -468,11 +471,12 @@ class Analyser {
   }
 
   private PropertyCodeGenerator createCodeGenerator(
+      TypeElement builder,
       Property propertyWithoutCodeGenerator,
       ExecutableElement getterMethod,
       Set<String> methodsInvokedInBuilderConstructor) {
     Config config = new ConfigImpl(
-        propertyWithoutCodeGenerator, getterMethod, methodsInvokedInBuilderConstructor);
+        builder, propertyWithoutCodeGenerator, getterMethod, methodsInvokedInBuilderConstructor);
     for (PropertyCodeGenerator.Factory factory : PROPERTY_FACTORIES) {
       Optional<? extends PropertyCodeGenerator> codeGenerator = factory.create(config);
       if (codeGenerator.isPresent()) {
@@ -484,17 +488,25 @@ class Analyser {
 
   private class ConfigImpl implements Config {
 
+    private final TypeElement builder;
     private final Property property;
     private final ExecutableElement getterMethod;
     private final Set<String> methodsInvokedInBuilderConstructor;
 
     ConfigImpl(
+        TypeElement builder,
         Property property,
         ExecutableElement getterMethod,
         Set<String> methodsInvokedInBuilderConstructor) {
+      this.builder = builder;
       this.property = property;
       this.getterMethod = getterMethod;
       this.methodsInvokedInBuilderConstructor = methodsInvokedInBuilderConstructor;
+    }
+
+    @Override
+    public TypeElement getBuilder() {
+      return builder;
     }
 
     @Override

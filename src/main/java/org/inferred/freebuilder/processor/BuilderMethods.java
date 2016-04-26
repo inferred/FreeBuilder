@@ -53,6 +53,14 @@ public class BuilderMethods {
     return "setCountOf" + property.getCapitalizedName();
   }
 
+  public static String mapper(Property property) {
+    return "map" + property.getCapitalizedName();
+  }
+
+  public static String mutator(Property property) {
+    return "mutate" + property.getCapitalizedName();
+  }
+
   public static String clearMethod(Property property) {
     return "clear" + property.getCapitalizedName();
   }

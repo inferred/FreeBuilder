@@ -17,6 +17,7 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
+import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.putAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.putMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeAllMethod;
@@ -25,19 +26,26 @@ import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import java.util.Collection;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.excerpt.CheckedSetMultimap;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -61,12 +69,30 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
     TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
     Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
     Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
+    boolean overridesPutMethod =
+        hasPutMethodOverride(config, unboxedKeyType.or(keyType), unboxedValueType.or(valueType));
     return Optional.of(new CodeGenerator(
-        config.getProperty(), keyType, unboxedKeyType, valueType, unboxedValueType));
+        config.getProperty(),
+        overridesPutMethod,
+        keyType,
+        unboxedKeyType,
+        valueType,
+        unboxedValueType));
+  }
+
+  private static boolean hasPutMethodOverride(
+      Config config, TypeMirror keyType, TypeMirror valueType) {
+    return overrides(
+        config.getBuilder(),
+        config.getTypes(),
+        putMethod(config.getProperty()),
+        keyType,
+        valueType);
   }
 
   private static class CodeGenerator extends PropertyCodeGenerator {
 
+    private final boolean overridesPutMethod;
     private final TypeMirror keyType;
     private final Optional<TypeMirror> unboxedKeyType;
     private final TypeMirror valueType;
@@ -74,11 +100,12 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
 
     CodeGenerator(
         Property property,
+        boolean overridesPutMethod,
         TypeMirror keyType,
         Optional<TypeMirror> unboxedKeyType,
-        TypeMirror valueType,
-        Optional<TypeMirror> unboxedValueType) {
+        TypeMirror valueType, Optional<TypeMirror> unboxedValueType) {
       super(property);
+      this.overridesPutMethod = overridesPutMethod;
       this.keyType = keyType;
       this.unboxedKeyType = unboxedKeyType;
       this.valueType = valueType;
@@ -98,6 +125,7 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
       addMultimapPutAll(code, metadata);
       addRemove(code, metadata);
       addRemoveAll(code, metadata);
+      addMutate(code, metadata);
       addClear(code, metadata);
       addGetter(code, metadata);
     }
@@ -260,6 +288,41 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
           .addLine("}");
     }
 
+    private void addMutate(SourceBuilder code, Metadata metadata) {
+      ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
+      if (consumer == null) {
+        return;
+      }
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Applies {@code mutator} to the multimap to be returned from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * <p>This method mutates the multimap in-place. {@code mutator} is a void")
+          .addLine(" * consumer, so any value returned from a lambda will be ignored.")
+          .addLine(" *")
+          .addLine(" * @return this {@code Builder} object")
+          .addLine(" * @throws NullPointerException if {@code mutator} is null")
+          .addLine(" */")
+          .addLine("public %s %s(%s<%s<%s, %s>> mutator) {",
+              metadata.getBuilder(),
+              mutator(property),
+              consumer.getQualifiedName(),
+              SetMultimap.class,
+              keyType,
+              valueType);
+      if (overridesPutMethod) {
+        code.addLine("  mutator.accept(new CheckedSetMultimap<>(%s, this::%s));",
+            property.getName(), putMethod(property));
+      } else {
+        code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+                putMethod(property))
+            .addLine("  mutator.accept(%s);", property.getName());
+      }
+      code.addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+    }
+
     private void addClear(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
@@ -329,6 +392,15 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
     @Override
     public void addPartialClear(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
+    }
+
+    @Override
+    public Set<StaticExcerpt> getStaticExcerpts() {
+      ImmutableSet.Builder<StaticExcerpt> staticMethods = ImmutableSet.builder();
+      if (overridesPutMethod) {
+        staticMethods.addAll(CheckedSetMultimap.excerpts());
+      }
+      return staticMethods.build();
     }
   }
 }
