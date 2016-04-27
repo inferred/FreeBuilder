@@ -19,6 +19,7 @@ import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
+import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
@@ -35,6 +36,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.BuilderFactory.TypeInference;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
@@ -65,6 +67,7 @@ public class CodeGenerator {
 
     addBuilderTypeDeclaration(code, metadata);
     code.addLine(" {");
+    addStaticFromMethod(code, metadata);
     addConstantDeclarations(metadata, code);
     if (any(metadata.getProperties(), IS_REQUIRED)) {
       addPropertyEnum(metadata, code);
@@ -101,6 +104,24 @@ public class CodeGenerator {
     if (metadata.isBuilderSerializable()) {
       code.add(" implements %s", Serializable.class);
     }
+  }
+
+  private static void addStaticFromMethod(SourceBuilder code, Metadata metadata) {
+    BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+    if (builderFactory == null) {
+      return;
+    }
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Creates a new builder using {@code value} as a template.")
+        .addLine(" */")
+        .addLine("public static %s%s from(%s value) {",
+            metadata.getBuilder().typeParameters(),
+            metadata.getBuilder(),
+            metadata.getType())
+        .addLine("  return %s.mergeFrom(value);",
+            builderFactory.newBuilder(metadata.getBuilder(), EXPLICIT_TYPES))
+        .addLine("}");
   }
 
   private static void addConstantDeclarations(Metadata metadata, SourceBuilder body) {
@@ -208,9 +229,9 @@ public class CodeGenerator {
       List<PropertyCodeGenerator> codeGenerators =
           Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
       if (Iterables.any(codeGenerators, IS_TEMPLATE_REQUIRED_IN_CLEAR)) {
-        code.add("  %s _template = ", metadata.getGeneratedBuilder());
-        metadata.getBuilderFactory().get().addNewBuilder(code, metadata.getBuilder());
-        code.add(";\n");
+        code.addLine("  %s _template = %s;",
+            metadata.getGeneratedBuilder(),
+            metadata.getBuilderFactory().get().newBuilder(metadata.getBuilder(), TypeInference.INFERRED_TYPES));
       }
       for (PropertyCodeGenerator codeGenerator : codeGenerators) {
         if (codeGenerator.isTemplateRequiredInClear()) {
