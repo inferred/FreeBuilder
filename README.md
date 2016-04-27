@@ -118,7 +118,7 @@ If you write the Person interface shown above, you get:
      * getters (throwing `IllegalStateException` for unset fields)
      * setters
      * lambda-accepting mapper methods (Java 8+)
-     * `mergeFrom` methods to copy data from existing values or builders
+     * `from` and `mergeFrom` methods to copy data from existing values or builders
      * a `build` method that verifies all fields have been set
         * [see below for default values and constraint checking](#defaults-and-constraints)
   * An implementation of `Person` with:
@@ -152,8 +152,7 @@ For each property `foo`, the builder gets:
 The mapper methods are very useful when modifying existing values, e.g.
 
 ```java
-Person olderPerson = new Person.Builder()
-    .mergeFrom(person)
+Person olderPerson = Person.Builder.from(person)
     .mapAge(age -> age + 1)
     .build();
 ```

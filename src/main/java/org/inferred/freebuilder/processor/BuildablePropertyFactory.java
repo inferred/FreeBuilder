@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.tryFind;
 
+import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.INFERRED_TYPES;
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
@@ -162,9 +163,8 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.add("private final %s %s = ", builderType, property.getName());
-      builderFactory.addNewBuilder(code, builderType);
-      code.add(";\n");
+      code.addLine("private final %s %s = %s;",
+          builderType, property.getName(), builderFactory.newBuilder(builderType, INFERRED_TYPES));
     }
 
     @Override

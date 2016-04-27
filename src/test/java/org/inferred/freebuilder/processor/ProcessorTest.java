@@ -254,6 +254,24 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testFrom() {
+    behaviorTester
+        .with(new Processor())
+        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .build();")
+            .addLine("com.example.DataType.Builder builder =")
+            .addLine("    com.example.DataType.Builder.from(value);")
+            .addLine("assertEquals(11, builder.getPropertyA());")
+            .addLine("assertTrue(builder.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
         .with(new Processor())

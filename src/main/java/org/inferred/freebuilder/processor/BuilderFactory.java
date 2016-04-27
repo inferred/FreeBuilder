@@ -25,6 +25,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
@@ -36,32 +37,75 @@ public enum BuilderFactory {
 
   /** A new Builder can be made by calling the class' no-args constructor. */
   NO_ARGS_CONSTRUCTOR {
-    @Override public void addNewBuilder(
-        SourceBuilder code,
-        ParameterizedType builderType) {
-      code.add("%s()", builderType.constructor());
+    @Override public Excerpt newBuilder(
+        final ParameterizedType builderType,
+        final TypeInference typeInference) {
+      return new Excerpt() {
+        @Override public void addTo(SourceBuilder code) {
+          if (typeInference == TypeInference.INFERRED_TYPES) {
+            code.add("%s()", builderType.constructor());
+          } else {
+            code.add("new %s()", builderType);
+          }
+        }
+      };
     }
   },
 
   /** The enclosing class provides a static builder() factory method. */
   BUILDER_METHOD {
-    @Override public void addNewBuilder(
-        SourceBuilder code,
-        ParameterizedType builderType) {
-      code.add("%s.%sbuilder()",
-          builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
+    @Override public Excerpt newBuilder(
+        final ParameterizedType builderType,
+        final TypeInference typeInference) {
+      return new Excerpt() {
+        @Override public void addTo(SourceBuilder code) {
+          if (typeInference == TypeInference.INFERRED_TYPES) {
+            code.add("%s.builder()", builderType.getQualifiedName().getEnclosingType());
+          } else {
+            code.add("%s.%sbuilder()",
+                builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
+          }
+        }
+      };
     }
   },
 
   /** The enclosing class provides a static newBuilder() factory method. */
   NEW_BUILDER_METHOD {
-    @Override public void addNewBuilder(
-        SourceBuilder code,
-        ParameterizedType builderType) {
-      code.add("%s.%snewBuilder()",
-          builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
+    @Override public Excerpt newBuilder(
+        final ParameterizedType builderType,
+        final TypeInference typeInference) {
+      return new Excerpt() {
+        @Override public void addTo(SourceBuilder code) {
+          if (typeInference == TypeInference.INFERRED_TYPES) {
+            code.add("%s.newBuilder()", builderType.getQualifiedName().getEnclosingType());
+          } else {
+            code.add("%s.%snewBuilder()",
+                builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
+          }
+        }
+      };
     }
   };
+
+  public enum TypeInference {
+    /**
+     * Types must be specified explicitly in the source, even when the diamond operator is
+     * available.
+     *
+     * <p>Use this when the expression result is not immediately assigned to a variable or returned
+     * from a method.
+     */
+    EXPLICIT_TYPES,
+    /**
+     * Types should be inferred where possible, as specifying them explicitly would be redundant.
+     *
+     * <p>Use this when the expression result is immediately assigned to a variable or returned
+     * from a method. Do not use this when the expression result is passed directly into a method,
+     * as Java 6+7 cannot do type inference in this situation.
+     */
+    INFERRED_TYPES
+  }
 
   /** Determines the correct way of constructing a default {@code builderType} instance, if any. */
   public static Optional<BuilderFactory> from(TypeElement builderType) {
@@ -79,8 +123,8 @@ public enum BuilderFactory {
     }
   }
 
-  /** Adds a code snippet calling the Builder factory method. */
-  public abstract void addNewBuilder(SourceBuilder code, ParameterizedType builderType);
+  /** Returns an excerpt calling the Builder factory method. */
+  public abstract Excerpt newBuilder(ParameterizedType builderType, TypeInference typeInference);
 
   private static boolean typeIsAbstract(TypeElement type) {
     return type.getModifiers().contains(Modifier.ABSTRACT);
