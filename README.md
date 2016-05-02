@@ -181,9 +181,10 @@ public interface Person {
       // Set defaults in the builder constructor.
       setDescription("Indescribable");
     }
-    @Override void checkAge(int age) {
-      // Check single-field (argument) constraints in the check method.
+    @Override Builder setAge(int age) {
+      // Check single-field (argument) constraints in the setter method.
       checkArgument(age >= 0);
+      return super.setAge(age);
     }
     @Override public Person build() {
       // Check cross-field (state) constraints in the build method.
