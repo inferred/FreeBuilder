@@ -1,0 +1,48 @@
+plugins {
+  id 'java'
+}
+
+repositories {
+  mavenCentral()
+}
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+compileTestJava {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+dependencies {
+  compile commonsLang3
+  compile googleJavaFormat
+  compile guava
+  compile jsr305
+  compileOnly autoService
+  compileOnly sorcerer
+
+  testCompile guavaTestlib
+  testCompile gwtUser
+  testCompile hamcrest
+  testCompile jackson('annotations')
+  testCompile jackson('core')
+  testCompile jackson('databind')
+  testCompile jackson('datatype-guava')
+  testCompile jackson('datatype-jdk8')
+  testCompile javassist
+  testCompile junit
+  testCompile mockito
+  testCompile truth
+}
+
+String jackson(String pkg) {
+  String namespace
+  if (pkg.startsWith('datatype-')) {
+    namespace = 'datatype'
+  } else {
+    namespace = 'core'
+  }
+  return String.format('com.fasterxml.jackson.%s:jackson-%s:%s',
+      namespace, pkg, jacksonVersion)
+}
