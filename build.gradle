@@ -101,3 +101,65 @@ shadowJar {
   exclude 'javax/annotation/meta/E*'
   exclude 'javax/annotation/meta/T*'
 }
+
+//// Vanilla integration tests ///////////////////////////////////
+configurations {
+  vanillaCompile
+  vanillaTestCompile.extendsFrom vanillaCompile
+}
+dependencies {
+  vanillaCompile guava
+  vanillaCompile gwtUser
+  vanillaTestCompile junit
+}
+task vanillaTest {
+  description 'Runs the vanilla integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+}
+
+(6..8).each { jdk ->
+  def sourceSet = sourceSets.create("vanilla${jdk}") {
+    java {
+      srcDir file('src/it/vanilla/src/main/java')
+      compileClasspath += shadowJar.outputs.files
+    }
+  }
+  def testSourceSet = sourceSets.create("vanilla${jdk}Test") {
+    java {
+      srcDir file('src/it/vanilla/src/test/java')
+      compileClasspath += sourceSet.output
+      runtimeClasspath += sourceSet.output
+    }
+  }
+
+  tasks.getByName("compileVanilla${jdk}Java") {
+    sourceCompatibility = "1.$jdk"
+    targetCompatibility = "1.$jdk"
+  }
+  tasks.getByName("compileVanilla${jdk}TestJava") {
+    sourceCompatibility = "1.$jdk"
+    targetCompatibility = "1.$jdk"
+  }
+
+  def compile = configurations["vanilla${jdk}Compile"]
+  def runtime = configurations["vanilla${jdk}Runtime"]
+  def testCompile = configurations["vanilla${jdk}TestCompile"]
+  def testRuntime = configurations["vanilla${jdk}TestRuntime"]
+  compile.extendsFrom configurations['vanillaCompile']
+  testCompile.extendsFrom configurations['vanillaTestCompile']
+  testCompile.extendsFrom compile
+  testRuntime.extendsFrom runtime
+
+  def test = task("vanilla${jdk}Test", type: Test) {
+    vanillaTest.dependsOn it
+    testClassesDir = sourceSets["vanilla${jdk}Test"].output.classesDir
+    classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
+    reports {
+      html {
+        destination "$reportsDir/vanilla${jdk}"
+      }
+    }
+  }
+}
