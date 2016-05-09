@@ -1,5 +1,6 @@
 plugins {
   id 'java'
+  id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
 repositories {
@@ -16,7 +17,14 @@ compileTestJava {
 
 dependencies {
   compile commonsLang3
-  compile googleJavaFormat
+  compile(googleJavaFormat) {
+    // Exclude transitive dependencies that don't affect the formatter
+    exclude module: 'jcommander'
+    exclude module: 'org.eclipse.equinox.app'
+    exclude module: 'org.eclipse.core.filesystem'
+    exclude module: 'org.eclipse.text'
+    exclude module: 'org.eclipse.equinox.registry'
+  }
   compile guava
   compile jsr305
   compileOnly autoService
@@ -45,4 +53,51 @@ String jackson(String pkg) {
   }
   return String.format('com.fasterxml.jackson.%s:jackson-%s:%s',
       namespace, pkg, jacksonVersion)
+}
+
+//// Shadow JAR //////////////////////////////////////////////////
+jar {
+  classifier = 'only'
+}
+
+shadowJar {
+  classifier = null
+
+  ['com.google', 'org.apache', 'org.eclipse', 'org.osgi'].each {
+    relocate it, "org.inferred.freebuilder.shaded.$it"
+  }
+
+  // Exclude common META-INF detritus
+  exclude 'META-INF/*.txt'
+  exclude 'META-INF/maven/**'
+
+  // Exclude Eclipse (via google-java-format) detritus
+  exclude 'META-INF/eclipse.inf'
+  exclude 'META-INF/services/org.osgi.*'
+  exclude '.api_description'
+  exclude '.options'
+  exclude 'about.html'
+  exclude 'about_files/*.txt'
+  exclude 'ant_tasks/*'
+  exclude 'plugin.xml'
+  exclude 'jdtCompilerAdapter.jar'
+  exclude '*.profile'
+  exclude '*.properties'
+  exclude '*.list'
+
+  // Exclude all of jsr305 except Nullable, Nonnull and meta.When
+  exclude 'javax/annotation/C*'
+  exclude 'javax/annotation/D*'
+  exclude 'javax/annotation/M*'
+  exclude 'javax/annotation/Nonnegative*'
+  exclude 'javax/annotation/O*'
+  exclude 'javax/annotation/P*'
+  exclude 'javax/annotation/R*'
+  exclude 'javax/annotation/S*'
+  exclude 'javax/annotation/T*'
+  exclude 'javax/annotation/U*'
+  exclude 'javax/annotation/W*'
+  exclude 'javax/annotation/concurrent/*'
+  exclude 'javax/annotation/meta/E*'
+  exclude 'javax/annotation/meta/T*'
 }
