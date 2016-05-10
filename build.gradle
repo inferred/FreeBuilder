@@ -102,6 +102,48 @@ shadowJar {
   exclude 'javax/annotation/meta/T*'
 }
 
+import java.util.zip.ZipFile
+import java.util.zip.ZipException
+
+task shadowTest {
+  description 'Verifies freebuilder.jar is shaded correctly.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+  dependsOn shadowJar
+  def expected = new File("$projectDir/jar-footprint.txt")
+  def report = new File("$reportsDir/shadowJarFootprint.txt")
+  inputs.file shadowJar.outputs
+  inputs.file expected
+  outputs.file report
+  doFirst {
+    def jar = shadowJar.outputs.files[0]
+    def zip = new ZipFile(jar)
+    def folders = new TreeSet<String>(zip.entries().collect {
+      it.toString().replaceAll('([^/]*(/[^/]*){0,3}).*', '$1')
+    })
+    def expectedFolders = new TreeSet<String>(expected.readLines())
+    report.parentFile.mkdirs()
+    if (expectedFolders != folders) {
+      def message = new StringBuilder('shadow.jar incorrect')
+      def missing = expectedFolders - folders
+      if (!missing.isEmpty()) {
+        message.append('\nThe following are missing:')
+        missing.forEach { message.append('\n  - ').append(it) }
+      }
+      def extra = folders - expectedFolders
+      if (!extra.isEmpty()) {
+        message.append('\nThe following should not be present:')
+        extra.forEach { message.append('\n  - ').append(it) }
+      }
+
+      report.write message.toString()
+      throw new GradleException(message.toString())
+    }
+    report.write 'shadow.jar correct'
+  }
+}
+
 //// Vanilla integration tests ///////////////////////////////////
 configurations {
   vanillaCompile
