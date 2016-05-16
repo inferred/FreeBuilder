@@ -373,3 +373,50 @@ task noGuavaTest {
     }
   }
 }
+
+//// Lambda integration tests ////////////////////////////////////
+configurations {
+  lambdaCompile
+  lambdaTestCompile.extendsFrom lambdaCompile
+}
+dependencies {
+  lambdaCompile guava
+  lambdaCompile gwtUser
+  lambdaTestCompile junit
+}
+sourceSets.create('lambda') {
+  java {
+    srcDir file('src/it/lambda/src/main/java')
+    compileClasspath += shadowJar.outputs.files
+  }
+}
+sourceSets.create('lambdaTest') {
+  java {
+    srcDir file('src/it/lambda/src/test/java')
+    compileClasspath += sourceSets.lambda.output
+    runtimeClasspath += sourceSets.lambda.output
+  }
+}
+
+tasks.compileLambdaJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+tasks.compileLambdaTestJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+task("lambdaTest", type: Test) {
+  description 'Runs the lambda integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+  testClassesDir = sourceSets["lambdaTest"].output.classesDir
+  classpath = sourceSets["lambdaTest"].runtimeClasspath
+  reports {
+    html {
+      destination "$reportsDir/lambda"
+    }
+  }
+}
