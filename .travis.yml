@@ -1,4 +1,4 @@
 language: java
-script: mvn -U clean verify
+script: ./gradlew clean check
 jdk:
   - oraclejdk8
