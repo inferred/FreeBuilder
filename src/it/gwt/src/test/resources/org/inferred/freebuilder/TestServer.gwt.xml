@@ -16,6 +16,7 @@
 
   <inherits name="com.google.common.collect.Collect" />
   <inherits name="com.google.gwt.user.User" />
+  <inherits name="com.google.gwt.junit.JUnit" />
 
   <define-property name='rpc.enforceTypeVersioning' values="true, false" />
   <set-property name='rpc.enforceTypeVersioning' value='true' />

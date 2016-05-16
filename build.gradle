@@ -1,3 +1,12 @@
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.6'
+  }
+}
+
 plugins {
   id 'java'
   id 'com.github.johnrengelman.shadow' version '1.2.3'
@@ -204,4 +213,102 @@ task vanillaTest {
       }
     }
   }
+}
+
+//// GWT integration tests ///////////////////////////////////////
+configurations {
+  gwtCompile
+  gwtCompileOnly
+  gwtTestCompile.extendsFrom gwtCompile
+}
+dependencies {
+  gwtCompile 'com.google.guava:guava-gwt:18.0'
+  gwtCompile gwt('codeserver')
+  gwtCompileOnly gwt('dev')
+  gwtCompile gwt('elemental')
+  gwtCompile gwt('servlet')
+  gwtCompileOnly gwt('user')
+  gwtTestCompile junit
+}
+
+String gwt(String pkg) {
+  return 'com.google.gwt:gwt-' + pkg + ':2.7.0'
+}
+
+sourceSets.create('gwt') {
+  java {
+    srcDir file('src/it/gwt/src/main/java')
+    compileClasspath += shadowJar.outputs.files
+  }
+  resources {
+    srcDir file('src/it/gwt/src/main/resources')
+  }
+}
+sourceSets.create('gwtTest') {
+  java {
+    srcDir file('src/it/gwt/src/test/java')
+    compileClasspath += sourceSets.gwt.output
+    runtimeClasspath += sourceSets.gwt.output
+  }
+  resources {
+    srcDir file('src/it/gwt/src/test/resources')
+  }
+  runtimeClasspath += files(sourceSets.gwt.allJava.srcDirs)
+  runtimeClasspath += files(sourceSets.gwtTest.allJava.srcDirs)
+}
+
+tasks.compileGwtJava {
+  sourceCompatibility = "1.7"
+  targetCompatibility = "1.7"
+}
+tasks.compileGwtTestJava {
+  sourceCompatibility = "1.7"
+  targetCompatibility = "1.7"
+}
+
+import de.richsource.gradle.plugins.gwt.GwtCompile
+import de.richsource.gradle.plugins.gwt.LogLevel
+task compileGwtToJs(type: GwtCompile) {
+  def gwtDir = new File(buildDir, 'gwt')
+  war = new File(gwtDir, 'out')
+  extra = new File(gwtDir, 'extra')
+  workDir = new File(gwtDir, 'work')
+  gen = new File(gwtDir, 'gen')
+  cacheDir = new File(gwtDir, 'cache')
+  logLevel = LogLevel.INFO
+  group = 'GWT'
+  modules = ['org.inferred.freebuilder.TestServer']
+  src = files(sourceSets['gwt'].allJava.srcDirs,
+              sourceSets['gwt'].output.resourcesDir,
+              sourceSets['gwtTest'].allJava.srcDirs,
+              sourceSets['gwtTest'].output.resourcesDir)
+  classpath = (sourceSets['gwt'].compileClasspath +
+               sourceSets['gwtTest'].compileClasspath)
+  sourceLevel = '1.7'
+  incremental = false
+  strict = true
+  dependsOn gwtClasses, gwtTestClasses
+}
+
+task gwtTest(type: Test) {
+  description 'Runs the GWT integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+  dependsOn compileGwtToJs
+  testClassesDir = sourceSets.gwtTest.output.classesDir
+  classpath = sourceSets.gwtTest.runtimeClasspath
+  reports {
+    html {
+      destination "$reportsDir/gwt"
+    }
+  }
+  testLogging.showStandardStreams = true
+  def gwtArgs = new StringBuilder()
+  for (def key in ["war", "extra", "workDir", "gen", "logLevel"]) {
+    def value = compileGwtToJs[key]
+    gwtArgs.append(" -$key $value")
+  }
+  systemProperty("gwt.args", gwtArgs.toString())
+  systemProperty("gwt.persistentunitcachedir", compileGwtToJs.cacheDir)
 }
