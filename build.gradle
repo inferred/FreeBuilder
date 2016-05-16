@@ -312,3 +312,64 @@ task gwtTest(type: Test) {
   systemProperty("gwt.args", gwtArgs.toString())
   systemProperty("gwt.persistentunitcachedir", compileGwtToJs.cacheDir)
 }
+
+//// No-guava integration tests //////////////////////////////////
+configurations {
+  noGuavaCompile
+  noGuavaTestCompile.extendsFrom noGuavaCompile
+}
+dependencies {
+  noGuavaCompile gwtUser
+  noGuavaTestCompile junit
+}
+task noGuavaTest {
+  description 'Runs the no-guava integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+}
+
+(6..8).each { jdk ->
+  def sourceSet = sourceSets.create("noGuava${jdk}") {
+    java {
+      srcDir file('src/it/no-guava/src/main/java')
+      compileClasspath += shadowJar.outputs.files
+    }
+  }
+  def testSourceSet = sourceSets.create("noGuava${jdk}Test") {
+    java {
+      srcDir file('src/it/no-guava/src/test/java')
+      compileClasspath += sourceSet.output
+      runtimeClasspath += sourceSet.output
+    }
+  }
+
+  tasks.getByName("compileNoGuava${jdk}Java") {
+    sourceCompatibility = "1.$jdk"
+    targetCompatibility = "1.$jdk"
+  }
+  tasks.getByName("compileNoGuava${jdk}TestJava") {
+    sourceCompatibility = "1.$jdk"
+    targetCompatibility = "1.$jdk"
+  }
+
+  def compile = configurations["noGuava${jdk}Compile"]
+  def runtime = configurations["noGuava${jdk}Runtime"]
+  def testCompile = configurations["noGuava${jdk}TestCompile"]
+  def testRuntime = configurations["noGuava${jdk}TestRuntime"]
+  compile.extendsFrom configurations['noGuavaCompile']
+  testCompile.extendsFrom configurations['noGuavaTestCompile']
+  testCompile.extendsFrom compile
+  testRuntime.extendsFrom runtime
+
+  def test = task("noGuava${jdk}Test", type: Test) {
+    noGuavaTest.dependsOn it
+    testClassesDir = sourceSets["noGuava${jdk}Test"].output.classesDir
+    classpath = sourceSets["noGuava${jdk}Test"].runtimeClasspath
+    reports {
+      html {
+        destination "$reportsDir/noGuava${jdk}"
+      }
+    }
+  }
+}
