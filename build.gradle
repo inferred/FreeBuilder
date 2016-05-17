@@ -64,6 +64,12 @@ String jackson(String pkg) {
       namespace, pkg, jacksonVersion)
 }
 
+tasks.withType(Test) {
+  testLogging {
+    events "passed", "skipped", "failed"
+  }
+}
+
 //// Shadow JAR //////////////////////////////////////////////////
 jar {
   classifier = 'only'
