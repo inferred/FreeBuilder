@@ -4,11 +4,13 @@ buildscript {
   }
   dependencies {
     classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.6'
+    classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3'
   }
 }
 
 plugins {
   id 'java'
+  id 'com.bmuschko.nexus' version '2.3.1'
   id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
@@ -472,3 +474,59 @@ task("lambdaTest", type: Test) {
     }
   }
 }
+
+//// Publication /////////////////////////////////////////////////
+group = 'org.inferred'
+archivesBaseName = 'freebuilder'
+
+if (System.env.TRAVIS_TAG != null && !System.env.TRAVIS_TAG.isEmpty()) {
+  version = System.env.TRAVIS_TAG.replaceAll('^v','')
+} else if (System.env.TRAVIS_BRANCH != null && !System.env.TRAVIS_BRANCH.isEmpty()) {
+  version = System.env.TRAVIS_BRANCH + '-alpha.' + System.env.TRAVIS_BUILD_NUMBER
+} else {
+  version = 'UNKNOWN-SNAPSHOT'
+}
+
+artifacts {
+  archives shadowJar
+}
+
+modifyPom {
+  project {
+    name '@FreeBuilder'
+    packaging 'jar'
+    artifactId 'freebuilder'
+    description 'Automatic generation of the Builder pattern for Java 1.6+'
+    url 'http://inferred.org/freebuilder'
+
+    scm {
+      url 'https://github.com/google/freebuilder'
+      connection 'scm:git:git://github.com/google/freebuilder.git'
+      developerConnection 'scm:git:git@github.com:google/freebuilder.git'
+    }
+
+    licenses {
+      license {
+        name 'Apache 2.0'
+        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+      }
+    }
+
+    developers {
+      developer {
+        id 'chrisalice'
+        name 'Chris Purcell'
+        email 'Chris.Purcell.39@gmail.com'
+        timezone 'Europe/London'
+      }
+    }
+  }
+}
+
+ext['signing.keyId'] = System.env.PGP_KEY_ID
+ext['signing.password'] = System.env.PGP_PASSWORD
+ext['signing.secretKeyRingFile'] = System.env.PGP_SECRET_KEY_RING_FILE
+ext['nexusUsername'] = System.env.NEXUS_USERNAME
+ext['nexusPassword'] = System.env.NEXUS_PASSWORD
+
+apply plugin: 'io.codearte.nexus-staging'

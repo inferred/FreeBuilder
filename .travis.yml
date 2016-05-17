@@ -1,4 +1,24 @@
 language: java
-script: ./gradlew clean check
+install: "./gradlew clean jar"
+script: "./gradlew jar"
 jdk:
   - oraclejdk8
+
+env:
+  global:
+    - PGP_KEY_ID="2887CE9B"
+    - PGP_PASSWORD=""
+    - PGP_SECRET_KEY_RING_FILE=~/.gnupg/secring.gpg
+      # NEXUS_USERNAME
+    - secure: "DUvIXg1aLxpnWv7K7VeIWvb704Puat98zb++GKLkkHfdcyQn+t+mYQsMJPMKXa5iqWNfwoFSpmPrPmcTW5sGAg8vJ/OmZFJdtIdPaeykr+8kYIIHbS7Pquqr/4iN2UKaJ4TbMOj0sgEiu573CyW5JtRmRWVQuKG0rKJKsDf2XKc="
+      # NEXUS_PASSWORD
+    - secure: "SZcQ+0AhVo25fCCDQqc/kUVe4mcS0lVuzUAZPCXOmr146BAHTJ/HEae8OAkHEvFUZmGWlrG/FR1P6BQ+OnBOsnjei0sYokdg6w0e+bQ9wPaY4zsMsgSzPWscwt7pjVS05aSsS9uEEOCzM1nLCBzfEw7W8mWIQWeTPOa8Erzdtss="
+
+before_deploy: ./scripts/install_codesigning_key.sh
+
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: ./gradlew upload closeAndPromoteRepository
+  on:
+    tags: true
