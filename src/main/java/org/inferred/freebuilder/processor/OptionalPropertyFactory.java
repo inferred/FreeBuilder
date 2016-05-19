@@ -40,7 +40,6 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing a default value (absent) and convenience
@@ -194,8 +193,9 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
       if (unboxedType.isPresent()) {
         code.addLine("  this.%1$s = %1$s;", property.getName());
       } else {
-        code.addLine("  this.%1$s = %2$s.checkNotNull(%1$s);",
-            property.getName(), Preconditions.class);
+        code.add(PreconditionExcerpts.checkNotNullPreamble(property.getName()))
+            .addLine("  this.%s = %s;",
+                property.getName(), PreconditionExcerpts.checkNotNullInline(property.getName()));
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
