@@ -374,6 +374,52 @@ task noGuavaTest {
   }
 }
 
+//// No-guava-j8 integration tests ///////////////////////////////
+configurations {
+  noGuavaJ8Compile
+  noGuavaJ8TestCompile.extendsFrom noGuavaJ8Compile
+}
+dependencies {
+  noGuavaJ8TestCompile junit
+}
+
+sourceSets.create("noGuavaJ8") {
+  java {
+    srcDir file('src/it/no-guava-j8/src/main/java')
+    compileClasspath += shadowJar.outputs.files
+  }
+}
+sourceSets.create("noGuavaJ8Test") {
+  java {
+    srcDir file('src/it/no-guava-j8/src/test/java')
+    compileClasspath += sourceSets.noGuavaJ8.output
+    runtimeClasspath += sourceSets.noGuavaJ8.output
+  }
+}
+
+tasks.compileNoGuavaJ8Java {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+tasks.compileNoGuavaJ8TestJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+task noGuavaJ8Test(type: Test) {
+  description 'Runs the no-guava-j8 integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+  testClassesDir = sourceSets.noGuavaJ8Test.output.classesDir
+  classpath = sourceSets.noGuavaJ8Test.runtimeClasspath
+  reports {
+    html {
+      destination "$reportsDir/noGuavaJ8"
+    }
+  }
+}
+
 //// Lambda integration tests ////////////////////////////////////
 configurations {
   lambdaCompile
