@@ -1102,50 +1102,6 @@ public class ProcessorTest {
   }
 
   @Test
-  public void testGenericInterface() {
-    behaviorTester
-        .with(new Processor())
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType<A, B> {")
-            .addLine("  A getPropertyA();")
-            .addLine("  B getPropertyB();")
-            .addLine("")
-            .addLine("  public static class Builder<A, B> extends DataType_Builder<A, B> {}")
-            .addLine("}")
-            .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType<Integer, Boolean> value =")
-            .addLine("    new com.example.DataType.Builder<Integer, Boolean>()")
-            .addLine("        .setPropertyA(11)")
-            .addLine("        .setPropertyB(true)")
-            .addLine("        .build();")
-            .addLine("assertEquals(11, (int) value.getPropertyA());")
-            .addLine("assertTrue(value.getPropertyB());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testGenericInterface_compilesWithoutWarnings() {
-    behaviorTester
-        .with(new Processor())
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType<A, B> {")
-            .addLine("  A getPropertyA();")
-            .addLine("  B getPropertyB();")
-            .addLine("")
-            .addLine("  public static class Builder<A, B> extends DataType_Builder<A, B> {}")
-            .addLine("}")
-            .build())
-        .compiles()
-        .withNoWarnings();
-  }
-
-  @Test
   public void testSiblingNameClashes() {
     behaviorTester
         .with(new Processor())
