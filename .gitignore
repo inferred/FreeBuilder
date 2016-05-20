@@ -10,6 +10,7 @@ gen/
 # Eclipse project files
 .classpath
 .project
+.test
 
 # Intellij project files
 *.iml
