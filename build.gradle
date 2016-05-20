@@ -9,6 +9,7 @@ buildscript {
 }
 
 plugins {
+  id 'eclipse'
   id 'java'
   id 'com.bmuschko.nexus' version '2.3.1'
   id 'com.github.johnrengelman.shadow' version '1.2.3'
@@ -530,3 +531,28 @@ ext['nexusUsername'] = System.env.NEXUS_USERNAME
 ext['nexusPassword'] = System.env.NEXUS_PASSWORD
 
 apply plugin: 'io.codearte.nexus-staging'
+
+//// Eclipse /////////////////////////////////////////////////////
+eclipse.classpath {
+  // We include sorceror so we can link against internal JVM classes.
+  // Eclipse doesn't handle that well; instead, we just mark those classes as accessible.
+  // Note: this requires you to have JDK 6 installed, as later JDKs don't seem to expose
+  // the internal classes at all (hence the workaroud with sorceror).
+  minusConfigurations += [ configurations.detachedConfiguration(dependencies.create(sorcerer)) ]
+  file.withXml { xml ->
+    xml.asNode().findAll { it.@kind == 'con' }.each { node ->
+        node.appendNode('accessrules')
+            .appendNode('accessrule', [kind: 'accessible', pattern: 'com/sun/source/**'])
+    }
+  }
+  // Only src/main/java is compiled with JDK 6
+  file.withXml { xml ->
+    node = xml.asNode()
+    node.findAll { it.@kind == 'src' && it.@path != 'src/main/java' }.each { src ->
+        node.remove(src)
+    }
+  }
+  // Don't include test dependencies in the classpath
+  plusConfigurations.clear()
+  plusConfigurations += [ configurations.compileClasspath ]
+}
