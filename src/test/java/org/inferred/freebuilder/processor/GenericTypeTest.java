@@ -72,4 +72,31 @@ public class GenericTypeTest {
         .withNoWarnings();
   }
 
+  @Test
+  public void testBoundedParameters() {
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<A extends Number, B extends Number> {")
+            .addLine("  A getPropertyA();")
+            .addLine("  B getPropertyB();")
+            .addLine("")
+            .addLine("  public static class Builder<A extends Number, B extends Number>")
+            .addLine("      extends DataType_Builder<A, B> {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType<Integer, Double> value =")
+            .addLine("    new com.example.DataType.Builder<Integer, Double>()")
+            .addLine("        .setPropertyA(11)")
+            .addLine("        .setPropertyB(3.2)")
+            .addLine("        .build();")
+            .addLine("assertEquals(11, (int) value.getPropertyA());")
+            .addLine("assertEquals(3.2, (double) value.getPropertyB(), 0.001);")
+            .build())
+        .runTest();
+  }
+
 }

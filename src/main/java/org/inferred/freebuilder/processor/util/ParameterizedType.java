@@ -33,6 +33,7 @@ import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor6;
@@ -123,7 +124,7 @@ public class ParameterizedType extends ValueType implements Excerpt {
   public Excerpt declaration() {
     return new Excerpt() {
       @Override public void addTo(SourceBuilder source) {
-        source.add("%s%s", qualifiedName.getSimpleName(), typeParameters());
+        source.add("%s%s", qualifiedName.getSimpleName(), declarationParameters());
       }
     };
   }
@@ -138,6 +139,33 @@ public class ParameterizedType extends ValueType implements Excerpt {
           String prefix = "<";
           for (Object typeParameter : typeParameters) {
             source.add("%s%s", prefix, typeParameter);
+            prefix = ", ";
+          }
+          source.add(">");
+        }
+      }
+    };
+  }
+
+  /**
+   * Returns a source excerpt of the type parameters of this type, including bounds and angle
+   * brackets.
+   */
+  public Excerpt declarationParameters() {
+    return new Excerpt() {
+      @Override public void addTo(SourceBuilder source) {
+        if (!typeParameters.isEmpty()) {
+          String prefix = "<";
+          for (Object typeParameter : typeParameters) {
+            source.add("%s%s", prefix, typeParameter);
+            if (typeParameter instanceof TypeParameterElement) {
+              TypeParameterElement element = (TypeParameterElement) typeParameter;
+              String separator = " extends ";
+              for (TypeMirror bound : element.getBounds()) {
+                source.add("%s%s", separator, bound);
+                separator = " & ";
+              }
+            }
             prefix = ", ";
           }
           source.add(">");
