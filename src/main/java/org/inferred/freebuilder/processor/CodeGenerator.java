@@ -115,8 +115,8 @@ public class CodeGenerator {
         .addLine("/**")
         .addLine(" * Creates a new builder using {@code value} as a template.")
         .addLine(" */")
-        .addLine("public static %s%s from(%s value) {",
-            metadata.getBuilder().typeParameters(),
+        .addLine("public static %s %s from(%s value) {",
+            metadata.getBuilder().declarationParameters(),
             metadata.getBuilder(),
             metadata.getType())
         .addLine("  return %s.mergeFrom(value);",
@@ -492,9 +492,8 @@ public class CodeGenerator {
   private static void addPartialType(SourceBuilder code, Metadata metadata) {
     boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
     code.addLine("")
-        .addLine("private static final class %s%s %s {",
-            metadata.getPartialType().getSimpleName(),
-            metadata.getType().typeParameters(),
+        .addLine("private static final class %s %s {",
+            metadata.getPartialType().declaration(),
             extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {

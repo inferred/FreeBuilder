@@ -73,6 +73,36 @@ public class ParameterizedTypeTest {
         prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_7));
   }
 
+  @Test
+  public void testFromDeclaredType_parameterWithSingleBound() {
+    GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME)
+        .addTypeParameter("V", newTopLevelClass("java.lang.Number"))
+        .build();
+    ParameterizedType type = ParameterizedType.from(myType);
+    assertEquals(MY_TYPE_NAME, type.getQualifiedName());
+    assertTrue(type.isParameterized());
+    assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_7));
+    assertEquals("new MyType<V>", prettyPrint(type.constructor(), SourceLevel.JAVA_6));
+    assertEquals("new MyType<>", prettyPrint(type.constructor(), SourceLevel.JAVA_7));
+    assertEquals("MyType<V extends Number>", prettyPrint(type.declaration(), SourceLevel.JAVA_7));
+    assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_7));
+    assertEquals("{@link MyType#foo()}",
+        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_7));
+  }
+
+  @Test
+  public void testFromDeclaredType_parameterWithMultipleBounds() {
+    GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME)
+        .addTypeParameter("V",
+            newTopLevelClass("java.lang.Number"),
+            newTopLevelClass("java.lang.Comparable"),
+            newTopLevelClass("java.util.Formattable"))
+        .build();
+    ParameterizedType type = ParameterizedType.from(myType);
+    assertEquals("MyType<V extends Number & Comparable & Formattable>",
+        prettyPrint(type.declaration(), SourceLevel.JAVA_7));
+  }
+
   private static String prettyPrint(Excerpt type, SourceLevel sourceLevel) {
     return SourceStringBuilder.simple(sourceLevel).add(type).toString();
   }

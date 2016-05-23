@@ -183,7 +183,7 @@ class GwtSupport {
         .addLine("/** This class exists solely to ensure GWT whitelists all required types. */")
         .addLine("@%s(serializable = true)", GwtCompatible.class)
         .addLine("static final class GwtWhitelist%s %s {",
-            metadata.getType().typeParameters(),
+            metadata.getType().declarationParameters(),
             extending(metadata.getType(), metadata.isInterfaceType()))
         .addLine("");
     for (Property property : metadata.getProperties()) {
