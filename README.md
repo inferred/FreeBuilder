@@ -3,6 +3,9 @@
 
 _Automatic generation of the Builder pattern for Java 1.6+_
 
+[![Maven Central](https://img.shields.io/maven-central/v/org.inferred/freebuilder.svg)](http://mvnrepository.com/artifact/org.inferred/freebuilder)
+[![Travis CI](https://travis-ci.org/google/FreeBuilder.svg?branch=master)](https://travis-ci.org/google/FreeBuilder)
+
 > The Builder pattern is a good choice when designing classes whose constructors
 > or static factories would have more than a handful of parameters.
 > &mdash; <em>Effective Java, Second Edition</em>, page 39
@@ -488,12 +491,12 @@ Build tools and IDEs
 
 ### javac
 
-Download [freebuilder-1.10.3.jar][] and add it to the classpath (or
+Download [the latest FreeBuilder JAR] and add it to the classpath (or
 processorpath, if you supply one) on the command line. If [Guava] is
 available, FreeBuilder will use it to generate cleaner, more
 interoperable implementation code (e.g returning [immutable collections]).
 
-[freebuilder-1.10.3.jar]: http://repo1.maven.org/maven2/org/inferred/freebuilder/1.10.3/freebuilder-1.10.3.jar
+[the latest FreeBuilder JAR]: https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.inferred&a=freebuilder&v=RELEASE
 [immutable collections]: https://github.com/google/guava/wiki/ImmutableCollectionsExplained
 
 ### Maven
@@ -505,7 +508,7 @@ Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
   <dependency>
     <groupId>org.inferred</groupId>
     <artifactId>freebuilder</artifactId>
-    <version>1.10.3</version>
+    <version>[current version]</version>
     <optional>true</optional>
   </dependency>
 </dependencies>
@@ -519,7 +522,7 @@ interoperable implementation code (e.g returning [immutable collections]).
 Add the following lines to your dependencies:
 
 ```
-compile 'org.inferred:freebuilder:1.10.3'
+compile 'org.inferred:freebuilder:<current version>'
 ```
 
 If [Guava] is available, FreeBuilder will use it to generate cleaner, more
@@ -529,13 +532,13 @@ interoperable implementation code (e.g returning [immutable collections]).
 
 _Condensed from [Eclipse Indigo's documentation][]._
 
-Download [freebuilder-1.10.3.jar][] and add it to your project. Select it,
+Download [the latest FreeBuilder JAR] and add it to your project. Select it,
 right-click and choose **Build path > Add to Build path**.
 
 In your projects properties dialog, go to **Java Compiler > Annotation
 Processing** and ensure **Enable annotation processing** is checked.
 Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
-**Add JARs**, and select `freebuilder-1.10.3.jar`.
+**Add JARs**, and select the FreeBuilder JAR.
 
 [Eclipse Indigo's documentation]: http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm
 
@@ -543,7 +546,7 @@ Next, go to **Java Compiler > Annotation Processing > Factory Path**, select
 
 _Condensed from the [IntelliJ 14.0.3 documentation][] and [Auto Issue #106][]._
 
-Download [freebuilder-1.10.3.jar][], add it to your project, right-click it
+Download [the latest FreeBuilder JAR], add it to your project, right-click it
 and select **Use as Project Library**.
 
 In your Settings, go to **Build, Execution, Deployment > Compiler > Annotation

@@ -1,0 +1,632 @@
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.6'
+    classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3'
+  }
+}
+
+plugins {
+  id 'eclipse'
+  id 'java'
+  id 'com.bmuschko.nexus' version '2.3.1'
+  id 'com.github.johnrengelman.shadow' version '1.2.3'
+}
+
+repositories {
+  mavenCentral()
+}
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+compileTestJava {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+dependencies {
+  compile commonsLang3
+  compile(googleJavaFormat) {
+    // Exclude transitive dependencies that don't affect the formatter
+    exclude module: 'jcommander'
+    exclude module: 'org.eclipse.equinox.app'
+    exclude module: 'org.eclipse.core.filesystem'
+    exclude module: 'org.eclipse.text'
+    exclude module: 'org.eclipse.equinox.registry'
+  }
+  compile guava
+  compile jsr305
+  compileOnly autoService
+  compileOnly sorcerer
+
+  testCompile guavaTestlib
+  testCompile gwtUser
+  testCompile hamcrest
+  testCompile jackson('annotations')
+  testCompile jackson('core')
+  testCompile jackson('databind')
+  testCompile jackson('datatype-guava')
+  testCompile jackson('datatype-jdk8')
+  testCompile javassist
+  testCompile junit
+  testCompile mockito
+  testCompile truth
+}
+
+String jackson(String pkg) {
+  String namespace
+  if (pkg.startsWith('datatype-')) {
+    namespace = 'datatype'
+  } else {
+    namespace = 'core'
+  }
+  return String.format('com.fasterxml.jackson.%s:jackson-%s:%s',
+      namespace, pkg, jacksonVersion)
+}
+
+tasks.withType(Test) {
+  testLogging {
+    events "passed", "skipped", "failed"
+  }
+}
+
+//// Shadow JAR //////////////////////////////////////////////////
+jar {
+  classifier = 'only'
+}
+
+shadowJar {
+  classifier = null
+
+  ['com.google', 'org.apache', 'org.eclipse', 'org.osgi'].each {
+    relocate it, "org.inferred.freebuilder.shaded.$it"
+  }
+
+  // Exclude common META-INF detritus
+  exclude 'META-INF/*.txt'
+  exclude 'META-INF/maven/**'
+
+  // Exclude Eclipse (via google-java-format) detritus
+  exclude 'META-INF/eclipse.inf'
+  exclude 'META-INF/services/org.osgi.*'
+  exclude '.api_description'
+  exclude '.options'
+  exclude 'about.html'
+  exclude 'about_files/*.txt'
+  exclude 'ant_tasks/*'
+  exclude 'plugin.xml'
+  exclude 'jdtCompilerAdapter.jar'
+  exclude '*.profile'
+  exclude '*.properties'
+  exclude '*.list'
+
+  // Exclude all of jsr305 except Nullable, Nonnull and meta.When
+  exclude 'javax/annotation/C*'
+  exclude 'javax/annotation/D*'
+  exclude 'javax/annotation/M*'
+  exclude 'javax/annotation/Nonnegative*'
+  exclude 'javax/annotation/O*'
+  exclude 'javax/annotation/P*'
+  exclude 'javax/annotation/R*'
+  exclude 'javax/annotation/S*'
+  exclude 'javax/annotation/T*'
+  exclude 'javax/annotation/U*'
+  exclude 'javax/annotation/W*'
+  exclude 'javax/annotation/concurrent/*'
+  exclude 'javax/annotation/meta/E*'
+  exclude 'javax/annotation/meta/T*'
+}
+
+import java.util.zip.ZipFile
+import java.util.zip.ZipException
+
+task shadowTest {
+  description 'Verifies freebuilder.jar is shaded correctly.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+  dependsOn shadowJar
+  def expected = new File("$projectDir/jar-footprint.txt")
+  def report = new File("$reportsDir/shadowJarFootprint.txt")
+  inputs.file shadowJar.outputs
+  inputs.file expected
+  outputs.file report
+  doFirst {
+    def jar = shadowJar.outputs.files[0]
+    def zip = new ZipFile(jar)
+    def folders = new TreeSet<String>(zip.entries().collect {
+      it.toString().replaceAll('([^/]*(/[^/]*){0,3}).*', '$1')
+    })
+    def expectedFolders = new TreeSet<String>(expected.readLines())
+    report.parentFile.mkdirs()
+    if (expectedFolders != folders) {
+      def message = new StringBuilder('shadow.jar incorrect')
+      def missing = expectedFolders - folders
+      if (!missing.isEmpty()) {
+        message.append('\nThe following are missing:')
+        missing.forEach { message.append('\n  - ').append(it) }
+      }
+      def extra = folders - expectedFolders
+      if (!extra.isEmpty()) {
+        message.append('\nThe following should not be present:')
+        extra.forEach { message.append('\n  - ').append(it) }
+      }
+
+      report.write message.toString()
+      throw new GradleException(message.toString())
+    }
+    report.write 'shadow.jar correct'
+  }
+}
+
+//// Vanilla integration tests ///////////////////////////////////
+configurations {
+  vanillaCompile
+  vanillaTestCompile.extendsFrom vanillaCompile
+}
+dependencies {
+  vanillaCompile guava
+  vanillaCompile gwtUser
+  vanillaTestCompile junit
+}
+task vanillaTest {
+  description 'Runs the vanilla integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+}
+
+(6..8).each { jdk ->
+  def sourceSet = sourceSets.create("vanilla${jdk}") {
+    java {
+      srcDir file('src/it/vanilla/src/main/java')
+      compileClasspath += shadowJar.outputs.files
+    }
+  }
+  def testSourceSet = sourceSets.create("vanilla${jdk}Test") {
+    java {
+      srcDir file('src/it/vanilla/src/test/java')
+      compileClasspath += sourceSet.output
+      runtimeClasspath += sourceSet.output
+    }
+  }
+
+  tasks.getByName("compileVanilla${jdk}Java") {
+    sourceCompatibility = "1.$jdk"
+    targetCompatibility = "1.$jdk"
+  }
+  tasks.getByName("compileVanilla${jdk}TestJava") {
+    sourceCompatibility = "1.$jdk"
+    targetCompatibility = "1.$jdk"
+  }
+
+  def compile = configurations["vanilla${jdk}Compile"]
+  def runtime = configurations["vanilla${jdk}Runtime"]
+  def testCompile = configurations["vanilla${jdk}TestCompile"]
+  def testRuntime = configurations["vanilla${jdk}TestRuntime"]
+  compile.extendsFrom configurations['vanillaCompile']
+  testCompile.extendsFrom configurations['vanillaTestCompile']
+  testCompile.extendsFrom compile
+  testRuntime.extendsFrom runtime
+
+  def test = task("vanilla${jdk}Test", type: Test) {
+    vanillaTest.dependsOn it
+    testClassesDir = sourceSets["vanilla${jdk}Test"].output.classesDir
+    classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
+    reports {
+      html {
+        destination "$reportsDir/vanilla${jdk}"
+      }
+    }
+  }
+}
+
+//// GWT integration tests ///////////////////////////////////////
+configurations {
+  gwtCompile
+  gwtCompileOnly
+  gwtTestCompile.extendsFrom gwtCompile
+}
+dependencies {
+  gwtCompile 'com.google.guava:guava-gwt:18.0'
+  gwtCompile gwt('codeserver')
+  gwtCompileOnly gwt('dev')
+  gwtCompile gwt('elemental')
+  gwtCompile gwt('servlet')
+  gwtCompileOnly gwt('user')
+  gwtTestCompile junit
+}
+
+String gwt(String pkg) {
+  return 'com.google.gwt:gwt-' + pkg + ':2.7.0'
+}
+
+sourceSets.create('gwt') {
+  java {
+    srcDir file('src/it/gwt/src/main/java')
+    compileClasspath += shadowJar.outputs.files
+  }
+  resources {
+    srcDir file('src/it/gwt/src/main/resources')
+  }
+}
+sourceSets.create('gwtTest') {
+  java {
+    srcDir file('src/it/gwt/src/test/java')
+    compileClasspath += sourceSets.gwt.output
+    runtimeClasspath += sourceSets.gwt.output
+  }
+  resources {
+    srcDir file('src/it/gwt/src/test/resources')
+  }
+  runtimeClasspath += files(sourceSets.gwt.allJava.srcDirs)
+  runtimeClasspath += files(sourceSets.gwtTest.allJava.srcDirs)
+}
+
+tasks.compileGwtJava {
+  sourceCompatibility = "1.7"
+  targetCompatibility = "1.7"
+}
+tasks.compileGwtTestJava {
+  sourceCompatibility = "1.7"
+  targetCompatibility = "1.7"
+}
+
+import de.richsource.gradle.plugins.gwt.GwtCompile
+import de.richsource.gradle.plugins.gwt.LogLevel
+task compileGwtToJs(type: GwtCompile) {
+  def gwtDir = new File(buildDir, 'gwt')
+  war = new File(gwtDir, 'out')
+  extra = new File(gwtDir, 'extra')
+  workDir = new File(gwtDir, 'work')
+  gen = new File(gwtDir, 'gen')
+  cacheDir = new File(gwtDir, 'cache')
+  logLevel = LogLevel.INFO
+  group = 'GWT'
+  modules = ['org.inferred.freebuilder.TestServer']
+  src = files(sourceSets['gwt'].allJava.srcDirs,
+              sourceSets['gwt'].output.resourcesDir,
+              sourceSets['gwtTest'].allJava.srcDirs,
+              sourceSets['gwtTest'].output.resourcesDir)
+  classpath = (sourceSets['gwt'].compileClasspath +
+               sourceSets['gwtTest'].compileClasspath)
+  sourceLevel = '1.7'
+  incremental = false
+  strict = true
+  dependsOn gwtClasses, gwtTestClasses
+}
+
+task gwtTest(type: Test) {
+  description 'Runs the GWT integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+  dependsOn compileGwtToJs
+  testClassesDir = sourceSets.gwtTest.output.classesDir
+  classpath = sourceSets.gwtTest.runtimeClasspath
+  reports {
+    html {
+      destination "$reportsDir/gwt"
+    }
+  }
+  testLogging.showStandardStreams = true
+  def gwtArgs = new StringBuilder()
+  for (def key in ["war", "extra", "workDir", "gen", "logLevel"]) {
+    def value = compileGwtToJs[key]
+    gwtArgs.append(" -$key $value")
+  }
+  systemProperty("gwt.args", gwtArgs.toString())
+  systemProperty("gwt.persistentunitcachedir", compileGwtToJs.cacheDir)
+}
+
+//// No-guava integration tests //////////////////////////////////
+configurations {
+  noGuavaCompile
+  noGuavaTestCompile.extendsFrom noGuavaCompile
+}
+dependencies {
+  noGuavaCompile gwtUser
+  noGuavaTestCompile junit
+}
+task noGuavaTest {
+  description 'Runs the no-guava integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+}
+
+(6..8).each { jdk ->
+  def sourceSet = sourceSets.create("noGuava${jdk}") {
+    java {
+      srcDir file('src/it/no-guava/src/main/java')
+      compileClasspath += shadowJar.outputs.files
+    }
+  }
+  def testSourceSet = sourceSets.create("noGuava${jdk}Test") {
+    java {
+      srcDir file('src/it/no-guava/src/test/java')
+      compileClasspath += sourceSet.output
+      runtimeClasspath += sourceSet.output
+    }
+  }
+
+  tasks.getByName("compileNoGuava${jdk}Java") {
+    sourceCompatibility = "1.$jdk"
+    targetCompatibility = "1.$jdk"
+  }
+  tasks.getByName("compileNoGuava${jdk}TestJava") {
+    sourceCompatibility = "1.$jdk"
+    targetCompatibility = "1.$jdk"
+  }
+
+  def compile = configurations["noGuava${jdk}Compile"]
+  def runtime = configurations["noGuava${jdk}Runtime"]
+  def testCompile = configurations["noGuava${jdk}TestCompile"]
+  def testRuntime = configurations["noGuava${jdk}TestRuntime"]
+  compile.extendsFrom configurations['noGuavaCompile']
+  testCompile.extendsFrom configurations['noGuavaTestCompile']
+  testCompile.extendsFrom compile
+  testRuntime.extendsFrom runtime
+
+  def test = task("noGuava${jdk}Test", type: Test) {
+    noGuavaTest.dependsOn it
+    testClassesDir = sourceSets["noGuava${jdk}Test"].output.classesDir
+    classpath = sourceSets["noGuava${jdk}Test"].runtimeClasspath
+    reports {
+      html {
+        destination "$reportsDir/noGuava${jdk}"
+      }
+    }
+  }
+}
+
+//// No-guava-j8 integration tests ///////////////////////////////
+configurations {
+  noGuavaJ8Compile
+  noGuavaJ8TestCompile.extendsFrom noGuavaJ8Compile
+}
+dependencies {
+  noGuavaJ8TestCompile junit
+}
+
+sourceSets.create("noGuavaJ8") {
+  java {
+    srcDir file('src/it/no-guava-j8/src/main/java')
+    compileClasspath += shadowJar.outputs.files
+  }
+}
+sourceSets.create("noGuavaJ8Test") {
+  java {
+    srcDir file('src/it/no-guava-j8/src/test/java')
+    compileClasspath += sourceSets.noGuavaJ8.output
+    runtimeClasspath += sourceSets.noGuavaJ8.output
+  }
+}
+
+tasks.compileNoGuavaJ8Java {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+tasks.compileNoGuavaJ8TestJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+task noGuavaJ8Test(type: Test) {
+  description 'Runs the no-guava-j8 integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+  testClassesDir = sourceSets.noGuavaJ8Test.output.classesDir
+  classpath = sourceSets.noGuavaJ8Test.runtimeClasspath
+  reports {
+    html {
+      destination "$reportsDir/noGuavaJ8"
+    }
+  }
+}
+
+//// Lambda integration tests ////////////////////////////////////
+configurations {
+  lambdaCompile
+  lambdaTestCompile.extendsFrom lambdaCompile
+}
+dependencies {
+  lambdaCompile guava
+  lambdaCompile gwtUser
+  lambdaTestCompile junit
+}
+sourceSets.create('lambda') {
+  java {
+    srcDir file('src/it/lambda/src/main/java')
+    compileClasspath += shadowJar.outputs.files
+  }
+}
+sourceSets.create('lambdaTest') {
+  java {
+    srcDir file('src/it/lambda/src/test/java')
+    compileClasspath += sourceSets.lambda.output
+    runtimeClasspath += sourceSets.lambda.output
+  }
+}
+
+tasks.compileLambdaJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+tasks.compileLambdaTestJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+task("lambdaTest", type: Test) {
+  description 'Runs the lambda integration tests.'
+  group = 'Verification'
+  check.dependsOn it
+  shouldRunAfter test
+  testClassesDir = sourceSets["lambdaTest"].output.classesDir
+  classpath = sourceSets["lambdaTest"].runtimeClasspath
+  reports {
+    html {
+      destination "$reportsDir/lambda"
+    }
+  }
+}
+
+//// Publication /////////////////////////////////////////////////
+group = 'org.inferred'
+archivesBaseName = 'freebuilder'
+
+if (System.env.TRAVIS_TAG != null && !System.env.TRAVIS_TAG.isEmpty()) {
+  version = System.env.TRAVIS_TAG.replaceAll('^v','')
+} else if (System.env.TRAVIS_BRANCH != null && !System.env.TRAVIS_BRANCH.isEmpty()) {
+  version = System.env.TRAVIS_BRANCH + '-alpha.' + System.env.TRAVIS_BUILD_NUMBER
+} else {
+  version = 'UNKNOWN-SNAPSHOT'
+}
+
+artifacts {
+  archives shadowJar
+}
+
+modifyPom {
+  project {
+    name '@FreeBuilder'
+    packaging 'jar'
+    artifactId 'freebuilder'
+    description 'Automatic generation of the Builder pattern for Java 1.6+'
+    url 'http://inferred.org/freebuilder'
+
+    scm {
+      url 'https://github.com/google/freebuilder'
+      connection 'scm:git:git://github.com/google/freebuilder.git'
+      developerConnection 'scm:git:git@github.com:google/freebuilder.git'
+    }
+
+    licenses {
+      license {
+        name 'Apache 2.0'
+        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+      }
+    }
+
+    developers {
+      developer {
+        id 'chrisalice'
+        name 'Chris Purcell'
+        email 'Chris.Purcell.39@gmail.com'
+        timezone 'Europe/London'
+      }
+    }
+  }
+}
+
+ext['signing.keyId'] = System.env.PGP_KEY_ID
+ext['signing.password'] = System.env.PGP_PASSWORD
+ext['signing.secretKeyRingFile'] = System.env.PGP_SECRET_KEY_RING_FILE
+ext['nexusUsername'] = System.env.NEXUS_USERNAME
+ext['nexusPassword'] = System.env.NEXUS_PASSWORD
+
+apply plugin: 'io.codearte.nexus-staging'
+
+//// Eclipse /////////////////////////////////////////////////////
+eclipse.classpath {
+  // We include sorceror so we can link against internal JVM classes.
+  // Eclipse doesn't handle that well; instead, we just mark those classes as accessible.
+  // Note: this requires you to have JDK 6 installed, as later JDKs don't seem to expose
+  // the internal classes at all (hence the workaroud with sorceror).
+  minusConfigurations += [ configurations.detachedConfiguration(dependencies.create(sorcerer)) ]
+  file.withXml { xml ->
+    xml.asNode().findAll { it.@kind == 'con' }.each { node ->
+        node.appendNode('accessrules')
+            .appendNode('accessrule', [kind: 'accessible', pattern: 'com/sun/source/**'])
+    }
+  }
+  // Only src/main/java is compiled with JDK 6
+  file.withXml { xml ->
+    node = xml.asNode()
+    node.findAll { it.@kind == 'src' && it.@path != 'src/main/java' }.each { src ->
+        node.remove(src)
+    }
+  }
+  // Don't include test dependencies in the classpath
+  plusConfigurations.clear()
+  plusConfigurations += [ configurations.compileClasspath ]
+}
+
+import org.gradle.plugins.ide.eclipse.model.EclipseModel
+extensions.create("eclipseTest", EclipseModel)
+
+import org.gradle.plugins.ide.eclipse.GenerateEclipseProject
+import org.gradle.plugins.ide.eclipse.internal.LinkedResourcesCreator
+task eclipseTestProject(type: GenerateEclipseProject) {
+  description = 'Generates the Eclipse test project file.'
+  inputFile = project.file('.test/.project')
+  outputFile = inputFile
+  projectModel.name = project.name + '-test'
+  projectModel.buildCommand 'org.eclipse.jdt.core.javabuilder'
+  projectModel.natures "org.eclipse.jdt.core.javanature"
+  projectModel.linkedResource name: 'src', type:'2', location: 'PARENT-1-PROJECT_LOC/src/test/java'
+  eclipseTest.project = projectModel
+  tasks.eclipse.dependsOn it
+}
+
+import org.gradle.plugins.ide.eclipse.GenerateEclipseJdt
+task eclipseTestJdt(type: GenerateEclipseJdt) {
+  description = 'Generates the Eclipse test JDT settings file.'
+  inputFile = project.file('.test/.settings/org.eclipse.jdt.core.prefs')
+  outputFile = inputFile
+  eclipseTest.jdt = jdt
+  jdt.conventionMapping.map('sourceCompatibility') { JavaVersion.toVersion(compileTestJava.sourceCompatibility) }
+  jdt.conventionMapping.map('targetCompatibility') { JavaVersion.toVersion(compileTestJava.targetCompatibility) }
+  jdt.conventionMapping.map('javaRuntimeName') { 'JavaSE-' + jdt.targetCompatibility }
+  tasks.eclipse.dependsOn it
+}
+
+import org.gradle.api.internal.plugins.DslObject
+import org.gradle.internal.xml.XmlTransformer
+import org.gradle.plugins.ide.api.XmlFileContentMerger
+import org.gradle.plugins.ide.eclipse.GenerateEclipseClasspath
+import org.gradle.plugins.ide.eclipse.model.EclipseClasspath
+task eclipseTestClasspath(type: GenerateEclipseClasspath) {
+  description = 'Generates the Eclipse test classpath file.'
+  inputFile = project.file('.test/.classpath')
+  outputFile = inputFile
+  classpath = new EclipseClasspath(project)
+  classpath.file = new XmlFileContentMerger((XmlTransformer) getProperty('xmlTransformer'))
+  classpath.sourceSets = []
+  project.afterEvaluate {
+    Set<String> containers = new LinkedHashSet<>()
+    containers.add(
+        'org.eclipse.jdt.launching.JRE_CONTAINER/'
+            + 'org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/'
+            + eclipseTest.jdt.javaRuntimeName + '/')
+    containers.addAll(classpath.containers)
+    classpath.containers = containers
+  }
+  classpath.plusConfigurations += [
+    configurations.testCompileClasspath
+  ]
+  classpath.defaultOutputDir = project.file('.test/bin')
+  dependsOn sourceSets.main.output.dirs
+  dependsOn sourceSets.test.output.dirs
+  eclipseTest.classpath = classpath
+  tasks.eclipse.dependsOn it
+}
+
+eclipseTest.classpath.file.withXml { xml ->
+  xml.asNode().appendNode('classpathentry', [
+      combineaccessrules: 'false',
+      kind: 'src',
+      path: '/' + project.name
+  ])
+  if (xml.asNode().find { it.@kind == 'src' && it.@path == 'src' } == null) {
+    xml.asNode().appendNode('classpathentry', [
+        kind: 'src',
+        path: 'src'
+    ])
+  }
+}
