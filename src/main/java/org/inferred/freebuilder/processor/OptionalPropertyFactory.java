@@ -65,11 +65,23 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
             .addLine("  }")
             .addLine("  return (%s) this;", metadata.getBuilder());
       }
+
+      @Override
+      protected void invokeIfPresent(SourceBuilder code, String value, String method) {
+        code.addLine("if (%s.isPresent()) {", value)
+            .addLine("  %s(%s.get());", method, value)
+            .addLine("}");
+      }
     },
     JAVA8(QualifiedName.of("java.util", "Optional"), "empty", "ofNullable") {
       @Override
       protected void applyMapper(SourceBuilder code, Metadata metadata, Property property) {
         code.addLine("  return %s(%s().map(mapper));", setter(property), getter(property));
+      }
+
+      @Override
+      protected void invokeIfPresent(SourceBuilder code, String value, String method) {
+        code.addLine("%s.ifPresent(this::%s);", value, method);
       }
     };
 
@@ -84,6 +96,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     protected abstract void applyMapper(SourceBuilder code, Metadata metadata, Property property);
+    protected abstract void invokeIfPresent(SourceBuilder code, String value, String method);
   }
 
   @Override
@@ -307,12 +320,14 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s(%s.%s());", setter(property), value, property.getGetterName());
+      String propertyValue = value + "." + property.getGetterName() + "()";
+      optional.invokeIfPresent(code, propertyValue, setter(property));
     }
 
     @Override
     public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
-      code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
+      String propertyValue = builder + "." + getter(property) + "()";
+      optional.invokeIfPresent(code, propertyValue, setter(property));
     }
 
     @Override

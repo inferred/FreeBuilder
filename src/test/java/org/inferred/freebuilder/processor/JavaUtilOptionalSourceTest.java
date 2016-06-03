@@ -47,7 +47,7 @@ import javax.lang.model.type.TypeMirror;
 public class JavaUtilOptionalSourceTest {
 
   @Test
-  public void testJ8_withGuava() {
+  public void testJ8() {
     Metadata metadata = createMetadataWithOptionalProperties();
 
     String source = generateSource(
@@ -220,8 +220,8 @@ public class JavaUtilOptionalSourceTest {
         "   * Sets all property values using the given {@code Person} as a template.",
         "   */",
         "  public Person.Builder mergeFrom(Person value) {",
-        "    setName(value.getName());",
-        "    setAge(value.getAge());",
+        "    value.getName().ifPresent(this::setName);",
+        "    value.getAge().ifPresent(this::setAge);",
         "    return (Person.Builder) this;",
         "  }",
         "",
@@ -229,8 +229,8 @@ public class JavaUtilOptionalSourceTest {
         "   * Copies values from the given {@code Builder}.",
         "   */",
         "  public Person.Builder mergeFrom(Person.Builder template) {",
-        "    setName(template.getName());",
-        "    setAge(template.getAge());",
+        "    template.getName().ifPresent(this::setName);",
+        "    template.getAge().ifPresent(this::setAge);",
         "    return (Person.Builder) this;",
         "  }",
         "",
@@ -534,8 +534,8 @@ public class JavaUtilOptionalSourceTest {
         "   * Sets all property values using the given {@code Person} as a template.",
         "   */",
         "  public Person.Builder mergeFrom(Person value) {",
-        "    setName(value.getName());",
-        "    setAge(value.getAge());",
+        "    value.getName().ifPresent(this::setName);",
+        "    value.getAge().ifPresent(this::setAge);",
         "    return (Person.Builder) this;",
         "  }",
         "",
@@ -543,8 +543,8 @@ public class JavaUtilOptionalSourceTest {
         "   * Copies values from the given {@code Builder}.",
         "   */",
         "  public Person.Builder mergeFrom(Person.Builder template) {",
-        "    setName(template.getName());",
-        "    setAge(template.getAge());",
+        "    template.getName().ifPresent(this::setName);",
+        "    template.getAge().ifPresent(this::setAge);",
         "    return (Person.Builder) this;",
         "  }",
         "",
