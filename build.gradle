@@ -579,6 +579,24 @@ eclipse.classpath {
   plusConfigurations.clear()
   plusConfigurations += [ configurations.compileClasspath ]
 }
+// Exclude everything in src except src/main
+eclipse.project.file.withXml {
+  if (asNode().find { it.name() == 'filteredResources' } == null) {
+    asNode().append(new XmlParser().parseText("""
+      <filteredResources>
+        <filter>
+          <id>""" + System.currentTimeMillis() + """</id>
+          <name>src</name>
+          <type>9</type>
+          <matcher>
+            <id>org.eclipse.ui.ide.multiFilter</id>
+            <arguments>1.0-name-matches-false-false-main</arguments>
+          </matcher>
+        </filter>
+      </filteredResources>
+    """))
+  }
+}
 
 import org.gradle.plugins.ide.eclipse.model.EclipseModel
 extensions.create("eclipseTest", EclipseModel)
