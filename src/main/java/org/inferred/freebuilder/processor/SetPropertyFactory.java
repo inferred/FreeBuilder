@@ -73,7 +73,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
         config.getProperty(), elementType, unboxedType, overridesAddMethod));
   }
 
-  private static boolean hasAddMethodOverride( Config config, TypeMirror elementType) {
+  private static boolean hasAddMethodOverride(Config config, TypeMirror elementType) {
     return overrides(
         config.getBuilder(),
         config.getTypes(),

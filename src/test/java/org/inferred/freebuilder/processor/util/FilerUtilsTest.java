@@ -90,7 +90,8 @@ public class FilerUtilsTest {
         } else {
           return Answers.RETURNS_SMART_NULLS.get().answer(invocation);
         }
-      }});
+      }
+    });
     when(sourceFile.openWriter()).thenReturn(mockWriter);
 
     FilerUtils.writeCompilationUnit(filer, CLASS_TO_WRITE, originatingElement, "Hello!");
@@ -129,13 +130,13 @@ public class FilerUtilsTest {
       @Override
       public void describeMismatch(Object item, Description description) {
         if (!(item instanceof Throwable)) {
-          description.appendValue(item).appendText( " is not an exception");
+          description.appendValue(item).appendText(" is not an exception");
         }
         Throwable t = (Throwable) item;
         if (t.getSuppressed().length == 0) {
-          description.appendValue(item).appendText( " has no suppressed exceptions");
+          description.appendValue(item).appendText(" has no suppressed exceptions");
         } else if (t.getSuppressed().length > 1) {
-          description.appendValue(item).appendText( " has multiple suppressed exceptions");
+          description.appendValue(item).appendText(" has multiple suppressed exceptions");
         }
         Throwable suppressed = t.getSuppressed()[0];
         if (!matcher.matches(suppressed)) {
