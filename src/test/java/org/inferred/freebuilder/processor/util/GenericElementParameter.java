@@ -181,12 +181,12 @@ public abstract class GenericElementParameter implements TypeParameterElement {
     public TypeMirror getUpperBound() {
       GenericElementParameter impl = getImpl("getUpperBound()");
       switch (impl.bounds.size()) {
-      case 0:
-        return newTopLevelClass("java.lang.Object");
-      case 1:
-        return getOnlyElement(impl.bounds);
-      default:
-        throw new UnsupportedOperationException();
+        case 0:
+          return newTopLevelClass("java.lang.Object");
+        case 1:
+          return getOnlyElement(impl.bounds);
+        default:
+          throw new UnsupportedOperationException();
       }
     }
 

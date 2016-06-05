@@ -381,8 +381,8 @@ public class CodeGenerator {
                   code.addLine("    if (%1$s != other.%1$s) {", property.getName());
                 } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
                   code.addLine("    if (%1$s != other.%1$s", property.getName())
-                  .addLine("        && (%1$s == null || !%1$s.equals(other.%1$s))) {",
-                      property.getName());
+                      .addLine("        && (%1$s == null || !%1$s.equals(other.%1$s))) {",
+                          property.getName());
                 } else {
                   code.addLine("    if (!%1$s.equals(other.%1$s)) {", property.getName());
                 }
@@ -585,7 +585,7 @@ public class CodeGenerator {
           }
           code.addLine("      return false;")
               .addLine("    }");
-          }
+        }
         if (hasRequiredProperties) {
           code.addLine("    return _unsetProperties.equals(other._unsetProperties);");
         } else {

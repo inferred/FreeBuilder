@@ -59,13 +59,13 @@ public class ListPropertyFactoryTest {
   @Test
   public void testDefaultEmpty() {
     behaviorTester
-    .with(new Processor())
-    .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
-    .with(new TestBuilder()
-        .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-        .addLine("assertThat(value.getItems()).isEmpty();")
-        .build())
-    .runTest();
+        .with(new Processor())
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
+            .build())
+        .runTest();
   }
 
   @Test

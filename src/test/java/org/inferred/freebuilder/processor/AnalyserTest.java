@@ -1118,7 +1118,7 @@ public class AnalyserTest {
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
     QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
-    .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
+        .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder.withParameters())
@@ -1329,7 +1329,7 @@ public class AnalyserTest {
 
   @Test
   public void valueTypeNestedClassesAddedToVisibleList() throws CannotGenerateCodeException {
-     TypeElement dataType = model.newType(
+    TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
         "  DataType(int i) { }",
@@ -1352,12 +1352,12 @@ public class AnalyserTest {
   @Test
   public void valueTypeSuperclassesNestedClassesAddedToVisibleList()
       throws CannotGenerateCodeException {
-     model.newType(
+    model.newType(
         "package com.example;",
         "public class SuperType {",
         "  public interface Objects {}",
         "}");
-     TypeElement dataType = model.newType(
+    TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType extends SuperType {",
         "  DataType(int i) { }",
