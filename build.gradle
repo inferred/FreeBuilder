@@ -74,6 +74,7 @@ tasks.withType(Test) {
   }
 }
 
+//// Checkstyle //////////////////////////////////////////////////
 checkstyle {
   toolVersion = "6.19"
   configProperties['config_loc'] = "$rootDir/config/checkstyle"
@@ -88,6 +89,11 @@ tasks.withType(Checkstyle).each { checkstyleTask ->
       }
     }
   }
+}
+
+eclipse.project {
+  natures 'net.sf.eclipsecs.core.CheckstyleNature'
+  buildCommand 'net.sf.eclipsecs.core.CheckstyleBuilder'
 }
 
 //// Shadow JAR //////////////////////////////////////////////////
@@ -586,6 +592,8 @@ task eclipseTestProject(type: GenerateEclipseProject) {
   projectModel.name = project.name + '-test'
   projectModel.buildCommand 'org.eclipse.jdt.core.javabuilder'
   projectModel.natures "org.eclipse.jdt.core.javanature"
+  projectModel.natures 'net.sf.eclipsecs.core.CheckstyleNature'
+  projectModel.buildCommand 'net.sf.eclipsecs.core.CheckstyleBuilder'
   projectModel.linkedResource name: 'src', type:'2', location: 'PARENT-1-PROJECT_LOC/src/test/java'
   eclipseTest.project = projectModel
   tasks.eclipse.dependsOn it
