@@ -234,9 +234,9 @@ public class CodeGenerator {
       }
       for (PropertyCodeGenerator codeGenerator : codeGenerators) {
         if (codeGenerator.isTemplateRequiredInClear()) {
-          codeGenerator.addClear(code, "_template");
+          codeGenerator.addClearField(code, "_template");
         } else {
-          codeGenerator.addClear(code, null);
+          codeGenerator.addClearField(code, null);
         }
       }
       if (any(metadata.getProperties(), IS_REQUIRED)) {
@@ -256,7 +256,7 @@ public class CodeGenerator {
           .addLine(" */")
           .addLine("public %s clear() {", metadata.getBuilder());
       for (Property property : metadata.getProperties()) {
-        property.getCodeGenerator().addPartialClear(code);
+        property.getCodeGenerator().addPartialClearField(code);
       }
       code.addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");

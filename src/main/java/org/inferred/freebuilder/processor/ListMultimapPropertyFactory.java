@@ -390,12 +390,12 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     }
 
     @Override
-    public void addClear(SourceBuilder code, String template) {
+    public void addClearField(SourceBuilder code, String template) {
       code.addLine("%s.clear();", property.getName());
     }
 
     @Override
-    public void addPartialClear(SourceBuilder code) {
+    public void addPartialClearField(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
     }
 

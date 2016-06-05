@@ -189,12 +189,12 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addClear(SourceBuilder code, String template) {
+    public void addClearField(SourceBuilder code, String template) {
       code.addLine("%1$s = %2$s.%1$s;", property.getName(), template);
     }
 
     @Override
-    public void addPartialClear(SourceBuilder code) {
+    public void addPartialClearField(SourceBuilder code) {
       code.addLine("%s = null;", property.getName());
     }
   }
