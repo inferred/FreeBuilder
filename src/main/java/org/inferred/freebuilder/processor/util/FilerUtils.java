@@ -65,6 +65,7 @@ public class FilerUtils {
   }
 
   private static final Method ADD_SUPPRESSED;
+
   static {
     Method addSuppressed;
     try {

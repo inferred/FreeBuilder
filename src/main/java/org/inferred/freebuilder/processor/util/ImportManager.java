@@ -56,6 +56,7 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
 
   private static final String JAVA_LANG_PACKAGE = "java.lang";
   private static final String PACKAGE_PREFIX = "package ";
+
   /**
    * Builder of {@link ImportManager} instances.
    */

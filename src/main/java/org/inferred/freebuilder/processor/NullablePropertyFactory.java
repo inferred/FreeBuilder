@@ -67,9 +67,8 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     private final Set<TypeElement> nullables;
-    CodeGenerator(
-        Property property,
-        Iterable<TypeElement> nullableAnnotations) {
+
+    CodeGenerator(Property property, Iterable<TypeElement> nullableAnnotations) {
       super(property);
       this.nullables = ImmutableSet.copyOf(nullableAnnotations);
     }
