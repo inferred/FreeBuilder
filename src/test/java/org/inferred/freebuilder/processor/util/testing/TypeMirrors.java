@@ -79,10 +79,12 @@ public class TypeMirrors {
   }
 
   /** Returns a {@link TypeMirror} for the given type. */
-  public static TypeMirror typeMirror(
-      Types typeUtils,
-      Elements elementUtils,
-      Type type) {
+  public static TypeMirror typeMirror(Types typeUtils, Elements elementUtils, TypeToken<?> type) {
+    return typeMirror(typeUtils, elementUtils, type.getType());
+  }
+
+  /** Returns a {@link TypeMirror} for the given type. */
+  public static TypeMirror typeMirror(Types typeUtils, Elements elementUtils, Type type) {
     if (type instanceof Class) {
       return typeMirror(typeUtils, elementUtils, (Class<?>) type);
     } else if (type instanceof GenericArrayType) {
@@ -116,19 +118,6 @@ public class TypeMirrors {
     } else {
       throw new IllegalArgumentException("Unrecognized Type subclass " + type.getClass());
     }
-  }
-
-  private static Type getOnlyType(Type[] types) {
-    checkArgument(types.length <= 1, "Wildcard types with multiple bounds not supported");
-    return (types.length == 0) ? null : types[0];
-  }
-
-  /** Returns a {@link TypeMirror} for the given type. */
-  public static TypeMirror typeMirror(
-      Types typeUtils,
-      Elements elementUtils,
-      TypeToken<?> type) {
-    return typeMirror(typeUtils, elementUtils, type.getType());
   }
 
   /**
@@ -167,6 +156,11 @@ public class TypeMirrors {
         substitutions.containsKey(mutableSnippet.toString()),
         "Invalid type string '%s'", typeSnippet);
     return substitutions.get(mutableSnippet.toString());
+  }
+
+  private static Type getOnlyType(Type[] types) {
+    checkArgument(types.length <= 1, "Wildcard types with multiple bounds not supported");
+    return (types.length == 0) ? null : types[0];
   }
 
   /**
