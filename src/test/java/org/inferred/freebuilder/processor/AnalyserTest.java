@@ -470,7 +470,7 @@ public class AnalyserTest {
   }
 
   @Test
-  public void abstractMethodNamedGetürkt() throws CannotGenerateCodeException {
+  public void abstractMethodWithNonAsciiName() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
