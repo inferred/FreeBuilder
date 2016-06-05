@@ -85,27 +85,6 @@ public class ProcessorTest {
       .addLine("}")
       .build();
 
-  private static final JavaFileObject TWO_DEFAULTS_FREE_BUILDER_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  /** Returns %s */", PROPERTY_A_DESCRIPTION)
-      .addLine("  public abstract int getPropertyA();")
-      .addLine("  /** Returns %s */", PROPERTY_B_DESCRIPTION)
-      .addLine("  public abstract boolean isPropertyB();")
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    public Builder() {")
-      .addLine("      setPropertyA(0);")
-      .addLine("      setPropertyB(false);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
   private static final JavaFileObject STRING_PROPERTY_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
@@ -209,51 +188,6 @@ public class ProcessorTest {
   }
 
   @Test
-  public void testCantBuildWithAnUnsetProperty() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Not set: [propertyB]");
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .build();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testCantBuildWithMultipleUnsetProperties() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Not set: [propertyB, propertyD]");
-    behaviorTester
-        .with(new Processor())
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract int getPropertyA();")
-            .addLine("  public abstract boolean isPropertyB();")
-            .addLine("  public abstract String getPropertyC();")
-            .addLine("  public abstract int getPropertyD();")
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyC(\"\")")
-            .addLine("    .build();")
-            .build())
-        .runTest();
-  }
-
-  @Test
   public void testFrom() {
     behaviorTester
         .with(new Processor())
@@ -267,167 +201,6 @@ public class ProcessorTest {
             .addLine("    com.example.DataType.Builder.from(value);")
             .addLine("assertEquals(11, builder.getPropertyA());")
             .addLine("assertTrue(builder.isPropertyB());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFrom_valueInstance() {
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true)")
-            .addLine("    .build();")
-            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
-            .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(11, builder.getPropertyA());")
-            .addLine("assertTrue(builder.isPropertyB());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFrom_builder() {
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true);")
-            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(11, builder.getPropertyA());")
-            .addLine("assertTrue(builder.isPropertyB());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFrom_builderIgnoresUnsetField() {
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11);")
-            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(11, builder.getPropertyA());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFrom_builderUnsetPropertyGetterThrows() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("propertyB not set");
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11);")
-            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("builder.isPropertyB();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testBuildPartial_ignoresUnsetField() {
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(11, value.getPropertyA());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testBuildPartial_unsetPropertyGetterThrows() {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage("propertyB not set");
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .buildPartial();")
-            .addLine("value.isPropertyB();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testBuildPartial_toString() {
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(\"partial DataType{propertyA=11}\", value.toString());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testBuildPartial_toString_twoPrimitiveProperties() {
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true)")
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(\"partial DataType{propertyA=11, propertyB=true}\",")
-            .addLine("    value.toString());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testClear_noDefaults() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Not set: [propertyA, propertyB]");
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true)")
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testClear_withDefaults() {
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_DEFAULTS_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true)")
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertEquals(0, value.getPropertyA());")
-            .addLine("assertFalse(value.isPropertyB());")
             .build())
         .runTest();
   }
@@ -612,21 +385,6 @@ public class ProcessorTest {
             .addLine("    .setPropertyB(true);")
             .addLine("assertEquals(11, builder.getPropertyA());")
             .addLine("assertTrue(builder.isPropertyB());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testBuilderGetterThrowsIfValueUnset() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("propertyB not set");
-    behaviorTester
-        .with(new Processor())
-        .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .isPropertyB();")
             .build())
         .runTest();
   }
