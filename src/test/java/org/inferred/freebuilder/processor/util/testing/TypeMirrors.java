@@ -124,14 +124,14 @@ public class TypeMirrors {
    * Returns a {@link TypeMirror} for the given type, substituting any provided arguments for
    * %1, %2, etc.
    *
-   * <p>e.g. <code>typeMirror(types, elements, "java.util.List&lt;%1&gt;",
-   * typeMirror(types, elements, String.class))</code> will return the same thing as
-   * <code>typeMirror(types, elements, "java.util.List&lt;java.lang.String&gt;")</code>
+   * <p>e.g. {@code typeMirror(types, elements, "java.util.List<%1>",
+   * typeMirror(types, elements, String.class))} will return the same thing as
+   * {@code typeMirror(types, elements, "java.util.List<java.lang.String>")}
    *
    * @param typeUtils an implementation of {@link Types}
    * @param elementUtils an implementation of {@link Elements}
-   * @param typeSnippet the type, represented as a snippet of Java code, e.g. "java.lang.String",
-   *     "java.util.Map&lt;%1, %2&gt;"
+   * @param typeSnippet the type, represented as a snippet of Java code, e.g.
+   *     {@code "java.lang.String"}, {@code "java.util.Map<%1, %2>"}
    * @param args existing {@link TypeMirror} instances to be substituted into the type
    */
   public static TypeMirror typeMirror(
@@ -165,7 +165,8 @@ public class TypeMirrors {
 
   /**
    * Evaluate raw types, and substitute new %d strings in their place.
-   *   e.g.  Map<String,List<Integer>>  -->  %1<%2,%3<%4>>
+   *
+   * <p>e.g. {@code "Map<String,List<Integer>>"} &#x27fc; {@code "%1<%2,%3<%4>>"}
    */
   private static void substituteRawTypes(
       Types typeUtils,
@@ -204,7 +205,7 @@ public class TypeMirrors {
   /**
    * Returns a parameterised generic type.
    *
-   * @throws IllegalArgumentException if <code>rawType</code> is not in fact a raw type, or if
+   * @throws IllegalArgumentException if {@code rawType} is not in fact a raw type, or if
    *     the number of given parameters does not match the number declared on the raw type.
    */
   private static DeclaredType parameterisedType(

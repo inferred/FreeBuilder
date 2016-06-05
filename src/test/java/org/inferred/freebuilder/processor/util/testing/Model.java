@@ -180,11 +180,11 @@ public class Model {
    * Returns a {@link TypeMirror} for the given type, substituting any provided arguments for
    * %1, %2, etc.
    *
-   * e.g. <code>typeMirror("java.util.List&lt;%1&gt;", typeMirror(String.class))</code> will
-   * return the same thing as <code>typeMirror("java.util.List&lt;java.lang.String&gt;")</code>
+   * <p>e.g. {@code typeMirror("java.util.List<%1>", typeMirror(String.class))} will
+   * return the same thing as {@code typeMirror("java.util.List<java.lang.String>")}
    *
-   * @param typeSnippet the type, represented as a snippet of Java code, e.g. "java.lang.String",
-   *     "java.util.Map&lt;%1, %2&gt;"
+   * @param typeSnippet the type, represented as a snippet of Java code, e.g.
+   *     {@code "java.lang.String"}, {@code "java.util.Map<%1, %2>"}
    * @param args existing {@link TypeMirror} instances to be substituted into the type
    */
   public TypeMirror typeMirror(String typeSnippet, TypeMirror... args) {

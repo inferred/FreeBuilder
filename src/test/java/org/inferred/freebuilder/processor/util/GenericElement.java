@@ -58,6 +58,7 @@ public abstract class GenericElement implements TypeElement {
    *         .addTypeParameter("E");
    * typeBuilder.getTypeParameter("E").addBound(typeBuilder.asType());
    * GenericElement type = typeBuilder.build();
+   * </pre>
    */
   public static class Builder {
     private final QualifiedName qualifiedName;
