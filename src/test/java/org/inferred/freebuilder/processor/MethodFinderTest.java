@@ -39,46 +39,46 @@ public class MethodFinderTest {
   @ClassRule public static ModelRule model = new ModelRule();
 
   abstract static class ClassOne {
-    abstract void a();
-    abstract void a(int x);
-    abstract int a(double x);
+    abstract void method();
+    abstract void method(int x);
+    abstract int method(double x);
   }
 
   @Test
   public void testNoInheritanceClass() {
-    assertThat(methodsOn(ClassOne.class))
-        .containsExactly("void ClassOne::a()", "void ClassOne::a(int)", "int ClassOne::a(double)");
+    assertThat(methodsOn(ClassOne.class)).containsExactly(
+        "void ClassOne::method()", "void ClassOne::method(int)", "int ClassOne::method(double)");
   }
 
   private interface InterfaceOne {
-    abstract void a();
+    abstract void method();
   }
 
   @Test
   public void testNoInheritanceInterface() {
-    assertThat(methodsOn(InterfaceOne.class)).containsExactly("void InterfaceOne::a()");
+    assertThat(methodsOn(InterfaceOne.class)).containsExactly("void InterfaceOne::method()");
   }
 
   private abstract static class SingleInterface implements InterfaceOne { }
 
   @Test
   public void testSingleInterface() {
-    assertThat(methodsOn(SingleInterface.class)).containsExactly("void InterfaceOne::a()");
+    assertThat(methodsOn(SingleInterface.class)).containsExactly("void InterfaceOne::method()");
   }
 
   private abstract static class SingleSuperclass extends ClassOne { }
 
   @Test
   public void testSingleSuperclassMethodInterface() {
-    assertThat(methodsOn(SingleSuperclass.class))
-        .containsExactly("void ClassOne::a()", "void ClassOne::a(int)", "int ClassOne::a(double)");
+    assertThat(methodsOn(SingleSuperclass.class)).containsExactly(
+        "void ClassOne::method()", "void ClassOne::method(int)", "int ClassOne::method(double)");
   }
 
   interface InterfaceTwo extends InterfaceOne { }
 
   @Test
   public void testSimpleInterfaceHierarchy() {
-    assertThat(methodsOn(InterfaceTwo.class)).containsExactly("void InterfaceOne::a()");
+    assertThat(methodsOn(InterfaceTwo.class)).containsExactly("void InterfaceOne::method()");
   }
 
   private abstract static class DiamondInheritance
@@ -86,15 +86,15 @@ public class MethodFinderTest {
 
   @Test
   public void testDiamondInheritance() {
-    assertThat(methodsOn(DiamondInheritance.class)).containsExactly("void InterfaceOne::a()");
+    assertThat(methodsOn(DiamondInheritance.class)).containsExactly("void InterfaceOne::method()");
   }
 
   private interface InterfaceThree {
-    abstract void a();
+    abstract void method();
   }
 
   private interface InterfaceFour {
-    abstract void a();
+    abstract void method();
   }
 
   private abstract static class MultipleMethodsSameSignature
@@ -105,7 +105,9 @@ public class MethodFinderTest {
     ImmutableList<String> methods = methodsOn(MultipleMethodsSameSignature.class);
     // When choosing between multiple unrelated interfaces defining the same method, pick any
     assertThat(methods).containsAnyOf(
-        "void InterfaceOne::a()", "void InterfaceThree::a()", "void InterfaceFour::a()");
+        "void InterfaceOne::method()",
+        "void InterfaceThree::method()",
+        "void InterfaceFour::method()");
     assertThat(methods).hasSize(1);
   }
 
@@ -114,15 +116,15 @@ public class MethodFinderTest {
 
   @Test
   public void testMultipleMethodsSameSignatureWithSuperclass() {
-    // When choosing between InterfaceOne::a and ClassOne::a, pick the concrete type.
-    assertThat(methodsOn(MultipleMethodsSameSignatureWithSuperclass.class))
-        .containsExactly("void ClassOne::a()", "void ClassOne::a(int)", "int ClassOne::a(double)");
+    // When choosing between InterfaceOne::method and ClassOne::method, pick the concrete type.
+    assertThat(methodsOn(MultipleMethodsSameSignatureWithSuperclass.class)).containsExactly(
+        "void ClassOne::method()", "void ClassOne::method(int)", "int ClassOne::method(double)");
   }
 
   private interface MultipleMethodsSameSignatureRedeclared
       extends InterfaceOne, InterfaceTwo, InterfaceThree, InterfaceFour {
     @Override
-    abstract void a();
+    abstract void method();
   }
 
   @Test
@@ -130,7 +132,7 @@ public class MethodFinderTest {
     ImmutableList<String> methods = methodsOn(MultipleMethodsSameSignatureRedeclared.class);
     // When choosing between multiple interfaces defining the same method, pick the most derived
     // one.
-    assertThat(methods).containsExactly("void MultipleMethodsSameSignatureRedeclared::a()");
+    assertThat(methods).containsExactly("void MultipleMethodsSameSignatureRedeclared::method()");
   }
 
   private abstract static class WideMethodsSuperclass {
