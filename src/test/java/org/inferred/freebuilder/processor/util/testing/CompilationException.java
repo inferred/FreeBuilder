@@ -15,12 +15,12 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * {@code CompilationException} is thrown when a

@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
-
 import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
 import org.inferred.freebuilder.processor.util.feature.Feature;

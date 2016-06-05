@@ -16,7 +16,9 @@
 package org.inferred.freebuilder.processor.util;
 
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.junit.Test;

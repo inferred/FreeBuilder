@@ -15,10 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.RoundEnvironments.annotatedElementsIn;
-
-import static javax.lang.model.util.ElementFilter.typesIn;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Throwables;

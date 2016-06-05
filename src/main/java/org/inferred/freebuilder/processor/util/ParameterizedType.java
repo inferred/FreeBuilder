@@ -18,11 +18,9 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
-
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

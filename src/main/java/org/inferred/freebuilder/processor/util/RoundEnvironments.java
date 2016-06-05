@@ -15,14 +15,14 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Sets;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Sets;
 
 /** Utility class for {@link RoundEnvironment}. */
 public class RoundEnvironments {

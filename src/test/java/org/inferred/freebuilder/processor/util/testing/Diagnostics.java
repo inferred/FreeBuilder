@@ -15,6 +15,9 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+
 import java.io.File;
 import java.util.EnumSet;
 import java.util.Locale;
@@ -22,9 +25,6 @@ import java.util.Locale;
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 
 /**
  * Static utilities for {@link Diagnostic} instances.

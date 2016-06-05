@@ -17,6 +17,12 @@ package org.inferred.freebuilder.processor;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.SetMultimap;
+
+import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
+
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -29,12 +35,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
-
-import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.SetMultimap;
 
 /**
  * Static utility method for finding all methods, declared and inherited, on a type.
