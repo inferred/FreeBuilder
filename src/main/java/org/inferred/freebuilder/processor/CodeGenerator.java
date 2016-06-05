@@ -230,7 +230,8 @@ public class CodeGenerator {
       if (Iterables.any(codeGenerators, IS_TEMPLATE_REQUIRED_IN_CLEAR)) {
         code.addLine("  %s _template = %s;",
             metadata.getGeneratedBuilder(),
-            metadata.getBuilderFactory().get().newBuilder(metadata.getBuilder(), TypeInference.INFERRED_TYPES));
+            metadata.getBuilderFactory().get()
+                .newBuilder(metadata.getBuilder(), TypeInference.INFERRED_TYPES));
       }
       for (PropertyCodeGenerator codeGenerator : codeGenerators) {
         if (codeGenerator.isTemplateRequiredInClear()) {

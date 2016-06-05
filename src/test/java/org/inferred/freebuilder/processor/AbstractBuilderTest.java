@@ -16,7 +16,8 @@ public class AbstractBuilderTest {
             .addLine("public abstract class TypeWithAbstractBuilder {")
             .addLine("  public abstract int getItem();")
             .addLine("")
-            .addLine("  public abstract static class Builder extends TypeWithAbstractBuilder_Builder {}")
+            .addLine("  public abstract static class Builder")
+            .addLine("      extends TypeWithAbstractBuilder_Builder {}")
             .addLine("}")
             .build();
 

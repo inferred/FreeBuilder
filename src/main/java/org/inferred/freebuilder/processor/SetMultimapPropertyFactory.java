@@ -134,7 +134,8 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
-          .addLine(" * from %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" * from %s.",
+              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" * If the multimap already contains this mapping, then {@code %s}",
               putMethod(property))
           .addLine(" * has no effect (only the previously added mapping is retained).")

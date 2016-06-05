@@ -964,7 +964,8 @@ public class BuildablePropertyFactoryTest {
         .with(new SourceBuilder()
             .addLine("package com.example.foo;")
             .addLine("class Item_Builder {")
-            .addLine("  private final %s<String> names = new %s<String>();", List.class, ArrayList.class)
+            .addLine("  private final %s<String> names = new %s<String>();",
+                List.class, ArrayList.class)
             .addLine("  public Item.Builder addNames(String... names) {")
             .addLine("    for (String name : names) {")
             .addLine("      this.names.add(name);")

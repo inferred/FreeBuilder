@@ -512,7 +512,8 @@ public class SetPropertyFactoryTest {
             .addLine("    .build();")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(builder.build().getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.build().getItems())")
+            .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -527,7 +528,8 @@ public class SetPropertyFactoryTest {
             .addLine("    .addItems(\"one\", \"two\");")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.build().getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.build().getItems())")
+            .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }

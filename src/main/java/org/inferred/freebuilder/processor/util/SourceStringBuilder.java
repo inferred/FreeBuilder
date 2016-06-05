@@ -46,7 +46,8 @@ public final class SourceStringBuilder implements SourceBuilder {
    * conflicts.
    */
   public static SourceBuilder simple(Feature<?>... features) {
-    return new SourceStringBuilder(new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features));
+    return new SourceStringBuilder(
+        new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features));
   }
 
   SourceStringBuilder(TypeShortener shortener, FeatureSet features) {

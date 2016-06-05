@@ -73,7 +73,8 @@ public class ModelUtils {
     return Optional.absent();
   }
 
-  public static Optional<AnnotationValue> findProperty(AnnotationMirror annotation, String propertyName) {
+  public static Optional<AnnotationValue> findProperty(
+      AnnotationMirror annotation, String propertyName) {
     for (Entry<? extends ExecutableElement, ? extends AnnotationValue> element
         : annotation.getElementValues().entrySet()) {
       if (element.getKey().getSimpleName().contentEquals(propertyName)) {

@@ -1350,7 +1350,8 @@ public class AnalyserTest {
   }
 
   @Test
-  public void valueTypeSuperclassesNestedClassesAddedToVisibleList() throws CannotGenerateCodeException {
+  public void valueTypeSuperclassesNestedClassesAddedToVisibleList()
+      throws CannotGenerateCodeException {
      model.newType(
         "package com.example;",
         "public class SuperType {",
