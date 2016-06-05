@@ -9,6 +9,7 @@ buildscript {
 }
 
 plugins {
+  id 'checkstyle'
   id 'eclipse'
   id 'java'
   id 'com.bmuschko.nexus' version '2.3.1'
@@ -70,6 +71,22 @@ String jackson(String pkg) {
 tasks.withType(Test) {
   testLogging {
     events "passed", "skipped", "failed"
+  }
+}
+
+checkstyle {
+  toolVersion = "6.19"
+  configProperties['config_loc'] = "$rootDir/config/checkstyle"
+}
+
+tasks.withType(Checkstyle).each { checkstyleTask ->
+  checkstyleTask.doLast {
+    reports.all { report ->
+      def outputFile = report.destination
+      if (outputFile.exists() && outputFile.text.contains("<error ")) {
+        throw new GradleException("There were checkstyle warnings! See $outputFile")
+      }
+    }
   }
 }
 
