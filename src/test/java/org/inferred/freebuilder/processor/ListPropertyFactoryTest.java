@@ -15,12 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
@@ -59,13 +59,13 @@ public class ListPropertyFactoryTest {
   @Test
   public void testDefaultEmpty() {
     behaviorTester
-    .with(new Processor())
-    .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
-    .with(new TestBuilder()
-        .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-        .addLine("assertThat(value.getItems()).isEmpty();")
-        .build())
-    .runTest();
+        .with(new Processor())
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
+            .build())
+        .runTest();
   }
 
   @Test

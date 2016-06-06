@@ -26,5 +26,5 @@ public interface OptionalPropertiesType extends Serializable {
   Optional<String> getFirstName();
   Optional<String> getSurname();
 
-  public static class Builder extends OptionalPropertiesType_Builder { }
+  class Builder extends OptionalPropertiesType_Builder { }
 }

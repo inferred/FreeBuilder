@@ -18,19 +18,19 @@ package org.inferred.freebuilder.processor;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
+
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
+
 import java.util.Set;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 
 /** Standard ways of constructing a default Builder. */
 public enum BuilderFactory {

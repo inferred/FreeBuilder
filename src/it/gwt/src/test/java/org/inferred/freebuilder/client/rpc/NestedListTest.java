@@ -60,7 +60,8 @@ public class NestedListTest extends GWTTestCase {
 
     private NestedListTestServiceAsync getServiceAsync() {
         if (customFieldSerializerTestService == null) {
-            customFieldSerializerTestService = (NestedListTestServiceAsync) GWT.create(NestedListTestService.class);
+            customFieldSerializerTestService =
+                    (NestedListTestServiceAsync) GWT.create(NestedListTestService.class);
             ((ServiceDefTarget) customFieldSerializerTestService)
                     .setServiceEntryPoint(GWT.getModuleBaseURL() + "nested-list");
         }

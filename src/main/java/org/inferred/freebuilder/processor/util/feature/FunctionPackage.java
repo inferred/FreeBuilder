@@ -72,7 +72,7 @@ public enum FunctionPackage implements Feature<FunctionPackage> {
     return ifAvailable(UNARY_OPERATOR);
   }
 
-  private static final boolean runningInEclipse() {
+  private static boolean runningInEclipse() {
     // If we're running in Eclipse, we will have been invoked by the Eclipse round dispatcher.
     Throwable t = new Throwable();
     t.fillInStackTrace();
@@ -86,7 +86,7 @@ public enum FunctionPackage implements Feature<FunctionPackage> {
     return false;
   }
 
-  private static final boolean hasLambdas(SourceVersion version) {
+  private static boolean hasLambdas(SourceVersion version) {
     return version.ordinal() >= 8;
   }
 

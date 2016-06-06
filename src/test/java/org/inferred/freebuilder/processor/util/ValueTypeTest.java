@@ -17,11 +17,11 @@ package org.inferred.freebuilder.processor.util;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.testing.EqualsTester;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import com.google.common.testing.EqualsTester;
 
 @RunWith(JUnit4.class)
 public class ValueTypeTest {

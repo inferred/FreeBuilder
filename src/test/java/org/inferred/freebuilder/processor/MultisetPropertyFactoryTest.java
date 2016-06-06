@@ -15,15 +15,15 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.testing.EqualsTester;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.CompilationException;
@@ -74,13 +74,13 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testDefaultEmpty() {
     behaviorTester
-    .with(new Processor())
-    .with(MULTISET_PROPERTY_TYPE)
-    .with(new TestBuilder()
-        .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-        .addLine("assertThat(value.getItems()).isEmpty();")
-        .build())
-    .runTest();
+        .with(new Processor())
+        .with(MULTISET_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
+            .build())
+        .runTest();
   }
 
   @Test
@@ -352,13 +352,13 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testDefaultEmpty_primitive() {
     behaviorTester
-    .with(new Processor())
-    .with(MULTISET_PRIMITIVES_TYPE)
-    .with(new TestBuilder()
-        .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-        .addLine("assertThat(value.getItems()).isEmpty();")
-        .build())
-    .runTest();
+        .with(new Processor())
+        .with(MULTISET_PRIMITIVES_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
+            .build())
+        .runTest();
   }
 
   @Test

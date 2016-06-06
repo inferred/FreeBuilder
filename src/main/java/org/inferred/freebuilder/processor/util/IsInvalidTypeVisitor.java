@@ -39,7 +39,7 @@ import javax.lang.model.util.AbstractTypeVisitor6;
 public class IsInvalidTypeVisitor
     extends AbstractTypeVisitor6<Boolean, Void> implements Predicate<TypeMirror> {
 
-  /** Handles self-referential types like Comparable<E extends Comparable<E>>. */
+  /** Handles self-referential types like {@code Comparable<E extends Comparable<E>>}. */
   private final Map<DeclaredType, Boolean> invalidity = new LinkedHashMap<DeclaredType, Boolean>();
 
   /** Returns true if input is neither null nor invalid. */

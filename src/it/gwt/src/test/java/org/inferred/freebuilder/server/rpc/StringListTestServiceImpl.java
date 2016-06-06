@@ -20,7 +20,8 @@ import org.inferred.freebuilder.client.rpc.StringListTestService;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
-public class StringListTestServiceImpl extends RemoteServiceServlet implements StringListTestService {
+public class StringListTestServiceImpl extends RemoteServiceServlet
+        implements StringListTestService {
 
     @Override
     public StringListGwtType echo(StringListGwtType mapGwtType) {

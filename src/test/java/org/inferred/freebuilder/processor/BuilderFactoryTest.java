@@ -24,7 +24,7 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.IN
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_6;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 
-import javax.lang.model.element.TypeElement;
+import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
@@ -36,7 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.base.Optional;
+import javax.lang.model.element.TypeElement;
 
 @RunWith(JUnit4.class)
 public class BuilderFactoryTest {

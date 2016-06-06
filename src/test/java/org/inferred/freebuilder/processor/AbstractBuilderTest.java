@@ -8,24 +8,25 @@ import org.junit.Test;
 import javax.tools.JavaFileObject;
 
 public class AbstractBuilderTest {
-    private final BehaviorTester behaviorTester = new BehaviorTester();
+  private final BehaviorTester behaviorTester = new BehaviorTester();
 
-    private static final JavaFileObject TYPE_WITH_ABSTRACT_BUILDER = new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class TypeWithAbstractBuilder {")
-            .addLine("  public abstract int getItem();")
-            .addLine("")
-            .addLine("  public abstract static class Builder extends TypeWithAbstractBuilder_Builder {}")
-            .addLine("}")
-            .build();
+  private static final JavaFileObject TYPE_WITH_ABSTRACT_BUILDER = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class TypeWithAbstractBuilder {")
+      .addLine("  public abstract int getItem();")
+      .addLine("")
+      .addLine("  public abstract static class Builder")
+      .addLine("      extends TypeWithAbstractBuilder_Builder {}")
+      .addLine("}")
+      .build();
 
-    @Test
-    public void testGenericWithConstraint() {
-        behaviorTester
-                .with(new Processor())
-                .with(TYPE_WITH_ABSTRACT_BUILDER)
-                .compiles()
-                .withNoWarnings();
-    }
+  @Test
+  public void testGenericWithConstraint() {
+    behaviorTester
+        .with(new Processor())
+        .with(TYPE_WITH_ABSTRACT_BUILDER)
+        .compiles()
+        .withNoWarnings();
+  }
 }

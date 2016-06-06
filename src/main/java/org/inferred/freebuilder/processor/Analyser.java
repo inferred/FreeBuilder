@@ -21,19 +21,17 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
-
+import static javax.lang.model.element.ElementKind.INTERFACE;
+import static javax.lang.model.util.ElementFilter.constructorsIn;
+import static javax.lang.model.util.ElementFilter.typesIn;
+import static javax.tools.Diagnostic.Kind.ERROR;
+import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.GwtSupport.addGwtMetadata;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
-
-import static javax.lang.model.element.ElementKind.INTERFACE;
-import static javax.lang.model.util.ElementFilter.constructorsIn;
-import static javax.lang.model.util.ElementFilter.typesIn;
-import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.NOTE;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -701,7 +699,7 @@ class Analyser {
     return any(builder.get().getInterfaces(), isEqualTo(Serializable.class));
   }
 
-  private static final boolean hasUpperCase(int codepoint) {
+  private static boolean hasUpperCase(int codepoint) {
     return Character.toUpperCase(codepoint) != codepoint;
   }
 

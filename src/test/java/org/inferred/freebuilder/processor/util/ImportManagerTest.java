@@ -20,11 +20,7 @@ import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedCla
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.lang.model.element.Name;
+import com.google.common.reflect.TypeToken;
 
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
 import org.inferred.freebuilder.processor.util.testing.Model;
@@ -33,7 +29,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.reflect.TypeToken;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import javax.lang.model.element.Name;
 
 @RunWith(JUnit4.class)
 public class ImportManagerTest {

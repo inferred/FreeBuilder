@@ -49,6 +49,11 @@ public interface SourceBuilder {
   SourceBuilder add(String fmt, Object... args);
 
   /**
+   * Equivalent to {@code add("%s", excerpt)}.
+   */
+  SourceBuilder add(Excerpt excerpt);
+
+  /**
    * Appends a formatted line of code to the source.
    *
    * <p>Formatting is done by {@link String#format}, except that:<ul>
@@ -61,11 +66,6 @@ public interface SourceBuilder {
    * </ul>
    */
   SourceBuilder addLine(String fmt, Object... args);
-
-  /**
-   * Equivalent to {@code add("%s", excerpt)}.
-   */
-  SourceBuilder add(Excerpt excerpt);
 
   /**
    * Returns a {@code SourceStringBuilder} with the same configuration as this builder. In

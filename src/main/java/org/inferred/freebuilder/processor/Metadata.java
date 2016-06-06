@@ -57,7 +57,7 @@ public abstract class Metadata {
 
     private final String excerpt;
 
-    private Visibility(String excerpt) {
+    Visibility(String excerpt) {
       this.excerpt = excerpt;
     }
 
@@ -202,13 +202,13 @@ public abstract class Metadata {
       super.setValueTypeVisibility(Visibility.PRIVATE);
     }
 
-  /**
-   * Sets the value to be returned by {@link Metadata#getValueTypeVisibility()} to the most visible
-   * of the current value and {@code visibility}. Will not decrease visibility.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code visibility} is null
-   */
+    /**
+     * Sets the value to be returned by {@link Metadata#getValueTypeVisibility()} to the most
+     * visible of the current value and {@code visibility}. Will not decrease visibility.
+     *
+     * @return this {@code Builder} object
+     * @throws NullPointerException if {@code visibility} is null
+     */
     @Override
     public Builder setValueTypeVisibility(Visibility visibility) {
       return super.setValueTypeVisibility(

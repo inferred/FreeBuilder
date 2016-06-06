@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;

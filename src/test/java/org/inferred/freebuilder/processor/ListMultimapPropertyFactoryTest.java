@@ -15,10 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -29,6 +25,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.testing.EqualsTester;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
@@ -993,94 +993,94 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testOverridingPut_primitiveKey() {
     behaviorTester
-    .with(new Processor())
-    .with(new SourceBuilder()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<Integer, String> getItems();", Multimap.class)
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {")
-        .addLine("    @Override public Builder putItems(int unused, String unused2) {")
-        .addLine("      return this;")
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("  public static Builder builder() {")
-        .addLine("    return new Builder();")
-        .addLine("  }")
-        .addLine("}")
-        .build())
-    .with(testBuilder()
-        .addLine("DataType value = new DataType.Builder()")
-        .addLine("    .putItems(0, \"A\")")
-        .addLine("    .putAllItems(1, %s.of(\"B\", \"C\"))", ImmutableList.class)
-        .addLine("    .putAllItems(%s.of(3, \"D\"))", ImmutableMultimap.class)
-        .addLine("    .build();")
-        .addLine("assertThat(value.getItems()).isEmpty();")
-        .build())
-    .runTest();
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<Integer, String> getItems();", Multimap.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder putItems(int unused, String unused2) {")
+            .addLine("      return this;")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(0, \"A\")")
+            .addLine("    .putAllItems(1, %s.of(\"B\", \"C\"))", ImmutableList.class)
+            .addLine("    .putAllItems(%s.of(3, \"D\"))", ImmutableMultimap.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
+            .build())
+        .runTest();
   }
 
   @Test
   public void testOverridingPut_primitiveValue() {
     behaviorTester
-    .with(new Processor())
-    .with(new SourceBuilder()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<Integer, Character> getItems();", Multimap.class)
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {")
-        .addLine("    @Override public Builder putItems(int unused, char unused2) {")
-        .addLine("      return this;")
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("  public static Builder builder() {")
-        .addLine("    return new Builder();")
-        .addLine("  }")
-        .addLine("}")
-        .build())
-    .with(testBuilder()
-        .addLine("DataType value = new DataType.Builder()")
-        .addLine("    .putItems(0, 'A')")
-        .addLine("    .putAllItems(1, %s.of('B', 'C'))", ImmutableList.class)
-        .addLine("    .putAllItems(%s.of(3, 'D'))", ImmutableMultimap.class)
-        .addLine("    .build();")
-        .addLine("assertThat(value.getItems()).isEmpty();")
-        .build())
-    .runTest();
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<Integer, Character> getItems();", Multimap.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder putItems(int unused, char unused2) {")
+            .addLine("      return this;")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(0, 'A')")
+            .addLine("    .putAllItems(1, %s.of('B', 'C'))", ImmutableList.class)
+            .addLine("    .putAllItems(%s.of(3, 'D'))", ImmutableMultimap.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
+            .build())
+        .runTest();
   }
 
   @Test
   public void testOverridingPut_primitives() {
     behaviorTester
-    .with(new Processor())
-    .with(new SourceBuilder()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<Integer, Character> getItems();", Multimap.class)
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {")
-        .addLine("    @Override public Builder putItems(int unused, char unused2) {")
-        .addLine("      return this;")
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("  public static Builder builder() {")
-        .addLine("    return new Builder();")
-        .addLine("  }")
-        .addLine("}")
-        .build())
-    .with(testBuilder()
-        .addLine("DataType value = new DataType.Builder()")
-        .addLine("    .putItems(0, 'A')")
-        .addLine("    .putAllItems(1, %s.of('B', 'C'))", ImmutableList.class)
-        .addLine("    .putAllItems(%s.of(3, 'D'))", ImmutableMultimap.class)
-        .addLine("    .build();")
-        .addLine("assertThat(value.getItems()).isEmpty();")
-        .build())
-    .runTest();
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<Integer, Character> getItems();", Multimap.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder putItems(int unused, char unused2) {")
+            .addLine("      return this;")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(0, 'A')")
+            .addLine("    .putAllItems(1, %s.of('B', 'C'))", ImmutableList.class)
+            .addLine("    .putAllItems(%s.of(3, 'D'))", ImmutableMultimap.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
+            .build())
+        .runTest();
   }
 
   @Test

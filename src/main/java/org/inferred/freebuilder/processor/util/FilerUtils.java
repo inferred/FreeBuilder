@@ -45,22 +45,18 @@ public class FilerUtils {
     try {
       writer.append(source);
     } catch (Throwable e) {
-      if (ADD_SUPPRESSED != null) {
+      try {
+        writer.close();
+      } catch (Throwable t) {
         // Use suppressed exceptions in Java 7+
-        try {
-          writer.close();
-        } catch (Throwable t) {
+        if (ADD_SUPPRESSED != null) {
           try {
             ADD_SUPPRESSED.invoke(e, t);
           } catch (Exception x) {
             throw new RuntimeException("Failed to add suppressed exception: " + x.getMessage(), e);
           }
         }
-      } else {
         // Ignore any error thrown calling close() in Java 6
-        try {
-          writer.close();
-        } catch (Throwable ignored) {}
       }
       Throwables.propagateIfPossible(e, IOException.class);
       throw Throwables.propagate(e);
@@ -69,6 +65,7 @@ public class FilerUtils {
   }
 
   private static final Method ADD_SUPPRESSED;
+
   static {
     Method addSuppressed;
     try {

@@ -22,5 +22,5 @@ import java.util.List;
 public interface ListProperty extends Serializable {
   List<String> getNames();
 
-  public static class Builder extends ListProperty_Builder { }
+  class Builder extends ListProperty_Builder { }
 }

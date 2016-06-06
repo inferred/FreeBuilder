@@ -306,8 +306,8 @@ public class JavaUtilOptionalSourceTest {
         "    public String toString() {",
         "      return \"Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), " +
-            "(age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), "
+            + "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -355,8 +355,8 @@ public class JavaUtilOptionalSourceTest {
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), " +
-            "(age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), "
+            + "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",

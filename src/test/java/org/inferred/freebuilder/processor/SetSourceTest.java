@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;

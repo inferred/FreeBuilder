@@ -28,5 +28,5 @@ public interface NestedListGwtType extends Serializable {
   StringListGwtType getItem();
 
   /** Builder for {@link NestedListGwtType}. */
-  public static class Builder extends NestedListGwtType_Builder { }
+  class Builder extends NestedListGwtType_Builder { }
 }

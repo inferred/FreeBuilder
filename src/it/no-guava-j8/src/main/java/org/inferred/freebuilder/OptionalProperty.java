@@ -20,5 +20,5 @@ import java.util.Optional;
 public interface OptionalProperty extends Serializable {
   Optional<String> getName();
 
-  public static class Builder extends OptionalProperty_Builder { }
+  class Builder extends OptionalProperty_Builder { }
 }

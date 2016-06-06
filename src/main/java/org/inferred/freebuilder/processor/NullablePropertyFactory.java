@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Objects.firstNonNull;
-
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
@@ -68,9 +67,8 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     private final Set<TypeElement> nullables;
-    CodeGenerator(
-        Property property,
-        Iterable<TypeElement> nullableAnnotations) {
+
+    CodeGenerator(Property property, Iterable<TypeElement> nullableAnnotations) {
       super(property);
       this.nullables = ImmutableSet.copyOf(nullableAnnotations);
     }
@@ -190,12 +188,12 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addClear(SourceBuilder code, String template) {
+    public void addClearField(SourceBuilder code, String template) {
       code.addLine("%1$s = %2$s.%1$s;", property.getName(), template);
     }
 
     @Override
-    public void addPartialClear(SourceBuilder code) {
+    public void addPartialClearField(SourceBuilder code) {
       code.addLine("%s = null;", property.getName());
     }
   }

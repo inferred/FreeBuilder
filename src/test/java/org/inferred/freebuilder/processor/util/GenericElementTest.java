@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;

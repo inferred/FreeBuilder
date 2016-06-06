@@ -20,6 +20,19 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.tools.ToolProvider.getSystemJavaCompiler;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.ExecutionError;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
@@ -49,19 +62,6 @@ import javax.lang.model.util.Types;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.reflect.TypeToken;
-import com.google.common.util.concurrent.ExecutionError;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 /**
  * Utility class for creating javax.lang.model instances for testing.
@@ -180,11 +180,11 @@ public class Model {
    * Returns a {@link TypeMirror} for the given type, substituting any provided arguments for
    * %1, %2, etc.
    *
-   * e.g. <code>typeMirror("java.util.List&lt;%1&gt;", typeMirror(String.class))</code> will
-   * return the same thing as <code>typeMirror("java.util.List&lt;java.lang.String&gt;")</code>
+   * <p>e.g. {@code typeMirror("java.util.List<%1>", typeMirror(String.class))} will
+   * return the same thing as {@code typeMirror("java.util.List<java.lang.String>")}
    *
-   * @param typeSnippet the type, represented as a snippet of Java code, e.g. "java.lang.String",
-   *     "java.util.Map&lt;%1, %2&gt;"
+   * @param typeSnippet the type, represented as a snippet of Java code, e.g.
+   *     {@code "java.lang.String"}, {@code "java.util.Map<%1, %2>"}
    * @param args existing {@link TypeMirror} instances to be substituted into the type
    */
   public TypeMirror typeMirror(String typeSnippet, TypeMirror... args) {
@@ -446,7 +446,7 @@ public class Model {
   private static class HasAnnotationOfType implements Predicate<Element> {
     private final Class<? extends Annotation> annotationType;
 
-    public HasAnnotationOfType(Class<? extends Annotation> annotationType) {
+    HasAnnotationOfType(Class<? extends Annotation> annotationType) {
       this.annotationType = annotationType;
     }
 

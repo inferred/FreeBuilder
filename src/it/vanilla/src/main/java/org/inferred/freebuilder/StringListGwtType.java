@@ -27,5 +27,5 @@ public interface StringListGwtType extends Serializable {
   List<String> getNames();
 
   /** Builder for {@link StringListGwtType}. */
-  public static class Builder extends StringListGwtType_Builder { }
+  class Builder extends StringListGwtType_Builder { }
 }

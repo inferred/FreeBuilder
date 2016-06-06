@@ -19,14 +19,14 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.assertEquals;
 
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.NestingKind;
-import javax.lang.model.element.TypeElement;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.NestingKind;
+import javax.lang.model.element.TypeElement;
 
 /** Tests for {@link ModelRule}. */
 @RunWith(JUnit4.class)

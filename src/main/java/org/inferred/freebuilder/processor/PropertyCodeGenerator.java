@@ -132,10 +132,10 @@ public abstract class PropertyCodeGenerator {
   public abstract boolean isTemplateRequiredInClear();
 
   /** Adds a clear call for the property given a template builder to the builder's source code. */
-  public abstract void addClear(SourceBuilder code, String template);
+  public abstract void addClearField(SourceBuilder code, String template);
 
   /** Adds a partial clear call for the property to the builder's source code. */
-  public abstract void addPartialClear(SourceBuilder code);
+  public abstract void addPartialClearField(SourceBuilder code);
 
   /** Returns excerpts for any static types or methods added by this generator. */
   public Set<? extends StaticExcerpt> getStaticExcerpts() {

@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 
@@ -191,8 +190,8 @@ public class NullableSourceTest {
         "    public String toString() {",
         "      return \"Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), " +
-            "(age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), "
+            + "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",
@@ -242,8 +241,8 @@ public class NullableSourceTest {
         "    public String toString() {",
         "      return \"partial Person{\"",
         "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), " +
-            "(age != null ? \"age=\" + age : null))",
+        "              (name != null ? \"name=\" + name : null), "
+            + "(age != null ? \"age=\" + age : null))",
         "          + \"}\";",
         "    }",
         "  }",

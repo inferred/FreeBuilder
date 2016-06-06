@@ -15,14 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Name;
-
 import com.google.common.collect.ImmutableSet;
+
 import com.sun.source.tree.ExpressionStatementTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
@@ -36,6 +30,13 @@ import com.sun.source.tree.Tree.Kind;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
 
 /** Implementation of {@link MethodIntrospector} for javac. */
 class JavacMethodIntrospector extends MethodIntrospector {

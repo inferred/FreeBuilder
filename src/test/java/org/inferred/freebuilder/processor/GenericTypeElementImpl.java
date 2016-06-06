@@ -15,6 +15,14 @@
  */
 package org.inferred.freebuilder.processor;
 
+import com.google.common.collect.ImmutableList;
+
+import org.inferred.freebuilder.processor.util.NameImpl;
+import org.inferred.freebuilder.processor.util.NoTypes;
+import org.inferred.freebuilder.processor.util.PackageElementImpl;
+import org.inferred.freebuilder.processor.util.Partial;
+import org.inferred.freebuilder.processor.util.ValueType;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
@@ -30,14 +38,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.util.AbstractElementVisitor6;
-
-import org.inferred.freebuilder.processor.util.NameImpl;
-import org.inferred.freebuilder.processor.util.NoTypes;
-import org.inferred.freebuilder.processor.util.PackageElementImpl;
-import org.inferred.freebuilder.processor.util.Partial;
-import org.inferred.freebuilder.processor.util.ValueType;
-
-import com.google.common.collect.ImmutableList;
 
 abstract class GenericTypeElementImpl extends ValueType
     implements javax.lang.model.element.TypeElement {

@@ -27,5 +27,5 @@ public interface OptionalGwtType extends Serializable {
   Optional<String> getName();
 
   /** Builder for {@link OptionalGwtType}. */
-  public static class Builder extends OptionalGwtType_Builder { }
+  class Builder extends OptionalGwtType_Builder { }
 }

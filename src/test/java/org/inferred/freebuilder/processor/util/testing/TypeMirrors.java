@@ -17,6 +17,16 @@ package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
+
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -36,16 +46,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.reflect.TypeToken;
 
 /** Static utility methods pertaining to {@link TypeMirror} instances. */
 public class TypeMirrors {
@@ -79,10 +79,12 @@ public class TypeMirrors {
   }
 
   /** Returns a {@link TypeMirror} for the given type. */
-  public static TypeMirror typeMirror(
-      Types typeUtils,
-      Elements elementUtils,
-      Type type) {
+  public static TypeMirror typeMirror(Types typeUtils, Elements elementUtils, TypeToken<?> type) {
+    return typeMirror(typeUtils, elementUtils, type.getType());
+  }
+
+  /** Returns a {@link TypeMirror} for the given type. */
+  public static TypeMirror typeMirror(Types typeUtils, Elements elementUtils, Type type) {
     if (type instanceof Class) {
       return typeMirror(typeUtils, elementUtils, (Class<?>) type);
     } else if (type instanceof GenericArrayType) {
@@ -118,31 +120,18 @@ public class TypeMirrors {
     }
   }
 
-  private static Type getOnlyType(Type[] types) {
-    checkArgument(types.length <= 1, "Wildcard types with multiple bounds not supported");
-    return (types.length == 0) ? null : types[0];
-  }
-
-  /** Returns a {@link TypeMirror} for the given type. */
-  public static TypeMirror typeMirror(
-      Types typeUtils,
-      Elements elementUtils,
-      TypeToken<?> type) {
-    return typeMirror(typeUtils, elementUtils, type.getType());
-  }
-
   /**
    * Returns a {@link TypeMirror} for the given type, substituting any provided arguments for
    * %1, %2, etc.
    *
-   * <p>e.g. <code>typeMirror(types, elements, "java.util.List&lt;%1&gt;",
-   * typeMirror(types, elements, String.class))</code> will return the same thing as
-   * <code>typeMirror(types, elements, "java.util.List&lt;java.lang.String&gt;")</code>
+   * <p>e.g. {@code typeMirror(types, elements, "java.util.List<%1>",
+   * typeMirror(types, elements, String.class))} will return the same thing as
+   * {@code typeMirror(types, elements, "java.util.List<java.lang.String>")}
    *
    * @param typeUtils an implementation of {@link Types}
    * @param elementUtils an implementation of {@link Elements}
-   * @param typeSnippet the type, represented as a snippet of Java code, e.g. "java.lang.String",
-   *     "java.util.Map&lt;%1, %2&gt;"
+   * @param typeSnippet the type, represented as a snippet of Java code, e.g.
+   *     {@code "java.lang.String"}, {@code "java.util.Map<%1, %2>"}
    * @param args existing {@link TypeMirror} instances to be substituted into the type
    */
   public static TypeMirror typeMirror(
@@ -169,9 +158,15 @@ public class TypeMirrors {
     return substitutions.get(mutableSnippet.toString());
   }
 
+  private static Type getOnlyType(Type[] types) {
+    checkArgument(types.length <= 1, "Wildcard types with multiple bounds not supported");
+    return (types.length == 0) ? null : types[0];
+  }
+
   /**
    * Evaluate raw types, and substitute new %d strings in their place.
-   *   e.g.  Map<String,List<Integer>>  -->  %1<%2,%3<%4>>
+   *
+   * <p>e.g. {@code "Map<String,List<Integer>>"} &#x27fc; {@code "%1<%2,%3<%4>>"}
    */
   private static void substituteRawTypes(
       Types typeUtils,
@@ -210,7 +205,7 @@ public class TypeMirrors {
   /**
    * Returns a parameterised generic type.
    *
-   * @throws IllegalArgumentException if <code>rawType</code> is not in fact a raw type, or if
+   * @throws IllegalArgumentException if {@code rawType} is not in fact a raw type, or if
    *     the number of given parameters does not match the number declared on the raw type.
    */
   private static DeclaredType parameterisedType(

@@ -15,13 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.CompilationException;
@@ -512,7 +512,8 @@ public class SetPropertyFactoryTest {
             .addLine("    .build();")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(builder.build().getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.build().getItems())")
+            .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -527,7 +528,8 @@ public class SetPropertyFactoryTest {
             .addLine("    .addItems(\"one\", \"two\");")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.build().getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.build().getItems())")
+            .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }

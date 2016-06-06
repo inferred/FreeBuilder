@@ -17,7 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.tryFind;
-
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.INFERRED_TYPES;
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
@@ -27,8 +28,16 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationM
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.util.ElementFilter.typesIn;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+
+import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.List;
 
@@ -40,17 +49,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
-
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 
 /**
  * {@link PropertyCodeGenerator.Factory} for <b>buildable</b> types: that is, types with a Builder
@@ -295,12 +293,12 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addClear(SourceBuilder code, String template) {
+    public void addClearField(SourceBuilder code, String template) {
       code.addLine("%s.clear();", property.getName());
     }
 
     @Override
-    public void addPartialClear(SourceBuilder code) {
+    public void addPartialClearField(SourceBuilder code) {
       code.addLine("%s.clear();", property.getName());
     }
   }

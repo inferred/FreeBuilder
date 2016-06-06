@@ -15,6 +15,10 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+
 import java.util.List;
 
 import javax.lang.model.element.Name;
@@ -23,10 +27,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor6;
-
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 
 /**
  * Produces type references for use in source code.

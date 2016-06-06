@@ -19,6 +19,14 @@ import static com.google.common.collect.Iterables.addAll;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -36,14 +44,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
-
 /**
  * Manages the imports for a source file, and produces short type references by adding extra
  * imports when possible.
@@ -56,6 +56,7 @@ class ImportManager extends SimpleTypeVisitor6<String, Void>
 
   private static final String JAVA_LANG_PACKAGE = "java.lang";
   private static final String PACKAGE_PREFIX = "package ";
+
   /**
    * Builder of {@link ImportManager} instances.
    */

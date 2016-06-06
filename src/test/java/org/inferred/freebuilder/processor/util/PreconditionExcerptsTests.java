@@ -74,7 +74,8 @@ public class PreconditionExcerptsTests {
   @Test
   public void testCheckArgument_guava_singleParameter() {
     String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
-        .add(PreconditionExcerpts.checkArgument("foo > 0", "foo must be positive, but got %s", "foo"))
+        .add(PreconditionExcerpts.checkArgument(
+            "foo > 0", "foo must be positive, but got %s", "foo"))
         .toString();
     assertEquals("Preconditions.checkArgument(foo > 0, "
         + "\"foo must be positive, but got %s\", foo);\n", source);
@@ -95,7 +96,8 @@ public class PreconditionExcerptsTests {
     String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument("!foo.isEmpty()", "foo must not be empty"))
         .toString();
-    assertEquals("Preconditions.checkArgument(!foo.isEmpty(), \"foo must not be empty\");\n", source);
+    assertEquals(
+        "Preconditions.checkArgument(!foo.isEmpty(), \"foo must not be empty\");\n", source);
   }
 
   @Test

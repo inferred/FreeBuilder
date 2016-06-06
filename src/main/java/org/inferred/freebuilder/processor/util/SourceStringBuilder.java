@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
-
 import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
 import org.inferred.freebuilder.processor.util.feature.Feature;
@@ -47,7 +46,8 @@ public final class SourceStringBuilder implements SourceBuilder {
    * conflicts.
    */
   public static SourceBuilder simple(Feature<?>... features) {
-    return new SourceStringBuilder(new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features));
+    return new SourceStringBuilder(
+        new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features));
   }
 
   SourceStringBuilder(TypeShortener shortener, FeatureSet features) {

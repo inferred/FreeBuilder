@@ -61,7 +61,8 @@ public class MapTest extends GWTTestCase {
 
     private MapTestServiceAsync getServiceAsync() {
         if (customFieldSerializerTestService == null) {
-            customFieldSerializerTestService = (MapTestServiceAsync) GWT.create(MapTestService.class);
+            customFieldSerializerTestService =
+                    (MapTestServiceAsync) GWT.create(MapTestService.class);
             ((ServiceDefTarget) customFieldSerializerTestService)
                     .setServiceEntryPoint(GWT.getModuleBaseURL() + "map");
         }

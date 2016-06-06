@@ -26,10 +26,8 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.SimpleTypeVisitor6;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
@@ -38,8 +36,10 @@ import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.SimpleTypeVisitor6;
 
 /**
  * {@link PropertyCodeGenerator.Factory} providing a default value (absent) and convenience
@@ -48,7 +48,7 @@ import com.google.common.base.Optional;
 public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @VisibleForTesting
-  static enum OptionalType {
+  enum OptionalType {
     GUAVA(QualifiedName.of(Optional.class), "absent", "fromNullable") {
       @Override
       protected void applyMapper(SourceBuilder code, Metadata metadata, Property property) {
@@ -89,7 +89,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     private final String empty;
     private final String ofNullable;
 
-    private OptionalType(QualifiedName cls, String empty, String ofNullable) {
+    OptionalType(QualifiedName cls, String empty, String ofNullable) {
       this.cls = cls;
       this.empty = empty;
       this.ofNullable = ofNullable;
@@ -350,12 +350,12 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addClear(SourceBuilder code, String template) {
+    public void addClearField(SourceBuilder code, String template) {
       code.addLine("%1$s = %2$s.%1$s;", property.getName(), template);
     }
 
     @Override
-    public void addPartialClear(SourceBuilder code) {
+    public void addPartialClearField(SourceBuilder code) {
       code.addLine("%s = null;", property.getName());
     }
   }

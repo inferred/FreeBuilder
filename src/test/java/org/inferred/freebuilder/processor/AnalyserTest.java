@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.inferred.freebuilder.processor.BuilderFactory.BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NEW_BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
@@ -471,7 +470,7 @@ public class AnalyserTest {
   }
 
   @Test
-  public void abstractMethodNamedGetürkt() throws CannotGenerateCodeException {
+  public void abstractMethodWithNonAsciiName() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
@@ -1119,7 +1118,7 @@ public class AnalyserTest {
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
     QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
-    .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
+        .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder.withParameters())
@@ -1330,7 +1329,7 @@ public class AnalyserTest {
 
   @Test
   public void valueTypeNestedClassesAddedToVisibleList() throws CannotGenerateCodeException {
-     TypeElement dataType = model.newType(
+    TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
         "  DataType(int i) { }",
@@ -1351,13 +1350,14 @@ public class AnalyserTest {
   }
 
   @Test
-  public void valueTypeSuperclassesNestedClassesAddedToVisibleList() throws CannotGenerateCodeException {
-     model.newType(
+  public void valueTypeSuperclassesNestedClassesAddedToVisibleList()
+      throws CannotGenerateCodeException {
+    model.newType(
         "package com.example;",
         "public class SuperType {",
         "  public interface Objects {}",
         "}");
-     TypeElement dataType = model.newType(
+    TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType extends SuperType {",
         "  DataType(int i) { }",
