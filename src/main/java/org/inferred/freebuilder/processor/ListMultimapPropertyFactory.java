@@ -80,6 +80,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     boolean overridesPutMethod =
         hasPutMethodOverride(config, unboxedKeyType.or(keyType), unboxedValueType.or(valueType));
     return Optional.of(new CodeGenerator(
+        config.getMetadata(),
         config.getProperty(),
         overridesPutMethod,
         keyType,
@@ -107,13 +108,14 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     private final Optional<TypeMirror> unboxedValueType;
 
     CodeGenerator(
+        Metadata metadata,
         Property property,
         boolean overridesPutMethod,
         TypeMirror keyType,
         Optional<TypeMirror> unboxedKeyType,
         TypeMirror valueType,
         Optional<TypeMirror> unboxedValueType) {
-      super(property);
+      super(metadata, property);
       this.overridesPutMethod = overridesPutMethod;
       this.keyType = keyType;
       this.unboxedKeyType = unboxedKeyType;
@@ -128,7 +130,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code) {
       addPut(code, metadata);
       addSingleKeyPutAll(code, metadata);
       addMultimapPutAll(code, metadata);
@@ -371,7 +373,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, String builder) {
       code.addLine("%s(((%s) %s).%s);",
           putAllMethod(property),
           metadata.getGeneratedBuilder(),

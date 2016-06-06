@@ -73,6 +73,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
     Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
     boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
     return Optional.of(new CodeGenerator(
+        config.getMetadata(),
         config.getProperty(),
         overridesAddMethod,
         elementType,
@@ -98,11 +99,12 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @VisibleForTesting
     CodeGenerator(
+        Metadata metadata,
         Property property,
         boolean overridesAddMethod,
         TypeMirror elementType,
         Optional<TypeMirror> unboxedType) {
-      super(property);
+      super(metadata, property);
       this.overridesAddMethod = overridesAddMethod;
       this.elementType = elementType;
       this.unboxedType = unboxedType;
@@ -118,7 +120,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code) {
       addAdd(code, metadata);
       addVarargsAdd(code, metadata);
       addAddAll(code, metadata);
@@ -280,7 +282,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, String builder) {
       code.addLine("%s(((%s) %s).%s);",
           addAllMethod(property),
           metadata.getGeneratedBuilder(),

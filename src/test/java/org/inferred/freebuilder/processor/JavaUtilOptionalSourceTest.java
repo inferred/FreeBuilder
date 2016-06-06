@@ -708,22 +708,24 @@ public class JavaUtilOptionalSourceTest {
     GenericTypeMirrorImpl optionalString = optional.newMirror(string);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(optionalString)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(optionalString);
-    Property.Builder age = new Property.Builder()
+        .setType(optionalString)
+        .build();
+    Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(optionalInteger)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(optionalInteger);
+        .setType(optionalInteger)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -731,19 +733,22 @@ public class JavaUtilOptionalSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                name.build(), OptionalType.JAVA8, string, Optional.<TypeMirror>absent(), false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
-                age.build(), OptionalType.JAVA8, integer, Optional.<TypeMirror>of(INT), false))
-            .build())
+        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata;
+    return metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
+            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
+                metadata, name, OptionalType.JAVA8, string, Optional.<TypeMirror>absent(), false))
+            .build())
+        .addProperties(age.toBuilder()
+            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
+                metadata, age, OptionalType.JAVA8, integer, Optional.<TypeMirror>of(INT), false))
+            .build())
+        .build();
   }
 
 }

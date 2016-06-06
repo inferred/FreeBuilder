@@ -48,7 +48,7 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
     if (isPrimitive || nullableAnnotations.isEmpty()) {
       return Optional.absent();
     }
-    return Optional.of(new CodeGenerator(property, nullableAnnotations));
+    return Optional.of(new CodeGenerator(config.getMetadata(), property, nullableAnnotations));
   }
 
   private static Set<TypeElement> nullablesIn(Iterable<? extends AnnotationMirror> annotations) {
@@ -68,8 +68,8 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     private final Set<TypeElement> nullables;
 
-    CodeGenerator(Property property, Iterable<TypeElement> nullableAnnotations) {
-      super(property);
+    CodeGenerator(Metadata metadata, Property property, Iterable<TypeElement> nullableAnnotations) {
+      super(metadata, property);
       this.nullables = ImmutableSet.copyOf(nullableAnnotations);
     }
 
@@ -85,7 +85,7 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code) {
       addSetter(code, metadata);
       addMapper(code, metadata);
       addGetter(code, metadata);
@@ -166,7 +166,7 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, String builder) {
       code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
     }
 

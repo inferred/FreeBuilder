@@ -395,7 +395,7 @@ abstract class Metadata_Property_Builder {
     return new Metadata_Property_Builder.Partial(this);
   }
 
-  private static final class Value implements Metadata.Property {
+  private static final class Value extends Metadata.Property {
     private final TypeMirror type;
     @Nullable private final TypeMirror boxedType;
     private final String name;
@@ -536,7 +536,7 @@ abstract class Metadata_Property_Builder {
     }
   }
 
-  private static final class Partial implements Metadata.Property {
+  private static final class Partial extends Metadata.Property {
     private final TypeMirror type;
     @Nullable private final TypeMirror boxedType;
     private final String name;

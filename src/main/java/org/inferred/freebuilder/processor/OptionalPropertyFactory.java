@@ -120,6 +120,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
 
     return Optional.of(new CodeGenerator(
+        config.getMetadata(),
         config.getProperty(),
         optionalType,
         elementType,
@@ -144,12 +145,13 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     private final boolean requiresExplicitTypeParameters;
 
     @VisibleForTesting CodeGenerator(
+        Metadata metadata,
         Property property,
         OptionalType optional,
         TypeMirror elementType,
         Optional<TypeMirror> unboxedType,
         boolean requiresExplicitTypeParametersInJava7) {
-      super(property);
+      super(metadata, property);
       this.optional = optional;
       this.elementType = elementType;
       this.unboxedType = unboxedType;
@@ -178,7 +180,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code) {
       addSetter(code, metadata);
       addOptionalSetter(code, metadata);
       addNullableSetter(code, metadata);
@@ -325,7 +327,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, String builder) {
       String propertyValue = builder + "." + getter(property) + "()";
       optional.invokeIfPresent(code, propertyValue, setter(property));
     }

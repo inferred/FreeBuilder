@@ -70,7 +70,11 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
     boolean overridesSetCountMethod =
         hasSetCountMethodOverride(config, unboxedType.or(elementType));
     return Optional.of(new CodeGenerator(
-        config.getProperty(), overridesSetCountMethod, elementType, unboxedType));
+        config.getMetadata(),
+        config.getProperty(),
+        overridesSetCountMethod,
+        elementType,
+        unboxedType));
   }
 
   private static boolean hasSetCountMethodOverride(
@@ -92,11 +96,12 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
     private final Optional<TypeMirror> unboxedType;
 
     CodeGenerator(
+        Metadata metadata,
         Property property,
         boolean overridesSetCountMethod,
         TypeMirror elementType,
         Optional<TypeMirror> unboxedType) {
-      super(property);
+      super(metadata, property);
       this.overridesSetCountMethod = overridesSetCountMethod;
       this.elementType = elementType;
       this.unboxedType = unboxedType;
@@ -109,7 +114,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code) {
       addAdd(code, metadata);
       addVarargsAdd(code, metadata);
       addAddAll(code, metadata);
@@ -310,7 +315,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, String builder) {
       code.addLine("%s(((%s) %s).%s);",
           addAllMethod(property),
           metadata.getGeneratedBuilder(),

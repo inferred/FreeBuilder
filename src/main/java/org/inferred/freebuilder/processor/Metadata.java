@@ -141,39 +141,43 @@ public abstract class Metadata {
   /** Returns a list of nested classes that should be added to the generated builder class. */
   public abstract ImmutableList<Function<Metadata, Excerpt>> getNestedClasses();
 
+  public Builder toBuilder() {
+    return new Builder().mergeFrom(this);
+  }
+
   /** Metadata about a property of a {@link Metadata}. */
-  public interface Property {
+  public abstract static class Property {
 
     /** Returns the type of the property. */
-    TypeMirror getType();
+    public abstract TypeMirror getType();
 
     /** Returns the boxed form of {@link #getType()}, or null if type is not primitive. */
-    @Nullable TypeMirror getBoxedType();
+    @Nullable public abstract TypeMirror getBoxedType();
 
     /** Returns the name of the property, e.g. myProperty. */
-    String getName();
+    public abstract String getName();
 
     /** Returns the capitalized name of the property, e.g. MyProperty. */
-    String getCapitalizedName();
+    public abstract String getCapitalizedName();
 
     /** Returns the name of the property in all-caps with underscores, e.g. MY_PROPERTY. */
-    String getAllCapsName();
+    public abstract String getAllCapsName();
 
     /** Returns the name of the getter for the property, e.g. getMyProperty, or isSomethingTrue. */
-    String getGetterName();
+    public abstract String getGetterName();
 
     /**
      * Returns the code generator to use for this property, or null if no generator has been picked
      * (i.e. when passed to {@link PropertyCodeGenerator.Factory#create}.
      */
-    @Nullable PropertyCodeGenerator getCodeGenerator();
+    @Nullable public abstract PropertyCodeGenerator getCodeGenerator();
 
     /**
      * Returns true if a cast to this property type is guaranteed to be fully checked at runtime.
      * This is true for any type that is non-generic, raw, or parameterized with unbounded
      * wildcards, such as {@code Integer}, {@code List} or {@code Map<?, ?>}.
      */
-    boolean isFullyCheckedCast();
+    public abstract boolean isFullyCheckedCast();
 
     /**
      * Returns a list of annotations that should be applied to the accessor methods of this
@@ -181,10 +185,14 @@ public abstract class Metadata {
      * of the getter method as its argument. For a list, for example, that would be getX() and
      * addAllX().
      */
-    ImmutableList<Excerpt> getAccessorAnnotations();
+    public abstract ImmutableList<Excerpt> getAccessorAnnotations();
+
+    public Builder toBuilder() {
+      return new Builder().mergeFrom(this);
+    }
 
     /** Builder for {@link Property}. */
-    class Builder extends Metadata_Property_Builder {}
+    public static class Builder extends Metadata_Property_Builder {}
   }
 
   public static final Function<Property, PropertyCodeGenerator> GET_CODE_GENERATOR =

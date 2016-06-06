@@ -867,14 +867,15 @@ public class MapSourceTest {
     GenericTypeMirrorImpl mapIntString = map.newMirror(integer, string);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(mapIntString)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(mapIntString);
+        .setType(mapIntString)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -882,20 +883,24 @@ public class MapSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
+        .addProperties(name)
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters())
+        .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .build();
+    return metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
             .setCodeGenerator(new MapPropertyFactory.CodeGenerator(
-                name.build(),
+                metadata,
+                name,
                 false,
                 integer,
                 Optional.<TypeMirror>of(INT),
                 string,
                 Optional.<TypeMirror>absent()))
             .build())
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata;
   }
 
 }

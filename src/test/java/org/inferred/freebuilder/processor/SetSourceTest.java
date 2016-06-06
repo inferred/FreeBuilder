@@ -1153,14 +1153,15 @@ public class SetSourceTest {
     GenericTypeMirrorImpl setString = set.newMirror(string);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(setString)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(setString);
+        .setType(setString)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -1168,15 +1169,18 @@ public class SetSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new SetPropertyFactory.CodeGenerator(
-                name.build(), string, Optional.<TypeMirror>absent(), false))
-            .build())
+        .addProperties(name)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata;
+    return metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
+            .setCodeGenerator(new SetPropertyFactory.CodeGenerator(
+                metadata, name, string, Optional.<TypeMirror>absent(), false))
+            .build())
+        .build();
   }
 
 }
