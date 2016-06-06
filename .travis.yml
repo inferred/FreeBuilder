@@ -1,6 +1,6 @@
 language: java
-install: "./gradlew clean jar"
-script: "./gradlew jar"
+install: ./gradlew clean jar
+script: ./gradlew check
 jdk:
   - oraclejdk8
 
