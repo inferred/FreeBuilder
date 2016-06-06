@@ -59,7 +59,8 @@ public class OptionalTest extends GWTTestCase {
 
     private OptionalTestServiceAsync getServiceAsync() {
         if (customFieldSerializerTestService == null) {
-            customFieldSerializerTestService = (OptionalTestServiceAsync) GWT.create(OptionalTestService.class);
+            customFieldSerializerTestService =
+                    (OptionalTestServiceAsync) GWT.create(OptionalTestService.class);
             ((ServiceDefTarget) customFieldSerializerTestService)
                     .setServiceEntryPoint(GWT.getModuleBaseURL() + "optional");
         }

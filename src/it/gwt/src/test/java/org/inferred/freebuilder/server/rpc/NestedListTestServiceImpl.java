@@ -20,7 +20,8 @@ import org.inferred.freebuilder.client.rpc.NestedListTestService;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
-public class NestedListTestServiceImpl extends RemoteServiceServlet implements NestedListTestService {
+public class NestedListTestServiceImpl extends RemoteServiceServlet
+        implements NestedListTestService {
 
     @Override
     public NestedListGwtType echo(NestedListGwtType mapGwtType) {

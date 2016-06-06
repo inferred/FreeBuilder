@@ -37,7 +37,7 @@ public class OptionalPropertyTest {
     assertEquals(Optional.empty(), builder.build().getName());
     builder.setName(NAME_1);
     assertEquals(Optional.of(NAME_1), builder.build().getName());
-    builder.mapName(n -> n.substring(0,4) + "2");
+    builder.mapName(n -> n.substring(0, 4) + "2");
     assertEquals(Optional.of(NAME_2), builder.build().getName());
     builder.clearName();
     assertEquals(Optional.empty(), builder.build().getName());

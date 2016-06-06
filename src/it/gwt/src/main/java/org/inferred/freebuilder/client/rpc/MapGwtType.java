@@ -29,5 +29,5 @@ public interface MapGwtType extends Serializable {
   Map<String, Double> getDistances();
 
   /** Builder of {@link MapGwtType} instances. */
-  public static class Builder extends MapGwtType_Builder { }
+  class Builder extends MapGwtType_Builder { }
 }

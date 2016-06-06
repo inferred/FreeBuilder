@@ -59,7 +59,8 @@ public class StringListTest extends GWTTestCase {
 
     private StringListTestServiceAsync getServiceAsync() {
         if (customFieldSerializerTestService == null) {
-            customFieldSerializerTestService = (StringListTestServiceAsync) GWT.create(StringListTestService.class);
+            customFieldSerializerTestService =
+                    (StringListTestServiceAsync) GWT.create(StringListTestService.class);
             ((ServiceDefTarget) customFieldSerializerTestService)
                     .setServiceEntryPoint(GWT.getModuleBaseURL() + "string-list");
         }
