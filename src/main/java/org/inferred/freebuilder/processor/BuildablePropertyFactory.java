@@ -136,6 +136,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     return Optional.of(new CodeGenerator(
+        config.getMetadata(),
         config.getProperty(),
         ParameterizedType.from(builder.get()),
         builderFactory.get(),
@@ -149,11 +150,12 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     final MergeBuilderMethod mergeFromBuilderMethod;
 
     CodeGenerator(
+        Metadata metadata,
         Property property,
         ParameterizedType builderType,
         BuilderFactory builderFactory,
         MergeBuilderMethod mergeFromBuilderMethod) {
-      super(property);
+      super(metadata, property);
       this.builderType = builderType;
       this.builderFactory = builderFactory;
       this.mergeFromBuilderMethod = mergeFromBuilderMethod;
@@ -166,7 +168,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code) {
       addSetter(code, metadata);
       addSetterTakingBuilder(code, metadata);
       addMutate(code, metadata);
@@ -270,7 +272,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, String builder) {
       String propertyName = property.getName();
       if (propertyName.equals(builder)) {
         propertyName = "this." + propertyName;  // see issue #78

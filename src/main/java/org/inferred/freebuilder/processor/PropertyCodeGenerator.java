@@ -43,6 +43,9 @@ public abstract class PropertyCodeGenerator {
 
   /** Data available to {@link Factory} instances when creating a {@link PropertyCodeGenerator}. */
   interface Config {
+    /** Returns metadata about the builder being generated. */
+    Metadata getMetadata();
+
     /** Returns metadata about the property requiring code generation. */
     Metadata.Property getProperty();
 
@@ -77,9 +80,11 @@ public abstract class PropertyCodeGenerator {
     Optional<? extends PropertyCodeGenerator> create(Config config);
   }
 
+  protected final Metadata metadata;
   protected final Property property;
 
-  public PropertyCodeGenerator(Property property) {
+  public PropertyCodeGenerator(Metadata metadata, Property property) {
+    this.metadata = metadata;
     this.property = property;
   }
 
@@ -100,7 +105,7 @@ public abstract class PropertyCodeGenerator {
   public abstract void addBuilderFieldDeclaration(SourceBuilder code);
 
   /** Add the accessor methods for the property to the builder's source code. */
-  public abstract void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata);
+  public abstract void addBuilderFieldAccessors(SourceBuilder code);
 
   /** Add the final assignment of the property to the value object's source code. */
   public abstract void addFinalFieldAssignment(
@@ -115,7 +120,7 @@ public abstract class PropertyCodeGenerator {
   public abstract void addMergeFromValue(SourceBuilder code, String value);
 
   /** Add a merge from builder for the property to the builder's source code. */
-  public abstract void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder);
+  public abstract void addMergeFromBuilder(SourceBuilder code, String builder);
 
   /** Adds method annotations for the value type getter method. */
   public void addGetterAnnotations(@SuppressWarnings("unused") SourceBuilder code) {}

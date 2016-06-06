@@ -42,7 +42,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
     Property property = config.getProperty();
     boolean hasDefault = config.getMethodsInvokedInBuilderConstructor().contains(setter(property));
-    return Optional.of(new CodeGenerator(property, hasDefault));
+    return Optional.of(new CodeGenerator(config.getMetadata(), property, hasDefault));
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
@@ -50,8 +50,8 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     private final boolean hasDefault;
     private final boolean isPrimitive;
 
-    CodeGenerator(Property property, boolean hasDefault) {
-      super(property);
+    CodeGenerator(Metadata metadata, Property property, boolean hasDefault) {
+      super(metadata, property);
       this.hasDefault = hasDefault;
       this.isPrimitive = property.getType().getKind().isPrimitive();
     }
@@ -67,7 +67,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, final Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code) {
       addSetter(code, metadata);
       addMapper(code, metadata);
       addGetter(code, metadata);
@@ -176,7 +176,7 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, String builder) {
       code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
     }
 

@@ -1227,22 +1227,24 @@ public class ListSourceTest {
     GenericTypeMirrorImpl listString = list.newMirror(string);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(listString)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(listString);
-    Property.Builder age = new Property.Builder()
+        .setType(listString)
+        .build();
+    Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(listInteger)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(listInteger);
+        .setType(listInteger)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -1250,19 +1252,22 @@ public class ListSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
-                name.build(), false, string, Optional.<TypeMirror>absent()))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
-                age.build(), false, integer, Optional.<TypeMirror>of(INT)))
-            .build())
+        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata;
+    return metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
+            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
+                metadata, name, false, string, Optional.<TypeMirror>absent()))
+            .build())
+        .addProperties(age.toBuilder()
+            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
+                metadata, age, false, integer, Optional.<TypeMirror>of(INT)))
+            .build())
+        .build();
   }
 
 }

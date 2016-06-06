@@ -70,7 +70,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
     boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
     return Optional.of(new CodeGenerator(
-        config.getProperty(), elementType, unboxedType, overridesAddMethod));
+        config.getMetadata(), config.getProperty(), elementType, unboxedType, overridesAddMethod));
   }
 
   private static boolean hasAddMethodOverride(Config config, TypeMirror elementType) {
@@ -91,11 +91,12 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     private final boolean overridesAddMethod;
 
     CodeGenerator(
+        Metadata metadata,
         Property property,
         TypeMirror elementType,
         Optional<TypeMirror> unboxedType,
         boolean overridesAddMethod) {
-      super(property);
+      super(metadata, property);
       this.elementType = elementType;
       this.unboxedType = unboxedType;
       this.overridesAddMethod = overridesAddMethod;
@@ -111,7 +112,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addBuilderFieldAccessors(SourceBuilder code, Metadata metadata) {
+    public void addBuilderFieldAccessors(SourceBuilder code) {
       addAdd(code, metadata);
       addVarargsAdd(code, metadata);
       addAddAll(code, metadata);
@@ -303,7 +304,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, Metadata metadata, String builder) {
+    public void addMergeFromBuilder(SourceBuilder code, String builder) {
       code.addLine("%s(((%s) %s).%s);",
           addAllMethod(property),
           metadata.getGeneratedBuilder(),

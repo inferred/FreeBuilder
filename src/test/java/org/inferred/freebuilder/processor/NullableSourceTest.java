@@ -697,22 +697,24 @@ public class NullableSourceTest {
     ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(string);
-    Property.Builder age = new Property.Builder()
+        .setType(string)
+        .build();
+    Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(integer)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(integer);
+        .setType(integer)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -720,19 +722,22 @@ public class NullableSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(
-                name.build(), ImmutableSet.of(nullable)))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(
-                age.build(), ImmutableSet.of(nullable)))
-            .build())
+        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata;
+    return metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
+            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(
+                metadata, name, ImmutableSet.of(nullable)))
+            .build())
+        .addProperties(age.toBuilder()
+            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(
+                metadata, age, ImmutableSet.of(nullable)))
+            .build())
+        .build();
   }
 
 }

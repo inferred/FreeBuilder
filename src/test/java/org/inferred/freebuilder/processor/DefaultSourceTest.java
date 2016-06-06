@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.TypeVariableImpl.newTypeVariable;
@@ -2175,30 +2176,33 @@ public class DefaultSourceTest {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     TypeMirror string = newTopLevelClass("java.lang.String");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(string);
-    Property.Builder age = new Property.Builder()
+        .setType(string)
+        .build();
+    Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(newTopLevelClass("java.lang.Integer"))
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(INT);
-    Property.Builder shoeSize = new Property.Builder()
+        .setType(INT)
+        .build();
+    Property shoeSize = new Property.Builder()
         .setAllCapsName("SHOE_SIZE")
         .setBoxedType(newTopLevelClass("java.lang.Integer"))
         .setCapitalizedName("ShoeSize")
         .setFullyCheckedCast(true)
         .setGetterName("getShoeSize")
         .setName("shoeSize")
-        .setType(INT);
+        .setType(INT)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -2206,24 +2210,25 @@ public class DefaultSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                name.build(), false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                age.build(), true))
-            .build())
-        .addProperties(shoeSize
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                shoeSize.build(), false))
-            .build())
+        .addProperties(name, age, shoeSize)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
+    Metadata metadataWithCodeGenerators = metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, name, false))
+            .build())
+        .addProperties(age.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, age, true))
+            .build())
+        .addProperties(shoeSize.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, shoeSize, false))
+            .build())
+        .build();
 
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadataWithCodeGenerators)).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -3315,22 +3320,24 @@ public class DefaultSourceTest {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     TypeMirror string = newTopLevelClass("java.lang.String");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(string);
-    Property.Builder age = new Property.Builder()
+        .setType(string)
+        .build();
+    Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(newTopLevelClass("java.lang.Integer"))
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(INT);
+        .setType(INT)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -3338,41 +3345,44 @@ public class DefaultSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                name.build(), false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                age.build(), false))
-            .build())
+        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata;
+    return metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, name, false))
+            .build())
+        .addProperties(age.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, age, false))
+            .build())
+        .build();
   }
 
   private static Metadata createMetadataWithDefaults() {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     TypeMirror string = newTopLevelClass("java.lang.String");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(string)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(string);
-    Property.Builder age = new Property.Builder()
+        .setType(string)
+        .build();
+    Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(newTopLevelClass("java.lang.Integer"))
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(INT);
+        .setType(INT)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -3380,40 +3390,43 @@ public class DefaultSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                name.build(), true))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                age.build(), true))
-            .build())
+        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata;
+    return metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, name, true))
+            .build())
+        .addProperties(age.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, age, true))
+            .build())
+        .build();
   }
 
   private static Metadata createMetadataWithGenerics() {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     TypeVariable typeVariableA = newTypeVariable("A");
-    Property.Builder name = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(typeVariableA);
+        .setType(typeVariableA)
+        .build();
     TypeVariable typeVariableB = newTypeVariable("B");
-    Property.Builder age = new Property.Builder()
+    Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(typeVariableB);
+        .setType(typeVariableB)
+        .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -3421,19 +3434,20 @@ public class DefaultSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters("A", "B"))
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters("A", "B"))
-        .addProperties(name
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                name.build(), false))
-            .build())
-        .addProperties(age
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(
-                age.build(), false))
-            .build())
+        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters("A", "B"))
         .setValueType(generatedBuilder.nestedType("Value").withParameters("A", "B"))
         .build();
-    return metadata;
+    return metadata.toBuilder()
+        .clearProperties()
+        .addProperties(name.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, name, false))
+            .build())
+        .addProperties(age.toBuilder()
+            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, age, false))
+            .build())
+        .build();
   }
 
 }

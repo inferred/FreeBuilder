@@ -147,7 +147,7 @@ public class CodeGenerator {
 
   private static void addAccessors(Metadata metadata, SourceBuilder body) {
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addBuilderFieldAccessors(body, metadata);
+      property.getCodeGenerator().addBuilderFieldAccessors(body);
     }
   }
 
@@ -208,10 +208,10 @@ public class CodeGenerator {
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("  if (!_templateUnset.contains(%s.%s)) {",
             metadata.getPropertyEnum(), property.getAllCapsName());
-        property.getCodeGenerator().addMergeFromBuilder(code, metadata, "template");
+        property.getCodeGenerator().addMergeFromBuilder(code, "template");
         code.addLine("  }");
       } else {
-        property.getCodeGenerator().addMergeFromBuilder(code, metadata, "template");
+        property.getCodeGenerator().addMergeFromBuilder(code, "template");
       }
     }
     code.addLine("  return (%s) this;", metadata.getBuilder());

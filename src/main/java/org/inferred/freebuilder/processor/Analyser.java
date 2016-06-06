@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
+import static com.google.common.collect.Maps.newLinkedHashMap;
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
@@ -149,7 +150,8 @@ class Analyser {
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
     List<? extends TypeParameterElement> typeParameters = type.getTypeParameters();
-    Metadata.Builder metadata = new Metadata.Builder()
+    Map<ExecutableElement, Property> properties = findProperties(type, methods);
+    Metadata.Builder metadataBuilder = new Metadata.Builder()
         .setType(QualifiedName.of(type).withParameters(typeParameters))
         .setInterfaceType(type.getKind().isInterface())
         .setBuilder(parameterized(builder, typeParameters))
@@ -163,11 +165,14 @@ class Analyser {
         .addVisibleNestedTypes(propertyType)
         .addAllVisibleNestedTypes(visibleTypesIn(type))  // Because we inherit from type
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
-        .setBuilderSerializable(shouldBuilderBeSerializable(builder));
-    addGwtMetadata(type, metadata);
-    return metadata
-        .addAllProperties(findProperties(type, methods, builder).values())
-        .build();
+        .setBuilderSerializable(shouldBuilderBeSerializable(builder))
+        .addAllProperties(properties.values());
+    addGwtMetadata(type, metadataBuilder);
+    Metadata metadata = metadataBuilder.build();
+    if (builder.isPresent()) {
+      metadata = withCodeGenerators(properties, metadata, builder.get());
+    }
+    return metadata;
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {
@@ -367,29 +372,43 @@ class Analyser {
     return BuilderFactory.from(builder.get());
   }
 
-  private Map<String, Property> findProperties(
-      TypeElement type, Iterable<ExecutableElement> methods, Optional<TypeElement> builder) {
-    Set<String> methodsInvokedInBuilderConstructor = getMethodsInvokedInBuilderConstructor(builder);
-    Map<String, Property> propertiesByName = new LinkedHashMap<String, Property>();
+  private Map<ExecutableElement, Property> findProperties(
+      TypeElement type, Iterable<ExecutableElement> methods) {
+    Map<ExecutableElement, Property> propertiesByMethod = newLinkedHashMap();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
-      Property property = asPropertyOrNull(
-          type, builder, method, methodsInvokedInBuilderConstructor, jacksonSupport);
+      Property property = asPropertyOrNull(type, method, jacksonSupport);
       if (property != null) {
-        propertiesByName.put(property.getName(), property);
+        propertiesByMethod.put(method, property);
       }
     }
-    return propertiesByName;
+    return propertiesByMethod;
   }
 
-  private Set<String> getMethodsInvokedInBuilderConstructor(Optional<TypeElement> builder) {
-    if (!builder.isPresent()) {
-      return ImmutableSet.of();
+  private Metadata withCodeGenerators(
+      Map<ExecutableElement, Property> properties,
+      Metadata metadata,
+      TypeElement builder) {
+    Metadata.Builder resultBuilder = metadata.toBuilder()
+        .clearProperties();
+    Set<String> methodsInvokedInBuilderConstructor = getMethodsInvokedInBuilderConstructor(builder);
+    for (Map.Entry<ExecutableElement, Property> entry : properties.entrySet()) {
+      Config config = new ConfigImpl(
+          builder,
+          metadata,
+          entry.getValue(),
+          entry.getKey(),
+          methodsInvokedInBuilderConstructor);
+      resultBuilder.addProperties(new Property.Builder()
+          .mergeFrom(entry.getValue())
+          .setCodeGenerator(createCodeGenerator(config))
+          .build());
     }
-    List<ExecutableElement> constructors = constructorsIn(builder.get().getEnclosedElements());
-    if (constructors.isEmpty()) {
-      return ImmutableSet.of();
-    }
+    return resultBuilder.build();
+  }
+
+  private Set<String> getMethodsInvokedInBuilderConstructor(TypeElement builder) {
+    List<ExecutableElement> constructors = constructorsIn(builder.getEnclosedElements());
     Set<Name> result = null;
     for (ExecutableElement constructor : constructors) {
       if (result == null) {
@@ -408,9 +427,7 @@ class Analyser {
    */
   private Property asPropertyOrNull(
       TypeElement valueType,
-      Optional<TypeElement> builder,
       ExecutableElement method,
-      Set<String> methodsInvokedInBuilderConstructor,
       Optional<JacksonSupport> jacksonSupport) {
     MatchResult getterNameMatchResult = getterNameMatchResult(valueType, method);
     if (getterNameMatchResult == null) {
@@ -434,11 +451,6 @@ class Analyser {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
       TypeMirror boxedType = types.erasure(types.boxedClass(unboxedType).asType());
       resultBuilder.setBoxedType(boxedType);
-    }
-    Property propertyWithoutCodeGenerator = resultBuilder.build();
-    if (builder.isPresent()) {
-      resultBuilder.setCodeGenerator(createCodeGenerator(
-          builder.get(), propertyWithoutCodeGenerator, method, methodsInvokedInBuilderConstructor));
     }
     return resultBuilder.build();
   }
@@ -468,13 +480,7 @@ class Analyser {
     }
   }
 
-  private PropertyCodeGenerator createCodeGenerator(
-      TypeElement builder,
-      Property propertyWithoutCodeGenerator,
-      ExecutableElement getterMethod,
-      Set<String> methodsInvokedInBuilderConstructor) {
-    Config config = new ConfigImpl(
-        builder, propertyWithoutCodeGenerator, getterMethod, methodsInvokedInBuilderConstructor);
+  private static PropertyCodeGenerator createCodeGenerator(Config config) {
     for (PropertyCodeGenerator.Factory factory : PROPERTY_FACTORIES) {
       Optional<? extends PropertyCodeGenerator> codeGenerator = factory.create(config);
       if (codeGenerator.isPresent()) {
@@ -487,16 +493,19 @@ class Analyser {
   private class ConfigImpl implements Config {
 
     private final TypeElement builder;
+    private final Metadata metadata;
     private final Property property;
     private final ExecutableElement getterMethod;
     private final Set<String> methodsInvokedInBuilderConstructor;
 
     ConfigImpl(
         TypeElement builder,
+        Metadata metadata,
         Property property,
         ExecutableElement getterMethod,
         Set<String> methodsInvokedInBuilderConstructor) {
       this.builder = builder;
+      this.metadata = metadata;
       this.property = property;
       this.getterMethod = getterMethod;
       this.methodsInvokedInBuilderConstructor = methodsInvokedInBuilderConstructor;
@@ -505,6 +514,11 @@ class Analyser {
     @Override
     public TypeElement getBuilder() {
       return builder;
+    }
+
+    @Override
+    public Metadata getMetadata() {
+      return metadata;
     }
 
     @Override

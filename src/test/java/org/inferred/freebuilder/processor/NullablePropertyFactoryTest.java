@@ -27,6 +27,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.NullablePropertyFactory.CodeGenerator;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +44,12 @@ public class NullablePropertyFactoryTest {
   @Rule public final ModelRule model = new ModelRule();
   @Mock(answer = RETURNS_SMART_NULLS) private Config config;
   private final NullablePropertyFactory factory = new NullablePropertyFactory();
+  @Mock(answer = RETURNS_SMART_NULLS) private Metadata metadata;
+
+  @Before
+  public void setUp() {
+    when(config.getMetadata()).thenReturn(metadata);
+  }
 
   @Test
   public void notNullable() {
@@ -80,7 +87,7 @@ public class NullablePropertyFactoryTest {
     Optional<CodeGenerator> codeGenerator = factory.create(config);
 
     assertThat(codeGenerator).hasValue(new NullablePropertyFactory.CodeGenerator(
-        property, ImmutableSet.of(model.typeElement(Nullable.class))));
+        metadata, property, ImmutableSet.of(model.typeElement(Nullable.class))));
   }
 
   @Test
@@ -103,7 +110,7 @@ public class NullablePropertyFactoryTest {
     Optional<CodeGenerator> codeGenerator = factory.create(config);
 
     assertThat(codeGenerator).hasValue(new NullablePropertyFactory.CodeGenerator(
-        property, ImmutableSet.of(model.typeElement("foo.bar.Nullable"))));
+        metadata, property, ImmutableSet.of(model.typeElement("foo.bar.Nullable"))));
   }
 
   @Test
@@ -129,7 +136,7 @@ public class NullablePropertyFactoryTest {
     Optional<CodeGenerator> codeGenerator = factory.create(config);
 
     assertThat(codeGenerator).hasValue(new NullablePropertyFactory.CodeGenerator(
-        property, ImmutableSet.of(
+        metadata, property, ImmutableSet.of(
             model.typeElement(Nullable.class), model.typeElement("foo.bar.Nullable"))));
   }
 
