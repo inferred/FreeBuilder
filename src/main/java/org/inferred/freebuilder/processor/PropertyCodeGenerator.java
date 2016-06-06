@@ -18,12 +18,12 @@ package org.inferred.freebuilder.processor;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.StaticExcerpt;
@@ -133,14 +133,8 @@ public abstract class PropertyCodeGenerator {
   /** Adds a set call for the property from a function result to the builder's source code. */
   public abstract void addSetFromResult(SourceBuilder code, String builder, String variable);
 
-  /** Returns true if the clear method requires a template builder to operate correctly. */
-  public abstract boolean isTemplateRequiredInClear();
-
   /** Adds a clear call for the property given a template builder to the builder's source code. */
-  public abstract void addClearField(SourceBuilder code, String template);
-
-  /** Adds a partial clear call for the property to the builder's source code. */
-  public abstract void addPartialClearField(SourceBuilder code);
+  public abstract void addClearField(Block code);
 
   /** Returns excerpts for any static types or methods added by this generator. */
   public Set<? extends StaticExcerpt> getStaticExcerpts() {
@@ -152,13 +146,6 @@ public abstract class PropertyCodeGenerator {
       code.add(annotation);
     }
   }
-
-  public static final Predicate<PropertyCodeGenerator> IS_TEMPLATE_REQUIRED_IN_CLEAR =
-      new Predicate<PropertyCodeGenerator>() {
-        @Override public boolean apply(PropertyCodeGenerator input) {
-          return input.isTemplateRequiredInClear();
-        }
-      };
 
   @Override
   public boolean equals(final Object obj) {

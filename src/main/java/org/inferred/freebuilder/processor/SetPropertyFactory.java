@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedSet;
+import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -317,17 +318,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public boolean isTemplateRequiredInClear() {
-      return false;
-    }
-
-    @Override
-    public void addClearField(SourceBuilder code, String template) {
-      code.addLine("%s.clear();", property.getName());
-    }
-
-    @Override
-    public void addPartialClearField(SourceBuilder code) {
+    public void addClearField(Block code) {
       code.addLine("%s.clear();", property.getName());
     }
 
