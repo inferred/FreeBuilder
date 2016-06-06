@@ -384,6 +384,37 @@ public class GuavaOptionalPropertyTest {
   }
 
   @Test
+  public void testMergeFrom_valueInstance_emptyOptional() {
+    behaviorTester
+        .with(new Processor())
+        .with(OPTIONAL_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .build();")
+            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("    .setItem(\"item\")")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(%s.of(\"item\"), builder.getItem());", Optional.class)
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_builder_emptyOptional() {
+    behaviorTester
+        .with(new Processor())
+        .with(OPTIONAL_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType.Builder template = com.example.DataType.builder();")
+            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("    .setItem(\"item\")")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(%s.of(\"item\"), builder.getItem());", Optional.class)
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor())
