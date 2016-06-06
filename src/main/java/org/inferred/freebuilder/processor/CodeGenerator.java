@@ -347,52 +347,7 @@ public class CodeGenerator {
     // Equals
     switch (metadata.standardMethodUnderride(StandardMethod.EQUALS)) {
       case ABSENT:
-        // Default implementation if no user implementation exists.
-        code.addLine("")
-            .addLine("  @%s", Override.class)
-            .addLine("  public boolean equals(Object obj) {")
-            .addLine("    if (!(obj instanceof %s)) {", metadata.getValueType().getQualifiedName())
-            .addLine("      return false;")
-            .addLine("    }")
-            .addLine("    %1$s other = (%1$s) obj;", metadata.getValueType().withWildcards());
-        if (metadata.getProperties().isEmpty()) {
-          code.addLine("    return true;");
-        } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-          String prefix = "    return ";
-          for (Property property : metadata.getProperties()) {
-            code.add(prefix);
-            code.add("%1$s.equals(%2$s, other.%2$s)",
-                code.feature(SOURCE_LEVEL).javaUtilObjects().get(), property.getName());
-            prefix = "\n        && ";
-          }
-          code.add(";\n");
-        } else {
-          for (Property property : metadata.getProperties()) {
-            switch (property.getType().getKind()) {
-              case FLOAT:
-              case DOUBLE:
-                code.addLine("    if (%s.doubleToLongBits(%s)", Double.class, property.getName())
-                    .addLine("        != %s.doubleToLongBits(other.%s)) {",
-                        Double.class, property.getName());
-                break;
-
-              default:
-                if (property.getType().getKind().isPrimitive()) {
-                  code.addLine("    if (%1$s != other.%1$s) {", property.getName());
-                } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-                  code.addLine("    if (%1$s != other.%1$s", property.getName())
-                      .addLine("        && (%1$s == null || !%1$s.equals(other.%1$s))) {",
-                          property.getName());
-                } else {
-                  code.addLine("    if (!%1$s.equals(other.%1$s)) {", property.getName());
-                }
-            }
-            code.addLine("      return false;")
-                .addLine("    }");
-          }
-          code.addLine("    return true;");
-        }
-        code.addLine("  }");
+        addValueTypeEquals(code, metadata);
         break;
 
       case OVERRIDEABLE:
@@ -425,71 +380,124 @@ public class CodeGenerator {
     }
     // toString
     if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
-      code.addLine("")
-          .addLine("  @%s", Override.class)
-          .addLine("  public %s toString() {", String.class);
-      switch (metadata.getProperties().size()) {
-        case 0: {
-          code.addLine("    return \"%s{}\";", metadata.getType().getSimpleName());
-          break;
-        }
-
-        case 1: {
-          code.add("    return \"%s{", metadata.getType().getSimpleName());
-          Property property = getOnlyElement(metadata.getProperties());
-          if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-            code.add("\" + (%1$s != null ? \"%1$s=\" + %1$s : \"\") + \"}\";\n",
-                property.getName());
-          } else {
-            code.add("%1$s=\" + %1$s + \"}\";\n", property.getName());
-          }
-          break;
-        }
-
-        default: {
-          if (!any(metadata.getProperties(), IS_OPTIONAL)) {
-            // If none of the properties are optional, use string concatenation for performance.
-            code.addLine("    return \"%s{\"", metadata.getType().getSimpleName());
-            Property lastProperty = getLast(metadata.getProperties());
-            for (Property property : metadata.getProperties()) {
-              code.add("        + \"%1$s=\" + %1$s", property.getName());
-              if (property != lastProperty) {
-                code.add(" + \", \"\n");
-              } else {
-                code.add(" + \"}\";\n");
-              }
-            }
-          } else if (code.feature(GUAVA).isAvailable()) {
-            // If Guava is available, use COMMA_JOINER for readability.
-            code.addLine("    return \"%s{\"", metadata.getType().getSimpleName())
-                .addLine("        + COMMA_JOINER.join(");
-            Property lastProperty = getLast(metadata.getProperties());
-            for (Property property : metadata.getProperties()) {
-              code.add("            ");
-              if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-                code.add("(%s != null ? ", property.getName());
-              }
-              code.add("\"%1$s=\" + %1$s", property.getName());
-              if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-                code.add(" : null)");
-              }
-              if (property != lastProperty) {
-                code.add(",\n");
-              } else {
-                code.add(")\n");
-              }
-            }
-            code.addLine("        + \"}\";");
-          } else {
-            // Use StringBuilder if no better choice is available.
-            writeToStringWithBuilder(code, metadata, false);
-          }
-          break;
-        }
-      }
-      code.addLine("  }");
+      addValueTypeToString(code, metadata);
     }
     code.addLine("}");
+  }
+
+  private static void addValueTypeEquals(SourceBuilder code, Metadata metadata) {
+    // Default implementation if no user implementation exists.
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public boolean equals(Object obj) {")
+        .addLine("    if (!(obj instanceof %s)) {", metadata.getValueType().getQualifiedName())
+        .addLine("      return false;")
+        .addLine("    }")
+        .addLine("    %1$s other = (%1$s) obj;", metadata.getValueType().withWildcards());
+    if (metadata.getProperties().isEmpty()) {
+      code.addLine("    return true;");
+    } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+      String prefix = "    return ";
+      for (Property property : metadata.getProperties()) {
+        code.add(prefix);
+        code.add("%1$s.equals(%2$s, other.%2$s)",
+            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), property.getName());
+        prefix = "\n        && ";
+      }
+      code.add(";\n");
+    } else {
+      for (Property property : metadata.getProperties()) {
+        switch (property.getType().getKind()) {
+          case FLOAT:
+          case DOUBLE:
+            code.addLine("    if (%s.doubleToLongBits(%s)", Double.class, property.getName())
+                .addLine("        != %s.doubleToLongBits(other.%s)) {",
+                    Double.class, property.getName());
+            break;
+
+          default:
+            if (property.getType().getKind().isPrimitive()) {
+              code.addLine("    if (%1$s != other.%1$s) {", property.getName());
+            } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
+              code.addLine("    if (%1$s != other.%1$s", property.getName())
+                  .addLine("        && (%1$s == null || !%1$s.equals(other.%1$s))) {",
+                      property.getName());
+            } else {
+              code.addLine("    if (!%1$s.equals(other.%1$s)) {", property.getName());
+            }
+        }
+        code.addLine("      return false;")
+            .addLine("    }");
+      }
+      code.addLine("    return true;");
+    }
+    code.addLine("  }");
+  }
+
+  private static void addValueTypeToString(SourceBuilder code, Metadata metadata) {
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public %s toString() {", String.class);
+    switch (metadata.getProperties().size()) {
+      case 0: {
+        code.addLine("    return \"%s{}\";", metadata.getType().getSimpleName());
+        break;
+      }
+
+      case 1: {
+        code.add("    return \"%s{", metadata.getType().getSimpleName());
+        Property property = getOnlyElement(metadata.getProperties());
+        if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
+          code.add("\" + (%1$s != null ? \"%1$s=\" + %1$s : \"\") + \"}\";\n",
+              property.getName());
+        } else {
+          code.add("%1$s=\" + %1$s + \"}\";\n", property.getName());
+        }
+        break;
+      }
+
+      default: {
+        if (!any(metadata.getProperties(), IS_OPTIONAL)) {
+          // If none of the properties are optional, use string concatenation for performance.
+          code.addLine("    return \"%s{\"", metadata.getType().getSimpleName());
+          Property lastProperty = getLast(metadata.getProperties());
+          for (Property property : metadata.getProperties()) {
+            code.add("        + \"%1$s=\" + %1$s", property.getName());
+            if (property != lastProperty) {
+              code.add(" + \", \"\n");
+            } else {
+              code.add(" + \"}\";\n");
+            }
+          }
+        } else if (code.feature(GUAVA).isAvailable()) {
+          // If Guava is available, use COMMA_JOINER for readability.
+          code.addLine("    return \"%s{\"", metadata.getType().getSimpleName())
+              .addLine("        + COMMA_JOINER.join(");
+          Property lastProperty = getLast(metadata.getProperties());
+          for (Property property : metadata.getProperties()) {
+            code.add("            ");
+            if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
+              code.add("(%s != null ? ", property.getName());
+            }
+            code.add("\"%1$s=\" + %1$s", property.getName());
+            if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
+              code.add(" : null)");
+            }
+            if (property != lastProperty) {
+              code.add(",\n");
+            } else {
+              code.add(")\n");
+            }
+          }
+          code.addLine("        + \"}\";");
+        } else {
+          // Use StringBuilder if no better choice is available.
+          writeToStringWithBuilder(code, metadata, false);
+        }
+        break;
+      }
+    }
+    code.addLine("  }");
   }
 
   private static void addPartialType(SourceBuilder code, Metadata metadata) {
