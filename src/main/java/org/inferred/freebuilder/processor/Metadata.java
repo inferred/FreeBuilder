@@ -57,7 +57,7 @@ public abstract class Metadata {
 
     private final String excerpt;
 
-    private Visibility(String excerpt) {
+    Visibility(String excerpt) {
       this.excerpt = excerpt;
     }
 

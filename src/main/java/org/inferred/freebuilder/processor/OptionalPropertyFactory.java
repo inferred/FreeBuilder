@@ -48,7 +48,7 @@ import javax.lang.model.util.SimpleTypeVisitor6;
 public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
 
   @VisibleForTesting
-  static enum OptionalType {
+  enum OptionalType {
     GUAVA(QualifiedName.of(Optional.class), "absent", "fromNullable") {
       @Override
       protected void applyMapper(SourceBuilder code, Metadata metadata, Property property) {
@@ -89,7 +89,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     private final String empty;
     private final String ofNullable;
 
-    private OptionalType(QualifiedName cls, String empty, String ofNullable) {
+    OptionalType(QualifiedName cls, String empty, String ofNullable) {
       this.cls = cls;
       this.empty = empty;
       this.ofNullable = ofNullable;

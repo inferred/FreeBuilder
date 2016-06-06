@@ -51,7 +51,7 @@ public class MethodFinderTest {
   }
 
   private interface InterfaceOne {
-    abstract void method();
+    void method();
   }
 
   @Test
@@ -90,11 +90,11 @@ public class MethodFinderTest {
   }
 
   private interface InterfaceThree {
-    abstract void method();
+    void method();
   }
 
   private interface InterfaceFour {
-    abstract void method();
+    void method();
   }
 
   private abstract static class MultipleMethodsSameSignature
@@ -124,7 +124,7 @@ public class MethodFinderTest {
   private interface MultipleMethodsSameSignatureRedeclared
       extends InterfaceOne, InterfaceTwo, InterfaceThree, InterfaceFour {
     @Override
-    abstract void method();
+    void method();
   }
 
   @Test

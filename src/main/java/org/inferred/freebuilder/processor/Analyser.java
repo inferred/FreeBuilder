@@ -699,7 +699,7 @@ class Analyser {
     return any(builder.get().getInterfaces(), isEqualTo(Serializable.class));
   }
 
-  private static final boolean hasUpperCase(int codepoint) {
+  private static boolean hasUpperCase(int codepoint) {
     return Character.toUpperCase(codepoint) != codepoint;
   }
 

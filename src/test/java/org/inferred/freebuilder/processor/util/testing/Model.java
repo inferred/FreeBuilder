@@ -446,7 +446,7 @@ public class Model {
   private static class HasAnnotationOfType implements Predicate<Element> {
     private final Class<? extends Annotation> annotationType;
 
-    public HasAnnotationOfType(Class<? extends Annotation> annotationType) {
+    HasAnnotationOfType(Class<? extends Annotation> annotationType) {
       this.annotationType = annotationType;
     }
 

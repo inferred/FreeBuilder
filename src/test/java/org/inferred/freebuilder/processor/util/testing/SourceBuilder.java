@@ -96,7 +96,7 @@ public class SourceBuilder {
      * Creates a new {@link javax.tools.JavaFileObject JavaFileObject} containing the supplied
      * source code. File name is derived from the source code's package and type name.
      */
-    public Source(String source) {
+    Source(String source) {
       super(uriForClass(getTypeNameFromSource(source)), Kind.SOURCE);
       this.content = source;
     }
