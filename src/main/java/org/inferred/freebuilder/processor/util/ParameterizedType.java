@@ -18,9 +18,11 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
+
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -105,44 +107,28 @@ public class ParameterizedType extends ValueType implements Excerpt {
    * in full.
    */
   public Excerpt constructor() {
-    return new Excerpt() {
-      @Override public void addTo(SourceBuilder source) {
-        if (isParameterized() && source.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
-          source.add("new %s<>", qualifiedName);
-        } else {
-          source.add("new %s", ParameterizedType.this);
-        }
-      }
-    };
+    return Excerpts.add(
+        "new %s%s",
+        qualifiedName,
+        isParameterized() ? diamondOperator(Excerpts.join(", ", typeParameters)) : "");
   }
 
   /**
    * Returns a source excerpt suitable for declaring this type, i.e. {@code SimpleName<...>}
    */
   public Excerpt declaration() {
-    return new Excerpt() {
-      @Override public void addTo(SourceBuilder source) {
-        source.add("%s%s", qualifiedName.getSimpleName(), declarationParameters());
-      }
-    };
+    return Excerpts.add("%s%s", qualifiedName.getSimpleName(), declarationParameters());
   }
 
   /**
    * Returns a source excerpt of the type parameters of this type, including angle brackets.
    */
   public Excerpt typeParameters() {
-    return new Excerpt() {
-      @Override public void addTo(SourceBuilder source) {
-        if (!typeParameters.isEmpty()) {
-          String prefix = "<";
-          for (Object typeParameter : typeParameters) {
-            source.add("%s%s", prefix, typeParameter);
-            prefix = ", ";
-          }
-          source.add(">");
-        }
-      }
-    };
+    if (typeParameters.isEmpty()) {
+      return Excerpts.empty();
+    } else {
+      return Excerpts.add("<%s>", Excerpts.join(", ", typeParameters));
+    }
   }
 
   /**
@@ -176,22 +162,14 @@ public class ParameterizedType extends ValueType implements Excerpt {
    * Returns a source excerpt of a JavaDoc link to this type.
    */
   public Excerpt javadocLink() {
-    return new Excerpt() {
-      @Override public void addTo(SourceBuilder source) {
-        source.add("{@link %s}", getQualifiedName());
-      }
-    };
+    return Excerpts.add("{@link %s}", getQualifiedName());
   }
 
   /**
    * Returns a source excerpt of a JavaDoc link to a no-args method on this type.
    */
   public Excerpt javadocNoArgMethodLink(final String memberName) {
-    return new Excerpt() {
-      @Override public void addTo(SourceBuilder source) {
-        source.add("{@link %s#%s()}", getQualifiedName(), memberName);
-      }
-    };
+    return Excerpts.add("{@link %s#%s()}", getQualifiedName(), memberName);
   }
 
   @Override

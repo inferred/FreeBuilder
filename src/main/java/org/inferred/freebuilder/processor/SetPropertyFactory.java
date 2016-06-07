@@ -32,6 +32,7 @@ import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -104,11 +105,9 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.addLine("private final %1$s<%2$s> %3$s = new %1$s<%4$s>();",
-          LinkedHashSet.class,
-          elementType,
-          property.getName(),
-          code.feature(SOURCE_LEVEL).supportsDiamondOperator() ? "" : elementType);
+      code.feature(SOURCE_LEVEL);
+      code.addLine("private final %1$s<%2$s> %3$s = new %1$s%4$s();",
+          LinkedHashSet.class, elementType, property.getName(), diamondOperator(elementType));
     }
 
     @Override
@@ -356,11 +355,8 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
             .addLine("  case 1:")
             .addLine("    return %s.singleton(elements.iterator().next());", Collections.class)
             .addLine("  default:")
-            .add("    return %s.unmodifiableSet(new %s<", Collections.class, LinkedHashSet.class);
-        if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
-          code.add("E");
-        }
-        code.add(">(elements));\n")
+            .addLine("    return %s.unmodifiableSet(new %s%s(elements));",
+                Collections.class, LinkedHashSet.class, diamondOperator("E"))
             .addLine("  }")
             .addLine("}");
       }

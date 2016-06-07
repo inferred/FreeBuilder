@@ -17,8 +17,10 @@ package org.inferred.freebuilder.processor.util.feature;
 
 import com.google.common.base.Optional;
 
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -57,6 +59,37 @@ public enum SourceLevel implements Feature<SourceLevel> {
     }
   };
 
+  public static Excerpt diamondOperator(final Object type) {
+    return new DiamondOperator(type);
+  }
+
+  private static final class DiamondOperator extends ValueType implements Excerpt {
+    private final Object type;
+
+    private DiamondOperator(Object type) {
+      this.type = type;
+    }
+
+    @Override
+    public void addTo(SourceBuilder source) {
+      if (source.feature(SOURCE_LEVEL).compareTo(JAVA_7) >= 0) {
+        source.add("<>");
+      } else {
+        source.add("<%s>", type);
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "diamondOperator(" + type + ")";
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("type", type);
+    }
+  }
+
   public Optional<QualifiedName> javaUtilObjects() {
     switch (this) {
       case JAVA_6:
@@ -65,9 +98,5 @@ public enum SourceLevel implements Feature<SourceLevel> {
       default:
         return Optional.of(QualifiedName.of("java.util", "Objects"));
     }
-  }
-
-  public boolean supportsDiamondOperator() {
-    return this.compareTo(JAVA_7) >= 0;
   }
 }

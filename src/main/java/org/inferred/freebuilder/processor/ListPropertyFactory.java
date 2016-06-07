@@ -31,6 +31,7 @@ import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -112,11 +113,12 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.addLine("private final %1$s<%2$s> %3$s = new %1$s<%4$s>();",
+      code.feature(SOURCE_LEVEL);
+      code.addLine("private final %1$s<%2$s> %3$s = new %1$s%4$s();",
           ArrayList.class,
           elementType,
           property.getName(),
-          code.feature(SOURCE_LEVEL).supportsDiamondOperator() ? "" : elementType);
+          diamondOperator(elementType));
     }
 
     @Override
