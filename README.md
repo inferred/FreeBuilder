@@ -468,9 +468,13 @@ interface Address {
 ```
 
 `@FreeBuilder` will generate appropriate [@JsonProperty] annotations on the
-builder.
+builder. (If you use Java 8 or Guava types, you may need to include the
+relevant Jackson extension modules, [jackson-datatype-jdk8] and
+[jackson-datatype-guava].)
 
 [Jackson]: http://wiki.fasterxml.com/JacksonHome
+[jackson-datatype-guava]: https://github.com/FasterXML/jackson-datatype-guava
+[jackson-datatype-jdk8]: https://github.com/FasterXML/jackson-datatype-jdk8
 [@JsonProperty]: http://fasterxml.github.io/jackson-annotations/javadoc/2.6/com/fasterxml/jackson/annotation/JsonProperty.html
 [@JsonDeserialize]: http://fasterxml.github.io/jackson-databind/javadoc/2.6/com/fasterxml/jackson/databind/annotation/JsonDeserialize.html
 
