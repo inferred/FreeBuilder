@@ -22,7 +22,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Ordering;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
@@ -52,22 +51,39 @@ public abstract class Metadata {
     FINAL;
   }
 
-  public enum Visibility implements Excerpt {
-    PUBLIC("public "), PROTECTED("protected "), PACKAGE(""), PRIVATE("private ");
+  public static class Visibility extends Excerpt {
+    public static final Visibility PUBLIC = new Visibility(0, "PUBLIC", "public ");
+    public static final Visibility PROTECTED = new Visibility(1, "PROTECTED", "protected ");
+    public static final Visibility PACKAGE = new Visibility(2, "PACKAGE", "");
+    public static final Visibility PRIVATE = new Visibility(3, "PRIVATE", "private ");
 
+    private final int order;
+    private final String name;
     private final String excerpt;
 
-    Visibility(String excerpt) {
+    Visibility(int order, String name, String excerpt) {
+      this.order = order;
+      this.name = name;
       this.excerpt = excerpt;
     }
 
     public static Visibility mostVisible(Visibility a, Visibility b) {
-      return Ordering.natural().min(a, b);
+      return (a.order < b.order) ? a : b;
     }
 
     @Override
     public void addTo(SourceBuilder code) {
       code.add(excerpt);
+    }
+
+    @Override
+    public String toString() {
+      return name;
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("excerpt", excerpt);
     }
   }
 

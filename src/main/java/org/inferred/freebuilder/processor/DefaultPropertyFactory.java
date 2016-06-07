@@ -29,6 +29,7 @@ import com.google.common.base.Optional;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -147,13 +148,8 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine(" */")
           .addLine("public %s %s() {", property.getType(), getter(property));
       if (!hasDefault) {
-        Excerpt propertyIsSet = new Excerpt() {
-          @Override
-          public void addTo(SourceBuilder source) {
-            source.add("!_unsetProperties.contains(%s.%s)",
+        Excerpt propertyIsSet = Excerpts.add("!_unsetProperties.contains(%s.%s)",
                 metadata.getPropertyEnum(), property.getAllCapsName());
-          }
-        };
         code.add(PreconditionExcerpts.checkState(propertyIsSet, property.getName() + " not set"));
       }
       code.addLine("  return %s;", property.getName())

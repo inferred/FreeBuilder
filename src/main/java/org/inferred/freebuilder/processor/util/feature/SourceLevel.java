@@ -20,7 +20,6 @@ import com.google.common.base.Optional;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.ValueType;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -63,7 +62,7 @@ public enum SourceLevel implements Feature<SourceLevel> {
     return new DiamondOperator(type);
   }
 
-  private static final class DiamondOperator extends ValueType implements Excerpt {
+  private static final class DiamondOperator extends Excerpt {
     private final Object type;
 
     private DiamondOperator(Object type) {

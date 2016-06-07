@@ -6,9 +6,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Set;
 
@@ -42,9 +41,10 @@ class JacksonSupport {
       Property.Builder resultBuilder, ExecutableElement getterMethod) {
     Optional<AnnotationMirror> annotation = findAnnotationMirror(getterMethod, JSON_PROPERTY);
     if (annotation.isPresent()) {
-      resultBuilder.addAccessorAnnotations(new AnnotationExcerpt(annotation.get()));
+      resultBuilder.addAccessorAnnotations(Excerpts.add("%s%n", annotation.get()));
     } else if (generateDefaultAnnotations(getterMethod)) {
-      resultBuilder.addAccessorAnnotations(new JsonPropertyExcerpt(resultBuilder.getName()));
+      resultBuilder.addAccessorAnnotations(Excerpts.add(
+          "@%s(\"%s\")%n", JSON_PROPERTY, resultBuilder.getName()));
     }
   }
 
@@ -58,34 +58,6 @@ class JacksonSupport {
       }
     }
     return true;
-  }
-
-  private static class AnnotationExcerpt implements Excerpt {
-
-    private final AnnotationMirror annotation;
-
-    AnnotationExcerpt(AnnotationMirror annotation) {
-      this.annotation = annotation;
-    }
-
-    @Override
-    public void addTo(SourceBuilder code) {
-      code.addLine("%s", annotation);
-    }
-  }
-
-  private static class JsonPropertyExcerpt implements Excerpt {
-
-    private final String propertyName;
-
-    JsonPropertyExcerpt(String propertyName) {
-      this.propertyName = propertyName;
-    }
-
-    @Override
-    public void addTo(SourceBuilder code) {
-      code.addLine("@%s(\"%s\")", JSON_PROPERTY, propertyName);
-    }
   }
 
 }

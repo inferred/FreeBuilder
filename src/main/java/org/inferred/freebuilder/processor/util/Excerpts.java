@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Excerpts {
 
-  private static final class AddingExcerpt extends ValueType implements Excerpt {
+  private static final class AddingExcerpt extends Excerpt {
     private final String fmt;
     private final Object[] args;
 
@@ -46,9 +46,12 @@ public class Excerpts {
     return new AddingExcerpt(fmt, args);
   }
 
-  private static final class EmptyExcerpt implements Excerpt {
+  private static final class EmptyExcerpt extends Excerpt {
     @Override
     public void addTo(SourceBuilder source) {}
+
+    @Override
+    protected void addFields(FieldReceiver fields) {}
   }
 
   private static final Excerpt EMPTY = new EmptyExcerpt();
@@ -57,7 +60,7 @@ public class Excerpts {
     return EMPTY;
   }
 
-  private static final class JoiningExcerpt extends ValueType implements Excerpt {
+  private static final class JoiningExcerpt extends Excerpt {
     private final String separator;
     private final List<?> excerpts;
 

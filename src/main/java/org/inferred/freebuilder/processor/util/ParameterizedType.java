@@ -39,7 +39,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor6;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
-public class ParameterizedType extends ValueType implements Excerpt {
+public class ParameterizedType extends Excerpt {
 
   public static ParameterizedType from(TypeElement typeElement) {
     return new ParameterisedTypeForElementVisitor().visitType(typeElement, null);
@@ -136,26 +136,7 @@ public class ParameterizedType extends ValueType implements Excerpt {
    * brackets.
    */
   public Excerpt declarationParameters() {
-    return new Excerpt() {
-      @Override public void addTo(SourceBuilder source) {
-        if (!typeParameters.isEmpty()) {
-          String prefix = "<";
-          for (Object typeParameter : typeParameters) {
-            source.add("%s%s", prefix, typeParameter);
-            if (typeParameter instanceof TypeParameterElement) {
-              TypeParameterElement element = (TypeParameterElement) typeParameter;
-              String separator = " extends ";
-              for (TypeMirror bound : element.getBounds()) {
-                source.add("%s%s", separator, bound);
-                separator = " & ";
-              }
-            }
-            prefix = ", ";
-          }
-          source.add(">");
-        }
-      }
-    };
+    return new DeclarationParameters(typeParameters);
   }
 
   /**
@@ -184,6 +165,39 @@ public class ParameterizedType extends ValueType implements Excerpt {
   protected void addFields(FieldReceiver fields) {
     fields.add("qualifiedName", qualifiedName);
     fields.add("typeParameters", typeParameters);
+  }
+
+  private final class DeclarationParameters extends Excerpt {
+
+    private final List<?> typeParameters;
+
+    DeclarationParameters(List<?> typeParameters) {
+      this.typeParameters = typeParameters;
+    }
+
+    @Override public void addTo(SourceBuilder source) {
+      if (!typeParameters.isEmpty()) {
+        String prefix = "<";
+        for (Object typeParameter : typeParameters) {
+          source.add("%s%s", prefix, typeParameter);
+          if (typeParameter instanceof TypeParameterElement) {
+            TypeParameterElement element = (TypeParameterElement) typeParameter;
+            String separator = " extends ";
+            for (TypeMirror bound : element.getBounds()) {
+              source.add("%s%s", separator, bound);
+              separator = " & ";
+            }
+          }
+          prefix = ", ";
+        }
+        source.add(">");
+      }
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("typeParameters", typeParameters);
+    }
   }
 
   private static final class ParameterisedTypeForElementVisitor

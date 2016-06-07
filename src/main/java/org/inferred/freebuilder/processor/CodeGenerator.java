@@ -40,6 +40,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
@@ -785,15 +786,7 @@ public class CodeGenerator {
 
   /** Returns an {@link Excerpt} of "implements/extends {@code type}". */
   private static Excerpt extending(final Object type, final boolean isInterface) {
-    return new Excerpt() {
-      @Override public void addTo(SourceBuilder source) {
-        if (isInterface) {
-          source.add("implements %s", type);
-        } else {
-          source.add("extends %s", type);
-        }
-      }
-    };
+    return Excerpts.add(isInterface ? "implements %s" : "extends %s", type);
   }
 
   private static ImmutableList<String> getNames(Iterable<Property> properties) {
