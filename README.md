@@ -528,6 +528,12 @@ compile 'org.inferred:freebuilder:<current version>'
 If [Guava] is available, FreeBuilder will use it to generate cleaner, more
 interoperable implementation code (e.g returning [immutable collections]).
 
+If you use Eclipse or IDEA along with Gradle, consider using the
+[org.inferred.processors plugin] to correctly configure code generation in
+your IDE.
+
+[org.inferred.processors plugin]: https://github.com/palantir/gradle-processors
+
 ### Eclipse
 
 _Condensed from [Eclipse Indigo's documentation][]._
