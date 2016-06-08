@@ -15,8 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -176,7 +176,7 @@ public abstract class PropertyCodeGenerator {
 
   @Override
   public String toString() {
-    ToStringHelper stringHelper = Objects.toStringHelper(this);
+    ToStringHelper stringHelper = MoreObjects.toStringHelper(this);
     for (Map.Entry<String, Object> fieldValue : fieldValues().entrySet()) {
       stringHelper.add(fieldValue.getKey(), fieldValue.getValue());
     }
