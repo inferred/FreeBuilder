@@ -9,6 +9,23 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 class Declarations {
 
   /**
+   * Upcasts a Builder instance to the generated superclass, to allow access to private fields.
+   *
+   * @param block the {@link Block} to add the declaration to
+   * @param metadata metadata about the builder being generated
+   * @param builder the Builder instance to upcast
+   * @returns an Excerpt referencing the upcasted instance
+   */
+  public static Excerpt upcastToGeneratedBuilder(Block block, Metadata metadata, String builder) {
+    return block.declare(
+        "base",
+        "// Upcast to access private fields; otherwise, oddly, we get an access violation.%n"
+            + "%1$s base = (%1$s) %2$s;",
+        metadata.getGeneratedBuilder(),
+        builder);
+  }
+
+  /**
    * Declares a fresh Builder to copy default property values from.
    *
    * @returns an Excerpt referencing a fresh Builder, if a no-args factory method is available to
