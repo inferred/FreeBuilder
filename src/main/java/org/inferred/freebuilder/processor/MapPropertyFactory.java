@@ -29,7 +29,7 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
+import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -122,12 +123,12 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.add("private final %1$s<%2$s, %3$s> %4$s = new %1$s<",
-          LinkedHashMap.class, keyType, valueType, property.getName());
-      if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
-        code.add("%s, %s", keyType, valueType);
-      }
-      code.add(">();\n");
+      code.addLine("private final %1$s<%2$s, %3$s> %4$s = new %1$s%5$s();",
+          LinkedHashMap.class,
+          keyType,
+          valueType,
+          property.getName(),
+          diamondOperator(Excerpts.add("%s, %s", keyType, valueType)));
     }
 
     @Override
@@ -360,11 +361,8 @@ public class MapPropertyFactory implements PropertyCodeGenerator.Factory {
             .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
                 Collections.class)
             .addLine("  default:")
-            .add("    return %s.unmodifiableMap(new %s<", Collections.class, LinkedHashMap.class);
-        if (!code.feature(SOURCE_LEVEL).supportsDiamondOperator()) {
-          code.add("K, V");
-        }
-        code.add(">(entries));\n")
+            .addLine("    return %s.unmodifiableMap(new %s%s(entries));",
+                Collections.class, LinkedHashMap.class, diamondOperator("K, V"))
             .addLine("  }")
             .addLine("}");
       }

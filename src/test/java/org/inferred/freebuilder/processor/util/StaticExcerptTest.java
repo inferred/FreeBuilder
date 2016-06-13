@@ -4,8 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.TYPE;
 
-import com.google.common.base.Objects;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -24,20 +22,6 @@ public class StaticExcerptTest {
     }
 
     @Override public void addTo(SourceBuilder source) {}
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(getType(), getName());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof DummyStaticExcerpt)) {
-        return false;
-      }
-      DummyStaticExcerpt other = (DummyStaticExcerpt) obj;
-      return Objects.equal(getType(), other.getType()) && Objects.equal(getName(), other.getName());
-    }
   }
 
   @Test

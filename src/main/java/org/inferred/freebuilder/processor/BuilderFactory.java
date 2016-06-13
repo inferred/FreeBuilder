@@ -22,8 +22,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Set;
 
@@ -40,15 +40,11 @@ public enum BuilderFactory {
     @Override public Excerpt newBuilder(
         final ParameterizedType builderType,
         final TypeInference typeInference) {
-      return new Excerpt() {
-        @Override public void addTo(SourceBuilder code) {
-          if (typeInference == TypeInference.INFERRED_TYPES) {
-            code.add("%s()", builderType.constructor());
-          } else {
-            code.add("new %s()", builderType);
-          }
-        }
-      };
+      if (typeInference == TypeInference.INFERRED_TYPES) {
+        return Excerpts.add("%s()", builderType.constructor());
+      } else {
+        return Excerpts.add("new %s()", builderType);
+      }
     }
   },
 
@@ -57,16 +53,12 @@ public enum BuilderFactory {
     @Override public Excerpt newBuilder(
         final ParameterizedType builderType,
         final TypeInference typeInference) {
-      return new Excerpt() {
-        @Override public void addTo(SourceBuilder code) {
-          if (typeInference == TypeInference.INFERRED_TYPES) {
-            code.add("%s.builder()", builderType.getQualifiedName().getEnclosingType());
-          } else {
-            code.add("%s.%sbuilder()",
-                builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
-          }
-        }
-      };
+      if (typeInference == TypeInference.INFERRED_TYPES) {
+        return Excerpts.add("%s.builder()", builderType.getQualifiedName().getEnclosingType());
+      } else {
+        return Excerpts.add("%s.%sbuilder()",
+            builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
+      }
     }
   },
 
@@ -75,16 +67,12 @@ public enum BuilderFactory {
     @Override public Excerpt newBuilder(
         final ParameterizedType builderType,
         final TypeInference typeInference) {
-      return new Excerpt() {
-        @Override public void addTo(SourceBuilder code) {
-          if (typeInference == TypeInference.INFERRED_TYPES) {
-            code.add("%s.newBuilder()", builderType.getQualifiedName().getEnclosingType());
-          } else {
-            code.add("%s.%snewBuilder()",
-                builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
-          }
-        }
-      };
+      if (typeInference == TypeInference.INFERRED_TYPES) {
+        return Excerpts.add("%s.newBuilder()", builderType.getQualifiedName().getEnclosingType());
+      } else {
+        return Excerpts.add("%s.%snewBuilder()",
+            builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
+      }
     }
   };
 

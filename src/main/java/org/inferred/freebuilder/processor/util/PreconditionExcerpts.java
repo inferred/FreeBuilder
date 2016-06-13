@@ -8,6 +8,7 @@ import com.google.common.escape.Escaper;
 import com.google.common.escape.Escapers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -15,6 +16,138 @@ import java.util.regex.Pattern;
  * Code snippets that call or emulate Guava's {@link Preconditions} methods.
  */
 public class PreconditionExcerpts {
+
+  private static final class GuavaCheckExcerpt extends Excerpt {
+    private final Object[] args;
+    private final Object condition;
+    private final String message;
+    private final String methodName;
+    private final Class<? extends RuntimeException> exceptionType;
+
+    private GuavaCheckExcerpt(Object[] args, Object condition, String message, String methodName,
+        Class<? extends RuntimeException> exceptionType) {
+      this.args = args;
+      this.condition = condition;
+      this.message = message;
+      this.methodName = methodName;
+      this.exceptionType = exceptionType;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      if (code.feature(GUAVA).isAvailable()) {
+        code.add("%s.%s(%s, \"%s\"",
+            Preconditions.class,
+            methodName,
+            condition,
+            JAVA_STRING_ESCAPER.escape(message));
+        for (Object arg : args) {
+          code.add(", %s", arg);
+        }
+        code.add(");\n");
+      } else {
+        List<Excerpt> escapedArgs = new ArrayList<Excerpt>();
+        for (final Object arg : args) {
+          escapedArgs.add(Excerpts.add("\" + %s + \"", arg));
+        }
+        String messageConcatenated = code.subBuilder()
+            .add("\"" + JAVA_STRING_ESCAPER.escape(message) + "\"", escapedArgs.toArray())
+            .toString()
+            .replace("\"\" + ", "")
+            .replace(" + \"\"", "");
+        code.addLine("if (%s) {", negate(code, condition))
+            .addLine("  throw new %s(%s);", exceptionType, messageConcatenated)
+            .addLine("}");
+      }
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("methodName", methodName);
+      fields.add("exceptionType", exceptionType);
+      fields.add("condition", condition);
+      fields.add("message", message);
+      fields.add("args", Arrays.asList(args));
+    }
+  }
+
+  private static final class CheckNotNullPreambleExcerpt extends Excerpt {
+    private final Object reference;
+
+    private CheckNotNullPreambleExcerpt(Object reference) {
+      this.reference = reference;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      if (code.feature(GUAVA).isAvailable()) {
+        // No preamble needed
+      } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+        // No preamble needed
+      } else {
+        code.addLine("if (%s == null) {", reference)
+            .addLine("  throw new NullPointerException();")
+            .addLine("}");
+      }
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("reference", reference);
+    }
+  }
+
+  private static final class CheckNotNullInlineExcerpt extends Excerpt {
+    private final Object reference;
+
+    private CheckNotNullInlineExcerpt(Object reference) {
+      this.reference = reference;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      if (code.feature(GUAVA).isAvailable()) {
+        code.add("%s.checkNotNull(%s)", Preconditions.class, reference);
+      } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+        code.add("%s.requireNonNull(%s)",
+            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), reference);
+      } else {
+        code.add("%s", reference);
+      }
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("reference", reference);
+    }
+  }
+
+  private static final class CheckNotNullExcerpt extends Excerpt {
+    private final Object reference;
+
+    private CheckNotNullExcerpt(Object reference) {
+      this.reference = reference;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      if (code.feature(GUAVA).isAvailable()) {
+        code.addLine("%s.checkNotNull(%s);", Preconditions.class, reference);
+      } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+        code.addLine("%s.requireNonNull(%s);",
+            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), reference);
+      } else {
+        code.addLine("if (%s == null) {", reference)
+            .addLine("  throw new NullPointerException();")
+            .addLine("}");
+      }
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("reference", reference);
+    }
+  }
 
   private static final Escaper JAVA_STRING_ESCAPER = Escapers.builder()
       .addEscape('"', "\"")
@@ -46,20 +179,7 @@ public class PreconditionExcerpts {
    * @param reference an excerpt containing the reference to pass to the checkNotNull method
    */
   public static Excerpt checkNotNullPreamble(final Object reference) {
-    return new Excerpt() {
-      @Override
-      public void addTo(SourceBuilder code) {
-        if (code.feature(GUAVA).isAvailable()) {
-          // No preamble needed
-        } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-          // No preamble needed
-        } else {
-          code.addLine("if (%s == null) {", reference)
-              .addLine("  throw new NullPointerException();")
-              .addLine("}");
-        }
-      }
-    };
+    return new CheckNotNullPreambleExcerpt(reference);
   }
 
   /**
@@ -80,19 +200,7 @@ public class PreconditionExcerpts {
    * @param reference an excerpt containing the reference to pass to the checkNotNull method
    */
   public static Excerpt checkNotNullInline(final Object reference) {
-    return new Excerpt() {
-      @Override
-      public void addTo(SourceBuilder code) {
-        if (code.feature(GUAVA).isAvailable()) {
-          code.add("%s.checkNotNull(%s)", Preconditions.class, reference);
-        } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-          code.add("%s.requireNonNull(%s)",
-              code.feature(SOURCE_LEVEL).javaUtilObjects().get(), reference);
-        } else {
-          code.add("%s", reference);
-        }
-      }
-    };
+    return new CheckNotNullInlineExcerpt(reference);
   }
 
   /**
@@ -110,21 +218,7 @@ public class PreconditionExcerpts {
    * @param reference an excerpt containing the reference to pass to the checkNotNull method
    */
   public static Excerpt checkNotNull(final Object reference) {
-    return new Excerpt() {
-      @Override
-      public void addTo(SourceBuilder code) {
-        if (code.feature(GUAVA).isAvailable()) {
-          code.addLine("%s.checkNotNull(%s);", Preconditions.class, reference);
-        } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-          code.addLine("%s.requireNonNull(%s);",
-              code.feature(SOURCE_LEVEL).javaUtilObjects().get(), reference);
-        } else {
-          code.addLine("if (%s == null) {", reference)
-              .addLine("  throw new NullPointerException();")
-              .addLine("}");
-        }
-      }
-    };
+    return new CheckNotNullExcerpt(reference);
   }
 
   /**
@@ -145,8 +239,8 @@ public class PreconditionExcerpts {
       final Object condition,
       final String message,
       final Object... args) {
-    return guavaCheckExcerpt(
-        "checkArgument", IllegalArgumentException.class, condition, message, args);
+    return new GuavaCheckExcerpt(
+        args, condition, message, "checkArgument", IllegalArgumentException.class);
   }
 
   /**
@@ -168,49 +262,8 @@ public class PreconditionExcerpts {
       final Object condition,
       final String message,
       final Object... args) {
-    return guavaCheckExcerpt("checkState", IllegalStateException.class, condition, message, args);
-  }
-
-  private static Excerpt guavaCheckExcerpt(
-      final String methodName,
-      final Class<? extends RuntimeException> exceptionType,
-      final Object condition,
-      final String message,
-      final Object... args) {
-    return new Excerpt() {
-      @Override
-      public void addTo(SourceBuilder code) {
-        if (code.feature(GUAVA).isAvailable()) {
-          code.add("%s.%s(%s, \"%s\"",
-              Preconditions.class,
-              methodName,
-              condition,
-              JAVA_STRING_ESCAPER.escape(message));
-          for (Object arg : args) {
-            code.add(", %s", arg);
-          }
-          code.add(");\n");
-        } else {
-          List<Excerpt> escapedArgs = new ArrayList<Excerpt>();
-          for (final Object arg : args) {
-            escapedArgs.add(new Excerpt() {
-              @Override
-              public void addTo(SourceBuilder source) {
-                source.add("\" + %s + \"", arg);
-              }
-            });
-          }
-          String messageConcatenated = code.subBuilder()
-              .add("\"" + JAVA_STRING_ESCAPER.escape(message) + "\"", escapedArgs.toArray())
-              .toString()
-              .replace("\"\" + ", "")
-              .replace(" + \"\"", "");
-          code.addLine("if (%s) {", negate(code, condition))
-              .addLine("  throw new %s(%s);", exceptionType, messageConcatenated)
-              .addLine("}");
-        }
-      }
-    };
+    return new GuavaCheckExcerpt(
+        args, condition, message, "checkState", IllegalStateException.class);
   }
 
   /**
