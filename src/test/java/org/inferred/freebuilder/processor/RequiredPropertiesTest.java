@@ -25,6 +25,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Optional;
+
 import javax.tools.JavaFileObject;
 
 @RunWith(JUnit4.class)
@@ -38,6 +40,41 @@ public class RequiredPropertiesTest {
       .addLine("  public abstract boolean isPropertyB();")
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject DEFAULTED_PROPERTIES_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  int getPropertyA();")
+      .addLine("  boolean isPropertyB();")
+      .addLine("")
+      .addLine("  class Builder extends DataType_Builder {")
+      .addLine("    public Builder() {")
+      .addLine("      if (true) {  // Disable optimization in javac")
+      .addLine("        setPropertyA(0);")
+      .addLine("        setPropertyB(false);")
+      .addLine("      }")
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject REQUIRED_PROPERTIES_TYPE_NO_TEMPLATE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("import %s;", Optional.class)
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  public abstract int getPropertyA();")
+      .addLine("  public abstract boolean isPropertyB();")
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    public Builder(Optional<Integer> propertyA, Optional<Boolean> propertyB) {")
+      .addLine("      propertyA.ifPresent(this::setPropertyA);")
+      .addLine("      propertyB.ifPresent(this::setPropertyB);")
+      .addLine("    }")
+      .addLine("  }")
       .addLine("}")
       .build();
 
@@ -133,6 +170,23 @@ public class RequiredPropertiesTest {
             .addLine("DataType.Builder template = new DataType.Builder()")
             .addLine("    .setPropertyA(11);")
             .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(11, builder.getPropertyA());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_noTemplate() {
+    behaviorTester
+        .with(new Processor())
+        .with(REQUIRED_PROPERTIES_TYPE_NO_TEMPLATE)
+        .with(testBuilder()
+            .addImport(Optional.class)
+            .addLine("DataType.Builder template = new DataType")
+            .addLine("    .Builder(Optional.of(11), Optional.empty());")
+            .addLine("DataType.Builder builder = new DataType")
+            .addLine("    .Builder(Optional.empty(), Optional.empty())")
             .addLine("    .mergeFrom(template);")
             .addLine("assertEquals(11, builder.getPropertyA());")
             .build())
@@ -244,6 +298,129 @@ public class RequiredPropertiesTest {
             .addLine("new DataType.Builder()")
             .addLine("    .setPropertyA(11)")
             .addLine("    .isPropertyB();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromBuilder_defaultsDoNotOverride() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder())")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromValue_defaultsDoNotOverride() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder().build())")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromBuilder_nonDefaultsUsed() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder())")
+            .addLine("        .setPropertyA(13)")
+            .addLine("    .build();")
+            .addLine("assertEquals(13, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromValue_nonDefaultsUsed() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder()")
+            .addLine("        .setPropertyA(13)")
+            .addLine("        .build())")
+            .addLine("    .build();")
+            .addLine("assertEquals(13, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromBuilder_nonDefaultsOverride() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder())")
+            .addLine("        .setPropertyA(13)")
+            .addLine("    .build();")
+            .addLine("assertEquals(13, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromValue_nonDefaultsOverride() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder()")
+            .addLine("        .setPropertyA(13)")
+            .addLine("        .build())")
+            .addLine("    .build();")
+            .addLine("assertEquals(13, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_withDefaults() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .addLine("assertEquals(0, value.getPropertyA());")
+            .addLine("assertFalse(value.isPropertyB());")
             .build())
         .runTest();
   }

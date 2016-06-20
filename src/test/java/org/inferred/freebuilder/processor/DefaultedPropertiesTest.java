@@ -50,6 +50,112 @@ public class DefaultedPropertiesTest {
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
+  public void testMergeFromBuilder_defaultsDoNotOverride() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder())")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromValue_defaultsDoNotOverride() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder().build())")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromBuilder_nonDefaultsUsed() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder())")
+            .addLine("        .setPropertyA(13)")
+            .addLine("    .build();")
+            .addLine("assertEquals(13, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromValue_nonDefaultsUsed() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder()")
+            .addLine("        .setPropertyA(13)")
+            .addLine("        .build())")
+            .addLine("    .build();")
+            .addLine("assertEquals(13, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromBuilder_nonDefaultsOverride() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder())")
+            .addLine("        .setPropertyA(13)")
+            .addLine("    .build();")
+            .addLine("assertEquals(13, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromValue_nonDefaultsOverride() {
+    behaviorTester
+        .with(new Processor())
+        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .mergeFrom(new DataType.Builder()")
+            .addLine("        .setPropertyA(13)")
+            .addLine("        .build())")
+            .addLine("    .build();")
+            .addLine("assertEquals(13, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testClear() {
     behaviorTester
         .with(new Processor())
