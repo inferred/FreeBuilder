@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.util.Block;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -183,18 +185,13 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public boolean isTemplateRequiredInClear() {
-      return true;
-    }
-
-    @Override
-    public void addClearField(SourceBuilder code, String template) {
-      code.addLine("%1$s = %2$s.%1$s;", property.getName(), template);
-    }
-
-    @Override
-    public void addPartialClearField(SourceBuilder code) {
-      code.addLine("%s = null;", property.getName());
+    public void addClearField(Block code) {
+      Optional<Excerpt> defaults = Declarations.freshBuilder(code, metadata);
+      if (defaults.isPresent()) {
+        code.addLine("%1$s = %2$s.%1$s;", property.getName(), defaults.get());
+      } else {
+        code.addLine("%s = null;", property.getName());
+      }
     }
   }
 }

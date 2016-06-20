@@ -42,6 +42,7 @@ import com.google.common.collect.Multimaps;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedListMultimap;
+import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.StaticExcerpt;
@@ -387,17 +388,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     }
 
     @Override
-    public boolean isTemplateRequiredInClear() {
-      return false;
-    }
-
-    @Override
-    public void addClearField(SourceBuilder code, String template) {
-      code.addLine("%s.clear();", property.getName());
-    }
-
-    @Override
-    public void addPartialClearField(SourceBuilder code) {
+    public void addClearField(Block code) {
       code.addLine("%s.clear();", property.getName());
     }
 

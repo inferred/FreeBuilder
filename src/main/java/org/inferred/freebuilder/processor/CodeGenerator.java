@@ -22,23 +22,23 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EX
 import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
-import static org.inferred.freebuilder.processor.PropertyCodeGenerator.IS_TEMPLATE_REQUIRED_IN_CLEAR;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.BuilderFactory.TypeInference;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
@@ -220,49 +220,27 @@ public class CodeGenerator {
   }
 
   private static void addClearMethod(SourceBuilder code, Metadata metadata) {
-    if (metadata.getBuilderFactory().isPresent()) {
-      code.addLine("")
-          .addLine("/**")
-          .addLine(" * Resets the state of this builder.")
-          .addLine(" */")
-          .addLine("public %s clear() {", metadata.getBuilder());
-      List<PropertyCodeGenerator> codeGenerators =
-          Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
-      if (Iterables.any(codeGenerators, IS_TEMPLATE_REQUIRED_IN_CLEAR)) {
-        code.addLine("  %s _template = %s;",
-            metadata.getGeneratedBuilder(),
-            metadata.getBuilderFactory().get()
-                .newBuilder(metadata.getBuilder(), TypeInference.INFERRED_TYPES));
-      }
-      for (PropertyCodeGenerator codeGenerator : codeGenerators) {
-        if (codeGenerator.isTemplateRequiredInClear()) {
-          codeGenerator.addClearField(code, "_template");
-        } else {
-          codeGenerator.addClearField(code, null);
-        }
-      }
-      if (any(metadata.getProperties(), IS_REQUIRED)) {
-        code.addLine("  _unsetProperties.clear();")
-            .addLine("  _unsetProperties.addAll(_template._unsetProperties);",
-                metadata.getGeneratedBuilder());
-      }
-      code.addLine("  return (%s) this;", metadata.getBuilder())
-          .addLine("}");
-    } else {
-      code.addLine("")
-          .addLine("/**")
-          .addLine(" * Ensures a subsequent mergeFrom call will make a clone of its input.")
-          .addLine(" *")
-          .addLine(" * <p>The exact implementation of this method is not guaranteed to remain")
-          .addLine(" * stable; it should always be followed directly by a mergeFrom call.")
-          .addLine(" */")
-          .addLine("public %s clear() {", metadata.getBuilder());
-      for (Property property : metadata.getProperties()) {
-        property.getCodeGenerator().addPartialClearField(code);
-      }
-      code.addLine("  return (%s) this;", metadata.getBuilder())
-          .addLine("}");
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Resets the state of this builder.")
+        .addLine(" */")
+        .addLine("public %s clear() {", metadata.getBuilder());
+    Block body = new Block(code);
+    List<PropertyCodeGenerator> codeGenerators =
+        Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
+    for (PropertyCodeGenerator codeGenerator : codeGenerators) {
+      codeGenerator.addClearField(body);
     }
+    code.add(body);
+    if (any(metadata.getProperties(), IS_REQUIRED)) {
+      Optional<Excerpt> defaults = Declarations.freshBuilder(body, metadata);
+      if (defaults.isPresent()) {
+        code.addLine("  _unsetProperties.clear();")
+            .addLine("  _unsetProperties.addAll(%s._unsetProperties);", defaults.get());
+      }
+    }
+    code.addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("}");
   }
 
   private static void addBuildPartialMethod(SourceBuilder code, Metadata metadata) {
