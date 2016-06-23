@@ -369,7 +369,7 @@ public class ListMultimapPropertyFactory implements PropertyCodeGenerator.Factor
     }
 
     @Override
-    public void addMergeFromValue(SourceBuilder code, String value) {
+    public void addMergeFromValue(Block code, String value) {
       code.addLine("%s(%s.%s());", putAllMethod(property), value, property.getGetterName());
     }
 

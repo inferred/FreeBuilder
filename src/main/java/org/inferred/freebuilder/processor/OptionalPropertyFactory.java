@@ -323,7 +323,7 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromValue(SourceBuilder code, String value) {
+    public void addMergeFromValue(Block code, String value) {
       String propertyValue = value + "." + property.getGetterName() + "()";
       optional.invokeIfPresent(code, propertyValue, setter(property));
     }

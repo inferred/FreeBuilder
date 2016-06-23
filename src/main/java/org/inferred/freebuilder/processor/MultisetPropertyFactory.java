@@ -311,7 +311,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromValue(SourceBuilder code, String value) {
+    public void addMergeFromValue(Block code, String value) {
       code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
     }
 
