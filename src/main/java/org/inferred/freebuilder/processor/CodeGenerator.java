@@ -187,36 +187,20 @@ public class CodeGenerator {
   }
 
   private static void addMergeFromBuilderMethod(SourceBuilder code, Metadata metadata) {
-    boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
     code.addLine("")
         .addLine("/**")
         .addLine(" * Copies values from the given {@code %s}.",
-            metadata.getBuilder().getSimpleName());
-    if (hasRequiredProperties) {
-      code.addLine(" * Does not affect any properties not set on the input.");
-    }
-    code.addLine(" */")
+            metadata.getBuilder().getSimpleName())
+        .addLine(" * Does not affect any properties not set on the input.")
+        .addLine(" */")
         .addLine("public %1$s mergeFrom(%1$s template) {", metadata.getBuilder());
-    if (hasRequiredProperties) {
-      code.addLine("  // Upcast to access the private _unsetProperties field.")
-          .addLine("  // Otherwise, oddly, we get an access violation.")
-          .addLine("  %s<%s> _templateUnset = ((%s) template)._unsetProperties;",
-              EnumSet.class,
-              metadata.getPropertyEnum(),
-              metadata.getGeneratedBuilder());
-    }
+    Block body = new Block(code);
     for (Property property : metadata.getProperties()) {
-      if (property.getCodeGenerator().getType() == Type.REQUIRED) {
-        code.addLine("  if (!_templateUnset.contains(%s.%s)) {",
-            metadata.getPropertyEnum(), property.getAllCapsName());
-        property.getCodeGenerator().addMergeFromBuilder(code, "template");
-        code.addLine("  }");
-      } else {
-        property.getCodeGenerator().addMergeFromBuilder(code, "template");
-      }
+      property.getCodeGenerator().addMergeFromBuilder(body, "template");
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder());
-    code.addLine("}");
+    code.add(body)
+        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("}");
   }
 
   private static void addClearMethod(SourceBuilder code, Metadata metadata) {

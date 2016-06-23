@@ -173,8 +173,16 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromBuilder(SourceBuilder code, String builder) {
-      code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
+    public void addMergeFromBuilder(Block code, String builder) {
+      if (!hasDefault) {
+        Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+        code.addLine("if (!%s._unsetProperties.contains(%s.%s)) {",
+            base, metadata.getPropertyEnum(), property.getAllCapsName());
+      }
+      code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
+      if (!hasDefault) {
+        code.addLine("}");
+      }
     }
 
     @Override
