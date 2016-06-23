@@ -34,6 +34,13 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 @Generated("org.inferred.freebuilder.processor.CodeGenerator")
 abstract class Metadata_Builder {
 
+  /**
+   * Creates a new builder using {@code value} as a template.
+   */
+  public static Metadata.Builder from(Metadata value) {
+    return new Metadata.Builder().mergeFrom(value);
+  }
+
   private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
   private enum Property {
@@ -361,6 +368,18 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * Removes {@code element} from the set to be returned from {@link Metadata#getVisibleNestedTypes()}.
+   * Does nothing if {@code element} is not a member of the set.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code element} is null
+   */
+  public Metadata.Builder removeVisibleNestedTypes(QualifiedName element) {
+    this.visibleNestedTypes.remove(Preconditions.checkNotNull(element));
+    return (Metadata.Builder) this;
+  }
+
+  /**
    * Clears the set to be returned from {@link Metadata#getVisibleNestedTypes()}.
    *
    * @return this {@code Builder} object
@@ -470,33 +489,27 @@ abstract class Metadata_Builder {
   /**
    * Associates {@code key} with {@code value} in the map to be returned from
    * {@link Metadata#getStandardMethodUnderrides()}.
-   * Duplicate keys are not allowed.
+   * If the map previously contained a mapping for the key,
+   * the old value is replaced by the specified value.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if either {@code key} or {@code value} are null
-   * @throws IllegalArgumentException if {@code key} is already present
    */
   public Metadata.Builder putStandardMethodUnderrides(
       Metadata.StandardMethod key, Metadata.UnderrideLevel value) {
     Preconditions.checkNotNull(key);
     Preconditions.checkNotNull(value);
-    Preconditions.checkArgument(
-        !standardMethodUnderrides.containsKey(key),
-        "Key already present in standardMethodUnderrides: %s",
-        key);
     standardMethodUnderrides.put(key, value);
     return (Metadata.Builder) this;
   }
 
   /**
-   * Associates all of {@code map}'s keys and values in the map to be returned
-   * from {@link Metadata#getStandardMethodUnderrides()}.
-   * Duplicate keys are not allowed.
+   * Copies all of the mappings from {@code map} to the map to be returned from
+   * {@link Metadata#getStandardMethodUnderrides()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code map} is null or contains a
    *     null key or value
-   * @throws IllegalArgumentException if any key is already present
    */
   public Metadata.Builder putAllStandardMethodUnderrides(
       Map<? extends Metadata.StandardMethod, ? extends Metadata.UnderrideLevel> map) {
@@ -509,18 +522,13 @@ abstract class Metadata_Builder {
 
   /**
    * Removes the mapping for {@code key} from the map to be returned from
-   * {@link Metadata#getStandardMethodUnderrides()}.
+   * {@link Metadata#getStandardMethodUnderrides()}, if one is present.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code key} is null
-   * @throws IllegalArgumentException if {@code key} is not present
    */
   public Metadata.Builder removeStandardMethodUnderrides(Metadata.StandardMethod key) {
     Preconditions.checkNotNull(key);
-    Preconditions.checkArgument(
-        standardMethodUnderrides.containsKey(key),
-        "Key not present in standardMethodUnderrides: %s",
-        key);
     standardMethodUnderrides.remove(key);
     return (Metadata.Builder) this;
   }
@@ -792,21 +800,50 @@ abstract class Metadata_Builder {
    * Sets all property values using the given {@code Metadata} as a template.
    */
   public Metadata.Builder mergeFrom(Metadata value) {
-    setType(value.getType());
-    setInterfaceType(value.isInterfaceType());
-    setOptionalBuilder(value.getOptionalBuilder());
-    setBuilderFactory(value.getBuilderFactory());
-    setGeneratedBuilder(value.getGeneratedBuilder());
-    setValueType(value.getValueType());
-    setPartialType(value.getPartialType());
+    Metadata_Builder _defaults = new Metadata.Builder();
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.TYPE)
+        || !value.getType().equals(_defaults.getType())) {
+      setType(value.getType());
+    }
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)
+        || value.isInterfaceType() != _defaults.isInterfaceType()) {
+      setInterfaceType(value.isInterfaceType());
+    }
+    if (value.getOptionalBuilder().isPresent()) {
+      setOptionalBuilder(value.getOptionalBuilder().get());
+    }
+    if (value.getBuilderFactory().isPresent()) {
+      setBuilderFactory(value.getBuilderFactory().get());
+    }
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)
+        || !value.getGeneratedBuilder().equals(_defaults.getGeneratedBuilder())) {
+      setGeneratedBuilder(value.getGeneratedBuilder());
+    }
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)
+        || !value.getValueType().equals(_defaults.getValueType())) {
+      setValueType(value.getValueType());
+    }
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)
+        || !value.getPartialType().equals(_defaults.getPartialType())) {
+      setPartialType(value.getPartialType());
+    }
     addAllVisibleNestedTypes(value.getVisibleNestedTypes());
-    setPropertyEnum(value.getPropertyEnum());
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)
+        || !value.getPropertyEnum().equals(_defaults.getPropertyEnum())) {
+      setPropertyEnum(value.getPropertyEnum());
+    }
     addAllProperties(value.getProperties());
     putAllStandardMethodUnderrides(value.getStandardMethodUnderrides());
-    setBuilderSerializable(value.isBuilderSerializable());
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
+        || value.isBuilderSerializable() != _defaults.isBuilderSerializable()) {
+      setBuilderSerializable(value.isBuilderSerializable());
+    }
     addAllGeneratedBuilderAnnotations(value.getGeneratedBuilderAnnotations());
     addAllValueTypeAnnotations(value.getValueTypeAnnotations());
-    setValueTypeVisibility(value.getValueTypeVisibility());
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
+        || !value.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility())) {
+      setValueTypeVisibility(value.getValueTypeVisibility());
+    }
     addAllNestedClasses(value.getNestedClasses());
     return (Metadata.Builder) this;
   }
@@ -816,39 +853,58 @@ abstract class Metadata_Builder {
    * Does not affect any properties not set on the input.
    */
   public Metadata.Builder mergeFrom(Metadata.Builder template) {
-    // Upcast to access the private _unsetProperties field.
-    // Otherwise, oddly, we get an access violation.
-    EnumSet<Metadata_Builder.Property> _templateUnset =
-        ((Metadata_Builder) template)._unsetProperties;
-    if (!_templateUnset.contains(Metadata_Builder.Property.TYPE)) {
+    // Upcast to access private fields; otherwise, oddly, we get an access violation.
+    Metadata_Builder base = (Metadata_Builder) template;
+    Metadata_Builder _defaults = new Metadata.Builder();
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.TYPE)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.TYPE)
+            || !template.getType().equals(_defaults.getType()))) {
       setType(template.getType());
     }
-    if (!_templateUnset.contains(Metadata_Builder.Property.INTERFACE_TYPE)) {
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)
+            || template.isInterfaceType() != _defaults.isInterfaceType())) {
       setInterfaceType(template.isInterfaceType());
     }
-    setOptionalBuilder(template.getOptionalBuilder());
-    setBuilderFactory(template.getBuilderFactory());
-    if (!_templateUnset.contains(Metadata_Builder.Property.GENERATED_BUILDER)) {
+    if (template.getOptionalBuilder().isPresent()) {
+      setOptionalBuilder(template.getOptionalBuilder().get());
+    }
+    if (template.getBuilderFactory().isPresent()) {
+      setBuilderFactory(template.getBuilderFactory().get());
+    }
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)
+            || !template.getGeneratedBuilder().equals(_defaults.getGeneratedBuilder()))) {
       setGeneratedBuilder(template.getGeneratedBuilder());
     }
-    if (!_templateUnset.contains(Metadata_Builder.Property.VALUE_TYPE)) {
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)
+            || !template.getValueType().equals(_defaults.getValueType()))) {
       setValueType(template.getValueType());
     }
-    if (!_templateUnset.contains(Metadata_Builder.Property.PARTIAL_TYPE)) {
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)
+            || !template.getPartialType().equals(_defaults.getPartialType()))) {
       setPartialType(template.getPartialType());
     }
     addAllVisibleNestedTypes(((Metadata_Builder) template).visibleNestedTypes);
-    if (!_templateUnset.contains(Metadata_Builder.Property.PROPERTY_ENUM)) {
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)
+            || !template.getPropertyEnum().equals(_defaults.getPropertyEnum()))) {
       setPropertyEnum(template.getPropertyEnum());
     }
     addAllProperties(((Metadata_Builder) template).properties);
     putAllStandardMethodUnderrides(((Metadata_Builder) template).standardMethodUnderrides);
-    if (!_templateUnset.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)) {
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
+            || template.isBuilderSerializable() != _defaults.isBuilderSerializable())) {
       setBuilderSerializable(template.isBuilderSerializable());
     }
     addAllGeneratedBuilderAnnotations(((Metadata_Builder) template).generatedBuilderAnnotations);
     addAllValueTypeAnnotations(((Metadata_Builder) template).valueTypeAnnotations);
-    if (!_templateUnset.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)) {
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
+            || !template.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility()))) {
       setValueTypeVisibility(template.getValueTypeVisibility());
     }
     addAllNestedClasses(((Metadata_Builder) template).nestedClasses);
@@ -859,25 +915,25 @@ abstract class Metadata_Builder {
    * Resets the state of this builder.
    */
   public Metadata.Builder clear() {
-    Metadata_Builder _template = new Metadata.Builder();
-    type = _template.type;
-    interfaceType = _template.interfaceType;
-    optionalBuilder = _template.optionalBuilder;
-    builderFactory = _template.builderFactory;
-    generatedBuilder = _template.generatedBuilder;
-    valueType = _template.valueType;
-    partialType = _template.partialType;
+    Metadata_Builder _defaults = new Metadata.Builder();
+    type = _defaults.type;
+    interfaceType = _defaults.interfaceType;
+    optionalBuilder = _defaults.optionalBuilder;
+    builderFactory = _defaults.builderFactory;
+    generatedBuilder = _defaults.generatedBuilder;
+    valueType = _defaults.valueType;
+    partialType = _defaults.partialType;
     visibleNestedTypes.clear();
-    propertyEnum = _template.propertyEnum;
+    propertyEnum = _defaults.propertyEnum;
     properties.clear();
     standardMethodUnderrides.clear();
-    builderSerializable = _template.builderSerializable;
+    builderSerializable = _defaults.builderSerializable;
     generatedBuilderAnnotations.clear();
     valueTypeAnnotations.clear();
-    valueTypeVisibility = _template.valueTypeVisibility;
+    valueTypeVisibility = _defaults.valueTypeVisibility;
     nestedClasses.clear();
     _unsetProperties.clear();
-    _unsetProperties.addAll(_template._unsetProperties);
+    _unsetProperties.addAll(_defaults._unsetProperties);
     return (Metadata.Builder) this;
   }
 
