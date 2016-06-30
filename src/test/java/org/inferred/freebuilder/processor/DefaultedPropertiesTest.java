@@ -20,17 +20,22 @@ import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.experimental.theories.DataPoint;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Theories.class)
 public class DefaultedPropertiesTest {
 
-  private static final JavaFileObject DEFAULTED_PROPERTIES_TYPE = new SourceBuilder()
+  /**
+   * Test that defaults work correctly when we can detect them at compile-time (javac only).
+   */
+  @DataPoint
+  public static final JavaFileObject OPTIMIZED_BUILDER = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public interface DataType {")
@@ -46,14 +51,36 @@ public class DefaultedPropertiesTest {
       .addLine("}")
       .build();
 
+  /**
+   * Test that defaults work correctly when we cannot detect them at compile-time.
+   */
+  @DataPoint
+  public static final JavaFileObject SLOW_BUILDER = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  int getPropertyA();")
+      .addLine("  boolean isPropertyB();")
+      .addLine("")
+      .addLine("  class Builder extends DataType_Builder {")
+      .addLine("    public Builder() {")
+      .addLine("      if (true) {  // Disable optimization in javac")
+      .addLine("        setPropertyA(0);")
+      .addLine("        setPropertyB(false);")
+      .addLine("      }")
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
-  @Test
-  public void testMergeFromBuilder_defaultsDoNotOverride() {
+  @Theory
+  public void testMergeFromBuilder_defaultsDoNotOverride(JavaFileObject dataType) {
     behaviorTester
         .with(new Processor())
-        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setPropertyA(11)")
@@ -66,11 +93,11 @@ public class DefaultedPropertiesTest {
         .runTest();
   }
 
-  @Test
-  public void testMergeFromValue_defaultsDoNotOverride() {
+  @Theory
+  public void testMergeFromValue_defaultsDoNotOverride(JavaFileObject dataType) {
     behaviorTester
         .with(new Processor())
-        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setPropertyA(11)")
@@ -83,11 +110,11 @@ public class DefaultedPropertiesTest {
         .runTest();
   }
 
-  @Test
-  public void testMergeFromBuilder_nonDefaultsUsed() {
+  @Theory
+  public void testMergeFromBuilder_nonDefaultsUsed(JavaFileObject dataType) {
     behaviorTester
         .with(new Processor())
-        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setPropertyB(true)")
@@ -100,11 +127,11 @@ public class DefaultedPropertiesTest {
         .runTest();
   }
 
-  @Test
-  public void testMergeFromValue_nonDefaultsUsed() {
+  @Theory
+  public void testMergeFromValue_nonDefaultsUsed(JavaFileObject dataType) {
     behaviorTester
         .with(new Processor())
-        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setPropertyB(true)")
@@ -118,11 +145,11 @@ public class DefaultedPropertiesTest {
         .runTest();
   }
 
-  @Test
-  public void testMergeFromBuilder_nonDefaultsOverride() {
+  @Theory
+  public void testMergeFromBuilder_nonDefaultsOverride(JavaFileObject dataType) {
     behaviorTester
         .with(new Processor())
-        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setPropertyA(11)")
@@ -136,11 +163,11 @@ public class DefaultedPropertiesTest {
         .runTest();
   }
 
-  @Test
-  public void testMergeFromValue_nonDefaultsOverride() {
+  @Theory
+  public void testMergeFromValue_nonDefaultsOverride(JavaFileObject dataType) {
     behaviorTester
         .with(new Processor())
-        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setPropertyA(11)")
@@ -155,11 +182,11 @@ public class DefaultedPropertiesTest {
         .runTest();
   }
 
-  @Test
-  public void testClear() {
+  @Theory
+  public void testClear(JavaFileObject dataType) {
     behaviorTester
         .with(new Processor())
-        .with(DEFAULTED_PROPERTIES_TYPE)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setPropertyA(11)")
