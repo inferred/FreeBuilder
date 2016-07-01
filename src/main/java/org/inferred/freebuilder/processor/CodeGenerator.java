@@ -179,11 +179,13 @@ public class CodeGenerator {
             metadata.getType().getQualifiedName())
         .addLine(" */")
         .addLine("public %s mergeFrom(%s value) {", metadata.getBuilder(), metadata.getType());
+    Block body = new Block(code);
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addMergeFromValue(code, "value");
+      property.getCodeGenerator().addMergeFromValue(body, "value");
     }
-    code.add("  return (%s) this;\n", metadata.getBuilder());
-    code.addLine("}");
+    code.add(body)
+        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("}");
   }
 
   private static void addMergeFromBuilderMethod(SourceBuilder code, Metadata metadata) {

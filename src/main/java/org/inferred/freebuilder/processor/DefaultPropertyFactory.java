@@ -168,19 +168,57 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromValue(SourceBuilder code, String value) {
-      code.addLine("%s(%s.%s());", setter(property), value, property.getGetterName());
+    public void addMergeFromValue(Block code, String value) {
+      Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+      if (defaults != null) {
+        code.add("if (");
+        if (!hasDefault) {
+          code.add("%s._unsetProperties.contains(%s.%s) || ",
+              defaults, metadata.getPropertyEnum(), property.getAllCapsName());
+        }
+        if (isPrimitive) {
+          code.add("%s.%s() != %s.%s()",
+              value, property.getGetterName(), defaults, getter(property));
+        } else {
+          code.add("!%s.%s().equals(%s.%s())",
+              value, property.getGetterName(), defaults, getter(property));
+        }
+        code.add(") {%n");
+      }
+      code.addLine("  %s(%s.%s());", setter(property), value, property.getGetterName());
+      if (defaults != null) {
+        code.addLine("}");
+      }
     }
 
     @Override
     public void addMergeFromBuilder(Block code, String builder) {
-      if (!hasDefault) {
-        Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+      Excerpt base =
+          hasDefault ? null : Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+      Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+      if (defaults != null) {
+        code.add("if (");
+        if (!hasDefault) {
+          code.add("!%s._unsetProperties.contains(%s.%s) && ",
+                  base, metadata.getPropertyEnum(), property.getAllCapsName())
+              .add("(%s._unsetProperties.contains(%s.%s) ||",
+                  defaults, metadata.getPropertyEnum(), property.getAllCapsName());
+        }
+        if (isPrimitive) {
+          code.add("%1$s.%2$s() != %3$s.%2$s()", builder, getter(property), defaults);
+        } else {
+          code.add("!%1$s.%2$s().equals(%3$s.%2$s())", builder, getter(property), defaults);
+        }
+        if (!hasDefault) {
+          code.add(")");
+        }
+        code.add(") {%n");
+      } else if (!hasDefault) {
         code.addLine("if (!%s._unsetProperties.contains(%s.%s)) {",
             base, metadata.getPropertyEnum(), property.getAllCapsName());
       }
       code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
-      if (!hasDefault) {
+      if (defaults != null || !hasDefault) {
         code.addLine("}");
       }
     }

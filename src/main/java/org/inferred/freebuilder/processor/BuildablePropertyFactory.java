@@ -264,7 +264,7 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
-    public void addMergeFromValue(SourceBuilder code, String value) {
+    public void addMergeFromValue(Block code, String value) {
       String propertyName = property.getName();
       if (propertyName.equals(value)) {
         propertyName = "this." + propertyName;  // see issue #78
