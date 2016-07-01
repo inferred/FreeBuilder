@@ -5,19 +5,18 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.util.Excerpt;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-
 import javax.annotation.Generated;
 import javax.annotation.Nullable;
 import javax.lang.model.type.TypeMirror;
+import org.inferred.freebuilder.processor.Metadata;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator;
+import org.inferred.freebuilder.processor.util.Excerpt;
 
 /**
  * Auto-generated superclass of {@link Metadata.Property.Builder},
@@ -25,6 +24,13 @@ import javax.lang.model.type.TypeMirror;
  */
 @Generated("org.inferred.freebuilder.processor.CodeGenerator")
 abstract class Metadata_Property_Builder {
+
+  /**
+   * Creates a new builder using {@code value} as a template.
+   */
+  public static Metadata.Property.Builder from(Metadata.Property value) {
+    return new Metadata.Property.Builder().mergeFrom(value);
+  }
 
   private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
@@ -307,14 +313,33 @@ abstract class Metadata_Property_Builder {
    * Sets all property values using the given {@code Metadata.Property} as a template.
    */
   public Metadata.Property.Builder mergeFrom(Metadata.Property value) {
-    setType(value.getType());
+    Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
+    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
+        || !value.getType().equals(_defaults.getType())) {
+      setType(value.getType());
+    }
     setBoxedType(value.getBoxedType());
-    setName(value.getName());
-    setCapitalizedName(value.getCapitalizedName());
-    setAllCapsName(value.getAllCapsName());
-    setGetterName(value.getGetterName());
+    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
+        || !value.getName().equals(_defaults.getName())) {
+      setName(value.getName());
+    }
+    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
+        || !value.getCapitalizedName().equals(_defaults.getCapitalizedName())) {
+      setCapitalizedName(value.getCapitalizedName());
+    }
+    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
+        || !value.getAllCapsName().equals(_defaults.getAllCapsName())) {
+      setAllCapsName(value.getAllCapsName());
+    }
+    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
+        || !value.getGetterName().equals(_defaults.getGetterName())) {
+      setGetterName(value.getGetterName());
+    }
     setCodeGenerator(value.getCodeGenerator());
-    setFullyCheckedCast(value.isFullyCheckedCast());
+    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
+        || value.isFullyCheckedCast() != _defaults.isFullyCheckedCast()) {
+      setFullyCheckedCast(value.isFullyCheckedCast());
+    }
     addAllAccessorAnnotations(value.getAccessorAnnotations());
     return (Metadata.Property.Builder) this;
   }
@@ -324,28 +349,40 @@ abstract class Metadata_Property_Builder {
    * Does not affect any properties not set on the input.
    */
   public Metadata.Property.Builder mergeFrom(Metadata.Property.Builder template) {
-    // Upcast to access the private _unsetProperties field.
-    // Otherwise, oddly, we get an access violation.
-    EnumSet<Metadata_Property_Builder.Property> _templateUnset =
-        ((Metadata_Property_Builder) template)._unsetProperties;
-    if (!_templateUnset.contains(Metadata_Property_Builder.Property.TYPE)) {
+    // Upcast to access private fields; otherwise, oddly, we get an access violation.
+    Metadata_Property_Builder base = (Metadata_Property_Builder) template;
+    Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
+    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
+        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
+            || !template.getType().equals(_defaults.getType()))) {
       setType(template.getType());
     }
     setBoxedType(template.getBoxedType());
-    if (!_templateUnset.contains(Metadata_Property_Builder.Property.NAME)) {
+    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
+        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
+            || !template.getName().equals(_defaults.getName()))) {
       setName(template.getName());
     }
-    if (!_templateUnset.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)) {
+    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
+        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
+            || !template.getCapitalizedName().equals(_defaults.getCapitalizedName()))) {
       setCapitalizedName(template.getCapitalizedName());
     }
-    if (!_templateUnset.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)) {
+    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
+        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
+            || !template.getAllCapsName().equals(_defaults.getAllCapsName()))) {
       setAllCapsName(template.getAllCapsName());
     }
-    if (!_templateUnset.contains(Metadata_Property_Builder.Property.GETTER_NAME)) {
+    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
+        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
+            || !template.getGetterName().equals(_defaults.getGetterName()))) {
       setGetterName(template.getGetterName());
     }
     setCodeGenerator(template.getCodeGenerator());
-    if (!_templateUnset.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)) {
+    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
+        && (_defaults._unsetProperties.contains(
+                Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
+            || template.isFullyCheckedCast() != _defaults.isFullyCheckedCast())) {
       setFullyCheckedCast(template.isFullyCheckedCast());
     }
     addAllAccessorAnnotations(((Metadata_Property_Builder) template).accessorAnnotations);
@@ -356,18 +393,18 @@ abstract class Metadata_Property_Builder {
    * Resets the state of this builder.
    */
   public Metadata.Property.Builder clear() {
-    Metadata_Property_Builder _template = new Metadata.Property.Builder();
-    type = _template.type;
-    boxedType = _template.boxedType;
-    name = _template.name;
-    capitalizedName = _template.capitalizedName;
-    allCapsName = _template.allCapsName;
-    getterName = _template.getterName;
-    codeGenerator = _template.codeGenerator;
-    fullyCheckedCast = _template.fullyCheckedCast;
+    Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
+    type = _defaults.type;
+    boxedType = _defaults.boxedType;
+    name = _defaults.name;
+    capitalizedName = _defaults.capitalizedName;
+    allCapsName = _defaults.allCapsName;
+    getterName = _defaults.getterName;
+    codeGenerator = _defaults.codeGenerator;
+    fullyCheckedCast = _defaults.fullyCheckedCast;
     accessorAnnotations.clear();
     _unsetProperties.clear();
-    _unsetProperties.addAll(_template._unsetProperties);
+    _unsetProperties.addAll(_defaults._unsetProperties);
     return (Metadata.Property.Builder) this;
   }
 

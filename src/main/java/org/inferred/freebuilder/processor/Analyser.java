@@ -28,7 +28,7 @@ import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
-import static org.inferred.freebuilder.processor.GwtSupport.addGwtMetadata;
+import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
 import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
@@ -167,12 +167,14 @@ class Analyser {
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .addAllProperties(properties.values());
-    addGwtMetadata(type, metadataBuilder);
-    Metadata metadata = metadataBuilder.build();
+    Metadata baseMetadata = metadataBuilder.build();
+    metadataBuilder.mergeFrom(gwtMetadata(type, baseMetadata));
     if (builder.isPresent()) {
-      metadata = withCodeGenerators(properties, metadata, builder.get());
+      metadataBuilder
+          .clearProperties()
+          .addAllProperties(codeGenerators(properties, baseMetadata, builder.get()));
     }
-    return metadata;
+    return metadataBuilder.build();
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {
@@ -385,12 +387,11 @@ class Analyser {
     return propertiesByMethod;
   }
 
-  private Metadata withCodeGenerators(
+  private List<Property> codeGenerators(
       Map<ExecutableElement, Property> properties,
       Metadata metadata,
       TypeElement builder) {
-    Metadata.Builder resultBuilder = metadata.toBuilder()
-        .clearProperties();
+    ImmutableList.Builder<Property> codeGenerators = ImmutableList.builder();
     Set<String> methodsInvokedInBuilderConstructor = getMethodsInvokedInBuilderConstructor(builder);
     for (Map.Entry<ExecutableElement, Property> entry : properties.entrySet()) {
       Config config = new ConfigImpl(
@@ -399,12 +400,12 @@ class Analyser {
           entry.getValue(),
           entry.getKey(),
           methodsInvokedInBuilderConstructor);
-      resultBuilder.addProperties(new Property.Builder()
+      codeGenerators.add(new Property.Builder()
           .mergeFrom(entry.getValue())
           .setCodeGenerator(createCodeGenerator(config))
           .build());
     }
-    return resultBuilder.build();
+    return codeGenerators.build();
   }
 
   private Set<String> getMethodsInvokedInBuilderConstructor(TypeElement builder) {

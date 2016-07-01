@@ -29,25 +29,27 @@ class GwtSupport {
   private static final QualifiedName SERIALIZATION_STREAM_WRITER =
       QualifiedName.of("com.google.gwt.user.client.rpc", "SerializationStreamWriter");
 
-  public static void addGwtMetadata(TypeElement type, Metadata.Builder metadata) {
+  public static Metadata.Builder gwtMetadata(TypeElement type, Metadata metadata) {
+    Metadata.Builder extraMetadata = new Metadata.Builder();
     Optional<AnnotationMirror> annotation = findAnnotationMirror(type, GwtCompatible.class);
     if (annotation.isPresent()) {
-      metadata.addGeneratedBuilderAnnotations(Excerpts.add("@%s%n", GwtCompatible.class));
+      extraMetadata.addGeneratedBuilderAnnotations(Excerpts.add("@%s%n", GwtCompatible.class));
       Optional<AnnotationValue> serializable = findProperty(annotation.get(), "serializable");
       if (serializable.isPresent() && serializable.get().getValue().equals(Boolean.TRUE)) {
         // Due to a bug in GWT's handling of nested types, we have to declare Value as package
         // scoped so Value_CustomFieldSerializer can access it.
-        metadata.setValueTypeVisibility(Visibility.PACKAGE);
-        metadata.addValueTypeAnnotations(Excerpts.add(
+        extraMetadata.setValueTypeVisibility(Visibility.PACKAGE);
+        extraMetadata.addValueTypeAnnotations(Excerpts.add(
             "@%s(serializable = true)%n", GwtCompatible.class));
-        metadata.addNestedClasses(new CustomValueSerializer());
-        metadata.addNestedClasses(new GwtWhitelist());
+        extraMetadata.addNestedClasses(new CustomValueSerializer());
+        extraMetadata.addNestedClasses(new GwtWhitelist());
         QualifiedName builderName = metadata.getGeneratedBuilder().getQualifiedName();
-        metadata.addVisibleNestedTypes(
+        extraMetadata.addVisibleNestedTypes(
             builderName.nestedType("Value_CustomFieldSerializer"),
             builderName.nestedType("GwtWhitelist"));
       }
     }
+    return extraMetadata;
   }
 
   private static final class CustomValueSerializer implements Function<Metadata, Excerpt> {
