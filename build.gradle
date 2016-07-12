@@ -519,7 +519,7 @@ modifyPom {
     packaging 'jar'
     artifactId 'freebuilder'
     description 'Automatic generation of the Builder pattern for Java 1.6+'
-    url 'http://inferred.org/freebuilder'
+    url 'http://freebuilder.inferred.org/'
 
     scm {
       url 'https://github.com/google/freebuilder'
