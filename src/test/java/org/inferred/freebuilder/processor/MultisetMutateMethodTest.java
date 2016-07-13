@@ -21,6 +21,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -28,12 +29,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
+import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class MultisetMutateMethodTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.WITH_GUAVA_AND_LAMBDAS;
+  }
 
   private static final JavaFileObject UNCHECKED_PROPERTY = new SourceBuilder()
       .addLine("package com.example;")
@@ -75,13 +85,15 @@ public class MultisetMutateMethodTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
   public void mutateAndAddModifiesUnderlyingProperty_whenUnchecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(UNCHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -96,7 +108,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddModifiesUnderlyingProperty_whenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -113,7 +125,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -126,7 +138,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddAcceptsMaxIntOccurrences() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -143,7 +155,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("too many occurrences: 2147483648");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -156,7 +168,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -173,7 +185,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddMultipleModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -190,7 +202,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("occurrences cannot be negative: -2");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -203,7 +215,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddMultipleAcceptsMaxIntOccurrences() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -220,7 +232,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("too many occurrences: 2147483648");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -233,7 +245,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddMultipleReturnsOldCount() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -248,7 +260,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -261,7 +273,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddMultipleKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -278,7 +290,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndSetCountModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -293,7 +305,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndSetCountReturnsOldCount() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -308,7 +320,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -323,7 +335,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("count cannot be negative but was: -3");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -336,7 +348,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndSetCountKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -353,7 +365,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountModifiesUnderlyingPropertyIfOldCountMatches() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -368,7 +380,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountDoesNothingIfOldCountDoesNotMatch() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -383,7 +395,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountReturnsTrueIfOldCountMatches() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -396,7 +408,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountReturnsFalseIfOldCountDoesNotMatch() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -411,7 +423,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -426,7 +438,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("newCount cannot be negative but was: -3");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -439,7 +451,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -456,7 +468,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddAllModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -473,7 +485,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -486,7 +498,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddAllAcceptsMaxIntOccurrences() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -503,7 +515,7 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("too many occurrences: 2147483648");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -516,7 +528,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddAllKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -533,7 +545,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndSizeReturnsSize() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -546,7 +558,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndContainsReturnsTrueForContainedElement() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -559,7 +571,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndIterateFindsContainedElement() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -575,7 +587,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndRemoveModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -590,7 +602,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -612,7 +624,7 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndClearModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")

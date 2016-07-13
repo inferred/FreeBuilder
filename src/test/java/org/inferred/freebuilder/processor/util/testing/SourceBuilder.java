@@ -35,7 +35,13 @@ public class SourceBuilder {
   private static final Pattern PACKAGE_PATTERN =
       Pattern.compile("package\\s+(\\w+(\\s*\\.\\s*\\w+)*)\\s*;");
 
+  private String name;
   private final StringBuilder code = new StringBuilder();
+
+  public SourceBuilder setName(String name) {
+    this.name = name;
+    return this;
+  }
 
   /**
    * Appends a formatted line of code to the source. Formatting is done by {@link String#format},
@@ -55,7 +61,16 @@ public class SourceBuilder {
    * Returns a {@link JavaFileObject} for the source added to the builder.
    */
   public JavaFileObject build() {
-    return new Source(code.toString());
+    String content = code.toString();
+    String typeName = getTypeNameFromSource(content);
+    URI uri = uriForClass(typeName);
+    String humanReadableName;
+    if (name != null) {
+      humanReadableName = name;
+    } else {
+      humanReadableName = typeName.substring(typeName.lastIndexOf('.') + 1) + ".java";
+    }
+    return new Source(uri, humanReadableName, content);
   }
 
   /** Substitutes the given object with one that has a better toString() for code generation. */
@@ -90,15 +105,22 @@ public class SourceBuilder {
   /** Simple in-memory implementation of {@link javax.tools.JavaFileObject JavaFileObject}. */
   private class Source extends SimpleJavaFileObject {
 
+    private final String name;
     private final String content;
 
     /**
      * Creates a new {@link javax.tools.JavaFileObject JavaFileObject} containing the supplied
      * source code. File name is derived from the source code's package and type name.
      */
-    Source(String source) {
-      super(uriForClass(getTypeNameFromSource(source)), Kind.SOURCE);
-      this.content = source;
+    Source(URI uri, String name, String content) {
+      super(uri, Kind.SOURCE);
+      this.name = name;
+      this.content = content;
+    }
+
+    @Override
+    public String toString() {
+      return name;
     }
 
     @Override

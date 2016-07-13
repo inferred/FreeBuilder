@@ -34,7 +34,7 @@ import javax.lang.model.SourceVersion;
  */
 public enum SourceLevel implements Feature<SourceLevel> {
 
-  JAVA_6, JAVA_7;
+  JAVA_6("Java 6"), JAVA_7("Java 7+");
 
   /**
    * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current
@@ -89,6 +89,12 @@ public enum SourceLevel implements Feature<SourceLevel> {
     }
   }
 
+  private final String humanReadableFormat;
+
+  SourceLevel(String humanReadableFormat) {
+    this.humanReadableFormat = humanReadableFormat;
+  }
+
   public Optional<QualifiedName> javaUtilObjects() {
     switch (this) {
       case JAVA_6:
@@ -97,5 +103,10 @@ public enum SourceLevel implements Feature<SourceLevel> {
       default:
         return Optional.of(QualifiedName.of("java.util", "Objects"));
     }
+  }
+
+  @Override
+  public String toString() {
+    return humanReadableFormat;
   }
 }

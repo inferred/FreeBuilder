@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import com.google.common.base.Preconditions;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -25,12 +26,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
+import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class DefaultMapperMethodTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.WITH_LAMBDAS;
+  }
 
   private static final JavaFileObject REQUIRED_INTEGER_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -56,13 +66,15 @@ public class DefaultMapperMethodTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
   public void mapReplacesValueToBeReturnedFromGetterForRequiredProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -77,7 +89,7 @@ public class DefaultMapperMethodTest {
   @Test
   public void mapReplacesValueToBeReturnedFromGetterForDefaultProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(DEFAULT_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -93,7 +105,7 @@ public class DefaultMapperMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("property must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -122,7 +134,7 @@ public class DefaultMapperMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("property must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -153,7 +165,7 @@ public class DefaultMapperMethodTest {
   public void mapThrowsNpeIfMapperIsNullForRequiredProperty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -167,7 +179,7 @@ public class DefaultMapperMethodTest {
   public void mapThrowsNpeIfMapperIsNullForDefaultProperty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(DEFAULT_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -180,7 +192,7 @@ public class DefaultMapperMethodTest {
   public void mapThrowsNpeIfMapperIsNullForUnsetRequiredProperty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -193,7 +205,7 @@ public class DefaultMapperMethodTest {
   public void mapThrowsNpeIfMapperReturnsNullForRequiredProperty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -207,7 +219,7 @@ public class DefaultMapperMethodTest {
   public void mapThrowsNpeIfMapperReturnsNullForDefaultProperty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(DEFAULT_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -221,7 +233,7 @@ public class DefaultMapperMethodTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("property not set");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")

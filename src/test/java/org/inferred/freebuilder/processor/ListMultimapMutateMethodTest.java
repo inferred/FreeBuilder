@@ -22,6 +22,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -29,14 +30,22 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class ListMultimapMutateMethodTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.WITH_GUAVA_AND_LAMBDAS;
+  }
 
   private static final JavaFileObject UNCHECKED_PROPERTY = new SourceBuilder()
       .addLine("package com.example;")
@@ -80,13 +89,15 @@ public class ListMultimapMutateMethodTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
   public void mutateAndPutModifiesUnderlyingProperty_whenUnchecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(UNCHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -107,7 +118,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndPutModifiesUnderlyingProperty_whenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -130,7 +141,7 @@ public class ListMultimapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value may not be empty");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder().mutateItems(items -> items.put(\"one\", \"\"));")
@@ -141,7 +152,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndPutKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -158,7 +169,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndPutAllValuesModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -181,7 +192,7 @@ public class ListMultimapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value may not be empty");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder().mutateItems(items -> items")
@@ -193,7 +204,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndPutAllValuesKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -211,7 +222,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndPutAllMultimapModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -232,7 +243,7 @@ public class ListMultimapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value may not be empty");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder().mutateItems(items -> items")
@@ -244,7 +255,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndPutAllMultimapKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -262,7 +273,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndReplaceValuesModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -283,7 +294,7 @@ public class ListMultimapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value may not be empty");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -297,7 +308,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndReplaceValuesKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -316,7 +327,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddViaGetModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -336,7 +347,7 @@ public class ListMultimapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value may not be empty");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -349,7 +360,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddViaGetKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -369,7 +380,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddViaAsMapModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -389,7 +400,7 @@ public class ListMultimapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value may not be empty");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -402,7 +413,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddViaAsMapKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -420,7 +431,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddAtIndexViaAsMapModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -441,7 +452,7 @@ public class ListMultimapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value may not be empty");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -455,7 +466,7 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddAtIndexViaAsMapKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_PROPERTY)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")

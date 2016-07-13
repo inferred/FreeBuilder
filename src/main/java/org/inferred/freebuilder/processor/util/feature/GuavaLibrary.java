@@ -13,7 +13,7 @@ import javax.lang.model.element.TypeElement;
  */
 public enum GuavaLibrary implements Feature<GuavaLibrary> {
 
-  AVAILABLE, UNAVAILABLE;
+  AVAILABLE("Guava"), UNAVAILABLE("No Guava");
 
   /**
    * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current status of
@@ -34,7 +34,18 @@ public enum GuavaLibrary implements Feature<GuavaLibrary> {
     }
   };
 
+  private final String humanReadableFormat;
+
+  GuavaLibrary(String humanReadableFormat) {
+    this.humanReadableFormat = humanReadableFormat;
+  }
+
   public boolean isAvailable() {
     return this != UNAVAILABLE;
+  }
+
+  @Override
+  public String toString() {
+    return humanReadableFormat;
   }
 }

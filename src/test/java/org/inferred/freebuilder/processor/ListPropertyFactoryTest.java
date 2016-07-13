@@ -15,6 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.junit.Assume.assumeTrue;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
 
@@ -22,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -29,7 +33,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.util.Iterator;
 import java.util.List;
@@ -37,8 +43,13 @@ import java.util.List;
 import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code List<?>} properties. */
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class ListPropertyFactoryTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.ALL;
+  }
 
   private static final JavaFileObject LIST_PROPERTY_AUTO_BUILT_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -53,13 +64,15 @@ public class ListPropertyFactoryTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
   public void testDefaultEmpty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
@@ -71,7 +84,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testAddSingleElement() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -87,7 +100,7 @@ public class ListPropertyFactoryTest {
   public void testAddSingleElement_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -99,7 +112,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testAddVarargs() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -114,7 +127,7 @@ public class ListPropertyFactoryTest {
   public void testAddVarargs_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -126,7 +139,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testAddAllIterable() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -140,7 +153,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testAddAllIterable_onlyIteratesOnce() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -172,7 +185,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -188,7 +201,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testGetter_returnsLiveView() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
@@ -208,7 +221,7 @@ public class ListPropertyFactoryTest {
   public void testGetter_returnsUnmodifiableList() {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
@@ -221,7 +234,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = DataType.builder()")
@@ -237,7 +250,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testMergeFrom_builder() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder template = DataType.builder()")
@@ -252,7 +265,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testBuilderClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -268,7 +281,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -296,7 +309,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testEquality() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("new %s()", EqualsTester.class)
@@ -324,8 +337,9 @@ public class ListPropertyFactoryTest {
 
   @Test
   public void testImmutableListProperty() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -348,7 +362,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testOverrideAdd() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -376,7 +390,7 @@ public class ListPropertyFactoryTest {
   @Test
   public void testOverrideAdd_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -405,7 +419,7 @@ public class ListPropertyFactoryTest {
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")

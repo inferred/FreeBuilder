@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import com.google.common.base.Preconditions;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -25,13 +26,22 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
+import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class NullableMapperMethodTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.WITH_LAMBDAS;
+  }
 
   private static final JavaFileObject NULLABLE_INTEGER_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -43,13 +53,15 @@ public class NullableMapperMethodTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
   public void replacesValueToBeReturnedFromGetter() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -66,7 +78,7 @@ public class NullableMapperMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("property must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -96,7 +108,7 @@ public class NullableMapperMethodTest {
   public void throwsNpeIfMapperIsNull() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -110,7 +122,7 @@ public class NullableMapperMethodTest {
   public void throwsNpeIfMapperIsNullForUnsetNullableProperty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -122,7 +134,7 @@ public class NullableMapperMethodTest {
   @Test
   public void allowsNullReturn() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -137,7 +149,7 @@ public class NullableMapperMethodTest {
   @Test
   public void skipsMapperIfNullablePropertyIsUnset() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().mapProperty(a -> {")

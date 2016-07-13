@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import com.google.common.base.Preconditions;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -25,14 +26,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class ListMutateMethodTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.WITH_LAMBDAS;
+  }
 
   private static final JavaFileObject UNCHECKED_LIST_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -75,13 +83,15 @@ public class ListMutateMethodTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
   public void mutateAndAddModifiesUnderlyingPropertyWhenUnchecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(UNCHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -95,7 +105,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndAddModifiesUnderlyingPropertyWhenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -111,7 +121,7 @@ public class ListMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().mutateProperties(map -> map.add(-3));")
@@ -122,7 +132,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndAddKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_STRINGS_TYPE)
         .with(new TestBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -139,7 +149,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndAddAtIndex0ModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -154,7 +164,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndAddAtIndex1ModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -169,7 +179,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndAddAtIndex2ModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -184,7 +194,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndAddAtIndex3ModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -201,7 +211,7 @@ public class ListMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -214,7 +224,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndAddAtIndexKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_STRINGS_TYPE)
         .with(new TestBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -232,7 +242,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndSetModifiesUnderlyingPropertyWhenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -249,7 +259,7 @@ public class ListMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -262,7 +272,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndSetAtIndexKeepsSubstitute() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(INTERNED_STRINGS_TYPE)
         .with(new TestBuilder()
             .addLine("String s = new String(\"foobar\");")
@@ -280,7 +290,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndSizeReadsFromUnderlyingPropertyWhenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -293,7 +303,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndGetReadsFromUnderlyingPropertyWhenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -306,7 +316,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndRemoveModifiesUnderlyingPropertyWhenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -321,7 +331,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndClearModifiesUnderlyingPropertyWhenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -337,7 +347,7 @@ public class ListMutateMethodTest {
   @Test
   public void mutateAndClearSubListModifiesUnderlyingPropertyWhenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")

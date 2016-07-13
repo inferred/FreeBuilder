@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -23,14 +24,22 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class RequiredPropertiesTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.ALL;
+  }
 
   private static final JavaFileObject REQUIRED_PROPERTIES_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -60,6 +69,8 @@ public class RequiredPropertiesTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
@@ -68,7 +79,7 @@ public class RequiredPropertiesTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyB]");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -83,7 +94,7 @@ public class RequiredPropertiesTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyB, propertyD]");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -111,7 +122,7 @@ public class RequiredPropertiesTest {
   @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -129,7 +140,7 @@ public class RequiredPropertiesTest {
   @Test
   public void testMergeFrom_builder() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder template = new DataType.Builder()")
@@ -146,7 +157,7 @@ public class RequiredPropertiesTest {
   @Test
   public void testMergeFrom_builderIgnoresUnsetField() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder template = new DataType.Builder()")
@@ -161,7 +172,7 @@ public class RequiredPropertiesTest {
   @Test
   public void testMergeFrom_noTemplate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE_NO_TEMPLATE)
         .with(testBuilder()
             .addImport(Optional.class)
@@ -180,7 +191,7 @@ public class RequiredPropertiesTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("propertyB not set");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder template = new DataType.Builder()")
@@ -195,7 +206,7 @@ public class RequiredPropertiesTest {
   @Test
   public void testBuildPartial_ignoresUnsetField() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -211,7 +222,7 @@ public class RequiredPropertiesTest {
     thrown.expect(UnsupportedOperationException.class);
     thrown.expectMessage("propertyB not set");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -225,7 +236,7 @@ public class RequiredPropertiesTest {
   @Test
   public void testBuildPartial_toString() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -239,7 +250,7 @@ public class RequiredPropertiesTest {
   @Test
   public void testBuildPartial_toString_twoPrimitiveProperties() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -257,7 +268,7 @@ public class RequiredPropertiesTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -274,7 +285,7 @@ public class RequiredPropertiesTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("propertyB not set");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")

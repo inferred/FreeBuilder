@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -26,15 +27,23 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class SetMutateMethodTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.WITH_LAMBDAS;
+  }
 
   private static final JavaFileObject UNCHECKED_SET_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -62,13 +71,15 @@ public class SetMutateMethodTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
   public void mutateAndAddModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(UNCHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -83,7 +94,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndSizeReturnsSize() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -96,7 +107,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndContainsReturnsTrueForContainedElement() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -109,7 +120,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndIterateFindsContainedElement() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -125,7 +136,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndRemoveModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -140,7 +151,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -162,7 +173,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndClearModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -179,7 +190,7 @@ public class SetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")

@@ -16,8 +16,10 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -25,41 +27,58 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
+import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class OptionalMapperMethodTest {
 
-  private static final JavaFileObject J8_OPTIONAL_INTEGER_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer> getProperty();", java.util.Optional.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
+  @Parameters(name = "{1}: {0}")
+  public static List<Object[]> parameters() {
+    ImmutableList.Builder<Object[]> parameters = ImmutableList.builder();
+    for (FeatureSet features :  FeatureSets.WITH_LAMBDAS) {
+      parameters.add(new Object[] {
+          features,
+          java.util.Optional.class
+      });
+    }
+    for (FeatureSet features :  FeatureSets.WITH_GUAVA_AND_LAMBDAS) {
+      parameters.add(new Object[] {
+          features,
+          com.google.common.base.Optional.class
+      });
+    }
+    return parameters.build();
+  }
 
-  private static final JavaFileObject GUAVA_OPTIONAL_INTEGER_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer> getProperty();", com.google.common.base.Optional.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
+  private static JavaFileObject optionalIntegerType(Class<?> optionalType) {
+    return new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  %s<Integer> getProperty();", optionalType)
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {}")
+        .addLine("}")
+        .build();
+  }
+
+  @Parameter(value = 0) public FeatureSet features;
+  @Parameter(value = 1) public Class<?> optionalType;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final BehaviorTester behaviorTester = new BehaviorTester();
 
   @Test
-  public void mapReplacesValueToBeReturnedFromGetterForJ8OptionalProperty() {
+  public void mapReplacesValueToBeReturnedFromGetter() {
     behaviorTester
-        .with(new Processor())
-        .with(J8_OPTIONAL_INTEGER_TYPE)
+        .with(new Processor(features))
+        .with(optionalIntegerType(optionalType))
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setProperty(11)")
@@ -71,31 +90,16 @@ public class OptionalMapperMethodTest {
   }
 
   @Test
-  public void mapReplacesValueToBeReturnedFromGetterForGuavaOptionalProperty() {
-    behaviorTester
-        .with(new Processor())
-        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
-            .addLine("    .mapProperty(a -> a + 3)")
-            .addLine("    .build();")
-            .addLine("assertEquals(14, (int) value.getProperty().get());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mapDelegatesToSetterForValidationForJ8OptionalProperty() {
+  public void mapDelegatesToSetterForValidation() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("property must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  %s<Integer> getProperty();", java.util.Optional.class)
+            .addLine("  %s<Integer> getProperty();", optionalType)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder setProperty(int property) {")
@@ -115,40 +119,11 @@ public class OptionalMapperMethodTest {
   }
 
   @Test
-  public void mapDelegatesToSetterForValidationForGuavaOptionalProperty() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("property must be non-negative");
-    behaviorTester
-        .with(new Processor())
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer> getProperty();", com.google.common.base.Optional.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setProperty(int property) {")
-            .addLine("      %s.checkArgument(property >= 0, \"property must be non-negative\");",
-                Preconditions.class)
-            .addLine("      return super.setProperty(property);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
-            .addLine("    .mapProperty(a -> -3);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mapThrowsNpeIfMapperIsNullForJ8OptionalProperty() {
+  public void mapThrowsNpeIfMapperIsNull() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
-        .with(J8_OPTIONAL_INTEGER_TYPE)
+        .with(new Processor(features))
+        .with(optionalIntegerType(optionalType))
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .setProperty(11)")
@@ -158,25 +133,11 @@ public class OptionalMapperMethodTest {
   }
 
   @Test
-  public void mapThrowsNpeIfMapperIsNullForGuavaOptionalProperty() {
+  public void mapThrowsNpeIfMapperIsNullAndPropertyIsEmpty() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
-        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
-            .addLine("    .mapProperty(null);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mapThrowsNpeIfMapperIsNullForEmptyJ8OptionalProperty() {
-    thrown.expect(NullPointerException.class);
-    behaviorTester
-        .with(new Processor())
-        .with(J8_OPTIONAL_INTEGER_TYPE)
+        .with(new Processor(features))
+        .with(optionalIntegerType(optionalType))
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .mapProperty(null);")
@@ -185,23 +146,10 @@ public class OptionalMapperMethodTest {
   }
 
   @Test
-  public void mapThrowsNpeIfMapperIsNullForAbsentGuavaOptionalProperty() {
-    thrown.expect(NullPointerException.class);
+  public void mapAllowsNullReturn() {
     behaviorTester
-        .with(new Processor())
-        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .mapProperty(null);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mapAllowsNullReturnForJ8OptionalProperty() {
-    behaviorTester
-        .with(new Processor())
-        .with(J8_OPTIONAL_INTEGER_TYPE)
+        .with(new Processor(features))
+        .with(optionalIntegerType(optionalType))
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setProperty(11)")
@@ -213,39 +161,10 @@ public class OptionalMapperMethodTest {
   }
 
   @Test
-  public void mapAllowsNullReturnForGuavaOptionalProperty() {
+  public void mapSkipsMapperIfPropertyIsEmpty() {
     behaviorTester
-        .with(new Processor())
-        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
-            .addLine("    .mapProperty(a -> null)")
-            .addLine("    .build();")
-            .addLine("assertFalse(value.getProperty().isPresent());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mapSkipsMapperIfJ8OptionalPropertyIsEmpty() {
-    behaviorTester
-        .with(new Processor())
-        .with(J8_OPTIONAL_INTEGER_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .mapProperty(a -> { fail(\"mapper called\"); return null; })")
-            .addLine("    .build();")
-            .addLine("assertFalse(value.getProperty().isPresent());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mapSkipsMapperIfGuavaOptionalPropertyIsAbsent() {
-    behaviorTester
-        .with(new Processor())
-        .with(GUAVA_OPTIONAL_INTEGER_TYPE)
+        .with(new Processor(features))
+        .with(optionalIntegerType(optionalType))
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .mapProperty(a -> { fail(\"mapper called\"); return null; })")

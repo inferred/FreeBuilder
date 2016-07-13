@@ -20,12 +20,15 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationM
 import static org.inferred.freebuilder.processor.util.RoundEnvironments.annotatedElementsIn;
 
 import com.google.auto.service.AutoService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.FilerUtils;
+import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
 import java.io.IOException;
 import java.util.Set;
@@ -50,6 +53,14 @@ public class Processor extends AbstractProcessor {
 
   private Analyser analyser;
   private final CodeGenerator codeGenerator = new CodeGenerator();
+  private FeatureSet features;
+
+  public Processor() {}
+
+  @VisibleForTesting
+  public Processor(FeatureSet features) {
+    this.features = features;
+  }
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
@@ -69,6 +80,9 @@ public class Processor extends AbstractProcessor {
         processingEnv.getMessager(),
         MethodIntrospector.instance(processingEnv),
         processingEnv.getTypeUtils());
+    if (features == null) {
+      features = new EnvironmentFeatureSet(processingEnv);
+    }
   }
 
   @Override
@@ -79,7 +93,8 @@ public class Processor extends AbstractProcessor {
         CompilationUnitBuilder code = new CompilationUnitBuilder(
             processingEnv,
             metadata.getGeneratedBuilder().getQualifiedName(),
-            metadata.getVisibleNestedTypes());
+            metadata.getVisibleNestedTypes(),
+            features);
         codeGenerator.writeBuilderSource(code, metadata);
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),
