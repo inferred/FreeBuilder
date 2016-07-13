@@ -19,23 +19,35 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(BehaviorTestRunner.class)
+@RunWith(Parameterized.class)
+@UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class MapMutateMethodTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.WITH_LAMBDAS;
+  }
 
   private static final JavaFileObject UNCHECKED_SET_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -64,13 +76,15 @@ public class MapMutateMethodTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void putModifiesUnderlyingPropertyWhenUnchecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(UNCHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -88,7 +102,7 @@ public class MapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("key must be non-negative");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -100,7 +114,7 @@ public class MapMutateMethodTest {
   @Test
   public void putModifiesUnderlyingPropertyWhenChecked() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -116,7 +130,7 @@ public class MapMutateMethodTest {
   @Test
   public void iterateEntrySetFindsContainedEntry() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -134,7 +148,7 @@ public class MapMutateMethodTest {
   @Test
   public void callRemoveOnEntrySetIteratorModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -156,7 +170,7 @@ public class MapMutateMethodTest {
   @Test
   public void entrySetIteratorRemainsUsableAfterCallingRemove() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -185,7 +199,7 @@ public class MapMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value must not start with '-'");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -199,7 +213,7 @@ public class MapMutateMethodTest {
   @Test
   public void callSetValueOnEntryModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -216,7 +230,7 @@ public class MapMutateMethodTest {
   @Test
   public void entryRemainsUsableAfterCallingSetValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -239,7 +253,7 @@ public class MapMutateMethodTest {
   @Test
   public void entrySetIteratorRemainsUsableAfterCallingSetValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -265,7 +279,7 @@ public class MapMutateMethodTest {
   @Test
   public void getReturnsContainedValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -279,7 +293,7 @@ public class MapMutateMethodTest {
   @Test
   public void containsKeyFindsContainedKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -293,7 +307,7 @@ public class MapMutateMethodTest {
   @Test
   public void removeModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -310,7 +324,7 @@ public class MapMutateMethodTest {
   @Test
   public void clearModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(CHECKED_SET_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")

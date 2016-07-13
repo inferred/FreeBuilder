@@ -1,5 +1,6 @@
 package org.inferred.freebuilder.processor.util.feature;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -37,5 +38,10 @@ public class StaticFeatureSet implements FeatureSet {
       return feature;
     }
     return featureType.testDefault();
+  }
+
+  @Override
+  public String toString() {
+    return Joiner.on(", ").join(featuresByType.values());
   }
 }
