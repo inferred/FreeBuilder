@@ -17,12 +17,12 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.transform;
-
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -182,10 +182,12 @@ public class ParameterizedType extends Excerpt {
           source.add("%s%s", prefix, typeParameter);
           if (typeParameter instanceof TypeParameterElement) {
             TypeParameterElement element = (TypeParameterElement) typeParameter;
-            String separator = " extends ";
-            for (TypeMirror bound : element.getBounds()) {
-              source.add("%s%s", separator, bound);
-              separator = " & ";
+            if (!extendsObject(element)) {
+              String separator = " extends ";
+              for (TypeMirror bound : element.getBounds()) {
+                source.add("%s%s", separator, bound);
+                separator = " & ";
+              }
             }
           }
           prefix = ", ";
@@ -198,6 +200,17 @@ public class ParameterizedType extends Excerpt {
     protected void addFields(FieldReceiver fields) {
       fields.add("typeParameters", typeParameters);
     }
+  }
+
+  private static boolean extendsObject(TypeParameterElement element) {
+    if (element.getBounds().size() != 1) {
+      return false;
+    }
+    TypeElement bound = maybeAsTypeElement(getOnlyElement(element.getBounds())).orNull();
+    if (bound == null) {
+      return false;
+    }
+    return bound.getQualifiedName().contentEquals(Object.class.getName());
   }
 
   private static final class ParameterisedTypeForElementVisitor

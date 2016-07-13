@@ -88,6 +88,10 @@ public abstract class GenericElement implements TypeElement {
       for (TypeMirror bound : bounds) {
         typeParameter.addBound(bound);
       }
+      if (bounds.length == 0) {
+        // In reality, there's always an "extends Object" floating around.
+        typeParameter.addBound(ClassTypeImpl.newTopLevelClass(Object.class.getName()));
+      }
       typeParameters.put(simpleName, typeParameter);
       return this;
     }
