@@ -146,7 +146,7 @@ public class TestBuilder {
       this.testCode = testCode;
     }
 
-    public SimpleJavaFileObject selectName(Multiset<String> seenNames) {
+    TestFile selectName(Multiset<String> seenNames) {
       long id = seenNames.add(rootClassName, 1) + 1;
       String name = rootClassName + (id == 1 ? "" : "__" + id);
       return new TestFile(name, methodName, imports, testCode);
