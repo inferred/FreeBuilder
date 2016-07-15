@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTesterRunner;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -27,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +36,7 @@ import java.util.Optional;
 import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
+@UseParametersRunnerFactory(BehaviorTesterRunner.class)
 public class RequiredPropertiesTest {
 
   @Parameters(name = "{0}")
@@ -72,7 +75,7 @@ public class RequiredPropertiesTest {
   @Parameter public FeatureSet features;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  public BehaviorTester behaviorTester;
 
   @Test
   public void testCantBuildWithAnUnsetProperty() {

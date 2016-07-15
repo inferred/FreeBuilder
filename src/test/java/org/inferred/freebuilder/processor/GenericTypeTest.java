@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTesterRunner;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Test;
@@ -25,10 +26,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.List;
 
 @RunWith(Parameterized.class)
+@UseParametersRunnerFactory(BehaviorTesterRunner.class)
 public class GenericTypeTest {
 
   @Parameters(name = "{0}")
@@ -38,7 +41,7 @@ public class GenericTypeTest {
 
   @Parameter public FeatureSet features;
 
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  public BehaviorTester behaviorTester;
 
   @Test
   public void testGenericInterface() {

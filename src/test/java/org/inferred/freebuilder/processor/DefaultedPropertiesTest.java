@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTesterRunner;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -30,12 +31,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.List;
 
 import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
+@UseParametersRunnerFactory(BehaviorTesterRunner.class)
 public class DefaultedPropertiesTest {
 
   @Parameters(name = "{0}, {1}")
@@ -91,7 +94,7 @@ public class DefaultedPropertiesTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  public BehaviorTester behaviorTester;
 
   @Parameter(value = 0) public FeatureSet features;
   @Parameter(value = 1) public JavaFileObject dataType;

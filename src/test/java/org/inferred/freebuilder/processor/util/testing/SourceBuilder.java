@@ -21,6 +21,7 @@ import com.google.common.base.Throwables;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -103,7 +104,7 @@ public class SourceBuilder {
   }
 
   /** Simple in-memory implementation of {@link javax.tools.JavaFileObject JavaFileObject}. */
-  private class Source extends SimpleJavaFileObject {
+  private static class Source extends SimpleJavaFileObject {
 
     private final String name;
     private final String content;
@@ -126,6 +127,20 @@ public class SourceBuilder {
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return content;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof Source)) {
+        return false;
+      }
+      Source other = (Source) obj;
+      return Objects.equals(name, other.name) && Objects.equals(content, other.content);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(SourceBuilder.class, name, content);
     }
   }
 }

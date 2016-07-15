@@ -15,12 +15,14 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.RoundEnvironments.annotatedElementsIn;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
@@ -53,9 +55,13 @@ public class Processor extends AbstractProcessor {
 
   private Analyser analyser;
   private final CodeGenerator codeGenerator = new CodeGenerator();
-  private FeatureSet features;
+  private final FeatureSet features;
 
-  public Processor() {}
+  private transient FeatureSet environmentFeatures;
+
+  public Processor() {
+    this.features = null;
+  }
 
   @VisibleForTesting
   public Processor(FeatureSet features) {
@@ -81,7 +87,7 @@ public class Processor extends AbstractProcessor {
         MethodIntrospector.instance(processingEnv),
         processingEnv.getTypeUtils());
     if (features == null) {
-      features = new EnvironmentFeatureSet(processingEnv);
+      environmentFeatures = new EnvironmentFeatureSet(processingEnv);
     }
   }
 
@@ -94,7 +100,7 @@ public class Processor extends AbstractProcessor {
             processingEnv,
             metadata.getGeneratedBuilder().getQualifiedName(),
             metadata.getVisibleNestedTypes(),
-            features);
+            firstNonNull(features, environmentFeatures));
         codeGenerator.writeBuilderSource(code, metadata);
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),
@@ -124,5 +130,19 @@ public class Processor extends AbstractProcessor {
       }
     }
     return false;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Processor)) {
+      return false;
+    }
+    Processor other = (Processor) obj;
+    return Objects.equal(features, other.features);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(Processor.class, features);
   }
 }

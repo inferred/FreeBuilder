@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTesterRunner;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -45,6 +47,7 @@ import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code List<?>} properties. */
 @RunWith(Parameterized.class)
+@UseParametersRunnerFactory(BehaviorTesterRunner.class)
 public class MapPropertyFactoryTest {
 
   @Parameters(name = "{0}")
@@ -95,7 +98,7 @@ public class MapPropertyFactoryTest {
   @Parameter public FeatureSet features;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  public BehaviorTester behaviorTester;
 
   @Test
   public void testDefaultEmpty() {

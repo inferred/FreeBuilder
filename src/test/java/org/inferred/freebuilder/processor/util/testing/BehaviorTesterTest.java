@@ -41,7 +41,7 @@ import javax.lang.model.element.TypeElement;
 @RunWith(JUnit4.class)
 public class BehaviorTesterTest {
 
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  private final BehaviorTester behaviorTester = BehaviorTester.create();
 
   @Test
   public void simpleExample() {
