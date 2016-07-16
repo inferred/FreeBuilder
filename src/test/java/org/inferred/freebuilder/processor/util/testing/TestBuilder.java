@@ -175,15 +175,16 @@ public class TestBuilder {
   /**
    * In-memory implementation of {@link javax.tools.JavaFileObject JavaFileObject} for test code.
    */
-  private static class TestSource extends SimpleJavaFileObject {
+  static class TestSource extends SimpleJavaFileObject {
 
-    @SuppressWarnings("unused")  // Prevents name from being reused prematurely
     private final UniqueName className;
+    private final String methodName;
     private final String source;
 
     private TestSource(UniqueName className, String methodName, String imports, String testCode) {
       super(SourceBuilder.uriForClass(className.getName()), Kind.SOURCE);
       this.className = className;
+      this.methodName = methodName;
       this.source = "package " + className.getNamespace() + "; "
           + "import static " + Assert.class.getName() + ".*; "
           + "import static " + Truth.class.getName() + ".assertThat; "
@@ -198,6 +199,14 @@ public class TestBuilder {
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return source;
+    }
+
+    public String getClassName() {
+      return className.getName();
+    }
+
+    public String getMethodName() {
+      return methodName;
     }
   }
 }
