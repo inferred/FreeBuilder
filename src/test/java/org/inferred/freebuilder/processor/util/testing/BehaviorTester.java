@@ -22,7 +22,10 @@ import static com.google.common.util.concurrent.Uninterruptibles.joinUninterrupt
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 
+import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestFile;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 import org.junit.Test;
 
@@ -101,9 +104,10 @@ import javax.tools.ToolProvider;
  * </pre></code></blockquote>
  */
 public class BehaviorTester {
-  private final List<Processor> processors = new ArrayList<Processor>();
-  private final List<JavaFileObject> compilationUnits = new ArrayList<JavaFileObject>();
+  private final List<Processor> processors = new ArrayList<>();
+  private final List<JavaFileObject> compilationUnits = new ArrayList<>();
   private boolean shouldSetContextClassLoader = false;
+  private final Multiset<String> seenNames = LinkedHashMultiset.create();
 
   /** Adds a {@link Processor} to pass to the compiler when {@link #runTest} is invoked. */
   public BehaviorTester with(Processor processor) {
@@ -119,6 +123,14 @@ public class BehaviorTester {
    */
   public BehaviorTester with(JavaFileObject compilationUnit) {
     compilationUnits.add(compilationUnit);
+    return this;
+  }
+
+  /**
+   * Adds a {@link TestSource} to compile and execute when {@link #runTest} is invoked.
+   */
+  public BehaviorTester with(TestSource testSource) {
+    compilationUnits.add(testSource.selectName(seenNames));
     return this;
   }
 
@@ -219,11 +231,11 @@ public class BehaviorTester {
   }
 
   private void runTests(final ClassLoader classLoader, final List<Throwable> throwables) {
-    for (TestSource testSource : filter(compilationUnits, TestSource.class)) {
+    for (TestFile testFile : filter(compilationUnits, TestFile.class)) {
       try {
-        Class<?> testClass = classLoader.loadClass(testSource.getClassName());
+        Class<?> testClass = classLoader.loadClass(testFile.getClassName());
         Object testInstance = testClass.newInstance();
-        Method testMethod = testClass.getMethod(testSource.getMethodName());
+        Method testMethod = testClass.getMethod(testFile.getMethodName());
         testMethod.invoke(testInstance);
       } catch (InvocationTargetException e) {
         throwables.add(e.getCause());

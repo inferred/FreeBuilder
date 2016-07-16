@@ -16,13 +16,11 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.MapMaker;
+import com.google.common.collect.Multiset;
 import com.google.common.truth.Truth;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.concurrent.ConcurrentMap;
 
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
@@ -111,10 +109,10 @@ public class TestBuilder {
   /**
    * Returns a {@link JavaFileObject} for the test source added to the builder.
    */
-  public JavaFileObject build() {
+  public TestSource build() {
     StackTraceElement caller = new Exception().getStackTrace()[1];
     return new TestSource(
-        uniqueTestClassName(caller.getClassName()),
+        rootTestClassName(caller.getClassName()),
         caller.getMethodName(),
         imports.toString(),
         code.toString());
@@ -124,85 +122,72 @@ public class TestBuilder {
    * Creates a unique test class name. Once no longer referenced, it can subsequently be reused,
    * to keep compiler errors and stack traces cleaner.
    */
-  private static UniqueName uniqueTestClassName(String originalClassName) {
+  private static String rootTestClassName(String originalClassName) {
     int periodIndex = originalClassName.lastIndexOf('.');
-    String suggestion;
     if (periodIndex != -1) {
-      suggestion = originalClassName.substring(0, periodIndex)
+      return originalClassName.substring(0, periodIndex)
         + ".generatedcode" + originalClassName.substring(periodIndex);
     } else {
-      suggestion = "com.example.test.generatedcode.Test";
+      return "com.example.test.generatedcode.Test";
     }
-    UniqueName className = new UniqueName(suggestion);
-    return className;
   }
 
-  /**
-   * Holder of globally unique names. Names may be reused once their holder is no longer reachable.
-   */
-  private static class UniqueName {
-    /** Keyed by name; values are weakly referenced so stale entries can be deleted. */
-    private static final ConcurrentMap<String, UniqueName> USED_NAMES =
-        new MapMaker().weakValues().makeMap();
+  public static class TestSource {
 
-    private final String name;
+    private final String rootClassName;
+    private final String methodName;
+    private final String imports;
+    private final String testCode;
 
-    /** Creates a globally unique name derived from (equal to if possible) the given suggestion. */
-    UniqueName(String suggestion) {
-      System.gc(); // Attempt to free up names.
-      String attempt = suggestion;
-      int attemptNumber = 1;
-      while (USED_NAMES.putIfAbsent(attempt, this) != null) {
-        attemptNumber++;
-        attempt = suggestion + "__" + attemptNumber;
-      }
-      this.name = attempt;
+    private TestSource(String rootClassName, String methodName, String imports, String testCode) {
+      this.rootClassName = rootClassName;
+      this.methodName = methodName;
+      this.imports = imports;
+      this.testCode = testCode;
     }
 
-    String getName() {
-      return name;
-    }
-
-    String getSimpleName() {
-      return name.substring(name.lastIndexOf('.') + 1);
-    }
-
-    String getNamespace() {
-      return name.substring(0, name.lastIndexOf('.'));
+    public SimpleJavaFileObject selectName(Multiset<String> seenNames) {
+      long id = seenNames.add(rootClassName, 1) + 1;
+      String name = rootClassName + (id == 1 ? "" : "__" + id);
+      return new TestFile(name, methodName, imports, testCode);
     }
   }
 
   /**
    * In-memory implementation of {@link javax.tools.JavaFileObject JavaFileObject} for test code.
    */
-  static class TestSource extends SimpleJavaFileObject {
+  static class TestFile extends SimpleJavaFileObject {
 
-    private final UniqueName className;
+    private final String className;
     private final String methodName;
     private final String source;
 
-    private TestSource(UniqueName className, String methodName, String imports, String testCode) {
-      super(SourceBuilder.uriForClass(className.getName()), Kind.SOURCE);
+    private TestFile(String className, String methodName, String imports, String testCode) {
+      super(SourceBuilder.uriForClass(className), Kind.SOURCE);
       this.className = className;
       this.methodName = methodName;
-      this.source = "package " + className.getNamespace() + "; "
+      int period = className.lastIndexOf('.');
+      this.source = "package " + className.substring(0, period) + "; "
           + "import static " + Assert.class.getName() + ".*; "
           + "import static " + Truth.class.getName() + ".assertThat; "
           + imports
-          + "public class " + className.getSimpleName() + " {"
+          + "public class " + className.substring(period + 1) + " {"
           + "  @" + Test.class.getName()
           + "  public static void " + methodName + "() throws Exception {\n"
           + testCode
           + "\n  }\n}";
     }
 
+    /**
+     * Gets the character content of this file object.
+     */
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return source;
     }
 
     public String getClassName() {
-      return className.getName();
+      return className;
     }
 
     public String getMethodName() {
