@@ -142,6 +142,7 @@ shadowJar {
   exclude 'javax/annotation/meta/E*'
   exclude 'javax/annotation/meta/T*'
 }
+tasks.shadowJar.shouldRunAfter tasks.test
 
 import java.util.zip.ZipFile
 import java.util.zip.ZipException
@@ -150,7 +151,6 @@ task shadowTest {
   description 'Verifies freebuilder.jar is shaded correctly.'
   group = 'Verification'
   check.dependsOn it
-  shouldRunAfter test
   dependsOn shadowJar
   def expected = new File("$projectDir/jar-footprint.txt")
   def report = new File("$reportsDir/shadowJarFootprint.txt")
@@ -199,7 +199,6 @@ task vanillaTest {
   description 'Runs the vanilla integration tests.'
   group = 'Verification'
   check.dependsOn it
-  shouldRunAfter test
 }
 
 (6..8).each { jdk ->
@@ -326,7 +325,6 @@ task gwtTest(type: Test) {
   description 'Runs the GWT integration tests.'
   group = 'Verification'
   check.dependsOn it
-  shouldRunAfter test
   dependsOn compileGwtToJs
   testClassesDir = sourceSets.gwtTest.output.classesDir
   classpath = sourceSets.gwtTest.runtimeClasspath
@@ -358,7 +356,6 @@ task noGuavaTest {
   description 'Runs the no-guava integration tests.'
   group = 'Verification'
   check.dependsOn it
-  shouldRunAfter test
 }
 
 (6..8).each { jdk ->
@@ -442,7 +439,6 @@ task noGuavaJ8Test(type: Test) {
   description 'Runs the no-guava-j8 integration tests.'
   group = 'Verification'
   check.dependsOn it
-  shouldRunAfter test
   testClassesDir = sourceSets.noGuavaJ8Test.output.classesDir
   classpath = sourceSets.noGuavaJ8Test.runtimeClasspath
   reports {
@@ -489,7 +485,6 @@ task("lambdaTest", type: Test) {
   description 'Runs the lambda integration tests.'
   group = 'Verification'
   check.dependsOn it
-  shouldRunAfter test
   testClassesDir = sourceSets["lambdaTest"].output.classesDir
   classpath = sourceSets["lambdaTest"].runtimeClasspath
   reports {
