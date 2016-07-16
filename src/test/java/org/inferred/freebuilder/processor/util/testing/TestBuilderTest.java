@@ -18,7 +18,9 @@ package org.inferred.freebuilder.processor.util.testing;
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.util.testing.SourceBuilder.getTypeNameFromSource;
 import static org.junit.Assert.assertEquals;
+import static org.junit.runners.MethodSorters.NAME_ASCENDING;
 
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,9 +31,10 @@ import javax.tools.JavaFileObject;
 
 /** Unit tests for {@link TestBuilder}. */
 @RunWith(JUnit4.class)
+@FixMethodOrder(NAME_ASCENDING)
 public class TestBuilderTest {
   @Test
-  public void testUniqueNames() throws IOException {
+  public void test1_UniqueNames() throws IOException {
     JavaFileObject source1 = new TestBuilder().build();
     assertEquals(
         "org.inferred.freebuilder.processor.util.testing.generatedcode.TestBuilderTest",
@@ -40,23 +43,12 @@ public class TestBuilderTest {
     assertEquals(
         "org.inferred.freebuilder.processor.util.testing.generatedcode.TestBuilderTest__2",
         getTypeNameFromSource(source2.getCharContent(false)));
-
-    source1 = null;
-
-    JavaFileObject source3 = new TestBuilder().build();
-    assertEquals(
-        "org.inferred.freebuilder.processor.util.testing.generatedcode.TestBuilderTest",
-        getTypeNameFromSource(source3.getCharContent(false)));
-    JavaFileObject source4 = new TestBuilder().build();
-    assertEquals(
-        "org.inferred.freebuilder.processor.util.testing.generatedcode.TestBuilderTest__3",
-        getTypeNameFromSource(source4.getCharContent(false)));
   }
 
   public static class InnerClass { }
 
   @Test
-  public void testInnerClassNames() throws IOException {
+  public void test2_InnerClassNames() throws IOException {
     String result = new TestBuilder()
         .addLine("%s", InnerClass.class)
         .build()

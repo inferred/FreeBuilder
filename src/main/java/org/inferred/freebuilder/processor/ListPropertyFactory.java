@@ -30,7 +30,6 @@ import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.check
 import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -114,7 +113,6 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addBuilderFieldDeclaration(SourceBuilder code) {
-      code.feature(SOURCE_LEVEL);
       code.addLine("private final %1$s<%2$s> %3$s = new %1$s%4$s();",
           ArrayList.class,
           elementType,

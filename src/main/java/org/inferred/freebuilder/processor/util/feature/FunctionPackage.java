@@ -16,7 +16,7 @@ import javax.lang.model.util.Elements;
  */
 public enum FunctionPackage implements Feature<FunctionPackage> {
 
-  AVAILABLE, UNAVAILABLE;
+  AVAILABLE("Lambdas"), UNAVAILABLE("No lambdas");
 
   /**
    * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current status of
@@ -51,6 +51,12 @@ public enum FunctionPackage implements Feature<FunctionPackage> {
   private static final ParameterizedType UNARY_OPERATOR =
       QualifiedName.of("java.util.function", "UnaryOperator").withParameters("T");
 
+  private final String humanReadableFormat;
+
+  FunctionPackage(String humanReadableFormat) {
+    this.humanReadableFormat = humanReadableFormat;
+  }
+
   /**
    * Parameterized type for {@code java.util.function.Consumer<T>}, if available.
    */
@@ -70,6 +76,11 @@ public enum FunctionPackage implements Feature<FunctionPackage> {
    */
   public Optional<ParameterizedType> unaryOperator() {
     return ifAvailable(UNARY_OPERATOR);
+  }
+
+  @Override
+  public String toString() {
+    return humanReadableFormat;
   }
 
   private static boolean runningInEclipse() {

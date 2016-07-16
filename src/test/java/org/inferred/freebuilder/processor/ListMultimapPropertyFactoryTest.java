@@ -30,21 +30,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTesterRunner;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
+@UseParametersRunnerFactory(BehaviorTesterRunner.class)
 public class ListMultimapPropertyFactoryTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.WITH_GUAVA;
+  }
 
   private static final JavaFileObject MULTIMAP_PROPERTY = new SourceBuilder()
       .addLine("package com.example;")
@@ -98,13 +110,15 @@ public class ListMultimapPropertyFactoryTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  public BehaviorTester behaviorTester;
 
   @Test
   public void testDefaultEmpty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
@@ -117,7 +131,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testDefaultEmpty_primitives() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVES)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
@@ -130,7 +144,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPut() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -149,7 +163,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPut_primitiveKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_KEY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -168,7 +182,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPut_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_VALUE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -187,7 +201,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPut_primitives() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVES)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -207,7 +221,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testPut_nullKey() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -221,7 +235,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testPut_nullValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -234,7 +248,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPut_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -255,7 +269,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllIterable() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -275,7 +289,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllIterable_primitiveKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_KEY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -295,7 +309,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllIterable_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_VALUE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -315,7 +329,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllIterable_primitives() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVES)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -336,7 +350,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testPutAllIterable_nullKey() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -349,7 +363,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testPutAllIterable_nullValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -361,7 +375,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllIterable_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -379,7 +393,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllIterable_iteratesOnce() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -415,7 +429,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllMultimap() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -437,7 +451,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllMultimap_primitiveKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_KEY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -459,7 +473,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllMultimap_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_VALUE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -481,7 +495,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllMultimap_primitives() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVES)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -504,7 +518,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testPutAllMultimap_nullKey() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("%1$s<String, String> values = %1$s.create();", LinkedListMultimap.class)
@@ -518,7 +532,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testPutAllMultimap_nullValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("%1$s<String, String> values = %1$s.create();", LinkedListMultimap.class)
@@ -531,7 +545,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testPutAllMultimap_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -553,7 +567,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemove() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -575,7 +589,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemove_doesNotThrowIfEntryNotPresent() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -596,7 +610,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemove_primitiveKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_KEY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -618,7 +632,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemove_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_VALUE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -640,7 +654,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemove_primitives() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVES)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -663,7 +677,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testRemove_nullKey() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -677,7 +691,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testRemove_nullValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -690,7 +704,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemoveAll() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -710,7 +724,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemoveAll_doesNotThrowIfKeyNotPresent() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -728,7 +742,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemoveAll_primitiveKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_KEY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -748,7 +762,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemoveAll_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVE_VALUE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -768,7 +782,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testRemoveAll_primitives() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PRIMITIVES)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -789,7 +803,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testRemoveAll_nullKey() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
@@ -802,7 +816,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -823,7 +837,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testGet_returnsLiveView() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
@@ -843,7 +857,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testGet_returnsUnmodifiableMultimap() {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
@@ -856,7 +870,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = DataType.builder()")
@@ -877,7 +891,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testMergeFrom_builder() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType.Builder template = DataType.builder()")
@@ -897,7 +911,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testBuilderClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -932,7 +946,7 @@ public class ListMultimapPropertyFactoryTest {
 
   private void testPropertyOfMultimapSubclassType(Class<?> propertyType) {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -962,7 +976,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testOverridingPut() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -993,7 +1007,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testOverridingPut_primitiveKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -1024,7 +1038,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testOverridingPut_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -1055,7 +1069,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testOverridingPut_primitives() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -1086,7 +1100,7 @@ public class ListMultimapPropertyFactoryTest {
   @Test
   public void testEquality() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTIMAP_PROPERTY)
         .with(testBuilder()
             .addLine("new %s()", EqualsTester.class)
@@ -1121,7 +1135,7 @@ public class ListMultimapPropertyFactoryTest {
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")

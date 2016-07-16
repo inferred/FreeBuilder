@@ -1,48 +1,9 @@
-/*
- * Copyright 2014 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.inferred.freebuilder.processor.util.testing;
-
-import static com.google.common.base.Predicates.not;
-import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
-import static org.junit.Assert.fail;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.annotation.processing.Processor;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaCompiler.CompilationTask;
-import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import javax.tools.JavaFileObject.Kind;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
 
 /**
  * Convenience class for performing behavioral tests of API-generating
@@ -78,7 +39,7 @@ import javax.tools.ToolProvider;
  * a hypothetical Builder generator:
  *
  * <blockquote><code><pre>
- * new {@link #BehaviorTester()}
+ * {@link BehaviorTester#create()}
  *     {@link #with(Processor) .with}(builderGeneratingProcessor)
  *     {@link #with(JavaFileObject) .with}(new {@link SourceBuilder}()
  *         .addLine("package com.example;")
@@ -103,16 +64,19 @@ import javax.tools.ToolProvider;
  *     {@link #runTest()};
  * </pre></code></blockquote>
  */
-public class BehaviorTester {
-  private final List<Processor> processors = new ArrayList<Processor>();
-  private final List<JavaFileObject> compilationUnits = new ArrayList<JavaFileObject>();
-  private boolean shouldSetContextClassLoader = false;
+public interface BehaviorTester {
 
-  /** Adds a {@link Processor} to pass to the compiler when {@link #runTest} is invoked. */
-  public BehaviorTester with(Processor processor) {
-    processors.add(processor);
-    return this;
+  /**
+   * Creates a BehaviorTester suitable for running a single compilation pass.
+   */
+  static BehaviorTester create() {
+    return new BehaviorTesterImpl();
   }
+
+  /**
+   * Adds a {@link Processor} to pass to the compiler when {@link #runTest} is invoked.
+   */
+  BehaviorTester with(Processor processor);
 
   /**
    * Adds a {@link JavaFileObject} to pass to the compiler when {@link #runTest} is invoked.
@@ -120,65 +84,21 @@ public class BehaviorTester {
    * @see SourceBuilder
    * @see TestBuilder
    */
-  public BehaviorTester with(JavaFileObject compilationUnit) {
-    compilationUnits.add(compilationUnit);
-    return this;
-  }
+  BehaviorTester with(JavaFileObject compilationUnit);
 
   /**
    * Ensures {@link Thread#getContextClassLoader()} will return a class loader containing the
    * compiled sources. This is needed by some frameworks, e.g. GWT, but requires us to run tests
    * on a separate thread, which complicates exceptions and stack traces.
    */
-  public BehaviorTester withContextClassLoader() {
-    shouldSetContextClassLoader = true;
-    return this;
-  }
-
-  /**
-   * Assertions that can be made about a compilation run.
-   */
-  public static class CompilationSubject {
-
-    private final List<Diagnostic<? extends JavaFileObject>> diagnostics;
-
-    private CompilationSubject(List<Diagnostic<? extends JavaFileObject>> diagnostics) {
-      this.diagnostics = diagnostics;
-    }
-
-    /**
-     * Fails if the compiler issued warnings.
-     */
-    public CompilationSubject withNoWarnings() {
-      ImmutableList<Diagnostic<? extends JavaFileObject>> warnings = FluentIterable
-          .from(diagnostics)
-          .filter(Diagnostics.isKind(Diagnostic.Kind.WARNING, Diagnostic.Kind.MANDATORY_WARNING))
-          .toList();
-      if (!warnings.isEmpty()) {
-        StringBuilder message =
-            new StringBuilder("The following warnings were issued by the compiler:");
-        for (int i = 0; i < warnings.size(); ++i) {
-          message.append("\n    ").append(i + 1).append(") ");
-          Diagnostics.appendTo(message, warnings.get(i), 8);
-        }
-        throw new AssertionError(message.toString());
-      }
-      return this;
-    }
-  }
+  BehaviorTester withContextClassLoader();
 
   /**
    * Compiles everything given to {@link #with}.
    *
    * @return a {@link CompilationSubject} with which to make further assertions
    */
-  public CompilationSubject compiles() {
-    try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
-      List<Diagnostic<? extends JavaFileObject>> diagnostics =
-          compile(fileManager, compilationUnits, processors);
-      return new CompilationSubject(diagnostics);
-    }
-  }
+  CompilationSubject compiles();
 
   /**
    * Compiles, loads and tests everything given to {@link #with}.
@@ -187,110 +107,28 @@ public class BehaviorTester {
    * classloader. Finds all {@link Test @Test}-annotated methods (e.g. those built by {@link
    * TestBuilder}) and invokes them. Aggregates all exceptions, and propagates them to the caller.
    */
-  public void runTest() {
-    try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
-      compile(fileManager, compilationUnits, processors);
-      final ClassLoader classLoader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
-      final List<Throwable> exceptions = new ArrayList<Throwable>();
-      if (shouldSetContextClassLoader) {
-        Thread t = new Thread() {
-          @Override
-          public void run() {
-            runTests(classLoader, exceptions);
-          }
-        };
-        t.setContextClassLoader(classLoader);
-        t.start();
-        joinUninterruptibly(t);
-      } else {
-        runTests(classLoader, exceptions);
-        if (exceptions.size() == 1) {
-          // If there was a single error on the same thread, propagate it directly.
-          // This makes testing for expected errors easier.
-          Throwables.propagateIfPossible(exceptions.get(0));
-        }
-      }
-      if (!exceptions.isEmpty()) {
-        Throwable cause = exceptions.remove(0);
-        RuntimeException aggregate = new RuntimeException("Behavioral test failed", cause);
-        for (Throwable suppressed : exceptions) {
-          aggregate.addSuppressed(suppressed);
-        }
-        throw aggregate;
-      }
-    }
-  }
+  void runTest();
 
-  private void runTests(final ClassLoader classLoader, final List<Throwable> throwables) {
-    for (Class<?> compiledClass : loadCompiledClasses(classLoader, compilationUnits)) {
-      for (Method testMethod : getTestMethods(compiledClass)) {
-        try {
-          testMethod.invoke(testMethod.getDeclaringClass().newInstance());
-        } catch (InvocationTargetException e) {
-          throwables.add(e.getCause());
-        } catch (IllegalAccessException | InstantiationException e) {
-          throwables.add(new AssertionError("Unexpected failure", e));
-        }
-      }
-    }
-  }
+  /**
+   * Assertions that can be made about a compilation run.
+   */
+  interface CompilationSubject {
 
-  private static List<Class<?>> loadCompiledClasses(
-      ClassLoader classLoader, Iterable<? extends JavaFileObject> compilationUnits) {
-    try {
-      ImmutableList.Builder<Class<?>> resultBuilder = ImmutableList.builder();
-      for (JavaFileObject unit : compilationUnits) {
-        if (unit.getKind() == Kind.SOURCE) {
-          String typeName = SourceBuilder.getTypeNameFromSource(unit.getCharContent(true));
-          resultBuilder.add(classLoader.loadClass(typeName));
-        }
-      }
-      return resultBuilder.build();
-    } catch (IOException | ClassNotFoundException e) {
-      fail("Unexpected failure: " + e);
-      return null; // Unreachable
-    }
-  }
+    /**
+     * Fails if the compiler issued warnings.
+     */
+    CompilationSubject withNoWarnings();
 
-  private static List<Method> getTestMethods(Class<?> cls) {
-    ImmutableList.Builder<Method> resultBuilder = ImmutableList.builder();
-    for (Method method : cls.getDeclaredMethods()) {
-      if (method.isAnnotationPresent(Test.class)) {
-        Preconditions.checkState(Modifier.isPublic(method.getModifiers()),
-            "Test %s#%s is not public", cls.getName(), method.getName());
-        Preconditions.checkState(method.getParameterTypes().length == 0,
-            "Test %s#%s has parameters", cls.getName(), method.getName());
-        resultBuilder.add(method);
-      }
-    }
-    return resultBuilder.build();
-  }
-
-  private static ImmutableList<Diagnostic<? extends JavaFileObject>> compile(
-      JavaFileManager fileManager,
-      Iterable<? extends JavaFileObject> compilationUnits,
-      Iterable<? extends Processor> processors) {
-    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-    CompilationTask task = getCompiler().getTask(
-        null,
-        fileManager,
-        diagnostics,
-        ImmutableList.of("-Xlint:unchecked", "-Xdiags:verbose"),
-        null,
-        compilationUnits);
-    task.setProcessors(processors);
-    boolean successful = task.call();
-    if (!successful) {
-      throw new CompilationException(diagnostics.getDiagnostics());
-    }
-    // Filter out any errors: if compilation succeeded, they're probably "cannot find symbol"
-    // errors erroneously emitted by the compiler prior to running annotation processing.
-    return FluentIterable.from(diagnostics.getDiagnostics())
-        .filter(not(Diagnostics.isKind(Diagnostic.Kind.ERROR)))
-        .toList();
-  }
-
-  private static JavaCompiler getCompiler() {
-    return ToolProvider.getSystemJavaCompiler();
+    /**
+     * Loads and tests all {@code compilationUnits}.
+     *
+     * <p>Finds all {@link Test @Test}-annotated methods (e.g. those built by {@link TestBuilder})
+     * and invokes them. Aggregates all exceptions, and propagates them to the caller. All
+     * compilation units must have been passed to {@link BehaviorTester#with(JavaFileObject)} prior
+     * to calling {@link BehaviorTester#compiles()}.
+     */
+    CompilationSubject testsPass(
+        Iterable<? extends JavaFileObject> compilationUnits,
+        boolean shouldSetContextClassLoader);
   }
 }

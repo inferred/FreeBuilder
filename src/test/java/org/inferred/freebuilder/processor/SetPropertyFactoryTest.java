@@ -15,6 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.junit.Assume.assumeTrue;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
@@ -23,7 +26,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTesterRunner;
 import org.inferred.freebuilder.processor.util.testing.CompilationException;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -31,16 +36,26 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code List<?>} properties. */
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
+@UseParametersRunnerFactory(BehaviorTesterRunner.class)
 public class SetPropertyFactoryTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.ALL;
+  }
 
   private static final JavaFileObject SET_PROPERTY_AUTO_BUILT_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -68,13 +83,15 @@ public class SetPropertyFactoryTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  public BehaviorTester behaviorTester;
 
   @Test
   public void testDefaultEmpty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
@@ -86,7 +103,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddSingleElement() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -102,7 +119,7 @@ public class SetPropertyFactoryTest {
   public void testAddSingleElement_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -115,7 +132,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddSingleElement_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -130,7 +147,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddVarargs() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -145,7 +162,7 @@ public class SetPropertyFactoryTest {
   public void testAddVarargs_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().addItems(\"one\", null);")
@@ -156,7 +173,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddVarargs_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -170,7 +187,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddAllIterable() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -185,7 +202,7 @@ public class SetPropertyFactoryTest {
   public void testAddAllIterable_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -197,7 +214,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddAllIterable_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -211,7 +228,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddAllIterable_iteratesOnce() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -243,7 +260,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testRemove() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -259,7 +276,7 @@ public class SetPropertyFactoryTest {
   public void testRemove_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -272,7 +289,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testRemove_missingElement() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -287,7 +304,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -303,7 +320,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testDefaultEmpty_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
@@ -315,7 +332,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddSingleElement_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -331,7 +348,7 @@ public class SetPropertyFactoryTest {
   public void testAddSingleElement_null_primitive() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -344,7 +361,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddSingleElement_duplicate_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -359,7 +376,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddVarargs_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -373,7 +390,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddVarargs_null_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().addItems(1, null);")
@@ -385,7 +402,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddVarargs_duplicate_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
         .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -399,7 +416,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddAllIterable_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -414,7 +431,7 @@ public class SetPropertyFactoryTest {
   public void testAddAllIterable_null_primitive() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -426,7 +443,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testAddAllIterable_duplicate_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -440,7 +457,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testRemove_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -455,7 +472,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testClear_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -471,7 +488,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testGet_returnsLiveView() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -491,7 +508,7 @@ public class SetPropertyFactoryTest {
   public void testGet_returnsUnmodifiableSet() {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -504,7 +521,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
@@ -521,7 +538,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testMergeFrom_builder() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
@@ -537,7 +554,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testBuilderClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -553,7 +570,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -579,8 +596,9 @@ public class SetPropertyFactoryTest {
 
   @Test
   public void testImmutableSetProperty() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -606,7 +624,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testOverridingAdd() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -637,7 +655,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testOverridingAdd_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -668,7 +686,7 @@ public class SetPropertyFactoryTest {
   @Test
   public void testEquality() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
         .with(new TestBuilder()
             .addLine("new %s()", EqualsTester.class)
@@ -698,7 +716,7 @@ public class SetPropertyFactoryTest {
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")

@@ -8,7 +8,7 @@ import org.junit.Test;
 import javax.tools.JavaFileObject;
 
 public class AbstractBuilderTest {
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  private final BehaviorTester behaviorTester = BehaviorTester.create();
 
   private static final JavaFileObject TYPE_WITH_ABSTRACT_BUILDER = new SourceBuilder()
       .addLine("package com.example;")

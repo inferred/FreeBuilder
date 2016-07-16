@@ -25,7 +25,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTesterRunner;
 import org.inferred.freebuilder.processor.util.testing.CompilationException;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -33,14 +35,24 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
+@UseParametersRunnerFactory(BehaviorTesterRunner.class)
 public class MultisetPropertyFactoryTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.ALL;
+  }
 
   private static final JavaFileObject MULTISET_PROPERTY_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -68,13 +80,15 @@ public class MultisetPropertyFactoryTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  public BehaviorTester behaviorTester;
 
   @Test
   public void testDefaultEmpty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
@@ -86,7 +100,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddSingleElement() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -102,7 +116,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddSingleElement_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -115,7 +129,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddSingleElement_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -130,7 +144,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddVarargs() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -145,7 +159,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddVarargs_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().addItems(\"one\", null);")
@@ -156,7 +170,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddVarargs_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
         .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -170,7 +184,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddAllIterable() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -185,7 +199,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddAllIterable_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -197,7 +211,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddAllIterable_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -211,7 +225,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddAllIterable_iteratesOnce() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -243,7 +257,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddCopies() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -260,7 +274,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddCopies_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -274,7 +288,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddCopies_negativeOccurrences() {
     thrown.expect(IllegalArgumentException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -287,7 +301,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddCopies_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -303,7 +317,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testSetCountOf() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -320,7 +334,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testSetCountOf_toZero() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -336,7 +350,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -352,7 +366,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testDefaultEmpty_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
@@ -364,7 +378,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddSingleElement_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -380,7 +394,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddSingleElement_null_primitive() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -393,7 +407,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddSingleElement_duplicate_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -408,7 +422,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddVarargs_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -422,7 +436,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddVarargs_null_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().addItems(1, null);")
@@ -434,7 +448,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddVarargs_duplicate_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
         .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -448,7 +462,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddAllIterable_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -463,7 +477,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddAllIterable_null_primitive() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -475,7 +489,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddAllIterable_duplicate_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -489,7 +503,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddCopies_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -505,7 +519,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddCopies_null_primitive() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -519,7 +533,7 @@ public class MultisetPropertyFactoryTest {
   public void testAddCopies_negativeOccurrences_primitive() {
     thrown.expect(IllegalArgumentException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -532,7 +546,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testAddCopies_duplicate_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -547,7 +561,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testSetCountOf_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -563,7 +577,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testSetCountOf_toZero_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -579,7 +593,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testClear_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -595,7 +609,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testGet_returnsLiveView() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -615,7 +629,7 @@ public class MultisetPropertyFactoryTest {
   public void testGet_returnsUnmodifiableSet() {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -628,7 +642,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
@@ -644,7 +658,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testMergeFrom_builder() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
@@ -659,7 +673,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testBuilderClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -675,7 +689,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -702,7 +716,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testImmutableSetProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -728,7 +742,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testOverridingAdd() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -761,7 +775,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testOverridingAdd_primitive() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -794,7 +808,7 @@ public class MultisetPropertyFactoryTest {
   @Test
   public void testEquality() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new %s()", EqualsTester.class)
@@ -831,7 +845,7 @@ public class MultisetPropertyFactoryTest {
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")

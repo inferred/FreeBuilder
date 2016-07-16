@@ -15,10 +15,11 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.googlejavaformat.java.Formatter;
 
-import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
 import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
 
 import java.util.Collection;
@@ -36,13 +37,15 @@ public class CompilationUnitBuilder implements SourceBuilder {
   private final QualifiedName classToWrite;
 
   /**
-   * Returns a {@link CompilationUnitBuilder} for {@code classToWrite}. The file preamble (package
-   * and imports) will be generated automatically; the feature set will be taken from {@code env}..
+   * Returns a {@link CompilationUnitBuilder} for {@code classToWrite} using {@code features}. The
+   * file preamble (package and imports) will be generated automatically, and {@code env} will be
+   * inspected for potential import collisions.
    */
   public CompilationUnitBuilder(
       ProcessingEnvironment env,
       QualifiedName classToWrite,
-      Collection<QualifiedName> nestedClasses) {
+      Collection<QualifiedName> nestedClasses,
+      FeatureSet features) {
     this.classToWrite = classToWrite;
     // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
     // written first, but aren't known yet.
@@ -56,7 +59,7 @@ public class CompilationUnitBuilder implements SourceBuilder {
       importManagerBuilder.addImplicitImport(nestedClass);
     }
     importManager = importManagerBuilder.build();
-    source = new SourceStringBuilder(importManager, new EnvironmentFeatureSet(env));
+    source = new SourceStringBuilder(importManager, features);
   }
 
   @Override
@@ -103,7 +106,8 @@ public class CompilationUnitBuilder implements SourceBuilder {
     return unit.toString();
   }
 
-  private static String formatSource(String source) {
+  @VisibleForTesting
+  public static String formatSource(String source) {
     try {
       return new Formatter().formatSource(source);
     } catch (UnsupportedClassVersionError e) {
