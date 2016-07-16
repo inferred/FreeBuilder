@@ -16,13 +16,12 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.MapMaker;
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.common.truth.Truth;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.concurrent.ConcurrentMap;
 
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
@@ -141,22 +140,15 @@ public class TestBuilder {
    * Holder of globally unique names. Names may be reused once their holder is no longer reachable.
    */
   private static class UniqueName {
-    /** Keyed by name; values are weakly referenced so stale entries can be deleted. */
-    private static final ConcurrentMap<String, UniqueName> USED_NAMES =
-        new MapMaker().weakValues().makeMap();
+
+    private static final Multiset<String> usages = LinkedHashMultiset.create();
 
     private final String name;
 
     /** Creates a globally unique name derived from (equal to if possible) the given suggestion. */
     UniqueName(String suggestion) {
-      System.gc(); // Attempt to free up names.
-      String attempt = suggestion;
-      int attemptNumber = 1;
-      while (USED_NAMES.putIfAbsent(attempt, this) != null) {
-        attemptNumber++;
-        attempt = suggestion + "__" + attemptNumber;
-      }
-      this.name = attempt;
+      long id = usages.add(suggestion, 1) + 1;
+      this.name = suggestion + (id == 1 ? "" : "__" + id);
     }
 
     String getName() {
