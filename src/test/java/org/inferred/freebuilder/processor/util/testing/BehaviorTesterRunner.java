@@ -4,12 +4,16 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
+import static org.junit.runner.Description.createTestDescription;
 
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
+import org.inferred.freebuilder.processor.util.testing.BehaviorTester.CompilationSubject;
+import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
@@ -36,12 +40,38 @@ public class BehaviorTesterRunner implements ParametersRunnerFactory {
 
   private static class RunnerWithParameters extends BlockJUnit4ClassRunnerWithParameters {
 
+    private static class Compiler implements Supplier<CompilationSubject> {
+      private CompiledUnits units;
+      private CompilationSubject subject;
+
+      Compiler(CompiledUnits units) {
+        this.units = units;
+      }
+
+      @Override
+      public CompilationSubject get() {
+        if (subject == null) {
+          BehaviorTesterImpl tester = new BehaviorTesterImpl();
+          for (Processor processor : units.processors) {
+            tester.with(processor);
+          }
+          for (JavaFileObject compilationUnit : units.compilationUnits.values()) {
+            tester.with(compilationUnit);
+          }
+          subject = tester.compiles();
+          units = null;  // Allow compilers to be reclaimed by GC (processors retain a reference)
+        }
+        return subject;
+      }
+    }
+
     private static final String COMPILATION_FAILURE_EXPECTED =
         "Expected test to throw an instance of " + CompilationException.class.getName();
 
     private final Field testerField;
     private Map<FrameworkMethod, CompiledUnits> methods;
     private BehaviorTester tester;
+    private final Description introspection;
 
     private RunnerWithParameters(TestWithParameters test) throws InitializationError {
       super(test);
@@ -54,6 +84,8 @@ public class BehaviorTesterRunner implements ParametersRunnerFactory {
         throw new InitializationError("Multiple public BehaviorTester fields found");
       }
       testerField = getOnlyElement(testerFields);
+      introspection = createTestDescription(
+          getTestClass().getJavaClass(), "Introspect" + test.getParameters());
     }
 
     @Override
@@ -68,14 +100,55 @@ public class BehaviorTesterRunner implements ParametersRunnerFactory {
       };
     }
 
-    private void runChildren(RunNotifier notifier) throws Throwable {
-      Statement childrenInvoker = super.childrenInvoker(notifier);
-      methods = new LinkedHashMap<>();
-      childrenInvoker.evaluate();
+    @Override
+    public Description getDescription() {
+      Description originalDescription = super.getDescription();
+      Description suiteDescription = originalDescription.childlessCopy();
+      suiteDescription.addChild(introspection);
+      originalDescription.getChildren().forEach(suiteDescription::addChild);
+      return suiteDescription;
+    }
 
+    private void runChildren(RunNotifier notifier) throws Throwable {
+      notifier.fireTestStarted(introspection);
+      try {
+        Statement childrenInvoker = super.childrenInvoker(notifier);
+        methods = new LinkedHashMap<>();
+        childrenInvoker.evaluate();
+        notifier.fireTestFinished(introspection);
+      } catch (Throwable t) {
+        notifier.fireTestFailure(new Failure(introspection, t));
+        throw t;
+      }
+
+      Multimap<CompiledUnits, FrameworkMethod> methodsByUnits = mergeCompiledUnits(methods);
+      Map<FrameworkMethod, List<JavaFileObject>> compilationUnitsByMethod =
+          new LinkedHashMap<>(Maps.transformValues(methods, units ->
+              ImmutableList.copyOf(units.compilationUnits.values())));
+      methods = null;  // Allow compilers to be reclaimed by GC (processors retain a reference)
+
+      for (CompiledUnits units : methodsByUnits.keySet()) {
+        Compiler compiler = new Compiler(units);
+        for (FrameworkMethod method : methodsByUnits.get(units)) {
+          tester = new DelegatingBehaviorTester(compiler, compilationUnitsByMethod.remove(method));
+          try {
+            super.runChild(method, notifier);
+          } finally {
+            tester = null;
+          }
+        }
+        // Allow compilers to be reclaimed by GC (processors retain a reference)
+        units.processors.clear();
+        // Allow unique test names to be reclaimed by GC
+        units.compilationUnits.clear();
+      }
+    }
+
+    private static Multimap<CompiledUnits, FrameworkMethod> mergeCompiledUnits(
+        Map<FrameworkMethod, CompiledUnits> unitsByMethod) {
       // Determine what sets of units need to be compiled
       Multimap<CompiledUnits, FrameworkMethod> methodsByUnits = LinkedHashMultimap.create();
-      for (Entry<FrameworkMethod, CompiledUnits> entry : methods.entrySet()) {
+      for (Entry<FrameworkMethod, CompiledUnits> entry : unitsByMethod.entrySet()) {
         CompiledUnits mergedUnit = methodsByUnits.keySet()
             .stream()
             .filter(entry.getValue()::isCompatible)
@@ -86,30 +159,9 @@ public class BehaviorTesterRunner implements ParametersRunnerFactory {
       }
       System.out.println(String.format(
           "Merged %d tests into %d compiler passes",
-          methods.size(),
+          unitsByMethod.size(),
           methodsByUnits.keySet().size()));
-
-      for (CompiledUnits units : methodsByUnits.keySet()) {
-        Supplier<BehaviorTesterImpl.CompilationSubject> compiler = Suppliers.memoize(() -> {
-          BehaviorTesterImpl tester = new BehaviorTesterImpl();
-          for (Processor processor : units.processors) {
-            tester.with(processor);
-          }
-          for (JavaFileObject compilationUnit : units.compilationUnits.values()) {
-            tester.with(compilationUnit);
-          }
-          return tester.compiles();
-        });
-        for (FrameworkMethod method : methodsByUnits.get(units)) {
-          tester = new DelegatingBehaviorTester(
-              compiler, methods.get(method).compilationUnits.values());
-          try {
-            super.runChild(method, notifier);
-          } finally {
-            tester = null;
-          }
-        }
-      }
+      return methodsByUnits;
     }
 
     @Override
