@@ -53,7 +53,7 @@ public class OptionalMapperMethodTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  private final BehaviorTester behaviorTester = BehaviorTester.create();
 
   @Test
   public void mapReplacesValueToBeReturnedFromGetterForJ8OptionalProperty() {

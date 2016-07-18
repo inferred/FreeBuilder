@@ -26,7 +26,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class GenericTypeTest {
 
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  private final BehaviorTester behaviorTester = BehaviorTester.create();
 
   @Test
   public void testGenericInterface() {

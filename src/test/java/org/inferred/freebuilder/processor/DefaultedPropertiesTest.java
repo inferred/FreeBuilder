@@ -74,7 +74,7 @@ public class DefaultedPropertiesTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  private final BehaviorTester behaviorTester = BehaviorTester.create();
 
   @Theory
   public void testMergeFromBuilder_defaultsDoNotOverride(JavaFileObject dataType) {
