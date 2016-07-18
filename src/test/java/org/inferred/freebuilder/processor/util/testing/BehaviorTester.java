@@ -182,6 +182,7 @@ public class BehaviorTester {
    * @return a {@link CompilationSubject} with which to make further assertions
    */
   public CompilationSubject compiles() {
+    System.gc();
     try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
       List<Diagnostic<? extends JavaFileObject>> diagnostics =
           compile(fileManager, compilationUnits, processors);
