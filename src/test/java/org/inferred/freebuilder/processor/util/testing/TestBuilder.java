@@ -22,6 +22,8 @@ import com.google.common.truth.Truth;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Objects;
+
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 
@@ -150,6 +152,28 @@ public class TestBuilder {
       long id = seenNames.add(rootClassName, 1) + 1;
       String name = rootClassName + (id == 1 ? "" : "__" + id);
       return new TestFile(name, methodName, imports, testCode);
+    }
+
+    @Override
+    public String toString() {
+      return rootClassName + "." + methodName;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(rootClassName, methodName, imports, testCode);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof TestSource)) {
+        return false;
+      }
+      TestSource other = (TestSource) obj;
+      return Objects.equals(rootClassName, other.rootClassName)
+          && Objects.equals(methodName, other.methodName)
+          && Objects.equals(imports, other.imports)
+          && Objects.equals(testCode, other.testCode);
     }
   }
 
