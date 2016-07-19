@@ -15,13 +15,14 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
-import static com.google.common.collect.Iterables.filter;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -31,7 +32,9 @@ import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
@@ -48,6 +51,7 @@ class SingleBehaviorTester implements BehaviorTester {
   private final List<JavaFileObject> compilationUnits = new ArrayList<>();
   private boolean shouldSetContextClassLoader = false;
   private final Multiset<String> seenNames = LinkedHashMultiset.create();
+  private final Map<TestSource, TestFile> testFilesBySource = new LinkedHashMap<>();
 
   @Override
   public BehaviorTester with(Processor processor) {
@@ -63,7 +67,9 @@ class SingleBehaviorTester implements BehaviorTester {
 
   @Override
   public BehaviorTester with(TestSource testSource) {
-    compilationUnits.add(testSource.selectName(seenNames));
+    TestFile testFile = testSource.selectName(seenNames);
+    compilationUnits.add(testFile);
+    testFilesBySource.put(testSource, testFile);
     return this;
   }
 
@@ -73,16 +79,37 @@ class SingleBehaviorTester implements BehaviorTester {
     return this;
   }
 
+  @Override
+  public CompilationSubject compiles() {
+    TempJavaFileManager fileManager = new TempJavaFileManager();
+    List<Diagnostic<? extends JavaFileObject>> diagnostics =
+        compile(fileManager, compilationUnits, processors);
+    final ClassLoader classLoader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
+    return new SingleCompilationSubject(
+        classLoader, diagnostics, shouldSetContextClassLoader, testFilesBySource);
+  }
+
   static class SingleCompilationSubject implements CompilationSubject {
 
+    private final ClassLoader classLoader;
     private final List<Diagnostic<? extends JavaFileObject>> diagnostics;
+    private final boolean shouldSetContextClassLoader;
+    private final Map<TestSource, TestFile> testFilesBySource;
 
-    private SingleCompilationSubject(List<Diagnostic<? extends JavaFileObject>> diagnostics) {
+    private SingleCompilationSubject(
+        ClassLoader classLoader,
+        List<Diagnostic<? extends JavaFileObject>> diagnostics,
+        boolean shouldSetContextClassLoader,
+        Map<TestSource, TestFile> testFilesBySource) {
+      this.classLoader = classLoader;
       this.diagnostics = diagnostics;
+      this.shouldSetContextClassLoader = shouldSetContextClassLoader;
+      this.testFilesBySource = testFilesBySource;
     }
 
     @Override
     public CompilationSubject withNoWarnings() {
+      checkState(classLoader != null, "CompilationSubject closed");
       ImmutableList<Diagnostic<? extends JavaFileObject>> warnings = FluentIterable
           .from(diagnostics)
           .filter(Diagnostics.isKind(Diagnostic.Kind.WARNING, Diagnostic.Kind.MANDATORY_WARNING))
@@ -98,55 +125,66 @@ class SingleBehaviorTester implements BehaviorTester {
       }
       return this;
     }
-  }
 
-  @Override
-  public CompilationSubject compiles() {
-    System.gc();
-    try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
-      List<Diagnostic<? extends JavaFileObject>> diagnostics =
-          compile(fileManager, compilationUnits, processors);
-      return new SingleCompilationSubject(diagnostics);
+    @Override
+    public CompilationSubject allTestsPass() {
+      checkState(classLoader != null, "CompilationSubject closed");
+      runTests(classLoader, testFilesBySource.values(), shouldSetContextClassLoader);
+      return this;
+    }
+
+    @Override
+    public CompilationSubject testsPass(
+        Iterable<? extends TestSource> testSources,
+        boolean shouldSetContextClassLoader) {
+      checkState(classLoader != null, "CompilationSubject closed");
+      Iterable<TestFile> testFiles = Iterables.transform(testSources, testSource ->
+          testFilesBySource.computeIfAbsent(testSource, s -> {
+              throw new IllegalStateException("Test source not compiled: " + s);
+          }));
+      runTests(classLoader, testFiles, shouldSetContextClassLoader);
+      return this;
     }
   }
 
-  @Override
-  public void runTest() {
-    try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
-      compile(fileManager, compilationUnits, processors);
-      final ClassLoader classLoader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
-      final List<Throwable> exceptions = new ArrayList<Throwable>();
-      if (shouldSetContextClassLoader) {
-        Thread t = new Thread() {
-          @Override
-          public void run() {
-            runTests(classLoader, exceptions);
-          }
-        };
-        t.setContextClassLoader(classLoader);
-        t.start();
-        joinUninterruptibly(t);
-      } else {
-        runTests(classLoader, exceptions);
-        if (exceptions.size() == 1) {
-          // If there was a single error on the same thread, propagate it directly.
-          // This makes testing for expected errors easier.
-          Throwables.propagateIfPossible(exceptions.get(0));
+  private static void runTests(
+      ClassLoader classLoader,
+      Iterable<? extends TestFile> testFiles,
+      boolean shouldSetContextClassLoader) {
+    final List<Throwable> exceptions = new ArrayList<Throwable>();
+    if (shouldSetContextClassLoader) {
+      Thread t = new Thread() {
+        @Override
+        public void run() {
+          runTests(classLoader, testFiles, exceptions);
         }
+      };
+      t.setContextClassLoader(classLoader);
+      t.start();
+      joinUninterruptibly(t);
+    } else {
+      runTests(classLoader, testFiles, exceptions);
+      if (exceptions.size() == 1) {
+        // If there was a single error on the same thread, propagate it directly.
+        // This makes testing for expected errors easier.
+        Throwables.propagateIfPossible(exceptions.get(0));
       }
-      if (!exceptions.isEmpty()) {
-        Throwable cause = exceptions.remove(0);
-        RuntimeException aggregate = new RuntimeException("Behavioral test failed", cause);
-        for (Throwable suppressed : exceptions) {
-          aggregate.addSuppressed(suppressed);
-        }
-        throw aggregate;
+    }
+    if (!exceptions.isEmpty()) {
+      Throwable cause = exceptions.remove(0);
+      RuntimeException aggregate = new RuntimeException("Behavioral test failed", cause);
+      for (Throwable suppressed : exceptions) {
+        aggregate.addSuppressed(suppressed);
       }
+      throw aggregate;
     }
   }
 
-  private void runTests(final ClassLoader classLoader, final List<Throwable> throwables) {
-    for (TestFile testFile : filter(compilationUnits, TestFile.class)) {
+  private static void runTests(
+      ClassLoader classLoader,
+      Iterable<? extends TestFile> testFiles,
+      final List<Throwable> throwables) {
+    for (TestFile testFile : testFiles) {
       try {
         Class<?> testClass = classLoader.loadClass(testFile.getClassName());
         Object testInstance = testClass.newInstance();

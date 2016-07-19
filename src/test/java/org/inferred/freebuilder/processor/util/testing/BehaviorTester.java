@@ -108,7 +108,9 @@ public interface BehaviorTester {
    * classloader. Finds all {@link Test @Test}-annotated methods (e.g. those built by {@link
    * TestBuilder}) and invokes them. Aggregates all exceptions, and propagates them to the caller.
    */
-  void runTest();
+  default void runTest() {
+    compiles().allTestsPass();
+  }
 
   /**
    * Assertions that can be made about a compilation run.
@@ -120,6 +122,22 @@ public interface BehaviorTester {
      */
     CompilationSubject withNoWarnings();
 
-  }
+    /**
+     * Loads and tests all test sources.
+     *
+     * <p>Aggregates all exceptions, and propagates them to the caller.
+     */
+    CompilationSubject allTestsPass();
 
+    /**
+     * Loads and tests all {@code testSources}.
+     *
+     * <p>Aggregates all exceptions, and propagates them to the caller. All test sources must have
+     * been passed to {@link BehaviorTester#with(TestSource)} prior to calling
+     * {@link BehaviorTester#compiles()}.
+     */
+    CompilationSubject testsPass(
+        Iterable<? extends TestSource> testSources,
+        boolean shouldSetContextClassLoader);
+  }
 }
