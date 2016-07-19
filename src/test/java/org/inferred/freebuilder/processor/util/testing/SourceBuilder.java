@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.base.Throwables;
@@ -36,7 +37,13 @@ public class SourceBuilder {
   private static final Pattern PACKAGE_PATTERN =
       Pattern.compile("package\\s+(\\w+(\\s*\\.\\s*\\w+)*)\\s*;");
 
+  private String name;
   private final StringBuilder code = new StringBuilder();
+
+  public SourceBuilder named(String name) {
+    this.name = name;
+    return this;
+  }
 
   /**
    * Appends a formatted line of code to the source. Formatting is done by {@link String#format},
@@ -56,7 +63,10 @@ public class SourceBuilder {
    * Returns a {@link JavaFileObject} for the source added to the builder.
    */
   public JavaFileObject build() {
-    return new Source(code.toString());
+    String source = code.toString();
+    String typeName = getTypeNameFromSource(source);
+    URI uri = uriForClass(typeName);
+    return new Source(source, firstNonNull(name, typeName), uri);
   }
 
   /** Substitutes the given object with one that has a better toString() for code generation. */
@@ -89,22 +99,29 @@ public class SourceBuilder {
   }
 
   /** Simple in-memory implementation of {@link javax.tools.JavaFileObject JavaFileObject}. */
-  private class Source extends SimpleJavaFileObject {
+  private static class Source extends SimpleJavaFileObject {
 
     private final String content;
+    private final String name;
 
     /**
      * Creates a new {@link javax.tools.JavaFileObject JavaFileObject} containing the supplied
      * source code. File name is derived from the source code's package and type name.
      */
-    Source(String source) {
-      super(uriForClass(getTypeNameFromSource(source)), Kind.SOURCE);
+    Source(String source, String name, URI uri) {
+      super(uri, Kind.SOURCE);
       this.content = source;
+      this.name = name;
     }
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return content;
+    }
+
+    @Override
+    public String toString() {
+      return name;
     }
 
     @Override
