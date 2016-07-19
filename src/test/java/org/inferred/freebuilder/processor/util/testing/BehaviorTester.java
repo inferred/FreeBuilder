@@ -16,20 +16,21 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.base.Predicates.not;
+import static com.google.common.collect.Iterables.filter;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
-import static org.junit.Assert.fail;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 
+import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestFile;
+import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +41,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
@@ -104,9 +104,10 @@ import javax.tools.ToolProvider;
  * </pre></code></blockquote>
  */
 public class BehaviorTester {
-  private final List<Processor> processors = new ArrayList<Processor>();
-  private final List<JavaFileObject> compilationUnits = new ArrayList<JavaFileObject>();
+  private final List<Processor> processors = new ArrayList<>();
+  private final List<JavaFileObject> compilationUnits = new ArrayList<>();
   private boolean shouldSetContextClassLoader = false;
+  private final Multiset<String> seenNames = LinkedHashMultiset.create();
 
   /** Adds a {@link Processor} to pass to the compiler when {@link #runTest} is invoked. */
   public BehaviorTester with(Processor processor) {
@@ -122,6 +123,14 @@ public class BehaviorTester {
    */
   public BehaviorTester with(JavaFileObject compilationUnit) {
     compilationUnits.add(compilationUnit);
+    return this;
+  }
+
+  /**
+   * Adds a {@link TestSource} to compile and execute when {@link #runTest} is invoked.
+   */
+  public BehaviorTester with(TestSource testSource) {
+    compilationUnits.add(testSource.selectName(seenNames));
     return this;
   }
 
@@ -173,6 +182,7 @@ public class BehaviorTester {
    * @return a {@link CompilationSubject} with which to make further assertions
    */
   public CompilationSubject compiles() {
+    System.gc();
     try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
       List<Diagnostic<? extends JavaFileObject>> diagnostics =
           compile(fileManager, compilationUnits, processors);
@@ -222,48 +232,21 @@ public class BehaviorTester {
   }
 
   private void runTests(final ClassLoader classLoader, final List<Throwable> throwables) {
-    for (Class<?> compiledClass : loadCompiledClasses(classLoader, compilationUnits)) {
-      for (Method testMethod : getTestMethods(compiledClass)) {
-        try {
-          testMethod.invoke(testMethod.getDeclaringClass().newInstance());
-        } catch (InvocationTargetException e) {
-          throwables.add(e.getCause());
-        } catch (IllegalAccessException | InstantiationException e) {
-          throwables.add(new AssertionError("Unexpected failure", e));
-        }
+    for (TestFile testFile : filter(compilationUnits, TestFile.class)) {
+      try {
+        Class<?> testClass = classLoader.loadClass(testFile.getClassName());
+        Object testInstance = testClass.newInstance();
+        Method testMethod = testClass.getMethod(testFile.getMethodName());
+        testMethod.invoke(testInstance);
+      } catch (InvocationTargetException e) {
+        throwables.add(e.getCause());
+      } catch (ClassNotFoundException
+          | NoSuchMethodException
+          | IllegalAccessException
+          | InstantiationException e) {
+        throwables.add(new AssertionError("Unexpected failure", e));
       }
     }
-  }
-
-  private static List<Class<?>> loadCompiledClasses(
-      ClassLoader classLoader, Iterable<? extends JavaFileObject> compilationUnits) {
-    try {
-      ImmutableList.Builder<Class<?>> resultBuilder = ImmutableList.builder();
-      for (JavaFileObject unit : compilationUnits) {
-        if (unit.getKind() == Kind.SOURCE) {
-          String typeName = SourceBuilder.getTypeNameFromSource(unit.getCharContent(true));
-          resultBuilder.add(classLoader.loadClass(typeName));
-        }
-      }
-      return resultBuilder.build();
-    } catch (IOException | ClassNotFoundException e) {
-      fail("Unexpected failure: " + e);
-      return null; // Unreachable
-    }
-  }
-
-  private static List<Method> getTestMethods(Class<?> cls) {
-    ImmutableList.Builder<Method> resultBuilder = ImmutableList.builder();
-    for (Method method : cls.getDeclaredMethods()) {
-      if (method.isAnnotationPresent(Test.class)) {
-        Preconditions.checkState(Modifier.isPublic(method.getModifiers()),
-            "Test %s#%s is not public", cls.getName(), method.getName());
-        Preconditions.checkState(method.getParameterTypes().length == 0,
-            "Test %s#%s has parameters", cls.getName(), method.getName());
-        resultBuilder.add(method);
-      }
-    }
-    return resultBuilder.build();
   }
 
   private static ImmutableList<Diagnostic<? extends JavaFileObject>> compile(
