@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -29,7 +31,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -37,7 +38,7 @@ import java.util.Map;
 import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code List<?>} properties. */
-@RunWith(JUnit4.class)
+@RunWith(BehaviorTestRunner.class)
 public class MapPropertyFactoryTest {
 
   private static final JavaFileObject MAP_PROPERTY_TYPE = new SourceBuilder()
@@ -81,7 +82,7 @@ public class MapPropertyFactoryTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = BehaviorTester.create();
+  @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void testDefaultEmpty() {

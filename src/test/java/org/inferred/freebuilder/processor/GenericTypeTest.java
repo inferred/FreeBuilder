@@ -16,17 +16,18 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
+@RunWith(BehaviorTestRunner.class)
 public class GenericTypeTest {
 
-  private final BehaviorTester behaviorTester = BehaviorTester.create();
+  @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void testGenericInterface() {

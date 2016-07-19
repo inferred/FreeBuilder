@@ -19,6 +19,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -26,14 +28,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.Iterator;
 import java.util.Set;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(BehaviorTestRunner.class)
 public class SetMutateMethodTest {
 
   private static final JavaFileObject UNCHECKED_SET_TYPE = new SourceBuilder()
@@ -63,7 +64,7 @@ public class SetMutateMethodTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = BehaviorTester.create();
+  @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void mutateAndAddModifiesUnderlyingProperty() {

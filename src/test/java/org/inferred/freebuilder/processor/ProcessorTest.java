@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -31,7 +33,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -45,7 +46,7 @@ import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(BehaviorTestRunner.class)
 public class ProcessorTest {
 
   private static final JavaFileObject NO_BUILDER_CLASS = new SourceBuilder()
@@ -99,7 +100,7 @@ public class ProcessorTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = BehaviorTester.create();
+  @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void testAbstractClass() {

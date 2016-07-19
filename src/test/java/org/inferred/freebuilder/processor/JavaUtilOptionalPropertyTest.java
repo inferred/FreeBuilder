@@ -24,21 +24,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.Optional;
 
 import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code Optional<?>} properties. */
-@RunWith(JUnit4.class)
+@RunWith(BehaviorTestRunner.class)
 public class JavaUtilOptionalPropertyTest {
 
   private static final JavaFileObject TWO_OPTIONAL_PROPERTIES_TYPE = new SourceBuilder()
@@ -82,7 +83,7 @@ public class JavaUtilOptionalPropertyTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = BehaviorTester.create();
+  @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void testConstructor_defaultEmpty() {
