@@ -123,7 +123,7 @@ public class ModelTest {
   @Test
   public void newElementAnnotatedWith_noElementIdentified() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("no annotated element");
+    thrown.expectMessage("No element annotated with @java.lang.Deprecated found");
     model.newElementAnnotatedWith(
         Deprecated.class,
         "package foo.bar;",
