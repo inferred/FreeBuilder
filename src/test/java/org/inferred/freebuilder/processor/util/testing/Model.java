@@ -371,7 +371,7 @@ public class Model {
               null,  // Writer
               fileManager,
               diagnostics,
-              ImmutableList.of("-proc:only", "-encoding", "UTF-8"),
+              ImmutableList.of("-proc:only", "-encoding", "UTF-8", "-XDuseUnsharedTable"),
               null,  // Class names
               ImmutableList.of(bootstrapType));
           task.setProcessors(ImmutableList.of(new ElementCapturingProcessor()));

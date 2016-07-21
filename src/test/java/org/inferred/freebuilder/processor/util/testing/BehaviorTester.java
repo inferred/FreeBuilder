@@ -182,7 +182,6 @@ public class BehaviorTester {
    * @return a {@link CompilationSubject} with which to make further assertions
    */
   public CompilationSubject compiles() {
-    System.gc();
     try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
       List<Diagnostic<? extends JavaFileObject>> diagnostics =
           compile(fileManager, compilationUnits, processors);
@@ -258,7 +257,7 @@ public class BehaviorTester {
         null,
         fileManager,
         diagnostics,
-        ImmutableList.of("-Xlint:unchecked", "-Xdiags:verbose"),
+        ImmutableList.of("-Xlint:unchecked", "-Xdiags:verbose", "-XDuseUnsharedTable"),
         null,
         compilationUnits);
     task.setProcessors(processors);
