@@ -29,7 +29,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ExecutionError;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
@@ -38,7 +42,6 @@ import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
@@ -115,6 +118,7 @@ public class Model {
   private static final String PLACEHOLDER_TYPE = "CodegenInternalPlaceholder";
   private static final int TIMEOUT_SECONDS = jvmDebugging() ? Integer.MAX_VALUE : 30;
 
+  private static final Pattern PACKAGE_PATTERN = Pattern.compile("package +([\\w.]+) *;");
   private static final Pattern TYPE_NAME_PATTERN = Pattern.compile(
       "(class|[@]?interface|enum) +(\\w+)");
 
@@ -129,17 +133,19 @@ public class Model {
     }
   }
 
-  private ExecutorService executorService;
+  private static final ListeningExecutorService executorService =
+      MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor(
+          new ThreadFactoryBuilder().setNameFormat("model-compiler").setDaemon(true).build()));
+  private ListenableFuture<?> compilerTask;
   private ProcessingEnvironment processingEnv;
   private SynchronousQueue<GenerationRequest> requestQueue;
 
   /** Starts up the compiler thread and waits for it to return the processing environment. */
   protected void start() {
-    checkState(executorService == null, "Cannot restart a Model");
-    executorService = Executors.newSingleThreadExecutor();
+    checkState(compilerTask == null, "Cannot restart a Model");
     requestQueue = new SynchronousQueue<GenerationRequest>();
     CompilerRunner compilerRunner = new CompilerRunner();
-    executorService.execute(compilerRunner);
+    compilerTask = executorService.submit(compilerRunner);
     processingEnv = compilerRunner.getProcessingEnvironment();
   }
 
@@ -276,10 +282,26 @@ public class Model {
     }
   }
 
-  /** Gracefully shuts down the compiler thread. */
+  /** Gracefully shuts down the compiler thread and release references. */
   public void destroy() {
-    if (executorService != null) {
-      executorService.shutdownNow();
+    if (compilerTask != null) {
+      try {
+        if (!compilerTask.isDone()) {
+          requestQueue.offer(new GenerationRequest(null, null), TIMEOUT_SECONDS, TimeUnit.SECONDS);
+          compilerTask.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (TimeoutException e) {
+        throw new AssertionError(
+            "Compiler task failed to terminate after " + TIMEOUT_SECONDS + " seconds");
+      } catch (ExecutionException e) {
+        throw new AssertionError("Compiler task failed", e.getCause());
+      } finally {
+        processingEnv = null;
+        requestQueue = null;
+        compilerTask = null;
+      }
     }
   }
 
@@ -305,9 +327,11 @@ public class Model {
   }
 
   private static String getTypeName(String code) {
-    Matcher matcher = TYPE_NAME_PATTERN.matcher(code);
-    Preconditions.checkArgument(matcher.find());
-    return matcher.group(2);
+    Matcher packageMatcher = PACKAGE_PATTERN.matcher(code);
+    String pkg = packageMatcher.find() ? (packageMatcher.group(1) + ".") : "";
+    Matcher typeNameMatcher = TYPE_NAME_PATTERN.matcher(code);
+    Preconditions.checkArgument(typeNameMatcher.find());
+    return pkg + typeNameMatcher.group(2);
   }
 
   private static void checkMarkerPresentExactlyOnce(String codeString) {
@@ -334,40 +358,45 @@ public class Model {
 
     @Override
     public void run() {
-      TempJavaFileManager fileManager = new TempJavaFileManager();
-      DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-      try {
-        final JavaFileObject bootstrapType = new SourceBuilder()
-            .addLine("package %s;", PACKAGE)
-            .addLine("@%s", Target.class)
-            .addLine("class %s { }", PLACEHOLDER_TYPE)
-            .build();
+      try (TempJavaFileManager fileManager = new TempJavaFileManager()) {
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+        try {
+          final JavaFileObject bootstrapType = new SourceBuilder()
+              .addLine("package %s;", PACKAGE)
+              .addLine("@%s", Target.class)
+              .addLine("class %s { }", PLACEHOLDER_TYPE)
+              .build();
 
-        CompilationTask task = getSystemJavaCompiler().getTask(
-            null,  // Writer
-            fileManager,
-            diagnostics,
-            ImmutableList.of("-proc:only", "-encoding", "UTF-8"),
-            null,  // Class names
-            ImmutableList.of(bootstrapType));
-        task.setProcessors(ImmutableList.of(new ElementCapturingProcessor()));
-        task.call();
-      } catch (RuntimeException e) {
-        processingEnvFuture.setException(e);
-        elementFuture.setException(e);
-      } finally {
-        if (!processingEnvFuture.isDone()) {
-          processingEnvFuture.setException(new CompilationException(diagnostics.getDiagnostics()));
-        }
-        if (!elementFuture.isDone()) {
-          if (diagnostics.getDiagnostics().isEmpty()) {
-            elementFuture.setException(new IllegalStateException(
-                "Code generation terminated abnormally. Was there no annotated element?"));
-          } else {
-            elementFuture.setException(new CompilationException(diagnostics.getDiagnostics()));
+          CompilationTask task = getSystemJavaCompiler().getTask(
+              null,  // Writer
+              fileManager,
+              diagnostics,
+              ImmutableList.of("-proc:only", "-encoding", "UTF-8"),
+              null,  // Class names
+              ImmutableList.of(bootstrapType));
+          task.setProcessors(ImmutableList.of(new ElementCapturingProcessor()));
+          task.call();
+        } catch (RuntimeException e) {
+          processingEnvFuture.setException(e);
+          elementFuture.setException(e);
+        } finally {
+          if (!processingEnvFuture.isDone()) {
+            processingEnvFuture.setException(
+                new CompilationException(diagnostics.getDiagnostics()));
           }
+          if (!elementFuture.isDone()) {
+            if (diagnostics.getDiagnostics().isEmpty()) {
+              elementFuture.setException(new IllegalStateException(
+                  "Code generation terminated abnormally. Was there no annotated element?"));
+            } else {
+              elementFuture.setException(new CompilationException(diagnostics.getDiagnostics()));
+            }
+          }
+          fileManager.close();
         }
-        fileManager.close();
+      } catch (Throwable t) {
+        processingEnvFuture.setException(t);
+        elementFuture.setException(t);
       }
     }
 
@@ -393,25 +422,26 @@ public class Model {
       @Override
       public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         processingEnvFuture.set(processingEnv);
+        if (roundEnv.errorRaised()) {
+          return false;
+        }
         // Some Java compilers may return spurious extra elements; hence the apparently redundant
         // Sets.filter call, just to be sure.
         Set<? extends Element> elements = Sets.filter(
             roundEnv.getElementsAnnotatedWith(annotationType),
             new HasAnnotationOfType(annotationType));
-        Element element;
-        try {
-          element = getOnlyElement(elements, null);
-        } catch (IllegalArgumentException e) {
+        if (elements.isEmpty()) {
+          elementFuture.setException(new IllegalArgumentException(
+              "No element annotated with @" + annotationType.getName() + " found"));
+        } else if (elements.size() > 1) {
           elementFuture.setException(new IllegalArgumentException(
               "Multiple elements annotated with @" + annotationType.getName() + " found"));
-          return false;
+        } else {
+          elementFuture.set(getOnlyElement(elements));
         }
-        if (element != null) {
-          elementFuture.set(element);
-          String code = fetchCodeForNextRequest();
-          if (code != null) {
-            passSourceCodeToCompiler(code);
-          }
+        String code = fetchCodeForNextRequest();
+        if (code != null) {
+          passSourceCodeToCompiler(code);
         }
         return false;
       }
