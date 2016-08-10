@@ -69,7 +69,7 @@ String jackson(String pkg) {
 }
 
 test {
-  forkEvery = 5
+  forkEvery = 20
 }
 tasks.withType(Test) {
   testLogging {
