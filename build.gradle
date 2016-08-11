@@ -68,12 +68,14 @@ String jackson(String pkg) {
       namespace, pkg, jacksonVersion)
 }
 
-test {
-  forkEvery = 5
-}
-tasks.withType(Test) {
-  testLogging {
-    events "passed", "skipped", "failed"
+if (System.env.CI == 'true') {
+  test {
+    forkEvery = 20
+  }
+  tasks.withType(Test) {
+    testLogging {
+      events "passed", "skipped", "failed"
+    }
   }
 }
 
