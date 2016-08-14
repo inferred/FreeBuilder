@@ -207,10 +207,10 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code builder} is null")
           .addLine(" */")
-          .addLine("public %s %s(%s.Builder builder) {",
+          .addLine("public %s %s(%s builder) {",
               metadata.getBuilder(),
               setter(property),
-              property.getType())
+              builderType)
           .addLine("  return %s(builder.build());", setter(property))
           .addLine("}");
     }
@@ -232,11 +232,11 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
           .addLine(" * @throws NullPointerException if {@code mutator} is null")
           .addLine(" */")
-          .addLine("public %s %s(%s<%s.Builder> mutator) {",
+          .addLine("public %s %s(%s<%s> mutator) {",
               metadata.getBuilder(),
               mutator(property),
               consumer.getQualifiedName(),
-              property.getType())
+              builderType)
           .addLine("  mutator.accept(%s);", property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");

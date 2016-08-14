@@ -797,6 +797,31 @@ public class BuildablePropertyFactoryTest {
   }
 
   @Test
+  public void testGenericChildProperty() {
+    // Raised in issue #183
+    behaviorTester
+        .with(new Processor())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface PIdentityDefinition<T, U> {")
+            .addLine("    class Builder<T, U> extends PIdentityDefinition_Builder<T, U> {}")
+            .addLine("}")
+            .build())
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface PAccess<T, U> {")
+            .addLine("    class Builder<T, U> extends PAccess_Builder<T, U> {}")
+            .addLine("")
+            .addLine("    PIdentityDefinition<T, U> getIdentity();")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
   public void testIssue68_nameCollisionForValue() {
     // mergeFrom(DataType value) must resolve the name collision on "value"
     behaviorTester
