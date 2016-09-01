@@ -69,7 +69,7 @@ String jackson(String pkg) {
 }
 
 test {
-  forkEvery = 5
+  maxHeapSize = "1024m"
 }
 tasks.withType(Test) {
   testLogging {
