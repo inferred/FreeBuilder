@@ -39,6 +39,7 @@ _Automatic generation of the Builder pattern for Java 1.6+_
   - [Troubleshooting Eclipse](#troubleshooting-eclipse)
   - [Online resouces](#online-resouces)
 - [Alternatives](#alternatives)
+  - [Immutables vs `@FreeBuilder`](#immutables-vs-freebuilder)
   - [AutoValue vs `@FreeBuilder`](#autovalue-vs-freebuilder)
   - [Proto vs `@FreeBuilder`](#proto-vs-freebuilder)
 - [Wait, why "free"?](#wait-why-free)
@@ -625,6 +626,31 @@ relevant file to trigger the incremental compiler. (Or run javac.)
 Alternatives
 ------------
 
+### Immutables vs `@FreeBuilder`
+
+<em><strong>Where is Immutables better than `@FreeBuilder`?</strong></em>
+
+[Immutables](https://immutables.github.io/) provides many of the same features as `@FreeBuilder`, plus a whole host more. Some are optional ways to potentially enhance performance, like [derived](https://immutables.github.io/immutable.html#derived-attributes) and [lazy](https://immutables.github.io/immutable.html#lazy-attributes) attributes, [singleton](https://immutables.github.io/immutable.html#singleton-instances) and [interned](https://immutables.github.io/immutable.html#instance-interning) instances, and [hash code precomputation](https://immutables.github.io/immutable.html#precomputed-hashcode). Some are API-changing: [strict builders](https://immutables.github.io/immutable.html#strict-builder) provide a compile-time guarantee that all fields are set (but limit the use of builders as a consequence), while [copy methods](https://immutables.github.io/immutable.html#copy-methods) provide a concise way to clone a value with a single field changed (but require you to reference the generated ImmutableFoo type, not Foo). It provides [advanced binary serialization options](https://immutables.github.io/immutable.html#serialization) and [GSON support](https://immutables.github.io/typeadapters.html). It does not require getters follow the JavaBean naming convention (i.e. starting with `get` or `is`), and lets you easily customize the conventional method prefixes. As Immutables is an active project, this list is likely incomplete.
+
+<em><strong>Where is `@FreeBuilder` better than Immutables?</strong></em>
+
+`@FreeBuilder` provides some features that are missing from, or not the default in, Immutables:
+
+ * [Partials](#partials).
+ * [Builder getter, mapper](#accessor-methods) and [mutation](#collections-and-maps) methods.
+ * [Nested builders](#nested-buildable-types).
+ * Jackson serialization is [clean and easily customised](#jackson).
+ * [GWT support](#gwt)
+ * Proxyable types<sup>1</sup>.
+ * [Traditional OO customization](#defaults-and-constraints)<sup>1</sup>.
+
+The first three points are increasingly useful as your interfaces grow in complexity and usage. Partials greatly reduce the fragility of your tests by only setting the values the code being tested actually uses. Your interfaces are liable accumulate more constraints, like new required fields, or cross-field constraints, and while these will be vitally important across the application as a whole, they create a big maintenance burden when they break unit tests for existing code that does not rely on those constraints. Builder getter, mapper and mutation methods and nested builders empower the modify-rebuild pattern, where code changes a small part of an object without affecting the remainder.
+
+The last two points arise because Immutables is *type-generating*: you write your value type as a prototype, but you always use the generated class. This type is final, meaning you can't proxy it, which unfortunately breaks tools like [Mockito](http://mockito.org/) and its wonderful [smart nulls](http://site.mockito.org/mockito/docs/current/org/mockito/Answers.html#RETURNS_SMART_NULLS). The generated builder is hard to customize as you cannot override methods, explaining why Immutables has so many annotations: for instance, [the `@Value.Check` annotation](https://immutables.github.io/immutable.html#precondition-check-method) is unnecessary in `@FreeBuilder`, as you can simply override the setters or build method to perform field or cross-field validation.
+
+1: But note that you *can* write a Builder subclass in your Foo type, enabling FreeBuilder-style override-based customization, though that is not the default approach recommended in the guide, and you will break all your callers if you change between the two.
+
+Immutables is a very active project, frequently adding new features, and future releases may address some or all of these deficiencies.
 
 ### AutoValue vs `@FreeBuilder`
 
