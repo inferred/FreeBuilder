@@ -337,7 +337,7 @@ public class Model {
 
     @Override
     public void run() {
-      TempJavaFileManager fileManager = new TempJavaFileManager();
+      TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
       DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
       try {
         final JavaFileObject bootstrapType = new SourceBuilder()

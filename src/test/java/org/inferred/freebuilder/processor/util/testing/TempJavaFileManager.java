@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Maps.immutableEntry;
 import static javax.tools.JavaFileObject.Kind.CLASS;
 import static javax.tools.JavaFileObject.Kind.OTHER;
 import static javax.tools.StandardLocation.CLASS_OUTPUT;
@@ -28,16 +27,20 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 
 import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.tools.DiagnosticListener;
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -47,16 +50,55 @@ import javax.tools.StandardJavaFileManager;
 /** Implementation of {@link JavaFileManager} that provides its own temporary output storage. */
 public class TempJavaFileManager implements JavaFileManager {
 
+  public static TempJavaFileManager newTempFileManager(
+      DiagnosticListener<? super JavaFileObject> diagnosticListener,
+      Locale locale,
+      Charset charset) {
+    return new TempJavaFileManager(
+        getSystemJavaCompiler().getStandardFileManager(diagnosticListener, locale, charset));
+  }
+
+  private static class FileKey extends ValueType {
+    static FileKey forClass(Location location, String className, Kind kind) {
+      return new FileKey(location, className.replace('.', '/') + kind.extension);
+    }
+
+    static FileKey forFile(Location location, String packageName, String relativeName) {
+      return new FileKey(location, path(packageName, relativeName));
+    }
+
+    private final Location location;
+    private final String path;
+
+    private FileKey(Location location, String path) {
+      this.location = location;
+      this.path = path;
+    }
+
+    public Location getKey() {
+      return location;
+    }
+
+    public String getValue() {
+      return path;
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("location", location);
+      fields.add("path", path);
+    }
+  }
+
   private static final Set<Kind> KINDS = ImmutableSet.of(Kind.CLASS, Kind.SOURCE);
   private static final Set<Location> LOCATIONS = ImmutableSet.of(SOURCE_OUTPUT, CLASS_OUTPUT);
 
   private final StandardJavaFileManager delegate;
-  private final Map<Map.Entry<Location, String>, InMemoryJavaFile> javaFiles =
-      new LinkedHashMap<>();
-  private final Map<Map.Entry<Location, String>, InMemoryFile> otherFiles = new LinkedHashMap<>();
+  private final Map<FileKey, InMemoryJavaFile> javaFiles = new LinkedHashMap<>();
+  private final Map<FileKey, InMemoryFile> otherFiles = new LinkedHashMap<>();
 
-  public TempJavaFileManager() {
-    delegate = getSystemJavaCompiler().getStandardFileManager(null, null, null);
+  private TempJavaFileManager(StandardJavaFileManager delegate) {
+    this.delegate = delegate;
   }
 
   @Override
@@ -70,7 +112,7 @@ public class TempJavaFileManager implements JavaFileManager {
       return new ClassLoader() {
         @Override
         protected Class<?> findClass(String name) throws ClassNotFoundException {
-          InMemoryJavaFile classFile = javaFiles.get(key(location, name, CLASS));
+          InMemoryJavaFile classFile = javaFiles.get(FileKey.forClass(location, name, CLASS));
           if (classFile == null) {
             throw new ClassNotFoundException();
           }
@@ -133,14 +175,10 @@ public class TempJavaFileManager implements JavaFileManager {
   public JavaFileObject getJavaFileForInput(Location location, String className, Kind kind)
       throws IOException {
     if (LOCATIONS.contains(location)) {
-      return javaFiles.get(key(location, className, kind));
+      return javaFiles.get(FileKey.forClass(location, className, kind));
     } else {
       return delegate.getJavaFileForInput(location, className, kind);
     }
-  }
-
-  private static Map.Entry<Location, String> key(Location location, String className, Kind kind) {
-    return immutableEntry(location, className.replace('.', '/') + kind.extension);
   }
 
   @Override
@@ -150,7 +188,7 @@ public class TempJavaFileManager implements JavaFileManager {
         "Unsupported location %s (must be one of %s)", location, LOCATIONS);
     checkArgument(KINDS.contains(kind), "Unsupported kind %s (must be one of %s)", kind, KINDS);
     return javaFiles.computeIfAbsent(
-        key(location, className, kind),
+        FileKey.forClass(location, className, kind),
         k -> new InMemoryJavaFile(qualifiedName(className), kind));
   }
 
@@ -170,16 +208,11 @@ public class TempJavaFileManager implements JavaFileManager {
       throws IOException {
     if (LOCATIONS.contains(location)) {
       Kind kind = kindFromExtension(relativeName);
-      Map.Entry<Location, String> key = key(location, packageName, relativeName);
+      FileKey key = FileKey.forFile(location, packageName, relativeName);
       return (KINDS.contains(kind) ? javaFiles : otherFiles).get(key);
     } else {
       return delegate.getFileForInput(location, packageName, relativeName);
     }
-  }
-
-  private static Map.Entry<Location, String> key(
-      Location location, String packageName, String relativeName) {
-    return immutableEntry(location, path(packageName, relativeName));
   }
 
   private static String path(String packageName, String relativeName) {
@@ -201,7 +234,7 @@ public class TempJavaFileManager implements JavaFileManager {
     checkArgument(LOCATIONS.contains(location),
         "Unsupported location %s (must be one of %s)", location, LOCATIONS);
     Kind kind = kindFromExtension(relativeName);
-    Map.Entry<Location, String> key = key(location, packageName, relativeName);
+    FileKey key = FileKey.forFile(location, packageName, relativeName);
     if (KINDS.contains(kind)) {
       return javaFiles.computeIfAbsent(key, k -> {
         QualifiedName qualifiedName = qualifiedName(relativeName

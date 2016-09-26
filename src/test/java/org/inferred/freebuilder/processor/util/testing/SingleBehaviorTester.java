@@ -81,7 +81,7 @@ class SingleBehaviorTester implements BehaviorTester {
 
   @Override
   public CompilationSubject compiles() {
-    TempJavaFileManager fileManager = new TempJavaFileManager();
+    TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
     List<Diagnostic<? extends JavaFileObject>> diagnostics =
         compile(fileManager, compilationUnits, processors);
     final ClassLoader classLoader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
