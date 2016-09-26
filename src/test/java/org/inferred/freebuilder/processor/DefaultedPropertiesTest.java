@@ -25,7 +25,6 @@ import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.theories.DataPoint;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -47,8 +46,7 @@ public class DefaultedPropertiesTest {
   /**
    * Test that defaults work correctly when we can detect them at compile-time (javac only).
    */
-  @DataPoint
-  public static final JavaFileObject OPTIMIZED_BUILDER = new SourceBuilder()
+  private static final JavaFileObject OPTIMIZED_BUILDER = new SourceBuilder()
       .named("Optimized")
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
@@ -68,8 +66,7 @@ public class DefaultedPropertiesTest {
   /**
    * Test that defaults work correctly when we cannot detect them at compile-time.
    */
-  @DataPoint
-  public static final JavaFileObject SLOW_BUILDER = new SourceBuilder()
+  private static final JavaFileObject SLOW_BUILDER = new SourceBuilder()
       .named("Slow")
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
