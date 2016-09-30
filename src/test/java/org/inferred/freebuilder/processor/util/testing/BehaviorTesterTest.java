@@ -37,11 +37,11 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 
-/** Unit tests for {@link BehaviorTester}. */
+/** Unit tests for {@link SingleBehaviorTester}. */
 @RunWith(JUnit4.class)
 public class BehaviorTesterTest {
 
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  private final BehaviorTester behaviorTester = BehaviorTester.create();
 
   @Test
   public void simpleExample() {

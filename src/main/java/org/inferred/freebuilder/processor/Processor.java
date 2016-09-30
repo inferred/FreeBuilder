@@ -110,4 +110,14 @@ public class Processor extends AbstractProcessor {
     }
     return false;
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    return (obj instanceof Processor);
+  }
+
+  @Override
+  public int hashCode() {
+    return Processor.class.hashCode();
+  }
 }

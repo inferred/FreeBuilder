@@ -55,7 +55,7 @@ public class TestBuilderTest {
   public static class InnerClass { }
 
   @Test
-  public void test2_InnerClassNames() throws IOException {
+  public void test2_InnerClassNames() {
     String result = new TestBuilder()
         .addLine("%s", InnerClass.class)
         .build()

@@ -22,11 +22,13 @@ import com.google.common.truth.Truth;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Objects;
+
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 
 /**
- * Simple builder API for a test method, suitable for use in {@link BehaviorTester}. See the
+ * Simple builder API for a test method, suitable for use in {@link SingleBehaviorTester}. See the
  * JavaDoc on that class for an example.
  *
  * <p>Automatically imports {@link Assert}.* and {@link Truth#assertThat}.
@@ -146,10 +148,32 @@ public class TestBuilder {
       this.testCode = testCode;
     }
 
-    public SimpleJavaFileObject selectName(Multiset<String> seenNames) {
+    TestFile selectName(Multiset<String> seenNames) {
       long id = seenNames.add(rootClassName, 1) + 1;
       String name = rootClassName + (id == 1 ? "" : "__" + id);
       return new TestFile(name, methodName, imports, testCode);
+    }
+
+    @Override
+    public String toString() {
+      return rootClassName + "." + methodName;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(rootClassName, methodName, imports, testCode);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof TestSource)) {
+        return false;
+      }
+      TestSource other = (TestSource) obj;
+      return Objects.equals(rootClassName, other.rootClassName)
+          && Objects.equals(methodName, other.methodName)
+          && Objects.equals(imports, other.imports)
+          && Objects.equals(testCode, other.testCode);
     }
   }
 

@@ -18,6 +18,8 @@ package org.inferred.freebuilder.processor;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -25,12 +27,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import javax.annotation.Nullable;
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(BehaviorTestRunner.class)
 public class NullablePropertyTest {
 
   private static final JavaFileObject TWO_NULLABLE_PROPERTIES_TYPE = new SourceBuilder()
@@ -74,7 +75,7 @@ public class NullablePropertyTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void testConstructor_defaultAbsent() {

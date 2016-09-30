@@ -115,6 +115,7 @@ public class Model {
   private static final String PLACEHOLDER_TYPE = "CodegenInternalPlaceholder";
   private static final int TIMEOUT_SECONDS = jvmDebugging() ? Integer.MAX_VALUE : 30;
 
+  private static final Pattern PACKAGE_PATTERN = Pattern.compile("package +([\\w.]+) *;");
   private static final Pattern TYPE_NAME_PATTERN = Pattern.compile(
       "(class|[@]?interface|enum) +(\\w+)");
 
@@ -305,9 +306,11 @@ public class Model {
   }
 
   private static String getTypeName(String code) {
-    Matcher matcher = TYPE_NAME_PATTERN.matcher(code);
-    Preconditions.checkArgument(matcher.find());
-    return matcher.group(2);
+    Matcher packageMatcher = PACKAGE_PATTERN.matcher(code);
+    String pkg = packageMatcher.find() ? (packageMatcher.group(1) + ".") : "";
+    Matcher typeNameMatcher = TYPE_NAME_PATTERN.matcher(code);
+    Preconditions.checkArgument(typeNameMatcher.find());
+    return pkg + typeNameMatcher.group(2);
   }
 
   private static void checkMarkerPresentExactlyOnce(String codeString) {
@@ -334,7 +337,7 @@ public class Model {
 
     @Override
     public void run() {
-      TempJavaFileManager fileManager = new TempJavaFileManager();
+      TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
       DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
       try {
         final JavaFileObject bootstrapType = new SourceBuilder()

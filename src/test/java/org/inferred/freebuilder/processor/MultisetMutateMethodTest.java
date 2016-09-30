@@ -21,6 +21,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -28,11 +30,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(JUnit4.class)
+@RunWith(BehaviorTestRunner.class)
 public class MultisetMutateMethodTest {
 
   private static final JavaFileObject UNCHECKED_PROPERTY = new SourceBuilder()
@@ -76,7 +77,7 @@ public class MultisetMutateMethodTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final BehaviorTester behaviorTester = new BehaviorTester();
+  @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void mutateAndAddModifiesUnderlyingProperty_whenUnchecked() {
