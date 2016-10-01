@@ -41,6 +41,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedList;
 import org.inferred.freebuilder.processor.util.Block;
+import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -203,9 +204,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("    %1$s.ensureCapacity(%1$s.size() + ((%2$s<?>) elements).size());",
               property.getName(), Collection.class)
           .addLine("  }")
-          .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("    %s(element);", addMethod(property))
-          .addLine("  }")
+          .add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
