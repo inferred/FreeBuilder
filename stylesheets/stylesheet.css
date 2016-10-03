@@ -5,15 +5,246 @@ body {
   margin: 0;
   padding: 0;
   font-family: Lato, sans-serif;
-  font-weight: 300;
+  font-weight: 400;
   font-size: 16px;
   line-height: 1.3;
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 599px) {
   body {
     font-size: 12px;
   }
+}
+
+.quickstart figure, .quickstart p {
+  display: block;
+  margin: 16px 1em;
+}
+
+p {
+  margin: 16px 1em;
+}
+
+figure {
+  display: inline-block;
+  margin: 1em;
+}
+
+figure pre {
+  display: inline-block;
+  position: relative;
+  width: 41.5em;
+  overflow: hidden;
+  margin: 0;
+}
+
+pre a, pre a:visited {
+  color: black;
+}
+
+tipped, tipped-right {
+  position: relative;
+}
+pre:hover tipped, pre:hover tipped-right {
+  border-bottom: dashed purple 1px;
+}
+tooltip {
+  position: absolute;
+  top: 1.4em;
+  box-shadow: 5px 5px 3px rgba(0,0,0,0.25);
+  padding: 2px 6px;
+  display: none;
+  background-color: yellow;
+  font-family: Lato, sans-serif;
+  font-weight: 400;
+  z-index: 1;
+}
+tipped:hover tooltip, tipped-right:hover tooltip {
+  display: block;
+}
+tipped tooltip {
+  left: 0em;
+}
+tipped-right tooltip {
+  right: 0em;
+}
+
+.features pre {
+  height: 20em;
+}
+
+@media screen and (max-width: 599px) {
+  figure pre img {
+    position: absolute;
+    top: -6.5em;
+  }
+}
+
+@keyframes scrolling {
+  0%   { opacity: 0; top: 0px; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { opacity: 0; top: -105em; }
+}
+
+@keyframes scrolling-large {
+  0%   { opacity: 0; top: 0; }
+  2%   { opacity: 1; }
+  23%  { opacity: 1; }
+  25%  { opacity: 0; top: -230em; }
+  25.1%{ top: -270em; }
+  27%  { opacity: 1; }
+  48%  { opacity: 1; }
+  50%  { opacity: 0; top: -480em; }
+  50.1%{ top: -520em; }
+  52%  { opacity: 1; }
+  73%  { opacity: 1; }
+  75%  { opacity: 0; top: -730em; }
+  75.1%{ top: -770em; }
+  77%  { opacity: 1; }
+  98%  { opacity: 1; }
+  100% { opacity: 0; top: -1000em; }
+}
+
+animate-scrolling,animate-scrolling-large {
+  display: inline-block;
+  font-size: smaller;
+  position: absolute;
+  top: 0px;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+animate-scrolling {
+  animation-name: scrolling;
+  animation-duration: 5s;
+}
+animate-scrolling-large {
+  animation-name: scrolling-large;
+  animation-duration: 40s;
+  left: -15em;
+}
+
+tooltip, animate-scrolling, animate-scrolling-large {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+@keyframes typing-1 {
+  0%   { max-width: 0; border-right-color: black; }
+  4.5% { border-right-color: black; }
+  5%   { border-right-color: white; }
+  9.5% { border-right-color: white; }
+  10%  { max-width: 0; border-right-color: black; }
+  14.5%{ border-right-color: black; }
+  15%  { border-right-color: white; }
+  19.5%{ border-right-color: white; }
+  20%  { border-right-color: black; }
+  24.5%{ border-right-color: black; }
+  25%  { border-right-color: white; }
+  27%  { max-width: 550px; }
+  100% { max-width: 550px; border-right-color: white; }
+}
+
+@keyframes typing-2 {
+  0%   { max-width: 0; border-right-color: white; }
+  29.5%{ border-right-color: white; }
+  30%  { border-right-color: black; }
+  34.5%{ border-right-color: black; }
+  35%  { border-right-color: white; max-width: 0; }
+  39.5%{ border-right-color: white; }
+  40%  { border-right-color: black; }
+  44.5%{ border-right-color: black; }
+  45%  { border-right-color: white; }
+  49.5%{ border-right-color: white; }
+  50%  { border-right-color: black; }
+  52%  { max-width: 550px; }
+  54.5%{ border-right-color: black; }
+  55%  { border-right-color: white; }
+  100% { max-width: 550px; border-right-color: white; }
+}
+
+@keyframes typing-3 {
+  0%   { max-width: 0; border-right-color: white; }
+  59.5%{ border-right-color: white; }
+  60%  { border-right-color: black; max-width: 0; }
+  64.5%{ border-right-color: black; }
+  65%  { border-right-color: white; }
+  69.5%{ border-right-color: white; }
+  70%  { border-right-color: black; }
+  74.5%{ border-right-color: black; }
+  75%  { border-right-color: white; }
+  77%  { max-width: 550px; }
+  79.5%{ border-right-color: white; }
+  80%  { border-right-color: black; }
+  84.5%{ border-right-color: black; }
+  85%  { border-right-color: white; }
+  100% { max-width: 550px; border-right-color: white; }
+}
+
+animate-add-1,animate-add-2,animate-add-3 {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  vertical-align: bottom;
+  overflow: hidden;
+  border-right: 2px solid white;
+  animation-duration: 10s;
+  animation-iteration-count: infinite;
+  animation-timing-function: steps(150);
+}
+animate-add-1 {
+  animation-name: typing-1;
+}
+animate-add-2 {
+  animation-name: typing-2;
+}
+animate-add-3 {
+  animation-name: typing-3;
+}
+
+pre:hover animate-add-1,
+pre:hover animate-add-2,
+pre:hover animate-add-3 {
+  animation: none;
+  overflow: visible;
+}
+
+@keyframes newline-2 {
+  0%   { max-height: 0; }
+  29.5%{ max-height: 0; }
+  30%  { max-height: 3em; }
+  100% { max-height: 3em; }
+}
+
+@keyframes newline-3 {
+  0%   { max-height: 0; }
+  59.5%{ max-height: 0; }
+  60%  { max-height: 3em; }
+  100% { max-height: 3em; }
+}
+
+animate-add-2-line,animate-add-3-line {
+  display: block;
+  overflow: hidden;
+  animation-duration: 10s;
+  animation-iteration-count: infinite;
+  animation-timing-function: steps(150);
+}
+animate-add-2-line {
+  animation-name: newline-2;
+}
+animate-add-3-line {
+  animation-name: newline-3;
+}
+
+pre:hover animate-add-2-line,
+pre:hover animate-add-3-line {
+  animation: none;
+  overflow: visible;
 }
 
 .container {
@@ -157,12 +388,14 @@ blockquote cite {
   margin-top: 0.336em;
 }
 
+pre, code {
+    font-size: 81.25%;
+    font-weight: 300;
+    font-family: "Source Code Pro", monospace;
+}
 pre {
     border: 1px dashed rgba(0, 0, 0, 0.15);
     padding: 0.3846em 0.7692em;
-    font-family: "Source Code Pro", monospace;
-    font-size: 81.25%;
-    font-weight: 300;
     line-height: 1.4;
     border-radius: 2px;
     -moz-border-radius: 2px;
@@ -171,15 +404,21 @@ pre {
     overflow: auto;
     overflow-y: hidden;
 }
-.keyword {
+java-keyword,.keyword {
   font-family: "Source Code Pro", monospace;
   font-weight: 500;
 }
-.static {
+java-static,.static {
   font-style: italic;
 }
-.comment {
+java-comment,.comment {
   color: #46A94B;
+}
+java-field,.field {
+  color: #7e1e9c;
+}
+java-string,.string {
+  color: #929591;
 }
 
 /* Buttons

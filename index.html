@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
-    <link href='http://fonts.googleapis.com/css?family=Lato:300,700|Source+Code+Pro:300,500' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,700|Source+Code+Pro:300,500' rel='stylesheet' type='text/css'>
 
     <title>@FreeBuilder</title>
   </head>
@@ -18,375 +18,1153 @@
       <div class="container">
         <h1>@Free<em>Builder</em></h1>
         <h2>Automatic generation of the Builder pattern for Java 1.6+</h2>
-
-        <section id="downloads">
-          <a href="http://mvnrepository.com/artifact/org.inferred/freebuilder"><img src="https://maven-badges.herokuapp.com/maven-central/org.inferred/freebuilder/badge.svg?style=plastic" width="131" height="18" /></a>
-          <a href="https://github.com/google/FreeBuilder" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
-        </section>
       </div>
     </header>
 
-    <div class="container">
-      <section id="main_content">
+    <body>
 
-<blockquote>
-The Builder pattern is a good choice when designing classes whose constructors
-or static factories would have more than a handful of parameters.
-<cite>— <em>Effective Java, Second Edition</em>, page 39</cite>
-</blockquote>
+      <h3>Quick Start</h3>
 
-<ol id="toc">
-<li> <a href="#background">Background</a>
-<li> <a href="#how-to-use-freebuilder">How to use <code>@FreeBuilder</code></a>
-<ol>
-<li> <a href="#quick-start">Quick start</a>
-<li> <a href="#what-you-get">What you get</a>
-<li> <a href="#defaults-and-constraints">Defaults and constraints</a>
-<li> <a href="#optional-values">Optional values</a>
-<li> <a href="#collections-and-maps">Collections and Maps</a>
-<li> <a href="#nested-buildable-types">Nested buildable types</a>
-<li> <a href="#builder-construction">Builder construction</a>
-<li> <a href="#partials">Partials</a>
-<li> <a href="#ides">IDEs</a>
-<li> <a href="#gwt">GWT</a>
-</ol>
-<li> <a href="#alternatives">Alternatives</a>
-<ol>
-<li> <a href="#autovalue-vs-freebuilder">AutoValue vs <code>@FreeBuilder</code></a>
-<li> <a href="#proto-vs-freebuilder">Proto vs <code>@FreeBuilder</code></a>
-</ol>
-<li> <a href="#why-free">Wait, why "free"?</a>
-<li> <a href="#license">License</a>
-</ol>
+      <div class="quickstart">
+        <figure>
+          <figcaption>
+            Want a Builder API without the hassle? In your
+            <select id="build" onchange="var elements = document.getElementsByClassName(this.id); for (var i = 0; i < elements.length; i++) { elements[i].style.display = 'none'; } elements = document.getElementsByClassName(this.value); for (var i = 0; i < elements.length; i++) { elements[i].style.display = null; }">
+              <option value="gradle">build.gradle</option>
+              <option value="maven">pom.xml</option>
+              <option value="javac">javac</option>
+              <option value="eclipse">Eclipse</option>
+              <option value="idea">IntelliJ</option>
+            </select>
+            <span class="build gradle">
+              file, add:
+            </span>
+            <span class="build maven" style="display: none">
+              file, add:
+            </span>
+            <span class="build javac" style="display: none">
+              invocation, add
+              <a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.inferred&a=freebuilder&v=RELEASE">the latest FreeBuilder JAR</a>
+              to your list of classpaths (or processorpaths, if you supply any).
+              <br>
+            </span>
+            <span class="build eclipse" style="display: none">
+              project, add
+              <a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.inferred&a=freebuilder&v=RELEASE">the latest FreeBuilder JAR</a>.
+              Select it, right-click and choose <b>Build path > Add to Build path</b>.
+              In your project properties dialog, go to <b>Java Compiler > Annotation Processing</b>
+              and ensure <b>Enable annotation processing</b> is checked. Finally, go to
+              <b>Java Compiler > Annotation Processing > Factory Path</b>, select
+              <b>Add JARs</b>, and select the FreeBuilder JAR.
+              <br>
+            </span>
+            <span class="build idea" style="display: none">
+              project, add
+              <a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=org.inferred&a=freebuilder&v=RELEASE">the latest FreeBuilder JAR</a>,
+              right-click it and select <b>Use as Project Library</b>. In your Settings,
+              go to <b>Build, Execution, Deployment > Compiler > Annotation Processors</b>
+              and ensure <b>Enable annotation processors</b> is selected, and
+              <b>Store generated sources relative to</b> is set to
+              <b>Module content root</b>. (If you have specified a processor path, ensure
+              you add the new JAR to it. Similarly, if you choose to specify processors
+              explicitly, add
+              <code>org.inferred.freebuilder.processor.Processor</code>
+              to the list.)
+              <br><br>
+              Run <b>Build > Rebuild Project</b>, then right-click the new
+              <code>generated</code> folder (this may have a different name if you have
+              changed the <b>Production sources directory</b> setting) and select
+              <b>Mark Directory As > Generated Sources Root</b>.
+              <br>
+            </span>
+          </figcaption>
+          <pre class="build gradle">
+dependencies {
+  compile 'org.inferred:freebuilder:<version>&lt;current version&gt;</version>'
+}</pre>
+          <pre class="build maven" style="display: none">
+&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.inferred&lt;/groupId&gt;
+    &lt;artifactId&gt;freebuilder&lt;/artifactId&gt;
+    &lt;version&gt;<version>[current version]</version>&lt;/version&gt;
+    &lt;optional&gt;true&lt;/optional&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;</pre>
+        </figure>
+        <figure>
+            <figcaption>Now just annotate, extend and go!</figcaption>
+            <pre>
+<java-keyword>import</java-keyword> org.inferred.freebuilder.FreeBuilder;
 
-<h2 id="background">Background</h2>
+<animate-add-1>@FreeBuilder</animate-add-1>
+<java-keyword>public</java-keyword> <tipped><java-keyword>interface</java-keyword><tooltip>You can also use an abstract class, if you want to add concrete methods.</tooltip></tipped> Person {
+  <java-comment>/** Returns the person's full (English) name. */</java-comment>
+  String <tipped>getName<tooltip>Getters must follow JavaBean conventions, i.e. start with get/is.</tooltip></tipped>();
+  <java-comment>/** Returns the person's age in years, rounded down. */</java-comment>
+  <java-keyword>int</java-keyword> getAge();
 
-<p>Implementing the <a href="http://en.wikipedia.org/wiki/Builder_pattern">Builder pattern</a>
-in Java is tedious, error-prone and repetitive. Who hasn't seen a ten-argument
-constructor, thought cross thoughts about the previous maintainers of the
-class, then added "just one more"? Even a simple four-field class requires 39
-lines of code for the most basic builder API, or 72 lines if you don't use a
-utility like <a href="https://github.com/google/auto/tree/master/value">AutoValue</a> to generate the value boilerplate.</p>
+  <java-keyword>class</java-keyword> Builder <animate-add-2><java-keyword>extends</java-keyword> <tipped>Person_Builder<tooltip>The Person_Builder class is generated by FreeBuilder.</tooltip></tipped> {}</animate-add-2>
+}
 
-<p><code>@FreeBuilder</code> produces all the boilerplate for you, as well as free extras like
-JavaDoc, getter methods, <a href="#collections-and-maps">collections support</a>,
-<a href="#nested-buildable-types">nested builders</a>, and <a href="#partials">partial values</a>
-(used in testing), which are highly useful, but would very rarely justify
-their creation and maintenance burden in hand-crafted code. (We also reserve
-the right to add more awesome methods in future!)</p>
+Person bob = <java-keyword>new</java-keyword> Person.Builder()<animate-add-3>.setName(<java-string>"Bob"</java-string>).setAge(23).build();</animate-add-3></pre>
+        </figure>
+        <p>For a complete feature list, extensive README, and issue tracker, please see <a href="https://github.com/google/FreeBuilder">the project page on GitHub</a>.</p>
+      </div>
 
-<blockquote>
-[The Builder pattern] is more verbose…so should only be used if there are
-enough parameters, say, four or more. But keep in mind that you may want to add
-parameters in the future. If you start out with constructors or static
-factories, and add a builder when the class evolves to the point where the
-number of parameters starts to get out of hand, the obsolete constructors or
-static factories will stick out like a sore thumb. Therefore, it's often better
-to start with a builder in the first place.
-<cite>— <em>Effective Java, Second Edition</em>, page 39</cite>
-</blockquote>
+      <h3>Features</h3>
 
-<h2 id="how-to-use-freebuilder">How to use <code>@FreeBuilder</code></h2>
+      <div class="features">
+      <p>FreeBuilder is packed with things like...</p>
 
-<h3 id="quick-start">Quick start</h3>
-<p>Add the <code>@FreeBuilder</code> artifact as an optional dependency to your Maven POM:</p>
+      <figure>
+          <figcaption>Industry-class generated API</figcaption>
+          <pre><animate-scrolling><java-comment>/**
+ * Sets the value to be returned by {@link Person#getName()}.
+ *
+ * @return this {@code Builder} object
+ * @throws NullPointerException if {@code name} is null
+ */</java-comment>
+<java-keyword>public</java-keyword> Person.Builder setName(String name) {
+  <java-keyword>this</java-keyword>.<java-field>name</java-field> = Preconditions.<java-static>checkNotNull</java-static>(name);
+  <java-field>_unsetProperties</java-field>.remove(Person_Builder.Property.<java-static><java-field>NAME</java-field></java-static>);
+  <java-keyword>return</java-keyword> (Person.Builder) <java-keyword>this</java-keyword>;
+}
 
-<div class="highlight highlight-xml"><pre>&lt;<span class="xml-tag">dependencies</span>&gt;
-  &lt;<span class="xml-tag">dependency</span>&gt;
-    &lt;<span class="xml-tag">groupId</span>&gt;org.inferred&lt;/<span class="xml-tag">groupId</span>&gt;
-    &lt;<span class="xml-tag">artifactId</span>&gt;freebuilder&lt;/<span class="xml-tag">artifactId</span>&gt;
-    &lt;<span class="xml-tag">version</span>&gt;1.6&lt;/<span class="xml-tag">version</span>&gt;
-    &lt;<span class="xml-tag">optional</span>&gt;true&lt;/<span class="xml-tag">optional</span>&gt;
-  &lt;/<span class="xml-tag">dependency</span>&gt;
-&lt;/<span class="xml-tag">dependencies</span>&gt;</pre></div>
+<java-comment>/**
+ * Replaces the value to be returned by {@link Person#getName()}
+ * by applying {@code mapper} to it and using the result.
+ *
+ * @return this {@code Builder} object
+ * @throws NullPointerException if {@code mapper} is null or returns null
+ * @throws IllegalStateException if the field has not been set
+ */</java-comment>
+<java-keyword>public</java-keyword> Person.Builder mapName(UnaryOperator&lt;String&gt; mapper) {
+  Preconditions.<java-static>checkNotNull</java-static>(mapper);
+  <java-keyword>return</java-keyword> setName(mapper.apply(getName()));
+}
 
-<p>Create your value type (e.g. <code>Person</code>) as an interface or abstract class,
-containing an abstract accessor method for each desired field. This accessor
-must be non-void, parameterless, and start with 'get' or 'is'. Add the
-<code>@FreeBuilder</code> annotation to your class, and it will automatically generate an
-implementing class and a package-visible builder API (<code>Person_Builder</code>), which
-you must subclass. For instance:</p>
+<java-comment>/**
+ * Returns the value that will be returned by {@link Person#getName()}.
+ *
+ * @throws IllegalStateException if the field has not been set
+ */</java-comment>
+<java-keyword>public</java-keyword> String getName() {
+  Preconditions.<java-static>checkState</java-static>(
+      !<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.<java-static></java-field>NAME<java-field></java-static>), <java-string>"name not set"</java-string>);
+  <java-keyword>return</java-keyword> <java-field>name</java-field>;
+}
 
-<div class="highlight highlight-java"><pre><span class="keyword">import</span> org.inferred.freebuilder.FreeBuilder;
-
-@FreeBuilder
-<span class="keyword">public</span> <span class="keyword">interface</span> Person {
-  <span class="comment">/** Returns the person's full (English) name. */</span>
-  String getName();
-  <span class="comment">/** Returns the person's age in years, rounded down. */</span>
-  <span class="keyword">int</span> getAge();
-  <span class="comment">/** Builder of {@link Person} instances. */</span>
-  <span class="keyword">class</span> Builder <span class="keyword">extends</span> Person_Builder { }
-}</pre></div>
-
-<p>If you are writing an abstract class, or using Java 8, you may wish to hide the
-builder's constructor and manually provide instead a static <code>builder()</code> method
-on the value type (though <em>Effective Java</em> does not do this).</p>
-
-<h3 id="what-you-get">What you get</h3>
-
-<p>If you write the Person interface shown above, you get:</p>
-
-<ul>
-<li>A builder class with:
-
-<ul>
-<li>a no-args constructor</li>
-<li>JavaDoc</li>
-<li>getters (throwing <code>IllegalStateException</code> for unset fields)</li>
-<li>setters</li>
-<li>
-<code>mergeFrom</code> methods to copy data from existing values or builders</li>
-<li>a <code>build</code> method that verifies all fields have been set
-
-<ul>
-<li><a href="#defaults-and-constraints">see below for default values and constraint checking</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>An implementation of <code>Person</code> with:
-
-<ul>
-<li><code>toString</code></li>
-<li>
-<code>equals</code> and <code>hashCode</code>
-</li>
-</ul>
-</li>
-<li>A <a href="#partials">partial</a> implementation of <code>Person</code> for unit tests with:
-
-<ul>
-<li>
-<code>UnsupportedOperationException</code>-throwing getters for unset fields</li>
-<li><code>toString</code></li>
-<li>
-<code>equals</code> and <code>hashCode</code>
-</li>
-</ul>
-</li>
-</ul>
-
-<div class="highlight highlight-java"><pre>Person person = <span class="keyword">new</span> Person.Builder()
-    .setName(<span class="constant">"Phil"</span>)
-    .setAge(31)
-    .build();
-System.<span class="static">out</span>.println(person);  <span class="comment">// Person{name=Phil, age=31}</span></pre></div>
-
-<h3 id="defaults-and-constraints">Defaults and constraints</h3>
-
-<p>We use method overrides to add customization like default values and constraint
-checks. For instance:</p>
-
-<div class="highlight highlight-java"><pre>@FreeBuilder
-<span class="keyword">public</span> <span class="keyword">interface</span> Person {
-  <span class="comment">/** Returns the person's full (English) name. */</span>
-  String getName();
-  <span class="comment">/** Returns the person's age in years, rounded down. */</span>
-  <span class="keyword">int</span> getAge();
-  <span class="comment">/** Returns a human-readable description of the person. */</span>
-  String getDescription();
-  <span class="comment">/** Builder class for {@link Person}. */</span>
-  <span class="keyword">class</span> Builder <span class="keyword">extends</span> Person_Builder {
-    <span class="keyword">public</span> Builder() {
-      <span class="comment">// Set defaults in the builder constructor.</span>
-      setDescription(<span class="constant">"Indescribable"</span>);
-    }
-    @Override <span class="keyword">public</span> Builder setAge(<span class="keyword">int</span> age) {
-      <span class="comment">// Check single-field (argument) constraints in the setter methods.</span>
-      <span class="static">checkArgument</span>(age &gt;= 18);
-      <span class="keyword">return</span> <span class="keyword">super</span>.setAge(age);
-    }
-    @Override <span class="keyword">public</span> Person build() {
-      <span class="comment">// Check cross-field (state) constraints in the build method.</span>
-      Person person = <span class="keyword">super</span>.build();
-      <span class="static">checkState</span>(!person.getDescription().contains(person.getName()));
-      <span class="keyword">return</span> person;
-    }
+<java-comment>/**
+ * Sets all property values using the given {@code Person} as a template.
+ */</java-comment>
+<java-keyword>public</java-keyword> Person.Builder mergeFrom(Person value) {
+  Person_Builder _defaults = <java-keyword>new</java-keyword> Person.Builder();
+  <java-keyword>if</java-keyword> (_defaults.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.NAME)
+      || !value.getName().equals(_defaults.getName())) {
+    setName(value.getName());
   }
-}</pre></div>
+  <java-keyword>if</java-keyword> (_defaults.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.AGE)
+      || value.getAge() != _defaults.getAge()) {
+    setAge(value.getAge());
+  }
+  <java-keyword>return</java-keyword> (Person.Builder) <java-keyword>this</java-keyword>;
+}
 
-<h3 id="optional-values">Optional values</h3>
+<java-comment>/**
+ * Copies values from the given {@code Builder}.
+ * Does not affect any properties not set on the input.
+ */</java-comment>
+<java-keyword>public</java-keyword> Person.Builder mergeFrom(Person.Builder template) {
+  <java-comment>// Upcast to access private fields; otherwise, oddly, we get an access violation.</java-comment>
+  Person_Builder base = (Person_Builder) template;
+  Person_Builder _defaults = <java-keyword>new</java-keyword> Person.Builder();
+  <java-keyword>if</java-keyword> (!base.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.NAME)
+      && (_defaults.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.NAME)
+          || !template.getName().equals(_defaults.getName()))) {
+    setName(template.getName());
+  }
+  <java-keyword>if</java-keyword> (!base.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.AGE)
+      && (_defaults.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.AGE)
+          || template.getAge() != _defaults.getAge())) {
+    setAge(template.getAge());
+  }
+  <java-keyword>return</java-keyword> (Person.Builder) <java-keyword>this</java-keyword>;
+}
 
-<p>If a property is optional—that is, has no reasonable default—then
-use <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/base/Optional.html">the Optional type</a>. It will default to Optional.absent(), and the Builder
-will gain additional convenience setter methods.</p>
+<java-comment>/**
+ * Resets the state of this builder.
+ */</java-comment>
+<java-keyword>public</java-keyword> Person.Builder clear() {
+  Person_Builder _defaults = <java-keyword>new</java-keyword> Person.Builder();
+  <java-field>name</java-field> = _defaults.<java-field>name</java-field>;
+  <java-field>age</java-field> = _defaults.<java-field>age</java-field>;
+  <java-field>_unsetProperties</java-field>.clear();
+  <java-field>_unsetProperties</java-field>.addAll(_defaults.<java-field>_unsetProperties</java-field>);
+  <java-keyword>return</java-keyword> (Person.Builder) <java-keyword>this</java-keyword>;
+}
 
-<div class="highlight highlight-java"><pre>  <span class="comment">/** Returns an optional human-readable description of the person. */</span>
-  Optional&lt;String&gt; getDescription();</pre></div>
+<java-comment>/**
+ * Returns a newly-created {@link Person} based on the contents of the {@code Builder}.
+ *
+ * @throws IllegalStateException if any field has not been set
+ */</java-comment>
+<java-keyword>public</java-keyword> Person build() {
+  Preconditions.checkState(<java-field>_unsetProperties</java-field>.isEmpty(), <java-string>"Not set: %s"</java-string>, <java-field>_unsetProperties</java-field>);
+  <java-keyword>return</java-keyword> <java-keyword>new</java-keyword> Person_Builder.Value(<java-keyword>this</java-keyword>);
+}
+</animate-scrolling></pre>
+      </figure>
+      <figure>
+          <figcaption>Collections support</figcaption>
+          <pre>
+@FreeBuilder
+<java-keyword>interface</java-keyword> TopOfThePops {
+  <java-comment>/** Artists who've released Number 1 hits. */</java-comment>
+  <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Set.html">Set</a>&lt;String&gt; getArtists();
+  <java-comment>/** Best album each year. */</java-comment>
+  <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html">Map</a>&lt;Integer, String&gt; getAlbums();
 
-<p>Prefer to use explicit defaults where meaningful, as it avoids the need for
-edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
-the empty string, as it forces the user to think about those edge cases.
-<a href="https://github.com/FreeBuilder" class="user-mention">@FreeBuilder</a> does <strong>not</strong> support nulls and will throw a
-NullPointerException if one is passed to a setter.</p>
+  <java-keyword>class</java-keyword> Builder <java-keyword>extends</java-keyword> TopOfThePops_Builder {}
+}
 
-<h3 id="collections-and-maps">Collections and Maps</h3>
+<java-keyword>new</java-keyword> TopOfThePops.Builder()
+    <animate-add-1>.addArtists(<java-string>"Michael Jackson"</java-string>, <java-string>"Billy Bragg"</java-string>)</animate-add-1>
+    <animate-add-2>.putAllAlbums(albumsByYear)</animate-add-2>
+    <animate-add-3>.build();</animate-add-3></pre>
+      </figure>
+      <figure>
+          <figcaption><a href="https://github.com/google/guava/wiki/NewCollectionTypesExplained">Guava collections</a> support</figcaption>
+          <pre>
+@FreeBuilder
+<java-keyword>interface</java-keyword> BookShop {
+  <java-comment>/** Shop assistants. */</java-comment>
+  <a href="https://github.com/google/guava/wiki/NewCollectionTypesExplained#multiset">Multiset</a>&lt;String&gt; getAssistants();
+  <java-comment>/** Books by category. */</java-comment>
+  <a href="https://github.com/google/guava/wiki/NewCollectionTypesExplained#multimap">Multimap</a>&lt;String, String&gt; getBooks();
 
-<p><code>@FreeBuilder</code> has special support for <code><a href="http://docs.oracle.com/javase/tutorial/collections/interfaces/list.html">List</a></code>,
-<code><a href="http://docs.oracle.com/javase/tutorial/collections/interfaces/set.html">Set</a></code>, <code><a href="https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained#Multiset">Multiset</a></code>, <code><a href="http://docs.oracle.com/javase/tutorial/collections/interfaces/map.html">Map</a></code> and
-<code><a href="https://code.google.com/p/guava-libraries/wiki/NewCollectionTypesExplained#Multimap">Multimap</a></code> properties:</p>
+  <java-keyword>class</java-keyword> Builder <java-keyword>extends</java-keyword> BookShop_Builder {}
+}
 
-<ul>
-<li>The Builder's <code>set<em>X</em></code> method is removed</li>
-<li>Mutation methods are added instead: <code>add<em>X</em></code> (collections),
-<code>put<em>X</em></code> (maps) and <code>clear<em>X</em></code>
-</li>
-<li>The Builder's <code>get<em>X</em></code> method returns an unmodifiable view
-of the current values: when the Builder is changed, the view also changes</li>
-<li>The property defaults to an empty collection</li>
-<li>The value type returns immutable collections</li>
-</ul>
+<java-keyword>new</java-keyword> BookShop.Builder()
+    <animate-add-1>.addAssistants(<java-string>"Bill"</java-string>, <java-string>"Bob"</java-string>)</animate-add-1>
+    <animate-add-2>.putAllBooks(<java-string>"Science Fiction"</java-string>, <java-static><a href="https://docs.oracle.com/javase/8/docs/api/java/util/Arrays.html#asList-T...-">asList</a></java-static>(<java-string>"I, Robot"</java-string>, <java-string>"Cyteen"</java-string>))</animate-add-2>
+    <animate-add-3>.build();</animate-add-3></pre>
+      </figure>
+      <figure>
+          <figcaption>Jackson support (just one line!)</figcaption>
+          <pre>
+@FreeBuilder
+<animate-add-1><a href="https://fasterxml.github.io/jackson-databind/javadoc/2.2.0/com/fasterxml/jackson/databind/annotation/JsonDeserialize.html">@JsonDeserialize</a>(builder = Person.Builder.<java-keyword>class</java-keyword>)</animate-add-1>
+<java-keyword>public</java-keyword> <java-keyword>interface</java-keyword> Person {
+  <java-comment>/** Returns the person's full (English) name. */</java-comment>
+  String getName();
+  <java-comment>/** Returns the person's age in years, rounded down. */</java-comment>
+  <java-keyword>int</java-keyword> getAge();
 
-<h3 id="nested-buildable-types">Nested buildable types</h3>
+  <java-keyword>class</java-keyword> Builder <java-keyword>extends</java-keyword> Person_Builder {}
+}
 
-<p><code>@FreeBuilder</code> has special support for buildable types like <a href="https://developers.google.com/protocol-buffers/">protos</a> and other
-<code>@FreeBuilder</code> types:</p>
+<animate-add-2>Person person = <java-keyword>new</java-keyword> <a href="https://fasterxml.github.io/jackson-databind/javadoc/2.2.0/com/fasterxml/jackson/databind/ObjectMapper.html">ObjectMapper</a>().<a href="https://fasterxml.github.io/jackson-databind/javadoc/2.2.0/com/fasterxml/jackson/databind/ObjectMapper.html#readValue(java.lang.String, java.lang.Class)">readValue</a>(</animate-add-2>
+    <animate-add-3><java-string>"{\"name\":\"Bob\", \"age\":23}"</java-string>, Person.<java-keyword>class</java-keyword>);</animate-add-3></pre>
+      </figure>
+      <figure>
+          <figcaption><a href="http://www.gwtproject.org/">GWT</a> support</figcaption>
+          <pre>
+@FreeBuilder
+<animate-add-1><a href="http://google.github.io/guava/releases/18.0/api/docs/com/google/common/annotations/GwtCompatible.html">@GwtCompatible</a>(serializable = <java-keyword>true</java-keyword>)</animate-add-1>
+<java-keyword>public</java-keyword> <java-keyword>interface</java-keyword> Person <animate-add-2><java-keyword>extends</java-keyword> <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html">Serializable</a> </animate-add-2>{
+  <java-comment>/** Returns the person's full (English) name. */</java-comment>
+  String getName();
+  <java-comment>/** Returns the person's age in years, rounded down. */</java-comment>
+  <java-keyword>int</java-keyword> getAge();
 
-<ul>
-<li>The <code>set<em>X</em></code> method gains an overload for the property
-type's Builder, as shorthand for <code>set<em>X</em>(x.build())</code>
-</li>
-<li>The <code>get<em>X</em></code> method is removed</li>
-<li>A <code>get<em>X</em>Builder</code> method is added instead, returning a
-mutable Builder for the property</li>
-<li>The property inherits the defaults of its Builder type</li>
-</ul>
+  <java-keyword>class</java-keyword> Builder <java-keyword>extends</java-keyword> Person_Builder {}
+}
 
-<h3 id="builder-construction">Builder construction</h3>
+<animate-add-3>RPC.<java-static><a href="http://www.gwtproject.org/javadoc/latest/com/google/gwt/user/server/rpc/RPC.html#encodeResponseForSuccess(java.lang.reflect.Method, java.lang.Object)">encodeResponseForSuccess</a></java-static>(someMethod, person);</animate-add-3></pre>
+      </figure>
+      <figure>
+          <figcaption>Don't just build, modify!</figcaption>
+          <pre>
+BookShop bookshop = BookShop.Builder
+    .<tipped><java-static>from</java-static><tooltip>The static <code>from</code> method turns a data object back into a Builder.</tooltip></tipped>(acquiredBookshop)
+    .removeAssistants(<java-string>"Terry"</java-string>)
+    .<tipped>mutateBooks<tooltip>The modify and mutate methods let you pass in a lambda, for more readable code,<br>or to access collection methods not available on the builder API.</tooltip></tipped>(books -> {
+      <animate-add-1>Collection&lt;String&gt; sciFi = books.<tipped-right>removeAll(<java-string>"Science Fiction"</java-string>)<tooltip>This modifies the <code>books</code> collection on the builder.</tooltip></tipped-right>;</animate-add-1>
+<animate-add-2-line>      <animate-add-2>books.putAll(<java-string>"sci-fi"</java-string>, sciFi);</animate-add-2>
+</animate-add-2-line>    })
+<animate-add-3-line>    <animate-add-3>.<tipped>mergeFrom<tooltip>The <code>mergeFrom</code> method combines collections.</tooltip></tipped>(existingBookshop)</animate-add-3>
+</animate-add-3-line>    .build();</pre>
+      </figure>
+      <figure>
+          <figcaption>Keep your tests robust with partials</figcaption>
+          <pre>
+<java-comment>// This code doesn't need to care about the ins-and-outs
+// of ISBN compliance (when we get around to implementing
+// it!), nor does it need any of the other fields we're
+// planning on adding to Book, so rather than have to fix
+// this test every time we modify Book, just pass in a
+// partial.</java-comment>
+Book book = <java-keyword>new</java-keyword> Book.Builder()
+    .setName(<java-string>"I, Robot"</java-string>)
+    .setIsbn(<java-string>"Some ISBN"</java-string>)
+    <animate-add-1>.buildPartial();  <java-comment>// Skips validation</java-comment></animate-add-1>
 
-<p><em>Effective Java</em> recommends passing required parameters in to the Builder
-constructor. While we follow most of the recommendations therein, we explicitly
-do not follow this one: while you gain compile-time verification that all
-parameters are set, you lose flexibility in client code, as well as opening
-yourself back up to the exact same subtle usage bugs as traditional constructors
-and factory methods. For the default <code>@FreeBuilder</code> case, where all parameters
-are required, this does not scale.</p>
+<animate-add-3-line><animate-add-3><java-comment>// Whoops! Throws UnsupportedOperationException.</java-comment></animate-add-3>
+</animate-add-3-line><animate-add-2>book.getPublicationDate();</animate-add-2>
+</pre>
+      </figure>
+      <figure>
+          <figcaption>Google-standard code readability and peer review</figcaption>
+          <pre><img src="images/peer-review-example.png" width="800" height="500"></pre>
+      </figure>
+      <figure>
+          <figcaption>Many hundreds of tests</figcaption>
+          <pre>
+<animate-scrolling-large>org.inferred.freebuilder.processor.AnalyserTest > abstractToString PASSED
+org.inferred.freebuilder.processor.AnalyserTest > abstractMethodNamedIs PASSED
+org.inferred.freebuilder.processor.AnalyserTest > mixedValidAndInvalidGetters PASSED
+org.inferred.freebuilder.processor.AnalyserTest > emptyInterface PASSED
+org.inferred.freebuilder.processor.AnalyserTest > finalTriad PASSED
+org.inferred.freebuilder.processor.AnalyserTest > privateNestedType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > voidGetter PASSED
+org.inferred.freebuilder.processor.AnalyserTest > abstractButNotGetter PASSED
+org.inferred.freebuilder.processor.AnalyserTest > builderSubclass_publicNewBuilderMethod PASSED
+org.inferred.freebuilder.processor.AnalyserTest > defaultCodeGenerator PASSED
+org.inferred.freebuilder.processor.AnalyserTest > underriddenHashCode PASSED
+org.inferred.freebuilder.processor.AnalyserTest > explicitPackageScopeNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.AnalyserTest > isFullyCheckedCast_objectLowerBoundWildcard PASSED
+org.inferred.freebuilder.processor.AnalyserTest > emptyDataType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > unnamedPackage PASSED
+org.inferred.freebuilder.processor.AnalyserTest > builderSubclass PASSED
+org.inferred.freebuilder.processor.AnalyserTest > nestedDataType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > implementsGenericInterface PASSED
+org.inferred.freebuilder.processor.AnalyserTest > noNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.AnalyserTest > freeAnnotationBuilder PASSED
+org.inferred.freebuilder.processor.AnalyserTest > nonAbstractMethodNamedIssue PASSED
+org.inferred.freebuilder.processor.AnalyserTest > innerType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > notGwtSerializable PASSED
+org.inferred.freebuilder.processor.AnalyserTest > finalToString PASSED
+org.inferred.freebuilder.processor.AnalyserTest > isFullyCheckedCast_wildcardType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > isFullyCheckedCast_lowerBoundWildcard PASSED
+org.inferred.freebuilder.processor.AnalyserTest > serializableBuilderSubclass PASSED
+org.inferred.freebuilder.processor.AnalyserTest > multipleConstructors PASSED
+org.inferred.freebuilder.processor.AnalyserTest > twiceNestedDataType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > isFullyCheckedCast_genericType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > complexGetterNames PASSED
+org.inferred.freebuilder.processor.AnalyserTest > explicitPrivateScopeNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.AnalyserTest > genericType_rebuilt PASSED
+org.inferred.freebuilder.processor.AnalyserTest > abstractHashCode PASSED
+org.inferred.freebuilder.processor.AnalyserTest > builderSubclass_publicBuilderMethod PASSED
+org.inferred.freebuilder.processor.AnalyserTest > abstractMethodWithNonAsciiName PASSED
+org.inferred.freebuilder.processor.AnalyserTest > underriddenHashCodeAndEquals PASSED
+org.inferred.freebuilder.processor.AnalyserTest > typeNotNamedBuilderIgnored PASSED
+org.inferred.freebuilder.processor.AnalyserTest > twoGetters PASSED
+org.inferred.freebuilder.processor.AnalyserTest > freeEnumBuilder PASSED
+org.inferred.freebuilder.processor.AnalyserTest > nonBooleanIsMethod PASSED
+org.inferred.freebuilder.processor.AnalyserTest > underriddenTriad PASSED
+org.inferred.freebuilder.processor.AnalyserTest > abstractMethodNamedIssue PASSED
+org.inferred.freebuilder.processor.AnalyserTest > finalHashCodeAndEquals PASSED
+org.inferred.freebuilder.processor.AnalyserTest > abstractMethodNamedGetter PASSED
+org.inferred.freebuilder.processor.AnalyserTest > wrongBuilderSuperclass_errorType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > underriddenToString PASSED
+org.inferred.freebuilder.processor.AnalyserTest > underriddenEquals PASSED
+org.inferred.freebuilder.processor.AnalyserTest > nonAbstractGetter PASSED
+org.inferred.freebuilder.processor.AnalyserTest > genericType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > nonStaticBuilder PASSED
+org.inferred.freebuilder.processor.AnalyserTest > implementsInterface PASSED
+org.inferred.freebuilder.processor.AnalyserTest > finalHashCode PASSED
+org.inferred.freebuilder.processor.AnalyserTest > wrongBuilderSuperclass_actualType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > isFullyCheckedCast_erasedType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > valueTypeSuperclassesNestedClassesAddedToVisibleList PASSED
+org.inferred.freebuilder.processor.AnalyserTest > abstractMethodNamedGet PASSED
+org.inferred.freebuilder.processor.AnalyserTest > finalEquals PASSED
+org.inferred.freebuilder.processor.AnalyserTest > indirectlyPrivateNestedType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > abstractEquals PASSED
+org.inferred.freebuilder.processor.AnalyserTest > finalGetter PASSED
+org.inferred.freebuilder.processor.AnalyserTest > twoGetters_interface PASSED
+org.inferred.freebuilder.processor.AnalyserTest > valueTypeNestedClassesAddedToVisibleList PASSED
+org.inferred.freebuilder.processor.AnalyserTest > isFullyCheckedCast_oneWildcard PASSED
+org.inferred.freebuilder.processor.AnalyserTest > getterWithArgument PASSED
+org.inferred.freebuilder.processor.AnalyserTest > noDefaults PASSED
+org.inferred.freebuilder.processor.AnalyserTest > isFullyCheckedCast_nonGenericType PASSED
+org.inferred.freebuilder.processor.AnalyserTest > gwtSerializable PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToBuilder_missingValue PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > hiddenBuilderNotIllegallyReferenced PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToValue_freebuilderlike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testIssue68_nameCollisionForTemplate PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testBuilderClear_protolike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testBuild_defaults PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testBuildPartial PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testBuildPartialAndGet PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testGetBuilder_freebuilderlike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testBuilderClear_freebuilderlike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testMergeFromValue_protolike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testMutateMethod PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToValue_nestedList PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testIssue68_nameCollisionForValue PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToBuilder_nestedList PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testMergeFromBuilder_nestedList PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToBuilder_valuesSet PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testGetBuilder_protolike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testBuild_noDefaults PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToBuilder_protolike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testMergeFromBuilder_protolike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testGetBuilder PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testMergeFromBuilder_freebuilderlike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testMergeFromValue PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToValue PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testMergeFromBuilder PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToBuilder_freebuilderlike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testMergeFromValue_nestedList PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testSetToValue_protolike PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.BuildablePropertyFactoryTest > testBuilderClear_nestedList PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_newBuilderMethod_inferredTypes_j6 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_newBuilderMethod_inferredTypes_j7 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderFactoryMethod_visibleNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testBuilderFactoryMethod_privateNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testBuilderFactoryMethod PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_noArgsConstructor_explicitTypes_j6 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_noArgsConstructor_explicitTypes_j7 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testImplicitConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNonStaticBuilderMethod PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testExplicitNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testPrivateBuilderFactoryMethod_visibleNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_builderMethod_explicitTypes_j6 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_builderMethod_explicitTypes_j7 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderFactoryMethod PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testPrivateNewBuilderFactoryMethod_visibleNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_newBuilderMethod_explicitTypes_j6 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_newBuilderMethod_explicitTypes_j7 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testBuilderFactoryMethod_visibleNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNonBuilderReturningBuilderMethod PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testAbstractInnerClass PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testExplicitPrivateNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderFactoryMethod_privateNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNonStaticNewBuilderMethod PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testParameterTakingNewBuilderMethod PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_noArgsConstructor_inferredTypes_j6 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_noArgsConstructor_inferredTypes_j7 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testParameterTakingBuilderMethod PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNonBuilderReturningNewBuilderMethod PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_builderMethod_inferredTypes_j6 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testNewBuilderForGenericType_builderMethod_inferredTypes_j7 PASSED
+org.inferred.freebuilder.processor.BuilderFactoryTest > testMissingNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapThrowsNpeIfMapperReturnsNullForDefaultProperty PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapDelegatesToSetterForValidationForRequiredProperty PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapReplacesValueToBeReturnedFromGetterForDefaultProperty PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapThrowsIllegalStateExceptionIfRequiredPropertyIsUnset PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapThrowsNpeIfMapperIsNullForUnsetRequiredProperty PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapThrowsNpeIfMapperReturnsNullForRequiredProperty PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapDelegatesToSetterForValidationForDefaultProperty PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapThrowsNpeIfMapperIsNullForRequiredProperty PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapThrowsNpeIfMapperIsNullForDefaultProperty PASSED
+org.inferred.freebuilder.processor.DefaultMapperMethodTest > mapReplacesValueToBeReturnedFromGetterForRequiredProperty PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesSourceTest > testJ6 PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesSourceTest > testJ7 PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesSourceTest > testJ8 PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesSourceTest > testJ6_noGuava_oneDefaultProperty PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesSourceTest > testJ6_noGuava PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesTest > testMergeFromBuilder_nonDefaultsOverride PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesTest > testMergeFromValue_nonDefaultsOverride PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesTest > testClear PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesTest > testMergeFromBuilder_nonDefaultsUsed PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesTest > testMergeFromBuilder_defaultsDoNotOverride PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesTest > testMergeFromValue_defaultsDoNotOverride PASSED
+org.inferred.freebuilder.processor.DefaultedPropertiesTest > testMergeFromValue_nonDefaultsUsed PASSED
+org.inferred.freebuilder.processor.GenericTypeSourceTest > testJ6 PASSED
+org.inferred.freebuilder.processor.GenericTypeSourceTest > testJ7 PASSED
+org.inferred.freebuilder.processor.GenericTypeSourceTest > testJ8 PASSED
+org.inferred.freebuilder.processor.GenericTypeTest > testGenericInterface PASSED
+org.inferred.freebuilder.processor.GenericTypeTest > testGenericInterface_compilesWithoutWarnings PASSED
+org.inferred.freebuilder.processor.GenericTypeTest > testBoundedParameters PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_primitive_notNull PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testWildcardHandling_wildcardWithExtendsBound PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testClear_primitive PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testConstructor_primitive_defaultAbsent PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testCustomization_primitive_absent PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testConstructor_defaultAbsent PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testCustomization_optionalOf PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testClear PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testBuilderGetter_defaultValue PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testCustomization_primitive_optionalOf PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testCustomization_nullable PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testWildcardHandling_unboundedWildcard PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSetNullable_null PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_primitive_null PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_primitive_nullOptional PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testValueToString_twoFields PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSetNullable_primitive_null PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testPartialToString_singleField PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testBuilderGetter_nonDefaultValue PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testWildcardHandling_noWildcard PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testMergeFrom_builder_emptyOptional PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testCustomization_null PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_primitive_absent PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testValueToString_singleField PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testCustomization_absent PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testBuilderClear_noBuilderFactory PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testCustomization_primitive_nullable PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testPartialToString_twoFields PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testEquality PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSetNullable_primitive_notNull PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSetNullable_notNull PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_optionalOf PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_notNull PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_nullOptional PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testMergeFrom_valueInstance_emptyOptional PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_primitive_optionalOf PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_absent PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testCustomization_primitive_null PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testBuilderClear_customDefault PASSED
+org.inferred.freebuilder.processor.GuavaOptionalPropertyTest > testSet_null PASSED
+org.inferred.freebuilder.processor.GuavaOptionalSourceTest > testJ6 PASSED
+org.inferred.freebuilder.processor.GuavaOptionalSourceTest > testJ7 PASSED
+org.inferred.freebuilder.processor.GuavaOptionalSourceTest > testJ8 PASSED
+org.inferred.freebuilder.processor.JacksonSupportTest > jacksonAnnotationAddedWithImplicitName PASSED
+org.inferred.freebuilder.processor.JacksonSupportTest > jacksonAnnotationAddedWithExplicitName PASSED
+org.inferred.freebuilder.processor.JacksonSupportTest > jsonAnyGetterAnnotationDisablesImplicitProperty PASSED
+org.inferred.freebuilder.processor.JacksonSupportTest > noAnnotationAddedIfJsonDeserializeMissing PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_primitive_notNull PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testWildcardHandling_wildcardWithExtendsBound PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testClear_primitive PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testConstructor_primitive_defaultEmpty PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testCustomization_optionalOf PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testClear PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testBuilderGetter_defaultValue PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testCustomization_primitive_empty PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testConstructor_defaultEmpty PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testCustomization_primitive_optionalOf PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_primitive_empty PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testCustomization_nullable PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testWildcardHandling_unboundedWildcard PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSetNullable_null PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_primitive_null PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_primitive_nullOptional PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testValueToString_twoFields PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSetNullable_primitive_null PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testPartialToString_singleField PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testBuilderGetter_nonDefaultValue PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testWildcardHandling_noWildcard PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testMergeFrom_builder_emptyOptional PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testCustomization_null PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testValueToString_singleField PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testBuilderClear_noBuilderFactory PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testCustomization_primitive_nullable PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testPartialToString_twoFields PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testEquality PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSetNullable_primitive_notNull PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSetNullable_notNull PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_optionalOf PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_notNull PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_nullOptional PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_empty PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testMergeFrom_valueInstance_emptyOptional PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_primitive_optionalOf PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testCustomization_empty PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testCustomization_primitive_null PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testBuilderClear_customDefault PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalPropertyTest > testSet_null PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalSourceTest > testJ8 PASSED
+org.inferred.freebuilder.processor.JavaUtilOptionalSourceTest > testJ8_noGuava PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddViaAsMapKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddAtIndexViaAsMapKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddViaGetKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutAllValuesChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutAllMultimapModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddViaAsMapChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddAtIndexViaAsMapChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddViaGetChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutModifiesUnderlyingProperty_whenChecked PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutAllValuesModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddViaAsMapModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddAtIndexViaAsMapModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndAddViaGetModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndReplaceValuesKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutAllMultimapKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutAllValuesKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndReplaceValuesModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndReplaceValuesChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutAllMultimapChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMultimapMutateMethodTest > mutateAndPutModifiesUnderlyingProperty_whenUnchecked PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testImmutableListMultimapProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemove_primitives PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllMultimap PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testListMultimapProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testOverridingPut_primitives PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllIterable_nullKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPut_primitiveValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPut_primitiveKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPut PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPut_nullValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPut_duplicate PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testClear PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllIterable PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllMultimap_nullValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllIterable_primitives PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllMultimap_duplicate PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllIterable_iteratesOnce PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPut_nullKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testDefaultEmpty_primitives PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testOverridingPut PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemove_primitiveValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPut_primitives PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemoveAll_nullKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllIterable_primitiveKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testDefaultEmpty PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllMultimap_nullKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testGet_returnsLiveView PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllIterable_nullValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemoveAll_doesNotThrowIfKeyNotPresent PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllIterable_duplicate PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemoveAll_primitiveValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemove_primitiveKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testOverridingPut_primitiveKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemoveAll_primitives PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testEquality PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllMultimap_primitiveValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testGet_returnsUnmodifiableMultimap PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllMultimap_primitives PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemove_doesNotThrowIfEntryNotPresent PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllIterable_primitiveValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testImmutableMultimapProperty PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemoveAll_primitiveKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemove PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testPutAllMultimap_primitiveKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemove_nullKey PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemove_nullValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testOverridingPut_primitiveValue PASSED
+org.inferred.freebuilder.processor.ListMultimapPropertyFactoryTest > testRemoveAll PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddAtIndex1ModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndClearSubListModifiesUnderlyingPropertyWhenChecked PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddAtIndex2ModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndSetModifiesUnderlyingPropertyWhenChecked PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddModifiesUnderlyingPropertyWhenChecked PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndSizeReadsFromUnderlyingPropertyWhenChecked PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndGetReadsFromUnderlyingPropertyWhenChecked PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndSetAtIndexKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddAtIndexKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddAtIndex3ModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddModifiesUnderlyingPropertyWhenUnchecked PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndRemoveModifiesUnderlyingPropertyWhenChecked PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndClearModifiesUnderlyingPropertyWhenChecked PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddAtIndexChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddChecksArguments PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndAddAtIndex0ModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.ListMutateMethodTest > mutateAndSetChecksArguments PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testOverrideAdd_primitive PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testAddVarargs_null PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testClear PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testAddSingleElement_null PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testAddSingleElement PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testOverrideAdd PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testAddAllIterable_onlyIteratesOnce PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testDefaultEmpty PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testImmutableListProperty PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testAddAllIterable PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testBuilderClear_noBuilderFactory PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testEquality PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testGetter_returnsUnmodifiableList PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testAddVarargs PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testGetter_returnsLiveView PASSED
+org.inferred.freebuilder.processor.ListPropertyFactoryTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.ListSourceTest > test_noGuava_j6 PASSED
+org.inferred.freebuilder.processor.ListSourceTest > test_noGuava_j7 PASSED
+org.inferred.freebuilder.processor.ListSourceTest > test_guava_j6 PASSED
+org.inferred.freebuilder.processor.ListSourceTest > test_guava_j7 PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > clearModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > entrySetIteratorRemainsUsableAfterCallingSetValue PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > removeModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > iterateEntrySetFindsContainedEntry PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > callSetValueOnEntryChecksArguments PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > containsKeyFindsContainedKey PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > callRemoveOnEntrySetIteratorModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > getReturnsContainedValue PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > callSetValueOnEntryModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > putModifiesUnderlyingPropertyWhenChecked PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > entryRemainsUsableAfterCallingSetValue PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > putModifiesUnderlyingPropertyWhenUnchecked PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > entrySetIteratorRemainsUsableAfterCallingRemove PASSED
+org.inferred.freebuilder.processor.MapMutateMethodTest > putChecksArguments PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPutAll_nullKey PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_nullKey_primitiveValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_nullKey_nonNullValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testRemove_primitiveKeyType_missingKey PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_duplicate PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testClear PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testBuilderClear_noDefaultFactory PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testRemove_null PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_primitiveKey_primitiveValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testRemove_missingKey PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_primitiveKey_nullValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testOverridingAdd PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testOverridingAdd_primitiveKey PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_nonNullKey_nullValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testGet_returnsUnmodifiableMap PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testDefaultEmpty PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_nonNullKey_nonNullValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_primitiveKey_nonNullValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testGet_returnsLiveView PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testImmutableMapProperty PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testOverridingAdd_primitiveKeyAndValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPut_nonNullKey_primitiveValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testEquality PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPutAll_nullValue PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testRemove PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPutAll_duplicate PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testRemove_primitiveKeyType PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testPutAll_noNulls PASSED
+org.inferred.freebuilder.processor.MapPropertyFactoryTest > testOverridingAdd_primitiveValue PASSED
+org.inferred.freebuilder.processor.MapSourceTest > test_noGuava_j6 PASSED
+org.inferred.freebuilder.processor.MapSourceTest > test_noGuava_j7 PASSED
+org.inferred.freebuilder.processor.MapSourceTest > test_guava_j6 PASSED
+org.inferred.freebuilder.processor.MapSourceTest > test_guava_j7 PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testDiamondInheritance PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testMultipleMethodsSameSignature PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testGenericSignatureOverriding PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testNoInheritanceClass PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testMultipleMethodsSameSignatureWithSuperclass PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testSingleSuperclassMethodInterface PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testSimpleInterfaceHierarchy PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testSignatureNarrowing PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testMultipleMethodsSameSignatureRedeclared PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testNoInheritanceInterface PASSED
+org.inferred.freebuilder.processor.MethodFinderTest > testSingleInterface PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddMultipleAcceptsMaxIntOccurrences PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddMultipleKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndConditionallySetCountReturnsFalseIfOldCountDoesNotMatch PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndConditionallySetCountChecksCount PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndSetCountChecksArguments PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddAllKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddRejectsMaxIntPlusOneOccurrences PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndSetCountModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndConditionallySetCountDoesNothingIfOldCountDoesNotMatch PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndConditionallySetCountChecksArguments PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndSetCountReturnsOldCount PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndRemoveModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddModifiesUnderlyingProperty_whenUnchecked PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddMultipleChecksArguments PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddMultipleRejectsMaxIntPlusOneOccurrences PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddAllChecksArguments PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddMultipleReturnsOldCount PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndConditionallySetCountModifiesUnderlyingPropertyIfOldCountMatches PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndSetCountChecksCount PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndConditionallySetCountReturnsTrueIfOldCountMatches PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndContainsReturnsTrueForContainedElement PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddAcceptsMaxIntOccurrences PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddAllAcceptsMaxIntOccurrences PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndIterateFindsContainedElement PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddMultipleModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddChecksArguments PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndSizeReturnsSize PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddAllRejectsMaxIntPlusOneOccurrences PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddModifiesUnderlyingProperty_whenChecked PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddAllModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndAddMultipleRejectsNegativeOccurrences PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndSetCountKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndClearModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.MultisetMutateMethodTest > mutateAndConditionallySetCountKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testClear_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddCopies_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testDefaultEmpty_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddVarargs_null PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testSetCountOf_toZero PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testClear PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testSetCountOf PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testImmutableSetProperty PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddSingleElement_duplicate PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddSingleElement_null PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddVarargs_duplicate PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddSingleElement PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testSetCountOf_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testOverridingAdd PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testOverridingAdd_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testGet_returnsUnmodifiableSet PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddAllIterable_duplicate_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddCopies PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddCopies_negativeOccurrences_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddAllIterable_null_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddSingleElement_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testDefaultEmpty PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddAllIterable_duplicate PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddAllIterable_iteratesOnce PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testGet_returnsLiveView PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddVarargs_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddVarargs_duplicate_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddCopies_null_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddAllIterable PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testSetCountOf_toZero_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddCopies_duplicate_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testBuilderClear_noBuilderFactory PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddAllIterable_null PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testEquality PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddCopies_duplicate PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddCopies_negativeOccurrences PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddVarargs PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddVarargs_null_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddAllIterable_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddSingleElement_duplicate_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddSingleElement_null_primitive PASSED
+org.inferred.freebuilder.processor.MultisetPropertyFactoryTest > testAddCopies_null PASSED
+org.inferred.freebuilder.processor.NullableMapperMethodTest > throwsNpeIfMapperIsNull PASSED
+org.inferred.freebuilder.processor.NullableMapperMethodTest > replacesValueToBeReturnedFromGetter PASSED
+org.inferred.freebuilder.processor.NullableMapperMethodTest > delegatesToSetterForValidation PASSED
+org.inferred.freebuilder.processor.NullableMapperMethodTest > allowsNullReturn PASSED
+org.inferred.freebuilder.processor.NullableMapperMethodTest > throwsNpeIfMapperIsNullForUnsetNullableProperty PASSED
+org.inferred.freebuilder.processor.NullableMapperMethodTest > skipsMapperIfNullablePropertyIsUnset PASSED
+org.inferred.freebuilder.processor.NullablePropertyFactoryTest > nullable PASSED
+org.inferred.freebuilder.processor.NullablePropertyFactoryTest > notNullable PASSED
+org.inferred.freebuilder.processor.NullablePropertyFactoryTest > arbitraryNullableAnnotation PASSED
+org.inferred.freebuilder.processor.NullablePropertyFactoryTest > multipleNullableAnnotations PASSED
+org.inferred.freebuilder.processor.NullablePropertyFactoryTest > nullablePrimitive PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testSet_primitive_notNull PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testConstructor_primitive_defaultAbsent PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testConstructor_defaultAbsent PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testBuilderGetter_defaultValue PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testSet_primitive_null PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testValueToString_twoFields PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testPartialToString_singleField PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testBuilderGetter_nonDefaultValue PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testValueToString_singleField PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testBuilderClear_noBuilderFactory PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testPartialToString_twoFields PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testEquality PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testSet_notNull PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testBuilderClear_customDefault PASSED
+org.inferred.freebuilder.processor.NullablePropertyTest > testSet_null PASSED
+org.inferred.freebuilder.processor.NullableSourceTest > testJ6 PASSED
+org.inferred.freebuilder.processor.NullableSourceTest > testJ7 PASSED
+org.inferred.freebuilder.processor.NullableSourceTest > testJ8 PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapThrowsNpeIfMapperIsNullForAbsentGuavaOptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapSkipsMapperIfJ8OptionalPropertyIsEmpty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapDelegatesToSetterForValidationForJ8OptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapDelegatesToSetterForValidationForGuavaOptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapThrowsNpeIfMapperIsNullForJ8OptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapAllowsNullReturnForGuavaOptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapSkipsMapperIfGuavaOptionalPropertyIsAbsent PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapAllowsNullReturnForJ8OptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapThrowsNpeIfMapperIsNullForGuavaOptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapReplacesValueToBeReturnedFromGetterForJ8OptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapThrowsNpeIfMapperIsNullForEmptyJ8OptionalProperty PASSED
+org.inferred.freebuilder.processor.OptionalMapperMethodTest > mapReplacesValueToBeReturnedFromGetterForGuavaOptionalProperty PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testClear_noBuilderFactory PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testNestedNameClashes PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testDoubleEquality PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testPropertyNamedTemplate PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testClear_newBuilderMethod PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testBuilderGetters PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testBuilderSerializability_serializableSubclass PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testFrom PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testUnderriding_toString PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testAbstractClass PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testUnderriding_finalHashCodeAndEquals PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testToString_oneProperty PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testClear_implicitConstructor PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testSiblingNameClashes PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testBuilderClassIsEmpty_whenNotSubclassed PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testUnderriding_finalHashCodeEqualsAndToString PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testClear_builderMethod PASSED
+org.inferred.freebuilder.processor.ProcessorTest > test_nullPointerException PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testInterface PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testNestedClassHidingType PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testEquality PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testUnderriding_finalToString PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testUnderriding_hashCodeAndEquals PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testBuilderSerializability_nonSerializableSubclass PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testGwtSerialize_twoStringProperties PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testClear_explicitNoArgsConstructor PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testToString_twoPrimitiveProperties PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testGwtSerialize_stringListProperty PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testGwtSerialize_twoPrimitiveProperties PASSED
+org.inferred.freebuilder.processor.ProcessorTest > testToString_noProperties PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesSourceTest > testJ6 PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesSourceTest > testJ7 PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesSourceTest > testJ8 PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesSourceTest > testJ7_noGuava PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesSourceTest > testJ6_noGuava PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testCantBuildWithAnUnsetProperty PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testBuildPartial_ignoresUnsetField PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testMergeFrom_builderIgnoresUnsetField PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testBuildPartial_unsetPropertyGetterThrows PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testBuildPartial_toString PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testBuilderGetterThrowsIfValueUnset PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testCantBuildWithMultipleUnsetProperties PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testMergeFrom_builderUnsetPropertyGetterThrows PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testMergeFrom_noTemplate PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testBuildPartial_toString_twoPrimitiveProperties PASSED
+org.inferred.freebuilder.processor.RequiredPropertiesTest > testClear_noDefaults PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndAddViaAsMapKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndAddViaGetKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutAllValuesChecksArguments PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutAllMultimapModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndAddViaAsMapChecksArguments PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndAddViaGetChecksArguments PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutModifiesUnderlyingProperty_whenChecked PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutAllValuesModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndAddViaAsMapModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndAddViaGetModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndReplaceValuesKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutAllMultimapKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutChecksArguments PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutAllValuesKeepsSubstitute PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndReplaceValuesModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndReplaceValuesChecksArguments PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutAllMultimapChecksArguments PASSED
+org.inferred.freebuilder.processor.SetMultimapMutateMethodTest > mutateAndPutModifiesUnderlyingProperty_whenUnchecked PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testGet_returnsUnmodifiableSetMultimap PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemove_primitives PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testImmutableSetMultimapProperty PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllMultimap PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testOverridingPut_primitives PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllIterable_nullKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPut_primitiveValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPut_primitiveKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPut PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPut_nullValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPut_duplicate PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testClear PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllIterable PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllMultimap_nullValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllIterable_primitives PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllMultimap_duplicate PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllIterable_iteratesOnce PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPut_nullKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testDefaultEmpty_primitives PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testOverridingPut PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemove_primitiveValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPut_primitives PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemoveAll_nullKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllIterable_primitiveKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testDefaultEmpty PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllMultimap_nullKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testGet_returnsLiveView PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllIterable_nullValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemoveAll_doesNotThrowIfKeyNotPresent PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllIterable_duplicate PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemoveAll_primitiveValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemove_primitiveKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testOverridingPut_primitiveKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemoveAll_primitives PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testEquality PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllMultimap_primitiveValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllMultimap_primitives PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemove_doesNotThrowIfEntryNotPresent PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllIterable_primitiveValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemoveAll_primitiveKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemove PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testPutAllMultimap_primitiveKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemove_nullKey PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemove_nullValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testOverridingPut_primitiveValue PASSED
+org.inferred.freebuilder.processor.SetMultimapPropertyFactoryTest > testRemoveAll PASSED
+org.inferred.freebuilder.processor.SetMutateMethodTest > mutateAndAddDelegatesToAddMethodForValidation PASSED
+org.inferred.freebuilder.processor.SetMutateMethodTest > mutateAndRemoveModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetMutateMethodTest > mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetMutateMethodTest > mutateAndContainsReturnsTrueForContainedElement PASSED
+org.inferred.freebuilder.processor.SetMutateMethodTest > mutateAndIterateFindsContainedElement PASSED
+org.inferred.freebuilder.processor.SetMutateMethodTest > mutateAndSizeReturnsSize PASSED
+org.inferred.freebuilder.processor.SetMutateMethodTest > mutateAndAddModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetMutateMethodTest > mutateAndClearModifiesUnderlyingProperty PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testClear_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testDefaultEmpty_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddVarargs_null PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testClear PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testRemove_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testRemove_null PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testImmutableSetProperty PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddSingleElement_duplicate PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddSingleElement_null PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddVarargs_duplicate PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddSingleElement PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testMergeFrom_builder PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testOverridingAdd PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testOverridingAdd_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testGet_returnsUnmodifiableSet PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddAllIterable_duplicate_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddAllIterable_null_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddSingleElement_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testDefaultEmpty PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddAllIterable_duplicate PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddAllIterable_iteratesOnce PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testGet_returnsLiveView PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testMergeFrom_valueInstance PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddVarargs_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddVarargs_duplicate_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddAllIterable PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testBuilderClear PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testBuilderClear_noBuilderFactory PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddAllIterable_null PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testEquality PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddVarargs PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddVarargs_null_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testJacksonInteroperability PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddAllIterable_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testRemove_missingElement PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testRemove PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddSingleElement_duplicate_primitive PASSED
+org.inferred.freebuilder.processor.SetPropertyFactoryTest > testAddSingleElement_null_primitive PASSED
+org.inferred.freebuilder.processor.SetSourceTest > test_noGuava_j6 PASSED
+org.inferred.freebuilder.processor.SetSourceTest > test_noGuava_j7 PASSED
+org.inferred.freebuilder.processor.SetSourceTest > test_guava_j6 PASSED
+org.inferred.freebuilder.processor.SetSourceTest > test_guava_j7 PASSED
+org.inferred.freebuilder.processor.SetSourceTest > test_guava_j8 PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_primitiveType PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_neitherOfTwo PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_superType PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_fullySpecifiedType PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_subType PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_firstOfTwo PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_wildcardType PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_boxedType PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_secondOfTwo PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_erasedType PASSED
+org.inferred.freebuilder.processor.UtilTests > testUpperBound_unknownType PASSED
+org.inferred.freebuilder.processor.UtilTests > testUpperBound_superBound PASSED
+org.inferred.freebuilder.processor.UtilTests > testUpperBound_knownType PASSED
+org.inferred.freebuilder.processor.UtilTests > testUpperBound_extendsBound PASSED
+org.inferred.freebuilder.processor.UtilTests > testErasesToAnyOf_nonGenericType PASSED
+:compileGwtToJsJul 01, 2016 7:40:16 PM java.util.prefs.FileSystemPreferences$1 run
+INFO: Created user preferences directory.
+Compiling module org.inferred.freebuilder.TestServer
+   Compiling 5 permutations
+      Compiling permutation 0...
+      Compiling permutation 1...
+      Compiling permutation 2...
+      Compiling permutation 3...
+      Compiling permutation 4...
+   Compile of permutations succeeded
+   Compilation succeeded -- 42.580s
+Linking into /home/travis/build/google/FreeBuilder/build/gwt/out/org.inferred.freebuilder.TestServer; Writing extras to /home/travis/build/google/FreeBuilder/build/gwt/extra/org.inferred.freebuilder.TestServer
+   Link succeeded
+   Linking succeeded -- 0.498s
+:gwtTest
+org.inferred.freebuilder.client.rpc.MapTest > testSerialization STANDARD_OUT
+    Starting http://172.17.0.178:46532/org.inferred.freebuilder.TestServer.JUnit/junit.html?gwt.codesvr=172.17.0.178:58265 on browser FF17
+    200 - GET /org.inferred.freebuilder.TestServer.JUnit/junit.html?gwt.codesvr=172.17.0.178:58265 (172.17.0.178) 2064 bytes
+    200 - GET /org.inferred.freebuilder.TestServer.JUnit/org.inferred.freebuilder.TestServer.JUnit.nocache.js (172.17.0.178) 8453 bytes
+    200 - GET /org.inferred.freebuilder.TestServer.JUnit/org.inferred.freebuilder.TestServer.JUnit.devmode.js (172.17.0.178) 15056 bytes
+    Module org.inferred.freebuilder.TestServer.JUnit has been loaded
+    200 - POST /org.inferred.freebuilder.TestServer.JUnit/junithost (172.17.0.178) 227 bytes
+    200 - POST /org.inferred.freebuilder.TestServer.JUnit/map (172.17.0.178) 221 bytes
+org.inferred.freebuilder.client.rpc.MapTest > testSerialization PASSED
+org.inferred.freebuilder.client.rpc.NestedListTest > testSerialization STANDARD_OUT
+    200 - POST /org.inferred.freebuilder.TestServer.JUnit/junithost (172.17.0.178) 203 bytes
+    200 - POST /org.inferred.freebuilder.TestServer.JUnit/nested-list (172.17.0.178) 218 bytes
+org.inferred.freebuilder.client.rpc.NestedListTest > testSerialization PASSED
+org.inferred.freebuilder.client.rpc.OptionalTest > testSerialization STANDARD_OUT
+    200 - POST /org.inferred.freebuilder.TestServer.JUnit/junithost (172.17.0.178) 201 bytes
+    200 - POST /org.inferred.freebuilder.TestServer.JUnit/optional (172.17.0.178) 173 bytes
+org.inferred.freebuilder.client.rpc.OptionalTest > testSerialization PASSED
+org.inferred.freebuilder.client.rpc.StringListTest > testSerialization STANDARD_OUT
+    200 - POST /org.inferred.freebuilder.TestServer.JUnit/junithost (172.17.0.178) 201 bytes
+    200 - POST /org.inferred.freebuilder.TestServer.JUnit/string-list (172.17.0.178) 194 bytes
+org.inferred.freebuilder.client.rpc.StringListTest > testSerialization PASSED
+:lambdaTest
+org.inferred.freebuilder.DefaultedPropertiesTest > testMap PASSED
+org.inferred.freebuilder.ListMultimapPropertiesTest > testMutate PASSED
+org.inferred.freebuilder.ListPropertiesTest > testMutate PASSED
+org.inferred.freebuilder.MapPropertiesTest > testMutate PASSED
+org.inferred.freebuilder.MultisetPropertiesTest > testMutate PASSED
+org.inferred.freebuilder.OptionalPropertiesTest > testMap PASSED
+org.inferred.freebuilder.RequiredPropertiesTest > testMap PASSED
+org.inferred.freebuilder.SetMultimapPropertiesTest > testMutate PASSED
+org.inferred.freebuilder.SetPropertiesTest > testMutate PASSED
+:noGuavaJ8Test
+org.inferred.freebuilder.OptionalPropertiesTest > testSetters PASSED
+org.inferred.freebuilder.OptionalPropertyTest > testAllMethodInteractions PASSED
+:noGuava6Test
+org.inferred.freebuilder.ListPropertyTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.MapPropertyTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.PrimitivePropertyTest > test PASSED
+org.inferred.freebuilder.SetPropertyTest > testAllMethodInteractions PASSED
+:noGuava7Test
+org.inferred.freebuilder.ListPropertyTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.MapPropertyTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.PrimitivePropertyTest > test PASSED
+org.inferred.freebuilder.SetPropertyTest > testAllMethodInteractions PASSED
+:noGuava8Test
+org.inferred.freebuilder.ListPropertyTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.MapPropertyTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.PrimitivePropertyTest > test PASSED
+org.inferred.freebuilder.SetPropertyTest > testAllMethodInteractions PASSED
+:noGuavaTest
+:shadowTest
+:vanilla6Test
+org.inferred.freebuilder.DefaultsOptimizationTest > testNoDefaultsNoOptimisation PASSED
+org.inferred.freebuilder.DefaultsOptimizationTest > testDefaultsOptimisation PASSED
+org.inferred.freebuilder.MapGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.NestedListGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.NoFrillsDataInterfaceTest > test PASSED
+org.inferred.freebuilder.NoFrillsDataTypeTest > test PASSED
+org.inferred.freebuilder.OptionalGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.StringListGwtTypeTest > testAllMethodInteractions PASSED
+:vanilla7Test
+org.inferred.freebuilder.DefaultsOptimizationTest > testNoDefaultsNoOptimisation PASSED
+org.inferred.freebuilder.DefaultsOptimizationTest > testDefaultsOptimisation PASSED
+org.inferred.freebuilder.MapGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.NestedListGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.NoFrillsDataInterfaceTest > test PASSED
+org.inferred.freebuilder.NoFrillsDataTypeTest > test PASSED
+org.inferred.freebuilder.OptionalGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.StringListGwtTypeTest > testAllMethodInteractions PASSED
+:vanilla8Test
+org.inferred.freebuilder.DefaultsOptimizationTest > testNoDefaultsNoOptimisation PASSED
+org.inferred.freebuilder.DefaultsOptimizationTest > testDefaultsOptimisation PASSED
+org.inferred.freebuilder.MapGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.NestedListGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.NoFrillsDataInterfaceTest > test PASSED
+org.inferred.freebuilder.NoFrillsDataTypeTest > test PASSED
+org.inferred.freebuilder.OptionalGwtTypeTest > testAllMethodInteractions PASSED
+org.inferred.freebuilder.StringListGwtTypeTest > testAllMethodInteractions PASSED
+:vanillaTest
+:check
+BUILD SUCCESSFUL
+Total time: 21 mins 15.929 secs</animate-scrolling-large></pre>
+      </figure>
 
-<p>If you want to follow <em>Effective Java</em> more faithfully in your own types,
-however, just create the appropriate constructor in your builder subclass:</p>
-
-<div class="highlight highlight-java"><pre>    <span class="keyword">public</span> Builder(String name, <span class="keyword">int</span> age) {
-      <span class="comment">// Set all initial values in the builder constructor</span>
-      setName(name);
-      setAge(age);
-    }</pre></div>
-
-<p>Implementation note: in javac, we spot these fields being set in the
-constructor, and do not check again at runtime. </p>
-
-<h3 id="partials">Partials</h3>
-
-<p>A <em>partial value</em> is an implementation of the value type which does not
-conform to the type's state constraints. It may be missing required fields, or
-it may violate a cross-field constraint.</p>
-
-<div class="highlight highlight-java"><pre>Person person = <span class="keyword">new</span> Person.Builder()
-    .setName(<span class="constant">"Phil"</span>)
-    .buildPartial();  <span class="comment">// build() would throw an IllegalStateException here</span>
-System.<span class="static">out</span>.println(person);  <span class="comment">// prints: partial Person{name="Phil"}</span>
-person.getAge();  <span class="comment">// throws UnsupportedOperationException</span></pre></div>
-
-<p>As partials violate the (legitimate) expectations of your program, they must
-<strong>not</strong> be created in production code. (They may also affect the
-performance of your program, as the JVM cannot make as many optimizations.)
-However, when testing a component which does not rely on the full state
-restrictions of the value type, partials can reduce the fragility of your test
-suite, allowing you to add new required fields or other constraints to an
-existing value type without breaking swathes of test code.</p>
-
-<h3 id="ides">IDEs</h3>
-
-<p>Follow your IDE's annotation processing instructions [<a href="http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm">Eclipse instructions</a>;
-<a href="http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html">IntelliJ instructions</a>].</p>
-
-<h3 id="gwt">GWT</h3>
-
-<p>To enable <a href="http://www.gwtproject.org/">GWT</a> serialization of the generated Value subclass, just add
-<code>@GwtCompatible(serializable = true)</code> to your <code>@FreeBuilder</code>-annotated type, and
-extend/implement <code>Serializable</code>. This will generate a <a href="http://www.gwtproject.org/javadoc/latest/com/google/gwt/user/client/rpc/CustomFieldSerializer.html">CustomFieldSerializer</a>,
-and ensure all necessary types are whitelisted.</p>
-
-<h2 id="alternatives">Alternatives</h2>
-
-<h3 id="autovalue-vs-freebuilder">AutoValue vs <code>@FreeBuilder</code></h3>
-
-<p><em><strong>Why is <code>@FreeBuilder</code> better than <a href="https://github.com/google/auto/tree/master/value">AutoValue</a>?</strong></em></p>
-
-<p>It’s not! AutoValue provides an implementing class with a package-visible
-constructor, so you can easily implement the Factory pattern. If you’re writing
-an immutable type that needs a small number of values to create (<em>Effective Java</em>
-suggests at most three), and is not likely to require more in future, use the
-Factory pattern.
-
-<p>How about if you want a builder?
-<a href="https://github.com/google/auto/tree/master/value#builders">AutoValue.Builder</a>
-lets you explicitly
-specify a minimal Builder interface that will then be implemented by generated
-code, while <code>@FreeBuilder</code> provides a generated builder API. AutoValue.Builder
-is better if you must have a minimal API&mdash;for instance, in an Android
-project, where every method is expensive&mdash;or strongly prefer a
-visible-in-source API at the expense of many useful methods. Otherwise, consider
-using <code>@FreeBuilder</code> to implement the Builder pattern.
-
-<p><em><strong>I used <a href="https://github.com/google/auto/tree/master/value">AutoValue</a>, but now have more than three properties! How
-do I migrate to <code>@FreeBuilder</code>?</strong></em></p>
-
-<ol>
-<li>Ensure your getter methods start with 'get' or 'is'.</li>
-<li>Change your annotation to <code>@FreeBuilder</code>.</li>
-<li>Rewrite your factory method(s) to use the builder API.</li>
-<li>Inline your factory method(s) with a refactoring tool (e.g. Eclipse).</li>
-</ol>
-
-<p>You can always skip step 4 and have both factory and builder methods, if that
-seems cleaner!</p>
-
-<p><em><strong>Can I use both <a href="https://github.com/google/auto/tree/master/value">AutoValue</a> and <code>@FreeBuilder</code>?</strong></em></p>
-
-<p>Not really. You can certainly use both annotations, but you will end up with
-two different implementing classes that never compare equal, even if they have
-the same values.</p>
-
-<h3 id="proto-vs-freebuilder">Proto vs <code>@FreeBuilder</code></h3>
-
-<p><em><strong><a href="https://developers.google.com/protocol-buffers/">Protocol buffers</a> have provided builders for ages. Why should I
-use <code>@FreeBuilder</code>?</strong></em></p>
-
-<p>Protocol buffers are cross-platform, backwards- and forwards-compatible, and
-have a very efficient wire format. Unfortunately, they do not support custom
-validation logic; nor can you use appropriate Java domain types, such as
-<a href="http://docs.oracle.com/javase/8/docs/api/java/time/Instant.html">Instant</a> or <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/Range.html">Range</a>. Generally, it will be clear which one is appropriate
-for your use-case.</p>
-
-<h2 id="why-free">Wait, why "free"?</h2>
-
-<ul>
-<li>Free as in beer: you don't pay the cost of writing or maintaining the builder
-code.</li>
-<li>Free as in flexible: you should always be able to customize the builder where
-the defaults don't work for you.</li>
-<li>Free as in liberty: you can always drop <code>@FreeBuilder</code> and walk away with
-the code it generated for you.</li>
-</ul>
-
-<h2 id="license">License</h2>
-
-<pre><code>Copyright 2014 Google Inc. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-</code></pre>
-      </section>
+      <p>For a complete feature list, extensive README, and issue tracker, please see <a href="https://github.com/google/FreeBuilder">the project page on GitHub</a>.</p>
     </div>
 
 <script>
