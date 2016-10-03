@@ -180,12 +180,12 @@ Person bob = <java-keyword>new</java-keyword> Person.Builder()<animate-add-3>.se
   Person_Builder base = (Person_Builder) template;
   Person_Builder _defaults = <java-keyword>new</java-keyword> Person.Builder();
   <java-keyword>if</java-keyword> (!base.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.NAME)
-      && (_defaults.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.NAME)
+      &amp;&amp; (_defaults.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.NAME)
           || !template.getName().equals(_defaults.getName()))) {
     setName(template.getName());
   }
   <java-keyword>if</java-keyword> (!base.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.AGE)
-      && (_defaults.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.AGE)
+      &amp;&amp; (_defaults.<java-field>_unsetProperties</java-field>.contains(Person_Builder.Property.AGE)
           || template.getAge() != _defaults.getAge())) {
     setAge(template.getAge());
   }
