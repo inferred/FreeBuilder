@@ -224,8 +224,14 @@ book.getPublicationDate();
       </features>
 
 <script>
+  updateVersions = function(latestTag) {
+    var versionFields = document.getElementsByTagName("version")
+    for (var i = 0; i < versionFields.length; i++) {
+      versionFields[i].innerText = latestTag
+    }
+  }
   // Callback for GitHub API; fills out version tags with the latest version
-  updateVersions = function(response) {
+  updateVersionsCallback = function(response) {
     // Return the largest array, considered lexicographically
     maxArray = function(a, b) {
       for (var i = 0; i < Math.min(a.length, b.length); i++) {
@@ -243,13 +249,16 @@ book.getPublicationDate();
         .map(function(tag) { return tag.name.substring(1).split(".").map(Number) })
         .reduce(maxArray)
         .join("."))
-    var versionFields = document.getElementsByTagName("version")
-    for (var i = 0; i < versionFields.length; i++) {
-      versionFields[i].innerText = latestTag
+    if (typeof(Storage) !== "undefined") {
+      localStorage.latestFreeBuilder = latestTag
     }
+    updateVersions(latestTag)
+  }
+  if (typeof(Storage) !== "undefined" && localStorage.latestFreeBuilder !== null) {
+    updateVersions(localStorage.latestFreeBuilder)
   }
 </script>
-<script src="https://api.github.com/repos/google/FreeBuilder/tags?callback=updateVersions"></script>
+<script src="https://api.github.com/repos/google/FreeBuilder/tags?callback=updateVersionsCallback"></script>
 
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
