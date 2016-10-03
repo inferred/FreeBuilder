@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.googlejavaformat.java.Formatter;
 
 import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
@@ -103,7 +104,8 @@ public class CompilationUnitBuilder implements SourceBuilder {
     return unit.toString();
   }
 
-  private static String formatSource(String source) {
+  @VisibleForTesting
+  public static String formatSource(String source) {
     try {
       return new Formatter().formatSource(source);
     } catch (UnsupportedClassVersionError e) {
