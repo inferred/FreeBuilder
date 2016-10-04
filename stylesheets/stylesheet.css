@@ -209,7 +209,7 @@ animate-add-3 {
 pre:hover animate-add-1,
 pre:hover animate-add-2,
 pre:hover animate-add-3 {
-  animation: none;
+  animation-name: none;
   overflow: visible;
 }
 
