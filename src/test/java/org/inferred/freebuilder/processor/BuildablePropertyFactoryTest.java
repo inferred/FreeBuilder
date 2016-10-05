@@ -15,29 +15,43 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+import static org.junit.Assume.assumeTrue;
+
 import com.google.common.collect.ImmutableList;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(BehaviorTestRunner.class)
+@RunWith(Parameterized.class)
+@UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class BuildablePropertyFactoryTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.ALL;
+  }
 
   private static final JavaFileObject NO_DEFAULTS_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -206,6 +220,8 @@ public class BuildablePropertyFactoryTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
@@ -213,7 +229,7 @@ public class BuildablePropertyFactoryTest {
   public void testBuild_noDefaults() {
     thrown.expect(IllegalStateException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().build();")
@@ -224,7 +240,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testBuild_defaults() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
@@ -239,7 +255,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testBuildPartial() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -253,7 +269,7 @@ public class BuildablePropertyFactoryTest {
   public void testBuildPartialAndGet() {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -267,7 +283,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testSetToValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -291,7 +307,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testSetToValue_nestedList() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NESTED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -312,7 +328,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testSetToValue_protolike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PROTOLIKE_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -333,7 +349,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testSetToValue_freebuilderlike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(FREEBUILDERLIKE_TYPE)
         .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
         .with(new TestBuilder()
@@ -355,7 +371,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testSetToBuilder_valuesSet() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -377,7 +393,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testSetToBuilder_nestedList() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NESTED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -396,7 +412,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testSetToBuilder_protolike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PROTOLIKE_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -415,7 +431,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testSetToBuilder_freebuilderlike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(FREEBUILDERLIKE_TYPE)
         .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
         .with(new TestBuilder()
@@ -436,7 +452,7 @@ public class BuildablePropertyFactoryTest {
   public void testSetToBuilder_missingValue() {
     thrown.expect(IllegalStateException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -448,8 +464,9 @@ public class BuildablePropertyFactoryTest {
 
   @Test
   public void testMutateMethod() {
+    assumeTrue("Environment has lambdas", features.get(FUNCTION_PACKAGE).consumer().isPresent());
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -471,7 +488,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testGetBuilder() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -484,7 +501,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testGetBuilder_protolike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PROTOLIKE_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -497,7 +514,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testGetBuilder_freebuilderlike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(FREEBUILDERLIKE_TYPE)
         .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
         .with(new TestBuilder()
@@ -511,7 +528,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testMergeFromBuilder() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
@@ -543,7 +560,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testMergeFromBuilder_nestedList() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NESTED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -565,7 +582,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testMergeFromBuilder_protolike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PROTOLIKE_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -587,7 +604,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testMergeFromBuilder_freebuilderlike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(FREEBUILDERLIKE_TYPE)
         .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
         .with(new TestBuilder()
@@ -610,7 +627,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testMergeFromValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
@@ -647,7 +664,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testMergeFromValue_nestedList() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NESTED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -670,7 +687,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testMergeFromValue_protolike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PROTOLIKE_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -693,7 +710,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testBuilderClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_DEFAULTS_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
@@ -730,7 +747,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testBuilderClear_nestedList() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NESTED_LIST_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -753,7 +770,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testBuilderClear_protolike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PROTOLIKE_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -776,7 +793,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void testBuilderClear_freebuilderlike() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(FREEBUILDERLIKE_TYPE)
         .with(FREEBUILDERLIKE_BUILDER_SUPERCLASS)
         .with(new TestBuilder()
@@ -826,7 +843,7 @@ public class BuildablePropertyFactoryTest {
   public void testIssue68_nameCollisionForValue() {
     // mergeFrom(DataType value) must resolve the name collision on "value"
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -874,7 +891,7 @@ public class BuildablePropertyFactoryTest {
   public void testIssue68_nameCollisionForTemplate() {
     // mergeFrom(DataType.Template template) must resolve the name collision on "template"
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -922,7 +939,7 @@ public class BuildablePropertyFactoryTest {
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
@@ -970,7 +987,7 @@ public class BuildablePropertyFactoryTest {
   @Test
   public void hiddenBuilderNotIllegallyReferenced() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example.foo;")
             .addLine("public abstract class Item {")

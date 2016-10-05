@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
 import org.junit.Rule;
@@ -211,6 +212,7 @@ public class CompilationUnitBuilderTest {
     return new CompilationUnitBuilder(
         environment,
         QualifiedName.of(pkg, simpleName),
-        ImmutableSet.<QualifiedName>of());
+        ImmutableSet.<QualifiedName>of(),
+        new StaticFeatureSet());
   }
 }

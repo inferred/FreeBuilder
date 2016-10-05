@@ -28,7 +28,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 
 /**
- * Simple builder API for a test method, suitable for use in {@link SingleBehaviorTester}. See the
+ * Simple builder API for a test method, suitable for use in {@link BehaviorTester}. See the
  * JavaDoc on that class for an example.
  *
  * <p>Automatically imports {@link Assert}.* and {@link Truth#assertThat}.

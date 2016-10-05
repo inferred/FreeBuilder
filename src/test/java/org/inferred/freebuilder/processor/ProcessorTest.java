@@ -24,15 +24,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -46,8 +51,14 @@ import java.util.List;
 
 import javax.tools.JavaFileObject;
 
-@RunWith(BehaviorTestRunner.class)
+@RunWith(Parameterized.class)
+@UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class ProcessorTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.ALL;
+  }
 
   private static final JavaFileObject NO_BUILDER_CLASS = new SourceBuilder()
       .addLine("package com.example;")
@@ -99,13 +110,15 @@ public class ProcessorTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void testAbstractClass() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
@@ -121,7 +134,7 @@ public class ProcessorTest {
   @Test
   public void testInterface() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(TWO_PROPERTY_FREE_BUILDER_INTERFACE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -137,7 +150,7 @@ public class ProcessorTest {
   @Test
   public void test_nullPointerException() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(STRING_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("try {")
@@ -151,7 +164,7 @@ public class ProcessorTest {
   @Test
   public void testBuilderSerializability_nonSerializableSubclass() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
         .with(new TestBuilder()
             .addLine("assertFalse(com.example.DataType.builder() instanceof %s);",
@@ -163,7 +176,7 @@ public class ProcessorTest {
   @Test
   public void testBuilderSerializability_serializableSubclass() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -191,7 +204,7 @@ public class ProcessorTest {
   @Test
   public void testFrom() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
@@ -211,7 +224,7 @@ public class ProcessorTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -239,7 +252,7 @@ public class ProcessorTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -269,7 +282,7 @@ public class ProcessorTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -302,7 +315,7 @@ public class ProcessorTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -333,7 +346,7 @@ public class ProcessorTest {
   @Test
   public void testClear_noBuilderFactory() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -362,7 +375,7 @@ public class ProcessorTest {
   @Test
   public void testPropertyNamedTemplate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -378,7 +391,7 @@ public class ProcessorTest {
   @Test
   public void testBuilderGetters() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
@@ -393,7 +406,7 @@ public class ProcessorTest {
   @Test
   public void testEquality() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
         .with(new TestBuilder()
             .addLine("new %s()", EqualsTester.class)
@@ -455,7 +468,7 @@ public class ProcessorTest {
   @Test
   public void testDoubleEquality() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -508,7 +521,7 @@ public class ProcessorTest {
   @Test
   public void testToString_noProperties() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -529,7 +542,7 @@ public class ProcessorTest {
   @Test
   public void testToString_oneProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(STRING_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
@@ -543,7 +556,7 @@ public class ProcessorTest {
   @Test
   public void testToString_twoPrimitiveProperties() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(TWO_PROPERTY_FREE_BUILDER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
@@ -558,7 +571,7 @@ public class ProcessorTest {
   @Test
   public void testGwtSerialize_twoStringProperties() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -584,7 +597,7 @@ public class ProcessorTest {
   @Test
   public void testGwtSerialize_twoPrimitiveProperties() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -610,7 +623,7 @@ public class ProcessorTest {
   @Test
   public void testGwtSerialize_stringListProperty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -674,7 +687,7 @@ public class ProcessorTest {
   @Test
   public void testUnderriding_hashCodeAndEquals() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -730,7 +743,7 @@ public class ProcessorTest {
   @Test
   public void testUnderriding_toString() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -763,7 +776,7 @@ public class ProcessorTest {
   @Test
   public void testUnderriding_finalHashCodeEqualsAndToString() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -791,7 +804,7 @@ public class ProcessorTest {
   @Test
   public void testUnderriding_finalHashCodeAndEquals() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -829,7 +842,7 @@ public class ProcessorTest {
   @Test
   public void testUnderriding_finalToString() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -863,7 +876,7 @@ public class ProcessorTest {
   @Test
   public void testSiblingNameClashes() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("/** Block import of java.lang.String. #evil */")
@@ -890,7 +903,7 @@ public class ProcessorTest {
   @Test
   public void testNestedNameClashes() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("/** Clashes with the inner type generated by FreeBuilder. */")
@@ -918,7 +931,7 @@ public class ProcessorTest {
   @Test
   public void testBuilderClassIsEmpty_whenNotSubclassed() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(NO_BUILDER_CLASS)
         .with(new TestBuilder()
             .addLine("Class<?> builderClass = Class.forName(\"com.example.DataType_Builder\");")
@@ -932,7 +945,7 @@ public class ProcessorTest {
   public void testNestedClassHidingType() {
     // See also https://github.com/google/FreeBuilder/issues/61
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -959,7 +972,7 @@ public class ProcessorTest {
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)

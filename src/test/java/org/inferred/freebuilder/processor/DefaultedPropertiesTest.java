@@ -16,8 +16,10 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -32,15 +34,22 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.List;
+
 import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class DefaultedPropertiesTest {
 
-  @Parameters(name = "{0}")
-  public static Iterable<JavaFileObject> parameters() {
-    return ImmutableList.of(OPTIMIZED_BUILDER, SLOW_BUILDER);
+  @Parameters(name = "{0}, {1}")
+  @SuppressWarnings("unchecked")
+  public static Iterable<Object[]> featureSets() {
+    return () -> Lists
+        .cartesianProduct(FeatureSets.ALL, ImmutableList.of(OPTIMIZED_BUILDER, SLOW_BUILDER))
+        .stream()
+        .map(List::toArray)
+        .iterator();
   }
 
   /**
@@ -86,14 +95,14 @@ public class DefaultedPropertiesTest {
       .build();
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-
   @Shared public BehaviorTester behaviorTester;
-  @Parameter public JavaFileObject dataType;
+  @Parameter(value = 0) public FeatureSet features;
+  @Parameter(value = 1) public JavaFileObject dataType;
 
   @Test
   public void testMergeFromBuilder_defaultsDoNotOverride() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -110,7 +119,7 @@ public class DefaultedPropertiesTest {
   @Test
   public void testMergeFromValue_defaultsDoNotOverride() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -127,7 +136,7 @@ public class DefaultedPropertiesTest {
   @Test
   public void testMergeFromBuilder_nonDefaultsUsed() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -144,7 +153,7 @@ public class DefaultedPropertiesTest {
   @Test
   public void testMergeFromValue_nonDefaultsUsed() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -162,7 +171,7 @@ public class DefaultedPropertiesTest {
   @Test
   public void testMergeFromBuilder_nonDefaultsOverride() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -180,7 +189,7 @@ public class DefaultedPropertiesTest {
   @Test
   public void testMergeFromValue_nonDefaultsOverride() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
@@ -199,7 +208,7 @@ public class DefaultedPropertiesTest {
   @Test
   public void testClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")

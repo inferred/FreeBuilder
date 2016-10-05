@@ -15,6 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.junit.Assume.assumeTrue;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.testing.EqualsTester;
 
@@ -22,24 +25,36 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code List<?>} properties. */
-@RunWith(BehaviorTestRunner.class)
+@RunWith(Parameterized.class)
+@UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class MapPropertyFactoryTest {
+
+  @Parameters(name = "{0}")
+  public static List<FeatureSet> featureSets() {
+    return FeatureSets.ALL;
+  }
 
   private static final JavaFileObject MAP_PROPERTY_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -81,13 +96,15 @@ public class MapPropertyFactoryTest {
       .addLine("}")
       .build();
 
+  @Parameter public FeatureSet features;
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
   @Test
   public void testDefaultEmpty() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
@@ -99,7 +116,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testPut_nonNullKey_nonNullValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -116,7 +133,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testPut_primitiveKey_nonNullValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PRIMITIVE_KEY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -133,7 +150,7 @@ public class MapPropertyFactoryTest {
   public void testPut_nullKey_nonNullValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -145,7 +162,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testPut_nonNullKey_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PRIMITIVE_VALUE_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -161,7 +178,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testPut_primitiveKey_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PRIMITIVE_KEY_VALUE_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -178,7 +195,7 @@ public class MapPropertyFactoryTest {
   public void testPut_nullKey_primitiveValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PRIMITIVE_VALUE_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -191,7 +208,7 @@ public class MapPropertyFactoryTest {
   public void testPut_nonNullKey_nullValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -204,7 +221,7 @@ public class MapPropertyFactoryTest {
   public void testPut_primitiveKey_nullValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PRIMITIVE_KEY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -216,7 +233,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testPut_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -232,7 +249,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testPutAll_noNulls() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -250,7 +267,7 @@ public class MapPropertyFactoryTest {
   public void testPutAll_nullKey() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("%s<String, Object> items = new %s<String, Object>();",
@@ -267,7 +284,7 @@ public class MapPropertyFactoryTest {
   public void testPutAll_nullValue() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("%s<String, Object> items = new %s<String, Object>();",
@@ -283,7 +300,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testPutAll_duplicate() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -300,7 +317,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testRemove() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -320,7 +337,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testRemove_missingKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -337,7 +354,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testRemove_primitiveKeyType() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PRIMITIVE_KEY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -357,7 +374,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testRemove_primitiveKeyType_missingKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(PRIMITIVE_KEY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -375,7 +392,7 @@ public class MapPropertyFactoryTest {
   public void testRemove_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
@@ -389,7 +406,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -409,7 +426,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testGet_returnsLiveView() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -433,7 +450,7 @@ public class MapPropertyFactoryTest {
   public void testGet_returnsUnmodifiableMap() {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
@@ -446,7 +463,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType template = new com.example.DataType.Builder()")
@@ -466,7 +483,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testMergeFrom_builder() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = new com.example.DataType.Builder()")
@@ -485,7 +502,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testBuilderClear() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
@@ -505,7 +522,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testBuilderClear_noDefaultFactory() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -536,8 +553,9 @@ public class MapPropertyFactoryTest {
 
   @Test
   public void testImmutableMapProperty() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -562,7 +580,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testOverridingAdd() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -591,7 +609,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testOverridingAdd_primitiveKey() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -620,7 +638,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testOverridingAdd_primitiveValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -649,7 +667,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testOverridingAdd_primitiveKeyAndValue() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
@@ -678,7 +696,7 @@ public class MapPropertyFactoryTest {
   @Test
   public void testEquality() {
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(MAP_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new %s()", EqualsTester.class)
@@ -710,7 +728,7 @@ public class MapPropertyFactoryTest {
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
-        .with(new Processor())
+        .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")

@@ -101,8 +101,8 @@ public class SourceBuilder {
   /** Simple in-memory implementation of {@link javax.tools.JavaFileObject JavaFileObject}. */
   private static class Source extends SimpleJavaFileObject {
 
-    private final String content;
     private final String name;
+    private final String content;
 
     /**
      * Creates a new {@link javax.tools.JavaFileObject JavaFileObject} containing the supplied

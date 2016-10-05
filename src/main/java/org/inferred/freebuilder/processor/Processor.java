@@ -15,17 +15,22 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.RoundEnvironments.annotatedElementsIn;
 
 import com.google.auto.service.AutoService;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.FilerUtils;
+import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
 import java.io.IOException;
 import java.util.Set;
@@ -50,6 +55,18 @@ public class Processor extends AbstractProcessor {
 
   private Analyser analyser;
   private final CodeGenerator codeGenerator = new CodeGenerator();
+  private final FeatureSet features;
+
+  private transient FeatureSet environmentFeatures;
+
+  public Processor() {
+    this.features = null;
+  }
+
+  @VisibleForTesting
+  public Processor(FeatureSet features) {
+    this.features = features;
+  }
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
@@ -69,6 +86,9 @@ public class Processor extends AbstractProcessor {
         processingEnv.getMessager(),
         MethodIntrospector.instance(processingEnv),
         processingEnv.getTypeUtils());
+    if (features == null) {
+      environmentFeatures = new EnvironmentFeatureSet(processingEnv);
+    }
   }
 
   @Override
@@ -79,7 +99,8 @@ public class Processor extends AbstractProcessor {
         CompilationUnitBuilder code = new CompilationUnitBuilder(
             processingEnv,
             metadata.getGeneratedBuilder().getQualifiedName(),
-            metadata.getVisibleNestedTypes());
+            metadata.getVisibleNestedTypes(),
+            firstNonNull(features, environmentFeatures));
         codeGenerator.writeBuilderSource(code, metadata);
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),
@@ -113,11 +134,15 @@ public class Processor extends AbstractProcessor {
 
   @Override
   public boolean equals(Object obj) {
-    return (obj instanceof Processor);
+    if (!(obj instanceof Processor)) {
+      return false;
+    }
+    Processor other = (Processor) obj;
+    return Objects.equal(features, other.features);
   }
 
   @Override
   public int hashCode() {
-    return Processor.class.hashCode();
+    return Objects.hashCode(Processor.class, features);
   }
 }
