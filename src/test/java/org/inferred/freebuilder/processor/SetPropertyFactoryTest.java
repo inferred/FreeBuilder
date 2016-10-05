@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.junit.Assume.assumeTrue;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
@@ -29,8 +30,8 @@ import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
-import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.CompilationException;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -78,6 +79,48 @@ public class SetPropertyFactoryTest {
       .addLine("  public abstract %s<Integer> getItems();", Set.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("  public static Builder builder() {")
+      .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final String STRING_VALIDATION_ERROR_MESSAGE = "Cannot add empty string";
+
+  private static final JavaFileObject VALIDATED_STRINGS = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  public abstract %s<%s> getItems();", Set.class, String.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    @Override public Builder addItems(String unused) {")
+      .addLine("      %s.checkArgument(!unused.isEmpty(), \"%s\");",
+          Preconditions.class, STRING_VALIDATION_ERROR_MESSAGE)
+      .addLine("      return super.addItems(unused);")
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("  public static Builder builder() {")
+      .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final String INT_VALIDATION_ERROR_MESSAGE = "Items must be non-negative";
+
+  private static final JavaFileObject VALIDATED_INTS = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  public abstract %s<Integer> getItems();", Set.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    @Override public Builder addItems(int element) {")
+      .addLine("      %s.checkArgument(element >= 0, \"%s\");",
+          Preconditions.class, INT_VALIDATION_ERROR_MESSAGE)
+      .addLine("      return super.addItems(element);")
+      .addLine("    }")
+      .addLine("  }")
       .addLine("  public static Builder builder() {")
       .addLine("    return new Builder();")
       .addLine("  }")
@@ -303,7 +346,22 @@ public class SetPropertyFactoryTest {
   }
 
   @Test
-  public void testClear() {
+  public void testClear_noElements() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .clearItems()")
+            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_twoElements() {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
@@ -623,63 +681,55 @@ public class SetPropertyFactoryTest {
   }
 
   @Test
-  public void testOverridingAdd() {
+  public void testValidation_varargsAdd() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItems();", Set.class, String.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder addItems(String unused) {")
-            .addLine("      return this;")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
-            .addLine("}")
-            .build())
+        .with(VALIDATED_STRINGS)
         .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .addItems(\"zero\")", ImmutableList.class)
-            .addLine("    .addItems(\"one\", \"two\")", ImmutableList.class)
-            .addLine("    .addAllItems(%s.of(\"three\", \"four\"))", ImmutableList.class)
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).isEmpty();")
+            .addLine("new com.example.DataType.Builder().addItems(\"one\", \"\");")
             .build())
         .runTest();
   }
 
   @Test
-  public void testOverridingAdd_primitive() {
+  public void testValidation_addAll() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<Integer> getItems();", Set.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder addItems(int unused) {")
-            .addLine("      return this;")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
-            .addLine("}")
-            .build())
+        .with(VALIDATED_STRINGS)
         .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .addItems(0)", ImmutableList.class)
-            .addLine("    .addItems(1, 2)", ImmutableList.class)
-            .addLine("    .addAllItems(%s.of(3, 4))", ImmutableList.class)
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).isEmpty();")
+            .addLine("new com.example.DataType.Builder().addAllItems(%s.of(\"three\", \"\"));",
+                ImmutableList.class)
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPrimitiveValidation_varargsAdd() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_INTS)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder().addItems(1, -2);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPrimitiveValidation_addAll() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_INTS)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder().addAllItems(%s.of(3, -4));",
+                ImmutableList.class)
             .build())
         .runTest();
   }
@@ -739,6 +789,189 @@ public class SetPropertyFactoryTest {
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
             .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testFromReusesImmutableSetInstance() {
+    assumeTrue(features.get(GUAVA).isAvailable());
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder.from(value).build();")
+            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromReusesImmutableSetInstance() {
+    assumeTrue(features.get(GUAVA).isAvailable());
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = new DataType.Builder().mergeFrom(value).build();")
+            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFromEmptySetDoesNotPreventReuseOfImmutableSetInstance() {
+    assumeTrue(features.get(GUAVA).isAvailable());
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = new DataType.Builder()")
+            .addLine("    .from(value)")
+            .addLine("    .mergeFrom(new DataType.Builder())")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testModifyAndAdd() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .addItems(\"three\")")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.getItems())")
+            .addLine("    .containsExactly(\"one\", \"two\", \"three\")")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testModifyAndRemove() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .removeItems(\"one\")")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.getItems()).containsExactly(\"two\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testModifyAndClear() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .clearItems()")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.getItems()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testModifyAndClearAll() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.getItems()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeInvalidData() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_STRINGS)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addImport(Set.class)
+            .addImport(ImmutableSet.class)
+            .addLine("DataType value = new DataType() {")
+            .addLine("  @Override public Set<String> getItems() {")
+            .addLine("    return ImmutableSet.of(\"foo\", \"\");")
+            .addLine("  }")
+            .addLine("};")
+            .addLine("DataType.Builder.from(value);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeCombinesSets() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType data1 = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType data2 = new DataType.Builder()")
+            .addLine("    .addItems(\"three\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder.from(data2).mergeFrom(data1).build();")
+            .addLine("assertThat(copy.getItems())")
+            .addLine("    .containsExactly(\"three\", \"two\", \"one\")")
+            .addLine("    .inOrder();")
             .build())
         .runTest();
   }
