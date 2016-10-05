@@ -168,6 +168,22 @@ public class ListPropertyFactoryTest {
         .runTest();
   }
 
+  @Test
+  public void testAddAllIterable_reusesImmutableListInstance() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("ImmutableList<String> values = ImmutableList.of(\"one\", \"two\");")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(values)", DodgySingleIterable.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).isSameAs(values);")
+            .build())
+        .runTest();
+  }
+
   /** Throws a {@link NullPointerException} on second call to {@link #iterator()}. */
   public static class DodgySingleIterable implements Iterable<String> {
     private ImmutableList<String> values;
@@ -194,6 +210,21 @@ public class ListPropertyFactoryTest {
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .clearItems()")
+            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testClear_emptyList() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .clearItems()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
@@ -340,6 +371,58 @@ public class ListPropertyFactoryTest {
   }
 
   @Test
+  public void testInstanceReuse() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder.from(value).build();")
+            .addLine("assertThat(value.getItems()).isSameAs(copy.getItems());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPropertyClearAfterMergeFromValue() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .clearItems()")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.getItems()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testBuilderClearAfterMergeFromValue() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .build();")
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .clear()")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.getItems()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testImmutableListProperty() {
     assumeTrue("Guava available", features.get(GUAVA).isAvailable());
     behaviorTester
@@ -448,7 +531,16 @@ public class ListPropertyFactoryTest {
         .runTest();
   }
 
+  @Test
+  public void testCompilesWithoutWarnings() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .compiles()
+        .withNoWarnings();
+  }
+
   private static TestBuilder testBuilder() {
-    return new TestBuilder().addImport("com.example.DataType");
+    return new TestBuilder().addImport("com.example.DataType").addImport(ImmutableList.class);
   }
 }
