@@ -15,17 +15,15 @@
   <body>
 
     <header>
-      <div class="container">
-        <h1>@Free<em>Builder</em></h1>
-        <h2>Automatic generation of the Builder pattern for Java 1.6+</h2>
-      </div>
+      <h1>@Free<em>Builder</em></h1>
+      <h2>Automatic generation of the Builder pattern for Java 1.6+</h2>
     </header>
 
     <body>
 
-      <h3>Quick Start</h3>
+      <quickstart>
+        <h3>Quick Start</h3>
 
-      <div class="quickstart">
         <figure>
           <figcaption>
             Want a Builder API without the hassle? In your
@@ -110,16 +108,16 @@ dependencies {
 Person bob = <java-keyword>new</java-keyword> Person.Builder()<animate-add-3>.setName(<java-string>"Bob"</java-string>).setAge(23).build();</animate-add-3></pre>
         </figure>
         <p>For a complete feature list, extensive README, and issue tracker, please see <a href="https://github.com/google/FreeBuilder">the project page on GitHub</a>.</p>
-      </div>
+      </quickstart>
 
-      <h3>Features</h3>
+      <features>
+        <h3>Features</h3>
 
-      <div class="features">
-      <p>FreeBuilder is packed with things like...</p>
+        <p>FreeBuilder is packed with things like...</p>
 
-      <figure>
-          <figcaption>Collections support</figcaption>
-          <pre>
+        <figure>
+            <figcaption>Collections support</figcaption>
+            <pre>
 @FreeBuilder
 <java-keyword>interface</java-keyword> TopOfThePops {
   <java-comment>/** Artists who've released Number 1 hits. */</java-comment>
@@ -134,10 +132,10 @@ Person bob = <java-keyword>new</java-keyword> Person.Builder()<animate-add-3>.se
     .addArtists(<java-string>"Michael Jackson"</java-string>, <java-string>"Billy Bragg"</java-string>)
     .putAllAlbums(albumsByYear)
     .build();</pre>
-      </figure>
-      <figure>
-          <figcaption><a href="https://github.com/google/guava/wiki/NewCollectionTypesExplained">Guava collections</a> support</figcaption>
-          <pre>
+        </figure>
+        <figure>
+            <figcaption><a href="https://github.com/google/guava/wiki/NewCollectionTypesExplained">Guava collections</a> support</figcaption>
+            <pre>
 @FreeBuilder
 <java-keyword>interface</java-keyword> BookShop {
   <java-comment>/** Shop assistants. */</java-comment>
@@ -152,10 +150,10 @@ Person bob = <java-keyword>new</java-keyword> Person.Builder()<animate-add-3>.se
     .addAssistants(<java-string>"Bill"</java-string>, <java-string>"Bob"</java-string>)
     .putAllBooks(<java-string>"Science Fiction"</java-string>, <java-static><a href="https://docs.oracle.com/javase/8/docs/api/java/util/Arrays.html#asList-T...-">asList</a></java-static>(<java-string>"I, Robot"</java-string>, <java-string>"Cyteen"</java-string>))
     .build();</pre>
-      </figure>
-      <figure>
-          <figcaption>Jackson support (just one line!)</figcaption>
-          <pre>
+        </figure>
+        <figure>
+            <figcaption>Jackson support (just one line!)</figcaption>
+            <pre>
 @FreeBuilder
 <a href="https://fasterxml.github.io/jackson-databind/javadoc/2.2.0/com/fasterxml/jackson/databind/annotation/JsonDeserialize.html">@JsonDeserialize</a>(builder = Person.Builder.<java-keyword>class</java-keyword>)
 <java-keyword>public</java-keyword> <java-keyword>interface</java-keyword> Person {
@@ -169,10 +167,10 @@ Person bob = <java-keyword>new</java-keyword> Person.Builder()<animate-add-3>.se
 
 Person person = <java-keyword>new</java-keyword> <a href="https://fasterxml.github.io/jackson-databind/javadoc/2.2.0/com/fasterxml/jackson/databind/ObjectMapper.html">ObjectMapper</a>().<a href="https://fasterxml.github.io/jackson-databind/javadoc/2.2.0/com/fasterxml/jackson/databind/ObjectMapper.html#readValue(java.lang.String, java.lang.Class)">readValue</a>(
     <java-string>"{\"name\":\"Bob\", \"age\":23}"</java-string>, Person.<java-keyword>class</java-keyword>);</pre>
-      </figure>
-      <figure>
-          <figcaption><a href="http://www.gwtproject.org/">GWT</a> support</figcaption>
-          <pre>
+        </figure>
+        <figure>
+            <figcaption><a href="http://www.gwtproject.org/">GWT</a> support</figcaption>
+            <pre>
 @FreeBuilder
 <a href="http://google.github.io/guava/releases/18.0/api/docs/com/google/common/annotations/GwtCompatible.html">@GwtCompatible</a>(serializable = <java-keyword>true</java-keyword>)
 <java-keyword>public</java-keyword> <java-keyword>interface</java-keyword> Person <java-keyword>extends</java-keyword> <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html">Serializable</a> {
@@ -185,10 +183,10 @@ Person person = <java-keyword>new</java-keyword> <a href="https://fasterxml.gith
 }
 
 RPC.<java-static><a href="http://www.gwtproject.org/javadoc/latest/com/google/gwt/user/server/rpc/RPC.html#encodeResponseForSuccess(java.lang.reflect.Method, java.lang.Object)">encodeResponseForSuccess</a></java-static>(someMethod, person);</pre>
-      </figure>
-      <figure>
-          <figcaption>Don't just build, modify!</figcaption>
-          <pre>
+        </figure>
+        <figure>
+            <figcaption>Don't just build, modify!</figcaption>
+            <pre>
 BookShop bookshop = BookShop.Builder
     .<tipped><java-static>from</java-static><tooltip>The static <code>from</code> method turns a data object back into a Builder.</tooltip></tipped>(acquiredBookshop)
     .removeAssistants(<java-string>"Terry"</java-string>)
@@ -198,10 +196,10 @@ BookShop bookshop = BookShop.Builder
     })
     .<tipped>mergeFrom<tooltip>The <code>mergeFrom</code> method combines collections.</tooltip></tipped>(existingBookshop)
     .build();</pre>
-      </figure>
-      <figure>
-          <figcaption>Keep your tests robust with partials</figcaption>
-          <pre>
+        </figure>
+        <figure>
+            <figcaption>Keep your tests robust with partials</figcaption>
+            <pre>
 <java-comment>// This code doesn't need to care about the ins-and-outs
 // of ISBN compliance (when we get around to implementing
 // it!), nor does it need any of the other fields we're
@@ -216,14 +214,14 @@ Book book = <java-keyword>new</java-keyword> Book.Builder()
 <java-comment>// Whoops! Throws UnsupportedOperationException.</java-comment>
 book.getPublicationDate();
 </pre>
-      </figure>
-      <figure>
-          <figcaption>Google-standard code readability and peer review</figcaption>
-          <pre><img src="images/peer-review-example.png" width="800" height="500"></pre>
-      </figure>
+        </figure>
+        <figure>
+            <figcaption>Google-standard code readability and peer review</figcaption>
+            <pre><img src="images/peer-review-example.png" width="800" height="500"></pre>
+        </figure>
 
-      <p>For a complete feature list, extensive README, and issue tracker, please see <a href="https://github.com/google/FreeBuilder">the project page on GitHub</a>.</p>
-    </div>
+        <p>For a complete feature list, extensive README, and issue tracker, please see <a href="https://github.com/google/FreeBuilder">the project page on GitHub</a>.</p>
+      </features>
 
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

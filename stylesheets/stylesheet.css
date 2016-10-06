@@ -16,7 +16,7 @@ body {
   }
 }
 
-.quickstart figure, .quickstart p {
+quickstart figure, quickstart p {
   display: block;
   margin: 16px 1em;
 }
@@ -36,6 +36,13 @@ figure pre {
   width: 41.5em;
   overflow: hidden;
   margin: 0;
+}
+
+@media screen and (max-width: 599px) {
+  figure pre img {
+    position: absolute;
+    top: -6.5em;
+  }
 }
 
 pre a, pre a:visited {
@@ -58,6 +65,12 @@ tooltip {
   font-family: Lato, sans-serif;
   font-weight: 400;
   z-index: 1;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 tipped:hover tooltip, tipped-right:hover tooltip {
   display: block;
@@ -69,68 +82,8 @@ tipped-right tooltip {
   right: 0em;
 }
 
-.features pre {
+features pre {
   height: 20em;
-}
-
-@media screen and (max-width: 599px) {
-  figure pre img {
-    position: absolute;
-    top: -6.5em;
-  }
-}
-
-@keyframes scrolling {
-  0%   { opacity: 0; top: 0px; }
-  15%  { opacity: 1; }
-  85%  { opacity: 1; }
-  100% { opacity: 0; top: -105em; }
-}
-
-@keyframes scrolling-large {
-  0%   { opacity: 0; top: 0; }
-  2%   { opacity: 1; }
-  23%  { opacity: 1; }
-  25%  { opacity: 0; top: -230em; }
-  25.1%{ top: -270em; }
-  27%  { opacity: 1; }
-  48%  { opacity: 1; }
-  50%  { opacity: 0; top: -480em; }
-  50.1%{ top: -520em; }
-  52%  { opacity: 1; }
-  73%  { opacity: 1; }
-  75%  { opacity: 0; top: -730em; }
-  75.1%{ top: -770em; }
-  77%  { opacity: 1; }
-  98%  { opacity: 1; }
-  100% { opacity: 0; top: -1000em; }
-}
-
-animate-scrolling,animate-scrolling-large {
-  display: inline-block;
-  font-size: smaller;
-  position: absolute;
-  top: 0px;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
-}
-animate-scrolling {
-  animation-name: scrolling;
-  animation-duration: 5s;
-}
-animate-scrolling-large {
-  animation-name: scrolling-large;
-  animation-duration: 40s;
-  left: -15em;
-}
-
-tooltip, animate-scrolling, animate-scrolling-large {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 @keyframes typing-1 {
@@ -211,57 +164,6 @@ pre:hover animate-add-2,
 pre:hover animate-add-3 {
   animation-name: none;
   overflow: visible;
-}
-
-@keyframes newline-2 {
-  0%   { max-height: 0; }
-  29.5%{ max-height: 0; }
-  30%  { max-height: 3em; }
-  100% { max-height: 3em; }
-}
-
-@keyframes newline-3 {
-  0%   { max-height: 0; }
-  59.5%{ max-height: 0; }
-  60%  { max-height: 3em; }
-  100% { max-height: 3em; }
-}
-
-animate-add-2-line,animate-add-3-line {
-  display: block;
-  overflow: hidden;
-  animation-duration: 10s;
-  animation-iteration-count: infinite;
-  animation-timing-function: steps(150);
-}
-animate-add-2-line {
-  animation-name: newline-2;
-}
-animate-add-3-line {
-  animation-name: newline-3;
-}
-
-pre:hover animate-add-2-line,
-pre:hover animate-add-3-line {
-  animation: none;
-  overflow: visible;
-}
-
-.container {
-  width: 90%;
-  max-width: 600px;
-  position: relative;
-  margin: 0 auto;
-  /* padding-top: 1em; */
-}
-
-section {
-  display: block;
-  margin: 0 0 1.25em 0;
-}
-
-li {
-  line-height: 1.4 ;
 }
 
 /* Header, <header>
@@ -366,28 +268,6 @@ h3:after {
 /* Main Content
 */
 
-#main_content {
-  width: 100%;
-  -webkit-font-smoothing: antialiased;
-}
-section img {
-  max-width: 100%
-}
-
-blockquote {
-  color: #6B4242;
-  margin: 0 auto;
-  overflow: auto;
-  width: 85%;
-  font-size: 93%;
-}
-
-blockquote cite {
-  float: right;
-  right: 0;
-  margin-top: 0.336em;
-}
-
 pre, code {
     font-size: 81.25%;
     font-weight: 300;
@@ -404,108 +284,22 @@ pre {
     overflow: auto;
     overflow-y: hidden;
 }
-java-keyword,.keyword {
+java-keyword {
   font-family: "Source Code Pro", monospace;
   font-weight: 500;
 }
-java-static,.static {
+java-static {
   font-style: italic;
 }
-java-comment,.comment {
+java-comment {
   color: #46A94B;
 }
-java-field,.field {
+java-field {
   color: #7e1e9c;
 }
-java-string,.string {
+java-string {
   color: #929591;
 }
-
-/* Buttons
-*/
-
-.btn {
-  display: inline-block;
-  background: #539EE8;
-  background: -webkit-linear-gradient(top,
-      rgba(83, 158, 232, 0.2), rgba(83, 158, 232, 0.45) 50%,
-      rgba(83, 158, 232, 0.5) 50%, rgba(83, 158, 232, 0.9));
-  padding: 0.5em 1.5em;
-  margin: 0 0.5385em;
-  border-radius: 2em;
-  border: 2px solid rgba(0, 0, 0, 0.5);
-  font-family: "Century Gothic", "Gill Sans", sans-serif;
-  font-weight: 700;
-  font-size: 81.25%;
-  color: aliceblue;
-  text-align: center;
-  text-decoration: none;
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.btn:hover {
-  background: -webkit-linear-gradient(top,
-      rgba(55, 106, 155, 0.9), rgba(55, 106, 155, 0.5) 50%,
-      rgba(55, 106, 155, 0.45) 50%, rgba(55, 106, 155, 0.2));
-  text-decoration: none;
-}
-
-.btn .icon {
-  display: inline-block;
-  width: 1.23em;
-  height: 1.23em;
-  margin: 0 0.615em 0 0;
-  float: left;
-}
-
-.btn-github .icon {
-  opacity: 0.7;
-  background: url("../images/github.png") 0 0 no-repeat;
-  background-size: 1.23em;
-}
-
-em strong {
-  font-family: Lato, sans-serif;
-  font-weight: 700;
-  font-style: normal;
-}
-
-em strong:before {
-  content: "″";
-  padding-right: 0.1em;
-  display: inline;
-}
-
-em strong:after {
-  content: "″";
-  padding-left: 0.1em;
-  display: inline;
-}
-
-section#downloads {
-    text-align: center;
-    display: block;
-    margin-top: 0.9375em;
-}
-
-@media screen and (max-width: 500px) {
-  section#downloads .btn {
-    display: none;
-  }
-
-  section#downloads .btn-github {
-    display: inline-block
-  }
-}
-
-#main_content {
-    width: 100%;
-    -webkit-font-smoothing: subpixel-antialiased;
-    text-align: justify;
-    padding-top: 2em;
-}
-
 
 a {
   color: #63c0f5;
@@ -514,128 +308,4 @@ a {
 
 a:hover {
   text-decoration: underline;
-}
-
-code {
-    font-family: "Source Code Pro", monospace;
-    font-weight: 300;
-}
-
-code em {
-  font-family: "Source Code Pro", monospace;
-  font-weight: 500;
-  display: inline-block;
-  font-style: normal;
-  margin: 0 1px;
-}
-
-ul {
-  padding-left: 3em;
-}
-
-ul ul {
-  padding-left: 1.5em;
-}
-
-ul li {
-  position: relative;
-}
-
-ul li {
-  list-style: none;
-}
-
-ul li:before {
-  content: "#";
-  position: absolute;
-  left: -1.23em;
-  font-family: "Century Gothic", "Gill Sans", sans-serif;
-  font-size: 81.25%;
-  margin-top: 2px;  /* Weirdly the same for Android. */
-  color: #539ee8;
-}
-
-@media screen and (min-width: 1200px) {
-  ol#toc {
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 620px;
-    padding: 2em 1em 2em 0;
-    white-space: nowrap;
-
-    margin: 0;
-  }
-
-  ol#toc:before {
-    display: block;
-    content: "Table of contents";
-    font-family: "Century Gothic", "Gill Sans", sans-serif;
-    font-weight: 300;
-    font-size: 112.5%;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1),
-                 0 0   5px rgba(181, 232, 83, 0.1),
-                 0 0  10px rgba(181, 232, 83, 0.1);
-    margin: 0;
-    padding-bottom: 0.5em;
-  }
-}
-
-@media screen and (max-width: 1200px) {
-  ol#toc {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: -19.05em;
-    width: 16.00em;
-    background: white;
-    z-index: 1;
-    padding: 1em;
-    padding-left: 2em;
-    border-right: 1px solid black;
-    border-bottom: 1px solid black;
-    white-space: nowrap;
-    border-radius: 0 0 3px 0;
-    -moz-border-radius: 0 0 3px 0;
-    -webkit-border-radius: 0 0 3px 0;
-    box-shadow: 5px 5px 1px rgba(0, 0, 0, 0.1);
-    margin: 0;
-  }
-
-  ol#toc:hover, ol#toc:focus {
-    left: -1em;
-  }
-
-  ol#toc:before {
-    display: block;
-    position: absolute;
-    content: "Table of contents";
-    background: transparent;
-    top: 10em;
-    right: -5.92em;
-
-    -webkit-transform: rotate(-90deg);
-    -moz-transform: rotate(-90deg);
-    -ms-transform: rotate(-90deg);
-    -o-transform: rotate(-90deg);
-    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
-
-    font-family: "Century Gothic", "Gill Sans", sans-serif;
-    font-weight: 300;
-    font-size: 112.5%;
-    margin: 0;
-    padding: 0.5em;
-    background-color: rgba(240, 240, 240, 0.7);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-top: none;
-    border-radius: 0 0 10px 10px;
-    -moz-border-radius: 0 0 10px 10px;
-    -webkit-border-radius: 0 0 10px 10px;
-    text-shadow: -5px 5px 1px rgba(0, 0, 0, 0.04);
-    box-shadow: -5px 5px 1px rgba(0, 0, 0, 0.02);
-  }
-}
-
-ol#toc li {
-  display: block
 }
