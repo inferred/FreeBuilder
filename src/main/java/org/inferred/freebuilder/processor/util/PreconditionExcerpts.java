@@ -71,6 +71,41 @@ public class PreconditionExcerpts {
     }
   }
 
+  private static final class UnsetPropertiesCheckExcerpt extends Excerpt {
+    private final String unsetPropertiesEnumeration;
+    private final Object condition;
+    private final String message;
+
+    private UnsetPropertiesCheckExcerpt(
+            String unsetPropertiesEnumeration, Object condition, String message) {
+      this.unsetPropertiesEnumeration = unsetPropertiesEnumeration;
+      this.condition = condition;
+      this.message = message;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      List<Excerpt> escapedArgs = new ArrayList<Excerpt>();
+      escapedArgs.add(Excerpts.add("\" + %s + \"", unsetPropertiesEnumeration));
+      String messageConcatenated = code.subBuilder()
+         .add("\"" + JAVA_STRING_ESCAPER.escape(message) + "\"", escapedArgs.toArray())
+         .toString()
+         .replace("\"\" + ", "")
+         .replace(" + \"\"", "");
+      code.addLine("if (%s) {", negate(code, condition))
+          .addLine("  throw new org.inferred.freebuilder.UnsetPropertiesException(%s, %s);",
+                   messageConcatenated, unsetPropertiesEnumeration)
+          .addLine("}");
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("condition", condition);
+      fields.add("message", message);
+      fields.add("unsetPropertiesEnumeration", unsetPropertiesEnumeration);
+    }
+  }
+
   private static final class CheckNotNullPreambleExcerpt extends Excerpt {
     private final Object reference;
 
@@ -264,6 +299,24 @@ public class PreconditionExcerpts {
       final Object... args) {
     return new GuavaCheckExcerpt(
         args, condition, message, "checkState", IllegalStateException.class);
+  }
+
+  /**
+   * Returns an excerpt that checks for unset properties.
+   *
+   * <pre>code.add(checkUnsetPropertiesState("_unsetProperties.isEmpty()",
+   *         "Not set: %s", "_unsetProperties"));</pre>
+   *
+   * @param condition an excerpt containing the expression to check
+   * @param message the error message template to use
+   * @param unsetPropertiesEnumeration name of the unset properties EnumSet
+   */
+  public static Excerpt checkUnsetPropertiesState(
+      final Object condition,
+      final String message,
+      final String unsetPropertiesEnumeration) {
+    return new UnsetPropertiesCheckExcerpt(
+         unsetPropertiesEnumeration, condition, message);
   }
 
   /**
