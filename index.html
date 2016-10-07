@@ -233,7 +233,7 @@ book.getPublicationDate();
   // Callback for GitHub API; fills out version tags with the latest version
   updateVersionsCallback = function(response) {
     // Return the largest array, considered lexicographically
-    maxArray = function(a, b) {
+    var maxArray = function(a, b) {
       for (var i = 0; i < Math.min(a.length, b.length); i++) {
         if (a[i] < b[i]) {
           return b
@@ -250,12 +250,12 @@ book.getPublicationDate();
         .reduce(maxArray)
         .join("."))
     if (typeof(Storage) !== "undefined") {
-      localStorage.latestFreeBuilder = latestTag
+      localStorage.latestFreeBuilderVersion = latestTag
     }
     updateVersions(latestTag)
   }
-  if (typeof(Storage) !== "undefined" && localStorage.latestFreeBuilder !== null) {
-    updateVersions(localStorage.latestFreeBuilder)
+  if (typeof(Storage) !== "undefined" && localStorage.latestFreeBuilderVersion !== null) {
+    updateVersions(localStorage.latestFreeBuilderVersion)
   }
 </script>
 <script src="https://api.github.com/repos/google/FreeBuilder/tags?callback=updateVersionsCallback"></script>
