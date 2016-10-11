@@ -15,6 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+import static org.junit.Assume.assumeTrue;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -200,6 +203,24 @@ public class SetMutateMethodTest {
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addProperties(5)")
             .addLine("    .mutateProperties(set -> set.add(-3));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void modifyAndMutateModifiesUnderlyingProperty() {
+    assumeTrue(features.get(FUNCTION_PACKAGE).consumer().isPresent());
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder().addProperties(1, 2).build();")
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .mutateProperties(set -> set.remove(1))")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.getProperties()).containsExactly(2);")
             .build())
         .runTest();
   }
