@@ -41,6 +41,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedSet;
 import org.inferred.freebuilder.processor.util.Block;
+import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -208,9 +209,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
               addAllMethod(property),
               Iterable.class,
               elementType)
-          .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("    %s(element);", addMethod(property))
-          .addLine("  }")
+          .add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
