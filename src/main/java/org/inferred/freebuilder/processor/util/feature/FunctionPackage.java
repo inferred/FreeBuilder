@@ -57,6 +57,10 @@ public enum FunctionPackage implements Feature<FunctionPackage> {
     this.humanReadableFormat = humanReadableFormat;
   }
 
+  public boolean lambdasAvailable() {
+    return (this == AVAILABLE);
+  }
+
   /**
    * Parameterized type for {@code java.util.function.Consumer<T>}, if available.
    */

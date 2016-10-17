@@ -1,10 +1,13 @@
 package org.inferred.freebuilder.processor.util;
 
 import static java.util.Arrays.asList;
+import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
+
+import javax.lang.model.type.TypeMirror;
 
 public class Excerpts {
 
@@ -58,6 +61,46 @@ public class Excerpts {
 
   public static Excerpt empty() {
     return EMPTY;
+  }
+
+  private static final class ForEachExcerpt extends Excerpt {
+    private final TypeMirror elementType;
+    private final String iterable;
+    private final String method;
+
+    private ForEachExcerpt(TypeMirror elementType, String iterable, String method) {
+      this.elementType = elementType;
+      this.iterable = iterable;
+      this.method = method;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      if (code.feature(FUNCTION_PACKAGE).lambdasAvailable()) {
+        code.addLine("%s.forEach(this::%s);", iterable, method);
+      } else {
+        code.addLine("for (%s element : %s) {", elementType, iterable)
+            .addLine("  %s(element);", method)
+            .addLine("}");
+      }
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("elementType", elementType);
+      fields.add("iterable", iterable);
+      fields.add("method", method);
+    }
+  }
+
+  /**
+   * Returns an excerpt calling {@code method} with each {@code elementType} element of
+   * {@code iterable}.
+   *
+   * <p>Will be {@code iterable.forEach(this::method);} on Java 8+.
+   */
+  public static Excerpt forEach(TypeMirror elementType, String iterable, String method) {
+    return new ForEachExcerpt(elementType, iterable, method);
   }
 
   private static final class JoiningExcerpt extends Excerpt {
