@@ -41,6 +41,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.excerpt.CheckedSet;
 import org.inferred.freebuilder.processor.util.Block;
+import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -176,12 +177,18 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("public %s %s(%s... elements) {",
               metadata.getBuilder(),
               addMethod(property),
-              unboxedType.or(elementType))
-          .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("    %s(element);", addMethod(property))
-          .addLine("  }")
-          .addLine("  return (%s) this;", metadata.getBuilder())
-          .addLine("}");
+              unboxedType.or(elementType));
+      Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.or(elementType));
+      if (arrayUtils.isPresent()) {
+        code.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
+      } else {
+        // Primitive type, Guava not available
+        code.addLine("  for (%s element : elements) {", elementType)
+            .addLine("    %s(element);", addMethod(property))
+            .addLine("  }")
+            .addLine("  return (%s) this;", metadata.getBuilder());
+      }
+      code.addLine("}");
     }
 
     private void addAddAll(SourceBuilder code, Metadata metadata) {
@@ -202,9 +209,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
               addAllMethod(property),
               Iterable.class,
               elementType)
-          .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-          .addLine("    %s(element);", addMethod(property))
-          .addLine("  }")
+          .add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
