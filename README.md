@@ -5,6 +5,7 @@ _Automatic generation of the Builder pattern for Java 1.6+_
 
 [![Maven Central](https://img.shields.io/maven-central/v/org.inferred/freebuilder.svg)](http://mvnrepository.com/artifact/org.inferred/freebuilder)
 [![Travis CI](https://travis-ci.org/google/FreeBuilder.svg?branch=master)](https://travis-ci.org/google/FreeBuilder)
+[![Gitter](https://img.shields.io/gitter/room/inferred/freebuilder.svg?style=flat-square)](https://gitter.im/inferred-freebuilder/Lobby)
 
 > The Builder pattern is a good choice when designing classes whose constructors
 > or static factories would have more than a handful of parameters.
