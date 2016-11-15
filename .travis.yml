@@ -1,11 +1,18 @@
+# sudo/dist/group must be required/trusty/edge to access oraclejdk9 (2016-11-14)
+sudo: required
+dist: trusty
+group: edge
+
 language: java
-install: ./gradlew clean jar
-script: ./gradlew check
 jdk:
   - oraclejdk8
 
+install: ./gradlew clean jar
+script: ./gradlew check
+
 env:
   global:
+    - JAVA_9_HOME=$(jdk_switcher home oraclejdk9)
     - PGP_KEY_ID="2887CE9B"
     - PGP_PASSWORD=""
     - PGP_SECRET_KEY_RING_FILE=~/.gnupg/secring.gpg
