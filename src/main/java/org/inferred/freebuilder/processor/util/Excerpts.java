@@ -5,6 +5,8 @@ import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FU
 
 import com.google.common.collect.ImmutableList;
 
+import org.inferred.freebuilder.processor.util.feature.JavaxPackage;
+
 import java.util.List;
 
 import javax.lang.model.type.TypeMirror;
@@ -101,6 +103,35 @@ public class Excerpts {
    */
   public static Excerpt forEach(TypeMirror elementType, String iterable, String method) {
     return new ForEachExcerpt(elementType, iterable, method);
+  }
+
+  private static final class GeneratedAnnotationExcerpt extends Excerpt {
+    private final Class<?> generator;
+
+    GeneratedAnnotationExcerpt(Class<?> generator) {
+      this.generator = generator;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      QualifiedName generated = code.feature(JavaxPackage.JAVAX).generated().orNull();
+      if (generated != null) {
+        code.addLine("@%s(\"%s\")", generated, generator.getName());
+      }
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("generator", generator);
+    }
+  }
+
+  /**
+   * Returns an excerpt of the {@link javax.annotation.Generated} annotation, if available,
+   * with value set to the full name of the {@code generator} class as recommended.
+   */
+  public static Excerpt generated(Class<?> generator) {
+    return new GeneratedAnnotationExcerpt(generator);
   }
 
   private static final class JoiningExcerpt extends Excerpt {

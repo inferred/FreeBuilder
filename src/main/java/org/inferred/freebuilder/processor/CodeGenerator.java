@@ -51,8 +51,6 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javax.annotation.Generated;
-
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
  */
@@ -96,7 +94,7 @@ public class CodeGenerator {
         .addLine(" * Auto-generated superclass of %s,", metadata.getBuilder().javadocLink())
         .addLine(" * derived from the API of %s.", metadata.getType().javadocLink())
         .addLine(" */")
-        .addLine("@%s(\"%s\")", Generated.class, this.getClass().getName());
+        .add(Excerpts.generated(getClass()));
     for (Excerpt annotation : metadata.getGeneratedBuilderAnnotations()) {
       code.add(annotation);
     }
@@ -744,7 +742,7 @@ public class CodeGenerator {
         .addLine(" * Placeholder. Create {@code %s.Builder} and subclass this type.",
             metadata.getType())
         .addLine(" */")
-        .addLine("@%s(\"%s\")", Generated.class, this.getClass().getName())
+        .add(Excerpts.generated(getClass()))
         .addLine("abstract class %s {}", metadata.getGeneratedBuilder().declaration());
   }
 
