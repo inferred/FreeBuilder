@@ -375,7 +375,8 @@ public class MapMutateMethodTest {
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder putProperties(int key, String value) {")
             .addLine("      checkArgument(key >= 0, \"key must be non-negative\");")
-            .addLine("      checkArgument(!value.startsWith(\"-\"), \"value must not start with '-'\");")
+            .addLine("      checkArgument(!value.startsWith(\"-\"), "
+                + "\"value must not start with '-'\");")
             .addLine("      return super.putProperties(key, value);")
             .addLine("    }")
             .addLine("  }")
