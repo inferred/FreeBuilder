@@ -148,6 +148,31 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testPrefixlessInterface() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  int propertyA();")
+            .addLine("  boolean propertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .propertyA(11)")
+            .addLine("    .propertyB(true)")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.propertyA());")
+            .addLine("assertTrue(value.propertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void test_nullPointerException() {
     behaviorTester
         .with(new Processor(features))

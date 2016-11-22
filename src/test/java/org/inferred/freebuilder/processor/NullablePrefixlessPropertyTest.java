@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2016 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class NullablePropertyTest {
+public class NullablePrefixlessPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
@@ -51,8 +51,8 @@ public class NullablePropertyTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  @%s public abstract %s getItem1();", Nullable.class, String.class)
-      .addLine("  @%s public abstract %s getItem2();", Nullable.class, String.class)
+      .addLine("  @%s public abstract %s item1();", Nullable.class, String.class)
+      .addLine("  @%s public abstract %s item2();", Nullable.class, String.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -65,7 +65,7 @@ public class NullablePropertyTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  @%s public abstract %s getItem();", Nullable.class, String.class)
+      .addLine("  @%s public abstract %s item();", Nullable.class, String.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -78,7 +78,7 @@ public class NullablePropertyTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  @%s public abstract Integer getItem();", Nullable.class)
+      .addLine("  @%s public abstract Integer item();", Nullable.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -99,7 +99,7 @@ public class NullablePropertyTest {
         .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-            .addLine("assertEquals(null, value.getItem());")
+            .addLine("assertEquals(null, value.item());")
             .build())
         .runTest();
   }
@@ -111,7 +111,7 @@ public class NullablePropertyTest {
         .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-            .addLine("assertEquals(null, value.getItem());")
+            .addLine("assertEquals(null, value.item());")
             .build())
         .runTest();
   }
@@ -123,7 +123,7 @@ public class NullablePropertyTest {
         .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
-            .addLine("assertEquals(null, builder.getItem());")
+            .addLine("assertEquals(null, builder.item());")
             .build())
         .runTest();
   }
@@ -135,8 +135,8 @@ public class NullablePropertyTest {
         .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
-            .addLine("    .setItem(\"item\");")
-            .addLine("assertEquals(\"item\", builder.getItem());")
+            .addLine("    .item(\"item\");")
+            .addLine("assertEquals(\"item\", builder.item());")
             .build())
         .runTest();
   }
@@ -148,9 +148,9 @@ public class NullablePropertyTest {
         .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .build();")
-            .addLine("assertEquals(\"item\", value.getItem());")
+            .addLine("assertEquals(\"item\", value.item());")
             .build())
         .runTest();
   }
@@ -162,9 +162,9 @@ public class NullablePropertyTest {
         .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(null)")
+            .addLine("    .item(null)")
             .addLine("    .build();")
-            .addLine("assertEquals(null, value.getItem());")
+            .addLine("assertEquals(null, value.item());")
             .build())
         .runTest();
   }
@@ -176,9 +176,9 @@ public class NullablePropertyTest {
         .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(5)")
+            .addLine("    .item(5)")
             .addLine("    .build();")
-            .addLine("assertEquals((Integer) 5, value.getItem());")
+            .addLine("assertEquals((Integer) 5, value.item());")
             .build())
         .runTest();
   }
@@ -190,9 +190,9 @@ public class NullablePropertyTest {
         .with(NULLABLE_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(null)")
+            .addLine("    .item(null)")
             .addLine("    .build();")
-            .addLine("assertEquals(null, value.getItem());")
+            .addLine("assertEquals(null, value.item());")
             .build())
         .runTest();
   }
@@ -204,11 +204,11 @@ public class NullablePropertyTest {
         .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .build();")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(\"item\", builder.getItem());")
+            .addLine("assertEquals(\"item\", builder.item());")
             .build())
         .runTest();
   }
@@ -220,10 +220,10 @@ public class NullablePropertyTest {
         .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\");")
+            .addLine("    .item(\"item\");")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(\"item\", builder.getItem());")
+            .addLine("assertEquals(\"item\", builder.item());")
             .build())
         .runTest();
   }
@@ -235,10 +235,10 @@ public class NullablePropertyTest {
         .with(NULLABLE_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertEquals(null, value.getItem());")
+            .addLine("assertEquals(null, value.item());")
             .build())
         .runTest();
   }
@@ -251,20 +251,20 @@ public class NullablePropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  @%s public abstract %s getItem();", Nullable.class, String.class)
+            .addLine("  @%s public abstract %s item();", Nullable.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder().setItem(\"default\");")
+            .addLine("    return new Builder().item(\"default\");")
             .addLine("  }")
             .addLine("}")
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertEquals(\"default\", value.getItem());")
+            .addLine("assertEquals(\"default\", value.item());")
             .build())
         .runTest();
   }
@@ -277,11 +277,11 @@ public class NullablePropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  @%s public abstract %s getItem();", Nullable.class, String.class)
+            .addLine("  @%s public abstract %s item();", Nullable.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    public Builder(String s) {")
-            .addLine("      setItem(s);")
+            .addLine("      item(s);")
             .addLine("    }")
             .addLine("  }")
             .addLine("}")
@@ -290,7 +290,7 @@ public class NullablePropertyTest {
             .addLine("com.example.DataType value = new com.example.DataType.Builder(\"item\")")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertEquals(null, value.getItem());")
+            .addLine("assertEquals(null, value.item());")
             .build())
         .runTest();
   }
@@ -305,14 +305,14 @@ public class NullablePropertyTest {
             .addLine("    .addEqualityGroup(")
             .addLine("        com.example.DataType.builder().build(),")
             .addLine("        com.example.DataType.builder()")
-            .addLine("            .setItem(null)")
+            .addLine("            .item(null)")
             .addLine("            .build())")
             .addLine("    .addEqualityGroup(")
             .addLine("        com.example.DataType.builder()")
-            .addLine("            .setItem(\"item\")")
+            .addLine("            .item(\"item\")")
             .addLine("            .build(),")
             .addLine("        com.example.DataType.builder()")
-            .addLine("            .setItem(\"item\")")
+            .addLine("            .item(\"item\")")
             .addLine("            .build())")
             .addLine("    .testEquals();")
             .build())
@@ -328,7 +328,7 @@ public class NullablePropertyTest {
             .addLine("com.example.DataType absent = com.example.DataType.builder()")
             .addLine("    .build();")
             .addLine("com.example.DataType present = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .build();")
             .addLine("assertEquals(\"DataType{}\", absent.toString());")
             .addLine("assertEquals(\"DataType{item=item}\", present.toString());")
@@ -345,14 +345,14 @@ public class NullablePropertyTest {
             .addLine("com.example.DataType aa = com.example.DataType.builder()")
             .addLine("    .build();")
             .addLine("com.example.DataType pa = com.example.DataType.builder()")
-            .addLine("    .setItem1(\"x\")")
+            .addLine("    .item1(\"x\")")
             .addLine("    .build();")
             .addLine("com.example.DataType ap = com.example.DataType.builder()")
-            .addLine("    .setItem2(\"y\")")
+            .addLine("    .item2(\"y\")")
             .addLine("    .build();")
             .addLine("com.example.DataType pp = com.example.DataType.builder()")
-            .addLine("    .setItem1(\"x\")")
-            .addLine("    .setItem2(\"y\")")
+            .addLine("    .item1(\"x\")")
+            .addLine("    .item2(\"y\")")
             .addLine("    .build();")
             .addLine("assertEquals(\"DataType{}\", aa.toString());")
             .addLine("assertEquals(\"DataType{item1=x}\", pa.toString());")
@@ -371,7 +371,7 @@ public class NullablePropertyTest {
             .addLine("com.example.DataType absent = com.example.DataType.builder()")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType present = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .buildPartial();")
             .addLine("assertEquals(\"partial DataType{}\", absent.toString());")
             .addLine("assertEquals(\"partial DataType{item=item}\", present.toString());")
@@ -388,14 +388,14 @@ public class NullablePropertyTest {
             .addLine("com.example.DataType aa = com.example.DataType.builder()")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType pa = com.example.DataType.builder()")
-            .addLine("    .setItem1(\"x\")")
+            .addLine("    .item1(\"x\")")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType ap = com.example.DataType.builder()")
-            .addLine("    .setItem2(\"y\")")
+            .addLine("    .item2(\"y\")")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType pp = com.example.DataType.builder()")
-            .addLine("    .setItem1(\"x\")")
-            .addLine("    .setItem2(\"y\")")
+            .addLine("    .item1(\"x\")")
+            .addLine("    .item2(\"y\")")
             .addLine("    .buildPartial();")
             .addLine("assertEquals(\"partial DataType{}\", aa.toString());")
             .addLine("assertEquals(\"partial DataType{item1=x}\", pa.toString());")

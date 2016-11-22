@@ -52,7 +52,7 @@ import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class ListMultimapPropertyFactoryTest {
+public class ListMultimapBeanPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {

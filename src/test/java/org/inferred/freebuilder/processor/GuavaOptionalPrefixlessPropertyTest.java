@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2016 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import javax.tools.JavaFileObject;
 /** Behavioral tests for {@code Optional<?>} properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class GuavaOptionalPropertyTest {
+public class GuavaOptionalPrefixlessPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
@@ -58,8 +58,8 @@ public class GuavaOptionalPropertyTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<String> getItem1();", Optional.class)
-      .addLine("  public abstract %s<String> getItem2();", Optional.class)
+      .addLine("  public abstract %s<String> item1();", Optional.class)
+      .addLine("  public abstract %s<String> item2();", Optional.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -72,7 +72,7 @@ public class GuavaOptionalPropertyTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<String> getItem();", Optional.class)
+      .addLine("  public abstract %s<String> item();", Optional.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -85,7 +85,7 @@ public class GuavaOptionalPropertyTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<Integer> getItem();", Optional.class)
+      .addLine("  public abstract %s<Integer> item();", Optional.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -106,7 +106,7 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -118,7 +118,7 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -130,7 +130,7 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
-            .addLine("assertEquals(%s.absent(), builder.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), builder.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -142,8 +142,8 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
-            .addLine("    .setItem(\"item\");")
-            .addLine("assertEquals(%s.of(\"item\"), builder.getItem());", Optional.class)
+            .addLine("    .item(\"item\");")
+            .addLine("assertEquals(%s.of(\"item\"), builder.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -155,9 +155,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.of(\"item\"), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"item\"), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -169,7 +169,7 @@ public class GuavaOptionalPropertyTest {
         .with(new Processor(features))
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().setItem((String) null);")
+            .addLine("new com.example.DataType.Builder().item((String) null);")
             .build())
         .runTest();
   }
@@ -181,9 +181,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(%s.of(\"item\"))", Optional.class)
+            .addLine("    .item(%s.of(\"item\"))", Optional.class)
             .addLine("    .build();")
-            .addLine("assertEquals(%s.of(\"item\"), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"item\"), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -195,9 +195,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(%s.<String>absent())", Optional.class)
+            .addLine("    .item(%s.<String>absent())", Optional.class)
             .addLine("    .build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -209,7 +209,7 @@ public class GuavaOptionalPropertyTest {
         .with(new Processor(features))
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().setItem((%s<String>) null);",
+            .addLine("new com.example.DataType.Builder().item((%s<String>) null);",
                 Optional.class)
             .build())
         .runTest();
@@ -222,9 +222,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setNullableItem(\"item\")")
+            .addLine("    .nullableItem(\"item\")")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.of(\"item\"), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"item\"), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -236,9 +236,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setNullableItem(null)")
+            .addLine("    .nullableItem(null)")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -250,10 +250,10 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .clearItem()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -265,9 +265,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(5)")
+            .addLine("    .item(5)")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.of(5), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(5), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -279,7 +279,7 @@ public class GuavaOptionalPropertyTest {
         .with(new Processor(features))
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().setItem((Integer) null);")
+            .addLine("new com.example.DataType.Builder().item((Integer) null);")
             .build())
         .runTest();
   }
@@ -291,9 +291,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(%s.of(5))", Optional.class)
+            .addLine("    .item(%s.of(5))", Optional.class)
             .addLine("    .build();")
-            .addLine("assertEquals(%s.of(5), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(5), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -305,9 +305,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(%s.<Integer>absent())", Optional.class)
+            .addLine("    .item(%s.<Integer>absent())", Optional.class)
             .addLine("    .build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -319,7 +319,7 @@ public class GuavaOptionalPropertyTest {
         .with(new Processor(features))
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().setItem((%s<Integer>) null);",
+            .addLine("new com.example.DataType.Builder().item((%s<Integer>) null);",
                 Optional.class)
             .build())
         .runTest();
@@ -332,9 +332,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setNullableItem(5)")
+            .addLine("    .nullableItem(5)")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.of(5), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(5), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -346,9 +346,9 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setNullableItem(null)")
+            .addLine("    .nullableItem(null)")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -360,10 +360,10 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(5)")
+            .addLine("    .item(5)")
             .addLine("    .clearItem()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -375,11 +375,11 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .build();")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(%s.of(\"item\"), builder.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"item\"), builder.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -391,10 +391,10 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\");")
+            .addLine("    .item(\"item\");")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(%s.of(\"item\"), builder.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"item\"), builder.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -408,9 +408,9 @@ public class GuavaOptionalPropertyTest {
             .addLine("com.example.DataType value = com.example.DataType.builder()")
             .addLine("    .build();")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(%s.of(\"item\"), builder.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"item\"), builder.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -423,9 +423,9 @@ public class GuavaOptionalPropertyTest {
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder();")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(%s.of(\"item\"), builder.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"item\"), builder.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -437,10 +437,10 @@ public class GuavaOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -453,20 +453,20 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItem();", Optional.class, String.class)
+            .addLine("  public abstract %s<%s> item();", Optional.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder().setItem(\"default\");")
+            .addLine("    return new Builder().item(\"default\");")
             .addLine("  }")
             .addLine("}")
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.of(\"default\"), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"default\"), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -479,11 +479,11 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItem();", Optional.class, String.class)
+            .addLine("  public abstract %s<%s> item();", Optional.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    public Builder(String s) {")
-            .addLine("      setItem(s);")
+            .addLine("      item(s);")
             .addLine("    }")
             .addLine("  }")
             .addLine("}")
@@ -492,7 +492,7 @@ public class GuavaOptionalPropertyTest {
             .addLine("com.example.DataType value = new com.example.DataType.Builder(\"item\")")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.item());", Optional.class)
             .build())
         .runTest();
   }
@@ -507,13 +507,13 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItem();", Optional.class, String.class)
+            .addLine("  public abstract %s<%s> item();", Optional.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setItem(String item) {")
+            .addLine("    @Override public Builder item(String item) {")
             .addLine("      %s.checkArgument(item.length() <= 10, \"Item too long\");",
                 Preconditions.class)
-            .addLine("      return super.setItem(item);")
+            .addLine("      return super.item(item);")
             .addLine("    }")
             .addLine("  }")
             .addLine("")
@@ -524,7 +524,7 @@ public class GuavaOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setItem(%s.of(\"very long item\"));", Optional.class)
+            .addLine("    .item(%s.of(\"very long item\"));", Optional.class)
             .build())
         .runTest();
   }
@@ -539,13 +539,13 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItem();", Optional.class, String.class)
+            .addLine("  public abstract %s<%s> item();", Optional.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setItem(String item) {")
+            .addLine("    @Override public Builder item(String item) {")
             .addLine("      %s.checkArgument(item.length() <= 10, \"Item too long\");",
                 Preconditions.class)
-            .addLine("      return super.setItem(item);")
+            .addLine("      return super.item(item);")
             .addLine("    }")
             .addLine("  }")
             .addLine("")
@@ -556,7 +556,7 @@ public class GuavaOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setNullableItem(\"very long item\");")
+            .addLine("    .nullableItem(\"very long item\");")
             .build())
         .runTest();
   }
@@ -570,7 +570,7 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItem();", Optional.class, String.class)
+            .addLine("  public abstract %s<%s> item();", Optional.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder clearItem() {")
@@ -585,7 +585,7 @@ public class GuavaOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setItem(%s.<String>absent());", Optional.class)
+            .addLine("    .item(%s.<String>absent());", Optional.class)
             .build())
         .runTest();
   }
@@ -599,7 +599,7 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItem();", Optional.class, String.class)
+            .addLine("  public abstract %s<%s> item();", Optional.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder clearItem() {")
@@ -614,7 +614,7 @@ public class GuavaOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setNullableItem(null);", Optional.class)
+            .addLine("    .nullableItem(null);", Optional.class)
             .build())
         .runTest();
   }
@@ -629,12 +629,12 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<Integer> getItem();", Optional.class)
+            .addLine("  public abstract %s<Integer> item();", Optional.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setItem(int item) {")
+            .addLine("    @Override public Builder item(int item) {")
             .addLine("      %s.checkArgument(item <= 10, \"Item too big\");", Preconditions.class)
-            .addLine("      return super.setItem(item);")
+            .addLine("      return super.item(item);")
             .addLine("    }")
             .addLine("  }")
             .addLine("")
@@ -645,7 +645,7 @@ public class GuavaOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setItem(%s.of(13));", Optional.class)
+            .addLine("    .item(%s.of(13));", Optional.class)
             .build())
         .runTest();
   }
@@ -660,12 +660,12 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<Integer> getItem();", Optional.class)
+            .addLine("  public abstract %s<Integer> item();", Optional.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setItem(int item) {")
+            .addLine("    @Override public Builder item(int item) {")
             .addLine("      %s.checkArgument(item <= 10, \"Item too big\");", Preconditions.class)
-            .addLine("      return super.setItem(item);")
+            .addLine("      return super.item(item);")
             .addLine("    }")
             .addLine("  }")
             .addLine("")
@@ -676,7 +676,7 @@ public class GuavaOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setNullableItem(13);")
+            .addLine("    .nullableItem(13);")
             .build())
         .runTest();
   }
@@ -690,7 +690,7 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<Integer> getItem();", Optional.class)
+            .addLine("  public abstract %s<Integer> item();", Optional.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder clearItem() {")
@@ -705,7 +705,7 @@ public class GuavaOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setItem(%s.<Integer>absent());", Optional.class)
+            .addLine("    .item(%s.<Integer>absent());", Optional.class)
             .build())
         .runTest();
   }
@@ -719,7 +719,7 @@ public class GuavaOptionalPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<Integer> getItem();", Optional.class)
+            .addLine("  public abstract %s<Integer> item();", Optional.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder clearItem() {")
@@ -734,7 +734,7 @@ public class GuavaOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setNullableItem(null);", Optional.class)
+            .addLine("    .nullableItem(null);", Optional.class)
             .build())
         .runTest();
   }
@@ -749,17 +749,17 @@ public class GuavaOptionalPropertyTest {
             .addLine("    .addEqualityGroup(")
             .addLine("        com.example.DataType.builder().build(),")
             .addLine("        com.example.DataType.builder()")
-            .addLine("            .setItem(%s.<String>absent())", Optional.class)
+            .addLine("            .item(%s.<String>absent())", Optional.class)
             .addLine("            .build(),")
             .addLine("        com.example.DataType.builder()")
-            .addLine("            .setNullableItem(null)")
+            .addLine("            .nullableItem(null)")
             .addLine("            .build())")
             .addLine("    .addEqualityGroup(")
             .addLine("        com.example.DataType.builder()")
-            .addLine("            .setItem(\"item\")")
+            .addLine("            .item(\"item\")")
             .addLine("            .build(),")
             .addLine("        com.example.DataType.builder()")
-            .addLine("            .setItem(%s.of(\"item\"))", Optional.class)
+            .addLine("            .item(%s.of(\"item\"))", Optional.class)
             .addLine("            .build())")
             .addLine("    .testEquals();")
             .build())
@@ -775,7 +775,7 @@ public class GuavaOptionalPropertyTest {
             .addLine("com.example.DataType absent = com.example.DataType.builder()")
             .addLine("    .build();")
             .addLine("com.example.DataType present = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .build();")
             .addLine("assertEquals(\"DataType{}\", absent.toString());")
             .addLine("assertEquals(\"DataType{item=item}\", present.toString());")
@@ -792,14 +792,14 @@ public class GuavaOptionalPropertyTest {
             .addLine("com.example.DataType aa = com.example.DataType.builder()")
             .addLine("    .build();")
             .addLine("com.example.DataType pa = com.example.DataType.builder()")
-            .addLine("    .setItem1(\"x\")")
+            .addLine("    .item1(\"x\")")
             .addLine("    .build();")
             .addLine("com.example.DataType ap = com.example.DataType.builder()")
-            .addLine("    .setItem2(\"y\")")
+            .addLine("    .item2(\"y\")")
             .addLine("    .build();")
             .addLine("com.example.DataType pp = com.example.DataType.builder()")
-            .addLine("    .setItem1(\"x\")")
-            .addLine("    .setItem2(\"y\")")
+            .addLine("    .item1(\"x\")")
+            .addLine("    .item2(\"y\")")
             .addLine("    .build();")
             .addLine("assertEquals(\"DataType{}\", aa.toString());")
             .addLine("assertEquals(\"DataType{item1=x}\", pa.toString());")
@@ -818,7 +818,7 @@ public class GuavaOptionalPropertyTest {
             .addLine("com.example.DataType absent = com.example.DataType.builder()")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType present = com.example.DataType.builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .buildPartial();")
             .addLine("assertEquals(\"partial DataType{}\", absent.toString());")
             .addLine("assertEquals(\"partial DataType{item=item}\", present.toString());")
@@ -835,14 +835,14 @@ public class GuavaOptionalPropertyTest {
             .addLine("com.example.DataType aa = com.example.DataType.builder()")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType pa = com.example.DataType.builder()")
-            .addLine("    .setItem1(\"x\")")
+            .addLine("    .item1(\"x\")")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType ap = com.example.DataType.builder()")
-            .addLine("    .setItem2(\"y\")")
+            .addLine("    .item2(\"y\")")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType pp = com.example.DataType.builder()")
-            .addLine("    .setItem1(\"x\")")
-            .addLine("    .setItem2(\"y\")")
+            .addLine("    .item1(\"x\")")
+            .addLine("    .item2(\"y\")")
             .addLine("    .buildPartial();")
             .addLine("assertEquals(\"partial DataType{}\", aa.toString());")
             .addLine("assertEquals(\"partial DataType{item1=x}\", pa.toString());")
@@ -860,16 +860,16 @@ public class GuavaOptionalPropertyTest {
               .addLine("package com.example;")
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
-              .addLine("  public abstract %s<%s<%s>> getItems();",
+              .addLine("  public abstract %s<%s<%s>> items();",
                       Optional.class, ImmutableList.class, Number.class)
               .addLine("  public static class Builder extends DataType_Builder {}")
               .addLine("}")
               .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItems(%s.of((%s) 1, 2, 3, 4))", ImmutableList.class, Number.class)
+            .addLine("    .items(%s.of((%s) 1, 2, 3, 4))", ImmutableList.class, Number.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().get()).containsExactly(1, 2, 3, 4).inOrder();")
+            .addLine("assertThat(value.items().get()).containsExactly(1, 2, 3, 4).inOrder();")
             .build())
         .runTest();
   }
@@ -882,16 +882,16 @@ public class GuavaOptionalPropertyTest {
               .addLine("package com.example;")
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
-              .addLine("  public abstract %s<%s<?>> getItems();",
+              .addLine("  public abstract %s<%s<?>> items();",
                       Optional.class, ImmutableList.class)
               .addLine("  public static class Builder extends DataType_Builder {}")
               .addLine("}")
               .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItems(%s.of(1, 2, 3, 4))", ImmutableList.class)
+            .addLine("    .items(%s.of(1, 2, 3, 4))", ImmutableList.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().get()).containsExactly(1, 2, 3, 4).inOrder();")
+            .addLine("assertThat(value.items().get()).containsExactly(1, 2, 3, 4).inOrder();")
             .build())
         .runTest();
   }
@@ -904,16 +904,16 @@ public class GuavaOptionalPropertyTest {
               .addLine("package com.example;")
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
-              .addLine("  public abstract %s<%s<? extends %s>> getItems();",
+              .addLine("  public abstract %s<%s<? extends %s>> items();",
                       Optional.class, ImmutableList.class, Number.class)
               .addLine("  public static class Builder extends DataType_Builder {}")
               .addLine("}")
               .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItems(%s.of(1, 2, 3, 4))", ImmutableList.class)
+            .addLine("    .items(%s.of(1, 2, 3, 4))", ImmutableList.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().get()).containsExactly(1, 2, 3, 4).inOrder();")
+            .addLine("assertThat(value.items().get()).containsExactly(1, 2, 3, 4).inOrder();")
             .build())
         .runTest();
   }
@@ -929,7 +929,7 @@ public class GuavaOptionalPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public interface DataType {")
-            .addLine("  @JsonProperty(\"stuff\") %s<%s> getItem();", Optional.class, String.class)
+            .addLine("  @JsonProperty(\"stuff\") %s<%s> item();", Optional.class, String.class)
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -937,13 +937,13 @@ public class GuavaOptionalPropertyTest {
         .with(new TestBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setItem(\"item\")")
+            .addLine("    .item(\"item\")")
             .addLine("    .build();")
             .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
             .addLine("    .registerModule(new %s());", GuavaModule.class)
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertEquals(%s.of(\"item\"), clone.getItem());", Optional.class)
+            .addLine("assertEquals(%s.of(\"item\"), clone.item());", Optional.class)
             .build())
         .runTest();
   }

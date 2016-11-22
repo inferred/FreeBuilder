@@ -49,7 +49,7 @@ import javax.tools.JavaFileObject;
 /** Behavioral tests for {@code List<?>} properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class MapPropertyFactoryTest {
+public class MapBeanPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {

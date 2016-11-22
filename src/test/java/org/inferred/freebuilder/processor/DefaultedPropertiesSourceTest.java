@@ -42,7 +42,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ6() {
-    Metadata metadata = createMetadata();
+    Metadata metadata = createMetadata(true);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -252,7 +252,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ7() {
-    Metadata metadata = createMetadata();
+    Metadata metadata = createMetadata(true);
 
     String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -451,7 +451,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ6_noGuava() {
-    Metadata metadata = createMetadata();
+    Metadata metadata = createMetadata(true);
 
     assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
         "/**",
@@ -677,6 +677,7 @@ public class DefaultedPropertiesSourceTest {
         .setGetterName("getName")
         .setName("name")
         .setType(string)
+        .setUsingBeanConvention(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -686,6 +687,7 @@ public class DefaultedPropertiesSourceTest {
         .setGetterName("getAge")
         .setName("age")
         .setType(INT)
+        .setUsingBeanConvention(true)
         .build();
     Property shoeSize = new Property.Builder()
         .setAllCapsName("SHOE_SIZE")
@@ -695,6 +697,7 @@ public class DefaultedPropertiesSourceTest {
         .setGetterName("getShoeSize")
         .setName("shoeSize")
         .setType(INT)
+        .setUsingBeanConvention(true)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
@@ -1042,7 +1045,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ8() {
-    Metadata metadata = createMetadata();
+    Metadata metadata = createMetadata(true);
 
     String source = generateSource(
         metadata,
@@ -1265,6 +1268,216 @@ public class DefaultedPropertiesSourceTest {
         "}\n"));
   }
 
+  @Test
+  public void testPrefixless() {
+    Metadata metadata = createMetadata(false);
+
+    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+        "/**",
+        " * Auto-generated superclass of {@link Person.Builder},",
+        " * derived from the API of {@link Person}.",
+        " */",
+        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "abstract class Person_Builder {",
+        "",
+        "  /**",
+        "   * Creates a new builder using {@code value} as a template.",
+        "   */",
+        "  public static Person.Builder from(Person value) {",
+        "    return new Person.Builder().mergeFrom(value);",
+        "  }",
+        "",
+        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
+        "",
+        "  private String name;",
+        "  private int age;",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#name()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   * @throws NullPointerException if {@code name} is null",
+        "   */",
+        "  public Person.Builder name(String name) {",
+        "    this.name = Preconditions.checkNotNull(name);",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns the value that will be returned by {@link Person#name()}.",
+        "   */",
+        "  public String name() {",
+        "    return name;",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#age()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder age(int age) {",
+        "    this.age = age;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns the value that will be returned by {@link Person#age()}.",
+        "   */",
+        "  public int age() {",
+        "    return age;",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets all property values using the given {@code Person} as a template.",
+        "   */",
+        "  public Person.Builder mergeFrom(Person value) {",
+        "    Person_Builder _defaults = new Person.Builder();",
+        "    if (!value.name().equals(_defaults.name())) {",
+        "      name(value.name());",
+        "    }",
+        "    if (value.age() != _defaults.age()) {",
+        "      age(value.age());",
+        "    }",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Copies values from the given {@code Builder}.",
+        "   * Does not affect any properties not set on the input.",
+        "   */",
+        "  public Person.Builder mergeFrom(Person.Builder template) {",
+        "    Person_Builder _defaults = new Person.Builder();",
+        "    if (!template.name().equals(_defaults.name())) {",
+        "      name(template.name());",
+        "    }",
+        "    if (template.age() != _defaults.age()) {",
+        "      age(template.age());",
+        "    }",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Resets the state of this builder.",
+        "   */",
+        "  public Person.Builder clear() {",
+        "    Person_Builder _defaults = new Person.Builder();",
+        "    name = _defaults.name;",
+        "    age = _defaults.age;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns a newly-created {@link Person} based on the contents of the {@code Builder}.",
+        "   */",
+        "  public Person build() {",
+        "    return new Person_Builder.Value(this);",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns a newly-created partial {@link Person}",
+        "   * based on the contents of the {@code Builder}.",
+        "   * State checking will not be performed.",
+        "   *",
+        "   * <p>Partials should only ever be used in tests.",
+        "   */",
+        "  @VisibleForTesting()",
+        "  public Person buildPartial() {",
+        "    return new Person_Builder.Partial(this);",
+        "  }",
+        "",
+        "  private static final class Value extends Person {",
+        "    private final String name;",
+        "    private final int age;",
+        "",
+        "    private Value(Person_Builder builder) {",
+        "      this.name = builder.name;",
+        "      this.age = builder.age;",
+        "    }",
+        "",
+        "    @Override",
+        "    public String name() {",
+        "      return name;",
+        "    }",
+        "",
+        "    @Override",
+        "    public int age() {",
+        "      return age;",
+        "    }",
+        "",
+        "    @Override",
+        "    public boolean equals(Object obj) {",
+        "      if (!(obj instanceof Person_Builder.Value)) {",
+        "        return false;",
+        "      }",
+        "      Person_Builder.Value other = (Person_Builder.Value) obj;",
+        "      if (!name.equals(other.name)) {",
+        "        return false;",
+        "      }",
+        "      if (age != other.age) {",
+        "        return false;",
+        "      }",
+        "      return true;",
+        "    }",
+        "",
+        "    @Override",
+        "    public int hashCode() {",
+        "      return Arrays.hashCode(new Object[] {name, age});",
+        "    }",
+        "",
+        "    @Override",
+        "    public String toString() {",
+        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "    }",
+        "  }",
+        "",
+        "  private static final class Partial extends Person {",
+        "    private final String name;",
+        "    private final int age;",
+        "",
+        "    Partial(Person_Builder builder) {",
+        "      this.name = builder.name;",
+        "      this.age = builder.age;",
+        "    }",
+        "",
+        "    @Override",
+        "    public String name() {",
+        "      return name;",
+        "    }",
+        "",
+        "    @Override",
+        "    public int age() {",
+        "      return age;",
+        "    }",
+        "",
+        "    @Override",
+        "    public boolean equals(Object obj) {",
+        "      if (!(obj instanceof Person_Builder.Partial)) {",
+        "        return false;",
+        "      }",
+        "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
+        "      if (!name.equals(other.name)) {",
+        "        return false;",
+        "      }",
+        "      if (age != other.age) {",
+        "        return false;",
+        "      }",
+        "      return true;",
+        "    }",
+        "",
+        "    @Override",
+        "    public int hashCode() {",
+        "      return Arrays.hashCode(new Object[] {name, age});",
+        "    }",
+        "",
+        "    @Override",
+        "    public String toString() {",
+        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
+            + "+ \"}\";",
+        "    }",
+        "  }",
+        "}\n"));
+  }
+
   private static String generateSource(Metadata metadata, Feature<?>... features) {
     SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
     new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
@@ -1275,7 +1488,7 @@ public class DefaultedPropertiesSourceTest {
     }
   }
 
-  private static Metadata createMetadata() {
+  private static Metadata createMetadata(boolean bean) {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     TypeMirror string = newTopLevelClass("java.lang.String");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
@@ -1284,18 +1497,20 @@ public class DefaultedPropertiesSourceTest {
         .setBoxedType(string)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
-        .setGetterName("getName")
+        .setGetterName(bean ? "getName" : "name")
         .setName("name")
         .setType(string)
+        .setUsingBeanConvention(bean)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(newTopLevelClass("java.lang.Integer"))
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
-        .setGetterName("getAge")
+        .setGetterName(bean ? "getAge" : "age")
         .setName("age")
         .setType(INT)
+        .setUsingBeanConvention(bean)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())

@@ -240,7 +240,7 @@ public class AnalyserTest {
   }
 
   @Test
-  public void twoGetters() throws CannotGenerateCodeException {
+  public void twoBeanGetters() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
@@ -249,16 +249,50 @@ public class AnalyserTest {
         "}"));
     Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
-    assertEquals(model.typeMirror(int.class), properties.get("age").getType());
-    assertEquals(model.typeMirror(Integer.class), properties.get("age").getBoxedType());
-    assertEquals("AGE", properties.get("age").getAllCapsName());
-    assertEquals("Age", properties.get("age").getCapitalizedName());
-    assertEquals("getAge", properties.get("age").getGetterName());
-    assertEquals("java.lang.String", properties.get("name").getType().toString());
-    assertNull(properties.get("name").getBoxedType());
-    assertEquals("NAME", properties.get("name").getAllCapsName());
-    assertEquals("Name", properties.get("name").getCapitalizedName());
-    assertEquals("getName", properties.get("name").getGetterName());
+
+    Property age = properties.get("age");
+    assertEquals(model.typeMirror(int.class), age.getType());
+    assertEquals(model.typeMirror(Integer.class), age.getBoxedType());
+    assertEquals("AGE", age.getAllCapsName());
+    assertEquals("Age", age.getCapitalizedName());
+    assertEquals("getAge", age.getGetterName());
+    assertTrue(age.isUsingBeanConvention());
+
+    Property name = properties.get("name");
+    assertEquals("java.lang.String", name.getType().toString());
+    assertNull(name.getBoxedType());
+    assertEquals("NAME", name.getAllCapsName());
+    assertEquals("Name", name.getCapitalizedName());
+    assertEquals("getName", name.getGetterName());
+    assertTrue(name.isUsingBeanConvention());
+  }
+
+  @Test
+  public void twoPrefixlessGetters() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public abstract String name();",
+        "  public abstract int age();",
+        "}"));
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("name", "age");
+
+    Property age = properties.get("age");
+    assertEquals(model.typeMirror(int.class), age.getType());
+    assertEquals(model.typeMirror(Integer.class), age.getBoxedType());
+    assertEquals("AGE", age.getAllCapsName());
+    assertEquals("Age", age.getCapitalizedName());
+    assertEquals("age", age.getGetterName());
+    assertFalse(age.isUsingBeanConvention());
+
+    Property name = properties.get("name");
+    assertEquals("java.lang.String", name.getType().toString());
+    assertNull(name.getBoxedType());
+    assertEquals("NAME", name.getAllCapsName());
+    assertEquals("Name", name.getCapitalizedName());
+    assertEquals("name", name.getGetterName());
+    assertFalse(name.isUsingBeanConvention());
   }
 
   @Test
@@ -410,21 +444,6 @@ public class AnalyserTest {
   }
 
   @Test
-  public void abstractButNotGetter() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  public abstract String name();",
-        "  public static class Builder extends DataType_Builder {}",
-        "}"));
-    assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("name");
-    assertThat(messager.getMessagesByElement().get("name"))
-        .containsExactly("[ERROR] Only getter methods (starting with 'get' or 'is') may be declared"
-            + " abstract on @FreeBuilder types");
-  }
-
-  @Test
   public void abstractMethodNamedGet() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
@@ -432,11 +451,12 @@ public class AnalyserTest {
         "  public abstract String get();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("get");
-    assertThat(messager.getMessagesByElement().get("get"))
-        .containsExactly("[ERROR] Only getter methods (starting with 'get' or 'is') may be declared"
-            + " abstract on @FreeBuilder types");
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("get");
+    assertEquals("Get", properties.get("get").getCapitalizedName());
+    assertEquals("get", properties.get("get").getGetterName());
+    assertEquals("GET", properties.get("get").getAllCapsName());
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -447,11 +467,12 @@ public class AnalyserTest {
         "  public abstract String getter();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("getter");
-    assertThat(messager.getMessagesByElement().get("getter"))
-        .containsExactly("[ERROR] Getter methods cannot have a lowercase character immediately"
-            + " after the 'get' prefix on @FreeBuilder types (did you mean 'getTer'?)");
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("getter");
+    assertEquals("Getter", properties.get("getter").getCapitalizedName());
+    assertEquals("getter", properties.get("getter").getGetterName());
+    assertEquals("GETTER", properties.get("getter").getAllCapsName());
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -462,11 +483,13 @@ public class AnalyserTest {
         "  public abstract String issue();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("issue");
-    assertThat(messager.getMessagesByElement().get("issue"))
-        .containsExactly("[ERROR] Getter methods cannot have a lowercase character immediately"
-            + " after the 'is' prefix on @FreeBuilder types (did you mean 'isSue'?)");
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("issue");
+    assertEquals("ISSUE", properties.get("issue").getAllCapsName());
+    assertEquals("Issue", properties.get("issue").getCapitalizedName());
+    assertEquals("issue", properties.get("issue").getGetterName());
+    assertEquals("java.lang.String", properties.get("issue").getType().toString());
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -477,11 +500,13 @@ public class AnalyserTest {
         "  public abstract String getürkt();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("getürkt");
-    assertThat(messager.getMessagesByElement().get("getürkt"))
-        .containsExactly("[ERROR] Getter methods cannot have a lowercase character immediately"
-            + " after the 'get' prefix on @FreeBuilder types (did you mean 'getÜrkt'?)");
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("getürkt");
+    assertEquals("GETÜRKT", properties.get("getürkt").getAllCapsName());
+    assertEquals("Getürkt", properties.get("getürkt").getCapitalizedName());
+    assertEquals("getürkt", properties.get("getürkt").getGetterName());
+    assertEquals("java.lang.String", properties.get("getürkt").getType().toString());
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -492,11 +517,13 @@ public class AnalyserTest {
         "  public abstract boolean is();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("is");
-    assertThat(messager.getMessagesByElement().get("is"))
-        .containsExactly("[ERROR] Only getter methods (starting with 'get' or 'is') may be declared"
-            + " abstract on @FreeBuilder types");
+    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    assertThat(properties.keySet()).containsExactly("is");
+    assertEquals("IS", properties.get("is").getAllCapsName());
+    assertEquals("Is", properties.get("is").getCapitalizedName());
+    assertEquals("is", properties.get("is").getGetterName());
+    assertEquals("boolean", properties.get("is").getType().toString());
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test

@@ -179,6 +179,9 @@ public abstract class Metadata {
     /** Returns the name of the property in all-caps with underscores, e.g. MY_PROPERTY. */
     public abstract String getAllCapsName();
 
+    /** Returns true if getters start with "get"; setters should follow suit with "set". */
+    public abstract boolean isUsingBeanConvention();
+
     /** Returns the name of the getter for the property, e.g. getMyProperty, or isSomethingTrue. */
     public abstract String getGetterName();
 

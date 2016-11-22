@@ -879,6 +879,7 @@ public class GenericTypeSourceTest {
         .setGetterName("getName")
         .setName("name")
         .setType(typeVariableA)
+        .setUsingBeanConvention(true)
         .build();
     TypeVariable typeVariableB = newTypeVariable("B");
     Property age = new Property.Builder()
@@ -888,6 +889,7 @@ public class GenericTypeSourceTest {
         .setGetterName("getAge")
         .setName("age")
         .setType(typeVariableB)
+        .setUsingBeanConvention(true)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters("A", "B"))

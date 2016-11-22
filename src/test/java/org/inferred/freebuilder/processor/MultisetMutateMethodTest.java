@@ -640,6 +640,58 @@ public class MultisetMutateMethodTest {
         .runTest();
   }
 
+  @Test
+  public void mutateAndAddModifiesUnderlyingProperty_whenUnchecked_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<Integer> properties();", Multiset.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addProperties(5)")
+            .addLine("    .mutateProperties(set -> set.add(11))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.properties()).containsExactly(5, 11);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndAddModifiesUnderlyingProperty_whenChecked_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<Integer> properties();", Multiset.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder setCountOfProperties(int element, int count) {")
+            .addLine("      %s.checkArgument(element >= 0, \"elements must be non-negative\");",
+                Preconditions.class)
+            .addLine("      return super.setCountOfProperties(element, count);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addProperties(5)")
+            .addLine("    .mutateProperties(set -> set.add(11))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.properties()).containsExactly(5, 11);")
+            .build())
+        .runTest();
+  }
+
   private static TestBuilder testBuilder() {
     return new TestBuilder()
         .addImport("com.example.DataType")

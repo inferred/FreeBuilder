@@ -28,6 +28,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleElementVisitor6;
@@ -190,5 +191,30 @@ public class ModelUtils {
           return Optional.absent();
         }
       };
+
+  /**
+   * Determines the return type of {@code method}, if called on an instance of type {@code type}.
+   *
+   * <p>For instance, in this example, myY.getProperty() returns List&lt;T&gt;, not T:<pre><code>
+   *    interface X&lt;T&gt; {
+   *      T getProperty();
+   *    }
+   *    &#64;FreeBuilder interface Y&lt;T&gt; extends X&lt;List&lt;T&gt;&gt; { }</pre></code>
+   *
+   * <p>(Unfortunately, a bug in Eclipse prevents us handling these cases correctly at the moment.
+   * javac works fine.)
+   */
+  public static TypeMirror getReturnType(TypeElement type, ExecutableElement method, Types types) {
+    try {
+      ExecutableType executableType = (ExecutableType)
+          types.asMemberOf((DeclaredType) type.asType(), method);
+      return executableType.getReturnType();
+    } catch (IllegalArgumentException e) {
+      // Eclipse incorrectly throws an IllegalArgumentException here:
+      //    "element is not valid for the containing declared type"
+      // As a workaround for the common case, fall back to the declared return type.
+      return method.getReturnType();
+    }
+  }
 
 }

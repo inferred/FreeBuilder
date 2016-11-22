@@ -40,7 +40,7 @@ import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class DefaultedPropertiesTest {
+public class DefaultedBeanPropertiesTest {
 
   @Parameters(name = "{0}, {1}")
   @SuppressWarnings("unchecked")
