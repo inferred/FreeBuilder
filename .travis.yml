@@ -1,9 +1,10 @@
-# sudo/dist/group must be required/trusty/edge to access oraclejdk9 (2016-11-14)
+# sudo necessary for addons
 sudo: required
 dist: trusty
 
 language: java
 
+# JDK 9 only available reliably as an add-on (2016-11-14)
 addons:
   apt:
     packages:
