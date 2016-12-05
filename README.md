@@ -332,8 +332,8 @@ property called 'descendants' would generate:
 |:------:| ----------- |
 | `addDescendants(String element)` | Appends `element` to the collection of descendants. If descendants is a set and the element is already present, it is ignored. Throws a NullPointerException if element is null. |
 | `addDescendants(String... elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
-| `addAllDescendants(​Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
-| `mutateDescendants(​Consumer<‌.‌.‌.‌<String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the collection of descendants. (The mutator takes a list, set or map as appropriate.) Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned collection to replace the existing collection. |
+| `addAllDescendants(​Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null.<br> *Java 8+* Overloaded to also accept a [Stream] or [Spliterator]. |
+| `mutateDescendants(​Consumer<‌.‌.‌.‌<String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the collection of descendants. (The mutator takes a list, set or map as appropriate.) Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned collection to replace the existing collection. |
 | `clearDescendants()` | Removes all elements from the collection of descendants, leaving it empty. |
 | `descendants()` | Returns an unmodifiable view of the collection of descendants. Changes to the collection held by the builder will be reflected in the view. |
 
@@ -349,7 +349,7 @@ A <code>[Map][]</code> property called 'albums' would generate:
 | `putAlbums(int key, String value)` | Associates `key` with `value` in albums.  Throws a NullPointerException if either parameter is null. Replaces any existing entry. |
 | `putAllAlbums(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in albums. Throws a NullPointerException if the map is null or contains a null key or value. Throws an IllegalArgumentException if any key is already present. |
 | `removeAlbums(int key)` | Removes the mapping for `key` from albums. Throws a NullPointerException if the parameter is null. Does nothing if the key is not present. |
-| `mutateAlbums(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the map of albums. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned map to replace the existing map. |
+| `mutateAlbums(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the map of albums. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned map to replace the existing map. |
 | `clearAlbums()` | Removes all mappings from albums, leaving it empty. |
 | `albums()` | Returns an unmodifiable view of the map of albums. Changes to the map held by the builder will be reflected in this view. |
 
@@ -367,7 +367,7 @@ A <code>[Multimap][]</code> property called 'awards' would generate:
 | `putAllAwards(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in awards. Throws a NullPointerException if the map is null or contains a null key or value. If awards is a map, an IllegalArgumentException will be thrown if any key is already present. |
 | `removeAwards(int key, String value)` | Removes the single pair `key`-`value` from awards. If multiple pairs match, which is removed is unspecified. Throws a NullPointerException if either parameter is null. |
 | `removeAllAwards(int key)` | Removes all values associated with `key` from awards. Throws a NullPointerException if the key is null. |
-| `mutateAwards(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the multimap of awards. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned multimap to replace the existing multimap. |
+| `mutateAwards(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the multimap of awards. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned multimap to replace the existing multimap. |
 | `clearAwards()` | Removes all mappings from awards, leaving it empty. |
 | `awards()` | Returns an unmodifiable view of the multimap of awards. Changes to the multimap held by the builder will be reflected in this view. |
 
@@ -385,11 +385,13 @@ personBuilder
 
 [List]: http://docs.oracle.com/javase/tutorial/collections/interfaces/list.html
 [Set]: http://docs.oracle.com/javase/tutorial/collections/interfaces/set.html
+[Spliterator]: https://docs.oracle.com/javase/8/docs/api/java/util/Spliterator.html
+[Stream]: https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html
 [Multiset]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multiset
 [Map]: http://docs.oracle.com/javase/tutorial/collections/interfaces/map.html
 [Multimap]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multimap
 [sort]: http://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#sort-java.util.List-
-[stream]: https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#stream--
+[stream()]: https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#stream--
 [subList]: http://docs.oracle.com/javase/8/docs/api/java/util/List.html#subList-int-int-
 
 
