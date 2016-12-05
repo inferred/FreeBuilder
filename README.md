@@ -145,7 +145,25 @@ System.out.println(person);  // Person{name=Phil, age=31}
 
 ### JavaBean convention
 
-If you prefer your value types to follow JavaBean conventions, just prefix your accessor methods with 'get' (or, optionally, 'is' for boolean accessors). FreeBuilder will follow suit, and additionally add 'set' prefixes on setter methods.
+If you prefer your value types to follow the JavaBean naming convention, just prefix your accessor methods with 'get' (or, optionally, 'is' for boolean accessors). FreeBuilder will follow suit, and additionally add 'set' prefixes on setter methods, as well as dropping the prefix from its toString output.
+
+```java
+@FreeBuilder
+public interface Person {
+  /** Returns the person's full (English) name. */
+  String getName();
+  /** Returns the person's age in years, rounded down. */
+  int getAge();
+  /** Builder of {@link Person} instances. */
+  class Builder extends Person_Builder { }
+}
+
+Person person = new Person.Builder()
+    .setName("Phil")
+    .setAge(31)
+    .build();
+System.out.println(person);  // Person{name=Phil, age=31}
+```
 
 
 ### Accessor methods
