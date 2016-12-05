@@ -31,6 +31,7 @@ import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.check
 import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -119,7 +120,7 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code) {
       addAdd(code, metadata);
       addVarargsAdd(code, metadata);
-      addAddAll(code, metadata);
+      addAddAllMethods(code, metadata);
       addRemove(code, metadata);
       addMutator(code, metadata);
       addClear(code, metadata);
@@ -191,7 +192,53 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("}");
     }
 
-    private void addAddAll(SourceBuilder code, Metadata metadata) {
+    private void addAddAllMethods(SourceBuilder code, Metadata metadata) {
+      if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
+        addSpliteratorAddAll(code, metadata);
+        addStreamAddAll(code, metadata);
+      }
+      addIterableAddAll(code, metadata);
+    }
+
+    private void addSpliteratorAddAll(SourceBuilder code, Metadata metadata) {
+      QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
+      addJavadocForAddAll(code, metadata);
+      code.addLine("public %s %s(%s<? extends %s> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              spliterator,
+              elementType)
+          .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+    }
+
+    private void addStreamAddAll(SourceBuilder code, Metadata metadata) {
+      QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
+      addJavadocForAddAll(code, metadata);
+      code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              baseStream,
+              elementType)
+          .addLine("  return %s(elements.spliterator());", addAllMethod(property))
+          .addLine("}");
+    }
+
+    private void addIterableAddAll(SourceBuilder code, Metadata metadata) {
+      addJavadocForAddAll(code, metadata);
+      addAccessorAnnotations(code);
+      code.addLine("public %s %s(%s<? extends %s> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              Iterable.class,
+              elementType)
+          .add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+    }
+
+    private void addJavadocForAddAll(SourceBuilder code, Metadata metadata) {
       code.addLine("")
           .addLine("/**")
           .addLine(" * Adds each element of {@code elements} to the set to be returned from")
@@ -203,15 +250,6 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
           .addLine(" *     null element")
           .addLine(" */");
-      addAccessorAnnotations(code);
-      code.addLine("public %s %s(%s<? extends %s> elements) {",
-              metadata.getBuilder(),
-              addAllMethod(property),
-              Iterable.class,
-              elementType)
-          .add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
-          .addLine("  return (%s) this;", metadata.getBuilder())
-          .addLine("}");
     }
 
     private void addRemove(SourceBuilder code, Metadata metadata) {
