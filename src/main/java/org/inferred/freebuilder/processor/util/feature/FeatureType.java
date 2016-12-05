@@ -14,13 +14,13 @@ import javax.annotation.processing.ProcessingEnvironment;
 public abstract class FeatureType<F extends Feature<F>> {
 
   /** Returns the instance of {@code F} to use by default in tests. */
-  protected abstract F testDefault();
+  protected abstract F testDefault(FeatureSet features);
 
   /** Returns the instance of {@code F} to use in {@code env}. */
-  protected abstract F forEnvironment(ProcessingEnvironment env);
+  protected abstract F forEnvironment(ProcessingEnvironment env, FeatureSet features);
 
   @SuppressWarnings("unchecked")
   protected Class<F> type() {
-    return (Class<F>) testDefault().getClass();
+    return (Class<F>) testDefault(new StaticFeatureSet()).getClass();
   }
 }
