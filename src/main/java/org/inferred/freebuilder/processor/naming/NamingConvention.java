@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
+import com.google.common.base.Optional;
+
 import org.inferred.freebuilder.processor.Metadata.Property;
 
 import javax.lang.model.element.ExecutableElement;
@@ -25,5 +27,5 @@ public interface NamingConvention {
    * Verifies {@code method} is an abstract getter following this naming convention. Any
    * deviations will be logged as an error.
    */
-  Property.Builder getPropertyNamesOrNull(TypeElement valueType, ExecutableElement method);
+  Optional<Property.Builder> getPropertyNames(TypeElement valueType, ExecutableElement method);
 }

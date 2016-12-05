@@ -17,6 +17,8 @@ package org.inferred.freebuilder.processor.naming;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
+import com.google.common.base.Optional;
+
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
 import org.inferred.freebuilder.processor.util.ModelUtils;
@@ -58,7 +60,8 @@ class BeanConvention implements NamingConvention {
    * deviations will be logged as an error.
    */
   @Override
-  public Property.Builder getPropertyNamesOrNull(TypeElement valueType, ExecutableElement method) {
+  public Optional<Property.Builder> getPropertyNames(
+      TypeElement valueType, ExecutableElement method) {
     boolean declaredOnValueType = method.getEnclosingElement().equals(valueType);
     String name = method.getSimpleName().toString();
     Matcher getterMatcher = GETTER_PATTERN.matcher(name);
@@ -72,7 +75,7 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return null;
+      return Optional.absent();
     }
     String prefix = getterMatcher.group(1);
     String capitalizedName = getterMatcher.group(2);
@@ -91,7 +94,7 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return null;
+      return Optional.absent();
     }
     TypeMirror returnType = ModelUtils.getReturnType(valueType, method, types);
     if (returnType.getKind() == TypeKind.VOID) {
@@ -101,7 +104,7 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return null;
+      return Optional.absent();
     }
     if (prefix.equals(IS_PREFIX) && (returnType.getKind() != TypeKind.BOOLEAN)) {
       if (declaredOnValueType) {
@@ -113,7 +116,7 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return null;
+      return Optional.absent();
     }
     if (!method.getParameters().isEmpty()) {
       if (declaredOnValueType) {
@@ -122,19 +125,19 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return null;
+      return Optional.absent();
     }
     if (new IsInvalidTypeVisitor().visit(returnType)) {
       // The compiler should already have issued an error.
-      return null;
+      return Optional.absent();
     }
 
     String camelCaseName = Introspector.decapitalize(capitalizedName);
-    return new Property.Builder()
+    return Optional.of(new Property.Builder()
         .setUsingBeanConvention(true)
         .setName(camelCaseName)
         .setCapitalizedName(capitalizedName)
-        .setGetterName(getterMatcher.group(0));
+        .setGetterName(getterMatcher.group(0)));
   }
 
   private static boolean hasUpperCase(int codepoint) {

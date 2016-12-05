@@ -386,7 +386,7 @@ class Analyser {
     Map<ExecutableElement, Property> propertiesByMethod = newLinkedHashMap();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
-      Property.Builder propertyBuilder = namingConvention.getPropertyNamesOrNull(type, method);
+      Property.Builder propertyBuilder = namingConvention.getPropertyNames(type, method).orNull();
       if (propertyBuilder != null) {
         addPropertyData(propertyBuilder, type, method, jacksonSupport);
         propertiesByMethod.put(method, propertyBuilder.build());

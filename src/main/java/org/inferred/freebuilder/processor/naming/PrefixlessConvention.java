@@ -18,6 +18,8 @@ package org.inferred.freebuilder.processor.naming;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 
+import com.google.common.base.Optional;
+
 import org.inferred.freebuilder.processor.Metadata.Property;
 
 import java.util.Set;
@@ -41,17 +43,18 @@ class PrefixlessConvention implements NamingConvention {
   private final Types types;
 
   @Override
-  public Property.Builder getPropertyNamesOrNull(TypeElement valueType, ExecutableElement method) {
+  public Optional<Property.Builder> getPropertyNames(
+      TypeElement valueType, ExecutableElement method) {
     if (!methodIsAbstractGetter(valueType, method)) {
-      return null;
+      return Optional.absent();
     }
     String name = method.getSimpleName().toString();
     String capitalizedName = name.substring(0, 1).toUpperCase() + name.substring(1);
-    return new Property.Builder()
+    return Optional.of(new Property.Builder()
         .setUsingBeanConvention(false)
         .setName(name)
         .setCapitalizedName(capitalizedName)
-        .setGetterName(name);
+        .setGetterName(name));
   }
 
   /**
