@@ -124,6 +124,39 @@ public enum SourceLevel implements Feature<SourceLevel> {
     return compareTo(JAVA_8) >= 0;
   }
 
+  public Optional<QualifiedName> baseStream() {
+    switch (this) {
+      case JAVA_6:
+      case JAVA_7:
+        return Optional.absent();
+
+      default:
+        return Optional.of(QualifiedName.of("java.util.stream", "BaseStream"));
+    }
+  }
+
+  public Optional<QualifiedName> stream() {
+    switch (this) {
+      case JAVA_6:
+      case JAVA_7:
+        return Optional.absent();
+
+      default:
+        return Optional.of(STREAM);
+    }
+  }
+
+  public Optional<QualifiedName> spliterator() {
+    switch (this) {
+      case JAVA_6:
+      case JAVA_7:
+        return Optional.absent();
+
+      default:
+        return Optional.of(QualifiedName.of("java.util", "Spliterator"));
+    }
+  }
+
   @Override
   public String toString() {
     return humanReadableFormat;
