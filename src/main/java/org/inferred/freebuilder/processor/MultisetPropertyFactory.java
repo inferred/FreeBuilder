@@ -28,6 +28,7 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -118,7 +119,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code) {
       addAdd(code, metadata);
       addVarargsAdd(code, metadata);
-      addAddAll(code, metadata);
+      addAddAllMethods(code, metadata);
       addAddCopiesTo(code, metadata);
       addMutate(code, metadata);
       addClear(code, metadata);
@@ -169,16 +170,57 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("}");
     }
 
-    private void addAddAll(SourceBuilder code, Metadata metadata) {
-      code.addLine("")
-          .addLine("/**")
-          .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
-          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-          .addLine(" *")
-          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
-          .addLine(" *     null element")
-          .addLine(" */");
+    private void addAddAllMethods(SourceBuilder code, Metadata metadata) {
+      if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
+        addSpliteratorAddAll(code, metadata);
+        addStreamAddAll(code, metadata);
+        addIterableAddAll(code, metadata);
+      } else {
+        addPreStreamsAddAll(code, metadata);
+      }
+    }
+
+    private void addSpliteratorAddAll(SourceBuilder code, Metadata metadata) {
+      QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
+      addJavadocForAddAll(code, metadata);
+      code.addLine("public %s %s(%s<? extends %s> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              spliterator,
+              elementType)
+          .addLine("  elements.forEachRemaining(element -> {")
+          .addLine("    %s(element, 1);", addCopiesMethod(property))
+          .addLine("  });")
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+    }
+
+    private void addStreamAddAll(SourceBuilder code, Metadata metadata) {
+      QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
+      addJavadocForAddAll(code, metadata);
+      code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              baseStream,
+              elementType)
+          .addLine("  return %s(elements.spliterator());", addAllMethod(property))
+          .addLine("}");
+    }
+
+    private void addIterableAddAll(SourceBuilder code, Metadata metadata) {
+      addJavadocForAddAll(code, metadata);
+      addAccessorAnnotations(code);
+      code.addLine("public %s %s(%s<? extends %s> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              Iterable.class,
+              elementType)
+          .addLine("  return %s(elements.spliterator());", addAllMethod(property))
+          .addLine("}");
+    }
+
+    private void addPreStreamsAddAll(SourceBuilder code, Metadata metadata) {
+      addJavadocForAddAll(code, metadata);
       addAccessorAnnotations(code);
       code.addLine("public %s %s(%s<? extends %s> elements) {",
               metadata.getBuilder(),
@@ -190,6 +232,18 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
+
+    private void addJavadocForAddAll(SourceBuilder code, Metadata metadata) {
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
+          .addLine(" *     null element")
+          .addLine(" */");
     }
 
     private void addAddCopiesTo(SourceBuilder code, Metadata metadata) {
