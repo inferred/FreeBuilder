@@ -68,6 +68,7 @@ String jackson(String pkg) {
       namespace, pkg, jacksonVersion)
 }
 
+//// Testing /////////////////////////////////////////////////////
 test {
   maxHeapSize = "1024m"
 }
@@ -78,6 +79,7 @@ if (System.env.CI == 'true') {
     }
   }
 }
+check.dependsOn javadoc
 
 //// Checkstyle //////////////////////////////////////////////////
 checkstyle {
