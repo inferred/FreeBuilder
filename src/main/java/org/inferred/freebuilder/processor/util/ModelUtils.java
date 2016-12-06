@@ -199,7 +199,7 @@ public class ModelUtils {
    *    interface X&lt;T&gt; {
    *      T getProperty();
    *    }
-   *    &#64;FreeBuilder interface Y&lt;T&gt; extends X&lt;List&lt;T&gt;&gt; { }</pre></code>
+   *    &#64;FreeBuilder interface Y&lt;T&gt; extends X&lt;List&lt;T&gt;&gt; { }</code></pre>
    *
    * <p>(Unfortunately, a bug in Eclipse prevents us handling these cases correctly at the moment.
    * javac works fine.)
