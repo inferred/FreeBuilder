@@ -176,4 +176,27 @@ public class OptionalMapperMethodTest {
             .build())
         .runTest();
   }
+
+  @Test
+  public void mapReplacesValueToBeReturnedFromPrefixlessGetter() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<Integer> property();", optionalType)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .property(11)")
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, (int) value.property().get());")
+            .build())
+        .runTest();
+  }
 }

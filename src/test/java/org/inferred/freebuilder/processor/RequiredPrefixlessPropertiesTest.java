@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2016 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class RequiredPropertiesTest {
+public class RequiredPrefixlessPropertiesTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
@@ -49,8 +49,8 @@ public class RequiredPropertiesTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract int getPropertyA();")
-      .addLine("  public abstract boolean isPropertyB();")
+      .addLine("  public abstract int propertyA();")
+      .addLine("  public abstract boolean propertyB();")
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("}")
@@ -61,13 +61,13 @@ public class RequiredPropertiesTest {
       .addLine("import %s;", Optional.class)
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract int getPropertyA();")
-      .addLine("  public abstract boolean isPropertyB();")
+      .addLine("  public abstract int propertyA();")
+      .addLine("  public abstract boolean propertyB();")
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
       .addLine("    public Builder(Optional<Integer> propertyA, Optional<Boolean> propertyB) {")
-      .addLine("      propertyA.ifPresent(this::setPropertyA);")
-      .addLine("      propertyB.ifPresent(this::setPropertyB);")
+      .addLine("      propertyA.ifPresent(this::propertyA);")
+      .addLine("      propertyB.ifPresent(this::propertyB);")
       .addLine("    }")
       .addLine("  }")
       .addLine("}")
@@ -79,7 +79,7 @@ public class RequiredPropertiesTest {
   @Shared public BehaviorTester behaviorTester;
 
   @Test
-  public void testCantBuildWithAnUnsetProperty() {
+  public void testCantBuildWithAnUnproperty() {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyB]");
     behaviorTester
@@ -87,14 +87,14 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
+            .addLine("    .propertyA(11)")
             .addLine("    .build();")
             .build())
         .runTest();
   }
 
   @Test
-  public void testCantBuildWithMultipleUnsetProperties() {
+  public void testCantBuildWithMultipleUnproperties() {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyB, propertyD]");
     behaviorTester
@@ -103,10 +103,10 @@ public class RequiredPropertiesTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract int getPropertyA();")
-            .addLine("  public abstract boolean isPropertyB();")
-            .addLine("  public abstract String getPropertyC();")
-            .addLine("  public abstract int getPropertyD();")
+            .addLine("  public abstract int propertyA();")
+            .addLine("  public abstract boolean propertyB();")
+            .addLine("  public abstract String propertyC();")
+            .addLine("  public abstract int propertyD();")
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("  public static Builder builder() {")
@@ -116,8 +116,8 @@ public class RequiredPropertiesTest {
             .build())
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyC(\"\")")
+            .addLine("    .propertyA(11)")
+            .addLine("    .propertyC(\"\")")
             .addLine("    .build();")
             .build())
         .runTest();
@@ -130,13 +130,13 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true)")
+            .addLine("    .propertyA(11)")
+            .addLine("    .propertyB(true)")
             .addLine("    .build();")
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(11, builder.getPropertyA());")
-            .addLine("assertTrue(builder.isPropertyB());")
+            .addLine("assertEquals(11, builder.propertyA());")
+            .addLine("assertTrue(builder.propertyB());")
             .build())
         .runTest();
   }
@@ -148,12 +148,12 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true);")
+            .addLine("    .propertyA(11)")
+            .addLine("    .propertyB(true);")
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(11, builder.getPropertyA());")
-            .addLine("assertTrue(builder.isPropertyB());")
+            .addLine("assertEquals(11, builder.propertyA());")
+            .addLine("assertTrue(builder.propertyB());")
             .build())
         .runTest();
   }
@@ -165,10 +165,10 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .setPropertyA(11);")
+            .addLine("    .propertyA(11);")
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(11, builder.getPropertyA());")
+            .addLine("assertEquals(11, builder.propertyA());")
             .build())
         .runTest();
   }
@@ -185,13 +185,13 @@ public class RequiredPropertiesTest {
             .addLine("DataType.Builder builder = new DataType")
             .addLine("    .Builder(Optional.empty(), Optional.empty())")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(11, builder.getPropertyA());")
+            .addLine("assertEquals(11, builder.propertyA());")
             .build())
         .runTest();
   }
 
   @Test
-  public void testMergeFrom_builderUnsetPropertyGetterThrows() {
+  public void testMergeFrom_builderUnpropertyGetterThrows() {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("propertyB not set");
     behaviorTester
@@ -199,10 +199,10 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .setPropertyA(11);")
+            .addLine("    .propertyA(11);")
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("builder.isPropertyB();")
+            .addLine("builder.propertyB();")
             .build())
         .runTest();
   }
@@ -214,15 +214,15 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
+            .addLine("    .propertyA(11)")
             .addLine("    .buildPartial();")
-            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertEquals(11, value.propertyA());")
             .build())
         .runTest();
   }
 
   @Test
-  public void testBuildPartial_unsetPropertyGetterThrows() {
+  public void testBuildPartial_unpropertyGetterThrows() {
     thrown.expect(UnsupportedOperationException.class);
     thrown.expectMessage("propertyB not set");
     behaviorTester
@@ -230,9 +230,9 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
+            .addLine("    .propertyA(11)")
             .addLine("    .buildPartial();")
-            .addLine("value.isPropertyB();")
+            .addLine("value.propertyB();")
             .build())
         .runTest();
   }
@@ -244,7 +244,7 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
+            .addLine("    .propertyA(11)")
             .addLine("    .buildPartial();")
             .addLine("assertEquals(\"partial DataType{propertyA=11}\", value.toString());")
             .build())
@@ -258,8 +258,8 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true)")
+            .addLine("    .propertyA(11)")
+            .addLine("    .propertyB(true)")
             .addLine("    .buildPartial();")
             .addLine("assertEquals(\"partial DataType{propertyA=11, propertyB=true}\",")
             .addLine("    value.toString());")
@@ -276,8 +276,8 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .setPropertyB(true)")
+            .addLine("    .propertyA(11)")
+            .addLine("    .propertyB(true)")
             .addLine("    .clear()")
             .addLine("    .build();")
             .build())
@@ -293,8 +293,8 @@ public class RequiredPropertiesTest {
         .with(REQUIRED_PROPERTIES_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .setPropertyA(11)")
-            .addLine("    .isPropertyB();")
+            .addLine("    .propertyA(11)")
+            .addLine("    .propertyB();")
             .build())
         .runTest();
   }

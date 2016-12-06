@@ -52,7 +52,7 @@ public class SetMutateMethodTest {
     return FeatureSets.WITH_LAMBDAS;
   }
 
-  private static final JavaFileObject UNCHECKED_SET_TYPE = new SourceBuilder()
+  private static final JavaFileObject UNCHECKED_SET_BEAN_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public interface DataType {")
@@ -62,11 +62,37 @@ public class SetMutateMethodTest {
       .addLine("}")
       .build();
 
-  private static final JavaFileObject CHECKED_SET_TYPE = new SourceBuilder()
+  private static final JavaFileObject CHECKED_SET_BEAN_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public interface DataType {")
       .addLine("  %s<Integer> getProperties();", Set.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("    @Override public Builder addProperties(int element) {")
+      .addLine("      %s.checkArgument(element >= 0, \"elements must be non-negative\");",
+          Preconditions.class)
+      .addLine("      return super.addProperties(element);")
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject UNCHECKED_SET_PREFIXLESS_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  %s<Integer> properties();", Set.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject CHECKED_SET_PREFIXLESS_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  %s<Integer> properties();", Set.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder addProperties(int element) {")
@@ -84,10 +110,10 @@ public class SetMutateMethodTest {
   @Shared public BehaviorTester behaviorTester;
 
   @Test
-  public void mutateAndAddModifiesUnderlyingProperty() {
+  public void mutateAndAddModifiesUnderlyingProperty_bean() {
     behaviorTester
         .with(new Processor(features))
-        .with(UNCHECKED_SET_TYPE)
+        .with(UNCHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addProperties(5)")
@@ -99,10 +125,10 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void mutateAndSizeReturnsSize() {
+  public void mutateAndSizeReturnsSize_bean() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
+        .with(CHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addProperties(5)")
@@ -112,10 +138,10 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void mutateAndContainsReturnsTrueForContainedElement() {
+  public void mutateAndContainsReturnsTrueForContainedElement_bean() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
+        .with(CHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addProperties(5)")
@@ -125,10 +151,10 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void mutateAndIterateFindsContainedElement() {
+  public void mutateAndIterateFindsContainedElement_bean() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
+        .with(CHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addProperties(5)")
@@ -141,10 +167,10 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void mutateAndRemoveModifiesUnderlyingProperty() {
+  public void mutateAndRemoveModifiesUnderlyingProperty_bean() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
+        .with(CHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addProperties(5, 11)")
@@ -156,10 +182,10 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty() {
+  public void mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty_bean() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
+        .with(CHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addProperties(5, 11)")
@@ -178,10 +204,10 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void mutateAndClearModifiesUnderlyingProperty() {
+  public void mutateAndClearModifiesUnderlyingProperty_bean() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
+        .with(CHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addProperties(5, 11)")
@@ -193,12 +219,12 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void mutateAndAddDelegatesToAddMethodForValidation() {
+  public void mutateAndAddDelegatesToAddMethodForValidation_bean() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("elements must be non-negative");
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
+        .with(CHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addProperties(5)")
@@ -208,11 +234,11 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void modifyAndMutateModifiesUnderlyingProperty() {
+  public void modifyAndMutateModifiesUnderlyingProperty_bean() {
     assumeTrue(features.get(FUNCTION_PACKAGE).consumer().isPresent());
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
+        .with(CHECKED_SET_BEAN_TYPE)
         .with(new TestBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder().addProperties(1, 2).build();")
@@ -221,6 +247,148 @@ public class SetMutateMethodTest {
             .addLine("    .mutateProperties(set -> set.remove(1))")
             .addLine("    .build();")
             .addLine("assertThat(copy.getProperties()).containsExactly(2);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndAddModifiesUnderlyingProperty_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(UNCHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addProperties(5)")
+            .addLine("    .mutateProperties(set -> set.add(11))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.properties()).containsExactly(5, 11);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndSizeReturnsSize_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addProperties(5)")
+            .addLine("    .mutateProperties(set -> assertThat(set.size()).equals(1));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndContainsReturnsTrueForContainedElement_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addProperties(5)")
+            .addLine("    .mutateProperties(set -> assertThat(set.contains(5)).isTrue());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndIterateFindsContainedElement_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addProperties(5)")
+            .addLine("    .mutateProperties(set -> {")
+            .addLine("      assertThat(%s.copyOf(set.iterator())).containsExactly(5);",
+                ImmutableSet.class)
+            .addLine("    });")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndRemoveModifiesUnderlyingProperty_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addProperties(5, 11)")
+            .addLine("    .mutateProperties(set -> set.remove(5))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.properties()).containsExactly(11);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addProperties(5, 11)")
+            .addLine("    .mutateProperties(set -> {")
+            .addLine("      %s<Integer> it = set.iterator();", Iterator.class)
+            .addLine("      while (it.hasNext()) {")
+            .addLine("        if (it.next() == 5) {")
+            .addLine("          it.remove();")
+            .addLine("        }")
+            .addLine("      }")
+            .addLine("    })")
+            .addLine("    .build();")
+            .addLine("assertThat(value.properties()).containsExactly(11);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndClearModifiesUnderlyingProperty_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addProperties(5, 11)")
+            .addLine("    .mutateProperties(set -> set.clear())")
+            .addLine("    .build();")
+            .addLine("assertThat(value.properties()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndAddDelegatesToAddMethodForValidation_prefixless() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("elements must be non-negative");
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addProperties(5)")
+            .addLine("    .mutateProperties(set -> set.add(-3));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void modifyAndMutateModifiesUnderlyingProperty_prefixless() {
+    assumeTrue(features.get(FUNCTION_PACKAGE).consumer().isPresent());
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_SET_PREFIXLESS_TYPE)
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType value = new DataType.Builder().addProperties(1, 2).build();")
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .mutateProperties(set -> set.remove(1))")
+            .addLine("    .build();")
+            .addLine("assertThat(copy.properties()).containsExactly(2);")
             .build())
         .runTest();
   }

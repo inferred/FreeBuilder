@@ -87,8 +87,7 @@ _See [Build tools and IDEs](#build-tools-and-ides) for how to add `@FreeBuilder`
 to your project's build and/or IDE._
 
 Create your value type (e.g. `Person`) as an interface or abstract class,
-containing an abstract accessor method for each desired field. This accessor
-must be non-void, parameterless, and start with 'get' or 'is'. Add the
+containing an abstract accessor method for each desired field. Add the
 `@FreeBuilder` annotation to your class, and it will automatically generate an
 implementing class and a package-visible builder API (`Person_Builder`), which
 you must subclass. For instance:
@@ -100,9 +99,9 @@ import org.inferred.freebuilder.FreeBuilder;
 @FreeBuilder
 public interface Person {
   /** Returns the person's full (English) name. */
-  String getName();
+  String name();
   /** Returns the person's age in years, rounded down. */
-  int getAge();
+  int age();
   /** Builder of {@link Person} instances. */
   class Builder extends Person_Builder { }
 }
@@ -137,6 +136,29 @@ If you write the Person interface shown above, you get:
 
 ```java
 Person person = new Person.Builder()
+    .name("Phil")
+    .age(31)
+    .build();
+System.out.println(person);  // Person{name=Phil, age=31}
+```
+
+
+### JavaBean convention
+
+If you prefer your value types to follow the JavaBean naming convention, just prefix your accessor methods with 'get' (or, optionally, 'is' for boolean accessors). FreeBuilder will follow suit, and additionally add 'set' prefixes on setter methods, as well as dropping the prefix from its toString output.
+
+```java
+@FreeBuilder
+public interface Person {
+  /** Returns the person's full (English) name. */
+  String getName();
+  /** Returns the person's age in years, rounded down. */
+  int getAge();
+  /** Builder of {@link Person} instances. */
+  class Builder extends Person_Builder { }
+}
+
+Person person = new Person.Builder()
     .setName("Phil")
     .setAge(31)
     .build();
@@ -150,8 +172,8 @@ For each property `foo`, the builder gets:
 
 | Method | Description |
 |:------:| ----------- |
-| A setter method, `setFoo` | Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.) |
-| A getter method, `getFoo` | Throws an IllegalStateException if the property value has not yet been set. |
+| A setter method, `foo` | Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.) |
+| A getter method, `foo` | Throws an IllegalStateException if the property value has not yet been set. |
 | A mapper method, `mapFoo` | *Java 8+* Takes a [UnaryOperator]. Replaces the current property value with the result of invoking the unary operator on it. Throws a NullPointerException if the operator, or the value it returns, is null. Throws an IllegalStateException if the property value has not yet been set. |
 
 The mapper methods are very useful when modifying existing values, e.g.
@@ -175,26 +197,26 @@ checks. For instance:
 @FreeBuilder
 public interface Person {
   /** Returns the person's full (English) name. */
-  String getName();
+  String name();
   /** Returns the person's age in years, rounded down. */
-  int getAge();
+  int age();
   /** Returns a human-readable description of the person. */
-  String getDescription();
+  String description();
   /** Builder class for {@link Person}. */
   class Builder extends Person_Builder {
     public Builder() {
       // Set defaults in the builder constructor.
-      setDescription("Indescribable");
+      description("Indescribable");
     }
-    @Override Builder setAge(int age) {
+    @Override Builder age(int age) {
       // Check single-field (argument) constraints in the setter method.
       checkArgument(age >= 0);
-      return super.setAge(age);
+      return super.age(age);
     }
     @Override public Person build() {
       // Check cross-field (state) constraints in the build method.
       Person person = super.build();
-      checkState(!person.getDescription().contains(person.getName()));
+      checkState(!person.description().contains(person.name()));
       return person;
     }
   }
@@ -214,7 +236,7 @@ backwards-compatibility).
 
 ```java
   /** Returns an optional human-readable description of the person. */
-  Optional<String> getDescription();
+  Optional<String> description();
 ```
 
 This property will now default to Optional.empty(), and the Builder
@@ -222,10 +244,10 @@ will gain additional convenience setter methods:
 
 | Method | Description |
 |:------:| ----------- |
-| `setDescription(String value)` | Sets the property to `Optional.of(value)`. Throws a NullPointerException if value is null; this avoids users accidentally clearing an optional value in a way that peer review is unlikely to catch. |
+| `description(String value)` | Sets the property to `Optional.of(value)`. Throws a NullPointerException if value is null; this avoids users accidentally clearing an optional value in a way that peer review is unlikely to catch. |
 | `clearDescription()` | Sets the property to `Optional.empty()`. |
-| `setDescription(Optional<String> value)` | Sets the property to `value`. |
-| `setNullableDescription(String value)` | Sets the property to `Optional.ofNullable(value)`. |
+| `description(Optional<String> value)` | Sets the property to `value`. |
+| `nullableDescription(String value)` | Sets the property to `Optional.ofNullable(value)`. |
 | `mapDescription(UnaryOperator<String> mapper` | *Java 8+* If the property value is not empty, this replaces the value with the result of invoking `mapper` with the existing value, or clears it if `mapper` returns null. Throws a NullPointerException if `mapper` is null. |
 
 Prefer to use explicit defaults where meaningful, as it avoids the need for
@@ -252,7 +274,7 @@ annotation type named "Nullable" will do, but you may wish to use
 
 ```java
   /** Returns an optional title to use when addressing the person. */
-  @Nullable String getTitle();
+  @Nullable String title();
 ```
 
 This property will now default to null, and the Builder's setter methods will
@@ -260,8 +282,8 @@ change their null-handling behaviour:
 
 | Method | Description |
 |:------:| ----------- |
-| `setTitle(@Nullable String title)` | Sets the property to `title`. |
-| `getTitle()` | Returns the current value of the property. May be null. |
+| `title(@Nullable String title)` | Sets the property to `title`. |
+| `title()` | Returns the current value of the property. May be null. |
 | `mapTitle(UnaryOperator<String> mapper)` | *Java 8+* Takes a [UnaryOperator]. Replaces the current property value, if it is not null, with the result of invoking `mapper` on it. Throws a NullPointerException if `mapper` is null. `mapper` may return a null. |
 
 [Guava]: https://github.com/google/guava
@@ -275,18 +297,18 @@ This is the O(1), non-tedious, non&ndash;error-prone way we recomment converting
 
  * Load all your code in Eclipse, or another IDE with support for renaming and
     inlining.
- * _[IDE REFACTOR]_ Rename all your `@Nullable` getters to `getNullableX`.
- * Add an Optional-returning getX
- * Implement your getNullableX methods as:  `return getX().orElse(null)`
-   <br>(Guava: `return getX().orNull()`)
- * _[IDE REFACTOR]_ Inline your getNullableX methods
+ * _[IDE REFACTOR]_ Rename all your `@Nullable` getters to `nullableX()` (or `getNullableX()` if you use JavaBean naming conventions).
+ * Add an Optional-returning `x()` (or `getX()`)
+ * Implement your nullableX methods as:  `return x().orElse(null)`
+   <br>(Guava: `return x().orNull()`)
+ * _[IDE REFACTOR]_ Inline your `nullableX()` methods
 
 At this point, you have effectively performed an automatic translation of a
 `@Nullable` method to an Optional-returning one. Of course, your code is not
-optimal yet (e.g.  `if (foo.getX().orElse(null) != null)`  instead of  `if
-(foo.getX().isPresent())` ). Search-and-replace should get most of these issues.
+optimal yet (e.g.  `if (foo.x().orElse(null) != null)`  instead of  `if
+(foo.x().isPresent())` ). Search-and-replace should get most of these issues.
 
- * _[IDE REFACTOR]_ Rename all your `@Nullable` setters to `setNullableX`.
+ * _[IDE REFACTOR]_ Rename all your `@Nullable` setters to `nullableX` (or `setNullableX`).
 
 Your API is now `@FreeBuilder`-compatible :)
 
@@ -294,13 +316,13 @@ Your API is now `@FreeBuilder`-compatible :)
 ### Collections and Maps
 
 `@FreeBuilder` has special support for collection and map properties, removing
-the `setFoo` accessor method and generating new ones appropriate to the type.
+the `foo` accessor method and generating new ones appropriate to the type.
 Collection and map properties default to an empty collection/map and cannot hold
 nulls.
 
 ```java
   /** Returns a list of descendents for this person. **/
-  List<String> getDescendants();
+  List<String> descendants();
 ```
 
 A <code>[List][]</code>, <code>[Set][]</code> or <code>[Multiset][]</code>
@@ -313,11 +335,11 @@ property called 'descendants' would generate:
 | `addAllDescendants(​Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
 | `mutateDescendants(​Consumer<‌.‌.‌.‌<String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the collection of descendants. (The mutator takes a list, set or map as appropriate.) Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned collection to replace the existing collection. |
 | `clearDescendants()` | Removes all elements from the collection of descendants, leaving it empty. |
-| `getDescendants()` | Returns an unmodifiable view of the collection of descendants. Changes to the collection held by the builder will be reflected in the view. |
+| `descendants()` | Returns an unmodifiable view of the collection of descendants. Changes to the collection held by the builder will be reflected in the view. |
 
 ```java
   /** Returns a map of favourite albums by year. **/
-  Map<Integer, String> getAlbums();
+  Map<Integer, String> albums();
 ```
 
 A <code>[Map][]</code> property called 'albums' would generate:
@@ -329,11 +351,11 @@ A <code>[Map][]</code> property called 'albums' would generate:
 | `removeAlbums(int key)` | Removes the mapping for `key` from albums. Throws a NullPointerException if the parameter is null. Does nothing if the key is not present. |
 | `mutateAlbums(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the map of albums. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned map to replace the existing map. |
 | `clearAlbums()` | Removes all mappings from albums, leaving it empty. |
-| `getAlbums()` | Returns an unmodifiable view of the map of albums. Changes to the map held by the builder will be reflected in this view. |
+| `albums()` | Returns an unmodifiable view of the map of albums. Changes to the map held by the builder will be reflected in this view. |
 
 ```java
   /** Returns a multimap of all awards by year. **/
-  SetMultimap<Integer, String> getAwards();
+  SetMultimap<Integer, String> awards();
 ```
 
 A <code>[Multimap][]</code> property called 'awards' would generate:
@@ -347,7 +369,7 @@ A <code>[Multimap][]</code> property called 'awards' would generate:
 | `removeAllAwards(int key)` | Removes all values associated with `key` from awards. Throws a NullPointerException if the key is null. |
 | `mutateAwards(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the multimap of awards. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream] expecting the returned multimap to replace the existing multimap. |
 | `clearAwards()` | Removes all mappings from awards, leaving it empty. |
-| `getAwards()` | Returns an unmodifiable view of the multimap of awards. Changes to the multimap held by the builder will be reflected in this view. |
+| `awards()` | Returns an unmodifiable view of the multimap of awards. Changes to the multimap held by the builder will be reflected in this view. |
 
 In all cases, the value type will return immutable objects from its getter.
 
@@ -375,7 +397,7 @@ personBuilder
 
 ```java
   /** Returns the person responsible for this project. */
-  Person getOwner();
+  Person owner();
 ```
 
 `@FreeBuilder` has special support for buildable types like [protos][] and other
@@ -383,9 +405,9 @@ personBuilder
 
 | Method | Description |
 |:------:| ----------- |
-| `setOwner(Person owner)` | Sets the owner. Throws a NullPointerException if provided a null. |
-| `setOwner(Person.Builder builder)` | Calls `build()` on `builder` and sets the owner to the result. Throws a NullPointerException if builder or the result of calling `build()` is null. |
-| `getOwnerBuilder()` | Returns a builder for the owner property. Unlike other getter methods in FreeBuilder-generated API, this object is mutable, and modifying it **will modify the underlying property**. |
+| `owner(Person owner)` | Sets the owner. Throws a NullPointerException if provided a null. |
+| `owner(Person.Builder builder)` | Calls `build()` on `builder` and sets the owner to the result. Throws a NullPointerException if builder or the result of calling `build()` is null. |
+| `ownerBuilder()` | Returns a builder for the owner property. Unlike other getter methods in FreeBuilder-generated API, this object is mutable, and modifying it **will modify the underlying property**. |
 | `mutateOwner(Consumer<Person.Builder> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the builder for the property. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored. |
 
 The mutate method allows the buildable property to be set up or modified succinctly and readably in Java 8+:
@@ -393,8 +415,8 @@ The mutate method allows the buildable property to be set up or modified succinc
 ```java
 Project project = new Project.Builder()
     .mutateOwner(b -> b
-        .setName("Phil")
-        .setDepartment("HR"))
+        .name("Phil")
+        .department("HR"))
     .build();
 ```
 
@@ -419,8 +441,8 @@ however, just create the appropriate constructor in your builder subclass:
 ```java
     public Builder(String name, int age) {
       // Set all initial values in the builder constructor
-      setName(name);
-      setAge(age);
+      name(name);
+      age(age);
     }
 ```
 
@@ -437,10 +459,10 @@ it may violate a cross-field constraint.
 
 ```java
 Person person = new Person.Builder()
-    .setName("Phil")
+    .name("Phil")
     .buildPartial();  // build() would throw an IllegalStateException here
 System.out.println(person);  // prints: partial Person{name="Phil"}
-person.getAge();  // throws UnsupportedOperationException
+person.age();  // throws UnsupportedOperationException
 ```
 
 As partials violate the (legitimate) expectations of your program, they must
@@ -462,8 +484,8 @@ at your Builder class. For instance:
 // This type can be freely converted to and from JSON with Jackson
 @JsonDeserialize(builder = Address.Builder.class)
 interface Address {
-    String getCity();
-    String getState();
+    String city();
+    String state();
 
     class Builder extends Address_Builder {}
 }

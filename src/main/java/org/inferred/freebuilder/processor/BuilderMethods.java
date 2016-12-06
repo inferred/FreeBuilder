@@ -10,15 +10,27 @@ public class BuilderMethods {
   }
 
   public static String setter(Property property) {
-    return "set" + property.getCapitalizedName();
+    if (property.isUsingBeanConvention()) {
+      return "set" + property.getCapitalizedName();
+    } else {
+      return property.getName();
+    }
   }
 
   public static String nullableSetter(Property property) {
-    return "setNullable" + property.getCapitalizedName();
+    if (property.isUsingBeanConvention()) {
+      return "setNullable" + property.getCapitalizedName();
+    } else {
+      return "nullable" + property.getCapitalizedName();
+    }
   }
 
   public static String getBuilderMethod(Property property) {
-    return "get" + property.getCapitalizedName() + "Builder";
+    if (property.isUsingBeanConvention()) {
+      return "get" + property.getCapitalizedName() + "Builder";
+    } else {
+      return property.getName() + "Builder";
+    }
   }
 
   public static String addMethod(Property property) {

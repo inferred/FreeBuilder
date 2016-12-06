@@ -41,7 +41,8 @@ public class NullableSourceTest {
 
   @Test
   public void testJ6() {
-    assertThat(generateSource(metadata(), GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    String source = generateSource(metadata(true), GuavaLibrary.AVAILABLE);
+    assertThat(source).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
@@ -251,7 +252,7 @@ public class NullableSourceTest {
 
   @Test
   public void testJ7() {
-    String source = generateSource(metadata(), JAVA_7, GuavaLibrary.AVAILABLE);
+    String source = generateSource(metadata(true), JAVA_7, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
@@ -451,7 +452,7 @@ public class NullableSourceTest {
   @Test
   public void testJ8() {
     String source = generateSource(
-        metadata(),
+        metadata(true),
         JAVA_7,  // SourceLevel does not currently distinguish J7 and J8
         FunctionPackage.AVAILABLE,
         GuavaLibrary.AVAILABLE);
@@ -683,13 +684,224 @@ public class NullableSourceTest {
         "}\n"));
   }
 
+  @Test
+  public void testPrefixless() {
+    String source = generateSource(metadata(false), GuavaLibrary.AVAILABLE);
+    assertThat(source).isEqualTo(Joiner.on('\n').join(
+        "/**",
+        " * Auto-generated superclass of {@link Person.Builder},",
+        " * derived from the API of {@link Person}.",
+        " */",
+        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "abstract class Person_Builder {",
+        "",
+        "  /**",
+        "   * Creates a new builder using {@code value} as a template.",
+        "   */",
+        "  public static Person.Builder from(Person value) {",
+        "    return new Person.Builder().mergeFrom(value);",
+        "  }",
+        "",
+        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
+        "",
+        "  @Nullable private String name = null;",
+        "  @Nullable private Integer age = null;",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#name()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder name(@Nullable String name) {",
+        "    this.name = name;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns the value that will be returned by {@link Person#name()}.",
+        "   */",
+        "  @Nullable",
+        "  public String name() {",
+        "    return name;",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets the value to be returned by {@link Person#age()}.",
+        "   *",
+        "   * @return this {@code Builder} object",
+        "   */",
+        "  public Person.Builder age(@Nullable Integer age) {",
+        "    this.age = age;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns the value that will be returned by {@link Person#age()}.",
+        "   */",
+        "  @Nullable",
+        "  public Integer age() {",
+        "    return age;",
+        "  }",
+        "",
+        "  /**",
+        "   * Sets all property values using the given {@code Person} as a template.",
+        "   */",
+        "  public Person.Builder mergeFrom(Person value) {",
+        "    name(value.name());",
+        "    age(value.age());",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Copies values from the given {@code Builder}.",
+        "   * Does not affect any properties not set on the input.",
+        "   */",
+        "  public Person.Builder mergeFrom(Person.Builder template) {",
+        "    name(template.name());",
+        "    age(template.age());",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Resets the state of this builder.",
+        "   */",
+        "  public Person.Builder clear() {",
+        "    Person_Builder _defaults = new Person.Builder();",
+        "    name = _defaults.name;",
+        "    age = _defaults.age;",
+        "    return (Person.Builder) this;",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns a newly-created {@link Person} based on the contents of the {@code Builder}.",
+        "   */",
+        "  public Person build() {",
+        "    return new Person_Builder.Value(this);",
+        "  }",
+        "",
+        "  /**",
+        "   * Returns a newly-created partial {@link Person}",
+        "   * based on the contents of the {@code Builder}.",
+        "   * State checking will not be performed.",
+        "   *",
+        "   * <p>Partials should only ever be used in tests.",
+        "   */",
+        "  @VisibleForTesting()",
+        "  public Person buildPartial() {",
+        "    return new Person_Builder.Partial(this);",
+        "  }",
+        "",
+        "  private static final class Value extends Person {",
+        "    @Nullable private final String name;",
+        "    @Nullable private final Integer age;",
+        "",
+        "    private Value(Person_Builder builder) {",
+        "      this.name = builder.name;",
+        "      this.age = builder.age;",
+        "    }",
+        "",
+        "    @Override",
+        "    @Nullable",
+        "    public String name() {",
+        "      return name;",
+        "    }",
+        "",
+        "    @Override",
+        "    @Nullable",
+        "    public Integer age() {",
+        "      return age;",
+        "    }",
+        "",
+        "    @Override",
+        "    public boolean equals(Object obj) {",
+        "      if (!(obj instanceof Person_Builder.Value)) {",
+        "        return false;",
+        "      }",
+        "      Person_Builder.Value other = (Person_Builder.Value) obj;",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
+        "        return false;",
+        "      }",
+        "      if (age != other.age && (age == null || !age.equals(other.age))) {",
+        "        return false;",
+        "      }",
+        "      return true;",
+        "    }",
+        "",
+        "    @Override",
+        "    public int hashCode() {",
+        "      return Arrays.hashCode(new Object[] {name, age});",
+        "    }",
+        "",
+        "    @Override",
+        "    public String toString() {",
+        "      return \"Person{\"",
+        "          + COMMA_JOINER.join(",
+        "              (name != null ? \"name=\" + name : null), "
+            + "(age != null ? \"age=\" + age : null))",
+        "          + \"}\";",
+        "    }",
+        "  }",
+        "",
+        "  private static final class Partial extends Person {",
+        "    @Nullable private final String name;",
+        "    @Nullable private final Integer age;",
+        "",
+        "    Partial(Person_Builder builder) {",
+        "      this.name = builder.name;",
+        "      this.age = builder.age;",
+        "    }",
+        "",
+        "    @Override",
+        "    @Nullable",
+        "    public String name() {",
+        "      return name;",
+        "    }",
+        "",
+        "    @Override",
+        "    @Nullable",
+        "    public Integer age() {",
+        "      return age;",
+        "    }",
+        "",
+        "    @Override",
+        "    public boolean equals(Object obj) {",
+        "      if (!(obj instanceof Person_Builder.Partial)) {",
+        "        return false;",
+        "      }",
+        "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
+        "      if (name != other.name && (name == null || !name.equals(other.name))) {",
+        "        return false;",
+        "      }",
+        "      if (age != other.age && (age == null || !age.equals(other.age))) {",
+        "        return false;",
+        "      }",
+        "      return true;",
+        "    }",
+        "",
+        "    @Override",
+        "    public int hashCode() {",
+        "      return Arrays.hashCode(new Object[] {name, age});",
+        "    }",
+        "",
+        "    @Override",
+        "    public String toString() {",
+        "      return \"partial Person{\"",
+        "          + COMMA_JOINER.join(",
+        "              (name != null ? \"name=\" + name : null), "
+            + "(age != null ? \"age=\" + age : null))",
+        "          + \"}\";",
+        "    }",
+        "  }",
+        "}\n"));
+  }
+
   private static String generateSource(Metadata metadata, Feature<?>... features) {
     SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
     new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
     return CompilationUnitBuilder.formatSource(sourceBuilder.toString());
   }
 
-  private static Metadata metadata() {
+  private static Metadata metadata(boolean bean) {
     ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
     ClassTypeImpl string = newTopLevelClass("java.lang.String");
     ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
@@ -700,18 +912,20 @@ public class NullableSourceTest {
         .setBoxedType(string)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
-        .setGetterName("getName")
+        .setGetterName(bean ? "getName" : "name")
         .setName("name")
         .setType(string)
+        .setUsingBeanConvention(bean)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(integer)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
-        .setGetterName("getAge")
+        .setGetterName(bean ? "getAge" : "age")
         .setName("age")
         .setType(integer)
+        .setUsingBeanConvention(bean)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())

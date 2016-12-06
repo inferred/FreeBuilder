@@ -15,23 +15,21 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.junit.Assume.assumeTrue;
-
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.Multiset;
 import com.google.common.testing.EqualsTester;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
-import org.inferred.freebuilder.processor.util.testing.CompilationException;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
+import org.inferred.freebuilder.processor.util.testing.CompilationException;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -45,25 +43,23 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.tools.JavaFileObject;
 
-/** Behavioral tests for {@code List<?>} properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class SetPropertyFactoryTest {
+public class MultisetBeanPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
     return FeatureSets.ALL;
   }
 
-  private static final JavaFileObject SET_PROPERTY_AUTO_BUILT_TYPE = new SourceBuilder()
+  private static final JavaFileObject MULTISET_PROPERTY_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> getItems();", Set.class, String.class)
+      .addLine("  public abstract %s<%s> getItems();", Multiset.class, String.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -72,55 +68,13 @@ public class SetPropertyFactoryTest {
       .addLine("}")
       .build();
 
-  private static final JavaFileObject SET_PRIMITIVES_AUTO_BUILT_TYPE = new SourceBuilder()
+  private static final JavaFileObject MULTISET_PRIMITIVES_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<Integer> getItems();", Set.class)
+      .addLine("  public abstract %s<Integer> getItems();", Multiset.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  private static final String STRING_VALIDATION_ERROR_MESSAGE = "Cannot add empty string";
-
-  private static final JavaFileObject VALIDATED_STRINGS = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> getItems();", Set.class, String.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder addItems(String unused) {")
-      .addLine("      %s.checkArgument(!unused.isEmpty(), \"%s\");",
-          Preconditions.class, STRING_VALIDATION_ERROR_MESSAGE)
-      .addLine("      return super.addItems(unused);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  private static final String INT_VALIDATION_ERROR_MESSAGE = "Items must be non-negative";
-
-  private static final JavaFileObject VALIDATED_INTS = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<Integer> getItems();", Set.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder addItems(int element) {")
-      .addLine("      %s.checkArgument(element >= 0, \"%s\");",
-          Preconditions.class, INT_VALIDATION_ERROR_MESSAGE)
-      .addLine("      return super.addItems(element);")
-      .addLine("    }")
-      .addLine("  }")
       .addLine("  public static Builder builder() {")
       .addLine("    return new Builder();")
       .addLine("  }")
@@ -136,7 +90,7 @@ public class SetPropertyFactoryTest {
   public void testDefaultEmpty() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
             .addLine("assertThat(value.getItems()).isEmpty();")
@@ -148,13 +102,13 @@ public class SetPropertyFactoryTest {
   public void testAddSingleElement() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"two\");")
             .build())
         .runTest();
   }
@@ -164,7 +118,7 @@ public class SetPropertyFactoryTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -177,13 +131,13 @@ public class SetPropertyFactoryTest {
   public void testAddSingleElement_duplicate() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"one\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"one\");")
             .build())
         .runTest();
   }
@@ -192,12 +146,12 @@ public class SetPropertyFactoryTest {
   public void testAddVarargs() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"two\");")
             .build())
         .runTest();
   }
@@ -207,7 +161,7 @@ public class SetPropertyFactoryTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().addItems(\"one\", null);")
             .build())
@@ -218,12 +172,12 @@ public class SetPropertyFactoryTest {
   public void testAddVarargs_duplicate() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"one\")")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\").inOrder();")
+        .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .addLine("    .addItems(\"one\", \"one\")")
+        .addLine("    .build();")
+        .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"one\");")
             .build())
         .runTest();
   }
@@ -232,12 +186,12 @@ public class SetPropertyFactoryTest {
   public void testAddAllIterable() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", \"two\"))", ImmutableList.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"two\");")
             .build())
         .runTest();
   }
@@ -247,7 +201,7 @@ public class SetPropertyFactoryTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", null));", ImmutableList.class)
@@ -259,12 +213,12 @@ public class SetPropertyFactoryTest {
   public void testAddAllIterable_duplicate() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", \"one\"))", ImmutableList.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"one\");")
             .build())
         .runTest();
   }
@@ -273,12 +227,12 @@ public class SetPropertyFactoryTest {
   public void testAddAllIterable_iteratesOnce() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(new %s(\"one\", \"two\"))", DodgyStringIterable.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"two\");")
             .build())
         .runTest();
   }
@@ -302,76 +256,110 @@ public class SetPropertyFactoryTest {
   }
 
   @Test
-  public void testRemove() {
+  public void testAddCopies() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
-            .addLine("    .removeItems(\"one\")")
+            .addLine("    .addCopiesToItems(\"one\", 3)")
+            .addLine("    .addCopiesToItems(\"two\", 2)")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"two\");")
+            .addLine("assertThat(value.getItems()).iteratesAs(")
+            .addLine("    \"one\", \"one\", \"one\", \"two\", \"two\");")
             .build())
         .runTest();
   }
 
   @Test
-  public void testRemove_null() {
+  public void testAddCopies_null() {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .removeItems((String) null);")
+            .addLine("    .addCopiesToItems(\"one\", 3)")
+            .addLine("    .addCopiesToItems((String) null, 2);")
             .build())
         .runTest();
   }
 
   @Test
-  public void testRemove_missingElement() {
+  public void testAddCopies_negativeOccurrences() {
+    thrown.expect(IllegalArgumentException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addCopiesToItems(\"one\", 3)")
+            .addLine("    .addCopiesToItems(\"two\", -2);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddCopies_duplicate() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(MULTISET_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addCopiesToItems(\"one\", 3)")
+            .addLine("    .addCopiesToItems(\"one\", 2)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).iteratesAs(")
+            .addLine("    \"one\", \"one\", \"one\", \"one\", \"one\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testSetCountOf() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(MULTISET_PROPERTY_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addItems(\"one\", \"two\", \"three\")")
+            .addLine("    .setCountOfItems(\"one\", 3)")
+            .addLine("    .setCountOfItems(\"two\", 2)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).iteratesAs(")
+            .addLine("    \"one\", \"one\", \"one\", \"two\", \"two\", \"three\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testSetCountOf_toZero() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
-            .addLine("    .removeItems(\"three\")")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\");")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testClear_noElements() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .clearItems()")
+            .addLine("    .setCountOfItems(\"two\", 0)")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"three\", \"four\");")
             .build())
         .runTest();
   }
 
   @Test
-  public void testClear_twoElements() {
+  public void testClear() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .clearItems()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"three\", \"four\");")
             .build())
         .runTest();
   }
@@ -380,7 +368,7 @@ public class SetPropertyFactoryTest {
   public void testDefaultEmpty_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
             .addLine("assertThat(value.getItems()).isEmpty();")
@@ -392,13 +380,13 @@ public class SetPropertyFactoryTest {
   public void testAddSingleElement_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1)")
             .addLine("    .addItems(2)")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1, 2).inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 2);")
             .build())
         .runTest();
   }
@@ -408,7 +396,7 @@ public class SetPropertyFactoryTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addItems(1)")
@@ -421,13 +409,13 @@ public class SetPropertyFactoryTest {
   public void testAddSingleElement_duplicate_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1)")
             .addLine("    .addItems(1)")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 1);")
             .build())
         .runTest();
   }
@@ -436,12 +424,12 @@ public class SetPropertyFactoryTest {
   public void testAddVarargs_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1, 2)")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1, 2).inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 2);")
             .build())
         .runTest();
   }
@@ -450,7 +438,7 @@ public class SetPropertyFactoryTest {
   public void testAddVarargs_null_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder().addItems(1, null);")
             .build());
@@ -462,12 +450,12 @@ public class SetPropertyFactoryTest {
   public void testAddVarargs_duplicate_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
         .addLine("com.example.DataType value = new com.example.DataType.Builder()")
         .addLine("    .addItems(1, 1)")
         .addLine("    .build();")
-        .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
+        .addLine("assertThat(value.getItems()).iteratesAs(1, 1);")
             .build())
         .runTest();
   }
@@ -476,12 +464,12 @@ public class SetPropertyFactoryTest {
   public void testAddAllIterable_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 2))", ImmutableList.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1, 2).inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 2);")
             .build())
         .runTest();
   }
@@ -491,7 +479,7 @@ public class SetPropertyFactoryTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, null));", ImmutableList.class)
@@ -503,27 +491,102 @@ public class SetPropertyFactoryTest {
   public void testAddAllIterable_duplicate_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 1))", ImmutableList.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 1);")
             .build())
         .runTest();
   }
 
   @Test
-  public void testRemove_primitive() {
+  public void testAddCopies_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addCopiesToItems(1, 3)")
+            .addLine("    .addCopiesToItems(2, 2)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 1, 1, 2, 2);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddCopies_null_primitive() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(MULTISET_PRIMITIVES_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addCopiesToItems(1, 3)")
+            .addLine("    .addCopiesToItems((Integer) null, 2);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddCopies_negativeOccurrences_primitive() {
+    thrown.expect(IllegalArgumentException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(MULTISET_PRIMITIVES_TYPE)
+        .with(new TestBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addCopiesToItems(1, 3)")
+            .addLine("    .addCopiesToItems(2, -2);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddCopies_duplicate_primitive() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(MULTISET_PRIMITIVES_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addCopiesToItems(1, 3)")
+            .addLine("    .addCopiesToItems(1, 2)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 1, 1, 1, 1);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testSetCountOf_primitive() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(MULTISET_PRIMITIVES_TYPE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addItems(1, 2, 3)")
+            .addLine("    .setCountOfItems(1, 3)")
+            .addLine("    .setCountOfItems(2, 2)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 1, 1, 2, 2, 3);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testSetCountOf_toZero_primitive() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1, 2)")
-            .addLine("    .removeItems(1)")
+            .addLine("    .setCountOfItems(2, 0)")
+            .addLine("    .addItems(3, 4)")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(2);")
+            .addLine("assertThat(value.getItems()).iteratesAs(1, 3, 4);")
             .build())
         .runTest();
   }
@@ -532,14 +595,14 @@ public class SetPropertyFactoryTest {
   public void testClear_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(MULTISET_PRIMITIVES_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1, 2)")
             .addLine("    .clearItems()")
             .addLine("    .addItems(3, 4)")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(3, 4).inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(3, 4);")
             .build())
         .runTest();
   }
@@ -548,17 +611,17 @@ public class SetPropertyFactoryTest {
   public void testGet_returnsLiveView() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
-            .addLine("%s<String> itemsView = builder.getItems();", Set.class)
+            .addLine("%s<String> itemsView = builder.getItems();", Multiset.class)
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.addItems(\"one\", \"two\");")
-            .addLine("assertThat(itemsView).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(itemsView).iteratesAs(\"one\", \"two\");")
             .addLine("builder.clearItems();")
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.addItems(\"three\", \"four\");")
-            .addLine("assertThat(itemsView).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(itemsView).iteratesAs(\"three\", \"four\");")
             .build())
         .runTest();
   }
@@ -568,10 +631,10 @@ public class SetPropertyFactoryTest {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
-            .addLine("%s<String> itemsView = builder.getItems();", Set.class)
+            .addLine("%s<String> itemsView = builder.getItems();", Multiset.class)
             .addLine("itemsView.add(\"anything\");")
             .build())
         .runTest();
@@ -581,15 +644,14 @@ public class SetPropertyFactoryTest {
   public void testMergeFrom_valueInstance() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .build();")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(builder.build().getItems())")
-            .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.build().getItems()).iteratesAs(\"one\", \"two\");")
             .build())
         .runTest();
   }
@@ -598,14 +660,13 @@ public class SetPropertyFactoryTest {
   public void testMergeFrom_builder() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
             .addLine("    .addItems(\"one\", \"two\");")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.build().getItems())")
-            .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.build().getItems()).iteratesAs(\"one\", \"two\");")
             .build())
         .runTest();
   }
@@ -614,14 +675,14 @@ public class SetPropertyFactoryTest {
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .clear()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"three\", \"four\");")
             .build())
         .runTest();
   }
@@ -634,7 +695,7 @@ public class SetPropertyFactoryTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItems();", Set.class, String.class)
+            .addLine("  public abstract %s<%s> getItems();", Multiset.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    public Builder(String... items) {")
@@ -648,21 +709,20 @@ public class SetPropertyFactoryTest {
             .addLine("    .clear()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"three\", \"four\");")
             .build())
         .runTest();
   }
 
   @Test
   public void testImmutableSetProperty() {
-    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItems();", ImmutableSet.class, String.class)
+            .addLine("  public abstract %s<%s> getItems();", ImmutableMultiset.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("  public static Builder builder() {")
@@ -675,61 +735,73 @@ public class SetPropertyFactoryTest {
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.getItems()).iteratesAs(\"one\", \"two\");")
             .build())
         .runTest();
   }
 
   @Test
-  public void testValidation_varargsAdd() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+  public void testOverridingAdd() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s> getItems();", Multiset.class, String.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder setCountOfItems(String unused, int unused2) {")
+            .addLine("      return this;")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addItems(\"one\", \"\");")
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addItems(\"zero\")")
+            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addAllItems(%s.of(\"three\", \"four\"))", ImmutableList.class)
+            .addLine("    .addCopiesToItems(\"seven\", 3)")
+            .addLine("    .setCountOfItems(\"eight\", 3)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
             .build())
         .runTest();
   }
 
   @Test
-  public void testValidation_addAll() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+  public void testOverridingAdd_primitive() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addAllItems(%s.of(\"three\", \"\"));",
-                ImmutableList.class)
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<Integer> getItems();", Multiset.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder setCountOfItems(int unused, int unused2) {")
+            .addLine("      return this;")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
             .build())
-        .runTest();
-  }
-
-  @Test
-  public void testPrimitiveValidation_varargsAdd() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(VALIDATED_INTS)
         .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addItems(1, -2);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testPrimitiveValidation_addAll() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(VALIDATED_INTS)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addAllItems(%s.of(3, -4));",
-                ImmutableList.class)
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addItems(0)")
+            .addLine("    .addItems(1, 2)")
+            .addLine("    .addAllItems(%s.of(3, 4))", ImmutableList.class)
+            .addLine("    .addCopiesToItems(7, 3)")
+            .addLine("    .setCountOfItems(8, 3)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getItems()).isEmpty();")
             .build())
         .runTest();
   }
@@ -738,7 +810,7 @@ public class SetPropertyFactoryTest {
   public void testEquality() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(MULTISET_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("new %s()", EqualsTester.class)
             .addLine("    .addEqualityGroup(")
@@ -758,6 +830,13 @@ public class SetPropertyFactoryTest {
             .addLine("        com.example.DataType.builder()")
             .addLine("            .addItems(\"one\")")
             .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .addItems(\"one\", \"one\")")
+            .addLine("            .build(),")
+            .addLine("        com.example.DataType.builder()")
+            .addLine("            .addItems(\"one\", \"one\")")
+            .addLine("            .build())")
             .addLine("    .testEquals();")
             .build())
         .runTest();
@@ -774,204 +853,22 @@ public class SetPropertyFactoryTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public interface DataType {")
-            .addLine("  @JsonProperty(\"stuff\") %s<%s> getItems();", Set.class, String.class)
+            .addLine("  @JsonProperty(\"stuff\") %s<%s> getItems();", Multiset.class, String.class)
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(new TestBuilder()
             .addImport("com.example.DataType")
-            .addLine("DataType value = new DataType.Builder()")
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
-            .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
+            .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
+            .addLine("    .registerModule(new %s());", GuavaModule.class)
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testFromReusesImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFromReusesImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = new DataType.Builder().mergeFrom(value).build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFromEmptySetDoesNotPreventReuseOfImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = new DataType.Builder()")
-            .addLine("    .from(value)")
-            .addLine("    .mergeFrom(new DataType.Builder())")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testModifyAndAdd() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = DataType.Builder")
-            .addLine("    .from(value)")
-            .addLine("    .addItems(\"three\")")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.getItems())")
-            .addLine("    .containsExactly(\"one\", \"two\", \"three\")")
-            .addLine("    .inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testModifyAndRemove() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = DataType.Builder")
-            .addLine("    .from(value)")
-            .addLine("    .removeItems(\"one\")")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).containsExactly(\"two\");")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testModifyAndClear() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = DataType.Builder")
-            .addLine("    .from(value)")
-            .addLine("    .clearItems()")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isEmpty();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testModifyAndClearAll() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = DataType.Builder")
-            .addLine("    .from(value)")
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isEmpty();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeInvalidData() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addImport(Set.class)
-            .addImport(ImmutableSet.class)
-            .addLine("DataType value = new DataType() {")
-            .addLine("  @Override public Set<String> getItems() {")
-            .addLine("    return ImmutableSet.of(\"foo\", \"\");")
-            .addLine("  }")
-            .addLine("};")
-            .addLine("DataType.Builder.from(value);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeCombinesSets() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addLine("DataType data1 = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType data2 = new DataType.Builder()")
-            .addLine("    .addItems(\"three\")")
-            .addLine("    .addItems(\"two\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = DataType.Builder.from(data2).mergeFrom(data1).build();")
-            .addLine("assertThat(copy.getItems())")
-            .addLine("    .containsExactly(\"three\", \"two\", \"one\")")
-            .addLine("    .inOrder();")
+            .addLine("assertThat(clone.getItems()).iteratesAs(\"one\", \"two\");")
             .build())
         .runTest();
   }

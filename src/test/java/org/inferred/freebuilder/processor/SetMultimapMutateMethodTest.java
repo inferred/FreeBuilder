@@ -432,6 +432,72 @@ public class SetMultimapMutateMethodTest {
         .runTest();
   }
 
+  @Test
+  public void mutateAndPutModifiesUnderlyingProperty_whenUnchecked_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<String, String> items();", SetMultimap.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .mutateItems(items -> {")
+            .addLine("      items.put(\"one\", \"A\");")
+            .addLine("      items.put(\"two\", \"B\");")
+            .addLine("    })")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items())")
+            .addLine("    .contains(\"one\", \"A\")")
+            .addLine("    .and(\"two\", \"B\")")
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndPutModifiesUnderlyingProperty_whenChecked_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<String, String> items();", SetMultimap.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder putItems(String key, String value) {")
+            .addLine("      %s.checkArgument(!key.isEmpty(), \"key may not be empty\");",
+                Preconditions.class)
+            .addLine("      %s.checkArgument(!value.isEmpty(), \"value may not be empty\");",
+                Preconditions.class)
+            .addLine("      return super.putItems(key, value);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .mutateItems(items -> {")
+            .addLine("      items.put(\"one\", \"A\");")
+            .addLine("      items.put(\"two\", \"B\");")
+            .addLine("    })")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items())")
+            .addLine("    .contains(\"one\", \"A\")")
+            .addLine("    .and(\"two\", \"B\")")
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
   private static TestBuilder testBuilder() {
     return new TestBuilder()
         .addStaticImport(MultimapSubject.class, "assertThat")

@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
@@ -22,7 +23,7 @@ import com.google.common.testing.EqualsTester;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
@@ -40,18 +41,17 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.List;
-import java.util.Optional;
 
 import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code Optional<?>} properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class JavaUtilOptionalPropertyTest {
+public class GuavaOptionalBeanPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_LAMBDAS;
+    return FeatureSets.WITH_GUAVA;
   }
 
   private static final JavaFileObject TWO_OPTIONAL_PROPERTIES_TYPE = new SourceBuilder()
@@ -100,25 +100,25 @@ public class JavaUtilOptionalPropertyTest {
   @Shared public BehaviorTester behaviorTester;
 
   @Test
-  public void testConstructor_defaultEmpty() {
+  public void testConstructor_defaultAbsent() {
     behaviorTester
         .with(new Processor(features))
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
 
   @Test
-  public void testConstructor_primitive_defaultEmpty() {
+  public void testConstructor_primitive_defaultAbsent() {
     behaviorTester
         .with(new Processor(features))
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -130,7 +130,7 @@ public class JavaUtilOptionalPropertyTest {
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
-            .addLine("assertEquals(%s.empty(), builder.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), builder.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -189,15 +189,15 @@ public class JavaUtilOptionalPropertyTest {
   }
 
   @Test
-  public void testSet_empty() {
+  public void testSet_absent() {
     behaviorTester
         .with(new Processor(features))
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(%s.<String>empty())", Optional.class)
+            .addLine("    .setItem(%s.<String>absent())", Optional.class)
             .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -238,7 +238,7 @@ public class JavaUtilOptionalPropertyTest {
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setNullableItem(null)")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -253,7 +253,7 @@ public class JavaUtilOptionalPropertyTest {
             .addLine("    .setItem(\"item\")")
             .addLine("    .clearItem()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -299,15 +299,15 @@ public class JavaUtilOptionalPropertyTest {
   }
 
   @Test
-  public void testSet_primitive_empty() {
+  public void testSet_primitive_absent() {
     behaviorTester
         .with(new Processor(features))
         .with(OPTIONAL_INTEGER_TYPE)
         .with(new TestBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setItem(%s.<Integer>empty())", Optional.class)
+            .addLine("    .setItem(%s.<Integer>absent())", Optional.class)
             .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -348,7 +348,7 @@ public class JavaUtilOptionalPropertyTest {
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .setNullableItem(null)")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -363,7 +363,7 @@ public class JavaUtilOptionalPropertyTest {
             .addLine("    .setItem(5)")
             .addLine("    .clearItem()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -440,7 +440,7 @@ public class JavaUtilOptionalPropertyTest {
             .addLine("    .setItem(\"item\")")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -492,7 +492,7 @@ public class JavaUtilOptionalPropertyTest {
             .addLine("com.example.DataType value = new com.example.DataType.Builder(\"item\")")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.getItem());", Optional.class)
+            .addLine("assertEquals(%s.absent(), value.getItem());", Optional.class)
             .build())
         .runTest();
   }
@@ -562,7 +562,7 @@ public class JavaUtilOptionalPropertyTest {
   }
 
   @Test
-  public void testCustomization_empty() {
+  public void testCustomization_absent() {
     thrown.expectMessage("Fooled you!");
     behaviorTester
         .with(new Processor(features))
@@ -585,7 +585,7 @@ public class JavaUtilOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setItem(%s.<String>empty());", Optional.class)
+            .addLine("    .setItem(%s.<String>absent());", Optional.class)
             .build())
         .runTest();
   }
@@ -682,7 +682,7 @@ public class JavaUtilOptionalPropertyTest {
   }
 
   @Test
-  public void testCustomization_primitive_empty() {
+  public void testCustomization_primitive_absent() {
     thrown.expectMessage("Fooled you!");
     behaviorTester
         .with(new Processor(features))
@@ -705,7 +705,7 @@ public class JavaUtilOptionalPropertyTest {
             .build())
         .with(new TestBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
-            .addLine("    .setItem(%s.<Integer>empty());", Optional.class)
+            .addLine("    .setItem(%s.<Integer>absent());", Optional.class)
             .build())
         .runTest();
   }
@@ -749,7 +749,7 @@ public class JavaUtilOptionalPropertyTest {
             .addLine("    .addEqualityGroup(")
             .addLine("        com.example.DataType.builder().build(),")
             .addLine("        com.example.DataType.builder()")
-            .addLine("            .setItem(%s.<String>empty())", Optional.class)
+            .addLine("            .setItem(%s.<String>absent())", Optional.class)
             .addLine("            .build(),")
             .addLine("        com.example.DataType.builder()")
             .addLine("            .setNullableItem(null)")
@@ -772,12 +772,12 @@ public class JavaUtilOptionalPropertyTest {
         .with(new Processor(features))
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
-            .addLine("com.example.DataType empty = com.example.DataType.builder()")
+            .addLine("com.example.DataType absent = com.example.DataType.builder()")
             .addLine("    .build();")
             .addLine("com.example.DataType present = com.example.DataType.builder()")
             .addLine("    .setItem(\"item\")")
             .addLine("    .build();")
-            .addLine("assertEquals(\"DataType{}\", empty.toString());")
+            .addLine("assertEquals(\"DataType{}\", absent.toString());")
             .addLine("assertEquals(\"DataType{item=item}\", present.toString());")
             .build())
         .runTest();
@@ -815,12 +815,12 @@ public class JavaUtilOptionalPropertyTest {
         .with(new Processor(features))
         .with(OPTIONAL_PROPERTY_TYPE)
         .with(new TestBuilder()
-            .addLine("com.example.DataType empty = com.example.DataType.builder()")
+            .addLine("com.example.DataType absent = com.example.DataType.builder()")
             .addLine("    .buildPartial();")
             .addLine("com.example.DataType present = com.example.DataType.builder()")
             .addLine("    .setItem(\"item\")")
             .addLine("    .buildPartial();")
-            .addLine("assertEquals(\"partial DataType{}\", empty.toString());")
+            .addLine("assertEquals(\"partial DataType{}\", absent.toString());")
             .addLine("assertEquals(\"partial DataType{item=item}\", present.toString());")
             .build())
         .runTest();
@@ -940,7 +940,7 @@ public class JavaUtilOptionalPropertyTest {
             .addLine("    .setItem(\"item\")")
             .addLine("    .build();")
             .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
-            .addLine("    .registerModule(new %s());", Jdk8Module.class)
+            .addLine("    .registerModule(new %s());", GuavaModule.class)
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
             .addLine("assertEquals(%s.of(\"item\"), clone.getItem());", Optional.class)

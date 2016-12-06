@@ -363,4 +363,54 @@ public class ListMutateMethodTest {
         .runTest();
   }
 
+  @Test
+  public void mutateAndAddModifiesUnderlyingPropertyWhenUnchecked_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<Integer> properties();", List.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .mutateProperties(map -> map.add(11))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.properties()).containsExactly(11);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndAddModifiesUnderlyingPropertyWhenChecked_prefixless() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<Integer> properties();", List.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder addProperties(int element) {")
+            .addLine("      %s.checkArgument(element >= 0, \"elements must be non-negative\");",
+                Preconditions.class)
+            .addLine("      return super.addProperties(element);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .mutateProperties(map -> map.add(11))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.properties()).containsExactly(11);")
+            .build())
+        .runTest();
+  }
+
 }

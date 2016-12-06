@@ -39,6 +39,7 @@ abstract class Metadata_Property_Builder {
     NAME("name"),
     CAPITALIZED_NAME("capitalizedName"),
     ALL_CAPS_NAME("allCapsName"),
+    USING_BEAN_CONVENTION("usingBeanConvention"),
     GETTER_NAME("getterName"),
     FULLY_CHECKED_CAST("fullyCheckedCast"),
     ;
@@ -60,6 +61,7 @@ abstract class Metadata_Property_Builder {
   private String name;
   private String capitalizedName;
   private String allCapsName;
+  private boolean usingBeanConvention;
   private String getterName;
   @Nullable private PropertyCodeGenerator codeGenerator = null;
   private boolean fullyCheckedCast;
@@ -177,6 +179,29 @@ abstract class Metadata_Property_Builder {
         !_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME),
         "allCapsName not set");
     return allCapsName;
+  }
+
+  /**
+   * Sets the value to be returned by {@link Metadata.Property#isUsingBeanConvention()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Property.Builder setUsingBeanConvention(boolean usingBeanConvention) {
+    this.usingBeanConvention = usingBeanConvention;
+    _unsetProperties.remove(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION);
+    return (Metadata.Property.Builder) this;
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Metadata.Property#isUsingBeanConvention()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public boolean isUsingBeanConvention() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION),
+        "usingBeanConvention not set");
+    return usingBeanConvention;
   }
 
   /**
@@ -331,6 +356,11 @@ abstract class Metadata_Property_Builder {
         || !value.getAllCapsName().equals(_defaults.getAllCapsName())) {
       setAllCapsName(value.getAllCapsName());
     }
+    if (_defaults._unsetProperties.contains(
+            Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
+        || value.isUsingBeanConvention() != _defaults.isUsingBeanConvention()) {
+      setUsingBeanConvention(value.isUsingBeanConvention());
+    }
     if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
         || !value.getGetterName().equals(_defaults.getGetterName())) {
       setGetterName(value.getGetterName());
@@ -373,6 +403,12 @@ abstract class Metadata_Property_Builder {
             || !template.getAllCapsName().equals(_defaults.getAllCapsName()))) {
       setAllCapsName(template.getAllCapsName());
     }
+    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
+        && (_defaults._unsetProperties.contains(
+                Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
+            || template.isUsingBeanConvention() != _defaults.isUsingBeanConvention())) {
+      setUsingBeanConvention(template.isUsingBeanConvention());
+    }
     if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
         && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
             || !template.getGetterName().equals(_defaults.getGetterName()))) {
@@ -399,6 +435,7 @@ abstract class Metadata_Property_Builder {
     name = _defaults.name;
     capitalizedName = _defaults.capitalizedName;
     allCapsName = _defaults.allCapsName;
+    usingBeanConvention = _defaults.usingBeanConvention;
     getterName = _defaults.getterName;
     codeGenerator = _defaults.codeGenerator;
     fullyCheckedCast = _defaults.fullyCheckedCast;
@@ -438,6 +475,7 @@ abstract class Metadata_Property_Builder {
     private final String name;
     private final String capitalizedName;
     private final String allCapsName;
+    private final boolean usingBeanConvention;
     private final String getterName;
     @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
@@ -449,6 +487,7 @@ abstract class Metadata_Property_Builder {
       this.name = builder.name;
       this.capitalizedName = builder.capitalizedName;
       this.allCapsName = builder.allCapsName;
+      this.usingBeanConvention = builder.usingBeanConvention;
       this.getterName = builder.getterName;
       this.codeGenerator = builder.codeGenerator;
       this.fullyCheckedCast = builder.fullyCheckedCast;
@@ -479,6 +518,11 @@ abstract class Metadata_Property_Builder {
     @Override
     public String getAllCapsName() {
       return allCapsName;
+    }
+
+    @Override
+    public boolean isUsingBeanConvention() {
+      return usingBeanConvention;
     }
 
     @Override
@@ -524,6 +568,9 @@ abstract class Metadata_Property_Builder {
       if (!allCapsName.equals(other.allCapsName)) {
         return false;
       }
+      if (usingBeanConvention != other.usingBeanConvention) {
+        return false;
+      }
       if (!getterName.equals(other.getterName)) {
         return false;
       }
@@ -549,6 +596,7 @@ abstract class Metadata_Property_Builder {
             name,
             capitalizedName,
             allCapsName,
+            usingBeanConvention,
             getterName,
             codeGenerator,
             fullyCheckedCast,
@@ -565,6 +613,7 @@ abstract class Metadata_Property_Builder {
               "name=" + name,
               "capitalizedName=" + capitalizedName,
               "allCapsName=" + allCapsName,
+              "usingBeanConvention=" + usingBeanConvention,
               "getterName=" + getterName,
               (codeGenerator != null ? "codeGenerator=" + codeGenerator : null),
               "fullyCheckedCast=" + fullyCheckedCast,
@@ -579,6 +628,7 @@ abstract class Metadata_Property_Builder {
     private final String name;
     private final String capitalizedName;
     private final String allCapsName;
+    private final boolean usingBeanConvention;
     private final String getterName;
     @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
@@ -591,6 +641,7 @@ abstract class Metadata_Property_Builder {
       this.name = builder.name;
       this.capitalizedName = builder.capitalizedName;
       this.allCapsName = builder.allCapsName;
+      this.usingBeanConvention = builder.usingBeanConvention;
       this.getterName = builder.getterName;
       this.codeGenerator = builder.codeGenerator;
       this.fullyCheckedCast = builder.fullyCheckedCast;
@@ -634,6 +685,14 @@ abstract class Metadata_Property_Builder {
         throw new UnsupportedOperationException("allCapsName not set");
       }
       return allCapsName;
+    }
+
+    @Override
+    public boolean isUsingBeanConvention() {
+      if (_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)) {
+        throw new UnsupportedOperationException("usingBeanConvention not set");
+      }
+      return usingBeanConvention;
     }
 
     @Override
@@ -687,6 +746,9 @@ abstract class Metadata_Property_Builder {
           && (allCapsName == null || !allCapsName.equals(other.allCapsName))) {
         return false;
       }
+      if (usingBeanConvention != other.usingBeanConvention) {
+        return false;
+      }
       if (getterName != other.getterName
           && (getterName == null || !getterName.equals(other.getterName))) {
         return false;
@@ -713,6 +775,7 @@ abstract class Metadata_Property_Builder {
             name,
             capitalizedName,
             allCapsName,
+            usingBeanConvention,
             getterName,
             codeGenerator,
             fullyCheckedCast,
@@ -737,6 +800,9 @@ abstract class Metadata_Property_Builder {
                   : null),
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
                   ? "allCapsName=" + allCapsName
+                  : null),
+              (!_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
+                  ? "usingBeanConvention=" + usingBeanConvention
                   : null),
               (!_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
                   ? "getterName=" + getterName

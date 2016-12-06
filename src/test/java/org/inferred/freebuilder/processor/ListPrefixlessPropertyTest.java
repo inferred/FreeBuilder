@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2016 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ import javax.tools.JavaFileObject;
 /** Behavioral tests for {@code List<?>} properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class ListPropertyFactoryTest {
+public class ListPrefixlessPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
@@ -60,7 +60,7 @@ public class ListPropertyFactoryTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> getItems();", List.class, String.class)
+      .addLine("  public abstract %s<%s> items();", List.class, String.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
@@ -75,7 +75,7 @@ public class ListPropertyFactoryTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> getItems();", List.class, String.class)
+      .addLine("  public abstract %s<%s> items();", List.class, String.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder addItems(String element) {")
@@ -93,7 +93,7 @@ public class ListPropertyFactoryTest {
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<Integer> getItems();", List.class)
+      .addLine("  public abstract %s<Integer> items();", List.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder addItems(int item) {")
@@ -117,7 +117,7 @@ public class ListPropertyFactoryTest {
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertThat(value.getItems()).isEmpty();")
+            .addLine("assertThat(value.items()).isEmpty();")
             .build())
         .runTest();
   }
@@ -132,7 +132,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -159,7 +159,7 @@ public class ListPropertyFactoryTest {
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -186,7 +186,7 @@ public class ListPropertyFactoryTest {
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", \"two\"))", ImmutableList.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -200,7 +200,7 @@ public class ListPropertyFactoryTest {
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(new %s(\"one\", \"two\"))", DodgySingleIterable.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -234,7 +234,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .clearItems()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"three\", \"four\").inOrder();")
             .build())
         .runTest();
   }
@@ -249,7 +249,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .clearItems()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"three\", \"four\").inOrder();")
             .build())
         .runTest();
   }
@@ -261,7 +261,7 @@ public class ListPropertyFactoryTest {
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<String> itemsView = builder.getItems();", List.class)
+            .addLine("%s<String> itemsView = builder.items();", List.class)
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.addItems(\"one\", \"two\");")
             .addLine("assertThat(itemsView).containsExactly(\"one\", \"two\").inOrder();")
@@ -281,7 +281,7 @@ public class ListPropertyFactoryTest {
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<String> itemsView = builder.getItems();", List.class)
+            .addLine("%s<String> itemsView = builder.items();", List.class)
             .addLine("itemsView.add(\"something\");")
             .build())
         .runTest();
@@ -298,7 +298,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .build();")
             .addLine("DataType.Builder builder = DataType.builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -313,7 +313,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .addItems(\"one\", \"two\");")
             .addLine("DataType.Builder builder = DataType.builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -329,7 +329,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .clear()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"three\", \"four\").inOrder();")
             .build())
         .runTest();
   }
@@ -342,7 +342,7 @@ public class ListPropertyFactoryTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItems();", List.class, String.class)
+            .addLine("  public abstract %s<%s> items();", List.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    private Builder() { }")
@@ -357,7 +357,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .clear()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"three\", \"four\").inOrder();")
             .build())
         .runTest();
   }
@@ -402,7 +402,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(value.getItems()).isSameAs(copy.getItems());")
+            .addLine("assertThat(value.items()).isSameAs(copy.items());")
             .build())
         .runTest();
   }
@@ -420,7 +420,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .addLine("assertThat(copy.items()).isSameAs(value.items());")
             .build())
         .runTest();
   }
@@ -438,7 +438,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
             .addLine("DataType copy = new DataType.Builder().mergeFrom(value).build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .addLine("assertThat(copy.items()).isSameAs(value.items());")
             .build())
         .runTest();
   }
@@ -459,7 +459,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .from(value)")
             .addLine("    .mergeFrom(new DataType.Builder())")
             .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .addLine("assertThat(copy.items()).isSameAs(value.items());")
             .build())
         .runTest();
   }
@@ -477,7 +477,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .from(value)")
             .addLine("    .clearItems()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isEmpty();")
+            .addLine("assertThat(copy.items()).isEmpty();")
             .build())
         .runTest();
   }
@@ -495,7 +495,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .from(value)")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isEmpty();")
+            .addLine("assertThat(copy.items()).isEmpty();")
             .build())
         .runTest();
   }
@@ -509,7 +509,7 @@ public class ListPropertyFactoryTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItems();", ImmutableList.class, String.class)
+            .addLine("  public abstract %s<%s> items();", ImmutableList.class, String.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -519,7 +519,7 @@ public class ListPropertyFactoryTest {
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
@@ -584,7 +584,7 @@ public class ListPropertyFactoryTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public interface DataType {")
-            .addLine("  @JsonProperty(\"stuff\") %s<%s> getItems();", List.class, String.class)
+            .addLine("  @JsonProperty(\"stuff\") %s<%s> items();", List.class, String.class)
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -597,7 +597,7 @@ public class ListPropertyFactoryTest {
             .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertThat(clone.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(clone.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
         .runTest();
   }
