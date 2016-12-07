@@ -1,7 +1,7 @@
 package org.inferred.freebuilder.processor.util;
 
 import static java.util.Arrays.asList;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.collect.ImmutableList;
 
@@ -78,7 +78,7 @@ public class Excerpts {
 
     @Override
     public void addTo(SourceBuilder code) {
-      if (code.feature(FUNCTION_PACKAGE).lambdasAvailable()) {
+      if (code.feature(SOURCE_LEVEL).hasLambdas()) {
         code.addLine("%s.forEach(this::%s);", iterable, method);
       } else {
         code.addLine("for (%s element : %s) {", elementType, iterable)

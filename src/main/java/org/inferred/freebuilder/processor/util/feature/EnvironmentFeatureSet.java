@@ -8,11 +8,11 @@ import javax.annotation.processing.ProcessingEnvironment;
 
 /**
  * A set of {@link Feature} instances, determined dynamically by calling
- * {@link FeatureType#forEnvironment(ProcessingEnvironment)}.
+ * {@link FeatureType#forEnvironment}.
  */
 public class EnvironmentFeatureSet implements FeatureSet {
 
-  private static class FeatureFromEnvironmentLoader
+  private class FeatureFromEnvironmentLoader
       extends CacheLoader<FeatureType<?>, Feature<?>> {
     private final ProcessingEnvironment env;
 
@@ -23,7 +23,7 @@ public class EnvironmentFeatureSet implements FeatureSet {
 
     @Override
     public Feature<?> load(FeatureType<?> featureType) {
-      return featureType.forEnvironment(env);
+      return featureType.forEnvironment(env, EnvironmentFeatureSet.this);
     }
   }
 

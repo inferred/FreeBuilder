@@ -40,9 +40,14 @@ public class SourceLevelTest {
     assertEquals(SourceLevel.JAVA_7, sourceLevelFrom(SourceVersion.RELEASE_7));
   }
 
+  @Test
+  public void java8() {
+    assertEquals(SourceLevel.JAVA_8, sourceLevelFrom(SourceVersion.RELEASE_8));
+  }
+
   private static SourceLevel sourceLevelFrom(SourceVersion version) {
     ProcessingEnvironment env = mock(ProcessingEnvironment.class);
     when(env.getSourceVersion()).thenReturn(version);
-    return SOURCE_LEVEL.forEnvironment(env);
+    return SOURCE_LEVEL.forEnvironment(env, null);
   }
 }

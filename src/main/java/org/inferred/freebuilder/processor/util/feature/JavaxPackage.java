@@ -1,5 +1,8 @@
 package org.inferred.freebuilder.processor.util.feature;
 
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -9,7 +12,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.util.Elements;
 
 /**
- * Types in the javax package, if available. Defaults to {@link #AVAILABLE} in tests.
+ * Types in the javax package, if available. Linked to the {@link SourceLevel} by default in tests.
  */
 public enum JavaxPackage implements Feature<JavaxPackage> {
 
@@ -23,12 +26,13 @@ public enum JavaxPackage implements Feature<JavaxPackage> {
       new FeatureType<JavaxPackage>() {
 
         @Override
-        protected JavaxPackage testDefault() {
-          return AVAILABLE;
+        protected JavaxPackage testDefault(FeatureSet features) {
+          boolean isJava8OrHigher = features.get(SOURCE_LEVEL).compareTo(JAVA_8) >= 0;
+          return isJava8OrHigher ? UNAVAILABLE : AVAILABLE;
         }
 
         @Override
-        protected JavaxPackage forEnvironment(ProcessingEnvironment env) {
+        protected JavaxPackage forEnvironment(ProcessingEnvironment env, FeatureSet features) {
           return hasType(env.getElementUtils(), GENERATED) ? AVAILABLE : UNAVAILABLE;
         }
       };

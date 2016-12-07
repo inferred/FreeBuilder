@@ -34,12 +34,12 @@ public enum GuavaLibrary implements Feature<GuavaLibrary> {
   public static final FeatureType<GuavaLibrary> GUAVA = new FeatureType<GuavaLibrary>() {
 
     @Override
-    protected GuavaLibrary testDefault() {
+    protected GuavaLibrary testDefault(FeatureSet features) {
       return UNAVAILABLE;
     }
 
     @Override
-    protected GuavaLibrary forEnvironment(ProcessingEnvironment env) {
+    protected GuavaLibrary forEnvironment(ProcessingEnvironment env, FeatureSet features) {
       String name = Shading.unshadedName(ImmutableList.class.getName());
       TypeElement element = env.getElementUtils().getTypeElement(name);
       return (element != null) ? AVAILABLE : UNAVAILABLE;

@@ -4,7 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Stores a set of {@link Feature} instances, defaulting to {@link FeatureType#testDefault()} when
+ * Stores a set of {@link Feature} instances, defaulting to {@link FeatureType#testDefault} when
  * asked for a type that was not explicitly registered.
  */
 public class StaticFeatureSet implements FeatureSet {
@@ -28,7 +28,7 @@ public class StaticFeatureSet implements FeatureSet {
 
   /**
    * Returns the registered instance of {@code featureType}, or the value of
-   * {@link FeatureType#testDefault()} if no explicit instance was registered with this set.
+   * {@link FeatureType#testDefault} if no explicit instance was registered with this set.
    */
   @Override
   public <T extends Feature<T>> T get(FeatureType<T> featureType) {
@@ -37,7 +37,7 @@ public class StaticFeatureSet implements FeatureSet {
     if (feature != null) {
       return feature;
     }
-    return featureType.testDefault();
+    return featureType.testDefault(this);
   }
 
   @Override

@@ -16,11 +16,10 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -35,7 +34,6 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.inferred.freebuilder.processor.util.feature.Feature;
-import org.inferred.freebuilder.processor.util.feature.FunctionPackage;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,17 +48,12 @@ public class JavaUtilOptionalSourceTest {
   public void testJ8() {
     Metadata metadata = createMetadataWithOptionalProperties(true);
 
-    String source = generateSource(
-        metadata,
-        JAVA_7,  // SourceLevel does not currently distinguish J7 and J8
-        FunctionPackage.AVAILABLE,
-        GuavaLibrary.AVAILABLE);
+    String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
         " */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
         "abstract class Person_Builder {",
         "",
         "  /**",
@@ -368,16 +361,12 @@ public class JavaUtilOptionalSourceTest {
   public void testJ8_noGuava() {
     Metadata metadata = createMetadataWithOptionalProperties(true);
 
-    String source = generateSource(
-        metadata,
-        JAVA_7,  // SourceLevel does not currently distinguish J7 and J8
-        FunctionPackage.AVAILABLE);
+    String source = generateSource(metadata, JAVA_8);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
         " */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
         "abstract class Person_Builder {",
         "",
         "  /**",
@@ -696,17 +685,12 @@ public class JavaUtilOptionalSourceTest {
   public void testPrefixless() {
     Metadata metadata = createMetadataWithOptionalProperties(false);
 
-    String source = generateSource(
-        metadata,
-        JAVA_7,  // SourceLevel does not currently distinguish J7 and J8
-        FunctionPackage.AVAILABLE,
-        GuavaLibrary.AVAILABLE);
+    String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
         "/**",
         " * Auto-generated superclass of {@link Person.Builder},",
         " * derived from the API of {@link Person}.",
         " */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
         "abstract class Person_Builder {",
         "",
         "  /**",
