@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.inferred.freebuilder.processor.BuilderMethods.isPropertySetMethod;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
@@ -81,7 +82,7 @@ public class CodeGenerator {
     addMergeFromBuilderMethod(code, metadata);
     addMergeFromSuperTypes(code, metadata);
     addClearMethod(code, metadata);
-    addIsPropertyUnsetMethod(code, metadata);
+    addPropertiesSetMethods(code, metadata);
     addBuildMethod(code, metadata);
     addBuildPartialMethod(code, metadata);
 
@@ -209,16 +210,19 @@ public class CodeGenerator {
   }
 
   private static void addMergeFromSuperTypes(SourceBuilder code, Metadata metadata) {
-    for(Map.Entry<ParameterizedType, ImmutableList<Property>> e : metadata.getSuperTypeProperties().entrySet()){
+    for (Map.Entry<ParameterizedType, ImmutableList<Property>> e
+            : metadata.getSuperTypeProperties().entrySet()) {
       final ParameterizedType type = e.getKey();
       final ImmutableList<Property> properties = e.getValue();
 
       // mergeFrom - value
       code.addLine("")
               .addLine("/**")
-              .addLine(" * Sets all property values using the given {@code %s} as a template.", type.getQualifiedName())
+              .addLine(" * Sets all property values using the given {@code %s} as a template.",
+                      type.getQualifiedName())
               .addLine(" */")
-              .addLine("public %s mergeFrom(%s value) {", metadata.getBuilder(), type.getQualifiedName());
+              .addLine("public %s mergeFrom(%s value) {",
+                      metadata.getBuilder(), type.getQualifiedName());
       Block body = new Block(code);
       for (Property property : properties) {
         property.getCodeGenerator().addMergeFromSuperValue(body, "value");
@@ -228,7 +232,7 @@ public class CodeGenerator {
               .addLine("}");
 
       // has builder ?
-      if (!metadata.getSuperBuilderTypes().contains(type)){
+      if (!metadata.getSuperBuilderTypes().contains(type)) {
         continue;
       }
 
@@ -274,18 +278,28 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private static void addIsPropertyUnsetMethod(SourceBuilder code, Metadata metadata) {
+  private static void addPropertiesSetMethods(SourceBuilder code, Metadata metadata) {
     if (!any(metadata.getProperties(), IS_REQUIRED)) {
       return;
 
     }
-    code.addLine("")
-        .addLine("/**")
-        .addLine(" * Returns true if the required property is not set.")
-        .addLine(" */")
-        .addLine("public boolean isPropertyUnset(%s property) {", metadata.getPropertyEnum())
-        .addLine("  return _unsetProperties.contains(property);")
-        .addLine("}");
+
+    for (Property property : metadata.getProperties()) {
+      if (!IS_REQUIRED.apply(property)) {
+        continue;
+      }
+
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Returns true if the required property corresponding to")
+          .addLine(" * %s is set. ", metadata.getType().javadocNoArgMethodLink(
+                  property.getGetterName()))
+          .addLine(" */")
+          .addLine("public boolean %s() {", isPropertySetMethod(property))
+          .addLine("  return _unsetProperties.contains(%s.%s);",
+                  metadata.getPropertyEnum(), property.getAllCapsName())
+          .addLine("}");
+    }
   }
 
   private static void addBuildPartialMethod(SourceBuilder code, Metadata metadata) {
@@ -313,7 +327,7 @@ public class CodeGenerator {
 
   private static void addPropertyEnum(Metadata metadata, SourceBuilder code) {
     code.addLine("")
-        .addLine("enum %s {", metadata.getPropertyEnum().getSimpleName());
+        .addLine("private enum %s {", metadata.getPropertyEnum().getSimpleName());
     for (Property property : metadata.getProperties()) {
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("  %s(\"%s\"),", property.getAllCapsName(), property.getName());

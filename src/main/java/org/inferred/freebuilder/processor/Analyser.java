@@ -172,7 +172,8 @@ class Analyser {
           .addAllProperties(codeGenerators(properties, baseMetadata, builder.get()));
 
       metadataBuilder.addAllSuperBuilderTypes(superBuilders(type));
-      metadataBuilder.putAllSuperTypeProperties(processSuperTypeProperties(type, baseMetadata, builder));
+      metadataBuilder.putAllSuperTypeProperties(
+              processSuperTypeProperties(type, baseMetadata, builder));
     }
     return metadataBuilder.build();
   }
@@ -181,22 +182,24 @@ class Analyser {
           TypeElement type,
           Metadata baseMetadata,
           Optional<TypeElement> builder) throws CannotGenerateCodeException {
-    // For mergeFrom - iterate all super types, add properties from all supertypes.
-    Map<ParameterizedType, ImmutableList<Property>> toRet = new HashMap<ParameterizedType, ImmutableList<Property>>();
+    Map<ParameterizedType, ImmutableList<Property>> toRet =
+            new HashMap<ParameterizedType, ImmutableList<Property>>();
 
     final ImmutableSet<TypeElement> superTypes = MethodFinder.getSupertypes(type);
-    for(TypeElement superType : superTypes){
-      if (superType.equals(type)){
+    for (TypeElement superType : superTypes) {
+      if (superType.equals(type)) {
         continue;
       }
 
       final ImmutableSet<ExecutableElement> superMethods = methodsOn(superType, elements);
-      final Map<ExecutableElement, Property> superPropertiesRet = findProperties(superType, superMethods);
-      if (superPropertiesRet.isEmpty()){
+      final Map<ExecutableElement, Property> superPropertiesRet =
+              findProperties(superType, superMethods);
+      if (superPropertiesRet.isEmpty()) {
         continue;
       }
 
-      ParameterizedType pType = QualifiedName.of(superType).withParameters(superType.getTypeParameters());
+      ParameterizedType pType = QualifiedName.of(superType).withParameters(
+              superType.getTypeParameters());
 
       // Code builder dance
       if (builder.isPresent()) {
@@ -225,27 +228,23 @@ class Analyser {
     return ImmutableMap.copyOf(toRet);
   }
 
-  private ImmutableSet<ParameterizedType> superBuilders(TypeElement type) throws CannotGenerateCodeException {
+  private ImmutableSet<ParameterizedType> superBuilders(TypeElement type)
+          throws CannotGenerateCodeException {
     Set<ParameterizedType> toRet = new HashSet<ParameterizedType>();
     PackageElement pkg = elements.getPackageOf(type);
 
     final ImmutableSet<TypeElement> superTypes = MethodFinder.getSupertypes(type);
-    for(TypeElement superType : superTypes){
-      if (superType.equals(type)){
+    for (TypeElement superType : superTypes) {
+      if (superType.equals(type)) {
         continue;
       }
 
       final Optional<AnnotationMirror> freeBuilderMirror =
               findAnnotationMirror(superType, FreeBuilder.class);
 
-      // For now we support mergeFrom(superBuilder) only for builders from the same package
-      // Due to package local visibility of the Enum Property
-      if (!pkg.getQualifiedName().contentEquals(elements.getPackageOf(superType).getQualifiedName())){
-        continue;
-      }
-
-      if (freeBuilderMirror.isPresent()){
-        ParameterizedType pType = QualifiedName.of(superType).withParameters(superType.getTypeParameters());
+      if (freeBuilderMirror.isPresent()) {
+        ParameterizedType pType = QualifiedName.of(superType).withParameters(
+                superType.getTypeParameters());
         toRet.add(pType);
       }
     }

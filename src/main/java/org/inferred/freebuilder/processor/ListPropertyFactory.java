@@ -369,7 +369,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromSuperBuilder(Block code, String builder) {
-      Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+      Excerpt base = new Block(code).add(builder);
       code.addLine("%s(%s.%s());", addAllMethod(property), base, getter(property));
     }
 

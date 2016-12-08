@@ -1432,7 +1432,8 @@ public class AnalyserTest {
     assertThat(metadata.getSuperTypeProperties()).hasSize(1);
     assertThat(metadata.getSuperTypeProperties()).containsKey(superType);
     assertThat(metadata.getSuperTypeProperties().get(superType)).hasSize(1);
-    assertThat(metadata.getSuperTypeProperties().get(superType).get(0).getName()).isEqualTo("alpha");
+    assertThat(metadata.getSuperTypeProperties().get(superType).get(0).getName()).
+            isEqualTo("alpha");
   }
 
   private static String asSource(Excerpt annotation) {
