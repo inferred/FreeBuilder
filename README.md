@@ -25,6 +25,7 @@ _Automatic generation of the Builder pattern for Java 1.6+_
     - [Converting from `@Nullable`](#converting-from-nullable)
   - [Collections and Maps](#collections-and-maps)
   - [Nested buildable types](#nested-buildable-types)
+  - [Custom toString method](#custom-tostring-method)
   - [Builder construction](#builder-construction)
   - [Partials](#partials)
   - [Jackson](#jackson)
@@ -423,6 +424,31 @@ Project project = new Project.Builder()
 [protos]: https://developers.google.com/protocol-buffers/
 [Consumer]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html
 
+
+### Custom toString method
+
+FreeBuilder will only generate toString, hashCode and equals methods if they are left abstract, so to customise them, just implement them.
+(Due to language constraints, you will need to first convert your type to an abstract class if it was previously an interface.)
+
+```java
+abstract class Person {
+  public abstract String name();
+  public abstract int age();
+
+  @Override public String toString() {
+    return name() + " (" + age() + " years old)";
+  }
+
+  public static class Builder extends Person_Builder {}
+}
+```
+
+Note that it is a compile error to leave hashCode abstract if equals is implemented, and vice versa, as FreeBuilder has no reasonable way to ensure the consistency of any implementation it might generate.
+
+**Warning:**
+It is rarely a good idea to redefine equality on a value type, as it makes testing very hard.
+For instance, `assertEquals` in JUnit relies on equality; it will not know to check individual fields, and as a result, tests may be failing to catch bugs that, on the face of it, they looks like they should be.
+If you are only testing a subset of your fields for equality, consider separating your class in two, as you may have accidentally combined the key and the value of a map into a single object, and you may find your code becomes healthier after the separation.
 
 ### Builder construction
 
