@@ -372,9 +372,8 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromSuperBuilder(Block code, String builder) {
-      code.addLine("%s(((%s) %s).%s());",
+      code.addLine("%s(%s.%s());",
           addAllMethod(property),
-          metadata.getGeneratedBuilder(),
           builder,
           getter(property));
     }

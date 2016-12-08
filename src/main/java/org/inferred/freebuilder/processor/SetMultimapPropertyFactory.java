@@ -385,9 +385,8 @@ public class SetMultimapPropertyFactory implements PropertyCodeGenerator.Factory
 
     @Override
     public void addMergeFromSuperBuilder(Block code, String builder) {
-      code.addLine("%s(((%s) %s).%s());",
+      code.addLine("%s(%s.%s());",
           putAllMethod(property),
-          metadata.getGeneratedBuilder(),
           builder,
           getter(property));
     }
