@@ -43,11 +43,14 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -76,7 +79,9 @@ public class CodeGenerator {
     addAccessors(metadata, code);
     addMergeFromValueMethod(code, metadata);
     addMergeFromBuilderMethod(code, metadata);
+    addMergeFromSuperTypes(code, metadata);
     addClearMethod(code, metadata);
+    addIsPropertyUnsetMethod(code, metadata);
     addBuildMethod(code, metadata);
     addBuildPartialMethod(code, metadata);
 
@@ -203,6 +208,48 @@ public class CodeGenerator {
         .addLine("}");
   }
 
+  private static void addMergeFromSuperTypes(SourceBuilder code, Metadata metadata) {
+    for(Map.Entry<ParameterizedType, ImmutableList<Property>> e : metadata.getSuperTypeProperties().entrySet()){
+      final ParameterizedType type = e.getKey();
+      final ImmutableList<Property> properties = e.getValue();
+
+      // mergeFrom - value
+      code.addLine("")
+              .addLine("/**")
+              .addLine(" * Sets all property values using the given {@code %s} as a template.", type.getQualifiedName())
+              .addLine(" */")
+              .addLine("public %s mergeFrom(%s value) {", metadata.getBuilder(), type.getQualifiedName());
+      Block body = new Block(code);
+      for (Property property : properties) {
+        property.getCodeGenerator().addMergeFromSuperValue(body, "value");
+      }
+      code.add(body)
+              .addLine("  return (%s) this;", metadata.getBuilder())
+              .addLine("}");
+
+      // has builder ?
+      if (!metadata.getSuperBuilderTypes().contains(type)){
+        continue;
+      }
+
+      // mergeFrom - builder
+      final QualifiedName builder = type.getQualifiedName().nestedType("Builder");
+      code.addLine("")
+              .addLine("/**")
+              .addLine(" * Copies values from the given {@code %s}.", builder.getSimpleName())
+              .addLine(" * Does not affect any properties not set on the input.")
+              .addLine(" */")
+              .addLine("public %s mergeFrom(%s template) {", metadata.getBuilder(), builder);
+      Block fromBuilderBody = new Block(code);
+      for (Property property : properties) {
+        property.getCodeGenerator().addMergeFromSuperBuilder(fromBuilderBody, "template");
+      }
+      code.add(fromBuilderBody)
+              .addLine("  return (%s) this;", metadata.getBuilder())
+              .addLine("}");
+    }
+  }
+
   private static void addClearMethod(SourceBuilder code, Metadata metadata) {
     code.addLine("")
         .addLine("/**")
@@ -224,6 +271,20 @@ public class CodeGenerator {
       }
     }
     code.addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("}");
+  }
+
+  private static void addIsPropertyUnsetMethod(SourceBuilder code, Metadata metadata) {
+    if (!any(metadata.getProperties(), IS_REQUIRED)) {
+      return;
+
+    }
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Returns true if the required property is not set.")
+        .addLine(" */")
+        .addLine("public boolean isPropertyUnset(%s property) {", metadata.getPropertyEnum())
+        .addLine("  return _unsetProperties.contains(property);")
         .addLine("}");
   }
 
@@ -252,7 +313,7 @@ public class CodeGenerator {
 
   private static void addPropertyEnum(Metadata metadata, SourceBuilder code) {
     code.addLine("")
-        .addLine("private enum %s {", metadata.getPropertyEnum().getSimpleName());
+        .addLine("enum %s {", metadata.getPropertyEnum().getSimpleName());
     for (Property property : metadata.getProperties()) {
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("  %s(\"%s\"),", property.getAllCapsName(), property.getName());

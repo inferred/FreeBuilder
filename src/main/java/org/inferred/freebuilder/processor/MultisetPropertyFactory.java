@@ -316,12 +316,26 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public void addMergeFromSuperValue(Block code, String value) {
+      addMergeFromValue(code, value);
+    }
+
+    @Override
     public void addMergeFromBuilder(Block code, String builder) {
       code.addLine("%s(((%s) %s).%s);",
           addAllMethod(property),
           metadata.getGeneratedBuilder(),
           builder,
           property.getName());
+    }
+
+    @Override
+    public void addMergeFromSuperBuilder(Block code, String builder) {
+      code.addLine("%s(((%s) %s).%s());",
+          addAllMethod(property),
+          metadata.getGeneratedBuilder(),
+          builder,
+          getter(property));
     }
 
     @Override

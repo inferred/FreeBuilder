@@ -192,17 +192,32 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public void addMergeFromSuperValue(Block code, String value) {
+      addMergeFromValue(code, value);
+    }
+
+    @Override
     public void addMergeFromBuilder(Block code, String builder) {
+      addMergeFromBuilder(code, builder, false);
+    }
+
+    @Override
+    public void addMergeFromSuperBuilder(Block code, String builder) {
+      addMergeFromBuilder(code, builder, true);
+    }
+
+    public void addMergeFromBuilder(Block code, String builder, boolean fromSuper) {
       Excerpt base =
           hasDefault ? null : Declarations.upcastToGeneratedBuilder(code, metadata, builder);
       Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+      String unsetContains = fromSuper ? "isPropertyUnset" : "_unsetProperties.contains";
       if (defaults != null) {
         code.add("if (");
         if (!hasDefault) {
-          code.add("!%s._unsetProperties.contains(%s.%s) && ",
-                  base, metadata.getPropertyEnum(), property.getAllCapsName())
-              .add("(%s._unsetProperties.contains(%s.%s) ||",
-                  defaults, metadata.getPropertyEnum(), property.getAllCapsName());
+          code.add("!%s.%s(%s.%s) && ",
+                  base, unsetContains, metadata.getPropertyEnum(), property.getAllCapsName())
+              .add("(%s.%s(%s.%s) ||",
+                  defaults, unsetContains, metadata.getPropertyEnum(), property.getAllCapsName());
         }
         if (isPrimitive) {
           code.add("%1$s.%2$s() != %3$s.%2$s()", builder, getter(property), defaults);
@@ -214,8 +229,8 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
         }
         code.add(") {%n");
       } else if (!hasDefault) {
-        code.addLine("if (!%s._unsetProperties.contains(%s.%s)) {",
-            base, metadata.getPropertyEnum(), property.getAllCapsName());
+        code.addLine("if (!%s.%s(%s.%s)) {",
+            base, unsetContains, metadata.getPropertyEnum(), property.getAllCapsName());
       }
       code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
       if (defaults != null || !hasDefault) {

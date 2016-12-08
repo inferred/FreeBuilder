@@ -83,6 +83,10 @@ abstract class Metadata_Builder {
       new LinkedHashSet<QualifiedName>();
   private ParameterizedType propertyEnum;
   private final ArrayList<Metadata.Property> properties = new ArrayList<Metadata.Property>();
+  private Set<ParameterizedType> superBuilderTypes = ImmutableSet.of();
+  private final LinkedHashMap<ParameterizedType, ImmutableList<Metadata.Property>>
+          superTypeProperties =
+          new LinkedHashMap<ParameterizedType, ImmutableList<Metadata.Property>>();
   private final LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
       standardMethodUnderrides =
           new LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>();
@@ -487,6 +491,159 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * Adds {@code element} to the set to be returned from {@link Metadata#getSuperBuilderTypes()}.
+   * If the set already contains {@code element}, then {@code addSuperBuilderTypes}
+   * has no effect (only the previously added element is retained).
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code element} is null
+   */
+  public Metadata.Builder addSuperBuilderTypes(ParameterizedType element) {
+    if (this.superBuilderTypes instanceof ImmutableSet) {
+      this.superBuilderTypes = new LinkedHashSet<ParameterizedType>(this.superBuilderTypes);
+    }
+    this.superBuilderTypes.add(Preconditions.checkNotNull(element));
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the set to be returned from
+   * {@link Metadata#getSuperBuilderTypes()}, ignoring duplicate elements
+   * (only the first duplicate element is added).
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a
+   *     null element
+   */
+  public Metadata.Builder addSuperBuilderTypes(ParameterizedType... elements) {
+    return addAllSuperBuilderTypes(Arrays.asList(elements));
+  }
+
+  /**
+   * Adds each element of {@code elements} to the set to be returned from
+   * {@link Metadata#getSuperBuilderTypes()}, ignoring duplicate elements
+   * (only the first duplicate element is added).
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a
+   *     null element
+   */
+  public Metadata.Builder addAllSuperBuilderTypes(Iterable<? extends ParameterizedType> elements) {
+    for (ParameterizedType element : elements) {
+      addSuperBuilderTypes(element);
+    }
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Removes {@code element} from the set to be returned from {@link Metadata#getSuperBuilderTypes()}.
+   * Does nothing if {@code element} is not a member of the set.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code element} is null
+   */
+  public Metadata.Builder removeSuperBuilderTypes(ParameterizedType element) {
+    if (this.superBuilderTypes instanceof ImmutableSet) {
+      this.superBuilderTypes = new LinkedHashSet<ParameterizedType>(this.superBuilderTypes);
+    }
+    this.superBuilderTypes.remove(Preconditions.checkNotNull(element));
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Clears the set to be returned from {@link Metadata#getSuperBuilderTypes()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Builder clearSuperBuilderTypes() {
+    if (superBuilderTypes instanceof ImmutableSet) {
+      superBuilderTypes = ImmutableSet.of();
+    } else {
+      superBuilderTypes.clear();
+    }
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns an unmodifiable view of the set that will be returned by
+   * {@link Metadata#getSuperBuilderTypes()}.
+   * Changes to this builder will be reflected in the view.
+   */
+  public Set<ParameterizedType> getSuperBuilderTypes() {
+    if (superBuilderTypes instanceof ImmutableSet) {
+      superBuilderTypes = new LinkedHashSet<ParameterizedType>(superBuilderTypes);
+    }
+    return Collections.unmodifiableSet(superBuilderTypes);
+  }
+
+  /**
+   * Associates {@code key} with {@code value} in the map to be returned from
+   * {@link Metadata#getSuperTypeProperties()}.
+   * If the map previously contained a mapping for the key,
+   * the old value is replaced by the specified value.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if either {@code key} or {@code value} are null
+   */
+  public Metadata.Builder putSuperTypeProperties(
+          ParameterizedType key, ImmutableList<Metadata.Property> value) {
+    Preconditions.checkNotNull(key);
+    Preconditions.checkNotNull(value);
+    superTypeProperties.put(key, value);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Copies all of the mappings from {@code map} to the map to be returned from
+   * {@link Metadata#getSuperTypeProperties()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code map} is null or contains a
+   *     null key or value
+   */
+  public Metadata.Builder putAllSuperTypeProperties(
+          Map<? extends ParameterizedType, ? extends ImmutableList<Metadata.Property>> map) {
+    for (Map.Entry<? extends ParameterizedType, ? extends ImmutableList<Metadata.Property>> entry :
+            map.entrySet()) {
+      putSuperTypeProperties(entry.getKey(), entry.getValue());
+    }
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Removes the mapping for {@code key} from the map to be returned from
+   * {@link Metadata#getSuperTypeProperties()}, if one is present.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code key} is null
+   */
+  public Metadata.Builder removeSuperTypeProperties(ParameterizedType key) {
+    Preconditions.checkNotNull(key);
+    superTypeProperties.remove(key);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Removes all of the mappings from the map to be returned from
+   * {@link Metadata#getSuperTypeProperties()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Builder clearSuperTypeProperties() {
+    superTypeProperties.clear();
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns an unmodifiable view of the map that will be returned by
+   * {@link Metadata#getSuperTypeProperties()}.
+   * Changes to this builder will be reflected in the view.
+   */
+  public Map<ParameterizedType, ImmutableList<Metadata.Property>> getSuperTypeProperties() {
+    return Collections.unmodifiableMap(superTypeProperties);
+  }
+
+  /**
    * Associates {@code key} with {@code value} in the map to be returned from
    * {@link Metadata#getStandardMethodUnderrides()}.
    * If the map previously contained a mapping for the key,
@@ -833,6 +990,12 @@ abstract class Metadata_Builder {
       setPropertyEnum(value.getPropertyEnum());
     }
     addAllProperties(value.getProperties());
+    if (value instanceof Metadata_Builder.Value
+            && superBuilderTypes == ImmutableSet.<ParameterizedType>of()) {
+      superBuilderTypes = value.getSuperBuilderTypes();
+    } else {
+      addAllSuperBuilderTypes(value.getSuperBuilderTypes());
+    }
     putAllStandardMethodUnderrides(value.getStandardMethodUnderrides());
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
         || value.isBuilderSerializable() != _defaults.isBuilderSerializable()) {
@@ -894,6 +1057,8 @@ abstract class Metadata_Builder {
       setPropertyEnum(template.getPropertyEnum());
     }
     addAllProperties(((Metadata_Builder) template).properties);
+    addAllSuperBuilderTypes(((Metadata_Builder) template).superBuilderTypes);
+    putAllSuperTypeProperties(((Metadata_Builder) template).superTypeProperties);
     putAllStandardMethodUnderrides(((Metadata_Builder) template).standardMethodUnderrides);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
@@ -926,6 +1091,8 @@ abstract class Metadata_Builder {
     visibleNestedTypes.clear();
     propertyEnum = _defaults.propertyEnum;
     properties.clear();
+    clearSuperBuilderTypes();
+    superTypeProperties.clear();
     standardMethodUnderrides.clear();
     builderSerializable = _defaults.builderSerializable;
     generatedBuilderAnnotations.clear();
@@ -978,6 +1145,9 @@ abstract class Metadata_Builder {
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final ParameterizedType propertyEnum;
     private final ImmutableList<Metadata.Property> properties;
+    private final ImmutableSet<ParameterizedType> superBuilderTypes;
+    private final ImmutableMap<ParameterizedType, ImmutableList<Property>>
+            superTypeProperties;
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -997,6 +1167,8 @@ abstract class Metadata_Builder {
       this.visibleNestedTypes = ImmutableSet.copyOf(builder.visibleNestedTypes);
       this.propertyEnum = builder.propertyEnum;
       this.properties = ImmutableList.copyOf(builder.properties);
+      this.superBuilderTypes = ImmutableSet.copyOf(builder.superBuilderTypes);
+      this.superTypeProperties = ImmutableMap.copyOf(builder.superTypeProperties);
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
@@ -1053,6 +1225,17 @@ abstract class Metadata_Builder {
     @Override
     public ImmutableList<Metadata.Property> getProperties() {
       return properties;
+    }
+
+    @Override
+    public ImmutableSet<ParameterizedType> getSuperBuilderTypes() {
+      return superBuilderTypes;
+    }
+
+    @Override
+    public ImmutableMap<ParameterizedType, ImmutableList<Property>>
+    getSuperTypeProperties() {
+      return superTypeProperties;
     }
 
     @Override
@@ -1124,6 +1307,12 @@ abstract class Metadata_Builder {
       if (!properties.equals(other.properties)) {
         return false;
       }
+      if (!superBuilderTypes.equals(other.superBuilderTypes)) {
+        return false;
+      }
+      if (!superTypeProperties.equals(other.superTypeProperties)) {
+        return false;
+      }
       if (!standardMethodUnderrides.equals(other.standardMethodUnderrides)) {
         return false;
       }
@@ -1159,6 +1348,8 @@ abstract class Metadata_Builder {
             visibleNestedTypes,
             propertyEnum,
             properties,
+            superBuilderTypes,
+            superTypeProperties,
             standardMethodUnderrides,
             builderSerializable,
             generatedBuilderAnnotations,
@@ -1182,6 +1373,8 @@ abstract class Metadata_Builder {
               "visibleNestedTypes=" + visibleNestedTypes,
               "propertyEnum=" + propertyEnum,
               "properties=" + properties,
+              "superBuilderTypes=" + superBuilderTypes,
+              "superTypeProperties=" + superTypeProperties,
               "standardMethodUnderrides=" + standardMethodUnderrides,
               "builderSerializable=" + builderSerializable,
               "generatedBuilderAnnotations=" + generatedBuilderAnnotations,
@@ -1209,6 +1402,9 @@ abstract class Metadata_Builder {
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final ParameterizedType propertyEnum;
     private final ImmutableList<Metadata.Property> properties;
+    private final ImmutableSet<ParameterizedType> superBuilderTypes;
+    private final ImmutableMap<ParameterizedType, ImmutableList<Property>>
+            superTypeProperties;
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1229,6 +1425,8 @@ abstract class Metadata_Builder {
       this.visibleNestedTypes = ImmutableSet.copyOf(builder.visibleNestedTypes);
       this.propertyEnum = builder.propertyEnum;
       this.properties = ImmutableList.copyOf(builder.properties);
+      this.superBuilderTypes = ImmutableSet.copyOf(builder.superBuilderTypes);
+      this.superTypeProperties = ImmutableMap.copyOf(builder.superTypeProperties);
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
@@ -1304,6 +1502,17 @@ abstract class Metadata_Builder {
     @Override
     public ImmutableList<Metadata.Property> getProperties() {
       return properties;
+    }
+
+    @Override
+    public ImmutableSet<ParameterizedType> getSuperBuilderTypes() {
+      return superBuilderTypes;
+    }
+
+    @Override
+    public ImmutableMap<ParameterizedType, ImmutableList<Property>>
+    getSuperTypeProperties() {
+      return superTypeProperties;
     }
 
     @Override
@@ -1385,6 +1594,12 @@ abstract class Metadata_Builder {
       if (!properties.equals(other.properties)) {
         return false;
       }
+      if (!superBuilderTypes.equals(other.superBuilderTypes)) {
+        return false;
+      }
+      if (!superTypeProperties.equals(other.superTypeProperties)) {
+        return false;
+      }
       if (!standardMethodUnderrides.equals(other.standardMethodUnderrides)) {
         return false;
       }
@@ -1422,6 +1637,8 @@ abstract class Metadata_Builder {
             visibleNestedTypes,
             propertyEnum,
             properties,
+            superBuilderTypes,
+            superTypeProperties,
             standardMethodUnderrides,
             builderSerializable,
             generatedBuilderAnnotations,
@@ -1456,6 +1673,8 @@ abstract class Metadata_Builder {
                   ? "propertyEnum=" + propertyEnum
                   : null),
               "properties=" + properties,
+              "superBuilderTypes=" + superBuilderTypes,
+              "superTypeProperties=" + superTypeProperties,
               "standardMethodUnderrides=" + standardMethodUnderrides,
               (!_unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
                   ? "builderSerializable=" + builderSerializable

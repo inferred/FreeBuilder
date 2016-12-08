@@ -168,8 +168,18 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public void addMergeFromSuperValue(Block code, String value) {
+      addMergeFromValue(code, value);
+    }
+
+    @Override
     public void addMergeFromBuilder(Block code, String builder) {
       code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
+    }
+
+    @Override
+    public void addMergeFromSuperBuilder(Block code, String builder) {
+      addMergeFromBuilder(code, builder);
     }
 
     @Override
