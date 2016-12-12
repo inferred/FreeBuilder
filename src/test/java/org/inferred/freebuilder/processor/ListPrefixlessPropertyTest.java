@@ -42,7 +42,6 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -189,7 +188,7 @@ public class ListPrefixlessPropertyTest {
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(Arrays.spliterator(new String[] { \"one\", \"two\"}))")
+            .addLine("    .addAllItems(Stream.of(\"one\", \"two\").spliterator())")
             .addLine("    .build();")
             .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
             .build())
@@ -205,7 +204,7 @@ public class ListPrefixlessPropertyTest {
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(Arrays.spliterator(new String[] { \"one\", null }));")
+            .addLine("    .addAllItems(Stream.of(\"one\", null).spliterator());")
             .build())
         .runTest();
   }
@@ -633,7 +632,7 @@ public class ListPrefixlessPropertyTest {
         .with(VALIDATED_STRINGS)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(Arrays.spliterator(new String[] { \"item\", \"\" }));")
+            .addLine("    .addAllItems(Stream.of(\"item\", \"\").spliterator());")
             .build())
         .runTest();
   }
@@ -685,7 +684,7 @@ public class ListPrefixlessPropertyTest {
         .with(new Processor(features))
         .with(VALIDATED_INTS)
         .with(testBuilder()
-            .addLine("new DataType.Builder().addAllItems(Arrays.spliterator(new int[] { 3, -2 }));")
+            .addLine("new DataType.Builder().addAllItems(Stream.of(3, -2).spliterator());")
             .build())
         .runTest();
   }
@@ -777,7 +776,6 @@ public class ListPrefixlessPropertyTest {
   private static TestBuilder testBuilder() {
     return new TestBuilder()
         .addImport("com.example.DataType")
-        .addImport(Arrays.class)
         .addImport(ImmutableList.class)
         .addImport(Stream.class);
   }

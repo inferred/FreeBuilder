@@ -312,7 +312,7 @@ public class MultisetPrefixlessPropertyTest {
         .with(MULTISET_PROPERTY_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(Arrays.spliterator(new String[] { \"one\", \"two\" }))")
+            .addLine("    .addAllItems(Stream.of(\"one\", \"two\").spliterator())")
             .addLine("    .build();")
             .addLine("assertThat(value.items()).iteratesAs(\"one\", \"two\");")
             .build())
@@ -328,7 +328,7 @@ public class MultisetPrefixlessPropertyTest {
         .with(MULTISET_PROPERTY_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(Arrays.spliterator(new String[] { \"one\", null }));")
+            .addLine("    .addAllItems(Stream.of(\"one\", null).spliterator());")
             .build())
         .runTest();
   }
@@ -341,7 +341,7 @@ public class MultisetPrefixlessPropertyTest {
         .with(MULTISET_PROPERTY_TYPE)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(Arrays.spliterator(new String[] { \"one\", \"one\" }))")
+            .addLine("    .addAllItems(Stream.of(\"one\", \"one\").spliterator())")
             .addLine("    .build();")
             .addLine("assertThat(value.items()).iteratesAs(\"one\", \"one\");")
             .build())
