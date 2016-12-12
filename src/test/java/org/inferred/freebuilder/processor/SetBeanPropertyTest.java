@@ -49,7 +49,6 @@ import java.util.Set;
 
 import javax.tools.JavaFileObject;
 
-/** Behavioral tests for {@code List<?>} properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class SetBeanPropertyTest {
@@ -62,26 +61,20 @@ public class SetBeanPropertyTest {
   private static final JavaFileObject SET_PROPERTY_AUTO_BUILT_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> getItems();", Set.class, String.class)
+      .addLine("public interface DataType {")
+      .addLine("  %s<String> getItems();", Set.class)
       .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
-      .addLine("  }")
+      .addLine("  class Builder extends DataType_Builder {}")
       .addLine("}")
       .build();
 
   private static final JavaFileObject SET_PRIMITIVES_AUTO_BUILT_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<Integer> getItems();", Set.class)
+      .addLine("public interface DataType {")
+      .addLine("  %s<Integer> getItems();", Set.class)
       .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
-      .addLine("  }")
+      .addLine("  class Builder extends DataType_Builder {}")
       .addLine("}")
       .build();
 
@@ -90,18 +83,15 @@ public class SetBeanPropertyTest {
   private static final JavaFileObject VALIDATED_STRINGS = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> getItems();", Set.class, String.class)
+      .addLine("public interface DataType {")
+      .addLine("  %s<%s> getItems();", Set.class, String.class)
       .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("  class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder addItems(String unused) {")
       .addLine("      %s.checkArgument(!unused.isEmpty(), \"%s\");",
           Preconditions.class, STRING_VALIDATION_ERROR_MESSAGE)
       .addLine("      return super.addItems(unused);")
       .addLine("    }")
-      .addLine("  }")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
       .addLine("  }")
       .addLine("}")
       .build();
@@ -111,18 +101,15 @@ public class SetBeanPropertyTest {
   private static final JavaFileObject VALIDATED_INTS = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<Integer> getItems();", Set.class)
+      .addLine("public interface DataType {")
+      .addLine("  %s<Integer> getItems();", Set.class)
       .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
+      .addLine("  class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder addItems(int element) {")
       .addLine("      %s.checkArgument(element >= 0, \"%s\");",
           Preconditions.class, INT_VALIDATION_ERROR_MESSAGE)
       .addLine("      return super.addItems(element);")
       .addLine("    }")
-      .addLine("  }")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
       .addLine("  }")
       .addLine("}")
       .build();
@@ -137,8 +124,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder().build();")
             .addLine("assertThat(value.getItems()).isEmpty();")
             .build())
         .runTest();
@@ -149,8 +136,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
@@ -165,8 +152,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems((String) null);")
             .build())
@@ -178,8 +165,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"one\")")
             .addLine("    .build();")
@@ -193,8 +180,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
@@ -208,8 +195,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addItems(\"one\", null);")
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addItems(\"one\", null);")
             .build())
         .runTest();
   }
@@ -219,8 +206,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"one\")")
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(\"one\").inOrder();")
@@ -233,8 +220,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", \"two\"))", ImmutableList.class)
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
@@ -248,8 +235,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", null));", ImmutableList.class)
             .build())
         .runTest();
@@ -260,8 +247,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", \"one\"))", ImmutableList.class)
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(\"one\").inOrder();")
@@ -274,8 +261,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(new %s(\"one\", \"two\"))", DodgyStringIterable.class)
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
@@ -306,8 +293,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .removeItems(\"one\")")
             .addLine("    .build();")
@@ -322,8 +309,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .removeItems((String) null);")
             .build())
@@ -335,8 +322,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .removeItems(\"three\")")
             .addLine("    .build();")
@@ -350,8 +337,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .clearItems()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
@@ -365,8 +352,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .clearItems()")
             .addLine("    .addItems(\"three\", \"four\")")
@@ -381,8 +368,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder().build();")
             .addLine("assertThat(value.getItems()).isEmpty();")
             .build())
         .runTest();
@@ -393,8 +380,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(1)")
             .addLine("    .addItems(2)")
             .addLine("    .build();")
@@ -409,8 +396,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addItems(1)")
             .addLine("    .addItems((Integer) null);")
             .build())
@@ -422,8 +409,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(1)")
             .addLine("    .addItems(1)")
             .addLine("    .build();")
@@ -437,8 +424,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(1, 2)")
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(1, 2).inOrder();")
@@ -451,8 +438,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addItems(1, null);")
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addItems(1, null);")
             .build());
     thrown.expect(CompilationException.class);
     behaviorTester.runTest();
@@ -463,8 +450,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-        .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+        .addLine("DataType value = new DataType.Builder()")
         .addLine("    .addItems(1, 1)")
         .addLine("    .build();")
         .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
@@ -477,8 +464,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 2))", ImmutableList.class)
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(1, 2).inOrder();")
@@ -492,8 +479,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, null));", ImmutableList.class)
             .build())
         .runTest();
@@ -504,8 +491,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 1))", ImmutableList.class)
             .addLine("    .build();")
             .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
@@ -518,8 +505,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(1, 2)")
             .addLine("    .removeItems(1)")
             .addLine("    .build();")
@@ -533,8 +520,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(1, 2)")
             .addLine("    .clearItems()")
             .addLine("    .addItems(3, 4)")
@@ -549,8 +536,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
+        .with(testBuilder()
+            .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("%s<String> itemsView = builder.getItems();", Set.class)
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.addItems(\"one\", \"two\");")
@@ -569,8 +556,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
+        .with(testBuilder()
+            .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("%s<String> itemsView = builder.getItems();", Set.class)
             .addLine("itemsView.add(\"anything\");")
             .build())
@@ -582,11 +569,11 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = com.example.DataType.builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .build();")
-            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(value);")
             .addLine("assertThat(builder.build().getItems())")
             .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
@@ -599,10 +586,10 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\");")
-            .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(template);")
             .addLine("assertThat(builder.build().getItems())")
             .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
@@ -615,8 +602,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .clear()")
             .addLine("    .addItems(\"three\", \"four\")")
@@ -643,8 +630,8 @@ public class SetBeanPropertyTest {
             .addLine("  }")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder(\"hello\")")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder(\"hello\")")
             .addLine("    .clear()")
             .addLine("    .addItems(\"three\", \"four\")")
             .addLine("    .build();")
@@ -662,7 +649,7 @@ public class SetBeanPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItems();", ImmutableSet.class, String.class)
+            .addLine("  public abstract %s<String> getItems();", ImmutableSet.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("  public static Builder builder() {")
@@ -670,8 +657,8 @@ public class SetBeanPropertyTest {
             .addLine("  }")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
@@ -687,8 +674,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_STRINGS)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addItems(\"one\", \"\");")
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addItems(\"one\", \"\");")
             .build())
         .runTest();
   }
@@ -700,8 +687,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_STRINGS)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addAllItems(%s.of(\"three\", \"\"));",
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addAllItems(%s.of(\"three\", \"\"));",
                 ImmutableList.class)
             .build())
         .runTest();
@@ -714,8 +701,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_INTS)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addItems(1, -2);")
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addItems(1, -2);")
             .build())
         .runTest();
   }
@@ -727,8 +714,8 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_INTS)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().addAllItems(%s.of(3, -4));",
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addAllItems(%s.of(3, -4));",
                 ImmutableList.class)
             .build())
         .runTest();
@@ -739,23 +726,23 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new %s()", EqualsTester.class)
             .addLine("    .addEqualityGroup(")
-            .addLine("        com.example.DataType.builder().build(),")
-            .addLine("        com.example.DataType.builder().build())")
+            .addLine("        new DataType.Builder().build(),")
+            .addLine("        new DataType.Builder().build())")
             .addLine("    .addEqualityGroup(")
-            .addLine("        com.example.DataType.builder()")
+            .addLine("        new DataType.Builder()")
             .addLine("            .addItems(\"one\", \"two\")")
             .addLine("            .build(),")
-            .addLine("        com.example.DataType.builder()")
+            .addLine("        new DataType.Builder()")
             .addLine("            .addItems(\"one\", \"two\")")
             .addLine("            .build())")
             .addLine("    .addEqualityGroup(")
-            .addLine("        com.example.DataType.builder()")
+            .addLine("        new DataType.Builder()")
             .addLine("            .addItems(\"one\")")
             .addLine("            .build(),")
-            .addLine("        com.example.DataType.builder()")
+            .addLine("        new DataType.Builder()")
             .addLine("            .addItems(\"one\")")
             .addLine("            .build())")
             .addLine("    .testEquals();")
@@ -779,8 +766,7 @@ public class SetBeanPropertyTest {
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -799,8 +785,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -817,8 +802,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -835,8 +819,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -855,8 +838,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -877,8 +859,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -897,8 +878,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -917,8 +897,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -939,10 +918,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_STRINGS)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
-            .addImport(Set.class)
-            .addImport(ImmutableSet.class)
+        .with(testBuilder()
             .addLine("DataType value = new DataType() {")
             .addLine("  @Override public Set<String> getItems() {")
             .addLine("    return ImmutableSet.of(\"foo\", \"\");")
@@ -958,8 +934,7 @@ public class SetBeanPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
-            .addImport("com.example.DataType")
+        .with(testBuilder()
             .addLine("DataType data1 = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -974,5 +949,12 @@ public class SetBeanPropertyTest {
             .addLine("    .inOrder();")
             .build())
         .runTest();
+  }
+
+  private static TestBuilder testBuilder() {
+    return new TestBuilder()
+        .addImport(Set.class)
+        .addImport(ImmutableSet.class)
+        .addImport("com.example.DataType");
   }
 }
