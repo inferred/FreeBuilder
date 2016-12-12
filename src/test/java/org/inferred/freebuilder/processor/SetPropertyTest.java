@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2016 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +32,6 @@ import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
-import org.inferred.freebuilder.processor.util.testing.CompilationException;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
@@ -39,82 +40,96 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class SetBeanPropertyTest {
+public class SetPropertyTest {
 
-  @Parameters(name = "{0}")
-  public static List<FeatureSet> featureSets() {
-    return FeatureSets.ALL;
+  public enum TestConvention {
+    PREFIXLESS("prefixless", "items()"), BEAN("bean", "getItems()");
+
+    private final String name;
+    private final String getter;
+
+    TestConvention(String name, String getter) {
+      this.name = name;
+      this.getter = getter;
+    }
+
+    public String getter() {
+      return getter;
+    }
+
+    @Override
+    public String toString() {
+      return name;
+    }
   }
 
-  private static final JavaFileObject SET_PROPERTY_AUTO_BUILT_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<String> getItems();", Set.class)
-      .addLine("")
-      .addLine("  class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
+  @SuppressWarnings("unchecked")
+  @Parameters(name = "Set<{0}>, {1}, {2}")
+  public static Iterable<Object[]> parameters() {
+    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
+    List<TestConvention> conventions = Arrays.asList(TestConvention.values());
+    List<FeatureSet> features = FeatureSets.ALL;
+    return () -> Lists
+        .cartesianProduct(elements, conventions, features)
+        .stream()
+        .map(List::toArray)
+        .iterator();
+  }
 
-  private static final JavaFileObject SET_PRIMITIVES_AUTO_BUILT_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer> getItems();", Set.class)
-      .addLine("")
-      .addLine("  class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
+  private final ElementFactory elements;
+  private final TestConvention convention;
+  private final FeatureSet features;
 
-  private static final String STRING_VALIDATION_ERROR_MESSAGE = "Cannot add empty string";
+  private final JavaFileObject setPropertyType;
+  private final String validationErrorMessage;
+  private final JavaFileObject validatedType;
 
-  private static final JavaFileObject VALIDATED_STRINGS = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<%s> getItems();", Set.class, String.class)
-      .addLine("")
-      .addLine("  class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder addItems(String unused) {")
-      .addLine("      %s.checkArgument(!unused.isEmpty(), \"%s\");",
-          Preconditions.class, STRING_VALIDATION_ERROR_MESSAGE)
-      .addLine("      return super.addItems(unused);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
+  public SetPropertyTest(
+      ElementFactory elements, TestConvention convention, FeatureSet features) {
+    this.elements = elements;
+    this.convention = convention;
+    this.features = features;
+    setPropertyType = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public abstract class DataType {")
+        .addLine("  public abstract %s<%s> %s;", Set.class, elements.type(), convention.getter())
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {}")
+        .addLine("}")
+        .build();
 
-  private static final String INT_VALIDATION_ERROR_MESSAGE = "Items must be non-negative";
+    validationErrorMessage = elements.errorMessage();
 
-  private static final JavaFileObject VALIDATED_INTS = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer> getItems();", Set.class)
-      .addLine("")
-      .addLine("  class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder addItems(int element) {")
-      .addLine("      %s.checkArgument(element >= 0, \"%s\");",
-          Preconditions.class, INT_VALIDATION_ERROR_MESSAGE)
-      .addLine("      return super.addItems(element);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  @Parameter public FeatureSet features;
+    validatedType = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public abstract class DataType {")
+        .addLine("  public abstract %s<%s> %s;", Set.class, elements.type(), convention.getter())
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {")
+        .addLine("    @Override public Builder addItems(%s element) {", elements.unwrappedType())
+        .addLine("      %s.checkArgument(%s, \"%s\");",
+            Preconditions.class, elements.validation(), validationErrorMessage)
+        .addLine("      return super.addItems(element);")
+        .addLine("    }")
+        .addLine("  }")
+        .addLine("}")
+        .build();
+  }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
@@ -123,10 +138,10 @@ public class SetBeanPropertyTest {
   public void testDefaultEmpty() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertThat(value.getItems()).isEmpty();")
+            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
             .build())
         .runTest();
   }
@@ -135,13 +150,14 @@ public class SetBeanPropertyTest {
   public void testAddSingleElement() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -151,11 +167,11 @@ public class SetBeanPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems((String) null);")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems((%s) null);", elements.type())
             .build())
         .runTest();
   }
@@ -164,13 +180,14 @@ public class SetBeanPropertyTest {
   public void testAddSingleElement_duplicate() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.example(0))
             .build())
         .runTest();
   }
@@ -179,24 +196,26 @@ public class SetBeanPropertyTest {
   public void testAddVarargs() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
 
   @Test
   public void testAddVarargs_null() {
+    assumeTrue(elements.canRepresentSingleNullElement());
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
-            .addLine("new DataType.Builder().addItems(\"one\", null);")
+            .addLine("new DataType.Builder().addItems(%s, null);", elements.example(0))
             .build())
         .runTest();
   }
@@ -205,12 +224,13 @@ public class SetBeanPropertyTest {
   public void testAddVarargs_duplicate() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"one\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.example(0))
             .build())
         .runTest();
   }
@@ -219,12 +239,13 @@ public class SetBeanPropertyTest {
   public void testAddAllIterable() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(\"one\", \"two\"))", ImmutableList.class)
+            .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -234,10 +255,10 @@ public class SetBeanPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(\"one\", null));", ImmutableList.class)
+            .addLine("    .addAllItems(%s.asList(%s, null));", Arrays.class, elements.example(0))
             .build())
         .runTest();
   }
@@ -246,12 +267,13 @@ public class SetBeanPropertyTest {
   public void testAddAllIterable_duplicate() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(\"one\", \"one\"))", ImmutableList.class)
+            .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, elements.examples(0, 0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.example(0))
             .build())
         .runTest();
   }
@@ -260,45 +282,107 @@ public class SetBeanPropertyTest {
   public void testAddAllIterable_iteratesOnce() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(new %s(\"one\", \"two\"))", DodgyStringIterable.class)
+            .addLine("    .addAllItems(new %s<>(%s))", DodgyIterable.class, elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
 
-  /** Throws a {@link NullPointerException} the second time {@link #iterator()} is called. */
-  public static class DodgyStringIterable implements Iterable<String> {
-    private ImmutableList<String> values;
+  @Test
+  public void testAddAllStream() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(setPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(%s))", elements.examples(0, 1))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
+            .build())
+        .runTest();
+  }
 
-    public DodgyStringIterable(String... values) {
-      this.values = ImmutableList.copyOf(values);
-    }
+  @Test
+  public void testAddAllStream_null() {
+    assumeStreamsAvailable();
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(setPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(%s, null));", elements.example(0))
+            .build())
+        .runTest();
+  }
 
-    @Override
-    public Iterator<String> iterator() {
-      try {
-        return values.iterator();
-      } finally {
-        values = null;
-      }
-    }
+  @Test
+  public void testAddAllStream_duplicate() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(setPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(%s))", elements.examples(0, 0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllIntStream() {
+    assumeStreamsAvailable();
+    assumeTrue(elements == ElementFactory.INTEGERS);
+    behaviorTester
+        .with(new Processor(features))
+        .with(setPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(1, 2))", IntStream.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(1, 2).inOrder();", convention.getter())
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllIntStream_duplicate() {
+    assumeStreamsAvailable();
+    assumeTrue(elements == ElementFactory.INTEGERS);
+    behaviorTester
+        .with(new Processor(features))
+        .with(setPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(1, 1))", IntStream.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(1).inOrder();", convention.getter())
+            .build())
+        .runTest();
   }
 
   @Test
   public void testRemove() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
-            .addLine("    .removeItems(\"one\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
+            .addLine("    .removeItems(%s)", elements.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"two\");")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.getter(), elements.example(1))
             .build())
         .runTest();
   }
@@ -308,11 +392,11 @@ public class SetBeanPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .removeItems((String) null);")
+            .addLine("    .addItems(%s)", elements.example(1))
+            .addLine("    .removeItems((%s) null);", elements.type())
             .build())
         .runTest();
   }
@@ -321,13 +405,14 @@ public class SetBeanPropertyTest {
   public void testRemove_missingElement() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
-            .addLine("    .removeItems(\"three\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
+            .addLine("    .removeItems(%s)", elements.example(2))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\");")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -336,13 +421,14 @@ public class SetBeanPropertyTest {
   public void testClear_noElements() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .clearItems()")
-            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -351,182 +437,15 @@ public class SetBeanPropertyTest {
   public void testClear_twoElements() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .clearItems()")
-            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testDefaultEmpty_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertThat(value.getItems()).isEmpty();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testAddSingleElement_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(1)")
-            .addLine("    .addItems(2)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1, 2).inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testAddSingleElement_null_primitive() {
-    thrown.expect(NullPointerException.class);
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addItems(1)")
-            .addLine("    .addItems((Integer) null);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testAddSingleElement_duplicate_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(1)")
-            .addLine("    .addItems(1)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testAddVarargs_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(1, 2)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1, 2).inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testAddVarargs_null_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().addItems(1, null);")
-            .build());
-    thrown.expect(CompilationException.class);
-    behaviorTester.runTest();
-  }
-
-  @Test
-  public void testAddVarargs_duplicate_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-        .addLine("DataType value = new DataType.Builder()")
-        .addLine("    .addItems(1, 1)")
-        .addLine("    .build();")
-        .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testAddAllIterable_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(1, 2))", ImmutableList.class)
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1, 2).inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testAddAllIterable_null_primitive() {
-    thrown.expect(NullPointerException.class);
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(1, null));", ImmutableList.class)
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testAddAllIterable_duplicate_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(1, 1))", ImmutableList.class)
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(1).inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testRemove_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(1, 2)")
-            .addLine("    .removeItems(1)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(2);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testClear_primitive() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(1, 2)")
-            .addLine("    .clearItems()")
-            .addLine("    .addItems(3, 4)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(3, 4).inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -535,17 +454,20 @@ public class SetBeanPropertyTest {
   public void testGet_returnsLiveView() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<String> itemsView = builder.getItems();", Set.class)
+            .addLine("%s<%s> itemsView = builder.%s;",
+                Set.class, elements.type(), convention.getter())
             .addLine("assertThat(itemsView).isEmpty();")
-            .addLine("builder.addItems(\"one\", \"two\");")
-            .addLine("assertThat(itemsView).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("builder.addItems(%s);", elements.examples(0, 1))
+            .addLine("assertThat(itemsView).containsExactly(%s).inOrder();",
+                elements.examples(0, 1))
             .addLine("builder.clearItems();")
             .addLine("assertThat(itemsView).isEmpty();")
-            .addLine("builder.addItems(\"three\", \"four\");")
-            .addLine("assertThat(itemsView).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("builder.addItems(%s);", elements.examples(2, 3))
+            .addLine("assertThat(itemsView).containsExactly(%s).inOrder();",
+                elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -555,11 +477,12 @@ public class SetBeanPropertyTest {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<String> itemsView = builder.getItems();", Set.class)
-            .addLine("itemsView.add(\"anything\");")
+            .addLine("%s<%s> itemsView = builder.%s;",
+                Set.class, elements.type(), convention.getter())
+            .addLine("itemsView.add(%s);", elements.example(0))
             .build())
         .runTest();
   }
@@ -568,15 +491,15 @@ public class SetBeanPropertyTest {
   public void testMergeFrom_valueInstance() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(builder.build().getItems())")
-            .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.build().%s)", convention.getter())
+            .addLine("    .containsExactly(%s).inOrder();", elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -585,14 +508,14 @@ public class SetBeanPropertyTest {
   public void testMergeFrom_builder() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\");")
+            .addLine("    .addItems(%s);", elements.examples(0, 1))
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.build().getItems())")
-            .addLine("    .containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.build().%s)", convention.getter())
+            .addLine("    .containsExactly(%s).inOrder();", elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -601,14 +524,15 @@ public class SetBeanPropertyTest {
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .clear()")
-            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -621,48 +545,48 @@ public class SetBeanPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> getItems();", Set.class, String.class)
+            .addLine("  public abstract %s<%s> %s;",
+                Set.class, elements.type(), convention.getter())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    public Builder(String... items) {")
+            .addLine("    public Builder(%s... items) {", elements.unwrappedType())
             .addLine("      addItems(items);")
             .addLine("    }")
             .addLine("  }")
             .addLine("}")
             .build())
         .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder(\"hello\")")
+            .addLine("DataType value = new DataType.Builder(%s)", elements.example(0))
             .addLine("    .clear()")
-            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(2, 3))
             .build())
         .runTest();
   }
 
   @Test
   public void testImmutableSetProperty() {
-    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<String> getItems();", ImmutableSet.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s> %s;", ImmutableSet.class, elements.type(), convention.getter())
             .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
+            .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -670,53 +594,58 @@ public class SetBeanPropertyTest {
   @Test
   public void testValidation_varargsAdd() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(validationErrorMessage);
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
+        .with(validatedType)
         .with(testBuilder()
-            .addLine("new DataType.Builder().addItems(\"one\", \"\");")
+            .addLine("new DataType.Builder().addItems(%s, %s);",
+                elements.example(0), elements.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
-  public void testValidation_addAll() {
+  public void testValidation_addAllStream() {
+    assumeStreamsAvailable();
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(validationErrorMessage);
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
+        .with(validatedType)
         .with(testBuilder()
-            .addLine("new DataType.Builder().addAllItems(%s.of(\"three\", \"\"));",
-                ImmutableList.class)
+            .addLine("new DataType.Builder().addAllItems(Stream.of(%s, %s));",
+                elements.example(2), elements.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
-  public void testPrimitiveValidation_varargsAdd() {
+  public void testValidation_addAllIterable() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(validationErrorMessage);
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_INTS)
+        .with(validatedType)
         .with(testBuilder()
-            .addLine("new DataType.Builder().addItems(1, -2);")
+            .addLine("new DataType.Builder().addAllItems(%s.of(%s, %s));",
+                ImmutableList.class, elements.example(2), elements.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
-  public void testPrimitiveValidation_addAll() {
+  public void testPrimitiveValidation_addAllIntStream() {
+    assumeStreamsAvailable();
+    assumeTrue(elements == ElementFactory.INTEGERS);
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(validationErrorMessage);
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_INTS)
+        .with(validatedType)
         .with(testBuilder()
             .addLine("new DataType.Builder().addAllItems(%s.of(3, -4));",
-                ImmutableList.class)
+                IntStream.class)
             .build())
         .runTest();
   }
@@ -725,7 +654,7 @@ public class SetBeanPropertyTest {
   public void testEquality() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new %s()", EqualsTester.class)
             .addLine("    .addEqualityGroup(")
@@ -733,17 +662,17 @@ public class SetBeanPropertyTest {
             .addLine("        new DataType.Builder().build())")
             .addLine("    .addEqualityGroup(")
             .addLine("        new DataType.Builder()")
-            .addLine("            .addItems(\"one\", \"two\")")
+            .addLine("            .addItems(%s)", elements.examples(0, 1))
             .addLine("            .build(),")
             .addLine("        new DataType.Builder()")
-            .addLine("            .addItems(\"one\", \"two\")")
+            .addLine("            .addItems(%s)", elements.examples(0, 1))
             .addLine("            .build())")
             .addLine("    .addEqualityGroup(")
             .addLine("        new DataType.Builder()")
-            .addLine("            .addItems(\"one\")")
+            .addLine("            .addItems(%s)", elements.example(0))
             .addLine("            .build(),")
             .addLine("        new DataType.Builder()")
-            .addLine("            .addItems(\"one\")")
+            .addLine("            .addItems(%s)", elements.example(0))
             .addLine("            .build())")
             .addLine("    .testEquals();")
             .build())
@@ -761,74 +690,76 @@ public class SetBeanPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public interface DataType {")
-            .addLine("  @JsonProperty(\"stuff\") %s<%s> getItems();", Set.class, String.class)
+            .addLine("  @JsonProperty(\"stuff\") %s<%s> %s;",
+                Set.class, elements.type(), convention.getter())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertThat(value.getItems()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
 
   @Test
   public void testFromReusesImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
             .build())
         .runTest();
   }
 
   @Test
   public void testMergeFromReusesImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = new DataType.Builder().mergeFrom(value).build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
             .build())
         .runTest();
   }
 
   @Test
   public void testMergeFromEmptySetDoesNotPreventReuseOfImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = new DataType.Builder()")
             .addLine("    .from(value)")
             .addLine("    .mergeFrom(new DataType.Builder())")
             .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isSameAs(value.getItems());")
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
             .build())
         .runTest();
   }
@@ -837,18 +768,18 @@ public class SetBeanPropertyTest {
   public void testModifyAndAdd() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder")
             .addLine("    .from(value)")
-            .addLine("    .addItems(\"three\")")
+            .addLine("    .addItems(%s)", elements.example(2))
             .addLine("    .build();")
-            .addLine("assertThat(copy.getItems())")
-            .addLine("    .containsExactly(\"one\", \"two\", \"three\")")
+            .addLine("assertThat(copy.%s)", convention.getter())
+            .addLine("    .containsExactly(%s)", elements.examples(0, 1, 2))
             .addLine("    .inOrder();")
             .build())
         .runTest();
@@ -858,17 +789,18 @@ public class SetBeanPropertyTest {
   public void testModifyAndRemove() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder")
             .addLine("    .from(value)")
-            .addLine("    .removeItems(\"one\")")
+            .addLine("    .removeItems(%s)", elements.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).containsExactly(\"two\");")
+            .addLine("assertThat(copy.%s).containsExactly(%s);",
+                convention.getter(), elements.example(1))
             .build())
         .runTest();
   }
@@ -877,17 +809,17 @@ public class SetBeanPropertyTest {
   public void testModifyAndClear() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder")
             .addLine("    .from(value)")
             .addLine("    .clearItems()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isEmpty();")
+            .addLine("assertThat(copy.%s).isEmpty();", convention.getter())
             .build())
         .runTest();
   }
@@ -896,17 +828,17 @@ public class SetBeanPropertyTest {
   public void testModifyAndClearAll() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder")
             .addLine("    .from(value)")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.getItems()).isEmpty();")
+            .addLine("assertThat(copy.%s).isEmpty();", convention.getter())
             .build())
         .runTest();
   }
@@ -914,14 +846,17 @@ public class SetBeanPropertyTest {
   @Test
   public void testMergeInvalidData() {
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(validationErrorMessage);
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
+        .with(validatedType)
         .with(testBuilder()
+            .addImport(Set.class)
+            .addImport(ImmutableSet.class)
             .addLine("DataType value = new DataType() {")
-            .addLine("  @Override public Set<String> getItems() {")
-            .addLine("    return ImmutableSet.of(\"foo\", \"\");")
+            .addLine("  @Override public Set<%s> %s {", elements.type(), convention.getter())
+            .addLine("    return ImmutableSet.of(%s, %s);",
+                elements.example(0), elements.invalidExample())
             .addLine("  }")
             .addLine("};")
             .addLine("DataType.Builder.from(value);")
@@ -933,28 +868,35 @@ public class SetBeanPropertyTest {
   public void testMergeCombinesSets() {
     behaviorTester
         .with(new Processor(features))
-        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType data1 = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType data2 = new DataType.Builder()")
-            .addLine("    .addItems(\"three\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(2))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(data2).mergeFrom(data1).build();")
-            .addLine("assertThat(copy.getItems())")
-            .addLine("    .containsExactly(\"three\", \"two\", \"one\")")
+            .addLine("assertThat(copy.%s)", convention.getter())
+            .addLine("    .containsExactly(%s)", elements.examples(2, 1, 0))
             .addLine("    .inOrder();")
             .build())
         .runTest();
   }
 
+  private void assumeStreamsAvailable() {
+    assumeTrue("Streams available", features.get(SOURCE_LEVEL).stream().isPresent());
+  }
+
+  private void assumeGuavaAvailable() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+  }
+
   private static TestBuilder testBuilder() {
     return new TestBuilder()
-        .addImport(Set.class)
-        .addImport(ImmutableSet.class)
-        .addImport("com.example.DataType");
+        .addImport("com.example.DataType")
+        .addImport(Stream.class);
   }
 }
