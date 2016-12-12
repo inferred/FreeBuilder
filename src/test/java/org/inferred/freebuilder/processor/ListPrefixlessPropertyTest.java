@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.base.Preconditions;
@@ -43,6 +44,8 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.tools.JavaFileObject;
 
@@ -173,6 +176,90 @@ public class ListPrefixlessPropertyTest {
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .addItems(\"one\", null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllSpliterator() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"one\", \"two\").spliterator())")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllSpliterator_null() {
+    assumeStreamsAvailable();
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"one\", null).spliterator());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllStream() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"one\", \"two\"))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllStream_null() {
+    assumeStreamsAvailable();
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"one\", null));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllIntStream() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s> items();", List.class, Integer.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(1, 2))", IntStream.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(1, 2).inOrder();")
             .build())
         .runTest();
   }
@@ -393,7 +480,7 @@ public class ListPrefixlessPropertyTest {
 
   @Test
   public void testInstanceReuse() {
-    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
@@ -409,7 +496,7 @@ public class ListPrefixlessPropertyTest {
 
   @Test
   public void testFromReusesImmutableListInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
@@ -427,7 +514,7 @@ public class ListPrefixlessPropertyTest {
 
   @Test
   public void testMergeFromReusesImmutableListInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
@@ -445,7 +532,7 @@ public class ListPrefixlessPropertyTest {
 
   @Test
   public void testMergeFromEmptyListDoesNotPreventReuseOfImmutableListInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
@@ -502,7 +589,7 @@ public class ListPrefixlessPropertyTest {
 
   @Test
   public void testImmutableListProperty() {
-    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -537,7 +624,35 @@ public class ListPrefixlessPropertyTest {
   }
 
   @Test
-  public void testValidation_addAll() {
+  public void testValidation_addAllSpliterator() {
+    assumeStreamsAvailable();
+    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_STRINGS)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"item\", \"\").spliterator());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testValidation_addAllStream() {
+    assumeStreamsAvailable();
+    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_STRINGS)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"item\", \"\"));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testValidation_addAllIterable() {
     thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
     behaviorTester
         .with(new Processor(features))
@@ -562,7 +677,46 @@ public class ListPrefixlessPropertyTest {
   }
 
   @Test
-  public void testPrimitiveValidation_addAll() {
+  public void testPrimitiveValidation_addAllSpliterator() {
+    assumeStreamsAvailable();
+    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_INTS)
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addAllItems(Stream.of(3, -2).spliterator());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPrimitiveValidation_addAllStream() {
+    assumeStreamsAvailable();
+    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_INTS)
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addAllItems(Stream.of(3, -2));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPrimitiveValidation_addAllIntStream() {
+    assumeStreamsAvailable();
+    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_INTS)
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addAllItems(%s.of(3, -2));", IntStream.class)
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPrimitiveValidation_addAllIterable() {
     thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
     behaviorTester
         .with(new Processor(features))
@@ -611,7 +765,18 @@ public class ListPrefixlessPropertyTest {
         .withNoWarnings();
   }
 
+  private void assumeGuavaAvailable() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+  }
+
+  private void assumeStreamsAvailable() {
+    assumeTrue("Streams available", features.get(SOURCE_LEVEL).stream().isPresent());
+  }
+
   private static TestBuilder testBuilder() {
-    return new TestBuilder().addImport("com.example.DataType").addImport(ImmutableList.class);
+    return new TestBuilder()
+        .addImport("com.example.DataType")
+        .addImport(ImmutableList.class)
+        .addImport(Stream.class);
   }
 }

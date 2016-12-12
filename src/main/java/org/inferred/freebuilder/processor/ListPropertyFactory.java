@@ -30,6 +30,7 @@ import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.check
 import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -134,7 +135,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
     public void addBuilderFieldAccessors(SourceBuilder code) {
       addAdd(code, metadata);
       addVarargsAdd(code, metadata);
-      addAddAll(code, metadata);
+      addAddAllMethods(code, metadata);
       addMutate(code, metadata);
       addClear(code, metadata);
       addGetter(code, metadata);
@@ -201,24 +202,26 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       code.addLine("}");
     }
 
-    private void addAddAll(SourceBuilder code, Metadata metadata) {
-      code.addLine("")
-          .addLine("/**")
-          .addLine(" * Adds each element of {@code elements} to the list to be returned from")
-          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-          .addLine(" *")
-          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-          .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
-          .addLine(" *     null element")
-          .addLine(" */");
+    private void addAddAllMethods(SourceBuilder code, Metadata metadata) {
+      if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
+        addSpliteratorAddAll(code, metadata);
+        addStreamAddAll(code, metadata);
+        addIterableAddAll(code, metadata);
+      } else {
+        addPreStreamsAddAll(code, metadata);
+      }
+    }
+
+    private void addPreStreamsAddAll(SourceBuilder code, Metadata metadata) {
+      addJavadocForAddAll(code, metadata);
       addAccessorAnnotations(code);
       code.addLine("public %s %s(%s<? extends %s> elements) {",
-              metadata.getBuilder(),
-              addAllMethod(property),
-              Iterable.class,
-              elementType);
+          metadata.getBuilder(),
+          addAllMethod(property),
+          Iterable.class,
+          elementType);
       code.addLine("  if (elements instanceof %s) {", Collection.class)
-          .addLine("    int elementsSize = ((%s<?>) elements).size();", Collection.class);
+      .addLine("    int elementsSize = ((%s<?>) elements).size();", Collection.class);
       if (code.feature(GUAVA).isAvailable()) {
         code.addLine("    if (elementsSize != 0) {")
             .addLine("      if (%s instanceof %s) {", property.getName(), ImmutableList.class)
@@ -237,6 +240,70 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       code.add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
+    }
+
+    private void addSpliteratorAddAll(SourceBuilder code, Metadata metadata) {
+      QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
+      addJavadocForAddAll(code, metadata);
+      code.addLine("public %s %s(%s<? extends %s> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              spliterator,
+              elementType);
+      code.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", spliterator)
+          .addLine("    long elementsSize = elements.estimateSize();")
+          .addLine("    if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {");
+      if (code.feature(GUAVA).isAvailable()) {
+        code.addLine("      if (%s instanceof %s) {", property.getName(), ImmutableList.class)
+            .addLine("        %1$s = new %2$s%3$s(%1$s);",
+                property.getName(), ArrayList.class, diamondOperator(elementType))
+            .addLine("      }")
+            .add("      ((%s<?>) %s)", ArrayList.class, property.getName());
+      } else {
+        code.add("      %s", property.getName());
+      }
+      code.add(".ensureCapacity(%s.size() + (int) elementsSize);%n", property.getName())
+          .addLine("    }")
+          .addLine("  }")
+          .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
+          .addLine("  return (%s) this;", metadata.getBuilder())
+          .addLine("}");
+    }
+
+    private void addIterableAddAll(SourceBuilder code, Metadata metadata) {
+      addJavadocForAddAll(code, metadata);
+      addAccessorAnnotations(code);
+      code.addLine("public %s %s(%s<? extends %s> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              Iterable.class,
+              elementType)
+          .addLine("  return %s(elements.spliterator());", addAllMethod(property))
+          .addLine("}");
+    }
+
+    private void addStreamAddAll(SourceBuilder code, Metadata metadata) {
+      QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
+      addJavadocForAddAll(code, metadata);
+      code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
+              metadata.getBuilder(),
+              addAllMethod(property),
+              baseStream,
+              elementType)
+          .addLine("  return %s(elements.spliterator());", addAllMethod(property))
+          .addLine("}");
+    }
+
+    private void addJavadocForAddAll(SourceBuilder code, Metadata metadata) {
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Adds each element of {@code elements} to the list to be returned from")
+          .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+          .addLine(" *")
+          .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+          .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
+          .addLine(" *     null element")
+          .addLine(" */");
     }
 
     private void addMutate(SourceBuilder code, Metadata metadata) {

@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.base.Preconditions;
@@ -46,6 +47,8 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.tools.JavaFileObject;
 
@@ -137,7 +140,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
             .addLine("assertThat(value.items()).isEmpty();")
             .build())
@@ -149,7 +152,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -165,7 +168,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems((String) null);")
@@ -178,7 +181,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"one\")")
@@ -193,7 +196,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .build();")
@@ -208,7 +211,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder().addItems(\"one\", null);")
             .build())
         .runTest();
@@ -219,7 +222,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"one\")")
             .addLine("    .build();")
@@ -233,7 +236,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", \"two\"))", ImmutableList.class)
             .addLine("    .build();")
@@ -248,7 +251,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", null));", ImmutableList.class)
             .build())
@@ -260,7 +263,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(\"one\", \"one\"))", ImmutableList.class)
             .addLine("    .build();")
@@ -274,7 +277,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(new %s(\"one\", \"two\"))", DodgyStringIterable.class)
             .addLine("    .build();")
@@ -302,11 +305,85 @@ public class SetPrefixlessPropertyTest {
   }
 
   @Test
+  public void testAddAllStream() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"one\", \"two\"))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllStream_null() {
+    assumeStreamsAvailable();
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("new com.example.DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"one\", null));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllStream_duplicate() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PROPERTY_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addAllItems(Stream.of(\"one\", \"one\"))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllIntStream() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(1, 2))", IntStream.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(1, 2).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllIntStream_duplicate() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
+        .with(testBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(1, 1))", IntStream.class)
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(1).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testRemove() {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .removeItems(\"one\")")
@@ -322,7 +399,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .removeItems((String) null);")
@@ -335,7 +412,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .removeItems(\"three\")")
@@ -350,7 +427,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .clearItems()")
             .addLine("    .addItems(\"three\", \"four\")")
@@ -365,7 +442,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .clearItems()")
@@ -381,7 +458,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder().build();")
             .addLine("assertThat(value.items()).isEmpty();")
             .build())
@@ -393,7 +470,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1)")
             .addLine("    .addItems(2)")
@@ -409,7 +486,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addItems(1)")
             .addLine("    .addItems((Integer) null);")
@@ -422,7 +499,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1)")
             .addLine("    .addItems(1)")
@@ -437,7 +514,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1, 2)")
             .addLine("    .build();")
@@ -451,7 +528,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder().addItems(1, null);")
             .build());
     thrown.expect(CompilationException.class);
@@ -463,7 +540,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
         .addLine("com.example.DataType value = new com.example.DataType.Builder()")
         .addLine("    .addItems(1, 1)")
         .addLine("    .build();")
@@ -477,7 +554,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 2))", ImmutableList.class)
             .addLine("    .build();")
@@ -492,7 +569,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, null));", ImmutableList.class)
             .build())
@@ -504,7 +581,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 1))", ImmutableList.class)
             .addLine("    .build();")
@@ -518,7 +595,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1, 2)")
             .addLine("    .removeItems(1)")
@@ -533,7 +610,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PRIMITIVES_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(1, 2)")
             .addLine("    .clearItems()")
@@ -549,7 +626,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
             .addLine("%s<String> itemsView = builder.items();", Set.class)
             .addLine("assertThat(itemsView).isEmpty();")
@@ -569,7 +646,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder();")
             .addLine("%s<String> itemsView = builder.items();", Set.class)
             .addLine("itemsView.add(\"anything\");")
@@ -582,7 +659,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = com.example.DataType.builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .build();")
@@ -599,7 +676,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType.Builder template = com.example.DataType.builder()")
             .addLine("    .addItems(\"one\", \"two\");")
             .addLine("com.example.DataType.Builder builder = com.example.DataType.builder()")
@@ -615,7 +692,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\", \"two\")")
             .addLine("    .clear()")
@@ -643,7 +720,7 @@ public class SetPrefixlessPropertyTest {
             .addLine("  }")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder(\"hello\")")
             .addLine("    .clear()")
             .addLine("    .addItems(\"three\", \"four\")")
@@ -655,7 +732,7 @@ public class SetPrefixlessPropertyTest {
 
   @Test
   public void testImmutableSetProperty() {
-    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -670,7 +747,7 @@ public class SetPrefixlessPropertyTest {
             .addLine("  }")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("com.example.DataType value = new com.example.DataType.Builder()")
             .addLine("    .addItems(\"one\")")
             .addLine("    .addItems(\"two\")")
@@ -687,20 +764,34 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_STRINGS)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder().addItems(\"one\", \"\");")
             .build())
         .runTest();
   }
 
   @Test
-  public void testValidation_addAll() {
+  public void testValidation_addAllStream() {
+    assumeStreamsAvailable();
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_STRINGS)
-        .with(new TestBuilder()
+        .with(testBuilder()
+            .addLine("new com.example.DataType.Builder().addAllItems(Stream.of(\"three\", \"\"));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testValidation_addAllIterable() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_STRINGS)
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder().addAllItems(%s.of(\"three\", \"\"));",
                 ImmutableList.class)
             .build())
@@ -714,20 +805,49 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_INTS)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder().addItems(1, -2);")
             .build())
         .runTest();
   }
 
   @Test
-  public void testPrimitiveValidation_addAll() {
+  public void testPrimitiveValidation_addAllStream() {
+    assumeStreamsAvailable();
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_INTS)
-        .with(new TestBuilder()
+        .with(testBuilder()
+            .addLine("new com.example.DataType.Builder().addAllItems(Stream.of(3, -4));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPrimitiveValidation_addAllIntStream() {
+    assumeStreamsAvailable();
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_INTS)
+        .with(testBuilder()
+            .addLine("new com.example.DataType.Builder().addAllItems(%s.of(3, -4));",
+                IntStream.class)
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPrimitiveValidation_addAllIterable() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(VALIDATED_INTS)
+        .with(testBuilder()
             .addLine("new com.example.DataType.Builder().addAllItems(%s.of(3, -4));",
                 ImmutableList.class)
             .build())
@@ -739,7 +859,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("new %s()", EqualsTester.class)
             .addLine("    .addEqualityGroup(")
             .addLine("        com.example.DataType.builder().build(),")
@@ -779,7 +899,7 @@ public class SetPrefixlessPropertyTest {
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -795,11 +915,11 @@ public class SetPrefixlessPropertyTest {
 
   @Test
   public void testFromReusesImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -813,11 +933,11 @@ public class SetPrefixlessPropertyTest {
 
   @Test
   public void testMergeFromReusesImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -831,11 +951,11 @@ public class SetPrefixlessPropertyTest {
 
   @Test
   public void testMergeFromEmptySetDoesNotPreventReuseOfImmutableSetInstance() {
-    assumeTrue(features.get(GUAVA).isAvailable());
+    assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -855,7 +975,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -877,7 +997,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -897,7 +1017,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -917,7 +1037,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -939,7 +1059,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(VALIDATED_STRINGS)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addImport(Set.class)
             .addImport(ImmutableSet.class)
@@ -958,7 +1078,7 @@ public class SetPrefixlessPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(SET_PROPERTY_AUTO_BUILT_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType data1 = new DataType.Builder()")
             .addLine("    .addItems(\"one\")")
@@ -974,5 +1094,19 @@ public class SetPrefixlessPropertyTest {
             .addLine("    .inOrder();")
             .build())
         .runTest();
+  }
+
+  private void assumeStreamsAvailable() {
+    assumeTrue("Streams available", features.get(SOURCE_LEVEL).stream().isPresent());
+  }
+
+  private void assumeGuavaAvailable() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+  }
+
+  private static TestBuilder testBuilder() {
+    return new TestBuilder()
+        .addImport("com.example.DataType")
+        .addImport(Stream.class);
   }
 }
