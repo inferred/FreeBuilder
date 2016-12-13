@@ -293,6 +293,11 @@ public class SharedBehaviorTesting {
     }
 
     @Override
+    public String toString() {
+      return method.getName();
+    }
+
+    @Override
     public BehaviorTester with(Processor processor) {
       processors.add(processor);
       return this;

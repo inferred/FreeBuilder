@@ -329,7 +329,7 @@ nulls.
   List<String> descendants();
 ```
 
-A <code>[List][]</code>, <code>[Set][]</code> or <code>[Multiset][]</code>
+A <code>[List][]</code>, <code>[Set][]</code>, <code>[SortedSet][]</code> or <code>[Multiset][]</code>
 property called 'descendants' would generate:
 
 | Method | Description |
@@ -340,6 +340,7 @@ property called 'descendants' would generate:
 | `mutateDescendants(​Consumer<‌.‌.‌.‌<String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the collection of descendants. (The mutator takes a list, set or map as appropriate.) Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned collection to replace the existing collection. |
 | `clearDescendants()` | Removes all elements from the collection of descendants, leaving it empty. |
 | `descendants()` | Returns an unmodifiable view of the collection of descendants. Changes to the collection held by the builder will be reflected in the view. |
+| `setComparatorForDescendants(​Comparator<? super String> comparator)` | *SortedSet only* A protected method that sets the [comparator] to keep the set elements ordered by. Must be called before any other accessor method for this property. Defaults to the [natural ordering] of the set's elements. |
 
 ```java
   /** Returns a map of favourite albums by year. **/
@@ -387,13 +388,16 @@ personBuilder
     .mutateDescendants(Collections::sort);
 ```
 
+[Comparator]: https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html
 [List]: http://docs.oracle.com/javase/tutorial/collections/interfaces/list.html
 [Set]: http://docs.oracle.com/javase/tutorial/collections/interfaces/set.html
+[SortedSet]: http://docs.oracle.com/javase/8/docs/api/java/util/SortedSet.html
 [Spliterator]: https://docs.oracle.com/javase/8/docs/api/java/util/Spliterator.html
 [Stream]: https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html
 [Multiset]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multiset
 [Map]: http://docs.oracle.com/javase/tutorial/collections/interfaces/map.html
 [Multimap]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multimap
+[natural ordering]: https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html
 [sort]: http://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#sort-java.util.List-
 [stream()]: https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#stream--
 [subList]: http://docs.oracle.com/javase/8/docs/api/java/util/List.html#subList-int-int-
