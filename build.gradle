@@ -584,6 +584,11 @@ ext['nexusPassword'] = System.env.NEXUS_PASSWORD
 
 apply plugin: 'io.codearte.nexus-staging'
 
+nexusStaging {
+  numberOfRetries = 20
+  delayBetweenRetriesInMillis = 3000
+}
+
 //// Eclipse /////////////////////////////////////////////////////
 eclipse.classpath {
   // We include sorceror so we can link against internal JVM classes.
