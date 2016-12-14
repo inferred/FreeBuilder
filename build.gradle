@@ -72,13 +72,6 @@ String jackson(String pkg) {
 test {
   maxHeapSize = "1024m"
 }
-if (System.env.CI == 'true') {
-  tasks.withType(Test) {
-    testLogging {
-      events "passed", "skipped", "failed"
-    }
-  }
-}
 check.dependsOn javadoc
 
 //// Checkstyle //////////////////////////////////////////////////
