@@ -431,6 +431,32 @@ public class JavaUtilOptionalPrefixlessPropertyTest {
   }
 
   @Test
+  public void testToBuilder_fromPartial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> item();", Optional.class)
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value1 = new com.example.DataType.Builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .buildPartial();")
+            .addLine("com.example.DataType.Builder builder = value1.toBuilder();")
+            .addLine("builder.item(builder.item().get() + \" 2\");")
+            .addLine("com.example.DataType value2 = builder.build();")
+            .addLine("assertEquals(%s.of(\"item 2\"), value2.item());", Optional.class)
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))

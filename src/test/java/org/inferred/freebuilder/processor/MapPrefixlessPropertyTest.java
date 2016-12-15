@@ -500,6 +500,33 @@ public class MapPrefixlessPropertyTest {
   }
 
   @Test
+  public void testToBuilder_fromPartial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String, Object> items();", Map.class)
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value1 = new com.example.DataType.Builder()")
+            .addLine("    .putItems(\"bar\", \"baz\")")
+            .addLine("    .buildPartial();")
+            .addLine("com.example.DataType value2 = value1.toBuilder()")
+            .addLine("    .putItems(\"three\", 3)")
+            .addLine("    .build();")
+            .addLine("assertThat(value2.items())")
+            .addLine("    .isEqualTo(%s.of(\"bar\", \"baz\", \"three\", 3));", ImmutableMap.class)
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))

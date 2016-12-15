@@ -224,6 +224,18 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public void addSetBuilderFromPartial(Block code, String builder) {
+      if (!hasDefault) {
+        code.add("if (!_unsetProperties.contains(%s.%s)) {",
+            metadata.getPropertyEnum(), property.getAllCapsName());
+      }
+      code.addLine("  %s.%s(%s);", builder, setter(property), property.getName());
+      if (!hasDefault) {
+        code.addLine("}");
+      }
+    }
+
+    @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
       code.addLine("%s.%s(%s);", builder, setter(property), variable);
     }

@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
@@ -703,6 +704,54 @@ public class BuildablePrefixlessPropertyTest {
             .addLine("    .build());")
             .addLine("assertThat(builder.build().item().names())")
             .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToBuilder_fromPartial() {
+    assumeTrue(features.get(SOURCE_LEVEL).hasLambdas());
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s", FreeBuilder.class)
+            .addLine("  interface Item {")
+            .addLine("    String name();")
+            .addLine("    int price();")
+            .addLine("")
+            .addLine("    Builder toBuilder();")
+            .addLine("    class Builder extends DataType_Item_Builder {}")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  Item item1();")
+            .addLine("  Item item2();")
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value1 = new com.example.DataType.Builder()")
+            .addLine("    .mutateItem1($ -> $")
+            .addLine("        .name(\"Foo\"))")
+            .addLine("    .mutateItem2($ -> $")
+            .addLine("        .price(2))")
+            .addLine("    .buildPartial();")
+            .addLine("com.example.DataType value2 = value1.toBuilder()")
+            .addLine("    .mutateItem2($ -> $")
+            .addLine("        .name(\"Bar\"))")
+            .addLine("    .build();")
+            .addLine("com.example.DataType expected = new com.example.DataType.Builder()")
+            .addLine("    .mutateItem1($ -> $")
+            .addLine("        .name(\"Foo\"))")
+            .addLine("    .mutateItem2($ -> $")
+            .addLine("        .name(\"Bar\")")
+            .addLine("        .price(2))")
+            .addLine("    .buildPartial();")
+            .addLine("assertEquals(expected, value2);")
             .build())
         .runTest();
   }

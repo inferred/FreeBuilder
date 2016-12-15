@@ -521,6 +521,33 @@ public class SetPropertyTest {
   }
 
   @Test
+  public void testToBuilder_fromPartial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s> %s;", Set.class, elements.type(), convention.getter())
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value1 = new DataType.Builder()")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
+            .addLine("    .buildPartial();")
+            .addLine("DataType value2 = value1.toBuilder()")
+            .addLine("    .addItems(%s)", elements.examples(2))
+            .addLine("    .build();")
+            .addLine("assertThat(value2.%s)", convention.getter())
+            .addLine("    .containsExactly(%s).inOrder();", elements.examples(0, 1, 2))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))

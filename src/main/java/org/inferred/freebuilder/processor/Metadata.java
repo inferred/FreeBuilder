@@ -145,6 +145,9 @@ public abstract class Metadata {
   /** Returns whether the builder type should be serializable. */
   public abstract boolean isBuilderSerializable();
 
+  /** Returns whether the value type has a toBuilder method that needs to be generated. */
+  public abstract boolean getHasToBuilderMethod();
+
   /** Returns a list of annotations that should be applied to the generated builder class. */
   public abstract ImmutableList<Excerpt> getGeneratedBuilderAnnotations();
 
@@ -227,6 +230,7 @@ public abstract class Metadata {
 
     public Builder() {
       super.setValueTypeVisibility(Visibility.PRIVATE);
+      super.setHasToBuilderMethod(false);
     }
 
     /**

@@ -308,6 +308,20 @@ public class CodeGenerator {
       code.add(";\n");
       code.addLine("  }");
     }
+    // toBuilder
+    if (metadata.getHasToBuilderMethod()) {
+      code.addLine("")
+          .addLine("  @%s", Override.class)
+          .addLine("  public %s toBuilder() {", metadata.getBuilder());
+      BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+      if (builderFactory != null) {
+        code.addLine("    return %s.mergeFrom(this);",
+                builderFactory.newBuilder(metadata.getBuilder(), EXPLICIT_TYPES));
+      } else {
+        code.addLine("    throw new %s();", UnsupportedOperationException.class);
+      }
+      code.addLine("  }");
+    }
     // Equals
     switch (metadata.standardMethodUnderride(StandardMethod.EQUALS)) {
       case ABSENT:
@@ -510,6 +524,7 @@ public class CodeGenerator {
       code.add(";\n");
       code.addLine("  }");
     }
+    addPartialToBuilderMethod(code, metadata);
     // Equals
     if (metadata.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
       code.addLine("")
@@ -601,6 +616,38 @@ public class CodeGenerator {
       code.addLine("  }");
     }
     code.addLine("}");
+  }
+
+  private static void addPartialToBuilderMethod(SourceBuilder code, Metadata metadata) {
+    if (!metadata.getHasToBuilderMethod()) {
+      return;
+    }
+    BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+    if (builderFactory == BuilderFactory.NO_ARGS_CONSTRUCTOR) {
+      code.addLine("")
+          .addLine("  private static class PartialBuilder%s extends %s {",
+              metadata.getBuilder().declarationParameters(), metadata.getBuilder())
+          .addLine("    @Override public %s build() {", metadata.getType())
+          .addLine("      return buildPartial();")
+          .addLine("    }")
+          .addLine("  }");
+    }
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public %s toBuilder() {", metadata.getBuilder());
+    if (builderFactory == BuilderFactory.NO_ARGS_CONSTRUCTOR) {
+      code.addLine("    %s builder = new PartialBuilder%s();",
+              metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
+      Block block = new Block(code);
+      for (Property property : metadata.getProperties()) {
+        property.getCodeGenerator().addSetBuilderFromPartial(block, "builder");
+      }
+      code.add(block)
+          .addLine("    return builder;");
+    } else {
+      code.addLine("    throw new %s();", UnsupportedOperationException.class);
+    }
+    code.addLine("  }");
   }
 
   private static void writeToStringWithBuilder(

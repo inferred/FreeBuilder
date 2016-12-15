@@ -335,6 +335,11 @@ public class OptionalPropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public void addSetBuilderFromPartial(Block code, String builder) {
+      code.addLine("%s.%s(%s);", builder, nullableSetter(property), property.getName());
+    }
+
+    @Override
     public void addReadValueFragment(SourceBuilder code, String finalField) {
       code.add("%s.", optional.cls);
       if (requiresExplicitTypeParameters) {

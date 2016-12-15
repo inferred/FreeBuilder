@@ -66,6 +66,11 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     MERGE_DIRECTLY, BUILD_PARTIAL_AND_MERGE
   }
 
+  /** How to convert a partial value into a Builder. */
+  private enum PartialToBuilderMethod {
+    MERGE_DIRECTLY, TO_BUILDER_AND_MERGE
+  }
+
   @Override
   public Optional<? extends PropertyCodeGenerator> create(Config config) {
     DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
@@ -136,30 +141,48 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
       }
     }
 
+    List<ExecutableElement> valueMethods = FluentIterable
+        .from(config.getElements().getAllMembers(element))
+        .filter(ExecutableElement.class)
+        .filter(new IsCallableMethod())
+        .toList();
+
+    // Check whether there is a toBuilder() method
+    PartialToBuilderMethod partialToBuilderMethod;
+    if (any(valueMethods, new IsToBuilderMethod(builder.get().asType(), config.getTypes()))) {
+      partialToBuilderMethod = PartialToBuilderMethod.TO_BUILDER_AND_MERGE;
+    } else {
+      partialToBuilderMethod = PartialToBuilderMethod.MERGE_DIRECTLY;
+    }
+
     return Optional.of(new CodeGenerator(
         config.getMetadata(),
         config.getProperty(),
         ParameterizedType.from(builder.get()),
         builderFactory.get(),
-        mergeFromBuilderMethod));
+        mergeFromBuilderMethod,
+        partialToBuilderMethod));
   }
 
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
-    final ParameterizedType builderType;
-    final BuilderFactory builderFactory;
-    final MergeBuilderMethod mergeFromBuilderMethod;
+    private final ParameterizedType builderType;
+    private final BuilderFactory builderFactory;
+    private final MergeBuilderMethod mergeFromBuilderMethod;
+    private final PartialToBuilderMethod partialToBuilderMethod;
 
-    CodeGenerator(
+    private CodeGenerator(
         Metadata metadata,
         Property property,
         ParameterizedType builderType,
         BuilderFactory builderFactory,
-        MergeBuilderMethod mergeFromBuilderMethod) {
+        MergeBuilderMethod mergeFromBuilderMethod,
+        PartialToBuilderMethod partialToBuilderMethod) {
       super(metadata, property);
       this.builderType = builderType;
       this.builderFactory = builderFactory;
       this.mergeFromBuilderMethod = mergeFromBuilderMethod;
+      this.partialToBuilderMethod = partialToBuilderMethod;
     }
 
     @Override
@@ -286,6 +309,17 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public void addSetBuilderFromPartial(Block code, String builder) {
+      if (partialToBuilderMethod == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
+        code.add("%s.%s().mergeFrom(%s.toBuilder());",
+            builder, getBuilderMethod(property), setter(property), property.getName());
+      } else {
+        code.add("%s.%s().mergeFrom(%s);",
+            builder, getBuilderMethod(property), setter(property), property.getName());
+      }
+    }
+
+    @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
       code.addLine("%s.%s(%s);", builder, setter(property), variable);
     }
@@ -361,6 +395,29 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
         return false;
       }
       if (!types.isSubtype(builderType, element.getParameters().get(0).asType())) {
+        return false;
+      }
+      return true;
+    }
+  }
+
+  private static final class IsToBuilderMethod implements Predicate<ExecutableElement> {
+    final TypeMirror builderType;
+    final Types types;
+
+    IsToBuilderMethod(TypeMirror sourceType, Types types) {
+      this.builderType = sourceType;
+      this.types = types;
+    }
+
+    @Override public boolean apply(ExecutableElement element) {
+      if (element.getParameters().size() != 0) {
+        return false;
+      }
+      if (!element.getSimpleName().contentEquals("toBuilder")) {
+        return false;
+      }
+      if (!types.isSubtype(element.getReturnType(), builderType)) {
         return false;
       }
       return true;

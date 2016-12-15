@@ -51,6 +51,7 @@ abstract class Metadata_Builder {
     PARTIAL_TYPE("partialType"),
     PROPERTY_ENUM("propertyEnum"),
     BUILDER_SERIALIZABLE("builderSerializable"),
+    HAS_TO_BUILDER_METHOD("hasToBuilderMethod"),
     VALUE_TYPE_VISIBILITY("valueTypeVisibility"),
     ;
 
@@ -87,6 +88,7 @@ abstract class Metadata_Builder {
       standardMethodUnderrides =
           new LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>();
   private boolean builderSerializable;
+  private boolean hasToBuilderMethod;
   private final ArrayList<Excerpt> generatedBuilderAnnotations = new ArrayList<Excerpt>();
   private final ArrayList<Excerpt> valueTypeAnnotations = new ArrayList<Excerpt>();
   private Metadata.Visibility valueTypeVisibility;
@@ -577,6 +579,29 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * Sets the value to be returned by {@link Metadata#getHasToBuilderMethod()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Builder setHasToBuilderMethod(boolean hasToBuilderMethod) {
+    this.hasToBuilderMethod = hasToBuilderMethod;
+    _unsetProperties.remove(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Metadata#getHasToBuilderMethod()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public boolean getHasToBuilderMethod() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD),
+        "hasToBuilderMethod not set");
+    return hasToBuilderMethod;
+  }
+
+  /**
    * Adds {@code element} to the list to be returned from {@link Metadata#getGeneratedBuilderAnnotations()}.
    *
    * @return this {@code Builder} object
@@ -838,6 +863,10 @@ abstract class Metadata_Builder {
         || value.isBuilderSerializable() != _defaults.isBuilderSerializable()) {
       setBuilderSerializable(value.isBuilderSerializable());
     }
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD)
+        || value.getHasToBuilderMethod() != _defaults.getHasToBuilderMethod()) {
+      setHasToBuilderMethod(value.getHasToBuilderMethod());
+    }
     addAllGeneratedBuilderAnnotations(value.getGeneratedBuilderAnnotations());
     addAllValueTypeAnnotations(value.getValueTypeAnnotations());
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
@@ -900,6 +929,11 @@ abstract class Metadata_Builder {
             || template.isBuilderSerializable() != _defaults.isBuilderSerializable())) {
       setBuilderSerializable(template.isBuilderSerializable());
     }
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD)
+            || template.getHasToBuilderMethod() != _defaults.getHasToBuilderMethod())) {
+      setHasToBuilderMethod(template.getHasToBuilderMethod());
+    }
     addAllGeneratedBuilderAnnotations(((Metadata_Builder) template).generatedBuilderAnnotations);
     addAllValueTypeAnnotations(((Metadata_Builder) template).valueTypeAnnotations);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
@@ -928,6 +962,7 @@ abstract class Metadata_Builder {
     properties.clear();
     standardMethodUnderrides.clear();
     builderSerializable = _defaults.builderSerializable;
+    hasToBuilderMethod = _defaults.hasToBuilderMethod;
     generatedBuilderAnnotations.clear();
     valueTypeAnnotations.clear();
     valueTypeVisibility = _defaults.valueTypeVisibility;
@@ -981,6 +1016,7 @@ abstract class Metadata_Builder {
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
+    private final boolean hasToBuilderMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Metadata.Visibility valueTypeVisibility;
@@ -999,6 +1035,7 @@ abstract class Metadata_Builder {
       this.properties = ImmutableList.copyOf(builder.properties);
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
+      this.hasToBuilderMethod = builder.hasToBuilderMethod;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
       this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
       this.valueTypeVisibility = builder.valueTypeVisibility;
@@ -1067,6 +1104,11 @@ abstract class Metadata_Builder {
     }
 
     @Override
+    public boolean getHasToBuilderMethod() {
+      return hasToBuilderMethod;
+    }
+
+    @Override
     public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
       return generatedBuilderAnnotations;
     }
@@ -1130,6 +1172,9 @@ abstract class Metadata_Builder {
       if (builderSerializable != other.builderSerializable) {
         return false;
       }
+      if (hasToBuilderMethod != other.hasToBuilderMethod) {
+        return false;
+      }
       if (!generatedBuilderAnnotations.equals(other.generatedBuilderAnnotations)) {
         return false;
       }
@@ -1161,6 +1206,7 @@ abstract class Metadata_Builder {
             properties,
             standardMethodUnderrides,
             builderSerializable,
+            hasToBuilderMethod,
             generatedBuilderAnnotations,
             valueTypeAnnotations,
             valueTypeVisibility,
@@ -1184,6 +1230,7 @@ abstract class Metadata_Builder {
               "properties=" + properties,
               "standardMethodUnderrides=" + standardMethodUnderrides,
               "builderSerializable=" + builderSerializable,
+              "hasToBuilderMethod=" + hasToBuilderMethod,
               "generatedBuilderAnnotations=" + generatedBuilderAnnotations,
               "valueTypeAnnotations=" + valueTypeAnnotations,
               "valueTypeVisibility=" + valueTypeVisibility,
@@ -1212,6 +1259,7 @@ abstract class Metadata_Builder {
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
+    private final boolean hasToBuilderMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Metadata.Visibility valueTypeVisibility;
@@ -1231,6 +1279,7 @@ abstract class Metadata_Builder {
       this.properties = ImmutableList.copyOf(builder.properties);
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
+      this.hasToBuilderMethod = builder.hasToBuilderMethod;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
       this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
       this.valueTypeVisibility = builder.valueTypeVisibility;
@@ -1321,6 +1370,14 @@ abstract class Metadata_Builder {
     }
 
     @Override
+    public boolean getHasToBuilderMethod() {
+      if (_unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD)) {
+        throw new UnsupportedOperationException("hasToBuilderMethod not set");
+      }
+      return hasToBuilderMethod;
+    }
+
+    @Override
     public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
       return generatedBuilderAnnotations;
     }
@@ -1391,6 +1448,9 @@ abstract class Metadata_Builder {
       if (builderSerializable != other.builderSerializable) {
         return false;
       }
+      if (hasToBuilderMethod != other.hasToBuilderMethod) {
+        return false;
+      }
       if (!generatedBuilderAnnotations.equals(other.generatedBuilderAnnotations)) {
         return false;
       }
@@ -1424,6 +1484,7 @@ abstract class Metadata_Builder {
             properties,
             standardMethodUnderrides,
             builderSerializable,
+            hasToBuilderMethod,
             generatedBuilderAnnotations,
             valueTypeAnnotations,
             valueTypeVisibility,
@@ -1459,6 +1520,9 @@ abstract class Metadata_Builder {
               "standardMethodUnderrides=" + standardMethodUnderrides,
               (!_unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
                   ? "builderSerializable=" + builderSerializable
+                  : null),
+              (!_unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD)
+                  ? "hasToBuilderMethod=" + hasToBuilderMethod
                   : null),
               "generatedBuilderAnnotations=" + generatedBuilderAnnotations,
               "valueTypeAnnotations=" + valueTypeAnnotations,
