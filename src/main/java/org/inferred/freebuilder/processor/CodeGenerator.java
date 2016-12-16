@@ -231,16 +231,26 @@ public class CodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns a newly-created partial %s", metadata.getType().javadocLink())
-        .addLine(" * based on the contents of the {@code %s}.",
-            metadata.getBuilder().getSimpleName())
-        .addLine(" * State checking will not be performed.");
+        .addLine(" * for use in unit tests. State checking will not be performed.");
     if (any(metadata.getProperties(), IS_REQUIRED)) {
       code.addLine(" * Unset properties will throw an {@link %s}",
               UnsupportedOperationException.class)
           .addLine(" * when accessed via the partial object.");
     }
+    if (metadata.getHasToBuilderMethod()
+        && metadata.getBuilderFactory() == Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR)) {
+      code.addLine(" *")
+          .addLine(" * <p>The builder returned by a partial's {@link %s#toBuilder() toBuilder}",
+              metadata.getType())
+          .addLine(" * method overrides {@link %s#build() build()} to return another partial.",
+              metadata.getBuilder())
+          .addLine(" * This allows for robust tests of modify-rebuild code.");
+    }
     code.addLine(" *")
-        .addLine(" * <p>Partials should only ever be used in tests.")
+        .addLine(" * <p>Partials should only ever be used in tests. They permit writing robust")
+        .addLine(" * test cases that won't fail if this type gains more application-level")
+        .addLine(" * constraints (e.g. new required fields) in future. If you require partially")
+        .addLine(" * complete values in production code, consider using a Builder.")
         .addLine(" */");
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("@%s()", VisibleForTesting.class);
