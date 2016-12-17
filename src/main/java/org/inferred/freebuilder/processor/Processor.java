@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.MapMaker;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
@@ -34,6 +35,7 @@ import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.FilerException;
@@ -52,6 +54,14 @@ import javax.tools.Diagnostic.Kind;
  */
 @AutoService(javax.annotation.processing.Processor.class)
 public class Processor extends AbstractProcessor {
+
+  /**
+   * Keep track of which processors have been registered to avoid double-processing if FreeBuilder
+   * ends up on the processor path twice. While we catch the resulting Filer exceptions and convert
+   * them to warnings, it's still cleaner to issue a single NOTE-severity message.
+   */
+  private static final ConcurrentMap<ProcessingEnvironment, Processor> registeredProcessors =
+      new MapMaker().weakKeys().weakValues().concurrencyLevel(1).initialCapacity(1).makeMap();
 
   private Analyser analyser;
   private final CodeGenerator codeGenerator = new CodeGenerator();
@@ -81,6 +91,11 @@ public class Processor extends AbstractProcessor {
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
+    if (registeredProcessors.putIfAbsent(processingEnv, this) != null) {
+      processingEnv.getMessager() .printMessage(
+          Kind.NOTE, "FreeBuilder processor registered twice; disabling duplicate instance");
+      return;
+    }
     analyser = new Analyser(
         processingEnv.getElementUtils(),
         processingEnv.getMessager(),
@@ -93,6 +108,9 @@ public class Processor extends AbstractProcessor {
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    if (analyser == null) {
+      return false;
+    }
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
         Metadata metadata = analyser.analyse(type);

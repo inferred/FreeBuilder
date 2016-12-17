@@ -1105,4 +1105,22 @@ public class ProcessorTest {
         .runTest();
   }
 
+  @Test
+  public void testDoubleRegistration() {
+    // See also https://github.com/google/FreeBuilder/issues/21
+    behaviorTester
+        .with(new Processor(features))
+        .with(new Processor(features))
+        .with(TWO_PROPERTY_FREE_BUILDER_INTERFACE)
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setPropertyA(11)")
+            .addLine("    .setPropertyB(true)")
+            .addLine("    .build();")
+            .addLine("assertEquals(11, value.getPropertyA());")
+            .addLine("assertTrue(value.isPropertyB());")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
 }
