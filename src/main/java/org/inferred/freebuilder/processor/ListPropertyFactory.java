@@ -410,7 +410,8 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
                 property.getName(),
                 ImmutableList.class,
                 elementType)
-            .addLine("  %s = %s.%s();", property.getName(), value, property.getGetterName())
+            .addLine("  %s = %s.copyOf(%s.%s());",
+                property.getName(), ImmutableList.class, value, property.getGetterName())
             .addLine("} else {");
       }
       code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
