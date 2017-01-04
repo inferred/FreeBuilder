@@ -194,16 +194,21 @@ def java9Path = new File(java9Home, 'bin')
 def java9 = [:].withDefault { execName ->
   def executable = new File(java9Path, execName)
   assert executable.exists() : "There is no ${execName} executable in ${java9Path}"
-  executable
+  executable.toString()
 }
 
 afterEvaluate {
-  tasks.withType(AbstractCompile) {
+  tasks.withType(JavaCompile) {
     if (targetCompatibility == "1.9") {
       options.with {
         fork = true
         forkOptions.executable = java9.javac
       }
+    }
+  }
+  tasks.withType(Test) {
+    if (executable == java9.java) {
+      jvmArgs += ['--add-opens', 'java.base/java.lang=ALL-UNNAMED']
     }
   }
 }
@@ -263,7 +268,6 @@ task vanillaTest {
     classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
     if (jdk == 9) {
       executable java9.java
-      scanForTestClasses = false
     }
     reports {
       html {
