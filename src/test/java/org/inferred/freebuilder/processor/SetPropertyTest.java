@@ -618,6 +618,55 @@ public class SetPropertyTest {
   }
 
   @Test
+  public void testSetOfParameters() {
+    // See also https://github.com/google/FreeBuilder/issues/229
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<E> {")
+            .addLine("  %s<E> %s;", Set.class, convention.getter())
+            .addLine("")
+            .addLine("  class Builder<E> extends DataType_Builder<E> {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testSetOfParameterWildcards() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<E> {")
+            .addLine("  %s<? extends E> %s;", Set.class, convention.getter())
+            .addLine("")
+            .addLine("  class Builder<E> extends DataType_Builder<E> {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testValidation_varargsAdd() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(validationErrorMessage);

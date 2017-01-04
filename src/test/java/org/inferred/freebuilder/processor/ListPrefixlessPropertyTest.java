@@ -636,6 +636,55 @@ public class ListPrefixlessPropertyTest {
   }
 
   @Test
+  public void testListOfParameters() {
+    // See also
+    //  - https://github.com/google/FreeBuilder/issues/178
+    //  - https://github.com/google/FreeBuilder/issues/229
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType<E> {")
+            .addLine("  public abstract %s<E> items();", List.class)
+            .addLine("")
+            .addLine("  public static class Builder<E> extends DataType_Builder<E> {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType<String> value = new DataType.Builder<String>()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testListOfParameterWildcards() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType<E> {")
+            .addLine("  public abstract %s<? extends E> items();", List.class)
+            .addLine("")
+            .addLine("  public static class Builder<E> extends DataType_Builder<E> {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType<Number> value = new DataType.Builder<Number>()")
+            .addLine("    .addItems(1)")
+            .addLine("    .addItems(2.7)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(1, 2.7).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testImmutableListProperty() {
     assumeGuavaAvailable();
     behaviorTester
