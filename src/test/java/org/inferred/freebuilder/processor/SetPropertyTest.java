@@ -592,6 +592,32 @@ public class SetPropertyTest {
   }
 
   @Test
+  public void testImmutableSetProperty_withWildcard() {
+    assumeGuavaAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<? extends %s> %s;",
+                ImmutableSet.class, elements.type(), convention.getter())
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testValidation_varargsAdd() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(validationErrorMessage);

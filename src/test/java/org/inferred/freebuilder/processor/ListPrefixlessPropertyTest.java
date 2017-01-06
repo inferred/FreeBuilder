@@ -42,6 +42,7 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -588,6 +589,53 @@ public class ListPrefixlessPropertyTest {
   }
 
   @Test
+  public void testCollectionProperty() {
+    // See also https://github.com/google/FreeBuilder/issues/227
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s> items();", Collection.class, String.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(\"one\")")
+            .addLine("    .addItems(\"two\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCollectionProperty_withWildcard() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<? extends %s> items();", Collection.class, Number.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(1)")
+            .addLine("    .addItems(2.7)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(1, 2.7).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testImmutableListProperty() {
     assumeGuavaAvailable();
     behaviorTester
@@ -607,6 +655,31 @@ public class ListPrefixlessPropertyTest {
             .addLine("    .addItems(\"two\")")
             .addLine("    .build();")
             .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testImmutableListProperty_withWildcard() {
+    assumeGuavaAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<? extends %s> items();",
+                ImmutableList.class, Number.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(1)")
+            .addLine("    .addItems(2.7)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.items()).containsExactly(1, 2.7).inOrder();")
             .build())
         .runTest();
   }

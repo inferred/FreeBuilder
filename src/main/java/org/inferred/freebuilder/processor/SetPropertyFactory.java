@@ -381,7 +381,8 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       if (code.feature(GUAVA).isAvailable()) {
         code.addLine("if (%s instanceof %s && %s == %s.<%s>of()) {",
                 value, metadata.getValueType(), property.getName(), ImmutableSet.class, elementType)
-            .addLine("  %s = %s.%s();", property.getName(), value, property.getGetterName())
+            .addLine("  %s = %s.copyOf(%s.%s());",
+                property.getName(), ImmutableSet.class, value, property.getGetterName())
             .addLine("} else {");
       }
       code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
