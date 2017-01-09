@@ -396,8 +396,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine("%s = %s.copyOf(%s.%s);",
             finalField, ImmutableList.class, builder, property.getName());
       } else {
-        code.addLine("%s = immutableList(%s.%s, %s.class);",
-            finalField, builder, property.getName(), elementType);
+        code.addLine("%s = immutableList(%s.%s);", finalField, builder, property.getName());
       }
     }
 
@@ -406,7 +405,7 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       if (code.feature(GUAVA).isAvailable()) {
         code.addLine("if (%s instanceof %s && %s == %s.<%s>of()) {",
                 value,
-                metadata.getValueType(),
+                metadata.getValueType().getQualifiedName(),
                 property.getName(),
                 ImmutableList.class,
                 elementType)
@@ -453,17 +452,16 @@ public class ListPropertyFactory implements PropertyCodeGenerator.Factory {
       if (!code.feature(GUAVA).isAvailable()) {
         code.addLine("")
             .addLine("@%s(\"unchecked\")", SuppressWarnings.class)
-            .addLine("private static <E> %1$s<E> immutableList(%1$s<E> elements, %2$s<E> type) {",
-                List.class, Class.class)
+            .addLine("private static <E> %1$s<E> immutableList(%1$s<E> elements) {", List.class)
             .addLine("  switch (elements.size()) {")
             .addLine("  case 0:")
             .addLine("    return %s.emptyList();", Collections.class)
             .addLine("  case 1:")
             .addLine("    return %s.singletonList(elements.get(0));", Collections.class)
             .addLine("  default:")
-            .addLine("    return %s.unmodifiableList(%s.asList(elements.toArray(",
-                Collections.class, Arrays.class)
-            .addLine("        (E[]) %s.newInstance(type, elements.size()))));", Array.class)
+            .addLine("    return (%1$s<E>)(%1$s<?>) %2$s.unmodifiableList(%3$s.asList(",
+                List.class, Collections.class, Arrays.class)
+            .addLine("        elements.toArray()));", Array.class)
             .addLine("  }")
             .addLine("}");
       }
