@@ -71,6 +71,9 @@ String jackson(String pkg) {
 //// Testing /////////////////////////////////////////////////////
 test {
   maxHeapSize = "1024m"
+  testLogging {
+    exceptionFormat = 'full'
+  }
 }
 check.dependsOn javadoc
 
