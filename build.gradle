@@ -107,27 +107,13 @@ jar {
 shadowJar {
   classifier = null
 
-  ['com.google', 'org.apache', 'org.eclipse', 'org.osgi'].each {
+  ['com.google', 'org.apache', 'org.openjdk', 'org.osgi'].each {
     relocate it, "org.inferred.freebuilder.shaded.$it"
   }
 
   // Exclude common META-INF detritus
   exclude 'META-INF/*.txt'
   exclude 'META-INF/maven/**'
-
-  // Exclude Eclipse (via google-java-format) detritus
-  exclude 'META-INF/eclipse.inf'
-  exclude 'META-INF/services/org.osgi.*'
-  exclude '.api_description'
-  exclude '.options'
-  exclude 'about.html'
-  exclude 'about_files/*.txt'
-  exclude 'ant_tasks/*'
-  exclude 'plugin.xml'
-  exclude 'jdtCompilerAdapter.jar'
-  exclude '*.profile'
-  exclude '*.properties'
-  exclude '*.list'
 
   // Exclude all of jsr305 except Nullable, Nonnull and meta.When
   exclude 'javax/annotation/C*'
