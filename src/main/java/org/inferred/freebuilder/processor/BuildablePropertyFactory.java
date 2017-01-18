@@ -273,6 +273,11 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
     }
 
     @Override
+    public void addMergeFromSuperValue(Block code, String value) {
+      addMergeFromValue(code, value);
+    }
+
+    @Override
     public void addMergeFromBuilder(Block code, String builder) {
       String propertyName = property.getName();
       if (propertyName.equals(builder)) {
@@ -283,6 +288,11 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
         code.add(".buildPartial()");
       }
       code.add(");\n");
+    }
+
+    @Override
+    public void addMergeFromSuperBuilder(Block code, String builder) {
+      addMergeFromBuilder(code, builder);
     }
 
     @Override

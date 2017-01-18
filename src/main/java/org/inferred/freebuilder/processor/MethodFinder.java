@@ -73,7 +73,7 @@ public class MethodFinder {
     return ImmutableSet.copyOf(methods.values());
   }
 
-  private static ImmutableSet<TypeElement> getSupertypes(TypeElement type)
+  public static ImmutableSet<TypeElement> getSupertypes(TypeElement type)
       throws CannotGenerateCodeException {
     Set<TypeElement> supertypes = new LinkedHashSet<TypeElement>();
     addSupertypesToSet(type, supertypes);

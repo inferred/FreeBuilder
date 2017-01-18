@@ -376,9 +376,8 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
       code.add("(%s.%s);\n", builder, property.getName());
     }
 
-    @Override
-    public void addMergeFromValue(Block code, String value) {
-      if (code.feature(GUAVA).isAvailable()) {
+    private void addMergeFromValue(Block code, String value, boolean guavaMerge) {
+      if (guavaMerge) {
         code.addLine("if (%s instanceof %s && %s == %s.<%s>of()) {",
                 value,
                 metadata.getValueType().getQualifiedName(),
@@ -390,9 +389,19 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
             .addLine("} else {");
       }
       code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
-      if (code.feature(GUAVA).isAvailable()) {
+      if (guavaMerge) {
         code.addLine("}");
       }
+    }
+
+    @Override
+    public void addMergeFromValue(Block code, String value) {
+      addMergeFromValue(code, value, code.feature(GUAVA).isAvailable());
+    }
+
+    @Override
+    public void addMergeFromSuperValue(Block code, String value) {
+      addMergeFromValue(code, value, false);
     }
 
     @Override
@@ -402,6 +411,14 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
           metadata.getGeneratedBuilder(),
           builder,
           property.getName());
+    }
+
+    @Override
+    public void addMergeFromSuperBuilder(Block code, String builder) {
+      code.addLine("%s(%s.%s());",
+          addAllMethod(property),
+          builder,
+          getter(property));
     }
 
     @Override

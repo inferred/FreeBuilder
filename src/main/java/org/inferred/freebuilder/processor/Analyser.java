@@ -35,6 +35,7 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
+import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -43,6 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
@@ -53,6 +55,8 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -166,8 +170,86 @@ class Analyser {
       metadataBuilder
           .clearProperties()
           .addAllProperties(codeGenerators(properties, baseMetadata, builder.get()));
+
+      metadataBuilder.addAllSuperBuilderTypes(superBuilders(type));
+      metadataBuilder.putAllSuperTypeProperties(
+              processSuperTypeProperties(type, baseMetadata, builder));
     }
     return metadataBuilder.build();
+  }
+
+  private ImmutableMap<ParameterizedType, ImmutableList<Property>> processSuperTypeProperties(
+          TypeElement type,
+          Metadata baseMetadata,
+          Optional<TypeElement> builder) throws CannotGenerateCodeException {
+    Map<ParameterizedType, ImmutableList<Property>> toRet =
+            new HashMap<ParameterizedType, ImmutableList<Property>>();
+
+    final ImmutableSet<TypeElement> superTypes = MethodFinder.getSupertypes(type);
+    for (TypeElement superType : superTypes) {
+      if (superType.equals(type)) {
+        continue;
+      }
+
+      final ImmutableSet<ExecutableElement> superMethods = methodsOn(superType, elements);
+      final Map<ExecutableElement, Property> superPropertiesRet =
+              findProperties(superType, superMethods);
+      if (superPropertiesRet.isEmpty()) {
+        continue;
+      }
+
+      ParameterizedType pType = QualifiedName.of(superType).withParameters(
+              superType.getTypeParameters());
+
+      // Code builder dance
+      if (builder.isPresent()) {
+        final Metadata metadataSuperType = analyse(superType);
+        final Metadata.Builder metadataBld = Metadata.Builder.from(metadataSuperType);
+        metadataBld.setBuilderFactory(Optional.<BuilderFactory>absent());
+
+        for (Map.Entry<ExecutableElement, Property> entry : superPropertiesRet.entrySet()) {
+          Config config = new ConfigImpl(
+                  builder.get(),
+                  metadataBld.build(),
+                  entry.getValue(),
+                  entry.getKey(),
+                  ImmutableSet.<String>of());
+
+          entry.setValue(new Property.Builder()
+                  .mergeFrom(entry.getValue())
+                  .setCodeGenerator(createCodeGenerator(config))
+                  .build());
+        }
+      }
+
+      toRet.put(pType, ImmutableList.copyOf(superPropertiesRet.values()));
+    }
+
+    return ImmutableMap.copyOf(toRet);
+  }
+
+  private ImmutableSet<ParameterizedType> superBuilders(TypeElement type)
+          throws CannotGenerateCodeException {
+    Set<ParameterizedType> toRet = new HashSet<ParameterizedType>();
+    PackageElement pkg = elements.getPackageOf(type);
+
+    final ImmutableSet<TypeElement> superTypes = MethodFinder.getSupertypes(type);
+    for (TypeElement superType : superTypes) {
+      if (superType.equals(type)) {
+        continue;
+      }
+
+      final Optional<AnnotationMirror> freeBuilderMirror =
+              findAnnotationMirror(superType, FreeBuilder.class);
+
+      if (freeBuilderMirror.isPresent()) {
+        ParameterizedType pType = QualifiedName.of(superType).withParameters(
+                superType.getTypeParameters());
+        toRet.add(pType);
+      }
+    }
+
+    return ImmutableSet.copyOf(toRet);
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {

@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.inferred.freebuilder.processor.BuilderMethods.isPropertySetMethod;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
@@ -43,11 +44,14 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -76,7 +80,9 @@ public class CodeGenerator {
     addAccessors(metadata, code);
     addMergeFromValueMethod(code, metadata);
     addMergeFromBuilderMethod(code, metadata);
+    addMergeFromSuperTypes(code, metadata);
     addClearMethod(code, metadata);
+    addPropertiesSetMethods(code, metadata);
     addBuildMethod(code, metadata);
     addBuildPartialMethod(code, metadata);
 
@@ -203,6 +209,51 @@ public class CodeGenerator {
         .addLine("}");
   }
 
+  private static void addMergeFromSuperTypes(SourceBuilder code, Metadata metadata) {
+    for (Map.Entry<ParameterizedType, ImmutableList<Property>> e
+            : metadata.getSuperTypeProperties().entrySet()) {
+      final ParameterizedType type = e.getKey();
+      final ImmutableList<Property> properties = e.getValue();
+
+      // mergeFrom - value
+      code.addLine("")
+              .addLine("/**")
+              .addLine(" * Sets all property values using the given {@code %s} as a template.",
+                      type.getQualifiedName())
+              .addLine(" */")
+              .addLine("public %s mergeFrom(%s value) {",
+                      metadata.getBuilder(), type.getQualifiedName());
+      Block body = new Block(code);
+      for (Property property : properties) {
+        property.getCodeGenerator().addMergeFromSuperValue(body, "value");
+      }
+      code.add(body)
+              .addLine("  return (%s) this;", metadata.getBuilder())
+              .addLine("}");
+
+      // has builder ?
+      if (!metadata.getSuperBuilderTypes().contains(type)) {
+        continue;
+      }
+
+      // mergeFrom - builder
+      final QualifiedName builder = type.getQualifiedName().nestedType("Builder");
+      code.addLine("")
+              .addLine("/**")
+              .addLine(" * Copies values from the given {@code %s}.", builder.getSimpleName())
+              .addLine(" * Does not affect any properties not set on the input.")
+              .addLine(" */")
+              .addLine("public %s mergeFrom(%s template) {", metadata.getBuilder(), builder);
+      Block fromBuilderBody = new Block(code);
+      for (Property property : properties) {
+        property.getCodeGenerator().addMergeFromSuperBuilder(fromBuilderBody, "template");
+      }
+      code.add(fromBuilderBody)
+              .addLine("  return (%s) this;", metadata.getBuilder())
+              .addLine("}");
+    }
+  }
+
   private static void addClearMethod(SourceBuilder code, Metadata metadata) {
     code.addLine("")
         .addLine("/**")
@@ -225,6 +276,30 @@ public class CodeGenerator {
     }
     code.addLine("  return (%s) this;", metadata.getBuilder())
         .addLine("}");
+  }
+
+  private static void addPropertiesSetMethods(SourceBuilder code, Metadata metadata) {
+    if (!any(metadata.getProperties(), IS_REQUIRED)) {
+      return;
+
+    }
+
+    for (Property property : metadata.getProperties()) {
+      if (!IS_REQUIRED.apply(property)) {
+        continue;
+      }
+
+      code.addLine("")
+          .addLine("/**")
+          .addLine(" * Returns true if the required property corresponding to")
+          .addLine(" * %s is set. ", metadata.getType().javadocNoArgMethodLink(
+                  property.getGetterName()))
+          .addLine(" */")
+          .addLine("public boolean %s() {", isPropertySetMethod(property))
+          .addLine("  return _unsetProperties.contains(%s.%s);",
+                  metadata.getPropertyEnum(), property.getAllCapsName())
+          .addLine("}");
+    }
   }
 
   private static void addBuildPartialMethod(SourceBuilder code, Metadata metadata) {

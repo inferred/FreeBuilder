@@ -35,12 +35,14 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.inferred.freebuilder.processor.util.testing.FakeMessager;
@@ -1401,6 +1403,37 @@ public class AnalyserTest {
         QualifiedName.of("com.example", "DataType_Builder", "Partial"),
         QualifiedName.of("com.example", "DataType_Builder", "Property"),
         QualifiedName.of("com.example", "DataType_Builder", "Value"));
+  }
+
+  @Test
+  public void mergeFromSuperType()
+      throws CannotGenerateCodeException {
+    model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getCanonicalName(),
+        "public abstract class SuperType {",
+        "  public abstract String getAlpha();",
+        "  public static class Builder extends SuperType_Builder {}",
+        "}");
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getCanonicalName(),
+        "public abstract class DataType extends SuperType {",
+        "  public abstract String getBeta();",
+        "  public static class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    final ParameterizedType superType = QualifiedName.of("com.example", "SuperType")
+            .withParameters(ImmutableList.of());
+
+    assertThat(metadata.getSuperBuilderTypes()).containsExactly(superType);
+    assertThat(metadata.getSuperTypeProperties()).hasSize(1);
+    assertThat(metadata.getSuperTypeProperties()).containsKey(superType);
+    assertThat(metadata.getSuperTypeProperties().get(superType)).hasSize(1);
+    assertThat(metadata.getSuperTypeProperties().get(superType).get(0).getName()).
+            isEqualTo("alpha");
   }
 
   private static String asSource(Excerpt annotation) {
