@@ -564,6 +564,9 @@ modifyPom {
         timezone 'Europe/London'
       }
     }
+
+    // We shade all our dependencies
+    dependencies.clear()
   }
 }
 
