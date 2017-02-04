@@ -122,6 +122,11 @@ public abstract class PropertyCodeGenerator {
   /** Add a merge from builder for the property to the builder's source code. */
   public abstract void addMergeFromBuilder(Block code, String builder);
 
+  /** Sets the property on a builder from within a partial value's toBuilder() method. */
+  public void addSetBuilderFromPartial(Block code, String builder) {
+    addSetFromResult(code, builder, property.getName());
+  }
+
   /** Adds method annotations for the value type getter method. */
   public void addGetterAnnotations(@SuppressWarnings("unused") SourceBuilder code) {}
 

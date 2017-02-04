@@ -91,6 +91,7 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder.withParameters())
+        .setHasToBuilderMethod(false)
         .setInterfaceType(false)
         .setPartialType(partialType.withParameters())
         .setPropertyEnum(propertyType.withParameters())
@@ -125,6 +126,7 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder.withParameters())
+        .setHasToBuilderMethod(false)
         .setInterfaceType(true)
         .setPartialType(partialType.withParameters())
         .setPropertyEnum(propertyType.withParameters())
@@ -237,6 +239,48 @@ public class AnalyserTest {
     assertThat(dataType.getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
+  public void toBuilderMethod() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public interface DataType {",
+        "  Builder toBuilder();",
+        "  class Builder extends DataType_Builder { }",
+        "}"));
+    assertTrue(dataType.getHasToBuilderMethod());
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
+  public void toBuilderMethod_genericInterface() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public interface DataType<K, V> {",
+        "  Builder<K, V> toBuilder();",
+        "  class Builder<K, V> extends DataType_Builder<K, V> { }",
+        "}"));
+    assertTrue(dataType.getHasToBuilderMethod());
+    assertThat(dataType.getProperties()).isEmpty();
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
+  public void toBuilderMethod_noBuilderFactoryMethod() throws CannotGenerateCodeException {
+    analyser.analyse(model.newType(
+        "package com.example;",
+        "public interface DataType {",
+        "  Builder toBuilder();",
+        "  class Builder extends DataType_Builder {",
+        "    public Builder(String unused) {}",
+        "  }",
+        "}"));
+    assertThat(messager.getMessagesByElement().keySet()).containsExactly("toBuilder");
+    assertThat(messager.getMessagesByElement().get("toBuilder"))
+        .containsExactly("[ERROR] No accessible no-args Builder constructor available to "
+            + "implement toBuilder");
   }
 
   @Test
@@ -1111,6 +1155,7 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder.withParameters())
+        .setHasToBuilderMethod(false)
         .setInterfaceType(false)
         .setPartialType(partialType.withParameters())
         .setPropertyEnum(propertyType.withParameters())
@@ -1149,6 +1194,7 @@ public class AnalyserTest {
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder.withParameters())
+        .setHasToBuilderMethod(false)
         .setInterfaceType(false)
         .setPartialType(partialType.withParameters())
         .setPropertyEnum(propertyType.withParameters())

@@ -48,6 +48,7 @@ import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
+import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
@@ -138,17 +139,18 @@ class Analyser {
     QualifiedName generatedBuilder = QualifiedName.of(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
     Optional<TypeElement> builder = tryFindBuilder(generatedBuilder, type);
+    Optional<BuilderFactory> builderFactory = builderFactory(builder);
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
     List<? extends TypeParameterElement> typeParameters = type.getTypeParameters();
     Map<ExecutableElement, Property> properties =
-        findProperties(type, removeUnderriddenAndConcreteMethods(methods));
+        findProperties(type, removeNonGetterMethods(builder, methods));
     Metadata.Builder metadataBuilder = new Metadata.Builder()
         .setType(QualifiedName.of(type).withParameters(typeParameters))
         .setInterfaceType(type.getKind().isInterface())
         .setBuilder(parameterized(builder, typeParameters))
-        .setBuilderFactory(builderFactory(builder))
+        .setBuilderFactory(builderFactory)
         .setGeneratedBuilder(generatedBuilder.withParameters(typeParameters))
         .setValueType(valueType.withParameters(typeParameters))
         .setPartialType(partialType.withParameters(typeParameters))
@@ -158,6 +160,7 @@ class Analyser {
         .addVisibleNestedTypes(propertyType)
         .addAllVisibleNestedTypes(visibleTypesIn(type))  // Because we inherit from type
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
+        .setHasToBuilderMethod(hasToBuilderMethod(builder, builderFactory, methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .addAllProperties(properties.values());
     Metadata baseMetadata = metadataBuilder.build();
@@ -306,13 +309,48 @@ class Analyser {
     return result.build();
   }
 
-  private static Set<ExecutableElement> removeUnderriddenAndConcreteMethods(
+  /** Find a toBuilder method, if the user has provided one.
+   * @param builderFactory */
+  private boolean hasToBuilderMethod(
+      Optional<TypeElement> builder,
+      Optional<BuilderFactory> builderFactory,
       Iterable<ExecutableElement> methods) {
+    if (!builder.isPresent()) {
+      return false;
+    }
+    for (ExecutableElement method : methods) {
+      if (isToBuilderMethod(builder.get(), method)) {
+        if (!builderFactory.isPresent()) {
+          messager.printMessage(ERROR,
+              "No accessible no-args Builder constructor available to implement toBuilder",
+              method);
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isToBuilderMethod(TypeElement builder, ExecutableElement method) {
+      if (method.getSimpleName().contentEquals("toBuilder")
+          && method.getModifiers().contains(Modifier.ABSTRACT)
+          && method.getParameters().isEmpty()) {
+        Optional<TypeElement> returnType = ModelUtils.maybeAsTypeElement(method.getReturnType());
+        if (returnType.isPresent() && returnType.get().equals(builder)) {
+          return true;
+        }
+      }
+      return false;
+  }
+
+  private static Set<ExecutableElement> removeNonGetterMethods(
+      Optional<TypeElement> builder, Iterable<ExecutableElement> methods) {
     ImmutableSet.Builder<ExecutableElement> nonUnderriddenMethods = ImmutableSet.builder();
     for (ExecutableElement method : methods) {
       boolean isAbstract = method.getModifiers().contains(Modifier.ABSTRACT);
       boolean isStandardMethod = maybeStandardMethod(method).isPresent();
-      if (isAbstract && !isStandardMethod) {
+      boolean isToBuilderMethod = builder.isPresent() && isToBuilderMethod(builder.get(), method);
+      if (isAbstract && !isStandardMethod && !isToBuilderMethod) {
         nonUnderriddenMethods.add(method);
       }
     }

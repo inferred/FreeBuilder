@@ -407,6 +407,34 @@ public class ListPrefixlessPropertyTest {
   }
 
   @Test
+  public void testToBuilder_fromPartial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s> items();", List.class, String.class)
+            .addLine("")
+            .addLine("  public abstract Builder toBuilder();")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value1 = new DataType.Builder()")
+            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .buildPartial();")
+            .addLine("DataType value2 = value1.toBuilder()")
+            .addLine("    .addItems(\"three\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value2.items())")
+            .addLine("    .containsExactly(\"one\", \"two\", \"three\")")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))

@@ -107,10 +107,7 @@ public class ParameterizedType extends Excerpt {
    * in full.
    */
   public Excerpt constructor() {
-    return Excerpts.add(
-        "new %s%s",
-        qualifiedName,
-        isParameterized() ? diamondOperator(Excerpts.join(", ", typeParameters)) : "");
+    return Excerpts.add("new %s%s", qualifiedName, typeParametersOrDiamondOperator());
   }
 
   /**
@@ -118,6 +115,16 @@ public class ParameterizedType extends Excerpt {
    */
   public Excerpt declaration() {
     return Excerpts.add("%s%s", qualifiedName.getSimpleName(), declarationParameters());
+  }
+
+  /**
+   * Returns a source excerpt of the type parameters of this type, including angle brackets, unless
+   * the diamond operator is available, in which case only the angle brackets will be emitted.
+   */
+  public Excerpt typeParametersOrDiamondOperator() {
+    return isParameterized()
+        ? diamondOperator(Excerpts.join(", ", typeParameters))
+        : Excerpts.empty();
   }
 
   /**

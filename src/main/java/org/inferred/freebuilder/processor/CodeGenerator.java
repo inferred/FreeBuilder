@@ -231,16 +231,26 @@ public class CodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns a newly-created partial %s", metadata.getType().javadocLink())
-        .addLine(" * based on the contents of the {@code %s}.",
-            metadata.getBuilder().getSimpleName())
-        .addLine(" * State checking will not be performed.");
+        .addLine(" * for use in unit tests. State checking will not be performed.");
     if (any(metadata.getProperties(), IS_REQUIRED)) {
       code.addLine(" * Unset properties will throw an {@link %s}",
               UnsupportedOperationException.class)
           .addLine(" * when accessed via the partial object.");
     }
+    if (metadata.getHasToBuilderMethod()
+        && metadata.getBuilderFactory() == Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR)) {
+      code.addLine(" *")
+          .addLine(" * <p>The builder returned by a partial's {@link %s#toBuilder() toBuilder}",
+              metadata.getType())
+          .addLine(" * method overrides {@link %s#build() build()} to return another partial.",
+              metadata.getBuilder())
+          .addLine(" * This allows for robust tests of modify-rebuild code.");
+    }
     code.addLine(" *")
-        .addLine(" * <p>Partials should only ever be used in tests.")
+        .addLine(" * <p>Partials should only ever be used in tests. They permit writing robust")
+        .addLine(" * test cases that won't fail if this type gains more application-level")
+        .addLine(" * constraints (e.g. new required fields) in future. If you require partially")
+        .addLine(" * complete values in production code, consider using a Builder.")
         .addLine(" */");
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("@%s()", VisibleForTesting.class);
@@ -306,6 +316,20 @@ public class CodeGenerator {
       code.add("    return ");
       property.getCodeGenerator().addReadValueFragment(code, property.getName());
       code.add(";\n");
+      code.addLine("  }");
+    }
+    // toBuilder
+    if (metadata.getHasToBuilderMethod()) {
+      code.addLine("")
+          .addLine("  @%s", Override.class)
+          .addLine("  public %s toBuilder() {", metadata.getBuilder());
+      BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+      if (builderFactory != null) {
+        code.addLine("    return %s.mergeFrom(this);",
+                builderFactory.newBuilder(metadata.getBuilder(), EXPLICIT_TYPES));
+      } else {
+        code.addLine("    throw new %s();", UnsupportedOperationException.class);
+      }
       code.addLine("  }");
     }
     // Equals
@@ -510,6 +534,7 @@ public class CodeGenerator {
       code.add(";\n");
       code.addLine("  }");
     }
+    addPartialToBuilderMethod(code, metadata);
     // Equals
     if (metadata.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
       code.addLine("")
@@ -601,6 +626,38 @@ public class CodeGenerator {
       code.addLine("  }");
     }
     code.addLine("}");
+  }
+
+  private static void addPartialToBuilderMethod(SourceBuilder code, Metadata metadata) {
+    if (!metadata.getHasToBuilderMethod()) {
+      return;
+    }
+    BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+    if (builderFactory == BuilderFactory.NO_ARGS_CONSTRUCTOR) {
+      code.addLine("")
+          .addLine("  private static class PartialBuilder%s extends %s {",
+              metadata.getBuilder().declarationParameters(), metadata.getBuilder())
+          .addLine("    @Override public %s build() {", metadata.getType())
+          .addLine("      return buildPartial();")
+          .addLine("    }")
+          .addLine("  }");
+    }
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public %s toBuilder() {", metadata.getBuilder());
+    if (builderFactory == BuilderFactory.NO_ARGS_CONSTRUCTOR) {
+      code.addLine("    %s builder = new PartialBuilder%s();",
+              metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
+      Block block = new Block(code);
+      for (Property property : metadata.getProperties()) {
+        property.getCodeGenerator().addSetBuilderFromPartial(block, "builder");
+      }
+      code.add(block)
+          .addLine("    return builder;");
+    } else {
+      code.addLine("    throw new %s();", UnsupportedOperationException.class);
+    }
+    code.addLine("  }");
   }
 
   private static void writeToStringWithBuilder(

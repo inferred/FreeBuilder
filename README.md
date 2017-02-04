@@ -99,15 +99,18 @@ import org.inferred.freebuilder.FreeBuilder;
 
 @FreeBuilder
 public interface Person {
-  /** Returns the person's full (English) name. */
+  /** Returns this person's full (English) name. */
   String name();
-  /** Returns the person's age in years, rounded down. */
+  /** Returns this person's age in years, rounded down. */
   int age();
+  /** Returns a new {@link Builder} with the same property values as this person. */
+  Builder toBuilder();
   /** Builder of {@link Person} instances. */
   class Builder extends Person_Builder { }
 }
 ```
 
+The `toBuilder()` method here is optional but highly recommended.
 If you are writing an abstract class, or using Java 8, you may wish to hide the
 builder's constructor and manually provide instead a static `builder()` method
 on the value type (though <em>Effective Java</em> does not do this).
@@ -133,6 +136,8 @@ If you write the Person interface shown above, you get:
      * `UnsupportedOperationException`-throwing getters for unset fields
      * `toString`
      * `equals` and `hashCode`
+     * a special `toBuilder()` method that preserves the 'partial' aspect on newly-minted
+       Person instances
 
 
 ```java
@@ -180,9 +185,7 @@ For each property `foo`, the builder gets:
 The mapper methods are very useful when modifying existing values, e.g.
 
 ```java
-Person olderPerson = Person.Builder.from(person)
-    .mapAge(age -> age + 1)
-    .build();
+Person olderPerson = person.toBuilder().mapAge(age -> age + 1).build();
 ```
 
 [UnaryOperator]: https://docs.oracle.com/javase/8/docs/api/java/util/function/UnaryOperator.html
@@ -489,7 +492,7 @@ it may violate a cross-field constraint.
 Person person = new Person.Builder()
     .name("Phil")
     .buildPartial();  // build() would throw an IllegalStateException here
-System.out.println(person);  // prints: partial Person{name="Phil"}
+System.out.println(person);  // prints: partial Person{name=Phil}
 person.age();  // throws UnsupportedOperationException
 ```
 
@@ -500,6 +503,18 @@ However, when testing a component which does not rely on the full state
 restrictions of the value type, partials can reduce the fragility of your test
 suite, allowing you to add new required fields or other constraints to an
 existing value type without breaking swathes of test code.
+
+To allow robust tests of modify-rebuild code, the `toBuilder()` method on
+partials returns a subclass of Builder that returns partials from the `build()`
+method.
+
+```java
+Person anotherPerson = person.toBuilder().name("Bob").build();
+System.out.println(anotherPerson);  // prints: partial Person{name=Bob}
+```
+
+(Note the `from` and `mergeFrom` methods do not behave this way; instead, they
+will throw an UnsupportedOperationException if given a partial.)
 
 
 ### Jackson

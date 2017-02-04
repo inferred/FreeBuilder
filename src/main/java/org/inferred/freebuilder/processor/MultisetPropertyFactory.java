@@ -380,7 +380,7 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addSetFromResult(SourceBuilder code, String builder, String variable) {
-      code.addLine("%s.%s%s(%s);", builder, addAllMethod(property), variable);
+      code.addLine("%s.%s(%s);", builder, addAllMethod(property), variable);
     }
 
     @Override

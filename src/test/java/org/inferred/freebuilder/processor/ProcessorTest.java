@@ -899,6 +899,87 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testToBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .build();")
+            .addLine("com.example.DataType.Builder copyBuilder = value.toBuilder();")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("com.example.DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToBuilder_fromPartial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("  int getAge();")
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("com.example.DataType.Builder copyBuilder = value.toBuilder();")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("com.example.DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"partial DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToBuilder_fromPartial_withGenerics() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<T> {")
+            .addLine("  T getName();")
+            .addLine("  int getAge();")
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder<T> extends DataType_Builder<T> {}")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addImport("com.example.DataType")
+            .addLine("DataType<String> value = new DataType.Builder<String>()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("DataType.Builder<String> copyBuilder = value.toBuilder();")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("DataType<String> copy = copyBuilder.build();")
+            .addLine("assertEquals(\"partial DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testSiblingNameClashes() {
     behaviorTester
         .with(new Processor(features))

@@ -150,11 +150,16 @@ public class MapSourceTest {
         "  }",
         "",
         "  /**",
-        "   * Returns a newly-created partial {@link Person} based on the contents of the "
-            + "{@code Builder}.",
-        "   * State checking will not be performed.",
+        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
+            + "State checking will not",
+        "   * be performed.",
         "   *",
-        "   * <p>Partials should only ever be used in tests.",
+        "   * <p>Partials should only ever be used in tests. "
+            + "They permit writing robust test cases that won't",
+        "   * fail if this type gains more application-level constraints "
+            + "(e.g. new required fields) in",
+        "   * future. If you require partially complete values in production code, "
+            + "consider using a Builder.",
         "   */",
         "  @VisibleForTesting()",
         "  public Person buildPartial() {",
@@ -341,11 +346,16 @@ public class MapSourceTest {
         "  }",
         "",
         "  /**",
-        "   * Returns a newly-created partial {@link Person} based on the contents of the "
-            + "{@code Builder}.",
-        "   * State checking will not be performed.",
+        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
+            + "State checking will not",
+        "   * be performed.",
         "   *",
-        "   * <p>Partials should only ever be used in tests.",
+        "   * <p>Partials should only ever be used in tests. "
+            + "They permit writing robust test cases that won't",
+        "   * fail if this type gains more application-level constraints "
+            + "(e.g. new required fields) in",
+        "   * future. If you require partially complete values in production code, "
+            + "consider using a Builder.",
         "   */",
         "  @VisibleForTesting()",
         "  public Person buildPartial() {",
@@ -528,11 +538,16 @@ public class MapSourceTest {
         "  }",
         "",
         "  /**",
-        "   * Returns a newly-created partial {@link Person} based on the contents of the "
-            + "{@code Builder}.",
-        "   * State checking will not be performed.",
+        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
+            + "State checking will not",
+        "   * be performed.",
         "   *",
-        "   * <p>Partials should only ever be used in tests.",
+        "   * <p>Partials should only ever be used in tests. "
+            + "They permit writing robust test cases that won't",
+        "   * fail if this type gains more application-level constraints "
+            + "(e.g. new required fields) in",
+        "   * future. If you require partially complete values in production code, "
+            + "consider using a Builder.",
         "   */",
         "  public Person buildPartial() {",
         "    return new Person_Builder.Partial(this);",
@@ -729,11 +744,16 @@ public class MapSourceTest {
         "  }",
         "",
         "  /**",
-        "   * Returns a newly-created partial {@link Person} based on the contents of the "
-            + "{@code Builder}.",
-        "   * State checking will not be performed.",
+        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
+            + "State checking will not",
+        "   * be performed.",
         "   *",
-        "   * <p>Partials should only ever be used in tests.",
+        "   * <p>Partials should only ever be used in tests. "
+            + "They permit writing robust test cases that won't",
+        "   * fail if this type gains more application-level constraints "
+            + "(e.g. new required fields) in",
+        "   * future. If you require partially complete values in production code, "
+            + "consider using a Builder.",
         "   */",
         "  public Person buildPartial() {",
         "    return new Person_Builder.Partial(this);",
@@ -925,11 +945,16 @@ public class MapSourceTest {
         "  }",
         "",
         "  /**",
-        "   * Returns a newly-created partial {@link Person} based on the contents of the "
-            + "{@code Builder}.",
-        "   * State checking will not be performed.",
+        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
+            + "State checking will not",
+        "   * be performed.",
         "   *",
-        "   * <p>Partials should only ever be used in tests.",
+        "   * <p>Partials should only ever be used in tests. "
+            + "They permit writing robust test cases that won't",
+        "   * fail if this type gains more application-level constraints "
+            + "(e.g. new required fields) in",
+        "   * future. If you require partially complete values in production code, "
+            + "consider using a Builder.",
         "   */",
         "  @VisibleForTesting()",
         "  public Person buildPartial() {",

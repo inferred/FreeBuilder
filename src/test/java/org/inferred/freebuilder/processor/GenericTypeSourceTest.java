@@ -182,12 +182,18 @@ public class GenericTypeSourceTest {
         "  }",
         "",
         "  /**",
-        "   * Returns a newly-created partial {@link Person} based on the contents of the "
-            + "{@code Builder}.",
-        "   * State checking will not be performed. Unset properties will throw an {@link",
-        "   * UnsupportedOperationException} when accessed via the partial object.",
+        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
+            + "State checking will not",
+        "   * be performed. Unset properties will throw an {@link UnsupportedOperationException} "
+            + "when",
+        "   * accessed via the partial object.",
         "   *",
-        "   * <p>Partials should only ever be used in tests.",
+        "   * <p>Partials should only ever be used in tests. "
+            + "They permit writing robust test cases that won't",
+        "   * fail if this type gains more application-level constraints "
+            + "(e.g. new required fields) in",
+        "   * future. If you require partially complete values in production code, "
+            + "consider using a Builder.",
         "   */",
         "  @VisibleForTesting()",
         "  public Person<A, B> buildPartial() {",
@@ -444,12 +450,18 @@ public class GenericTypeSourceTest {
         "  }",
         "",
         "  /**",
-        "   * Returns a newly-created partial {@link Person} based on the contents of the "
-            + "{@code Builder}.",
-        "   * State checking will not be performed. Unset properties will throw an {@link",
-        "   * UnsupportedOperationException} when accessed via the partial object.",
+        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
+            + "State checking will not",
+        "   * be performed. Unset properties will throw an {@link UnsupportedOperationException} "
+            + "when",
+        "   * accessed via the partial object.",
         "   *",
-        "   * <p>Partials should only ever be used in tests.",
+        "   * <p>Partials should only ever be used in tests. "
+            + "They permit writing robust test cases that won't",
+        "   * fail if this type gains more application-level constraints "
+            + "(e.g. new required fields) in",
+        "   * future. If you require partially complete values in production code, "
+            + "consider using a Builder.",
         "   */",
         "  @VisibleForTesting()",
         "  public Person<A, B> buildPartial() {",
@@ -723,12 +735,18 @@ public class GenericTypeSourceTest {
         "  }",
         "",
         "  /**",
-        "   * Returns a newly-created partial {@link Person} based on the contents of the "
-            + "{@code Builder}.",
-        "   * State checking will not be performed. Unset properties will throw an {@link",
-        "   * UnsupportedOperationException} when accessed via the partial object.",
+        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
+            + "State checking will not",
+        "   * be performed. Unset properties will throw an {@link UnsupportedOperationException} "
+            + "when",
+        "   * accessed via the partial object.",
         "   *",
-        "   * <p>Partials should only ever be used in tests.",
+        "   * <p>Partials should only ever be used in tests. "
+            + "They permit writing robust test cases that won't",
+        "   * fail if this type gains more application-level constraints "
+            + "(e.g. new required fields) in",
+        "   * future. If you require partially complete values in production code, "
+            + "consider using a Builder.",
         "   */",
         "  @VisibleForTesting()",
         "  public Person<A, B> buildPartial() {",
