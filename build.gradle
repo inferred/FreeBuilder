@@ -529,6 +529,11 @@ if (System.env.TRAVIS_TAG != null && !System.env.TRAVIS_TAG.isEmpty()) {
 artifacts {
   archives shadowJar
 }
+configurations.archives.artifacts.with { archives ->
+  // Don't publish the unshaded jar
+  def unshadedJar = archives.findAll { it.classifier == 'only' }
+  archives.removeAll(unshadedJar)
+}
 
 modifyPom {
   project {
