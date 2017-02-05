@@ -12,7 +12,7 @@ import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.util.List;
 
-final class FeatureSets {
+public final class FeatureSets {
 
   /** For tests valid in any environment. */
   public static final List<FeatureSet> ALL = ImmutableList.of(
