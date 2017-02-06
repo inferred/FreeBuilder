@@ -92,7 +92,7 @@ public class Processor extends AbstractProcessor {
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
     if (registeredProcessors.putIfAbsent(processingEnv, this) != null) {
-      processingEnv.getMessager() .printMessage(
+      processingEnv.getMessager().printMessage(
           Kind.NOTE, "FreeBuilder processor registered twice; disabling duplicate instance");
       return;
     }
@@ -109,6 +109,7 @@ public class Processor extends AbstractProcessor {
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (analyser == null) {
+      // Another FreeBuilder Processor is already registered; skip processing
       return false;
     }
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
