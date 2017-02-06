@@ -19,6 +19,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
@@ -31,10 +32,12 @@ import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /** Default {@link PropertyCodeGenerator.Factory}, providing reference semantics for any type. */
@@ -50,12 +53,12 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
   @VisibleForTesting static class CodeGenerator extends PropertyCodeGenerator {
 
     private final boolean hasDefault;
-    private final boolean isPrimitive;
+    private final TypeKind kind;
 
     CodeGenerator(Metadata metadata, Property property, boolean hasDefault) {
       super(metadata, property);
       this.hasDefault = hasDefault;
-      this.isPrimitive = property.getType().getKind().isPrimitive();
+      this.kind = property.getType().getKind();
     }
 
     @Override
@@ -82,14 +85,14 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
               metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
           .addLine(" *")
           .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
-      if (!isPrimitive) {
+      if (!kind.isPrimitive()) {
         code.addLine(" * @throws NullPointerException if {@code %s} is null", property.getName());
       }
       code.addLine(" */");
       addAccessorAnnotations(code);
       code.addLine("public %s %s(%s %s) {",
           metadata.getBuilder(), setter(property), property.getType(), property.getName());
-      if (isPrimitive) {
+      if (kind.isPrimitive()) {
         code.addLine("  this.%1$s = %1$s;", property.getName());
       } else {
         code.add(checkNotNullPreamble(property.getName()))
@@ -176,13 +179,11 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
           code.add("%s._unsetProperties.contains(%s.%s) || ",
               defaults, metadata.getPropertyEnum(), property.getAllCapsName());
         }
-        if (isPrimitive) {
-          code.add("%s.%s() != %s.%s()",
-              value, property.getGetterName(), defaults, getter(property));
-        } else {
-          code.add("!%s.%s().equals(%s.%s())",
-              value, property.getGetterName(), defaults, getter(property));
-        }
+        code.add(ObjectsExcerpts.notEquals(
+            Excerpts.add("%s.%s()", value, property.getGetterName()),
+            Excerpts.add("%s.%s()", defaults, getter(property)),
+            kind,
+            NOT_NULLABLE));
         code.add(") {%n");
       }
       code.addLine("  %s(%s.%s());", setter(property), value, property.getGetterName());
@@ -204,11 +205,11 @@ public class DefaultPropertyFactory implements PropertyCodeGenerator.Factory {
               .add("(%s._unsetProperties.contains(%s.%s) ||",
                   defaults, metadata.getPropertyEnum(), property.getAllCapsName());
         }
-        if (isPrimitive) {
-          code.add("%1$s.%2$s() != %3$s.%2$s()", builder, getter(property), defaults);
-        } else {
-          code.add("!%1$s.%2$s().equals(%3$s.%2$s())", builder, getter(property), defaults);
-        }
+        code.add(ObjectsExcerpts.notEquals(
+            Excerpts.add("%s.%s()", builder, getter(property)),
+            Excerpts.add("%s.%s()", defaults, getter(property)),
+            kind,
+            NOT_NULLABLE));
         if (!hasDefault) {
           code.add(")");
         }

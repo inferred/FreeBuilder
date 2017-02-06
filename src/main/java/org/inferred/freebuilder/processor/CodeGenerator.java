@@ -22,6 +22,8 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EX
 import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
+import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
+import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
@@ -41,6 +43,7 @@ import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
@@ -395,26 +398,12 @@ public class CodeGenerator {
       code.add(";\n");
     } else {
       for (Property property : metadata.getProperties()) {
-        switch (property.getType().getKind()) {
-          case FLOAT:
-          case DOUBLE:
-            code.addLine("    if (%s.doubleToLongBits(%s)", Double.class, property.getName())
-                .addLine("        != %s.doubleToLongBits(other.%s)) {",
-                    Double.class, property.getName());
-            break;
-
-          default:
-            if (property.getType().getKind().isPrimitive()) {
-              code.addLine("    if (%1$s != other.%1$s) {", property.getName());
-            } else if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-              code.addLine("    if (%1$s != other.%1$s", property.getName())
-                  .addLine("        && (%1$s == null || !%1$s.equals(other.%1$s))) {",
-                      property.getName());
-            } else {
-              code.addLine("    if (!%1$s.equals(other.%1$s)) {", property.getName());
-            }
-        }
-        code.addLine("      return false;")
+        code.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
+                property.getName(),
+                "other." + property.getName(),
+                property.getType().getKind(),
+                (property.getCodeGenerator().getType() == Type.OPTIONAL) ? NULLABLE : NOT_NULLABLE))
+            .addLine("      return false;")
             .addLine("    }");
       }
       code.addLine("    return true;");

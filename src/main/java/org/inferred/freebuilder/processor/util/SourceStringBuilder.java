@@ -50,6 +50,14 @@ public final class SourceStringBuilder implements SourceBuilder {
         new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features));
   }
 
+  /**
+   * Returns a {@link SourceStringBuilder} that returns compilable code.
+   */
+  public static SourceBuilder compilable(FeatureSet features) {
+    return new SourceStringBuilder(
+        new TypeShortener.NeverShorten(), features);
+  }
+
   SourceStringBuilder(TypeShortener shortener, FeatureSet features) {
     this.shortener = shortener;
     this.features = features;
