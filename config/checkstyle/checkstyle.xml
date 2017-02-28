@@ -19,6 +19,9 @@ https://github.com/google/auto/blob/0c06a2345f71f053714d37bb6549d3460c999f2d/che
       <property name="file" value="${config_loc}/suppressions.xml"/>
     </module>
 
+    <!-- Allow targetted suppression with @SuppressWarnings annotation -->
+    <module name="SuppressWarningsFilter"/>
+
     <!--module name="NewlineAtEndOfFile"/-->
     <module name="FileLength"/>
     <module name="FileTabCharacter"/>
@@ -150,5 +153,6 @@ https://github.com/google/auto/blob/0c06a2345f71f053714d37bb6549d3460c999f2d/che
 
         <!-- Enable suppression -->
         <module name="FileContentsHolder"/>
+        <module name="SuppressWarningsHolder"/>
     </module>
 </module>

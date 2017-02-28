@@ -1,6 +1,9 @@
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -12,10 +15,10 @@ public enum ElementFactory {
       "!element.isEmpty()",
       "Cannot add empty string",
       "",
-      "one",
-      "two",
-      "three",
-      "four"),
+      "alpha",
+      "beta",
+      "cappa",
+      "delta"),
   INTEGERS(
       "Integer",
       "int",
@@ -23,9 +26,9 @@ public enum ElementFactory {
       "Items must be non-negative",
       -4,
       1,
-      2,
       3,
-      4);
+      6,
+      10);
 
   private final String type;
   private final String unwrappedType;
@@ -47,6 +50,8 @@ public enum ElementFactory {
     this.errorMessage = errorMessage;
     this.invalidExample = invalidExample;
     this.examples = ImmutableList.copyOf(examples);
+    checkState(Ordering.natural().isOrdered(this.examples),
+        "Examples must be in natural order (got %s)", this.examples);
   }
 
   public String type() {

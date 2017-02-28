@@ -61,6 +61,10 @@ public class BuilderMethods {
     return "removeAll" + property.getCapitalizedName();
   }
 
+  public static String setComparatorMethod(Property property) {
+    return "setComparatorFor" + property.getCapitalizedName();
+  }
+
   public static String setCountMethod(Property property) {
     return "setCountOf" + property.getCapitalizedName();
   }
