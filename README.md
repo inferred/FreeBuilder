@@ -594,20 +594,28 @@ interoperable implementation code (e.g returning [immutable collections]).
 
 ### Gradle
 
-Add the following lines to your dependencies:
+Add the following lines to your project's build.gradle file:
 
 ```
-compile 'org.inferred:freebuilder:<current version>'
+plugins {
+  id 'org.inferred.processors' version '1.2.8'
+}
+
+dependencies {
+  processor 'org.inferred:freebuilder:<current version>'
+}
 ```
+
+This uses the [org.inferred.processors plugin] to correctly configure code generation in
+your IDE. Alternatively, you can drop the plugin and replace `processor` with
+[`compileOnly`], or `compile` if you are on Gradle 2.11 or earlier—you will lose IDE
+integration—or use your own favourite Gradle annotation processor plugin.
 
 If [Guava] is available, FreeBuilder will use it to generate cleaner, more
 interoperable implementation code (e.g returning [immutable collections]).
 
-If you use Eclipse or IDEA along with Gradle, consider using the
-[org.inferred.processors plugin] to correctly configure code generation in
-your IDE.
-
 [org.inferred.processors plugin]: https://github.com/palantir/gradle-processors
+[`compileOnly`]: https://blog.gradle.org/introducing-compile-only-dependencies
 
 ### Eclipse
 
