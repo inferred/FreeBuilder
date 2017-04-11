@@ -74,6 +74,20 @@ public class NullablePrefixlessPropertyTest {
       .addLine("}")
       .build();
 
+  private static final JavaFileObject EXPLICIT_DEFAULT_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  @%s %s item();", Nullable.class, String.class)
+      .addLine("")
+      .addLine("  class Builder extends DataType_Builder {")
+      .addLine("    public Builder() {")
+      .addLine("      item(\"default\");")
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
   private static final JavaFileObject NULLABLE_INTEGER_TYPE = new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
@@ -83,6 +97,33 @@ public class NullablePrefixlessPropertyTest {
       .addLine("  public static class Builder extends DataType_Builder {}")
       .addLine("  public static Builder builder() {")
       .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject NULLABLE_DOUBLE_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public abstract class DataType {")
+      .addLine("  @%s public abstract Double item();", Nullable.class)
+      .addLine("")
+      .addLine("  public static class Builder extends DataType_Builder {}")
+      .addLine("  public static Builder builder() {")
+      .addLine("    return new Builder();")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
+  private static final JavaFileObject NAN_DEFAULT_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType {")
+      .addLine("  @%s Double item();", Nullable.class)
+      .addLine("")
+      .addLine("  class Builder extends DataType_Builder {")
+      .addLine("    public Builder() {")
+      .addLine("      item(Double.NaN);")
+      .addLine("    }")
       .addLine("  }")
       .addLine("}")
       .build();
@@ -198,7 +239,7 @@ public class NullablePrefixlessPropertyTest {
   }
 
   @Test
-  public void testMergeFrom_valueInstance() {
+  public void testMergeFrom_stringValueInstance_replacesNullDefault() {
     behaviorTester
         .with(new Processor(features))
         .with(NULLABLE_PROPERTY_TYPE)
@@ -214,7 +255,187 @@ public class NullablePrefixlessPropertyTest {
   }
 
   @Test
-  public void testMergeFrom_builder() {
+  public void testMergeFrom_stringValueInstance_ignoresNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_PROPERTY_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder()")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(\"item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringValueInstance_overridesIfNotNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_PROPERTY_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder()")
+            .addLine("    .item(\"other item\")")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(\"other item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringValueInstance_replacesExplicitDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(EXPLICIT_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(\"item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringValueInstance_ignoresExplicitDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(EXPLICIT_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(\"item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringValueInstance_overridesIfNotExplicitDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(EXPLICIT_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .item(\"other item\")")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(\"other item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleValueInstance_replacesNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_DOUBLE_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(3.2, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleValueInstance_ignoresNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_DOUBLE_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder()")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(3.2, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleValueInstance_overridesIfNotNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_DOUBLE_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder()")
+            .addLine("    .item(-1.9)")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(-1.9, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleValueInstance_replacesNaNDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NAN_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(3.2, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleValueInstance_ignoresNaNDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NAN_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(3.2, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleValueInstance_overridesIfNotNaNDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NAN_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .item(-1.9)")
+            .addLine("    .build();")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .mergeFrom(value);")
+            .addLine("assertEquals(-1.9, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringBuilder_replacesNullDefault() {
     behaviorTester
         .with(new Processor(features))
         .with(NULLABLE_PROPERTY_TYPE)
@@ -224,6 +445,175 @@ public class NullablePrefixlessPropertyTest {
             .addLine("DataType.Builder builder = DataType.builder()")
             .addLine("    .mergeFrom(template);")
             .addLine("assertEquals(\"item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringBuilder_ignoresNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_PROPERTY_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = DataType.builder();")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(\"item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringBuilder_overridesIfNotNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_PROPERTY_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = DataType.builder()")
+            .addLine("    .item(\"other item\");")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(\"other item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringBuilder_replacesExplicitDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(EXPLICIT_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder()")
+            .addLine("    .item(\"item\");")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(\"item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringBuilder_ignoresExplicitDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(EXPLICIT_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder();")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(\"item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_stringBuilder_overridesIfNotExplicitDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(EXPLICIT_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder()")
+            .addLine("    .item(\"other item\");")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .item(\"item\")")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(\"other item\", builder.item());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleBuilder_replacesNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_DOUBLE_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = DataType.builder()")
+            .addLine("    .item(3.2);")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(3.2, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleBuilder_ignoresNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_DOUBLE_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = DataType.builder();")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(3.2, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleBuilder_overridesIfNotNullDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NULLABLE_DOUBLE_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = DataType.builder()")
+            .addLine("    .item(-7.7);")
+            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(-7.7, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleBuilder_replacesNaNDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NAN_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder()")
+            .addLine("    .item(3.2);")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(3.2, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleBuilder_ignoresNaNDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NAN_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder();")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(3.2, builder.item(), 0.0001);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMergeFrom_doubleBuilder_overridesIfNotNaNDefault() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(NAN_DEFAULT_TYPE)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder()")
+            .addLine("    .item(-7.7);")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .item(3.2)")
+            .addLine("    .mergeFrom(template);")
+            .addLine("assertEquals(-7.7, builder.item(), 0.0001);")
             .build())
         .runTest();
   }

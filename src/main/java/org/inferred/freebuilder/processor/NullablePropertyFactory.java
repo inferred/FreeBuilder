@@ -16,9 +16,11 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static javax.lang.model.type.TypeKind.DECLARED;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -29,6 +31,8 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -164,12 +168,34 @@ public class NullablePropertyFactory implements PropertyCodeGenerator.Factory {
 
     @Override
     public void addMergeFromValue(Block code, String value) {
-      code.addLine("%s(%s.%s());", setter(property), value, property.getGetterName());
+      Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+      if (defaults != null) {
+        code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
+            Excerpts.add("%s.%s()", value, property.getGetterName()),
+            Excerpts.add("%s.%s()", defaults, getter(property)),
+            DECLARED,
+            NULLABLE));
+      }
+      code.addLine("  %s(%s.%s());", setter(property), value, property.getGetterName());
+      if (defaults != null) {
+        code.addLine("}");
+      }
     }
 
     @Override
     public void addMergeFromBuilder(Block code, String builder) {
-      code.addLine("%s(%s.%s());", setter(property), builder, getter(property));
+      Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+      if (defaults != null) {
+        code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
+            Excerpts.add("%s.%s()", builder, getter(property)),
+            Excerpts.add("%s.%s()", defaults, getter(property)),
+            DECLARED,
+            NULLABLE));
+      }
+      code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
+      if (defaults != null) {
+        code.addLine("}");
+      }
     }
 
     @Override
