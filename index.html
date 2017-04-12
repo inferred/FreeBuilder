@@ -77,15 +77,18 @@
             </span>
           </figcaption>
           <pre class="build gradle">
+plugins {
+  id 'org.inferred.processors' version '<processors-version>xx</processors-version>'
+}
 dependencies {
-  compile 'org.inferred:freebuilder:<version>&lt;current version&gt;</version>'
+  processor 'org.inferred:freebuilder:<freebuilder-version>&lt;current version&gt;</freebuilder-version>'
 }</pre>
           <pre class="build maven" style="display: none">
 &lt;dependencies&gt;
   &lt;dependency&gt;
     &lt;groupId&gt;org.inferred&lt;/groupId&gt;
     &lt;artifactId&gt;freebuilder&lt;/artifactId&gt;
-    &lt;version&gt;<version>[current version]</version>&lt;/version&gt;
+    &lt;version&gt;<freebuilder-version>[current version]</freebuilder-version>&lt;/version&gt;
     &lt;optional&gt;true&lt;/optional&gt;
   &lt;/dependency&gt;
 &lt;/dependencies&gt;</pre>
@@ -224,14 +227,7 @@ book.publicationDate();
       </features>
 
 <script>
-  updateVersions = function(latestTag) {
-    var versionFields = document.getElementsByTagName("version")
-    for (var i = 0; i < versionFields.length; i++) {
-      versionFields[i].innerText = latestTag
-    }
-  }
-  // Callback for GitHub API; fills out version tags with the latest version
-  updateVersionsCallback = function(response) {
+  (function() {
     // Return the largest array, considered lexicographically
     var maxArray = function(a, b) {
       for (var i = 0; i < Math.min(a.length, b.length); i++) {
@@ -244,21 +240,40 @@ book.publicationDate();
       return (a.length < b.length) ? b : a
     }
 
-    var latestTag = (response.data
-        .filter(function(tag) { return /^v\d+(\.\d+)+$/.test(tag.name) })
-        .map(function(tag) { return tag.name.substring(1).split(".").map(Number) })
-        .reduce(maxArray)
-        .join("."))
-    if (typeof(Storage) !== "undefined") {
-      localStorage.latestFreeBuilderVersion = latestTag
+    var updateVersions = function(tagName, storageKey, callbackName) {
+      var setVersionsTo = function(latestTag) {
+        var versionFields = document.getElementsByTagName(tagName)
+        for (var i = 0; i < versionFields.length; i++) {
+          versionFields[i].innerText = latestTag
+        }
+      }
+
+      // Callback for GitHub API.
+      // Fills out version tags with the latest version, and puts it in local storage for next time.
+      window[callbackName] = function(response) {
+        var latestTag = (response.data
+            .filter(function(tag) { return /^v\d+(\.\d+)+$/.test(tag.name) })
+            .map(function(tag) { return tag.name.substring(1).split(".").map(Number) })
+            .reduce(maxArray)
+            .join("."))
+        if (typeof(Storage) !== "undefined") {
+          localStorage.setItem(storageKey, latestTag)
+        }
+        setVersionsTo(latestTag)
+      }
+
+      // If a version is stored in local storage from last time this page was opened, use it.
+      if (typeof(Storage) !== "undefined" && localStorage.getItem(storageKey) !== null) {
+        setVersionsTo(localStorage.getItem(storageKey))
+      }
     }
-    updateVersions(latestTag)
-  }
-  if (typeof(Storage) !== "undefined" && localStorage.latestFreeBuilderVersion !== null) {
-    updateVersions(localStorage.latestFreeBuilderVersion)
-  }
+
+    updateVersions("freebuilder-version", "latestFreeBuilderVersion", "updateFreeBuilderVersionsCallback")
+    updateVersions("processors-version", "latestProcessorsVersion", "updateProcessorsVersionsCallback")
+  })()
 </script>
-<script src="https://api.github.com/repos/google/FreeBuilder/tags?callback=updateVersionsCallback"></script>
+<script src="https://api.github.com/repos/google/FreeBuilder/tags?callback=updateFreeBuilderVersionsCallback"></script>
+<script src="https://api.github.com/repos/palantir/gradle-processors/tags?callback=updateProcessorsVersionsCallback"></script>
 <script>
   ((window.gitter = {}).chat = {}).options = {
     room: 'inferred-freebuilder/Lobby'
