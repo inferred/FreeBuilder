@@ -166,7 +166,7 @@ public class CodeGenerator {
     code.addLine(" */")
         .addLine("public %s build() {", metadata.getType());
     if (hasRequiredProperties) {
-      code.add(PreconditionExcerpts.checkState(
+      code.add(PreconditionExcerpts.checkUnsetPropertiesState(
           "_unsetProperties.isEmpty()", "Not set: %s", "_unsetProperties"));
     }
     code.addLine("  return %s(this);", metadata.getValueType().constructor())
