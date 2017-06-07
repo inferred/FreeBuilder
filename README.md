@@ -598,7 +598,7 @@ Add the following lines to your project's build.gradle file:
 
 ```
 plugins {
-  id 'org.inferred.processors' version '1.2.8'
+  id 'org.inferred.processors' version '1.2.10'
 }
 
 dependencies {
