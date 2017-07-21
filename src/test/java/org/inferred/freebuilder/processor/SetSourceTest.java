@@ -1453,7 +1453,7 @@ public class SetSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new SetPropertyFactory.CodeGenerator(
-                metadata, name, string, Optional.<TypeMirror>absent(), false))
+                metadata, name, string, Optional.<TypeMirror>absent(), false, false, false))
             .build())
         .build();
   }

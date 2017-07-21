@@ -20,6 +20,7 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
+import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -44,6 +46,7 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -986,6 +989,145 @@ public class SetPropertyTest {
             .addLine("    .inOrder();")
             .build())
         .runTest();
+  }
+
+  public static class ComparablePair<T extends Comparable<T>>
+      implements Comparable<ComparablePair<T>> {
+    private final T first;
+    private final T second;
+
+    public ComparablePair(T first, T second) {
+      this.first = first;
+      this.second = second;
+    }
+
+    @Override
+    public String toString() {
+      return "(" + first + "," + second + ")";
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(first, second);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof ComparablePair<?>)) {
+        return false;
+      }
+      ComparablePair<?> other = (ComparablePair<?>) obj;
+      return Objects.equals(first, other.first) && Objects.equals(second, other.second);
+    }
+
+    @Override
+    public int compareTo(ComparablePair<T> o) {
+      return ComparisonChain.start()
+          .compare(first, o.first)
+          .compare(second, o.second)
+          .result();
+    }
+  }
+
+  @Test
+  public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s<%s>> %s;",
+                set.type(), ComparablePair.class, elements.type(), convention.getter())
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addItems(")
+            .addLine("    new %s<>(%s),", ComparablePair.class, elements.examples(0, 1))
+            .addLine("    new %s<>(%s));", ComparablePair.class, elements.examples(1, 2))
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType<T> {")
+            .addLine("  public abstract %s<T> %s;", set.type(), convention.getter())
+            .addLine("")
+            .addLine("  public static class Builder<T> extends DataType_Builder<T> {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("new DataType.Builder<%s>()", elements.type())
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
+            .addLine("    .build();")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testCanOverrideGenericFieldVarargsAdder() {
+    // Ensure we remove the final annotation needed to apply @SafeVarargs.
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s<%s>> %s;",
+                set.type(), ComparablePair.class, elements.type(), convention.getter())
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @%s", Override.class)
+            .addLine("    @%s", SafeVarargs.class)
+            .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
+            .addLine("    public final Builder addItems(%s<%s>... items) {",
+                ComparablePair.class, elements.type())
+            .addLine("      return super.addItems(items);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testCanOverrideGenericBuildableVarargsAdder() {
+    // Ensure we remove the final annotation needed to apply @SafeVarargs.
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType<T> {")
+            .addLine("  public abstract %s<T> %s;", set.type(), convention.getter())
+            .addLine("")
+            .addLine("  public static class Builder<T> extends DataType_Builder<T> {")
+            .addLine("    @%s", Override.class)
+            .addLine("    @%s", SafeVarargs.class)
+            .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
+            .addLine("    public final Builder<T> addItems(T... items) {")
+            .addLine("      return super.addItems(items);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
   }
 
   private void assumeStreamsAvailable() {
