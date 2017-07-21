@@ -72,6 +72,22 @@ public class ListMutateMethodTest {
       .addLine("}")
       .build();
 
+  private static final JavaFileObject CHECKED_NUMBER_LIST_TYPE = new SourceBuilder()
+      .addLine("package com.example;")
+      .addLine("@%s", FreeBuilder.class)
+      .addLine("public interface DataType<N extends Number> {")
+      .addLine("  %s<N> getProperties();", List.class)
+      .addLine("")
+      .addLine("  public static class Builder<N extends Number> extends DataType_Builder<N> {")
+      .addLine("    @Override public Builder<N> addProperties(N element) {")
+      .addLine("      %s.checkArgument(element.intValue() >= 0, "
+          + "\"elements must be non-negative\");", Preconditions.class)
+      .addLine("      return super.addProperties(element);")
+      .addLine("    }")
+      .addLine("  }")
+      .addLine("}")
+      .build();
+
   /** Simple type that substitutes passed-in objects, in this case by interning strings. */
   private static final JavaFileObject INTERNED_STRINGS_TYPE = new SourceBuilder()
       .addLine("package com.example;")
@@ -129,6 +145,33 @@ public class ListMutateMethodTest {
         .with(CHECKED_LIST_TYPE)
         .with(testBuilder()
             .addLine("new DataType.Builder().mutateProperties(map -> map.add(-3));")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndAddModifiesUnderlyingPropertyWhenCheckedTypeVariable() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_NUMBER_LIST_TYPE)
+        .with(testBuilder()
+            .addLine("DataType<Integer> value = new DataType.Builder<Integer>()")
+            .addLine("    .mutateProperties(map -> map.add(11))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getProperties()).containsExactly(11);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndAddChecksArgumentsForTypeVariable() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("elements must be non-negative");
+    behaviorTester
+        .with(new Processor(features))
+        .with(CHECKED_NUMBER_LIST_TYPE)
+        .with(testBuilder()
+            .addLine("new DataType.Builder<Integer>().mutateProperties(map -> map.add(-3));")
             .build())
         .runTest();
   }
