@@ -143,7 +143,9 @@ public class ModelUtils {
       return false;
     }
     for (int i = 0; i < params.length; ++i) {
-      if (!types.isSameType(params[i], method.getParameters().get(i).asType())) {
+      TypeMirror expected = types.erasure(params[i]);
+      TypeMirror actual = types.erasure(method.getParameters().get(i).asType());
+      if (!types.isSameType(expected, actual)) {
         return false;
       }
     }
