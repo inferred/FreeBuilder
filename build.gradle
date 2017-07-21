@@ -178,28 +178,36 @@ task shadowTest {
 if (!hasProperty('java9Home') && System.env.containsKey('JAVA_9_HOME')) {
   project.ext.java9Home = System.env['JAVA_9_HOME']
 }
-assert hasProperty('java9Home') : "Set the property 'java9Home' in your your gradle.properties pointing to a Java 9 installation"
-def java9Path = new File(java9Home, 'bin')
-def java9 = [:].withDefault { execName ->
-  def executable = new File(java9Path, execName)
-  assert executable.exists() : "There is no ${execName} executable in ${java9Path}"
-  executable.toString()
-}
+// JDK 9 is not available on TravisCI at the moment.
+// See https://github.com/travis-ci/travis-ci/issues/7778
+// assert hasProperty('java9Home') : "Set the property 'java9Home' in your your gradle.properties pointing to a Java 9 installation"
+def maxJavaVersion = hasProperty('java9Home') ? 9 : 8
+def java9
+if (maxJavaVersion == 9) {
+  def java9Path = new File(java9Home, 'bin')
+  java9 = [:].withDefault { execName ->
+    def executable = new File(java9Path, execName)
+    assert executable.exists() : "There is no ${execName} executable in ${java9Path}"
+    executable.toString()
+  }
 
-afterEvaluate {
-  tasks.withType(JavaCompile) {
-    if (targetCompatibility == "1.9") {
-      options.with {
-        fork = true
-        forkOptions.executable = java9.javac
+  afterEvaluate {
+    tasks.withType(JavaCompile) {
+      if (targetCompatibility == "1.9") {
+        options.with {
+          fork = true
+          forkOptions.executable = java9.javac
+        }
+      }
+    }
+    tasks.withType(Test) {
+      if (executable == java9.java) {
+        jvmArgs += ['--add-opens', 'java.base/java.lang=ALL-UNNAMED']
       }
     }
   }
-  tasks.withType(Test) {
-    if (executable == java9.java) {
-      jvmArgs += ['--add-opens', 'java.base/java.lang=ALL-UNNAMED']
-    }
-  }
+} else {
+  System.err.println "Warning: Java 9 unavailable; not all tests will run"
 }
 
 //// Vanilla integration tests ///////////////////////////////////
@@ -218,7 +226,7 @@ task vanillaTest {
   check.dependsOn it
 }
 
-(6..9).each { jdk ->
+(6..maxJavaVersion).each { jdk ->
   def sourceSet = sourceSets.create("vanilla${jdk}") {
     java {
       srcDir file('src/it/vanilla/src/main/java')

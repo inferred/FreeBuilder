@@ -4,19 +4,20 @@ dist: trusty
 
 language: java
 
-# JDK 9 only available reliably as an add-on (2016-11-14)
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
-      - oracle-java9-installer
+# JDK 9 unavailable (https://github.com/travis-ci/travis-ci/issues/7778)
+# # JDK 9 only available reliably as an add-on (2016-11-14)
+# addons:
+#   apt:
+#     packages:
+#       - oracle-java8-installer
+#       - oracle-java9-installer
 
 install: ./gradlew clean jar
 script: travis_wait 30 ./gradlew check
 
 env:
   global:
-    - JAVA_9_HOME=$(jdk_switcher home oraclejdk9)
+#    - JAVA_9_HOME=$(jdk_switcher home oraclejdk9)
     - PGP_KEY_ID="2887CE9B"
     - PGP_PASSWORD=""
     - PGP_SECRET_KEY_RING_FILE=~/.gnupg/secring.gpg
