@@ -110,6 +110,16 @@ public enum SourceLevel implements Feature<SourceLevel> {
     this.humanReadableFormat = humanReadableFormat;
   }
 
+  public Optional<QualifiedName> safeVarargs() {
+    switch (this) {
+      case JAVA_6:
+        return Optional.absent();
+
+      default:
+        return Optional.of(QualifiedName.of("java.lang", "SafeVarargs"));
+    }
+  }
+
   public Optional<QualifiedName> javaUtilObjects() {
     switch (this) {
       case JAVA_6:
