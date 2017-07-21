@@ -97,8 +97,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(UNCHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(map -> map.add(11))")
             .addLine("    .build();")
             .addLine("assertThat(value.getProperties()).containsExactly(11);")
@@ -111,8 +111,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(map -> map.add(11))")
             .addLine("    .build();")
             .addLine("assertThat(value.getProperties()).containsExactly(11);")
@@ -127,8 +127,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().mutateProperties(map -> map.add(-3));")
+        .with(testBuilder()
+            .addLine("new DataType.Builder().mutateProperties(map -> map.add(-3));")
             .build())
         .runTest();
   }
@@ -138,11 +138,11 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(INTERNED_STRINGS_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
             .addLine("String i = s.intern();")
             .addLine("assertThat(s).isNotSameAs(i);")
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(map -> map.add(s))")
             .addLine("    .build();")
             .addLine("assertThat(value.getProperties().get(0)).isSameAs(i);")
@@ -155,8 +155,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.add(0, 11))")
             .addLine("    .build();")
@@ -170,8 +170,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.add(1, 11))")
             .addLine("    .build();")
@@ -185,8 +185,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.add(2, 11))")
             .addLine("    .build();")
@@ -200,8 +200,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.add(3, 11))")
             .addLine("    .build();")
@@ -217,8 +217,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.add(2, -3));")
             .build())
@@ -230,11 +230,11 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(INTERNED_STRINGS_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
             .addLine("String i = s.intern();")
             .addLine("assertThat(s).isNotSameAs(i);")
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(\"one\", \"two\", \"three\")")
             .addLine("    .mutateProperties(map -> map.add(2, s))")
             .addLine("    .build();")
@@ -248,8 +248,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.set(1, 11))")
             .addLine("    .build();")
@@ -265,8 +265,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.set(1, -3));")
             .build())
@@ -278,11 +278,11 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(INTERNED_STRINGS_TYPE)
-        .with(new TestBuilder()
+        .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
             .addLine("String i = s.intern();")
             .addLine("assertThat(s).isNotSameAs(i);")
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(\"one\", \"two\", \"three\")")
             .addLine("    .mutateProperties(map -> map.set(2, s))")
             .addLine("    .build();")
@@ -296,8 +296,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> assertThat(map.size()).isEqualTo(3));")
             .build())
@@ -309,8 +309,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> assertThat(map.get(1)).isEqualTo(2));")
             .build())
@@ -322,8 +322,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.remove(1))")
             .addLine("    .build();")
@@ -337,8 +337,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3)")
             .addLine("    .mutateProperties(map -> map.clear())")
             .addLine("    .addProperties(4)")
@@ -353,8 +353,8 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(CHECKED_LIST_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addProperties(1, 2, 3, 4, 5, 6, 7)")
             .addLine("    .mutateProperties(map -> map.subList(1, 5).clear())")
             .addLine("    .build();")
@@ -376,8 +376,8 @@ public class ListMutateMethodTest {
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(map -> map.add(11))")
             .addLine("    .build();")
             .addLine("assertThat(value.properties()).containsExactly(11);")
@@ -404,13 +404,17 @@ public class ListMutateMethodTest {
             .addLine("  }")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(map -> map.add(11))")
             .addLine("    .build();")
             .addLine("assertThat(value.properties()).containsExactly(11);")
             .build())
         .runTest();
+  }
+
+  private static TestBuilder testBuilder() {
+    return new TestBuilder().addImport("com.example.DataType");
   }
 
 }
