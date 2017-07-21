@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
+import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -991,6 +992,106 @@ public class MultisetPrefixlessPropertyTest {
         .runTest();
   }
 
+  @Test
+  public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s<%s>> items();",
+                Multiset.class, List.class, String.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addItems(")
+            .addLine("    ImmutableList.of(\"one\", \"two\"),")
+            .addLine("    ImmutableList.of(\"three\", \"four\"));")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType<T> {")
+            .addLine("  public abstract %s<T> items();", Multiset.class)
+            .addLine("")
+            .addLine("  public static class Builder<T> extends DataType_Builder<T> {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("new DataType.Builder<String>().addItems(\"one\", \"two\")")
+            .addLine("    .build();")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testCanOverrideGenericFieldVarargsAdder() {
+    // Ensure we remove the final annotation needed to apply @SafeVarargs.
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s<%s>> items();",
+                Multiset.class, List.class, String.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @%s", Override.class)
+            .addLine("    @%s", SafeVarargs.class)
+            .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
+            .addLine("    public final Builder addItems(%s<%s>... items) {",
+                List.class, String.class)
+            .addLine("      return super.addItems(items);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testCanOverrideGenericBuildableVarargsAdder() {
+    // Ensure we remove the final annotation needed to apply @SafeVarargs.
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType<T> {")
+            .addLine("  public abstract %s<T> items();", Multiset.class)
+            .addLine("")
+            .addLine("  public static class Builder<T> extends DataType_Builder<T> {")
+            .addLine("    @%s", Override.class)
+            .addLine("    @%s", SafeVarargs.class)
+            .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
+            .addLine("    public final Builder<T> addItems(T... items) {")
+            .addLine("      return super.addItems(items);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
   private void assumeStreamsAvailable() {
     assumeTrue("Streams available", features.get(SOURCE_LEVEL).stream().isPresent());
   }
@@ -999,6 +1100,7 @@ public class MultisetPrefixlessPropertyTest {
     return new TestBuilder()
         .addImport("com.example.DataType")
         .addImport(Arrays.class)
-        .addImport(Stream.class);
+        .addImport(Stream.class)
+        .addImport(ImmutableList.class);
   }
 }

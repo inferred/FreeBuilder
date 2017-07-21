@@ -26,6 +26,7 @@ import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
@@ -69,12 +70,17 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
     Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
+    boolean needsSafeVarargs = needsSafeVarargs(unboxedType.or(elementType));
     boolean overridesSetCountMethod =
         hasSetCountMethodOverride(config, unboxedType.or(elementType));
+    boolean overridesVarargsAddMethod =
+        hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
     return Optional.of(new CodeGenerator(
         config.getMetadata(),
         config.getProperty(),
+        needsSafeVarargs,
         overridesSetCountMethod,
+        overridesVarargsAddMethod,
         elementType,
         unboxedType));
   }
@@ -89,22 +95,36 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
         config.getTypes().getPrimitiveType(TypeKind.INT));
   }
 
+  private static boolean hasVarargsAddMethodOverride(Config config, TypeMirror elementType) {
+    return overrides(
+        config.getBuilder(),
+        config.getTypes(),
+        addMethod(config.getProperty()),
+        config.getTypes().getArrayType(elementType));
+  }
+
   private static class CodeGenerator extends PropertyCodeGenerator {
 
     private static final ParameterizedType COLLECTION =
         QualifiedName.of(Collection.class).withParameters("E");
+    private final boolean needsSafeVarargs;
     private final boolean overridesSetCountMethod;
+    private final boolean overridesVarargsAddMethod;
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
 
     CodeGenerator(
         Metadata metadata,
         Property property,
+        boolean needsSafeVarargs,
         boolean overridesSetCountMethod,
+        boolean overridesVarargsAddMethod,
         TypeMirror elementType,
         Optional<TypeMirror> unboxedType) {
       super(metadata, property);
+      this.needsSafeVarargs = needsSafeVarargs;
       this.overridesSetCountMethod = overridesSetCountMethod;
+      this.overridesVarargsAddMethod = overridesVarargsAddMethod;
       this.elementType = elementType;
       this.unboxedType = unboxedType;
     }
@@ -158,9 +178,22 @@ public class MultisetPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
             .addLine(" *     null element");
       }
-      code.addLine(" */")
-          .addLine("public %s %s(%s... elements) {",
-              metadata.getBuilder(),
+      code.addLine(" */");
+      QualifiedName safeVarargs = code.feature(SOURCE_LEVEL).safeVarargs().orNull();
+      if (safeVarargs != null && needsSafeVarargs) {
+        if (!overridesVarargsAddMethod) {
+          code.addLine("@%s", safeVarargs)
+              .addLine("@%s({\"varargs\"})", SuppressWarnings.class);
+        } else {
+          code.addLine("@%s({\"unchecked\", \"varargs\"})", SuppressWarnings.class);
+        }
+      }
+      code.add("public ");
+      if (safeVarargs != null && needsSafeVarargs && !overridesVarargsAddMethod) {
+        code.add("final ");
+      }
+      code.add("%s %s(%s... elements) {\n",
+             metadata.getBuilder(),
               addMethod(property),
               unboxedType.or(elementType))
           .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
