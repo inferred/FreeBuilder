@@ -15,9 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.util.ElementFilter.typesIn;
+import static org.inferred.freebuilder.processor.BuildableType.maybeBuilder;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
@@ -25,193 +23,70 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 
+import org.inferred.freebuilder.processor.BuildableType.MergeBuilderMethod;
+import org.inferred.freebuilder.processor.BuildableType.PartialToBuilderMethod;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.Type;
-import org.inferred.freebuilder.processor.util.TypeClass;
 import org.inferred.freebuilder.processor.util.Variable;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 
 /**
- * {@link PropertyCodeGenerator} for <b>buildable</b> types: that is, types with a Builder class
- * providing a similar API to proto or &#64;FreeBuilder:<ul>
- * <li> a public constructor, or static builder()/newBuilder() method;
- * <li> build(), buildPartial() and clear() methods; and
- * <li> a mergeWith(Value) method.
- * </ul>
+ * {@link PropertyCodeGenerator} providing fluent methods for fields of a {@link BuildableType}.
  */
 class BuildableProperty extends PropertyCodeGenerator {
-
-  /** How to merge the values from one Builder into another. */
-  private enum MergeBuilderMethod {
-    MERGE_DIRECTLY, BUILD_PARTIAL_AND_MERGE
-  }
-
-  /** How to convert a partial value into a Builder. */
-  private enum PartialToBuilderMethod {
-    MERGE_DIRECTLY, TO_BUILDER_AND_MERGE
-  }
 
   static class Factory implements PropertyCodeGenerator.Factory {
 
     @Override
     public Optional<BuildableProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
-      if (type == null) {
-        return Optional.empty();
-      }
-      TypeElement element = asElement(type);
-
-      // Find the builder
-      Optional<TypeElement> builder =
-          typesIn(element.getEnclosedElements()).stream().filter(IS_BUILDER_TYPE).findAny();
-      if (!builder.isPresent()) {
+      DeclaredType datatype = maybeDeclared(config.getProperty().getType()).orElse(null);
+      if (datatype == null) {
         return Optional.empty();
       }
 
-      // Verify the builder can be constructed
-      Optional<BuilderFactory> builderFactory = BuilderFactory.from(builder.get());
-      if (!builderFactory.isPresent()) {
+      DeclaredType builder = maybeBuilder(datatype, config.getElements(), config.getTypes())
+          .orElse(null);
+      if (builder == null) {
         return Optional.empty();
       }
 
-      MergeBuilderMethod mergeFromBuilderMethod;
-      if (findAnnotationMirror(element, "org.inferred.freebuilder.FreeBuilder").isPresent()) {
-        /*
-         * If the element is annotated @FreeBuilder, assume the necessary methods will be added. We
-         * can't check directly as the builder superclass may not have been generated yet. To be
-         * strictly correct, we should delay a round if an error type leaves us unsure about this
-         * kind of API-changing decision, and then we would work with _any_ Builder-generating API.
-         * We would need to drop out part of our own builder superclass, to prevent chains of
-         * dependent buildable types leading to quadratic compilation times (not to mention cycles),
-         * and leave a dangling super-superclass to pick up next round. As an optimization, though,
-         * we would probably skip this for @FreeBuilder-types anyway, to avoid extra types whenever
-         * possible, which leaves a lot of complicated code supporting a currently non-existent edge
-         * case.
-         */
-        mergeFromBuilderMethod = MergeBuilderMethod.MERGE_DIRECTLY;
-      } else {
-        List<ExecutableElement> methods = config.getElements()
-            .getAllMembers(builder.get())
-            .stream()
-            .flatMap(instancesOf(ExecutableElement.class))
-            .filter(new IsCallableMethod())
-            .collect(toList());
-
-        // Check there is a build() method
-        if (!methods.stream().anyMatch(new IsBuildMethod("build", type, config.getTypes()))) {
-          return Optional.empty();
-        }
-
-        // Check there is a buildPartial() method
-        if (!methods.stream().anyMatch(
-            new IsBuildMethod("buildPartial", type, config.getTypes()))) {
-          return Optional.empty();
-        }
-
-        // Check there is a clear() method
-        if (!methods.stream().anyMatch(IS_CLEAR_METHOD)) {
-          return Optional.empty();
-        }
-
-        // Check there is a mergeFrom(Value) method
-        if (!methods.stream().anyMatch(new IsMergeFromMethod(type, config.getTypes()))) {
-          return Optional.empty();
-        }
-
-        // Check whether there is a mergeFrom(Builder) method
-        if (methods.stream().anyMatch(
-            new IsMergeFromMethod(builder.get().asType(), config.getTypes()))) {
-          mergeFromBuilderMethod = MergeBuilderMethod.MERGE_DIRECTLY;
-        } else {
-          mergeFromBuilderMethod = MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE;
-        }
-      }
-
-      List<ExecutableElement> valueMethods = config.getElements()
-          .getAllMembers(element)
-          .stream()
-          .flatMap(instancesOf(ExecutableElement.class))
-          .filter(new IsCallableMethod())
-          .collect(toList());
-
-      // Check whether there is a toBuilder() method
-      PartialToBuilderMethod partialToBuilderMethod;
-      if (valueMethods.stream().anyMatch(
-          new IsToBuilderMethod(builder.get().asType(), config.getTypes()))) {
-        partialToBuilderMethod = PartialToBuilderMethod.TO_BUILDER_AND_MERGE;
-      } else {
-        partialToBuilderMethod = PartialToBuilderMethod.MERGE_DIRECTLY;
-      }
+      BuildableType type = BuildableType.create(
+          datatype, builder, config.getElements(), config.getTypes());
 
       // Find any mutate method override
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
           mutator(config.getProperty()),
-          consumer(builder.get().asType()),
+          consumer(builder),
           config.getElements(),
           config.getTypes());
 
       return Optional.of(new BuildableProperty(
-          config.getDatatype(),
-          config.getProperty(),
-          TypeClass.from(builder.get()),
-          builderFactory.get(),
-          mutatorType,
-          mergeFromBuilderMethod,
-          partialToBuilderMethod));
+          config.getDatatype(), config.getProperty(), type, mutatorType));
     }
   }
 
-  private final Type builderType;
-  private final BuilderFactory builderFactory;
+  private final BuildableType type;
   private final FunctionalType mutatorType;
-  private final MergeBuilderMethod mergeFromBuilderMethod;
-  private final PartialToBuilderMethod partialToBuilderMethod;
-  private final Excerpt suppressUnchecked;
 
   private BuildableProperty(
       Datatype datatype,
       Property property,
-      Type builderType,
-      BuilderFactory builderFactory,
-      FunctionalType mutatorType,
-      MergeBuilderMethod mergeFromBuilderMethod,
-      PartialToBuilderMethod partialToBuilderMethod) {
+      BuildableType type,
+      FunctionalType mutatorType) {
     super(datatype, property);
-    this.builderType = builderType;
-    this.builderFactory = builderFactory;
+    this.type = type;
     this.mutatorType = mutatorType;
-    this.mergeFromBuilderMethod = mergeFromBuilderMethod;
-    this.partialToBuilderMethod = partialToBuilderMethod;
-    if (ModelUtils.needsSafeVarargs(property.getType())) {
-      suppressUnchecked = Excerpts.add("@SuppressWarnings(\"unchecked\")");
-    } else {
-      suppressUnchecked = Excerpts.empty();
-    }
   }
 
   @Override
@@ -250,7 +125,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("    %s = %s;", property.getField(), property.getName())
         .addLine("  } else {")
         .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
-            suppressUnchecked, builderType, builder, property.getField())
+            type.suppressUnchecked(), type.builderType(), builder, property.getField())
         .addLine("    %s.clear();", builder)
         .addLine("    %s.mergeFrom(%s);", builder, property.getName())
         .addLine("  }")
@@ -271,7 +146,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s builder) {",
             datatype.getBuilder(),
             setter(property),
-            builderType)
+            type.builderType())
         .addLine("  return %s(builder.build());", setter(property))
         .addLine("}");
   }
@@ -307,25 +182,23 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine(" * Returns a builder for the value that will be returned by %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
-        .addLine("public %s %s() {", builderType, getBuilderMethod(property));
+        .addLine("public %s %s() {", type.builderType(), getBuilderMethod(property));
     Block body = methodBody(code)
         .addLine("  if (%s == null) {", property.getField())
-        .addLine("    %s = %s;",
-            property.getField(), builderFactory.newBuilder(builderType, EXPLICIT_TYPES))
+        .addLine("    %s = %s;", property.getField(), type.newBuilder(EXPLICIT_TYPES))
         .addLine("  } else if (%s instanceof %s) {",
             property.getField(), ModelUtils.maybeAsTypeElement(property.getType()).get())
         .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
-            suppressUnchecked, property.getType(), value, property.getField());
-    if (partialToBuilderMethod == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
+            type.suppressUnchecked(), property.getType(), value, property.getField());
+    if (type.partialToBuilder() == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
       body.addLine("    %s = %s.toBuilder();", property.getField(), value);
     } else {
-      body.addLine("    %s = %s",
-              property.getField(), builderFactory.newBuilder(builderType, EXPLICIT_TYPES))
+      body.addLine("    %s = %s", property.getField(), type.newBuilder(EXPLICIT_TYPES))
           .addLine("        .mergeFrom(%s);", value);
     }
     body.addLine("  }")
         .addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
-            suppressUnchecked, builderType, builder, property.getField())
+            type.suppressUnchecked(), type.builderType(), builder, property.getField())
         .addLine("  return %s;", builder);
     code.add(body)
         .addLine("}");
@@ -349,14 +222,16 @@ class BuildableProperty extends PropertyCodeGenerator {
     Variable fieldBuilder = new Variable(property.getName() + "Builder");
     Variable fieldValue = new Variable(property.getName() + "Value");
     code.addLine("if (%s == null) {", property.getField().on(builder))
-        .addLine("  %s = %s.%s();",
-            finalField, builderFactory.newBuilder(builderType, EXPLICIT_TYPES), buildMethod)
+        .addLine("  %s = %s.%s();", finalField, type.newBuilder(EXPLICIT_TYPES), buildMethod)
         .addLine("} else if (%s instanceof %s) {",
             property.getField().on(builder),
             ModelUtils.maybeAsTypeElement(property.getType()).get());
-    if (suppressUnchecked != Excerpts.empty()) {
+    if (type.suppressUnchecked() != Excerpts.empty()) {
       code.addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
-              suppressUnchecked, property.getType(), fieldValue, property.getField().on(builder))
+              type.suppressUnchecked(),
+              property.getType(),
+              fieldValue,
+              property.getField().on(builder))
           .addLine("  %s = %s;", finalField, fieldValue);
     } else {
       code.addLine("  %s = (%s) %s;",
@@ -364,7 +239,10 @@ class BuildableProperty extends PropertyCodeGenerator {
     }
     code.addLine("} else {")
         .addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
-            suppressUnchecked, builderType, fieldBuilder, property.getField().on(builder))
+            type.suppressUnchecked(),
+            type.builderType(),
+            fieldBuilder,
+            property.getField().on(builder))
         .addLine("  %s = %s.%s();", finalField, fieldBuilder, buildMethod)
         .addLine("}");
   }
@@ -389,7 +267,7 @@ class BuildableProperty extends PropertyCodeGenerator {
             property.getField().on(base),
             ModelUtils.maybeAsTypeElement(property.getType()).get())
         .addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
-            suppressUnchecked, property.getType(), fieldValue, property.getField().on(base))
+           type.suppressUnchecked(), property.getType(), fieldValue, property.getField().on(base))
         .addLine("  if (%s == null) {", property.getField())
         .addLine("    %s = %s;", property.getField(), fieldValue)
         .addLine("  } else {")
@@ -398,7 +276,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("} else {")
         .add("  %s().mergeFrom(%s.%s()",
             getBuilderMethod(property), base, getBuilderMethod(property));
-    if (mergeFromBuilderMethod == MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE) {
+    if (type.mergeBuilder() == MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE) {
       code.add(".buildPartial()");
     }
     code.add(");\n")
@@ -407,7 +285,7 @@ class BuildableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addSetBuilderFromPartial(Block code, Variable builder) {
-    if (partialToBuilderMethod == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
+    if (type.partialToBuilder() == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
       code.add("%s.%s().mergeFrom(%s.toBuilder());",
           builder, getBuilderMethod(property), property.getField());
     } else {
@@ -430,108 +308,8 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("    %s = null;", property.getField())
         .addLine("  } else {")
         .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
-            suppressUnchecked, builderType, fieldBuilder, property.getField())
+            type.suppressUnchecked(), type.builderType(), fieldBuilder, property.getField())
         .addLine("    %s.clear();", fieldBuilder)
         .addLine("  }");
   }
-
-  private static <T, S extends T> Function<T, Stream<S>> instancesOf(Class<S> subclass) {
-    return x -> subclass.isInstance(x) ? Stream.of(subclass.cast(x)) : Stream.empty();
-  }
-
-  private static final class IsCallableMethod implements Predicate<ExecutableElement> {
-    @Override
-    public boolean test(ExecutableElement element) {
-      boolean isMethod = (element.getKind() == ElementKind.METHOD);
-      boolean isPublic = element.getModifiers().contains(Modifier.PUBLIC);
-      boolean isNotStatic = !element.getModifiers().contains(Modifier.STATIC);
-      boolean declaresNoExceptions = element.getThrownTypes().isEmpty();
-      return isMethod && isPublic && isNotStatic && declaresNoExceptions;
-    }
-  }
-
-  private static final class IsBuildMethod implements Predicate<ExecutableElement> {
-    final String methodName;
-    final TypeMirror builtType;
-    final Types types;
-
-    IsBuildMethod(String methodName, TypeMirror builtType, Types types) {
-      this.methodName = methodName;
-      this.builtType = builtType;
-      this.types = types;
-    }
-
-    @Override public boolean test(ExecutableElement element) {
-      if (!element.getParameters().isEmpty()) {
-        return false;
-      }
-      if (!element.getSimpleName().contentEquals(methodName)) {
-        return false;
-      }
-      if (!types.isSubtype(element.getReturnType(), builtType)) {
-        return false;
-      }
-      return true;
-    }
-  }
-
-  private static final Predicate<ExecutableElement> IS_CLEAR_METHOD = element -> {
-    if (!element.getParameters().isEmpty()) {
-      return false;
-    }
-    if (!element.getSimpleName().contentEquals("clear")) {
-      return false;
-    }
-    return true;
-  };
-
-  private static final class IsMergeFromMethod implements Predicate<ExecutableElement> {
-    final TypeMirror builderType;
-    final Types types;
-
-    IsMergeFromMethod(TypeMirror sourceType, Types types) {
-      this.builderType = sourceType;
-      this.types = types;
-    }
-
-    @Override public boolean test(ExecutableElement element) {
-      if (element.getParameters().size() != 1) {
-        return false;
-      }
-      if (!element.getSimpleName().contentEquals("mergeFrom")) {
-        return false;
-      }
-      if (!types.isSubtype(builderType, element.getParameters().get(0).asType())) {
-        return false;
-      }
-      return true;
-    }
-  }
-
-  private static final class IsToBuilderMethod implements Predicate<ExecutableElement> {
-    final TypeMirror builderType;
-    final Types types;
-
-    IsToBuilderMethod(TypeMirror sourceType, Types types) {
-      this.builderType = sourceType;
-      this.types = types;
-    }
-
-    @Override public boolean test(ExecutableElement element) {
-      if (element.getParameters().size() != 0) {
-        return false;
-      }
-      if (!element.getSimpleName().contentEquals("toBuilder")) {
-        return false;
-      }
-      if (!types.isSubtype(element.getReturnType(), builderType)) {
-        return false;
-      }
-      return true;
-    }
-  }
-
-  private static final Predicate<Element> IS_BUILDER_TYPE = element ->
-      element.getSimpleName().contentEquals("Builder") && element.getModifiers().contains(PUBLIC);
-
 }
