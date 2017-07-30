@@ -16,11 +16,14 @@
 package org.inferred.freebuilder.processor.util.feature;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.Shading;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -36,7 +39,7 @@ import javax.lang.model.util.Elements;
  */
 public enum SourceLevel implements Feature<SourceLevel> {
 
-  JAVA_6("Java 6"), JAVA_7("Java 7"), JAVA_8("Java 8+");
+  JAVA_6("Java 6", 6), JAVA_7("Java 7", 7), JAVA_8("Java 8+", 8);
 
   /**
    * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current
@@ -122,9 +125,11 @@ public enum SourceLevel implements Feature<SourceLevel> {
   }
 
   private final String humanReadableFormat;
+  private final int version;
 
-  SourceLevel(String humanReadableFormat) {
+  SourceLevel(String humanReadableFormat, int version) {
     this.humanReadableFormat = humanReadableFormat;
+    this.version = version;
   }
 
   public Optional<QualifiedName> safeVarargs() {
@@ -182,6 +187,10 @@ public enum SourceLevel implements Feature<SourceLevel> {
       default:
         return Optional.of(QualifiedName.of("java.util", "Spliterator"));
     }
+  }
+
+  public List<String> javacArguments() {
+    return ImmutableList.of("-source", Integer.toString(version));
   }
 
   @Override

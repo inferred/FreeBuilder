@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.junit.Test;
@@ -23,7 +24,7 @@ import org.junit.Test;
 import javax.tools.JavaFileObject;
 
 public class AbstractBuilderTest {
-  private final BehaviorTester behaviorTester = BehaviorTester.create();
+  private final BehaviorTester behaviorTester = BehaviorTester.create(new StaticFeatureSet());
 
   private static final JavaFileObject TYPE_WITH_ABSTRACT_BUILDER = new SourceBuilder()
       .addLine("package com.example;")

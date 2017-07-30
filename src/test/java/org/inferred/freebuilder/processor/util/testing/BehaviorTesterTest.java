@@ -16,13 +16,20 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_6;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.rules.ExpectedException.none;
 
 import com.google.common.collect.ImmutableSet;
 
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
+import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -30,6 +37,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -41,7 +50,9 @@ import javax.lang.model.element.TypeElement;
 @RunWith(JUnit4.class)
 public class BehaviorTesterTest {
 
-  private final BehaviorTester behaviorTester = BehaviorTester.create();
+  @Rule public final ExpectedException thrown = none();
+
+  private final BehaviorTester behaviorTester = BehaviorTester.create(new StaticFeatureSet());
 
   @Test
   public void simpleExample() {
@@ -88,22 +99,17 @@ public class BehaviorTesterTest {
 
   @Test
   public void failingTest_throwsOriginalRuntimeException() {
-    boolean caughtError = false;
-    try {
-      behaviorTester
-          .with(new TestBuilder()
-                .addLine("assertEquals(2, 3);")
-                .build())
-          .runTest();
-    } catch (AssertionError e) {
-      caughtError = true;
-      assertEquals("expected:<2> but was:<3>", e.getMessage());
-    }
-    assertTrue("Expected an AssertionError", caughtError);
+    thrown.expect(AssertionError.class);
+    thrown.expectMessage("expected:<2> but was:<3>");
+    behaviorTester
+        .with(new TestBuilder()
+              .addLine("assertEquals(2, 3);")
+              .build())
+        .runTest();
   }
 
-  @Test(expected = CompilationException.class)
   public void failingCompilation_throwsAssertionError() {
+    thrown.expect(CompilationException.class);
     behaviorTester
         .with(new TestBuilder()
             .addLine("jooblefish")
@@ -131,6 +137,17 @@ public class BehaviorTesterTest {
           (stackTraceElement.getLineNumber() == firstLine + 4)  // ECJ gives great stack traces
               || (stackTraceElement.getLineNumber() == firstLine + 2));  // javac, not so great
     }
+  }
+
+  @Test
+  public void sourceLevelAffectsCompilationErrors() {
+    TestSource test = new TestBuilder()
+        .addLine("%s<String> list = new %s<>();", List.class, ArrayList.class)
+        .build();
+    BehaviorTester.create(new StaticFeatureSet(JAVA_8)).with(test).compiles();
+    thrown.expect(CompilationException.class);
+    thrown.expectMessage("diamond operator is not supported");
+    BehaviorTester.create(new StaticFeatureSet(JAVA_6)).with(test).compiles();
   }
 
   private abstract static class TestProcessor extends AbstractProcessor {

@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util.testing;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -26,6 +27,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestFile;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 
@@ -47,11 +49,18 @@ import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 class SingleBehaviorTester implements BehaviorTester {
+
+  private final FeatureSet features;
+
   private final List<Processor> processors = new ArrayList<>();
   private final List<JavaFileObject> compilationUnits = new ArrayList<>();
   private boolean shouldSetContextClassLoader = false;
   private final Multiset<String> seenNames = LinkedHashMultiset.create();
   private final Map<TestSource, TestFile> testFilesBySource = new LinkedHashMap<>();
+
+  SingleBehaviorTester(FeatureSet features) {
+    this.features = features;
+  }
 
   @Override
   public BehaviorTester with(Processor processor) {
@@ -83,7 +92,7 @@ class SingleBehaviorTester implements BehaviorTester {
   public CompilationSubject compiles() {
     TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
     List<Diagnostic<? extends JavaFileObject>> diagnostics =
-        compile(fileManager, compilationUnits, processors);
+        compile(fileManager, compilationUnits, processors, features);
     final ClassLoader classLoader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
     return new SingleCompilationSubject(
         classLoader, diagnostics, shouldSetContextClassLoader, testFilesBySource);
@@ -204,13 +213,20 @@ class SingleBehaviorTester implements BehaviorTester {
   private static ImmutableList<Diagnostic<? extends JavaFileObject>> compile(
       JavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits,
-      Iterable<? extends Processor> processors) {
+      Iterable<? extends Processor> processors,
+      FeatureSet features) {
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+    List<String> arguments = ImmutableList.<String>builder()
+        .add("-Xlint:unchecked")
+        .add("-Xlint:varargs")
+        .add("-Xdiags:verbose")
+        .addAll(features.get(SOURCE_LEVEL).javacArguments())
+        .build();
     CompilationTask task = getCompiler().getTask(
         null,
         fileManager,
         diagnostics,
-        ImmutableList.of("-Xlint:unchecked", "-Xlint:varargs", "-Xdiags:verbose"),
+        arguments,
         null,
         compilationUnits);
     task.setProcessors(processors);
