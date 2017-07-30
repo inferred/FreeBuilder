@@ -109,7 +109,7 @@ class Analyser {
       new ListMultimapPropertyFactory(),
       new SetMultimapPropertyFactory(),
       new OptionalPropertyFactory(),
-      new BuildablePropertyFactory(),
+      new BuildableProperty.Factory(),
       new DefaultPropertyFactory()); // Must be last, as it will always return a CodeGenerator
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
