@@ -73,20 +73,35 @@ public enum SourceLevel implements Feature<SourceLevel> {
   private static final String ECLIPSE_DISPATCHER =
       Shading.unshadedName("org.eclipse.jdt.internal.compiler.apt.dispatch.RoundDispatcher");
 
-  public static Excerpt diamondOperator(final Object type) {
-    return new DiamondOperator(type);
+  /**
+   * An excerpt that uses the diamond operator (&lt;&gt;) whenever available.
+   */
+  public static Excerpt diamondOperator(Object type) {
+    return new DiamondOperator("diamondOperator", type, JAVA_7);
+  }
+
+  /**
+   * An excerpt that uses the diamond operator (&lt;&gt;) whenever nested inference is available
+   * (Java 8+).
+   */
+  public static Excerpt nestedDiamondOperator(Object type) {
+    return new DiamondOperator("nestedDiamondOperator", type, JAVA_8);
   }
 
   private static final class DiamondOperator extends Excerpt {
+    private final String methodName;
     private final Object type;
+    private final SourceLevel minimumSourceLevel;
 
-    private DiamondOperator(Object type) {
+    private DiamondOperator(String methodName, Object type, SourceLevel minimumSourceLevel) {
+      this.methodName = methodName;
       this.type = type;
+      this.minimumSourceLevel = minimumSourceLevel;
     }
 
     @Override
     public void addTo(SourceBuilder source) {
-      if (source.feature(SOURCE_LEVEL).compareTo(JAVA_7) >= 0) {
+      if (source.feature(SOURCE_LEVEL).compareTo(minimumSourceLevel) >= 0) {
         source.add("<>");
       } else {
         source.add("<%s>", type);
@@ -95,12 +110,14 @@ public enum SourceLevel implements Feature<SourceLevel> {
 
     @Override
     public String toString() {
-      return "diamondOperator(" + type + ")";
+      return methodName + "(" + type + ")";
     }
 
     @Override
     protected void addFields(FieldReceiver fields) {
+      fields.add("methodName", methodName);
       fields.add("type", type);
+      fields.add("minimumSourceLevel", minimumSourceLevel);
     }
   }
 
