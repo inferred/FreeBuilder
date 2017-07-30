@@ -29,7 +29,7 @@ import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.OptionalPropertyFactory.OptionalType;
+import org.inferred.freebuilder.processor.OptionalProperty.OptionalType;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -1316,11 +1316,11 @@ public class GuavaOptionalSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
+            .setCodeGenerator(new OptionalProperty(
                 metadata, name, OptionalType.GUAVA, string, Optional.<TypeMirror>absent(), false))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new OptionalPropertyFactory.CodeGenerator(
+            .setCodeGenerator(new OptionalProperty(
                 metadata, age, OptionalType.GUAVA, integer, Optional.<TypeMirror>of(INT), false))
             .build())
         .build();
