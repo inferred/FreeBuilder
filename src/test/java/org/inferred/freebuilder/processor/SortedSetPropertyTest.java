@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
 
 /**
- * Partial set of tests of {@link SortedSetPropertyFactory}. Tests specific to the mutateX methods
+ * Partial set of tests of {@link SortedSetProperty}. Tests specific to the mutateX methods
  * generated in Java 8+ are in {@link SortedSetMutateMethodTest}. Tests common to unsorted tests can
  * be found in {@link SetPropertyTest} and {@link SetMutateMethodTest}.
  */
