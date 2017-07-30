@@ -1076,7 +1076,7 @@ public class MapSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new MapPropertyFactory.CodeGenerator(
+            .setCodeGenerator(new MapProperty(
                 metadata,
                 name,
                 false,

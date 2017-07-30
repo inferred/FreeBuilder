@@ -104,7 +104,7 @@ class Analyser {
       new ListProperty.Factory(),
       new SetPropertyFactory(),
       new SortedSetPropertyFactory(),
-      new MapPropertyFactory(),
+      new MapProperty.Factory(),
       new MultisetPropertyFactory(),
       new ListMultimapProperty.Factory(),
       new SetMultimapPropertyFactory(),
