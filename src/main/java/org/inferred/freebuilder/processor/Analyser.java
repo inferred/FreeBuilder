@@ -101,7 +101,7 @@ class Analyser {
    */
   private static final List<PropertyCodeGenerator.Factory> PROPERTY_FACTORIES = ImmutableList.of(
       new NullablePropertyFactory(), // Must be first, as no other factory supports nulls
-      new ListPropertyFactory(),
+      new ListProperty.Factory(),
       new SetPropertyFactory(),
       new SortedSetPropertyFactory(),
       new MapPropertyFactory(),
