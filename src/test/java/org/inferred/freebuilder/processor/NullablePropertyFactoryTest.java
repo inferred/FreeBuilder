@@ -24,7 +24,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.NullablePropertyFactory.CodeGenerator;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -43,7 +42,7 @@ public class NullablePropertyFactoryTest {
 
   @Rule public final ModelRule model = new ModelRule();
   @Mock(answer = RETURNS_SMART_NULLS) private Config config;
-  private final NullablePropertyFactory factory = new NullablePropertyFactory();
+  private final NullableProperty.Factory factory = new NullableProperty.Factory();
   @Mock(answer = RETURNS_SMART_NULLS) private Metadata metadata;
 
   @Before
@@ -65,7 +64,7 @@ public class NullablePropertyFactoryTest {
     when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
-    Optional<CodeGenerator> codeGenerator = factory.create(config);
+    Optional<NullableProperty> codeGenerator = factory.create(config);
 
     assertThat(codeGenerator).isAbsent();
   }
@@ -84,9 +83,9 @@ public class NullablePropertyFactoryTest {
     when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
-    Optional<CodeGenerator> codeGenerator = factory.create(config);
+    Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullablePropertyFactory.CodeGenerator(
+    assertThat(codeGenerator).hasValue(new NullableProperty(
         metadata, property, ImmutableSet.of(model.typeElement(Nullable.class))));
   }
 
@@ -107,9 +106,9 @@ public class NullablePropertyFactoryTest {
     when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
-    Optional<CodeGenerator> codeGenerator = factory.create(config);
+    Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullablePropertyFactory.CodeGenerator(
+    assertThat(codeGenerator).hasValue(new NullableProperty(
         metadata, property, ImmutableSet.of(model.typeElement("foo.bar.Nullable"))));
   }
 
@@ -133,9 +132,9 @@ public class NullablePropertyFactoryTest {
     when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
-    Optional<CodeGenerator> codeGenerator = factory.create(config);
+    Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullablePropertyFactory.CodeGenerator(
+    assertThat(codeGenerator).hasValue(new NullableProperty(
         metadata, property, ImmutableSet.of(
             model.typeElement(Nullable.class), model.typeElement("foo.bar.Nullable"))));
   }
@@ -154,7 +153,7 @@ public class NullablePropertyFactoryTest {
     when(config.getProperty()).thenReturn(property);
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
-    Optional<CodeGenerator> codeGenerator = factory.create(config);
+    Optional<NullableProperty> codeGenerator = factory.create(config);
 
     assertThat(codeGenerator).isAbsent();
   }

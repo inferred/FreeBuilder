@@ -100,7 +100,7 @@ class Analyser {
    * factory should always be last.
    */
   private static final List<PropertyCodeGenerator.Factory> PROPERTY_FACTORIES = ImmutableList.of(
-      new NullablePropertyFactory(), // Must be first, as no other factory supports nulls
+      new NullableProperty.Factory(), // Must be first, as no other factory supports nulls
       new ListProperty.Factory(),
       new SetPropertyFactory(),
       new SortedSetPropertyFactory(),
