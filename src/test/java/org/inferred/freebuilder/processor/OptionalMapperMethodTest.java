@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.FreeBuilder;
@@ -106,8 +105,10 @@ public class OptionalMapperMethodTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder setProperty(int property) {")
-            .addLine("      %s.checkArgument(property >= 0, \"property must be non-negative\");",
-                Preconditions.class)
+            .addLine("      if (property < 0) {")
+            .addLine("        throw new IllegalArgumentException(")
+            .addLine("            \"property must be non-negative\");")
+            .addLine("      }")
             .addLine("      return super.setProperty(property);")
             .addLine("    }")
             .addLine("  }")

@@ -15,8 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Preconditions;
-
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -102,9 +100,10 @@ public class NullableMapperMethodTest {
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder setProperty(@%s Integer property) {",
                 Nullable.class)
-            .addLine("      %s.checkArgument(property == null || property >= 0,",
-                Preconditions.class)
+            .addLine("      if (property != null && property < 0) {")
+            .addLine("        throw new IllegalArgumentException(")
             .addLine("              \"property must be non-negative\");")
+            .addLine("      }")
             .addLine("      return super.setProperty(property);")
             .addLine("    }")
             .addLine("  }")
@@ -203,9 +202,10 @@ public class NullableMapperMethodTest {
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder property(@%s Integer property) {",
                 Nullable.class)
-            .addLine("      %s.checkArgument(property == null || property >= 0,",
-                Preconditions.class)
+            .addLine("      if (property != null && property < 0) {")
+            .addLine("        throw new IllegalArgumentException(")
             .addLine("              \"property must be non-negative\");")
+            .addLine("      }")
             .addLine("      return super.property(property);")
             .addLine("    }")
             .addLine("  }")

@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
 
@@ -537,8 +536,9 @@ public class JavaUtilOptionalPrefixlessPropertyTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder item(String item) {")
-            .addLine("      %s.checkArgument(item.length() <= 10, \"Item too long\");",
-                Preconditions.class)
+            .addLine("      if (item.length() > 10) {")
+            .addLine("        throw new IllegalArgumentException(\"Item too long\");")
+            .addLine("      }")
             .addLine("      return super.item(item);")
             .addLine("    }")
             .addLine("  }")
@@ -569,8 +569,9 @@ public class JavaUtilOptionalPrefixlessPropertyTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder item(String item) {")
-            .addLine("      %s.checkArgument(item.length() <= 10, \"Item too long\");",
-                Preconditions.class)
+            .addLine("      if (item.length() > 10) {")
+            .addLine("        throw new IllegalArgumentException(\"Item too long\");")
+            .addLine("      }")
             .addLine("      return super.item(item);")
             .addLine("    }")
             .addLine("  }")
@@ -659,7 +660,9 @@ public class JavaUtilOptionalPrefixlessPropertyTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder item(int item) {")
-            .addLine("      %s.checkArgument(item <= 10, \"Item too big\");", Preconditions.class)
+            .addLine("      if (item > 10) {")
+            .addLine("        throw new IllegalArgumentException(\"Item too big\");")
+            .addLine("      }")
             .addLine("      return super.item(item);")
             .addLine("    }")
             .addLine("  }")
@@ -690,7 +693,9 @@ public class JavaUtilOptionalPrefixlessPropertyTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder item(int item) {")
-            .addLine("      %s.checkArgument(item <= 10, \"Item too big\");", Preconditions.class)
+            .addLine("      if (item > 10) {")
+            .addLine("        throw new IllegalArgumentException(\"Item too big\");")
+            .addLine("      }")
             .addLine("      return super.item(item);")
             .addLine("    }")
             .addLine("  }")
@@ -887,7 +892,7 @@ public class JavaUtilOptionalPrefixlessPropertyTest {
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
               .addLine("  public abstract %s<%s<%s>> items();",
-                      Optional.class, ImmutableList.class, Number.class)
+                      Optional.class, List.class, Number.class)
               .addLine("  public static class Builder extends DataType_Builder {}")
               .addLine("}")
               .build())
@@ -908,8 +913,7 @@ public class JavaUtilOptionalPrefixlessPropertyTest {
               .addLine("package com.example;")
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
-              .addLine("  public abstract %s<%s<?>> items();",
-                      Optional.class, ImmutableList.class)
+              .addLine("  public abstract %s<%s<?>> items();", Optional.class, List.class)
               .addLine("  public static class Builder extends DataType_Builder {}")
               .addLine("}")
               .build())
@@ -931,7 +935,7 @@ public class JavaUtilOptionalPrefixlessPropertyTest {
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
               .addLine("  public abstract %s<%s<? extends %s>> items();",
-                      Optional.class, ImmutableList.class, Number.class)
+                      Optional.class, List.class, Number.class)
               .addLine("  public static class Builder extends DataType_Builder {}")
               .addLine("}")
               .build())

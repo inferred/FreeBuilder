@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.junit.Assume.assumeTrue;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
 
@@ -79,8 +78,10 @@ public class ListBeanPropertyTest {
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder addItems(String element) {")
-      .addLine("      %s.checkArgument(!element.isEmpty(), \"%s\");",
-          Preconditions.class, STRING_VALIDATION_ERROR_MESSAGE)
+      .addLine("      if (element.isEmpty()) {")
+      .addLine("        throw new IllegalArgumentException(\"%s\");",
+          STRING_VALIDATION_ERROR_MESSAGE)
+      .addLine("      }")
       .addLine("      return super.addItems(element);")
       .addLine("    }")
       .addLine("  }")
@@ -97,8 +98,9 @@ public class ListBeanPropertyTest {
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder addItems(int item) {")
-      .addLine("      %s.checkArgument(item >= 0, \"%s\");",
-          Preconditions.class, INT_VALIDATION_ERROR_MESSAGE)
+      .addLine("      if (item < 0) {")
+      .addLine("        throw new IllegalArgumentException(\"%s\");", INT_VALIDATION_ERROR_MESSAGE)
+      .addLine("      }")
       .addLine("      return super.addItems(item);")
       .addLine("    }")
       .addLine("  }")

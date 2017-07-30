@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.junit.Assume.assumeTrue;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
@@ -114,8 +113,9 @@ public class SetMutateMethodTest {
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {")
         .addLine("    @Override public Builder addProperties(int element) {")
-        .addLine("      %s.checkArgument(element >= 0, \"elements must be non-negative\");",
-            Preconditions.class)
+        .addLine("      if (element < 0) {")
+        .addLine("        throw new IllegalArgumentException(\"elements must be non-negative\");")
+        .addLine("      }")
         .addLine("      return super.addProperties(element);")
         .addLine("    }")
         .addLine("  }")

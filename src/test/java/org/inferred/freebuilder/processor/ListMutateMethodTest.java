@@ -15,8 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Preconditions;
-
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -64,8 +62,9 @@ public class ListMutateMethodTest {
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder addProperties(int element) {")
-      .addLine("      %s.checkArgument(element >= 0, \"elements must be non-negative\");",
-          Preconditions.class)
+      .addLine("      if (element < 0) {")
+      .addLine("        throw new IllegalArgumentException(\"elements must be non-negative\");")
+      .addLine("      }")
       .addLine("      return super.addProperties(element);")
       .addLine("    }")
       .addLine("  }")
@@ -80,8 +79,9 @@ public class ListMutateMethodTest {
       .addLine("")
       .addLine("  public static class Builder<N extends Number> extends DataType_Builder<N> {")
       .addLine("    @Override public Builder<N> addProperties(N element) {")
-      .addLine("      %s.checkArgument(element.intValue() >= 0, "
-          + "\"elements must be non-negative\");", Preconditions.class)
+      .addLine("      if (element.intValue() < 0) {")
+      .addLine("        throw new IllegalArgumentException(\"elements must be non-negative\");")
+      .addLine("      }")
       .addLine("      return super.addProperties(element);")
       .addLine("    }")
       .addLine("  }")
@@ -440,8 +440,10 @@ public class ListMutateMethodTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder addProperties(int element) {")
-            .addLine("      %s.checkArgument(element >= 0, \"elements must be non-negative\");",
-                Preconditions.class)
+            .addLine("      if (element < 0) {")
+            .addLine("        throw new IllegalArgumentException(")
+            .addLine("            \"elements must be non-negative\");")
+            .addLine("      }")
             .addLine("      return super.addProperties(element);")
             .addLine("    }")
             .addLine("  }")

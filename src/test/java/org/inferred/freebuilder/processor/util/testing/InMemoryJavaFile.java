@@ -29,7 +29,7 @@ public class InMemoryJavaFile extends InMemoryFile implements JavaFileObject {
   private final Kind kind;
 
   public InMemoryJavaFile(QualifiedName qualifiedName, Kind kind) {
-    super(name(qualifiedName));
+    super(name(qualifiedName, kind));
     this.qualifiedName = qualifiedName;
     this.kind = kind;
   }
@@ -54,13 +54,18 @@ public class InMemoryJavaFile extends InMemoryFile implements JavaFileObject {
     return null;
   }
 
-  private static String name(QualifiedName qualifiedName) {
+  @Override
+  public String toString() {
+    return "InMemoryJavaFile(name=" + getName() + ")";
+  }
+
+  private static String name(QualifiedName qualifiedName, Kind kind) {
     StringBuilder name = new StringBuilder();
     if (!qualifiedName.getPackage().isEmpty()) {
       name.append(qualifiedName.getPackage().replace('.', '/')).append('/');
     }
     Joiner.on('$').appendTo(name, qualifiedName.getSimpleNames());
-    name.append(".java");
+    name.append(kind.extension);
     return name.toString();
   }
 }

@@ -19,7 +19,6 @@ import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -129,8 +128,9 @@ public class SetPropertyTest {
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {")
         .addLine("    @Override public Builder addItems(%s element) {", elements.unwrappedType())
-        .addLine("      %s.checkArgument(%s, \"%s\");",
-            Preconditions.class, elements.validation(), validationErrorMessage)
+        .addLine("      if (!(%s)) {", elements.validation())
+        .addLine("        throw new IllegalArgumentException(\"%s\");", validationErrorMessage)
+        .addLine("      }")
         .addLine("      return super.addItems(element);")
         .addLine("    }")
         .addLine("  }")
@@ -289,7 +289,8 @@ public class SetPropertyTest {
         .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(new %s<>(%s))", DodgyIterable.class, elements.examples(1, 0))
+            .addLine("    .addAllItems(new %s<%s>(%s))",
+                DodgyIterable.class, elements.type(), elements.examples(1, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
                 convention.getter(), elements.examples(set.inOrder(1, 0)))

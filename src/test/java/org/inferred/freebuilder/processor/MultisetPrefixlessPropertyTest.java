@@ -58,7 +58,7 @@ public class MultisetPrefixlessPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
-    return FeatureSets.ALL;
+    return FeatureSets.WITH_GUAVA;
   }
 
   private static final JavaFileObject MULTISET_PROPERTY_TYPE = new SourceBuilder()

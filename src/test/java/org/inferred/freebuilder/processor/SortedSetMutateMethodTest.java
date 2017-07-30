@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 
 import org.inferred.freebuilder.FreeBuilder;
@@ -76,8 +75,10 @@ public class SortedSetMutateMethodTest {
       .addLine("")
       .addLine("    @Override")
       .addLine("    public Builder addItems(String element) {")
-      .addLine("      %s.checkArgument(!element.startsWith(\"0\"), \"%s\");",
-          Preconditions.class, FAILED_VALIDATION_MESSAGE)
+            .addLine("      if (element.startsWith(\"0\")) {")
+            .addLine("        throw new IllegalArgumentException(\"%s\");",
+                FAILED_VALIDATION_MESSAGE)
+            .addLine("      }")
       .addLine("      return super.addItems(element);")
       .addLine("    }")
       .addLine("  }")

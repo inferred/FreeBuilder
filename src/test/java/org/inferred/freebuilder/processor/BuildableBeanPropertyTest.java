@@ -40,6 +40,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.tools.JavaFileObject;
@@ -118,7 +119,7 @@ public class BuildableBeanPropertyTest {
       .addLine("@%s", FreeBuilder.class)
       .addLine("public interface DataType {")
       .addLine("  class Item {")
-      .addLine("    public %s<String> getNames() {", ImmutableList.class)
+      .addLine("    public %s<String> getNames() {", List.class)
       .addLine("      return names;")
       .addLine("    }")
       .addLine("")
@@ -158,10 +159,11 @@ public class BuildableBeanPropertyTest {
       .addLine("      private Builder() {}")
       .addLine("    }")
       .addLine("")
-      .addLine("    private final %s<String> names;", ImmutableList.class)
+      .addLine("    private final %s<String> names;", List.class)
       .addLine("")
-      .addLine("    private Item(Iterable<String> names) {")
-      .addLine("      this.names = %s.copyOf(names);", ImmutableList.class)
+      .addLine("    private Item(%s<String> names) {", List.class)
+      .addLine("      this.names = %s.unmodifiableList(new %s<String>(names));",
+          Collections.class, ArrayList.class)
       .addLine("    }")
       .addLine("  }")
       .addLine("")
@@ -209,13 +211,12 @@ public class BuildableBeanPropertyTest {
       .addLine("  public DataType.Item build() { return new Value(this); }")
       .addLine("  public DataType.Item buildPartial() { return new Value(this); }")
       .addLine("  private class Value implements DataType.Item {")
-      .addLine("    private %s<String> names;", ImmutableList.class)
+      .addLine("    private %s<String> names;", List.class)
       .addLine("    Value(DataType_Item_Builder builder) {")
-      .addLine("      names = %s.copyOf(builder.names);",
-          ImmutableList.class)
+      .addLine("      names = %s.unmodifiableList(new %s<String>(builder.names));",
+          Collections.class, ArrayList.class)
       .addLine("    }")
-      .addLine("    @%s public %s<String> getNames() { return names; }",
-          Override.class, ImmutableList.class)
+      .addLine("    @%s public %s<String> getNames() { return names; }", Override.class, List.class)
       .addLine("  }")
       .addLine("}")
       .build();
