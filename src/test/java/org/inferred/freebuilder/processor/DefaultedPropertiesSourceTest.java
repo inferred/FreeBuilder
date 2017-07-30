@@ -693,13 +693,13 @@ public class DefaultedPropertiesSourceTest {
     Metadata metadataWithCodeGenerators = metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, name, false))
+            .setCodeGenerator(new DefaultProperty(metadata, name, false))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, age, true))
+            .setCodeGenerator(new DefaultProperty(metadata, age, true))
             .build())
         .addProperties(shoeSize.toBuilder()
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, shoeSize, false))
+            .setCodeGenerator(new DefaultProperty(metadata, shoeSize, false))
             .build())
         .build();
 
@@ -1720,10 +1720,10 @@ public class DefaultedPropertiesSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, name, true))
+            .setCodeGenerator(new DefaultProperty(metadata, name, true))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, age, true))
+            .setCodeGenerator(new DefaultProperty(metadata, age, true))
             .build())
         .build();
   }

@@ -412,9 +412,7 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = uniqueIndex(metadata.getProperties(), GET_NAME);
-    assertEquals(
-        DefaultPropertyFactory.CodeGenerator.class,
-        properties.get("name").getCodeGenerator().getClass());
+    assertEquals(DefaultProperty.class, properties.get("name").getCodeGenerator().getClass());
   }
 
   @Test

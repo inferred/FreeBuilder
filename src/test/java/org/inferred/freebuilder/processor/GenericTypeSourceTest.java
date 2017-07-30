@@ -897,10 +897,10 @@ public class GenericTypeSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, name, false))
+            .setCodeGenerator(new DefaultProperty(metadata, name, false))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultPropertyFactory.CodeGenerator(metadata, age, false))
+            .setCodeGenerator(new DefaultProperty(metadata, age, false))
             .build())
         .build();
   }
