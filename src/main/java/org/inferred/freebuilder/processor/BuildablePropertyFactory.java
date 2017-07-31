@@ -30,7 +30,6 @@ import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FU
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 
@@ -38,6 +37,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.List;
@@ -214,9 +214,9 @@ public class BuildablePropertyFactory implements PropertyCodeGenerator.Factory {
               setter(property),
               property.getType(),
               property.getName())
+          .add(PreconditionExcerpts.checkNotNull(property.getName()))
           .addLine("  this.%s.clear();", property.getName())
-          .addLine("  this.%1$s.mergeFrom(%2$s.checkNotNull(%1$s));",
-              property.getName(), Preconditions.class)
+          .addLine("  this.%s.mergeFrom(%s);", property.getName(), property.getName())
           .addLine("  return (%s) this;", metadata.getBuilder())
           .addLine("}");
     }
