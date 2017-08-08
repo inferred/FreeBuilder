@@ -151,7 +151,7 @@ class SingleBehaviorTester implements BehaviorTester {
       ClassLoader classLoader,
       Iterable<? extends TestFile> testFiles,
       boolean shouldSetContextClassLoader) {
-    final List<Throwable> exceptions = new ArrayList<Throwable>();
+    final List<Throwable> exceptions = new ArrayList<>();
     if (shouldSetContextClassLoader) {
       Thread t = new Thread() {
         @Override
@@ -205,12 +205,12 @@ class SingleBehaviorTester implements BehaviorTester {
       JavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits,
       Iterable<? extends Processor> processors) {
-    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     CompilationTask task = getCompiler().getTask(
         null,
         fileManager,
         diagnostics,
-        ImmutableList.of("-Xlint:unchecked", "-Xdiags:verbose"),
+        ImmutableList.of("-Xlint:unchecked", "-Xlint:varargs", "-Xdiags:verbose"),
         null,
         compilationUnits);
     task.setProcessors(processors);

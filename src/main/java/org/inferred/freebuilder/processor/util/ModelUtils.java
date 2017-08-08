@@ -31,6 +31,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleElementVisitor6;
 import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.lang.model.util.Types;
@@ -132,6 +133,59 @@ public class ModelUtils {
       }
     }
     return false;
+  }
+
+  /**
+   * Returns true if a method with a variable number of {@code elementType} arguments needs a
+   * {@code &#64;SafeVarargs} annotation to avoid compiler warnings in Java 7+.
+   */
+  public static boolean needsSafeVarargs(TypeMirror elementType) {
+    return elementType.accept(new SimpleTypeVisitor6<Boolean, Void>() {
+      @Override
+      public Boolean visitDeclared(DeclaredType t, Void p) {
+        // Set<?>... does not need @SafeVarargs; Set<Integer>... or Set<? extends Number> does.
+        for (TypeMirror typeArgument : t.getTypeArguments()) {
+          if (!isPlainWildcard(typeArgument)) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      @Override
+      public Boolean visitTypeVariable(TypeVariable t, Void p) {
+        return true;
+      }
+
+      @Override
+      protected Boolean defaultAction(TypeMirror e, Void p) {
+        return false;
+      }
+
+      @Override
+      public Boolean visitUnknown(TypeMirror t, Void p) {
+        return false;
+      }
+    }, null);
+  }
+
+  private static boolean isPlainWildcard(TypeMirror type) {
+    return type.accept(new SimpleTypeVisitor6<Boolean, Void>() {
+      @Override
+      public Boolean visitWildcard(WildcardType t, Void p) {
+        return (t.getExtendsBound() == null) && (t.getSuperBound() == null);
+      }
+
+      @Override
+      protected Boolean defaultAction(TypeMirror e, Void p) {
+        return false;
+      }
+
+      @Override
+      public Boolean visitUnknown(TypeMirror t, Void p) {
+        return false;
+      }
+    }, null);
   }
 
   private static boolean signatureMatches(

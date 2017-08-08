@@ -25,6 +25,7 @@ import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
@@ -71,9 +72,18 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
 
     TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
     Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
+    boolean needsSafeVarargs = needsSafeVarargs(unboxedType.or(elementType));
     boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
+    boolean overridesVarargsAddMethod =
+        hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
     return Optional.of(new CodeGenerator(
-        config.getMetadata(), config.getProperty(), elementType, unboxedType, overridesAddMethod));
+        config.getMetadata(),
+        config.getProperty(),
+        elementType,
+        unboxedType,
+        needsSafeVarargs,
+        overridesAddMethod,
+        overridesVarargsAddMethod));
   }
 
   private static boolean hasAddMethodOverride(Config config, TypeMirror elementType) {
@@ -84,6 +94,14 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
         elementType);
   }
 
+  private static boolean hasVarargsAddMethodOverride(Config config, TypeMirror elementType) {
+    return overrides(
+        config.getBuilder(),
+        config.getTypes(),
+        addMethod(config.getProperty()),
+        config.getTypes().getArrayType(elementType));
+  }
+
   @VisibleForTesting
   static class CodeGenerator extends PropertyCodeGenerator {
 
@@ -91,18 +109,24 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
         QualifiedName.of(Collection.class).withParameters("E");
     private final TypeMirror elementType;
     private final Optional<TypeMirror> unboxedType;
+    private final boolean needsSafeVarargs;
     private final boolean overridesAddMethod;
+    private final boolean overridesVarargsAddMethod;
 
     CodeGenerator(
         Metadata metadata,
         Property property,
         TypeMirror elementType,
         Optional<TypeMirror> unboxedType,
-        boolean overridesAddMethod) {
+        boolean needsSafeVarargs,
+        boolean overridesAddMethod,
+        boolean overridesVarargsAddMethod) {
       super(metadata, property);
       this.elementType = elementType;
       this.unboxedType = unboxedType;
+      this.needsSafeVarargs = needsSafeVarargs;
       this.overridesAddMethod = overridesAddMethod;
+      this.overridesVarargsAddMethod = overridesVarargsAddMethod;
     }
 
     @Override
@@ -174,8 +198,21 @@ public class SetPropertyFactory implements PropertyCodeGenerator.Factory {
         code.addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
             .addLine(" *     null element");
       }
-      code.addLine(" */")
-          .addLine("public %s %s(%s... elements) {",
+      code.addLine(" */");
+      QualifiedName safeVarargs = code.feature(SOURCE_LEVEL).safeVarargs().orNull();
+      if (safeVarargs != null && needsSafeVarargs) {
+        if (!overridesVarargsAddMethod) {
+          code.addLine("@%s", safeVarargs)
+              .addLine("@%s({\"varargs\"})", SuppressWarnings.class);
+        } else {
+          code.addLine("@%s({\"unchecked\", \"varargs\"})", SuppressWarnings.class);
+        }
+      }
+      code.add("public ");
+      if (safeVarargs != null && needsSafeVarargs && !overridesVarargsAddMethod) {
+        code.add("final ");
+      }
+      code.add("%s %s(%s... elements) {\n",
               metadata.getBuilder(),
               addMethod(property),
               unboxedType.or(elementType));
