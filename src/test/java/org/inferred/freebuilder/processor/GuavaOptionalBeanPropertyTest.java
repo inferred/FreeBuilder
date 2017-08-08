@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
 
@@ -26,9 +25,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -511,8 +510,9 @@ public class GuavaOptionalBeanPropertyTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder setItem(String item) {")
-            .addLine("      %s.checkArgument(item.length() <= 10, \"Item too long\");",
-                Preconditions.class)
+            .addLine("      if (item.length() > 10) {")
+            .addLine("        throw new IllegalArgumentException(\"Item too long\");")
+            .addLine("      }")
             .addLine("      return super.setItem(item);")
             .addLine("    }")
             .addLine("  }")
@@ -543,8 +543,9 @@ public class GuavaOptionalBeanPropertyTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder setItem(String item) {")
-            .addLine("      %s.checkArgument(item.length() <= 10, \"Item too long\");",
-                Preconditions.class)
+            .addLine("      if (item.length() > 10) {")
+            .addLine("        throw new IllegalArgumentException(\"Item too long\");")
+            .addLine("      }")
             .addLine("      return super.setItem(item);")
             .addLine("    }")
             .addLine("  }")
@@ -633,7 +634,9 @@ public class GuavaOptionalBeanPropertyTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder setItem(int item) {")
-            .addLine("      %s.checkArgument(item <= 10, \"Item too big\");", Preconditions.class)
+            .addLine("      if (item > 10) {")
+            .addLine("        throw new IllegalArgumentException(\"Item too big\");")
+            .addLine("      }")
             .addLine("      return super.setItem(item);")
             .addLine("    }")
             .addLine("  }")
@@ -664,7 +667,9 @@ public class GuavaOptionalBeanPropertyTest {
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder setItem(int item) {")
-            .addLine("      %s.checkArgument(item <= 10, \"Item too big\");", Preconditions.class)
+            .addLine("      if (item > 10) {")
+            .addLine("        throw new IllegalArgumentException(\"Item too big\");")
+            .addLine("      }")
             .addLine("      return super.setItem(item);")
             .addLine("    }")
             .addLine("  }")

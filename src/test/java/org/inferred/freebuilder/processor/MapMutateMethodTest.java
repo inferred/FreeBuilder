@@ -15,14 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -61,15 +60,18 @@ public class MapMutateMethodTest {
 
   private static final JavaFileObject CHECKED_SET_TYPE = new SourceBuilder()
       .addLine("package com.example;")
-      .addLine("import static %s.checkArgument;", Preconditions.class)
       .addLine("@%s", FreeBuilder.class)
       .addLine("public interface DataType {")
       .addLine("  %s<Integer, String> getProperties();", Map.class)
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
       .addLine("    @Override public Builder putProperties(int key, String value) {")
-      .addLine("      checkArgument(key >= 0, \"key must be non-negative\");")
-      .addLine("      checkArgument(!value.startsWith(\"-\"), \"value must not start with '-'\");")
+      .addLine("      if (key < 0) {")
+      .addLine("        throw new IllegalArgumentException(\"key must be non-negative\");")
+      .addLine("      }")
+      .addLine("      if (value.startsWith(\"-\")) {")
+      .addLine("        throw new IllegalArgumentException(\"value must not start with '-'\");")
+      .addLine("      }")
       .addLine("      return super.putProperties(key, value);")
       .addLine("    }")
       .addLine("  }")
@@ -367,16 +369,19 @@ public class MapMutateMethodTest {
         .with(new Processor(features))
         .with(new SourceBuilder()
             .addLine("package com.example;")
-            .addLine("import static %s.checkArgument;", Preconditions.class)
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
             .addLine("  %s<Integer, String> properties();", Map.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder putProperties(int key, String value) {")
-            .addLine("      checkArgument(key >= 0, \"key must be non-negative\");")
-            .addLine("      checkArgument(!value.startsWith(\"-\"), "
-                + "\"value must not start with '-'\");")
+            .addLine("      if (key < 0) {")
+            .addLine("        throw new IllegalArgumentException(\"key must be non-negative\");")
+            .addLine("      }")
+            .addLine("      if (value.startsWith(\"-\")) {")
+            .addLine("        throw new IllegalArgumentException(")
+            .addLine("            \"value must not start with '-'\");")
+            .addLine("      }")
             .addLine("      return super.putProperties(key, value);")
             .addLine("    }")
             .addLine("  }")

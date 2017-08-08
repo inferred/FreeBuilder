@@ -5,8 +5,9 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester.CompilationSubject;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.Description;
@@ -62,6 +63,7 @@ public class SharedBehaviorTesting {
   private final BiConsumer<FrameworkMethod, RunNotifier> superChildRunner;
   private final TestSupplier superCreateTest;
   private final Supplier<Description> superDescription;
+  private final FeatureSet features;
 
   /** Metadata about the child tests, built by {@link #getChildMetadata()}. */
   private List<Child> children;
@@ -74,12 +76,14 @@ public class SharedBehaviorTesting {
       TestSupplier superCreateTest,
       Supplier<Description> superDescription,
       Supplier<TestClass> testClass,
-      BiFunction<Class<?>, String, Description> descriptionFactory)
+      BiFunction<Class<?>, String, Description> descriptionFactory,
+      FeatureSet features)
           throws InitializationError {
     this.superChildrenInvoker = superChildrenInvoker;
     this.superChildRunner = superChildRunner;
     this.superCreateTest = superCreateTest;
     this.superDescription = superDescription;
+    this.features = features;
     List<FrameworkField> testerFields = testClass.get().getAnnotatedFields(Shared.class);
     if (testerFields.isEmpty()) {
       throw new InitializationError("No public @Shared field found");
@@ -145,7 +149,7 @@ public class SharedBehaviorTesting {
       }
     } else {
       // Rerun individual tests with the default BehaviorTester.
-      tester = BehaviorTester.create();
+      tester = BehaviorTester.create(features);
       try {
         superChildrenInvoker.apply(notifier).evaluate();
       } finally {
@@ -221,7 +225,7 @@ public class SharedBehaviorTesting {
       RunNotifier notifier,
       SharedCompiler sharedCompiler,
       FrameworkMethod child) {
-    tester = new DelegatingBehaviorTester(sharedCompiler);
+    tester = new DelegatingBehaviorTester(sharedCompiler, features);
     try {
       superChildRunner.accept(child, notifier);
     } finally {
@@ -244,7 +248,7 @@ public class SharedBehaviorTesting {
   /**
    * Groups children that can share a compiler.
    */
-  private static Queue<SharedCompiler> shareCompilers(List<Child> children) {
+  private Queue<SharedCompiler> shareCompilers(List<Child> children) {
     Queue<SharedCompiler> sharedCompilers = new ArrayDeque<>();
     for (Child child : children) {
       Optional<SharedCompiler> sharedCompiler = sharedCompilers
@@ -254,7 +258,7 @@ public class SharedBehaviorTesting {
       if (sharedCompiler.isPresent()) {
         sharedCompiler.get().addChild(child);
       } else {
-        sharedCompilers.add(new SharedCompiler(child));
+        sharedCompilers.add(new SharedCompiler(child, features));
       }
     }
     return sharedCompilers;
@@ -353,8 +357,10 @@ public class SharedBehaviorTesting {
     final Map<String, JavaFileObject> compilationUnits = new LinkedHashMap<>();
     final List<TestSource> testSources = new ArrayList<>();
     private CompilationSubject subject;
+    private RuntimeException compilationException;
+    private final FeatureSet features;
 
-    SharedCompiler(Child child) {
+    SharedCompiler(Child child, FeatureSet features) {
       children.add(child.method);
       unmergeable = child.unmergeable;
       processors = ImmutableSet.copyOf(child.processors);
@@ -362,6 +368,7 @@ public class SharedBehaviorTesting {
         compilationUnits.put(compilationUnit.getName(), compilationUnit);
       }
       testSources.addAll(child.testSources);
+      this.features = features;
     }
 
     boolean canShareCompiler(Child child) {
@@ -390,83 +397,102 @@ public class SharedBehaviorTesting {
     }
 
     public CompilationSubject compiles() {
+      if (compilationException != null) {
+        throw compilationException;
+      }
       if (subject == null) {
-        SingleBehaviorTester tester = new SingleBehaviorTester();
+        SingleBehaviorTester tester = new SingleBehaviorTester(features);
         for (Processor processor : processors) {
           tester.with(processor);
         }
+        processors = null;  // Allow compilers to be reclaimed by GC (processors retain a reference)
         for (JavaFileObject compilationUnit : compilationUnits.values()) {
           tester.with(compilationUnit);
         }
         for (TestSource testSource : testSources) {
           tester.with(testSource);
         }
-        subject = tester.compiles();
-        processors = null;  // Allow compilers to be reclaimed by GC (processors retain a reference)
+        try {
+          subject = tester.compiles();
+        } catch (RuntimeException e) {
+          compilationException = e;
+          throw e;
+        }
       }
       return subject;
     }
   }
 
   /**
-   * A BehaviorTester that uses a shared {@link SharedCompiler} to reduce overheads.
+   * A BehaviorTester that uses a shared {@link SharedCompiler} to reduce overheads, but can fall
+   * back to an unshared compiler if compilation fails, to preserve test isolation.
    */
   private static class DelegatingBehaviorTester implements BehaviorTester {
 
-    private final SharedCompiler compilation;
+    private final SharedCompiler sharedCompiler;
+    private final SingleBehaviorTester fallbackCompiler;
     private final List<TestSource> testSources = new ArrayList<>();
     private boolean shouldSetContextClassLoader = false;
 
-    DelegatingBehaviorTester(SharedCompiler compilation) {
-      this.compilation = compilation;
+    DelegatingBehaviorTester(SharedCompiler sharedCompiler, FeatureSet features) {
+      this.sharedCompiler = sharedCompiler;
+      this.fallbackCompiler = new SingleBehaviorTester(features);
     }
 
     @Override
     public BehaviorTester with(Processor processor) {
+      fallbackCompiler.with(processor);
       return this;
     }
 
     @Override
     public BehaviorTester with(JavaFileObject compilationUnit) {
+      fallbackCompiler.with(compilationUnit);
       return this;
     }
 
     @Override
     public BehaviorTester with(TestSource testSource) {
       testSources.add(testSource);
+      fallbackCompiler.with(testSource);
       return this;
     }
 
     @Override
     public BehaviorTester withContextClassLoader() {
       shouldSetContextClassLoader = true;
+      fallbackCompiler.withContextClassLoader();
       return this;
     }
 
     @Override
     public CompilationSubject compiles() {
-      CompilationSubject assertCompiled = compilation.compiles();
-      return new CompilationSubject() {
-        @Override
-        public CompilationSubject withNoWarnings() {
-          assertCompiled.withNoWarnings();
-          return this;
-        }
+      try {
+        CompilationSubject assertCompiled = sharedCompiler.compiles();
+        return new CompilationSubject() {
+          @Override
+          public CompilationSubject withNoWarnings() {
+            assertCompiled.withNoWarnings();
+            return this;
+          }
 
-        @Override
-        public CompilationSubject allTestsPass() {
-          assertCompiled.testsPass(testSources, shouldSetContextClassLoader);
-          return this;
-        }
+          @Override
+          public CompilationSubject allTestsPass() {
+            assertCompiled.testsPass(testSources, shouldSetContextClassLoader);
+            return this;
+          }
 
-        @Override
-        public CompilationSubject testsPass(
-            Iterable<? extends TestSource> testSources,
-            boolean shouldSetContextClassLoader) {
-          assertCompiled.testsPass(testSources, shouldSetContextClassLoader);
-          return this;
-        }
-      };
+          @Override
+          public CompilationSubject testsPass(
+              Iterable<? extends TestSource> testSources,
+              boolean shouldSetContextClassLoader) {
+            assertCompiled.testsPass(testSources, shouldSetContextClassLoader);
+            return this;
+          }
+        };
+      } catch (RuntimeException e) {
+        return fallbackCompiler.compiles();
+      }
     }
   }
 }

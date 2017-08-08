@@ -16,13 +16,23 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_6;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.rules.ExpectedException.none;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
+import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -30,22 +40,25 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
 
 /** Unit tests for {@link BehaviorTester}. */
 @RunWith(JUnit4.class)
 public class BehaviorTesterTest {
 
-  private final BehaviorTester behaviorTester = BehaviorTester.create();
+  @Rule public final ExpectedException thrown = none();
 
   @Test
   public void simpleExample() {
-    behaviorTester
+    behaviorTester()
         .with(new SourceBuilder()
             .addLine("package com.example;")
             .addLine("@%s(%s.RUNTIME)", Retention.class, RetentionPolicy.class)
@@ -88,23 +101,18 @@ public class BehaviorTesterTest {
 
   @Test
   public void failingTest_throwsOriginalRuntimeException() {
-    boolean caughtError = false;
-    try {
-      behaviorTester
-          .with(new TestBuilder()
-                .addLine("assertEquals(2, 3);")
-                .build())
-          .runTest();
-    } catch (AssertionError e) {
-      caughtError = true;
-      assertEquals("expected:<2> but was:<3>", e.getMessage());
-    }
-    assertTrue("Expected an AssertionError", caughtError);
+    thrown.expect(AssertionError.class);
+    thrown.expectMessage("expected:<2> but was:<3>");
+    behaviorTester()
+        .with(new TestBuilder()
+              .addLine("assertEquals(2, 3);")
+              .build())
+        .runTest();
   }
 
-  @Test(expected = CompilationException.class)
   public void failingCompilation_throwsAssertionError() {
-    behaviorTester
+    thrown.expect(CompilationException.class);
+    behaviorTester()
         .with(new TestBuilder()
             .addLine("jooblefish")
             .build())
@@ -115,7 +123,7 @@ public class BehaviorTesterTest {
   public void failingTest_includesHelpfulStackTrace() {
     int firstLine = new Exception().getStackTrace()[0].getLineNumber();
     try {
-      behaviorTester
+      behaviorTester()
           .with(new TestBuilder()
                 .addLine("throw new RuntimeException(\"d'oh\");") // 4 lines after firstLine
                 .build())
@@ -131,6 +139,42 @@ public class BehaviorTesterTest {
           (stackTraceElement.getLineNumber() == firstLine + 4)  // ECJ gives great stack traces
               || (stackTraceElement.getLineNumber() == firstLine + 2));  // javac, not so great
     }
+  }
+
+  @Test
+  public void sourceLevelAffectsCompilationErrors() {
+    TestSource test = new TestBuilder()
+        .addLine("%s<String> list = new %s<>();", List.class, ArrayList.class)
+        .build();
+    behaviorTesterWith(JAVA_8).with(test).compiles();
+    thrown.expect(CompilationException.class);
+    thrown.expectMessage("diamond operator is not supported");
+    behaviorTesterWith(JAVA_6).with(test).compiles();
+  }
+
+  @Test
+  public void guavaPackageAffectsAvailabilityOfGuavaInSource() {
+    JavaFileObject source = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("public class Test {")
+        .addLine("  private final %s<Integer> aField = %s.of();", List.class, ImmutableList.class)
+        .addLine("}")
+        .build();
+    TestSource test = new TestBuilder()
+        .addLine("new com.example.Test();")
+        .build();
+    behaviorTesterWith(GuavaLibrary.AVAILABLE).with(source).with(test).runTest();
+    thrown.expect(NoClassDefFoundError.class);
+    thrown.expectMessage("com/google/common/collect/ImmutableList");
+    behaviorTesterWith(GuavaLibrary.UNAVAILABLE).with(source).with(test).runTest();
+  }
+
+  private static BehaviorTester behaviorTester() {
+    return behaviorTesterWith();
+  }
+
+  private static BehaviorTester behaviorTesterWith(Feature<?>... features) {
+    return BehaviorTester.create(new StaticFeatureSet(features));
   }
 
   private abstract static class TestProcessor extends AbstractProcessor {

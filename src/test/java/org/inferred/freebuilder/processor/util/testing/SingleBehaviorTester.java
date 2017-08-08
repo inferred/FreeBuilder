@@ -18,6 +18,10 @@ package org.inferred.freebuilder.processor.util.testing;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
+import static java.util.stream.Collectors.toSet;
+import static javax.tools.JavaFileObject.Kind.CLASS;
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -25,16 +29,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
+import com.google.common.io.ByteStreams;
 
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
+import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestFile;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
@@ -47,11 +56,18 @@ import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 class SingleBehaviorTester implements BehaviorTester {
+
+  private final FeatureSet features;
+
   private final List<Processor> processors = new ArrayList<>();
   private final List<JavaFileObject> compilationUnits = new ArrayList<>();
   private boolean shouldSetContextClassLoader = false;
   private final Multiset<String> seenNames = LinkedHashMultiset.create();
   private final Map<TestSource, TestFile> testFilesBySource = new LinkedHashMap<>();
+
+  SingleBehaviorTester(FeatureSet features) {
+    this.features = features;
+  }
 
   @Override
   public BehaviorTester with(Processor processor) {
@@ -83,10 +99,126 @@ class SingleBehaviorTester implements BehaviorTester {
   public CompilationSubject compiles() {
     TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
     List<Diagnostic<? extends JavaFileObject>> diagnostics =
-        compile(fileManager, compilationUnits, processors);
-    final ClassLoader classLoader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
+        compile(fileManager, compilationUnits, processors, features.get(SOURCE_LEVEL));
+    Set<String> testFiles =
+        testFilesBySource.values().stream().map(TestFile::getClassName).collect(toSet());
+
+    // The compiled source classes may only access packages in the feature set.
+    ClassLoader restrictedClassLoader = new RestrictedClassLoader(features);
+    ClassLoader sourceClassLoader =
+        new SourceClassLoader(restrictedClassLoader, fileManager, testFiles);
+
+    // The compiled test classes can access anything.
+    ClassLoader testClassLoader = new TestClassLoader(sourceClassLoader, fileManager, testFiles);
+
     return new SingleCompilationSubject(
-        classLoader, diagnostics, shouldSetContextClassLoader, testFilesBySource);
+        testClassLoader, diagnostics, shouldSetContextClassLoader, testFilesBySource);
+  }
+
+  /**
+   * A wrapper around the boot classloader that blocks access to packages not in the current
+   * {@link FeatureSet}.
+   */
+  private static class RestrictedClassLoader extends ClassLoader {
+
+    private final List<String> allowedPackages;
+
+    RestrictedClassLoader(FeatureSet features) {
+      ImmutableList.Builder<String> allowedPackages = ImmutableList.<String>builder()
+          .add("java.")
+          .add("sun.reflect.")
+          .add("com.fasterxml.jackson.annotation.")
+          .add("com.fasterxml.jackson.databind.annotation.");
+      if (features.get(GUAVA).isAvailable()) {
+        allowedPackages.add("com.google.common.");
+      }
+      this.allowedPackages = allowedPackages.build();
+    }
+
+    @Override
+    public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      if (!allowedPackages.stream().anyMatch(allowedPackage -> name.startsWith(allowedPackage))) {
+        throw new ClassNotFoundException();
+      }
+      return super.loadClass(name, resolve);
+    }
+  }
+
+  /**
+   * A classloader for compiled source classes. Permits access to classes in a single parent
+   * classloader.
+   */
+  private static class SourceClassLoader extends ClassLoader {
+
+    private final JavaFileManager fileManager;
+    private final Set<String> testFiles;
+
+    SourceClassLoader(
+        ClassLoader parent,
+        JavaFileManager fileManager,
+        Set<String> testFiles) {
+      super(parent);
+      this.fileManager = fileManager;
+      this.testFiles = testFiles;
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+      if (testFiles.contains(name.split("[$]", 0)[0])) {
+        throw new ClassNotFoundException();
+      }
+      try {
+        JavaFileObject classFile = fileManager.getJavaFileForInput(
+            StandardLocation.CLASS_OUTPUT, name, CLASS);
+        if (classFile == null) {
+          throw new ClassNotFoundException();
+        }
+        byte[] bytes = ByteStreams.toByteArray(classFile.openInputStream());
+        return super.defineClass(name, bytes, 0, bytes.length);
+      } catch (IOException e) {
+        throw new ClassNotFoundException();
+      }
+    }
+  }
+
+  /**
+   * A classloader for compiled test code. Permits access to classes in a parent classloader, as
+   * well as anything visible from the boot classloader. This means test code can access
+   * test libraries without them leaking into the source classloader.
+   */
+  private static class TestClassLoader extends ClassLoader {
+
+    private final TempJavaFileManager fileManager;
+    private final Set<String> testFiles;
+
+    TestClassLoader(ClassLoader parent, TempJavaFileManager fileManager, Set<String> testFiles) {
+      super(parent);
+      this.fileManager = fileManager;
+      this.testFiles = testFiles;
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      return super.loadClass(name, resolve);
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+      if (!testFiles.contains(name.split("[$]", 0)[0])) {
+        return SingleBehaviorTester.class.getClassLoader().loadClass(name);
+      }
+      try {
+        JavaFileObject classFile = fileManager.getJavaFileForInput(
+            StandardLocation.CLASS_OUTPUT, name, CLASS);
+        if (classFile == null) {
+          throw new ClassNotFoundException();
+        }
+        byte[] bytes = ByteStreams.toByteArray(classFile.openInputStream());
+        return super.defineClass(name, bytes, 0, bytes.length);
+      } catch (IOException e) {
+        throw new ClassNotFoundException();
+      }
+    }
   }
 
   static class SingleCompilationSubject implements CompilationSubject {
@@ -204,13 +336,20 @@ class SingleBehaviorTester implements BehaviorTester {
   private static ImmutableList<Diagnostic<? extends JavaFileObject>> compile(
       JavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits,
-      Iterable<? extends Processor> processors) {
+      Iterable<? extends Processor> processors,
+      SourceLevel sourceLevel) {
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+    List<String> arguments = ImmutableList.<String>builder()
+        .add("-Xlint:unchecked")
+        .add("-Xlint:varargs")
+        .add("-Xdiags:verbose")
+        .addAll(sourceLevel.javacArguments())
+        .build();
     CompilationTask task = getCompiler().getTask(
         null,
         fileManager,
         diagnostics,
-        ImmutableList.of("-Xlint:unchecked", "-Xlint:varargs", "-Xdiags:verbose"),
+        arguments,
         null,
         compilationUnits);
     task.setProcessors(processors);

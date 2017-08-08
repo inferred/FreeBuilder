@@ -15,14 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -76,8 +75,10 @@ public class SortedSetMutateMethodTest {
       .addLine("")
       .addLine("    @Override")
       .addLine("    public Builder addItems(String element) {")
-      .addLine("      %s.checkArgument(!element.startsWith(\"0\"), \"%s\");",
-          Preconditions.class, FAILED_VALIDATION_MESSAGE)
+            .addLine("      if (element.startsWith(\"0\")) {")
+            .addLine("        throw new IllegalArgumentException(\"%s\");",
+                FAILED_VALIDATION_MESSAGE)
+            .addLine("      }")
       .addLine("      return super.addItems(element);")
       .addLine("    }")
       .addLine("  }")

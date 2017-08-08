@@ -30,10 +30,10 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.SourceLevel;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
-import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.CompilationException;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -58,7 +58,7 @@ public class MultisetPrefixlessPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
-    return FeatureSets.ALL;
+    return FeatureSets.WITH_GUAVA;
   }
 
   private static final JavaFileObject MULTISET_PROPERTY_TYPE = new SourceBuilder()

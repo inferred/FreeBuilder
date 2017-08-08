@@ -16,11 +16,14 @@
 package org.inferred.freebuilder.processor.util.feature;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.Shading;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -36,7 +39,7 @@ import javax.lang.model.util.Elements;
  */
 public enum SourceLevel implements Feature<SourceLevel> {
 
-  JAVA_6("Java 6"), JAVA_7("Java 7"), JAVA_8("Java 8+");
+  JAVA_6("Java 6", 6), JAVA_7("Java 7", 7), JAVA_8("Java 8+", 8);
 
   /**
    * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current
@@ -73,20 +76,35 @@ public enum SourceLevel implements Feature<SourceLevel> {
   private static final String ECLIPSE_DISPATCHER =
       Shading.unshadedName("org.eclipse.jdt.internal.compiler.apt.dispatch.RoundDispatcher");
 
-  public static Excerpt diamondOperator(final Object type) {
-    return new DiamondOperator(type);
+  /**
+   * An excerpt that uses the diamond operator (&lt;&gt;) whenever available.
+   */
+  public static Excerpt diamondOperator(Object type) {
+    return new DiamondOperator("diamondOperator", type, JAVA_7);
+  }
+
+  /**
+   * An excerpt that uses the diamond operator (&lt;&gt;) whenever nested inference is available
+   * (Java 8+).
+   */
+  public static Excerpt nestedDiamondOperator(Object type) {
+    return new DiamondOperator("nestedDiamondOperator", type, JAVA_8);
   }
 
   private static final class DiamondOperator extends Excerpt {
+    private final String methodName;
     private final Object type;
+    private final SourceLevel minimumSourceLevel;
 
-    private DiamondOperator(Object type) {
+    private DiamondOperator(String methodName, Object type, SourceLevel minimumSourceLevel) {
+      this.methodName = methodName;
       this.type = type;
+      this.minimumSourceLevel = minimumSourceLevel;
     }
 
     @Override
     public void addTo(SourceBuilder source) {
-      if (source.feature(SOURCE_LEVEL).compareTo(JAVA_7) >= 0) {
+      if (source.feature(SOURCE_LEVEL).compareTo(minimumSourceLevel) >= 0) {
         source.add("<>");
       } else {
         source.add("<%s>", type);
@@ -95,19 +113,23 @@ public enum SourceLevel implements Feature<SourceLevel> {
 
     @Override
     public String toString() {
-      return "diamondOperator(" + type + ")";
+      return methodName + "(" + type + ")";
     }
 
     @Override
     protected void addFields(FieldReceiver fields) {
+      fields.add("methodName", methodName);
       fields.add("type", type);
+      fields.add("minimumSourceLevel", minimumSourceLevel);
     }
   }
 
   private final String humanReadableFormat;
+  private final int version;
 
-  SourceLevel(String humanReadableFormat) {
+  SourceLevel(String humanReadableFormat, int version) {
     this.humanReadableFormat = humanReadableFormat;
+    this.version = version;
   }
 
   public Optional<QualifiedName> safeVarargs() {
@@ -165,6 +187,10 @@ public enum SourceLevel implements Feature<SourceLevel> {
       default:
         return Optional.of(QualifiedName.of("java.util", "Spliterator"));
     }
+  }
+
+  public List<String> javacArguments() {
+    return ImmutableList.of("-source", Integer.toString(version));
   }
 
   @Override

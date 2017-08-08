@@ -34,6 +34,7 @@ import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FU
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.nestedDiamondOperator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -454,7 +455,7 @@ public class SortedSetPropertyFactory implements PropertyCodeGenerator.Factory {
                 finalField,
                 Collections.class,
                 TreeSet.class,
-                diamondOperator(elementType))
+                nestedDiamondOperator(elementType))
             .addLine("} else {")
             .addLine("  %s = %s.unmodifiableSortedSet(new %s%s(%s.%s));",
                 finalField,

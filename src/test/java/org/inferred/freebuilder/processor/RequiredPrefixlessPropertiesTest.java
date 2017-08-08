@@ -17,9 +17,9 @@ package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -65,9 +65,13 @@ public class RequiredPrefixlessPropertiesTest {
       .addLine("  public abstract boolean propertyB();")
       .addLine("")
       .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    public Builder(Optional<Integer> propertyA, Optional<Boolean> propertyB) {")
-      .addLine("      propertyA.ifPresent(this::propertyA);")
-      .addLine("      propertyB.ifPresent(this::propertyB);")
+      .addLine("    public Builder(Integer propertyA, Boolean propertyB) {")
+      .addLine("      if (propertyA != null) {")
+      .addLine("        this.propertyA(propertyA);")
+      .addLine("      }")
+      .addLine("      if (propertyB != null) {")
+      .addLine("        this.propertyB(propertyB);")
+      .addLine("      }")
       .addLine("    }")
       .addLine("  }")
       .addLine("}")
@@ -181,9 +185,9 @@ public class RequiredPrefixlessPropertiesTest {
         .with(testBuilder()
             .addImport(Optional.class)
             .addLine("DataType.Builder template = new DataType")
-            .addLine("    .Builder(Optional.of(11), Optional.empty());")
+            .addLine("    .Builder(11, null);")
             .addLine("DataType.Builder builder = new DataType")
-            .addLine("    .Builder(Optional.empty(), Optional.empty())")
+            .addLine("    .Builder(null, null)")
             .addLine("    .mergeFrom(template);")
             .addLine("assertEquals(11, builder.propertyA());")
             .build())

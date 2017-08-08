@@ -26,9 +26,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTestRunner.Shared;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
+import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
@@ -41,6 +41,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.tools.JavaFileObject;
@@ -119,7 +120,7 @@ public class BuildablePrefixlessPropertyTest {
       .addLine("@%s", FreeBuilder.class)
       .addLine("public interface DataType {")
       .addLine("  class Item {")
-      .addLine("    public %s<String> names() {", ImmutableList.class)
+      .addLine("    public %s<String> names() {", List.class)
       .addLine("      return names;")
       .addLine("    }")
       .addLine("")
@@ -159,10 +160,11 @@ public class BuildablePrefixlessPropertyTest {
       .addLine("      private Builder() {}")
       .addLine("    }")
       .addLine("")
-      .addLine("    private final %s<String> names;", ImmutableList.class)
+      .addLine("    private final %s<String> names;", List.class)
       .addLine("")
-      .addLine("    private Item(Iterable<String> names) {")
-      .addLine("      this.names = %s.copyOf(names);", ImmutableList.class)
+      .addLine("    private Item(%s<String> names) {", List.class)
+      .addLine("      this.names = %s.unmodifiableList(new %s<String>(names));",
+          Collections.class, ArrayList.class)
       .addLine("    }")
       .addLine("  }")
       .addLine("")
@@ -210,13 +212,12 @@ public class BuildablePrefixlessPropertyTest {
       .addLine("  public DataType.Item build() { return new Value(this); }")
       .addLine("  public DataType.Item buildPartial() { return new Value(this); }")
       .addLine("  private class Value implements DataType.Item {")
-      .addLine("    private %s<String> names;", ImmutableList.class)
+      .addLine("    private %s<String> names;", List.class)
       .addLine("    Value(DataType_Item_Builder builder) {")
-      .addLine("      names = %s.copyOf(builder.names);",
-          ImmutableList.class)
+      .addLine("      names = %s.unmodifiableList(new %s<String>(builder.names));",
+          Collections.class, ArrayList.class)
       .addLine("    }")
-      .addLine("    @%s public %s<String> names() { return names; }",
-          Override.class, ImmutableList.class)
+      .addLine("    @%s public %s<String> names() { return names; }", Override.class, List.class)
       .addLine("  }")
       .addLine("}")
       .build();

@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 import org.junit.Test;
 
@@ -55,7 +56,7 @@ import javax.tools.JavaFileObject;
  * a hypothetical Builder generator:
  *
  * <blockquote><code><pre>
- * {@link BehaviorTester#create()}
+ * {@link BehaviorTester#create(FeatureSet) create(features)}
  *     {@link #with(Processor) .with}(builderGeneratingProcessor)
  *     {@link #with(JavaFileObject) .with}(new {@link SourceBuilder}()
  *         .addLine("package com.example;")
@@ -82,8 +83,8 @@ import javax.tools.JavaFileObject;
  */
 public interface BehaviorTester {
 
-  static SingleBehaviorTester create() {
-    return new SingleBehaviorTester();
+  static SingleBehaviorTester create(FeatureSet features) {
+    return new SingleBehaviorTester(features);
   }
 
   /** Adds a {@link Processor} to pass to the compiler when {@link #runTest} is invoked. */
