@@ -961,14 +961,11 @@ public class NullableSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(
-                metadata, name, ImmutableSet.of(nullable)))
+            .setCodeGenerator(new NullableProperty(metadata, name, ImmutableSet.of(nullable)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new NullablePropertyFactory.CodeGenerator(
-                metadata, age, ImmutableSet.of(nullable)))
+            .setCodeGenerator(new NullableProperty(metadata, age, ImmutableSet.of(nullable)))
             .build())
         .build();
   }
-
 }

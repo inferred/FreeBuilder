@@ -100,17 +100,17 @@ class Analyser {
    * factory should always be last.
    */
   private static final List<PropertyCodeGenerator.Factory> PROPERTY_FACTORIES = ImmutableList.of(
-      new NullablePropertyFactory(), // Must be first, as no other factory supports nulls
-      new ListPropertyFactory(),
-      new SetPropertyFactory(),
-      new SortedSetPropertyFactory(),
-      new MapPropertyFactory(),
-      new MultisetPropertyFactory(),
-      new ListMultimapPropertyFactory(),
-      new SetMultimapPropertyFactory(),
-      new OptionalPropertyFactory(),
-      new BuildablePropertyFactory(),
-      new DefaultPropertyFactory()); // Must be last, as it will always return a CodeGenerator
+      new NullableProperty.Factory(), // Must be first, as no other factory supports nulls
+      new ListProperty.Factory(),
+      new SetProperty.Factory(),
+      new SortedSetProperty.Factory(),
+      new MapProperty.Factory(),
+      new MultisetProperty.Factory(),
+      new ListMultimapProperty.Factory(),
+      new SetMultimapProperty.Factory(),
+      new OptionalProperty.Factory(),
+      new BuildableProperty.Factory(),
+      new DefaultProperty.Factory()); // Must be last, as it will always return a CodeGenerator
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";

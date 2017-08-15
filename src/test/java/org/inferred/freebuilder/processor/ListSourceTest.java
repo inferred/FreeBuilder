@@ -2008,11 +2008,11 @@ public class ListSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
+            .setCodeGenerator(new ListProperty(
                 metadata, name, false, false, false, string, Optional.<TypeMirror>absent()))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new ListPropertyFactory.CodeGenerator(
+            .setCodeGenerator(new ListProperty(
                 metadata, age, false, false, false, integer, Optional.<TypeMirror>of(INT)))
             .build())
         .build();

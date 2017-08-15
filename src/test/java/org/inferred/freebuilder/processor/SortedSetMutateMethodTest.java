@@ -41,8 +41,8 @@ import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
 
 /**
- * Partial set of tests of {@link SortedSetPropertyFactory}. Tests common to unsorted tests can be
- * found in {@link SetPropertyTest} and {@link SetMutateMethodTest}.
+ * Partial set of tests of {@link SortedSetProperty}. Tests common to unsorted tests can be found in
+ * {@link SetPropertyTest} and {@link SetMutateMethodTest}.
  */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
