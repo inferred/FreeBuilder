@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.googlejavaformat.java.Formatter;
 
+import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
@@ -59,7 +60,7 @@ public class CompilationUnitBuilder implements SourceBuilder {
       importManagerBuilder.addImplicitImport(nestedClass);
     }
     importManager = importManagerBuilder.build();
-    source = new SourceStringBuilder(importManager, features);
+    source = new SourceStringBuilder(importManager, features, new FileScope());
   }
 
   @Override
@@ -86,8 +87,18 @@ public class CompilationUnitBuilder implements SourceBuilder {
   }
 
   @Override
+  public SourceStringBuilder subScope(Scope newScope) {
+    return source.subScope(newScope);
+  }
+
+  @Override
   public <T extends Feature<T>> T feature(FeatureType<T> feature) {
     return source.feature(feature);
+  }
+
+  @Override
+  public Scope scope() {
+    return source.scope();
   }
 
   @Override

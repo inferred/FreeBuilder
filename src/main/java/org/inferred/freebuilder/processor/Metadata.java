@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -175,6 +176,11 @@ public abstract class Metadata {
 
     /** Returns the name of the property, e.g. myProperty. */
     public abstract String getName();
+
+    /** Returns the field name that stores the property, e.g. myProperty. */
+    public FieldAccess getField() {
+      return new FieldAccess(getName());
+    }
 
     /** Returns the capitalized name of the property, e.g. MyProperty. */
     public abstract String getCapitalizedName();

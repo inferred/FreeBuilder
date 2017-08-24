@@ -24,6 +24,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.setComparatorMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
@@ -135,8 +136,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private %s<%s> %s = null;",
-        NavigableSet.class, elementType, property.getName());
+    code.addLine("private %s<%s> %s = null;", NavigableSet.class, elementType, property.getField());
   }
 
   @Override
@@ -174,23 +174,25 @@ class SortedSetProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             setComparatorMethod(property),
             Comparator.class,
-            elementType)
-        .add(PreconditionExcerpts.checkState(
-            Excerpts.add("%s == null", property.getName()),
+            elementType);
+    Block body = methodBody(code, "comparator");
+    body.add(PreconditionExcerpts.checkState(
+            Excerpts.add("%s == null", property.getField()),
             "Comparator already set for %s",
-            property.getName()));
-    if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  if (comparator == null) {")
-          .addLine("    %s = %s.of();", property.getName(), ImmutableSortedSet.class)
+            property.getField()));
+    if (body.feature(GUAVA).isAvailable()) {
+      body.addLine("  if (comparator == null) {")
+          .addLine("    %s = %s.of();", property.getField(), ImmutableSortedSet.class)
           .addLine("  } else {")
           .addLine("    %s = new %s<%s>(comparator).build();",
-              property.getName(), ImmutableSortedSet.Builder.class, elementType)
+              property.getField(), ImmutableSortedSet.Builder.class, elementType)
           .addLine("  }");
     } else {
-      code.addLine("  %s = new %s%s(comparator);",
-          property.getName(), TreeSet.class, diamondOperator(elementType));
+      body.addLine("  %s = new %s%s(comparator);",
+          property.getField(), TreeSet.class, diamondOperator(elementType));
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -212,27 +214,29 @@ class SortedSetProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             addMethod(property),
             unboxedType.or(elementType));
-    addConvertToTreeSet(code);
+    Block body = methodBody(code, "element");
+    addConvertToTreeSet(body);
     if (unboxedType.isPresent()) {
-      code.addLine("  this.%s.add(element);", property.getName());
+      body.addLine("  %s.add(element);", property.getField());
     } else {
-      code.add(checkNotNullPreamble("element"))
-          .addLine("  this.%s.add(%s);", property.getName(), checkNotNullInline("element"));
+      body.add(checkNotNullPreamble("element"))
+          .addLine("  %s.add(%s);", property.getField(), checkNotNullInline("element"));
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
   private void addConvertToTreeSet(SourceBuilder code) {
-    code.addLine("  if (this.%s == null) {", property.getName())
+    code.addLine("  if (%s == null) {", property.getField())
         .addLine("    // Use default comparator")
-        .addLine("    this.%s = new %s%s();",
-            property.getName(), TreeSet.class, diamondOperator(elementType));
+        .addLine("    %s = new %s%s();",
+            property.getField(), TreeSet.class, diamondOperator(elementType));
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  } else if (this.%s instanceof %s) {",
-              property.getName(), ImmutableSortedSet.class)
-          .addLine("    this.%1$s = new %2$s%3$s(this.%1$s);",
-              property.getName(), TreeSet.class, diamondOperator(elementType));
+      code.addLine("  } else if (%s instanceof %s) {",
+              property.getField(), ImmutableSortedSet.class)
+          .addLine("    %1$s = new %2$s%3$s(%1$s);",
+              property.getField(), TreeSet.class, diamondOperator(elementType));
     }
     code.addLine("  }");
   }
@@ -357,51 +361,56 @@ class SortedSetProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             removeMethod(property),
             unboxedType.or(elementType));
-    addConvertToTreeSet(code);
+    Block body = methodBody(code, "mutator");
+    addConvertToTreeSet(body);
     if (unboxedType.isPresent()) {
-      code.addLine("  this.%s.remove(element);", property.getName());
+      body.addLine("  %s.remove(element);", property.getField());
     } else {
-      code.add(checkNotNullPreamble("element"))
-          .addLine("  this.%s.remove(%s);", property.getName(), checkNotNullInline("element"));
+      body.add(checkNotNullPreamble("element"))
+          .addLine("  %s.remove(%s);", property.getField(), checkNotNullInline("element"));
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
   private void addMutator(SourceBuilder code, Metadata metadata) {
-    Optional<ParameterizedType> consumer = code.feature(FUNCTION_PACKAGE).consumer();
-    if (consumer.isPresent()) {
-      code.addLine("")
-          .addLine("/**")
-          .addLine(" * Applies {@code mutator} to the set to be returned from %s.",
-              metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-          .addLine(" *")
-          .addLine(" * <p>This method mutates the set in-place. {@code mutator} is a void")
-          .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
-          .addLine(" * not to call pure functions, like %s.",
-              COLLECTION.javadocNoArgMethodLink("stream"))
-          .addLine(" *")
-          .addLine(" * @return this {@code Builder} object")
-          .addLine(" * @throws NullPointerException if {@code mutator} is null")
-          .addLine(" */")
-          .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
-              metadata.getBuilder(),
-              mutator(property),
-              consumer.get().getQualifiedName(),
-              SortedSet.class,
-              elementType);
-      addConvertToTreeSet(code);
-      if (overridesAddMethod) {
-        code.addLine("  mutator.accept(new CheckedNavigableSet<%s>(%s, this::%s));",
-                elementType, property.getName(), addMethod(property));
-      } else {
-        code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
-                addMethod(property))
-            .addLine("  mutator.accept(%s);", property.getName());
-      }
-      code.addLine("  return (%s) this;", metadata.getBuilder())
-          .addLine("}");
+    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
+    if (consumer == null) {
+      return;
     }
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Applies {@code mutator} to the set to be returned from %s.",
+            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" *")
+        .addLine(" * <p>This method mutates the set in-place. {@code mutator} is a void")
+        .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
+        .addLine(" * not to call pure functions, like %s.",
+            COLLECTION.javadocNoArgMethodLink("stream"))
+        .addLine(" *")
+        .addLine(" * @return this {@code Builder} object")
+        .addLine(" * @throws NullPointerException if {@code mutator} is null")
+        .addLine(" */")
+        .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
+            metadata.getBuilder(),
+            mutator(property),
+            consumer.getQualifiedName(),
+            SortedSet.class,
+            elementType);
+    Block body = methodBody(code, "mutator");
+    addConvertToTreeSet(body);
+    if (overridesAddMethod) {
+      body.addLine("  mutator.accept(new CheckedNavigableSet<%s>(%s, this::%s));",
+              elementType, property.getField(), addMethod(property));
+    } else {
+      body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+              addMethod(property))
+          .addLine("  mutator.accept(%s);", property.getField());
+    }
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
+        .addLine("}");
   }
 
   private void addClear(SourceBuilder code, Metadata metadata) {
@@ -414,12 +423,12 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine(" */")
         .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property));
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  if (%s instanceof %s) {", property.getName(), ImmutableSortedSet.class)
-          .addLine("    %s = %s.of();", property.getName(), ImmutableSortedSet.class)
+      code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSortedSet.class)
+          .addLine("    %s = %s.of();", property.getField(), ImmutableSortedSet.class)
           .add("  } else ");
     }
-    code.addLine("  if (%s != null) {", property.getName())
-        .addLine("    %s.clear();", property.getName())
+    code.addLine("  if (%s != null) {", property.getField())
+        .addLine("    %s.clear();", property.getField())
         .addLine("  }")
         .addLine("  return (%s) this;", metadata.getBuilder())
         .addLine("}");
@@ -434,23 +443,23 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine(" */")
         .addLine("public %s<%s> %s() {", SortedSet.class, elementType, getter(property));
     addConvertToTreeSet(code);
-    code.addLine("  return %s.unmodifiableSortedSet(%s);", Collections.class, property.getName())
+    code.addLine("  return %s.unmodifiableSortedSet(%s);", Collections.class, property.getField())
         .addLine("}");
   }
 
   @Override
-  public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-    code.addLine("if (%s.%s == null) {", builder, property.getName());
+  public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
+    code.addLine("if (%s == null) {", property.getField().on(builder));
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  %s = %s.<%s>of();",
               finalField, ImmutableSortedSet.class, elementType)
-          .addLine("} else if (%s.%s instanceof %s) {",
-              builder, property.getName(), ImmutableSortedSet.class)
-          .addLine("  %s = (%s<%s>) %s.%s;",
-              finalField, ImmutableSortedSet.class, elementType, builder, property.getName())
+          .addLine("} else if (%s instanceof %s) {",
+              property.getField().on(builder), ImmutableSortedSet.class)
+          .addLine("  %s = (%s<%s>) %s;",
+              finalField, ImmutableSortedSet.class, elementType, property.getField().on(builder))
           .addLine("} else {")
-          .addLine("  %s = %s.copyOfSorted(%s.%s);",
-              finalField, ImmutableSortedSet.class, builder, property.getName());
+          .addLine("  %s = %s.copyOfSorted(%s);",
+              finalField, ImmutableSortedSet.class, property.getField().on(builder));
     } else {
       code.addLine("  %s = %s.unmodifiableSortedSet(new %s%s());",
               finalField,
@@ -458,13 +467,12 @@ class SortedSetProperty extends PropertyCodeGenerator {
               TreeSet.class,
               nestedDiamondOperator(elementType))
           .addLine("} else {")
-          .addLine("  %s = %s.unmodifiableSortedSet(new %s%s(%s.%s));",
+          .addLine("  %s = %s.unmodifiableSortedSet(new %s%s(%s));",
               finalField,
               Collections.class,
               TreeSet.class,
               diamondOperator(elementType),
-              builder,
-              property.getName());
+              property.getField().on(builder));
     }
     code.addLine("}");
   }
@@ -473,13 +481,13 @@ class SortedSetProperty extends PropertyCodeGenerator {
   public void addMergeFromValue(Block code, String value) {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("if (%s instanceof %s", value, metadata.getValueType().getQualifiedName())
-          .addLine("      && (%s == null", property.getName())
+          .addLine("      && (%s == null", property.getField())
           .addLine("          || (%s instanceof %s ",
-              property.getName(), ImmutableSortedSet.class)
-          .addLine("              && %s.isEmpty()", property.getName())
+              property.getField(), ImmutableSortedSet.class)
+          .addLine("              && %s.isEmpty()", property.getField())
           .addLine("              && %s))) {",
               Excerpts.equals(
-                  Excerpts.add("%s.comparator()", property.getName()),
+                  Excerpts.add("%s.comparator()", property.getField()),
                   Excerpts.add("%s.%s().comparator()", value, property.getGetterName())))
           .addLine("  @%s(\"unchecked\")", SuppressWarnings.class)
           .addLine("  %1$s<%2$s> _temporary = (%1$s<%2$s>) (%1$s<?>) %3$s.%4$s();",
@@ -487,7 +495,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
               elementType,
               value,
               property.getGetterName())
-          .addLine("  %1$s = _temporary;", property.getName())
+          .addLine("  %s = _temporary;", property.getField())
           .addLine("} else {");
     }
     code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
@@ -499,13 +507,13 @@ class SortedSetProperty extends PropertyCodeGenerator {
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
-    code.addLine("if (%s.%s != null) {", base, property.getName())
-        .addLine("  %s(%s.%s);", addAllMethod(property), base, property.getName())
+    code.addLine("if (%s != null) {", property.getField().on(base))
+        .addLine("  %s(%s);", addAllMethod(property), property.getField().on(base))
         .addLine("}");
   }
 
   @Override
-  public void addSetFromResult(SourceBuilder code, String builder, String variable) {
+  public void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable) {
     code.addLine("%s.%s(%s);", builder, addAllMethod(property), variable);
   }
 

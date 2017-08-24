@@ -22,6 +22,7 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EX
 import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
@@ -43,6 +44,7 @@ import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -58,6 +60,8 @@ import java.util.TreeSet;
  * Code generation for the &#64;{@link FreeBuilder} annotation.
  */
 public class CodeGenerator {
+
+  static final FieldAccess UNSET_PROPERTIES = new FieldAccess("_unsetProperties");
 
   /** Write the source code for a generated builder. */
   void writeBuilderSource(SourceBuilder code, Metadata metadata) {
@@ -141,8 +145,8 @@ public class CodeGenerator {
     }
     // Unset properties
     if (any(metadata.getProperties(), IS_REQUIRED)) {
-      code.addLine("private final %s<%s> _unsetProperties =",
-              EnumSet.class, metadata.getPropertyEnum())
+      code.addLine("private final %s<%s> %s =",
+              EnumSet.class, metadata.getPropertyEnum(), UNSET_PROPERTIES)
           .addLine("    %s.allOf(%s.class);", EnumSet.class, metadata.getPropertyEnum());
     }
   }
@@ -167,7 +171,7 @@ public class CodeGenerator {
         .addLine("public %s build() {", metadata.getType());
     if (hasRequiredProperties) {
       code.add(PreconditionExcerpts.checkState(
-          "_unsetProperties.isEmpty()", "Not set: %s", "_unsetProperties"));
+          Excerpts.add("%s.isEmpty()", UNSET_PROPERTIES), "Not set: %s", UNSET_PROPERTIES));
     }
     code.addLine("  return %s(this);", metadata.getValueType().constructor())
         .addLine("}");
@@ -180,12 +184,12 @@ public class CodeGenerator {
             metadata.getType().getQualifiedName())
         .addLine(" */")
         .addLine("public %s mergeFrom(%s value) {", metadata.getBuilder(), metadata.getType());
-    Block body = new Block(code);
+    Block body = methodBody(code, "value");
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator().addMergeFromValue(body, "value");
     }
+    body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
-        .addLine("  return (%s) this;", metadata.getBuilder())
         .addLine("}");
   }
 
@@ -197,12 +201,12 @@ public class CodeGenerator {
         .addLine(" * Does not affect any properties not set on the input.")
         .addLine(" */")
         .addLine("public %1$s mergeFrom(%1$s template) {", metadata.getBuilder());
-    Block body = new Block(code);
+    Block body = Block.methodBody(code, "template");
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator().addMergeFromBuilder(body, "template");
     }
+    body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
-        .addLine("  return (%s) this;", metadata.getBuilder())
         .addLine("}");
   }
 
@@ -222,8 +226,8 @@ public class CodeGenerator {
     if (any(metadata.getProperties(), IS_REQUIRED)) {
       Optional<Excerpt> defaults = Declarations.freshBuilder(body, metadata);
       if (defaults.isPresent()) {
-        code.addLine("  _unsetProperties.clear();")
-            .addLine("  _unsetProperties.addAll(%s._unsetProperties);", defaults.get());
+        code.addLine("  %s.clear();", UNSET_PROPERTIES)
+            .addLine("  %s.addAll(%s);", UNSET_PROPERTIES, UNSET_PROPERTIES.on(defaults.get()));
       }
     }
     code.addLine("  return (%s) this;", metadata.getBuilder())
@@ -297,18 +301,20 @@ public class CodeGenerator {
         extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addValueFieldDeclaration(code, property.getName());
+      property.getCodeGenerator().addValueFieldDeclaration(code, property.getField());
     }
     // Constructor
     code.addLine("")
         .addLine("  private %s(%s builder) {",
             metadata.getValueType().getSimpleName(),
             metadata.getGeneratedBuilder());
+    Block body = methodBody(code, "builder");
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator()
-          .addFinalFieldAssignment(code, "this." + property.getName(), "builder");
+          .addFinalFieldAssignment(body, property.getField().on("this"), "builder");
     }
-    code.addLine("  }");
+    code.add(body)
+        .addLine("  }");
     // Getters
     for (Property property : metadata.getProperties()) {
       code.addLine("")
@@ -317,7 +323,7 @@ public class CodeGenerator {
       property.getCodeGenerator().addGetterAnnotations(code);
       code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
       code.add("    return ");
-      property.getCodeGenerator().addReadValueFragment(code, property.getName());
+      property.getCodeGenerator().addReadValueFragment(code, property.getField());
       code.add(";\n");
       code.addLine("  }");
     }
@@ -357,7 +363,7 @@ public class CodeGenerator {
     }
     // Hash code
     if (metadata.standardMethodUnderride(StandardMethod.HASH_CODE) == ABSENT) {
-      String properties = Joiner.on(", ").join(getNames(metadata.getProperties()));
+      FieldAccessList properties = getFields(metadata.getProperties());
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public int hashCode() {");
@@ -380,35 +386,39 @@ public class CodeGenerator {
     // Default implementation if no user implementation exists.
     code.addLine("")
         .addLine("  @%s", Override.class)
-        .addLine("  public boolean equals(Object obj) {")
-        .addLine("    if (!(obj instanceof %s)) {", metadata.getValueType().getQualifiedName())
+        .addLine("  public boolean equals(Object obj) {");
+    Block body = methodBody(code, "obj");
+    body.addLine("    if (!(obj instanceof %s)) {", metadata.getValueType().getQualifiedName())
         .addLine("      return false;")
         .addLine("    }")
         .addLine("    %1$s other = (%1$s) obj;", metadata.getValueType().withWildcards());
     if (metadata.getProperties().isEmpty()) {
-      code.addLine("    return true;");
-    } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+      body.addLine("    return true;");
+    } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
       String prefix = "    return ";
       for (Property property : metadata.getProperties()) {
-        code.add(prefix);
-        code.add("%1$s.equals(%2$s, other.%2$s)",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), property.getName());
+        body.add(prefix);
+        body.add("%s.equals(%s, %s)",
+            body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+            property.getField(),
+            property.getField().on("other"));
         prefix = "\n        && ";
       }
-      code.add(";\n");
+      body.add(";\n");
     } else {
       for (Property property : metadata.getProperties()) {
-        code.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
-                property.getName(),
-                "other." + property.getName(),
+        body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
+                property.getField(),
+                property.getField().on("other"),
                 property.getType().getKind(),
                 (property.getCodeGenerator().getType() == Type.OPTIONAL) ? NULLABLE : NOT_NULLABLE))
             .addLine("      return false;")
             .addLine("    }");
       }
-      code.addLine("    return true;");
+      body.addLine("    return true;");
     }
-    code.addLine("  }");
+    code.add(body)
+        .addLine("  }");
   }
 
   private static void addValueTypeToString(SourceBuilder code, Metadata metadata) {
@@ -425,10 +435,10 @@ public class CodeGenerator {
         code.add("    return \"%s{", metadata.getType().getSimpleName());
         Property property = getOnlyElement(metadata.getProperties());
         if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-          code.add("\" + (%1$s != null ? \"%1$s=\" + %1$s : \"\") + \"}\";\n",
-              property.getName());
+          code.add("\" + (%1$s != null ? \"%2$s=\" + %1$s : \"\") + \"}\";\n",
+              property.getField(), property.getName());
         } else {
-          code.add("%1$s=\" + %1$s + \"}\";\n", property.getName());
+          code.add("%s=\" + %s + \"}\";\n", property.getName(), property.getField());
         }
         break;
       }
@@ -439,7 +449,7 @@ public class CodeGenerator {
           code.addLine("    return \"%s{\"", metadata.getType().getSimpleName());
           Property lastProperty = getLast(metadata.getProperties());
           for (Property property : metadata.getProperties()) {
-            code.add("        + \"%1$s=\" + %1$s", property.getName());
+            code.add("        + \"%s=\" + %s", property.getName(), property.getField());
             if (property != lastProperty) {
               code.add(" + \", \"\n");
             } else {
@@ -454,9 +464,9 @@ public class CodeGenerator {
           for (Property property : metadata.getProperties()) {
             code.add("            ");
             if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-              code.add("(%s != null ? ", property.getName());
+              code.add("(%s != null ? ", property.getField());
             }
-            code.add("\"%1$s=\" + %1$s", property.getName());
+            code.add("\"%s=\" + %s", property.getName(), property.getField());
             if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
               code.add(" : null)");
             }
@@ -485,11 +495,11 @@ public class CodeGenerator {
             extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addValueFieldDeclaration(code, property.getName());
+      property.getCodeGenerator().addValueFieldDeclaration(code, property.getField());
     }
     if (hasRequiredProperties) {
-      code.addLine("  private final %s<%s> _unsetProperties;",
-          EnumSet.class, metadata.getPropertyEnum());
+      code.addLine("  private final %s<%s> %s;",
+          EnumSet.class, metadata.getPropertyEnum(), UNSET_PROPERTIES);
     }
     // Constructor
     code.addLine("")
@@ -498,10 +508,11 @@ public class CodeGenerator {
             metadata.getGeneratedBuilder());
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator()
-          .addPartialFieldAssignment(code, "this." + property.getName(), "builder");
+          .addPartialFieldAssignment(code, property.getField().on("this"), "builder");
     }
     if (hasRequiredProperties) {
-      code.addLine("    this._unsetProperties = builder._unsetProperties.clone();");
+      code.addLine("    %s = %s.clone();",
+          UNSET_PROPERTIES.on("this"), UNSET_PROPERTIES.on("builder"));
     }
     code.addLine("  }");
     // Getters
@@ -512,14 +523,14 @@ public class CodeGenerator {
       property.getCodeGenerator().addGetterAnnotations(code);
       code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
-        code.addLine("    if (_unsetProperties.contains(%s.%s)) {",
-                metadata.getPropertyEnum(), property.getAllCapsName())
+        code.addLine("    if (%s.contains(%s.%s)) {",
+                UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName())
             .addLine("      throw new %s(\"%s not set\");",
                 UnsupportedOperationException.class, property.getName())
             .addLine("    }");
       }
       code.add("    return ");
-      property.getCodeGenerator().addReadValueFragment(code, property.getName());
+      property.getCodeGenerator().addReadValueFragment(code, property.getField());
       code.add(";\n");
       code.addLine("  }");
     }
@@ -528,58 +539,68 @@ public class CodeGenerator {
     if (metadata.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
       code.addLine("")
           .addLine("  @%s", Override.class)
-          .addLine("  public boolean equals(Object obj) {")
-          .addLine("    if (!(obj instanceof %s)) {", metadata.getPartialType().getQualifiedName())
+          .addLine("  public boolean equals(Object obj) {");
+      Block body = methodBody(code, "obj");
+      body.addLine("    if (!(obj instanceof %s)) {", metadata.getPartialType().getQualifiedName())
           .addLine("      return false;")
           .addLine("    }")
           .addLine("    %1$s other = (%1$s) obj;", metadata.getPartialType().withWildcards());
       if (metadata.getProperties().isEmpty()) {
-        code.addLine("    return true;");
-      } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+        body.addLine("    return true;");
+      } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
         String prefix = "    return ";
         for (Property property : metadata.getProperties()) {
-          code.add(prefix);
-          code.add("%1$s.equals(%2$s, other.%2$s)",
-              code.feature(SOURCE_LEVEL).javaUtilObjects().get(), property.getName());
+          body.add(prefix);
+          body.add("%s.equals(%s, %s)",
+              body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+              property.getField(),
+              property.getField().on("other"));
           prefix = "\n        && ";
         }
         if (hasRequiredProperties) {
-          code.add(prefix);
-          code.add("%1$s.equals(_unsetProperties, other._unsetProperties)",
-              code.feature(SOURCE_LEVEL).javaUtilObjects().get());
+          body.add(prefix);
+          body.add("%s.equals(%s, %s)",
+              body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+              UNSET_PROPERTIES,
+              UNSET_PROPERTIES.on("other"));
         }
-        code.add(";\n");
+        body.add(";\n");
       } else {
         for (Property property : metadata.getProperties()) {
           switch (property.getType().getKind()) {
             case FLOAT:
             case DOUBLE:
-              code.addLine("    if (%s.doubleToLongBits(%s)", Double.class, property.getName())
-                  .addLine("        != %s.doubleToLongBits(other.%s)) {",
-                      Double.class, property.getName());
+              body.addLine("    if (%s.doubleToLongBits(%s)", Double.class, property.getField())
+                  .addLine("        != %s.doubleToLongBits(%s)) {",
+                      Double.class, property.getField().on("other"));
               break;
 
             default:
               if (property.getType().getKind().isPrimitive()) {
-                code.addLine("    if (%1$s != other.%1$s) {", property.getName());
+                body.addLine("    if (%s != %s) {",
+                    property.getField(), property.getField().on("other"));
               } else if (property.getCodeGenerator().getType() == Type.HAS_DEFAULT) {
-                code.addLine("    if (!%1$s.equals(other.%1$s)) {", property.getName());
+                body.addLine("    if (!%s.equals(%s)) {",
+                    property.getField(), property.getField().on("other"));
               } else {
-                code.addLine("    if (%1$s != other.%1$s", property.getName())
-                    .addLine("        && (%1$s == null || !%1$s.equals(other.%1$s))) {",
-                        property.getName());
+                body.addLine("    if (%s != %s",
+                        property.getField(), property.getField().on("other"))
+                    .addLine("        && (%1$s == null || !%1$s.equals(%2$s))) {",
+                        property.getField(), property.getField().on("other"));
               }
           }
-          code.addLine("      return false;")
+          body.addLine("      return false;")
               .addLine("    }");
         }
         if (hasRequiredProperties) {
-          code.addLine("    return _unsetProperties.equals(other._unsetProperties);");
+          body.addLine("    return %s.equals(%s);",
+              UNSET_PROPERTIES, UNSET_PROPERTIES.on("other"));
         } else {
-          code.addLine("    return true;");
+          body.addLine("    return true;");
         }
       }
-      code.addLine("  }");
+      code.add(body)
+          .addLine("  }");
     }
     // Hash code
     if (metadata.standardMethodUnderride(StandardMethod.HASH_CODE) != FINAL) {
@@ -587,12 +608,10 @@ public class CodeGenerator {
           .addLine("  @%s", Override.class)
           .addLine("  public int hashCode() {");
 
-      List<String> namesList = getNames(metadata.getProperties());
+      FieldAccessList properties = getFields(metadata.getProperties());
       if (hasRequiredProperties) {
-        namesList =
-            ImmutableList.<String>builder().addAll(namesList).add("_unsetProperties").build();
+        properties = properties.plus(UNSET_PROPERTIES);
       }
-      String properties = Joiner.on(", ").join(namesList);
 
       if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
         code.addLine("    return %s.hash(%s);",
@@ -669,13 +688,13 @@ public class CodeGenerator {
           break;
 
         case OPTIONAL:
-          code.addLine("if (%s != null) {", property.getName());
+          code.addLine("if (%s != null) {", property.getField());
           break;
 
         case REQUIRED:
           if (isPartial) {
-            code.addLine("if (!_unsetProperties.contains(%s.%s)) {",
-                    metadata.getPropertyEnum(), property.getAllCapsName());
+            code.addLine("if (!%s.contains(%s.%s)) {",
+                    UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
           }
           break;
       }
@@ -684,7 +703,7 @@ public class CodeGenerator {
       } else if (!noDefaults && hadSeenDefault) {
         code.addLine("result.append(\", \");");
       }
-      code.addLine("result.append(\"%1$s=\").append(%1$s);", property.getName());
+      code.addLine("result.append(\"%s=\").append(%s);", property.getName(), property.getField());
       if (!noDefaults && !seenDefault) {
         code.addLine("result.append(\", \");");
       } else if (noDefaults && property != last) {
@@ -721,21 +740,22 @@ public class CodeGenerator {
         Property property = getOnlyElement(metadata.getProperties());
         switch (property.getCodeGenerator().getType()) {
           case HAS_DEFAULT:
-            code.add("%1$s=\" + %1$s + \"}\";\n", property.getName());
+            code.add("%s=\" + %s + \"}\";\n", property.getName(), property.getField());
             break;
 
           case OPTIONAL:
             code.add("\"\n")
-                .addLine("        + (%1$s != null ? \"%1$s=\" + %1$s : \"\")",
-                    property.getName())
+                .addLine("        + (%1$s != null ? \"%2$s=\" + %1$s : \"\")",
+                    property.getField(), property.getName())
                 .addLine("        + \"}\";");
             break;
 
           case REQUIRED:
             code.add("\"\n")
-                .addLine("        + (!_unsetProperties.contains(%s.%s)",
-                    metadata.getPropertyEnum(), property.getAllCapsName())
-                .addLine("            ? \"%1$s=\" + %1$s : \"\")", property.getName())
+                .addLine("        + (!%s.contains(%s.%s)",
+                    UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName())
+                .addLine("            ? \"%s=\" + %s : \"\")",
+                    property.getName(), property.getField())
                 .addLine("        + \"}\";");
             break;
         }
@@ -750,17 +770,18 @@ public class CodeGenerator {
           code.add("            ");
           switch (property.getCodeGenerator().getType()) {
             case HAS_DEFAULT:
-              code.add("\"%1$s=\" + %1$s", property.getName());
+              code.add("\"%s=\" + %s", property.getName(), property.getField());
               break;
 
             case OPTIONAL:
-              code.add("(%1$s != null ? \"%1$s=\" + %1$s : null)", property.getName());
+              code.add("(%1$s != null ? \"%2$s=\" + %1$s : null)",
+                  property.getField(), property.getName());
               break;
 
             case REQUIRED:
-              code.add("(!_unsetProperties.contains(%s.%s)\n",
-                      metadata.getPropertyEnum(), property.getAllCapsName())
-                  .add("                ? \"%1$s=\" + %1$s : null)", property.getName());
+              code.add("(!%s.contains(%s.%s)",
+                      UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName())
+                  .add(" ? \"%s=\" + %s : null)", property.getName(), property.getField());
               break;
           }
           if (property != lastProperty) {
@@ -799,12 +820,41 @@ public class CodeGenerator {
     return Excerpts.add(isInterface ? "implements %s" : "extends %s", type);
   }
 
-  private static ImmutableList<String> getNames(Iterable<Property> properties) {
-    ImmutableList.Builder<String> result = ImmutableList.builder();
-    for (Property property : properties) {
-      result.add(property.getName());
+  private static class FieldAccessList extends Excerpt {
+    private final List<FieldAccess> fieldAccesses;
+
+    FieldAccessList(List<FieldAccess> fieldAccesses) {
+      this.fieldAccesses = ImmutableList.copyOf(fieldAccesses);
     }
-    return result.build();
+
+    @Override
+    public void addTo(SourceBuilder source) {
+      String separator = "";
+      for (FieldAccess field : fieldAccesses) {
+        source.add(separator).add(field);
+        separator = ", ";
+      }
+    }
+
+    public FieldAccessList plus(FieldAccess fieldAccess) {
+      return new FieldAccessList(ImmutableList.<FieldAccess>builder()
+          .addAll(fieldAccesses)
+          .add(fieldAccess)
+          .build());
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("fields", this.fieldAccesses);
+    }
+  }
+
+  private static FieldAccessList getFields(Iterable<Property> properties) {
+    ImmutableList.Builder<FieldAccess> fieldAccesses = ImmutableList.builder();
+    for (Property property : properties) {
+      fieldAccesses.add(property.getField());
+    }
+    return new FieldAccessList(fieldAccesses.build());
   }
 
   private static final Predicate<Property> IS_REQUIRED = new Predicate<Property>() {

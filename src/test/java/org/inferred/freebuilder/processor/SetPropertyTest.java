@@ -56,19 +56,30 @@ import javax.tools.JavaFileObject;
 public class SetPropertyTest {
 
   public enum TestConvention {
-    PREFIXLESS("prefixless", "items()"), BEAN("bean", "getItems()");
+    PREFIXLESS("prefixless") {
+      @Override
+      public String getter(String fieldName) {
+        return fieldName + "()";
+      }
+    },
+    BEAN("bean") {
+      @Override
+      public String getter(String fieldName) {
+        return "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1) + "()";
+      }
+    };
 
     private final String name;
-    private final String getter;
 
-    TestConvention(String name, String getter) {
+    TestConvention(String name) {
       this.name = name;
-      this.getter = getter;
     }
 
     public String getter() {
-      return getter;
+      return getter("items");
     }
+
+    abstract public String getter(String fieldName);
 
     @Override
     public String toString() {
@@ -988,6 +999,31 @@ public class SetPropertyTest {
             .addLine("assertThat(copy.%s)", convention.getter())
             .addLine("    .containsExactly(%s)", elements.examples(set.inOrder(2, 1, 0)))
             .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCanNamePropertyElements() {
+    // See also https://github.com/google/FreeBuilder/issues/258
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s> %s;",
+                set.type(), elements.type(), convention.getter("elements"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addElements(%s)", elements.examples(1, 0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter("elements"), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }

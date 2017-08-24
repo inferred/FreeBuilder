@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.collect.ImmutableSet;
-
 import com.sun.source.tree.ExpressionStatementTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;

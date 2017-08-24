@@ -24,6 +24,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.removeAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
@@ -41,6 +42,7 @@ import com.google.common.collect.SetMultimap;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedSetMultimap;
 import org.inferred.freebuilder.processor.util.Block;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.StaticExcerpt;
@@ -117,7 +119,7 @@ class SetMultimapProperty extends PropertyCodeGenerator {
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     code.addLine("private final %1$s<%2$s, %3$s> %4$s = %1$s.create();",
-        LinkedHashMultimap.class, keyType, valueType, property.getName());
+        LinkedHashMultimap.class, keyType, valueType, property.getField());
   }
 
   @Override
@@ -160,14 +162,16 @@ class SetMultimapProperty extends PropertyCodeGenerator {
             putMethod(property),
             unboxedKeyType.or(keyType),
             unboxedValueType.or(valueType));
+    Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
-      code.addLine("  %s.checkNotNull(key);", Preconditions.class);
+      body.addLine("  %s.checkNotNull(key);", Preconditions.class);
     }
     if (!unboxedValueType.isPresent()) {
-      code.addLine("  %s.checkNotNull(value);", Preconditions.class);
+      body.addLine("  %s.checkNotNull(value);", Preconditions.class);
     }
-    code.addLine("  this.%s.put(key, value);", property.getName())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  %s.put(key, value);", property.getField())
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -256,14 +260,16 @@ class SetMultimapProperty extends PropertyCodeGenerator {
             removeMethod(property),
             unboxedKeyType.or(keyType),
             unboxedValueType.or(valueType));
+    Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
-      code.addLine("  %s.checkNotNull(key);", Preconditions.class);
+      body.addLine("  %s.checkNotNull(key);", Preconditions.class);
     }
     if (!unboxedValueType.isPresent()) {
-      code.addLine("  %s.checkNotNull(value);", Preconditions.class);
+      body.addLine("  %s.checkNotNull(value);", Preconditions.class);
     }
-    code.addLine("  this.%s.remove(key, value);", property.getName())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  %s.remove(key, value);", property.getField())
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -283,11 +289,13 @@ class SetMultimapProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             removeAllMethod(property),
             unboxedKeyType.or(keyType));
+    Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
-      code.addLine("  %s.checkNotNull(key);", Preconditions.class);
+      body.addLine("  %s.checkNotNull(key);", Preconditions.class);
     }
-    code.addLine("  this.%s.removeAll(key);", property.getName())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  %s.removeAll(key);", property.getField())
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -314,15 +322,17 @@ class SetMultimapProperty extends PropertyCodeGenerator {
             SetMultimap.class,
             keyType,
             valueType);
+    Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      code.addLine("  mutator.accept(new CheckedSetMultimap<>(%s, this::%s));",
-          property.getName(), putMethod(property));
+      body.addLine("  mutator.accept(new CheckedSetMultimap<>(%s, this::%s));",
+          property.getField(), putMethod(property));
     } else {
-      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
-          .addLine("  mutator.accept(%s);", property.getName());
+          .addLine("  mutator.accept(%s);", property.getField());
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -335,7 +345,7 @@ class SetMultimapProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" */")
         .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
-        .addLine("  %s.clear();", property.getName())
+        .addLine("  %s.clear();", property.getField())
         .addLine("  return (%s) this;", metadata.getBuilder())
         .addLine("}");
   }
@@ -353,14 +363,14 @@ class SetMultimapProperty extends PropertyCodeGenerator {
             valueType,
             getter(property))
         .addLine("  return %s.unmodifiableSetMultimap(%s);",
-            Multimaps.class, property.getName())
+            Multimaps.class, property.getField())
         .addLine("}");
   }
 
   @Override
-  public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-    code.addLine("%s = %s.copyOf(%s.%s);",
-            finalField, ImmutableSetMultimap.class, builder, property.getName());
+  public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
+    code.addLine("%s = %s.copyOf(%s);",
+            finalField, ImmutableSetMultimap.class, property.getField().on(builder));
   }
 
   @Override
@@ -370,21 +380,18 @@ class SetMultimapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    code.addLine("%s(((%s) %s).%s);",
-        putAllMethod(property),
-        metadata.getGeneratedBuilder(),
-        builder,
-        property.getName());
+    Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+    code.addLine("%s(%s);", putAllMethod(property), property.getField().on(base));
   }
 
   @Override
-  public void addSetFromResult(SourceBuilder code, String builder, String variable) {
+  public void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable) {
     code.addLine("%s.%s(%s);", builder, putAllMethod(property), variable);
   }
 
   @Override
   public void addClearField(Block code) {
-    code.addLine("%s.clear();", property.getName());
+    code.addLine("%s.clear();", property.getField());
   }
 
   @Override

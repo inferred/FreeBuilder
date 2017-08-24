@@ -20,6 +20,7 @@ import static javax.lang.model.type.TypeKind.DECLARED;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
@@ -30,10 +31,12 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
 import java.util.Set;
 
@@ -89,7 +92,7 @@ class NullableProperty extends PropertyCodeGenerator {
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     addGetterAnnotations(code);
-    code.add("private %s %s = null;\n", property.getType(), property.getName());
+    code.add("private %s %s = null;\n", property.getType(), property.getField());
   }
 
   @Override
@@ -111,8 +114,9 @@ class NullableProperty extends PropertyCodeGenerator {
     code.add("public %s %s(", metadata.getBuilder(), setter(property));
     addGetterAnnotations(code);
     code.add("%s %s) {\n", property.getType(), property.getName())
-        .addLine("  this.%1$s = %1$s;", property.getName())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .add(methodBody(code, property.getName())
+            .addLine("  %s = %s;", property.getField(), property.getName())
+            .addLine("  return (%s) this;", metadata.getBuilder()))
         .addLine("}");
   }
 
@@ -135,13 +139,15 @@ class NullableProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             mapper(property),
             unaryOperator.withParameters(typeParam))
-        .add(PreconditionExcerpts.checkNotNull("mapper"))
-        .addLine("  %s %s = %s();",
-            property.getType(), property.getName(), getter(property))
-        .addLine("  if (%s != null) {", property.getName())
-        .addLine("    %s(mapper.apply(%s));", setter(property), property.getName())
+        .add(PreconditionExcerpts.checkNotNull("mapper"));
+    Block body = methodBody(code, "mapper");
+    Excerpt propertyValue = body.declare(new TypeMirrorExcerpt(
+        property.getType()), property.getName(), Excerpts.add("%s()", getter(property)));
+    body.addLine("  if (%s != null) {", propertyValue)
+        .addLine("    %s(mapper.apply(%s));", setter(property), propertyValue)
         .addLine("  }")
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -153,19 +159,19 @@ class NullableProperty extends PropertyCodeGenerator {
         .addLine(" */");
     addGetterAnnotations(code);
     code.addLine("public %s %s() {", property.getType(), getter(property))
-        .addLine("  return %s;", property.getName())
+        .addLine("  return %s;", property.getField())
         .addLine("}");
   }
 
   @Override
-  public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
+  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
     addGetterAnnotations(code);
     code.add("private final %s %s;\n", property.getType(), finalField);
   }
 
   @Override
-  public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-    code.addLine("%s = %s.%s;", finalField, builder, property.getName());
+  public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
+    code.addLine("%s = %s;", finalField, property.getField().on(builder));
   }
 
   @Override
@@ -208,7 +214,7 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addSetFromResult(SourceBuilder code, String builder, String variable) {
+  public void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable) {
     code.addLine("%s.%s(%s);", builder, setter(property), variable);
   }
 
@@ -216,9 +222,9 @@ class NullableProperty extends PropertyCodeGenerator {
   public void addClearField(Block code) {
     Optional<Excerpt> defaults = Declarations.freshBuilder(code, metadata);
     if (defaults.isPresent()) {
-      code.addLine("%1$s = %2$s.%1$s;", property.getName(), defaults.get());
+      code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
     } else {
-      code.addLine("%s = null;", property.getName());
+      code.addLine("%s = null;", property.getField());
     }
   }
 }

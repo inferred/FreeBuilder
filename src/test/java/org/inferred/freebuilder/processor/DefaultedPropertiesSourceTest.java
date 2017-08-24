@@ -827,7 +827,7 @@ public class DefaultedPropertiesSourceTest {
         "   */",
         "  public Person.Builder mergeFrom(Person.Builder template) {",
         "    // Upcast to access private fields; otherwise, oddly, we get an access violation.",
-        "    Person_Builder base = (Person_Builder) template;",
+        "    Person_Builder base = template;",
         "    Person_Builder _defaults = new Person.Builder();",
         "    if (!base._unsetProperties.contains(Person_Builder.Property.NAME)",
         "        && (_defaults._unsetProperties.contains(Person_Builder.Property.NAME)",
