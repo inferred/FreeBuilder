@@ -8,6 +8,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.addAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuildersMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
@@ -18,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Type;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -88,6 +91,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
     addBuilderVarargsAdd(code);
     addValueInstanceAddAll(code);
     addBuilderAddAll(code);
+    addMutate(code);
     addClear(code);
     addGetter(code);
   }
@@ -240,6 +244,33 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine("  elementBuilders.forEach(this::%s);", addMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
+        .addLine("}");
+  }
+
+  private void addMutate(SourceBuilder code) {
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Applies {@code mutator} to a list of builders for the elements of the list")
+        .addLine(" * that will be returned from %s.",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" *")
+        .addLine(" * <p>This method mutates the list in-place. {@code mutator} is a void")
+        .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
+        .addLine(" * not to call pure functions, like %s.",
+            Type.from(Collection.class).javadocNoArgMethodLink("stream"))
+        .addLine(" *")
+        .addLine(" * @return this {@code Builder} object")
+        .addLine(" * @throws NullPointerException if {@code mutator} is null")
+        .addLine(" */")
+        .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
+            datatype.getBuilder(),
+            mutator(property),
+            Consumer.class,
+            List.class,
+            element.builderType())
+        .add(methodBody(code, "mutator")
+            .addLine("  mutator.accept(%s);", property.getField())
+            .addLine("  return (%s) this;", datatype.getBuilder()))
         .addLine("}");
   }
 
