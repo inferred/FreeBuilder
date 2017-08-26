@@ -39,6 +39,10 @@ public class BuilderMethods {
     return "addAll" + property.getCapitalizedName();
   }
 
+  public static String addAllBuildersOfMethod(Property property) {
+    return "addAllBuildersOf" + property.getCapitalizedName();
+  }
+
   public static String addCopiesMethod(Property property) {
     return "addCopiesTo" + property.getCapitalizedName();
   }

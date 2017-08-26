@@ -187,6 +187,44 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void addAllIterableOfBuilders() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
+            .addLine("Item.Builder apple = new Item.Builder().name(\"apple\").price(50);")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addAllBuildersOfItems(ImmutableList.of(candy, apple))")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s)", convention.get("items"))
+            .addLine("    .containsExactly(candy.build(), apple.build()).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void addAllIterableOfBuilders_copiesBuilderValues() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candyBuilder = new Item.Builder().name(\"candy\").price(15);")
+            .addLine("Item.Builder appleBuilder = new Item.Builder().name(\"apple\").price(15);")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addAllBuildersOfItems(ImmutableList.of(candyBuilder, appleBuilder))")
+            .addLine("    .build();")
+            .addLine("Item candy = candyBuilder.build();")
+            .addLine("Item apple = appleBuilder.build();")
+            .addLine("candyBuilder.name(\"poison\").price(500);")
+            .addLine("appleBuilder.name(\"brick\").price(200);")
+            .addLine("assertThat(value.%s).containsExactly(candy, apple).inOrder();",
+                convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void mergeFromValue() {
     behaviorTester
         .with(new Processor(features))

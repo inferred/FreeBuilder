@@ -3,6 +3,7 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.BuildableType.maybeBuilder;
 import static org.inferred.freebuilder.processor.BuildableType.PartialToBuilderMethod.TO_BUILDER_AND_MERGE;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
+import static org.inferred.freebuilder.processor.BuilderMethods.addAllBuildersOfMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.addAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
@@ -80,6 +81,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
     addValueInstanceAdd(code);
     addBuilderAdd(code);
     addValueInstanceAddAll(code);
+    addBuilderAddAll(code);
   }
 
   private void addValueInstanceAdd(SourceBuilder code) {
@@ -162,6 +164,43 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine("    %1$s.ensureCapacity(%1$s.size() + %2$s);", property.getField(), size)
         .addLine("  }")
         .addLine("  elements.forEach(this::%s);", addMethod(property))
+        .addLine("  return (%s) this;", datatype.getBuilder());
+    code.add(body)
+        .addLine("}");
+  }
+
+  private void addBuilderAddAll(SourceBuilder code) {
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Adds the values built by each element of {@code elementBuilders} to")
+        .addLine(" * the list to be returned from %s.",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" *")
+        .addLine(" * <p>Only copies of the builders will be stored; any changes made to them after")
+        .addLine(" * returning from this method will not affect the values stored in the list.")
+        .addLine(" *")
+        .addLine(" * <p>The copied builders' {@link %s build()} methods will not be called until",
+            element.builderType().javadocNoArgMethodLink("build"))
+        .addLine(" * this object's {@link %s build() method} is, so if any builder's state is not",
+            datatype.getBuilder().javadocNoArgMethodLink("build"))
+        .addLine(" * legal, you will not get failures until then.")
+        .addLine(" *")
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
+        .addLine(" * @throws NullPointerException if {@code elementBuilders} is null or contains a")
+        .addLine(" *     null element")
+        .addLine(" */")
+        .addLine("public %s %s(%s<? extends %s> elementBuilders) {",
+            datatype.getBuilder(),
+            addAllBuildersOfMethod(property),
+            Iterable.class,
+            element.builderType());
+    Block body = methodBody(code, "elementBuilders");
+    body.addLine("  if (elementBuilders instanceof %s) {", Collection.class);
+    Variable size = new Variable("elementsSize");
+    body.addLine("    int %s = ((%s<?>) elementBuilders).size();", size, Collection.class)
+        .addLine("    %1$s.ensureCapacity(%1$s.size() + %2$s);", property.getField(), size)
+        .addLine("  }")
+        .addLine("  elementBuilders.forEach(this::%s);", addMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
