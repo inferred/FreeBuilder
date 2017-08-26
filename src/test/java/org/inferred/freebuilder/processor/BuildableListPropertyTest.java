@@ -318,6 +318,24 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void clearBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addItems(candy)")
+            .addLine("    .clear()")
+            .addLine("    .addItems(apple)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(apple);", convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void toBuilder_preservesContainedPartials() {
     behaviorTester
         .with(new Processor(features))
