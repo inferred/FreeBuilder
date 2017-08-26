@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.stream.BaseStream;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -137,6 +138,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
     addSpliteratorBuilderAddAll(code);
     addIterableValueInstanceAddAll(code);
     addIterableBuilderAddAll(code);
+    addStreamValueInstanceAddAll(code);
+    addStreamBuilderAddAll(code);
     addMutate(code);
     addClear(code);
     addGetter(code);
@@ -329,6 +332,27 @@ class BuildableListProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             addAllBuildersOfMethod(property),
             Iterable.class,
+            element.builderType())
+        .addLine("  return %s(elementBuilders.spliterator());", addAllBuildersOfMethod(property))
+        .addLine("}");
+  }
+
+  private void addStreamValueInstanceAddAll(SourceBuilder code) {
+    code.addLine("");
+    addJavadocForAddingMultipleValues(code);
+    code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
+            datatype.getBuilder(), addAllMethod(property), BaseStream.class, element.type())
+        .addLine("  return %s(elements.spliterator());", addAllMethod(property))
+        .addLine("}");
+  }
+
+  private void addStreamBuilderAddAll(SourceBuilder code) {
+    code.addLine("");
+    addJavadocForAddingMultipleBuilders(code);
+    code.addLine("public %s %s(%s<? extends %s, ?> elementBuilders) {",
+            datatype.getBuilder(),
+            addAllBuildersOfMethod(property),
+            BaseStream.class,
             element.builderType())
         .addLine("  return %s(elementBuilders.spliterator());", addAllBuildersOfMethod(property))
         .addLine("}");
