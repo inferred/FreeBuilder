@@ -14,6 +14,7 @@ import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
+import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 
 import com.google.common.collect.ImmutableList;
 
@@ -65,25 +66,57 @@ class BuildableListProperty extends PropertyCodeGenerator {
       BuildableType element = BuildableType
           .create(elementType, elementBuilder, config.getElements(), config.getTypes());
       boolean needsSafeVarargs = needsSafeVarargs(rawElementType);
+      boolean overridesValueInstanceVarargsAddMethod =
+          hasValueInstanceVarargsAddMethodOverride(config, rawElementType);
+      boolean overridesBuilderVarargsAddMethod =
+          hasBuilderVarargsAddMethodOverride(config, element.builderType());
 
       return Optional.of(new BuildableListProperty(
           config.getDatatype(),
           config.getProperty(),
           needsSafeVarargs,
+          overridesValueInstanceVarargsAddMethod,
+          overridesBuilderVarargsAddMethod,
           element));
+    }
+
+    private static boolean hasValueInstanceVarargsAddMethodOverride(
+        Config config, TypeMirror elementType) {
+      return overrides(
+          config.getBuilder(),
+          config.getTypes(),
+          addMethod(config.getProperty()),
+          config.getTypes().getArrayType(elementType));
+    }
+
+    private static boolean hasBuilderVarargsAddMethodOverride(Config config, Type builderType) {
+      TypeMirror rawBuilderType = config.getElements()
+          .getTypeElement(builderType.getQualifiedName().toString())
+          .asType();
+      return overrides(
+          config.getBuilder(),
+          config.getTypes(),
+          addMethod(config.getProperty()),
+          config.getTypes().getArrayType(rawBuilderType));
     }
   }
 
   private final boolean needsSafeVarargs;
+  private final boolean overridesValueInstanceVarargsAddMethod;
+  private final boolean overridesBuilderVarargsAddMethod;
   private final BuildableType element;
 
   private BuildableListProperty(
       Datatype datatype,
       Property property,
       boolean needsSafeVarargs,
+      boolean overridesValueInstanceVarargsAddMethod,
+      boolean overridesBuilderVarargsAddMethod,
       BuildableType element) {
     super(datatype, property);
     this.needsSafeVarargs = needsSafeVarargs;
+    this.overridesValueInstanceVarargsAddMethod = overridesValueInstanceVarargsAddMethod;
+    this.overridesBuilderVarargsAddMethod = overridesBuilderVarargsAddMethod;
     this.element = element;
   }
 
@@ -201,7 +234,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addValueInstanceVarargsAdd(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleValues(code);
-    addSafeVarargsForPublicMethod(code);
+    addSafeVarargsForPublicMethod(code, overridesValueInstanceVarargsAddMethod);
     code.add("%s %s(%s... elements) {%n",
             datatype.getBuilder(), addMethod(property), element.type())
         .addLine("  return %s(%s.asList(elements));", addAllMethod(property), Arrays.class)
@@ -211,7 +244,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addBuilderVarargsAdd(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleBuilders(code);
-    addSafeVarargsForPublicMethod(code);
+    addSafeVarargsForPublicMethod(code, overridesBuilderVarargsAddMethod);
     code.add("%s %s(%s... elementBuilders) {%n",
             datatype.getBuilder(), addMethod(property), element.builderType())
         .addLine("  return %s(%s.asList(elementBuilders));",
@@ -219,13 +252,17 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addSafeVarargsForPublicMethod(SourceBuilder code) {
+  private void addSafeVarargsForPublicMethod(SourceBuilder code, boolean isOverridden) {
     if (needsSafeVarargs) {
-      code.addLine("@%s", SafeVarargs.class)
-          .addLine("@%s({\"varargs\"})", SuppressWarnings.class);
+      if (!isOverridden) {
+        code.addLine("@%s", SafeVarargs.class)
+            .addLine("@%s({\"varargs\"})", SuppressWarnings.class);
+      } else {
+        code.addLine("@%s({\"unchecked\", \"varargs\"})", SuppressWarnings.class);
+      }
     }
     code.add("public ");
-    if (needsSafeVarargs) {
+    if (needsSafeVarargs && !isOverridden) {
       code.add("final ");
     }
   }
