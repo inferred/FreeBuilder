@@ -3,6 +3,7 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.BuildableType.maybeBuilder;
 import static org.inferred.freebuilder.processor.BuildableType.PartialToBuilderMethod.TO_BUILDER_AND_MERGE;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
+import static org.inferred.freebuilder.processor.BuilderMethods.addAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
@@ -78,6 +79,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
   public void addBuilderFieldAccessors(SourceBuilder code) {
     addValueInstanceAdd(code);
     addBuilderAdd(code);
+    addValueInstanceAddAll(code);
   }
 
   private void addValueInstanceAdd(SourceBuilder code) {
@@ -133,6 +135,34 @@ class BuildableListProperty extends PropertyCodeGenerator {
               property.getField(),
               element.builderFactory().newBuilder(element.builderType(), EXPLICIT_TYPES))
           .addLine("  return (%s) this;", datatype.getBuilder()))
+        .addLine("}");
+  }
+
+  private void addValueInstanceAddAll(SourceBuilder code) {
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Adds each element of {@code elements} to the list to be returned from")
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" *")
+        .addLine(" * <p>Each element <em>may</em> be converted to/from a builder in this process;")
+        .addLine(" * you should not rely on any of the instances you provide being (or not being)")
+        .addLine(" * present in the final list.")
+        .addLine(" *")
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
+        .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
+        .addLine(" *     null element")
+        .addLine(" */")
+        .addLine("public %s %s(%s<? extends %s> elements) {",
+            datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type());
+    Block body = methodBody(code, "elements");
+    body.addLine("  if (elements instanceof %s) {", Collection.class);
+    Variable size = new Variable("elementsSize");
+    body.addLine("    int %s = ((%s<?>) elements).size();", size, Collection.class)
+        .addLine("    %1$s.ensureCapacity(%1$s.size() + %2$s);", property.getField(), size)
+        .addLine("  }")
+        .addLine("  elements.forEach(this::%s);", addMethod(property))
+        .addLine("  return (%s) this;", datatype.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
