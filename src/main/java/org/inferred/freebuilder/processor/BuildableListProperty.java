@@ -83,6 +83,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
     addValueInstanceAdd(code);
     addBuilderAdd(code);
     addValueInstanceVarargsAdd(code);
+    addBuilderVarargsAdd(code);
     addValueInstanceAddAll(code);
     addBuilderAddAll(code);
     addClear(code);
@@ -159,6 +160,27 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine(" */");
   }
 
+  private void addJavadocForAddingMultipleBuilders(SourceBuilder code) {
+    code.addLine("/**")
+        .addLine(" * Adds the values built by each element of {@code elementBuilders} to")
+        .addLine(" * the list to be returned from %s.",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" *")
+        .addLine(" * <p>Only copies of the builders will be stored; any changes made to them after")
+        .addLine(" * returning from this method will not affect the values stored in the list.")
+        .addLine(" *")
+        .addLine(" * <p>The copied builders' {@link %s build()} methods will not be called until",
+            element.builderType().javadocNoArgMethodLink("build"))
+        .addLine(" * this object's {@link %s build() method} is, so if any builder's state is not",
+            datatype.getBuilder().javadocNoArgMethodLink("build"))
+        .addLine(" * legal, you will not get failures until then.")
+        .addLine(" *")
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
+        .addLine(" * @throws NullPointerException if {@code elementBuilders} is null or contains a")
+        .addLine(" *     null element")
+        .addLine(" */");
+  }
+
   private void addValueInstanceVarargsAdd(SourceBuilder code) {
     // TODO SafeVarargs
     code.addLine("");
@@ -166,6 +188,17 @@ class BuildableListProperty extends PropertyCodeGenerator {
     code.addLine("public %s %s(%s... elements) {",
             datatype.getBuilder(), addMethod(property), element.type())
         .addLine("  return %s(%s.asList(elements));", addAllMethod(property), Arrays.class)
+        .addLine("}");
+  }
+
+  private void addBuilderVarargsAdd(SourceBuilder code) {
+    // TODO SafeVarargs
+    code.addLine("");
+    addJavadocForAddingMultipleBuilders(code);
+    code.addLine("public %s %s(%s... elementBuilders) {",
+            datatype.getBuilder(), addMethod(property), element.builderType())
+        .addLine("  return %s(%s.asList(elementBuilders));",
+            addAllBuildersOfMethod(property), Arrays.class)
         .addLine("}");
   }
 
@@ -188,26 +221,9 @@ class BuildableListProperty extends PropertyCodeGenerator {
   }
 
   private void addBuilderAddAll(SourceBuilder code) {
-    code.addLine("")
-        .addLine("/**")
-        .addLine(" * Adds the values built by each element of {@code elementBuilders} to")
-        .addLine(" * the list to be returned from %s.",
-            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
-        .addLine(" *")
-        .addLine(" * <p>Only copies of the builders will be stored; any changes made to them after")
-        .addLine(" * returning from this method will not affect the values stored in the list.")
-        .addLine(" *")
-        .addLine(" * <p>The copied builders' {@link %s build()} methods will not be called until",
-            element.builderType().javadocNoArgMethodLink("build"))
-        .addLine(" * this object's {@link %s build() method} is, so if any builder's state is not",
-            datatype.getBuilder().javadocNoArgMethodLink("build"))
-        .addLine(" * legal, you will not get failures until then.")
-        .addLine(" *")
-        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
-        .addLine(" * @throws NullPointerException if {@code elementBuilders} is null or contains a")
-        .addLine(" *     null element")
-        .addLine(" */")
-        .addLine("public %s %s(%s<? extends %s> elementBuilders) {",
+    code.addLine("");
+    addJavadocForAddingMultipleBuilders(code);
+    code.addLine("public %s %s(%s<? extends %s> elementBuilders) {",
             datatype.getBuilder(),
             addAllBuildersOfMethod(property),
             Iterable.class,
