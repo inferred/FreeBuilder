@@ -20,6 +20,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -81,6 +82,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
   public void addBuilderFieldAccessors(SourceBuilder code) {
     addValueInstanceAdd(code);
     addBuilderAdd(code);
+    addValueInstanceVarargsAdd(code);
     addValueInstanceAddAll(code);
     addBuilderAddAll(code);
     addClear(code);
@@ -142,9 +144,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addValueInstanceAddAll(SourceBuilder code) {
-    code.addLine("")
-        .addLine("/**")
+  private void addJavadocForAddingMultipleValues(SourceBuilder code) {
+    code.addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the list to be returned from")
         .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
@@ -156,6 +157,21 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
         .addLine(" *     null element")
         .addLine(" */");
+  }
+
+  private void addValueInstanceVarargsAdd(SourceBuilder code) {
+    // TODO SafeVarargs
+    code.addLine("");
+    addJavadocForAddingMultipleValues(code);
+    code.addLine("public %s %s(%s... elements) {",
+            datatype.getBuilder(), addMethod(property), element.type())
+        .addLine("  return %s(%s.asList(elements));", addAllMethod(property), Arrays.class)
+        .addLine("}");
+  }
+
+  private void addValueInstanceAddAll(SourceBuilder code) {
+    code.addLine("");
+    addJavadocForAddingMultipleValues(code);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type());
