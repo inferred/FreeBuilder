@@ -300,6 +300,25 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void toBuilder_preservesContainedPartials() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").buildPartial();")
+            .addLine("Receipt initialReceipt = new Receipt.Builder()")
+            .addLine("    .addItems(candy)")
+            .addLine("    .buildPartial();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").buildPartial();")
+            .addLine("Receipt receipt = initialReceipt.toBuilder().addItems(apple).build();")
+            .addLine("assertThat(receipt.%s).containsExactly(candy, apple).inOrder();",
+                convention.get("items"))
+            .build())
+        .runTest();
+
+  }
+
+  @Test
   public void testJacksonInteroperability() {
     behaviorTester
         .with(new Processor(features))

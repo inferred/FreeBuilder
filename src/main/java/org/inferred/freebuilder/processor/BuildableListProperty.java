@@ -248,7 +248,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
 
   @Override
   public void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable) {
-    // TODO
+    code.addLine("%s.%s(%s);", builder, addAllMethod(property), variable);
   }
 
   @Override
