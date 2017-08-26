@@ -263,6 +263,25 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+    public void mergeFromBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Receipt.Builder initialBuilder = new Receipt.Builder().addItems(candy);")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .mergeFrom(initialBuilder)")
+            .addLine("    .addItems(apple)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(candy, apple).inOrder();",
+                convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void buildPartial_cascades() {
     behaviorTester
         .with(new Processor(features))
