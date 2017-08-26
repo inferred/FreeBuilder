@@ -185,7 +185,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    // TODO
+    code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
   }
 
   @Override
