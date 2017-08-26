@@ -31,6 +31,14 @@ public class BuilderMethods {
     }
   }
 
+  public static String getBuildersMethod(Property property) {
+    if (property.isUsingBeanConvention()) {
+      return "getBuildersOf" + property.getCapitalizedName();
+    } else {
+      return "buildersOf" + property.getCapitalizedName();
+    }
+  }
+
   public static String addMethod(Property property) {
     return "add" + property.getCapitalizedName();
   }

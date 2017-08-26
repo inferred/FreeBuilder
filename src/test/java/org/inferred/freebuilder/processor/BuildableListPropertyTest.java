@@ -313,6 +313,82 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void getter_returnsEmptyListIfBuilderIsEmpty() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("assertThat(new Receipt.Builder().%s).isEmpty();",
+                convention.get("buildersOfItems"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void getter_returnsUnmodifiableEmptyListIfBuilderIsEmpty() {
+    thrown.expect(UnsupportedOperationException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("new Receipt.Builder().%s.add(new Item.Builder());",
+                convention.get("buildersOfItems"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void getter_returnsListOfItemBuilders() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt.Builder builder = new Receipt.Builder().addItems(candy, apple);")
+            .addLine("assertThat(builder.%s).hasSize(2);", convention.get("buildersOfItems"))
+            .addLine("assertThat(builder.%s.get(0).build()).isEqualTo(candy);",
+                convention.get("buildersOfItems"))
+            .addLine("assertThat(builder.%s.get(1).build()).isEqualTo(apple);",
+                convention.get("buildersOfItems"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void getter_returnsUnmodifiableListOfItemBuilders() {
+    thrown.expect(UnsupportedOperationException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt.Builder builder = new Receipt.Builder().addItems(candy, apple);")
+            .addLine("builder.%s.add(new Item.Builder());", convention.get("buildersOfItems"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void getter_returnsListOfMutableItemBuildersUsedInContainingBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt.Builder builder = new Receipt.Builder()")
+            .addLine("    .addItems(new Item.Builder(), new Item.Builder());")
+            .addLine("builder.%s.get(0).mergeFrom(candy);", convention.get("buildersOfItems"))
+            .addLine("builder.%s.get(1).mergeFrom(apple);", convention.get("buildersOfItems"))
+            .addLine("assertThat(builder.build().%s).containsExactly(candy, apple).inOrder();",
+                convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void mergeFromValue() {
     behaviorTester
         .with(new Processor(features))

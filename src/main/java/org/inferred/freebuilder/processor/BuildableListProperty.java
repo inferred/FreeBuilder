@@ -7,6 +7,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.addAllBuildersOf
 import static org.inferred.freebuilder.processor.BuilderMethods.addAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
+import static org.inferred.freebuilder.processor.BuilderMethods.getBuildersMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
@@ -22,6 +23,7 @@ import org.inferred.freebuilder.processor.util.Variable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,6 +89,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
     addValueInstanceAddAll(code);
     addBuilderAddAll(code);
     addClear(code);
+    addGetter(code);
   }
 
   private void addValueInstanceAdd(SourceBuilder code) {
@@ -251,6 +254,21 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine("public %s %s() {", datatype.getBuilder(), clearMethod(property))
         .addLine("  %s.clear();", property.getField())
         .addLine("  return (%s) this;", datatype.getBuilder())
+        .addLine("}");
+  }
+
+  private void addGetter(SourceBuilder code) {
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Returns an unmodifiable list of mutable builders for the elements of the")
+        .addLine(" * list that will be returned by %s.",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * Changes to this builder will be reflected in the view, and changes to")
+        .addLine(" * the element builders in the view will affect this builder.")
+        .addLine(" */")
+        .addLine("public %s<%s> %s() {",
+            List.class, element.builderType(), getBuildersMethod(property))
+        .addLine("  return %s.unmodifiableList(%s);", Collections.class, property.getField())
         .addLine("}");
   }
 
