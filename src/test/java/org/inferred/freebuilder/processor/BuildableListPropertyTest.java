@@ -263,6 +263,24 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void buildPartial_cascades() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\");")
+            .addLine("Item.Builder apple = new Item.Builder().name(\"apple\");")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addItems(candy)")
+            .addLine("    .addItems(apple)")
+            .addLine("    .buildPartial();")
+            .addLine("assertThat(value.%s)", convention.get("items"))
+            .addLine("    .containsExactly(candy.buildPartial(), apple.buildPartial()).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testJacksonInteroperability() {
     behaviorTester
         .with(new Processor(features))
