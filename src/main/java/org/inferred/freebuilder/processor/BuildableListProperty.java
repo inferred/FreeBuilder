@@ -13,6 +13,7 @@ import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 
 import com.google.common.collect.ImmutableList;
 
@@ -60,20 +61,29 @@ class BuildableListProperty extends PropertyCodeGenerator {
       if (elementBuilder == null) {
         return Optional.empty();
       }
+
       BuildableType element = BuildableType
           .create(elementType, elementBuilder, config.getElements(), config.getTypes());
+      boolean needsSafeVarargs = needsSafeVarargs(rawElementType);
 
       return Optional.of(new BuildableListProperty(
           config.getDatatype(),
           config.getProperty(),
+          needsSafeVarargs,
           element));
     }
   }
 
+  private final boolean needsSafeVarargs;
   private final BuildableType element;
 
-  private BuildableListProperty(Datatype datatype, Property property, BuildableType element) {
+  private BuildableListProperty(
+      Datatype datatype,
+      Property property,
+      boolean needsSafeVarargs,
+      BuildableType element) {
     super(datatype, property);
+    this.needsSafeVarargs = needsSafeVarargs;
     this.element = element;
   }
 
@@ -189,24 +199,35 @@ class BuildableListProperty extends PropertyCodeGenerator {
   }
 
   private void addValueInstanceVarargsAdd(SourceBuilder code) {
-    // TODO SafeVarargs
     code.addLine("");
     addJavadocForAddingMultipleValues(code);
-    code.addLine("public %s %s(%s... elements) {",
+    addSafeVarargsForPublicMethod(code);
+    code.add("%s %s(%s... elements) {%n",
             datatype.getBuilder(), addMethod(property), element.type())
         .addLine("  return %s(%s.asList(elements));", addAllMethod(property), Arrays.class)
         .addLine("}");
   }
 
   private void addBuilderVarargsAdd(SourceBuilder code) {
-    // TODO SafeVarargs
     code.addLine("");
     addJavadocForAddingMultipleBuilders(code);
-    code.addLine("public %s %s(%s... elementBuilders) {",
+    addSafeVarargsForPublicMethod(code);
+    code.add("%s %s(%s... elementBuilders) {%n",
             datatype.getBuilder(), addMethod(property), element.builderType())
         .addLine("  return %s(%s.asList(elementBuilders));",
             addAllBuildersOfMethod(property), Arrays.class)
         .addLine("}");
+  }
+
+  private void addSafeVarargsForPublicMethod(SourceBuilder code) {
+    if (needsSafeVarargs) {
+      code.addLine("@%s", SafeVarargs.class)
+          .addLine("@%s({\"varargs\"})", SuppressWarnings.class);
+    }
+    code.add("public ");
+    if (needsSafeVarargs) {
+      code.add("final ");
+    }
   }
 
   private void addValueInstanceAddAll(SourceBuilder code) {
