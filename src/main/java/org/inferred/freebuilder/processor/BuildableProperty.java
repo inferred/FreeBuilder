@@ -23,6 +23,7 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.IN
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -34,6 +35,7 @@ import com.google.common.collect.FluentIterable;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -188,7 +190,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     code.addLine("private final %s %s = %s;",
-        builderType, property.getName(), builderFactory.newBuilder(builderType, INFERRED_TYPES));
+        builderType, property.getField(), builderFactory.newBuilder(builderType, INFERRED_TYPES));
   }
 
   @Override
@@ -214,10 +216,11 @@ class BuildableProperty extends PropertyCodeGenerator {
             setter(property),
             property.getType(),
             property.getName())
-        .add(PreconditionExcerpts.checkNotNull(property.getName()))
-        .addLine("  this.%s.clear();", property.getName())
-        .addLine("  this.%1$s.mergeFrom(%1$s);", property.getName())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .add(methodBody(code, property.getName())
+            .add(PreconditionExcerpts.checkNotNull(property.getName()))
+            .addLine("  %s.clear();", property.getField())
+            .addLine("  %s.mergeFrom(%s);", property.getField(), property.getName())
+            .addLine("  return (%s) this;", metadata.getBuilder()))
         .addLine("}");
   }
 
@@ -260,8 +263,9 @@ class BuildableProperty extends PropertyCodeGenerator {
             mutator(property),
             consumer.getQualifiedName(),
             builderType)
-        .addLine("  mutator.accept(%s);", property.getName())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .add(methodBody(code, "mutator")
+            .addLine("  mutator.accept(%s);", property.getField())
+            .addLine("  return (%s) this;", metadata.getBuilder()))
         .addLine("}");
   }
 
@@ -272,36 +276,28 @@ class BuildableProperty extends PropertyCodeGenerator {
             metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
         .addLine("public %s %s() {", builderType, getBuilderMethod(property))
-        .addLine("  return %s;", property.getName())
+        .addLine("  return %s;", property.getField())
         .addLine("}");
   }
 
   @Override
-  public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-    code.addLine("%s = %s.%s.build();", finalField, builder, property.getName());
+  public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
+    code.addLine("%s = %s.build();", finalField, property.getField().on(builder));
   }
 
   @Override
-  public void addPartialFieldAssignment(SourceBuilder code, String finalField, String builder) {
-    code.addLine("%s = %s.%s.buildPartial();", finalField, builder, property.getName());
+  public void addPartialFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
+    code.addLine("%s = %s.buildPartial();", finalField, property.getField().on(builder));
   }
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    String propertyName = property.getName();
-    if (propertyName.equals(value)) {
-      propertyName = "this." + propertyName;  // see issue #78
-    }
-    code.addLine("%s.mergeFrom(%s.%s());", propertyName, value, property.getGetterName());
+    code.addLine("%s.mergeFrom(%s.%s());", property.getField(), value, property.getGetterName());
   }
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    String propertyName = property.getName();
-    if (propertyName.equals(builder)) {
-      propertyName = "this." + propertyName;  // see issue #78
-    }
-    code.add("%s.mergeFrom(%s.%s()", propertyName, builder, getBuilderMethod(property));
+    code.add("%s.mergeFrom(%s.%s()", property.getField(), builder, getBuilderMethod(property));
     if (mergeFromBuilderMethod == MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE) {
       code.add(".buildPartial()");
     }
@@ -312,21 +308,21 @@ class BuildableProperty extends PropertyCodeGenerator {
   public void addSetBuilderFromPartial(Block code, String builder) {
     if (partialToBuilderMethod == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
       code.add("%s.%s().mergeFrom(%s.toBuilder());",
-          builder, getBuilderMethod(property), setter(property), property.getName());
+          builder, getBuilderMethod(property), property.getField());
     } else {
       code.add("%s.%s().mergeFrom(%s);",
-          builder, getBuilderMethod(property), setter(property), property.getName());
+          builder, getBuilderMethod(property), property.getField());
     }
   }
 
   @Override
-  public void addSetFromResult(SourceBuilder code, String builder, String variable) {
+  public void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable) {
     code.addLine("%s.%s(%s);", builder, setter(property), variable);
   }
 
   @Override
   public void addClearField(Block code) {
-    code.addLine("%s.clear();", property.getName());
+    code.addLine("%s.clear();", property.getField());
   }
 
   private static final class IsCallableMethod implements Predicate<ExecutableElement> {

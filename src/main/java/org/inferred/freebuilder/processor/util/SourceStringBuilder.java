@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
+import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
@@ -35,11 +36,12 @@ import javax.lang.model.type.TypeMirror;
 /**
  * A {@link SourceBuilder} that writes to a {@link StringBuilder}.
  */
-public final class SourceStringBuilder implements SourceBuilder {
+public class SourceStringBuilder implements SourceBuilder {
 
   private final TypeShortener shortener;
   private final StringBuilder destination = new StringBuilder();
   private final FeatureSet features;
+  private final Scope scope;
 
   /**
    * Returns a {@link SourceStringBuilder} that always shortens types, even if that causes
@@ -47,7 +49,7 @@ public final class SourceStringBuilder implements SourceBuilder {
    */
   public static SourceBuilder simple(Feature<?>... features) {
     return new SourceStringBuilder(
-        new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features));
+        new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features), new FileScope());
   }
 
   /**
@@ -55,12 +57,13 @@ public final class SourceStringBuilder implements SourceBuilder {
    */
   public static SourceBuilder compilable(FeatureSet features) {
     return new SourceStringBuilder(
-        new TypeShortener.NeverShorten(), features);
+        new TypeShortener.NeverShorten(), features, new FileScope());
   }
 
-  SourceStringBuilder(TypeShortener shortener, FeatureSet features) {
+  SourceStringBuilder(TypeShortener shortener, FeatureSet features, Scope scope) {
     this.shortener = shortener;
     this.features = features;
+    this.scope = scope;
   }
 
   @Override
@@ -86,12 +89,22 @@ public final class SourceStringBuilder implements SourceBuilder {
 
   @Override
   public SourceStringBuilder subBuilder() {
-    return new SourceStringBuilder(shortener, features);
+    return new SourceStringBuilder(shortener, features, scope);
+  }
+
+  @Override
+  public SourceStringBuilder subScope(Scope newScope) {
+    return new SourceStringBuilder(shortener, features, newScope);
   }
 
   @Override
   public <T extends Feature<T>> T feature(FeatureType<T> feature) {
     return features.get(feature);
+  }
+
+  @Override
+  public Scope scope() {
+    return scope;
   }
 
   /** Returns the source code written so far. */

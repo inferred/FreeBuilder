@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 
+import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Rule;
@@ -46,7 +47,8 @@ public class SourceStringBuilderTest {
   @Rule public final ModelRule model = new ModelRule();
   @Rule public final ExpectedException thrown = ExpectedException.none();
   private final ImportManager shortener = new ImportManager.Builder().build();
-  private final SourceBuilder builder = new SourceStringBuilder(shortener, new StaticFeatureSet());
+  private final SourceBuilder builder =
+      new SourceStringBuilder(shortener, new StaticFeatureSet(), new FileScope());
 
   @Test
   public void testConstructor() {

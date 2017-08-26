@@ -75,6 +75,13 @@ public interface SourceBuilder {
   SourceStringBuilder subBuilder();
 
   /**
+   * Returns a {@code SourceStringBuilder} with the same configuration as this builder, but with
+   * a different scope. In particular, the {@code TypeShortener} will be shared, so any types added
+   * to the sub-builder will be included in the imports for this builder (and its parents).
+   */
+  SourceStringBuilder subScope(Scope newScope);
+
+  /**
    * Returns the instance of {@code featureType} appropriate for the source being written. For
    * instance, <code>code.feature({@link GuavaLibrary#GUAVA
    * GUAVA}).{@link GuavaLibrary#isAvailable() isAvailable()}</code> returns true if the Guava
@@ -86,5 +93,10 @@ public interface SourceBuilder {
    * @see Feature
    */
   <T extends Feature<T>> T feature(FeatureType<T> featureType);
+
+  /**
+   * Returns the current scope (e.g. visible method parameters).
+   */
+  Scope scope();
 
 }

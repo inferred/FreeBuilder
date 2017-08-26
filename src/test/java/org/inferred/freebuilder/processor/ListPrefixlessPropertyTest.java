@@ -919,6 +919,58 @@ public class ListPrefixlessPropertyTest {
   }
 
   @Test
+  public void testCanNameBoxedPropertyElements() {
+    // See also https://github.com/google/FreeBuilder/issues/258
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s> elements();", List.class, String.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addElements(\"one\", \"two\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.elements()).containsExactly(\"one\", \"two\").inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCanNamePrimitivePropertyElements() {
+    // See also https://github.com/google/FreeBuilder/issues/258
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<%s> elements();", List.class, Integer.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addElements(1, 2)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.elements()).containsExactly(1, 2).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
     assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester

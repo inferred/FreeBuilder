@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.junit.rules.ExpectedException.none;
 
 import org.junit.Rule;
@@ -27,44 +28,95 @@ public class BlockTest {
   @Rule public ExpectedException thrown = none();
 
   private final SourceBuilder code = SourceStringBuilder.simple();
-  private final Block block = new Block(code);
+  private final Block block = methodBody(code, "param", "otherParam", "_otherParam");
 
   @Test
   public void testSingleDeclaration() {
-    block.add("Line 2\n");
-    Excerpt reference = block.declare("Line 3\n", "Line 1\n");
-    block.add(reference);
+    block.addLine("foo();");
+    Excerpt reference = block.declare(Excerpts.add("int"), "bar", Excerpts.add("baz()"));
+    block.addLine("foobar(%s);", reference);
     code.add(block);
-    assertThat(code.toString()).isEqualTo("Line 1\nLine 2\nLine 3\n");
+    assertThat(code.toString()).isEqualTo("int bar = baz();\nfoo();\nfoobar(bar);\n");
+  }
+
+  @Test
+  public void testAvoidsNameClashByPrependingUnderscore() {
+    block.addLine("foo();");
+    Excerpt reference = block.declare(Excerpts.add("int"), "param", Excerpts.add("baz()"));
+    block.addLine("foobar(%s);", reference);
+    code.add(block);
+    assertThat(code.toString()).isEqualTo("int _param = baz();\nfoo();\nfoobar(_param);\n");
+  }
+
+  @Test
+  public void testAvoidsUnderscoreNameClashByAppendingDigit() {
+    block.addLine("foo();");
+    Excerpt reference = block.declare(Excerpts.add("int"), "otherParam", Excerpts.add("baz()"));
+    block.addLine("foobar(%s);", reference);
+    code.add(block);
+    assertThat(code.toString())
+        .isEqualTo("int _otherParam2 = baz();\nfoo();\nfoobar(_otherParam2);\n");
   }
 
   @Test
   public void testTwoDeclarations() {
-    block.add("Line 3\n");
-    Excerpt reference = block.declare("Line 5\n", "Line 1\n");
-    Excerpt reference2 = block.declare("Line 4\n", "Line 2\n");
-    block.add(reference2);
-    block.add(reference);
+    block.addLine("foo();");
+    Excerpt reference = block.declare(Excerpts.add("int"), "one", Excerpts.add("1"));
+    Excerpt reference2 = block.declare(Excerpts.add("double"), "two", Excerpts.add("2.0"));
+    block.addLine("bar(%s);", reference);
+    block.addLine("baz(%s);", reference2);
     code.add(block);
-    assertThat(code.toString()).isEqualTo("Line 1\nLine 2\nLine 3\nLine 4\nLine 5\n");
+    assertThat(code.toString())
+        .isEqualTo("int one = 1;\ndouble two = 2.0;\nfoo();\nbar(one);\nbaz(two);\n");
   }
 
   @Test
   public void testDuplicateDeclaration() {
-    block.add("Line 2\n");
-    Excerpt reference = block.declare("Line 3\n", "Line 1\n");
-    Excerpt reference2 = block.declare("Line 3\n", "Line 1\n");
-    block.add(reference);
-    block.add(reference2);
+    block.addLine("foo();");
+    Excerpt reference = block.declare(Excerpts.add("int"), "bar", Excerpts.add("baz()"));
+    Excerpt reference2 = block.declare(Excerpts.add("int"), "bar", Excerpts.add("baz()"));
+    block.addLine("foobar(%s);", reference);
+    block.addLine("foobaz(%s);", reference2);
     code.add(block);
-    assertThat(code.toString()).isEqualTo("Line 1\nLine 2\nLine 3\nLine 3\n");
+    assertThat(code.toString()).isEqualTo("int bar = baz();\nfoo();\nfoobar(bar);\nfoobaz(bar);\n");
   }
 
   @Test
-  public void testIncompatibleDeclarations() {
-    block.declare("variable", "definition 1");
+  public void testIncompatibleTypes() {
+    block.declare(Excerpts.add("int"), "variable", Excerpts.add("value"));
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Incompatible declaration for 'variable'");
-    block.declare("variable", "definition 2");
+    block.declare(Excerpts.add("float"), "variable", Excerpts.add("value"));
+  }
+
+  @Test
+  public void testIncompatibleValues() {
+    block.declare(Excerpts.add("int"), "variable", Excerpts.add("value"));
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Incompatible declaration for 'variable'");
+    block.declare(Excerpts.add("int"), "variable", Excerpts.add("otherValue"));
+  }
+
+  @Test
+  public void testFieldReferenceQualifiedIfClashesWithVariable() {
+    Excerpt reference = block.declare(Excerpts.add("int"), "foo", Excerpts.add("bar()"));
+    block.addLine("%s = %s;", new FieldAccess("foo"), reference);
+    code.add(block);
+    assertThat(code.toString()).isEqualTo("int foo = bar();\nthis.foo = foo;\n");
+  }
+
+  @Test
+  public void testAppendsUnderscoreIfVariableNameClashesWithPreviousFieldAccess() {
+    block.addLine("%s = 10;", new FieldAccess("foo"));
+    block.declare(Excerpts.add("int"), "foo", Excerpts.add("bar()"));
+    code.add(block);
+    assertThat(code.toString()).isEqualTo("int _foo = bar();\nfoo = 10;\n");
+  }
+
+  @Test
+  public void testQualifiesFieldAccessInAssignmentToVariableOfSameName() {
+    block.declare(Excerpts.add("int"), "foo", new FieldAccess("foo"));
+    code.add(block);
+    assertThat(code.toString()).isEqualTo("int foo = this.foo;\n");
   }
 }

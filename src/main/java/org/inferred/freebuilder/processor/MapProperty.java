@@ -23,6 +23,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.putMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
@@ -38,6 +39,7 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
 import org.inferred.freebuilder.processor.util.Block;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
@@ -125,7 +127,7 @@ class MapProperty extends PropertyCodeGenerator {
         LinkedHashMap.class,
         keyType,
         valueType,
-        property.getName(),
+        property.getField(),
         diamondOperator(Excerpts.add("%s, %s", keyType, valueType)));
   }
 
@@ -165,14 +167,16 @@ class MapProperty extends PropertyCodeGenerator {
             putMethod(property),
             unboxedKeyType.or(keyType),
             unboxedValueType.or(valueType));
+    Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
-      code.add(PreconditionExcerpts.checkNotNull("key"));
+      body.add(PreconditionExcerpts.checkNotNull("key"));
     }
     if (!unboxedValueType.isPresent()) {
-      code.add(PreconditionExcerpts.checkNotNull("value"));
+      body.add(PreconditionExcerpts.checkNotNull("value"));
     }
-    code.addLine("  %s.put(key, value);", property.getName())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  %s.put(key, value);", property.getField())
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -217,11 +221,13 @@ class MapProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             removeMethod(property),
             unboxedKeyType.or(keyType));
+    Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
-      code.add(PreconditionExcerpts.checkNotNull("key"));
+      body.add(PreconditionExcerpts.checkNotNull("key"));
     }
-    code.addLine("  %s.remove(key);", property.getName())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  %s.remove(key);", property.getField())
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -250,15 +256,17 @@ class MapProperty extends PropertyCodeGenerator {
             Map.class,
             keyType,
             valueType);
+    Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      code.addLine("  mutator.accept(new CheckedMap<>(%s, this::%s));",
-          property.getName(), putMethod(property));
+      body.addLine("  mutator.accept(new CheckedMap<>(%s, this::%s));",
+          property.getField(), putMethod(property));
     } else {
-      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
-          .addLine("  mutator.accept(%s);", property.getName());
+          .addLine("  mutator.accept(%s);", property.getField());
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -271,7 +279,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" */")
         .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
-        .addLine("  %s.clear();", property.getName())
+        .addLine("  %s.clear();", property.getField())
         .addLine("  return (%s) this;", metadata.getBuilder())
         .addLine("}");
   }
@@ -284,19 +292,19 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine(" * Changes to this builder will be reflected in the view.")
         .addLine(" */")
         .addLine("public %s<%s, %s> %s() {", Map.class, keyType, valueType, getter(property))
-        .addLine("  return %s.unmodifiableMap(%s);", Collections.class, property.getName())
+        .addLine("  return %s.unmodifiableMap(%s);", Collections.class, property.getField())
         .addLine("}");
   }
 
   @Override
-  public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
+  public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
     code.add("%s = ", finalField);
     if (code.feature(GUAVA).isAvailable()) {
       code.add("%s.copyOf", ImmutableMap.class);
     } else {
       code.add("immutableMap");
     }
-    code.add("(%s.%s);\n", builder, property.getName());
+    code.add("(%s);\n", property.getField().on(builder));
   }
 
   @Override
@@ -306,21 +314,18 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    code.addLine("%s(((%s) %s).%s);",
-        putAllMethod(property),
-        metadata.getGeneratedBuilder(),
-        builder,
-        property.getName());
+    Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+    code.addLine("%s(%s);", putAllMethod(property), property.getField().on(base));
   }
 
   @Override
-  public void addSetFromResult(SourceBuilder code, String builder, String variable) {
+  public void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable) {
     code.addLine("%s.%s(%s);", builder, putAllMethod(property), variable);
   }
 
   @Override
   public void addClearField(Block code) {
-    code.addLine("%s.clear();", property.getName());
+    code.addLine("%s.clear();", property.getField());
   }
 
   @Override

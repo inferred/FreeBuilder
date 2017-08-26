@@ -19,6 +19,8 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.CodeGenerator.UNSET_PROPERTIES;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
@@ -30,6 +32,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
@@ -68,7 +71,7 @@ class DefaultProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private %s %s;", property.getType(), property.getName());
+    code.addLine("private %s %s;", property.getType(), property.getField());
   }
 
   @Override
@@ -92,22 +95,24 @@ class DefaultProperty extends PropertyCodeGenerator {
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s %s) {",
         metadata.getBuilder(), setter(property), property.getType(), property.getName());
+    Block body = methodBody(code, property.getName());
     if (kind.isPrimitive()) {
-      code.addLine("  this.%1$s = %1$s;", property.getName());
+      body.addLine("  %s = %s;", property.getField(), property.getName());
     } else {
-      code.add(checkNotNullPreamble(property.getName()))
-          .addLine("  this.%s = %s;", property.getName(), checkNotNullInline(property.getName()));
+      body.add(checkNotNullPreamble(property.getName()))
+          .addLine("  %s = %s;", property.getField(), checkNotNullInline(property.getName()));
     }
     if (!hasDefault) {
-      code.addLine("  _unsetProperties.remove(%s.%s);",
-          metadata.getPropertyEnum(), property.getAllCapsName());
+      body.addLine("  %s.remove(%s.%s);",
+          UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
     }
     if ((metadata.getBuilder() == metadata.getGeneratedBuilder())) {
-      code.addLine("  return this;");
+      body.addLine("  return this;");
     } else {
-      code.addLine("  return (%s) this;", metadata.getBuilder());
+      body.addLine("  return (%s) this;", metadata.getBuilder());
     }
-    code.addLine("}");
+    code.add(body)
+        .addLine("}");
   }
 
   private void addMapper(SourceBuilder code, final Metadata metadata) {
@@ -152,22 +157,22 @@ class DefaultProperty extends PropertyCodeGenerator {
     code.addLine(" */")
         .addLine("public %s %s() {", property.getType(), getter(property));
     if (!hasDefault) {
-      Excerpt propertyIsSet = Excerpts.add("!_unsetProperties.contains(%s.%s)",
-              metadata.getPropertyEnum(), property.getAllCapsName());
+      Excerpt propertyIsSet = Excerpts.add("!%s.contains(%s.%s)",
+              UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
       code.add(PreconditionExcerpts.checkState(propertyIsSet, property.getName() + " not set"));
     }
-    code.addLine("  return %s;", property.getName())
+    code.addLine("  return %s;", property.getField())
         .addLine("}");
   }
 
   @Override
-  public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
+  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
     code.add("private final %s %s;\n", property.getType(), finalField);
   }
 
   @Override
-  public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
-    code.addLine("%s = %s.%s;", finalField, builder, property.getName());
+  public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
+    code.addLine("%s = %s;", finalField, property.getField().on(builder));
   }
 
   @Override
@@ -176,8 +181,8 @@ class DefaultProperty extends PropertyCodeGenerator {
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {
-        code.add("%s._unsetProperties.contains(%s.%s) || ",
-            defaults, metadata.getPropertyEnum(), property.getAllCapsName());
+        code.add("%s.contains(%s.%s) || ",
+            UNSET_PROPERTIES.on(defaults), metadata.getPropertyEnum(), property.getAllCapsName());
       }
       code.add(ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", value, property.getGetterName()),
@@ -200,10 +205,12 @@ class DefaultProperty extends PropertyCodeGenerator {
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {
-        code.add("!%s._unsetProperties.contains(%s.%s) && ",
-                base, metadata.getPropertyEnum(), property.getAllCapsName())
-            .add("(%s._unsetProperties.contains(%s.%s) ||",
-                defaults, metadata.getPropertyEnum(), property.getAllCapsName());
+        code.add("!%s.contains(%s.%s) && ",
+                UNSET_PROPERTIES.on(base), metadata.getPropertyEnum(), property.getAllCapsName())
+            .add("(%s.contains(%s.%s) ||",
+                UNSET_PROPERTIES.on(defaults),
+                metadata.getPropertyEnum(),
+                property.getAllCapsName());
       }
       code.add(ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", builder, getter(property)),
@@ -215,8 +222,8 @@ class DefaultProperty extends PropertyCodeGenerator {
       }
       code.add(") {%n");
     } else if (!hasDefault) {
-      code.addLine("if (!%s._unsetProperties.contains(%s.%s)) {",
-          base, metadata.getPropertyEnum(), property.getAllCapsName());
+      code.addLine("if (!%s.contains(%s.%s)) {",
+          UNSET_PROPERTIES.on(base), metadata.getPropertyEnum(), property.getAllCapsName());
     }
     code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
     if (defaults != null || !hasDefault) {
@@ -227,17 +234,17 @@ class DefaultProperty extends PropertyCodeGenerator {
   @Override
   public void addSetBuilderFromPartial(Block code, String builder) {
     if (!hasDefault) {
-      code.add("if (!_unsetProperties.contains(%s.%s)) {",
-          metadata.getPropertyEnum(), property.getAllCapsName());
+      code.add("if (!%s.contains(%s.%s)) {",
+          UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
     }
-    code.addLine("  %s.%s(%s);", builder, setter(property), property.getName());
+    code.addLine("  %s.%s(%s);", builder, setter(property), property.getField());
     if (!hasDefault) {
       code.addLine("}");
     }
   }
 
   @Override
-  public void addSetFromResult(SourceBuilder code, String builder, String variable) {
+  public void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable) {
     code.addLine("%s.%s(%s);", builder, setter(property), variable);
   }
 
@@ -246,7 +253,7 @@ class DefaultProperty extends PropertyCodeGenerator {
     Optional<Excerpt> defaults = Declarations.freshBuilder(code, metadata);
     // Cannot clear property without defaults
     if (defaults.isPresent()) {
-      code.addLine("%1$s = %2$s.%1$s;", property.getName(), defaults.get());
+      code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
     }
   }
 }

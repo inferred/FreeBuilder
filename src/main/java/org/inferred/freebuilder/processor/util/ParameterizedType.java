@@ -163,9 +163,7 @@ public class ParameterizedType extends Excerpt {
   @Override
   public String toString() {
     // Only used when debugging, so an empty feature set is fine.
-    return new SourceStringBuilder(new TypeShortener.NeverShorten(), new StaticFeatureSet())
-        .add(this)
-        .toString();
+    return SourceStringBuilder.compilable(new StaticFeatureSet()).add(this).toString();
   }
 
   @Override

@@ -22,6 +22,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
@@ -138,13 +139,13 @@ class ListProperty extends PropertyCodeGenerator {
       code.addLine("private %s<%s> %s = %s.of();",
           List.class,
           elementType,
-          property.getName(),
+          property.getField(),
           ImmutableList.class);
     } else {
       code.addLine("private final %1$s<%2$s> %3$s = new %1$s%4$s();",
           ArrayList.class,
           elementType,
-          property.getName(),
+          property.getField(),
           diamondOperator(elementType));
     }
   }
@@ -172,21 +173,23 @@ class ListProperty extends PropertyCodeGenerator {
     code.addLine(" */")
         .addLine("public %s %s(%s element) {",
             metadata.getBuilder(), addMethod(property), unboxedType.or(elementType));
-    if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  if (this.%s instanceof %s) {", property.getName(), ImmutableList.class)
-          .addLine("    this.%1$s = new %2$s%3$s(this.%1$s);",
-              property.getName(),
+    Block body = methodBody(code, "element");
+    if (body.feature(GUAVA).isAvailable()) {
+      body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
+          .addLine("    %1$s = new %2$s%3$s(%1$s);",
+              property.getField(),
               ArrayList.class,
               diamondOperator(elementType))
           .addLine("  }");
     }
     if (unboxedType.isPresent()) {
-      code.addLine("  this.%s.add(element);", property.getName());
+      body.addLine("  %s.add(element);", property.getField());
     } else {
-      code.add(checkNotNullPreamble("element"))
-          .addLine("  this.%s.add(%s);", property.getName(), checkNotNullInline("element"));
+      body.add(checkNotNullPreamble("element"))
+          .addLine("  %s.add(%s);", property.getField(), checkNotNullInline("element"));
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -219,18 +222,20 @@ class ListProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             addMethod(property),
             unboxedType.or(elementType));
-    Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.or(elementType));
+    Block body = methodBody(code, "elements");
+    Optional<Class<?>> arrayUtils = body.feature(GUAVA).arrayUtils(unboxedType.or(elementType));
     if (arrayUtils.isPresent()) {
-      code.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
+      body.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
     } else {
       // Primitive type, Guava not available
-      code.addLine("  %1$s.ensureCapacity(%1$s.size() + elements.length);", property.getName())
+      body.addLine("  %1$s.ensureCapacity(%1$s.size() + elements.length);", property.getField())
           .addLine("  for (%s element : elements) {", unboxedType.get())
           .addLine("    %s(element);", addMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", metadata.getBuilder());
     }
-    code.addLine("}");
+    code.add(body)
+        .addLine("}");
   }
 
   private void addAddAllMethods(SourceBuilder code, Metadata metadata) {
@@ -251,25 +256,27 @@ class ListProperty extends PropertyCodeGenerator {
         addAllMethod(property),
         Iterable.class,
         elementType);
-    code.addLine("  if (elements instanceof %s) {", Collection.class)
-    .addLine("    int elementsSize = ((%s<?>) elements).size();", Collection.class);
-    if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("    if (elementsSize != 0) {")
-          .addLine("      if (%s instanceof %s) {", property.getName(), ImmutableList.class)
+    Block body = methodBody(code, "elements");
+    body.addLine("  if (elements instanceof %s) {", Collection.class)
+        .addLine("    int elementsSize = ((%s<?>) elements).size();", Collection.class);
+    if (body.feature(GUAVA).isAvailable()) {
+      body.addLine("    if (elementsSize != 0) {")
+          .addLine("      if (%s instanceof %s) {", property.getField(), ImmutableList.class)
           .addLine("        %1$s = new %2$s%3$s(%1$s);",
-              property.getName(), ArrayList.class, diamondOperator(elementType))
+              property.getField(), ArrayList.class, diamondOperator(elementType))
           .addLine("      }")
-          .add("      ((%s<?>) %s)", ArrayList.class, property.getName());
+          .add("      ((%s<?>) %s)", ArrayList.class, property.getField());
     } else {
-      code.add("    %s", property.getName());
+      body.add("    %s", property.getField());
     }
-    code.add(".ensureCapacity(%s.size() + elementsSize);%n", property.getName())
+    body.add(".ensureCapacity(%s.size() + elementsSize);%n", property.getField())
         .addLine("  }");
-    if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  }");
+    if (body.feature(GUAVA).isAvailable()) {
+      body.addLine("  }");
     }
-    code.add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
-        .addLine("  return (%s) this;", metadata.getBuilder())
+    body.add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -281,23 +288,25 @@ class ListProperty extends PropertyCodeGenerator {
             addAllMethod(property),
             spliterator,
             elementType);
-    code.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", spliterator)
+    Block body = methodBody(code, "elements");
+    body.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", spliterator)
         .addLine("    long elementsSize = elements.estimateSize();")
         .addLine("    if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {");
-    if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("      if (%s instanceof %s) {", property.getName(), ImmutableList.class)
+    if (body.feature(GUAVA).isAvailable()) {
+      body.addLine("      if (%s instanceof %s) {", property.getField(), ImmutableList.class)
           .addLine("        %1$s = new %2$s%3$s(%1$s);",
-              property.getName(), ArrayList.class, diamondOperator(elementType))
+              property.getField(), ArrayList.class, diamondOperator(elementType))
           .addLine("      }")
-          .add("      ((%s<?>) %s)", ArrayList.class, property.getName());
+          .add("      ((%s<?>) %s)", ArrayList.class, property.getField());
     } else {
-      code.add("      %s", property.getName());
+      body.add("      %s", property.getField());
     }
-    code.add(".ensureCapacity(%s.size() + (int) elementsSize);%n", property.getName())
+    body.add(".ensureCapacity(%s.size() + (int) elementsSize);%n", property.getField())
         .addLine("    }")
         .addLine("  }")
         .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -361,23 +370,25 @@ class ListProperty extends PropertyCodeGenerator {
             consumer.getQualifiedName(),
             List.class,
             elementType);
-    if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  if (this.%s instanceof %s) {", property.getName(), ImmutableList.class)
-          .addLine("    this.%1$s = new %2$s%3$s(this.%1$s);",
-              property.getName(),
+    Block body = methodBody(code, "mutator");
+    if (body.feature(GUAVA).isAvailable()) {
+      body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
+          .addLine("    %1$s = new %2$s%3$s(%1$s);",
+              property.getField(),
               ArrayList.class,
               diamondOperator(elementType))
           .addLine("  }");
     }
     if (overridesAddMethod) {
-      code.addLine("  mutator.accept(new CheckedList<>(%s, this::%s));",
-          property.getName(), addMethod(property));
+      body.addLine("  mutator.accept(new CheckedList<>(%s, this::%s));",
+          property.getField(), addMethod(property));
     } else {
-      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
-          .addLine("  mutator.accept(%s);", property.getName());
+          .addLine("  mutator.accept(%s);", property.getField());
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -391,11 +402,11 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine(" */")
         .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property));
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  if (%s instanceof %s) {", property.getName(), ImmutableList.class)
-          .addLine("    %s = %s.of();", property.getName(), ImmutableList.class)
+      code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
+          .addLine("    %s = %s.of();", property.getField(), ImmutableList.class)
           .addLine("  } else {");
     }
-    code.addLine("    %s.clear();", property.getName());
+    code.addLine("    %s.clear();", property.getField());
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  }");
     }
@@ -412,22 +423,22 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine(" */")
         .addLine("public %s<%s> %s() {", List.class, elementType, getter(property));
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  if (%s instanceof %s) {", property.getName(), ImmutableList.class)
+      code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
           .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getName(), ArrayList.class, diamondOperator(elementType))
+              property.getField(), ArrayList.class, diamondOperator(elementType))
           .addLine("  }");
     }
-    code.addLine("  return %s.unmodifiableList(%s);", Collections.class, property.getName())
+    code.addLine("  return %s.unmodifiableList(%s);", Collections.class, property.getField())
         .addLine("}");
   }
 
   @Override
-  public void addFinalFieldAssignment(SourceBuilder code, String finalField, String builder) {
+  public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("%s = %s.copyOf(%s.%s);",
-          finalField, ImmutableList.class, builder, property.getName());
+      code.addLine("%s = %s.copyOf(%s);",
+          finalField, ImmutableList.class, property.getField().on(builder));
     } else {
-      code.addLine("%s = immutableList(%s.%s);", finalField, builder, property.getName());
+      code.addLine("%s = immutableList(%s);", finalField, property.getField().on(builder));
     }
   }
 
@@ -437,11 +448,11 @@ class ListProperty extends PropertyCodeGenerator {
       code.addLine("if (%s instanceof %s && %s == %s.<%s>of()) {",
               value,
               metadata.getValueType().getQualifiedName(),
-              property.getName(),
+              property.getField(),
               ImmutableList.class,
               elementType)
           .addLine("  %s = %s.copyOf(%s.%s());",
-              property.getName(), ImmutableList.class, value, property.getGetterName())
+              property.getField(), ImmutableList.class, value, property.getGetterName())
           .addLine("} else {");
     }
     code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
@@ -453,11 +464,11 @@ class ListProperty extends PropertyCodeGenerator {
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
-    code.addLine("%s(%s.%s);", addAllMethod(property), base, property.getName());
+    code.addLine("%s(%s);", addAllMethod(property), property.getField().on(base));
   }
 
   @Override
-  public void addSetFromResult(SourceBuilder code, String builder, String variable) {
+  public void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable) {
     code.addLine("%s.%s(%s);", builder, addAllMethod(property), variable);
   }
 

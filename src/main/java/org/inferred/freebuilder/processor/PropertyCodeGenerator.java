@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
@@ -97,7 +99,7 @@ public abstract class PropertyCodeGenerator {
   }
 
   /** Add the field declaration for the property to the value's source code. */
-  public void addValueFieldDeclaration(SourceBuilder code, String finalField) {
+  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
     code.addLine("private final %s %s;", property.getType(), finalField);
   }
 
@@ -109,10 +111,11 @@ public abstract class PropertyCodeGenerator {
 
   /** Add the final assignment of the property to the value object's source code. */
   public abstract void addFinalFieldAssignment(
-      SourceBuilder code, String finalField, String builder);
+      SourceBuilder code, Excerpt finalField, String builder);
 
   /** Add the final assignment of the property to the partial value object's source code. */
-  public void addPartialFieldAssignment(SourceBuilder code, String finalField, String builder) {
+  public void addPartialFieldAssignment(
+      SourceBuilder code, Excerpt finalField, String builder) {
     addFinalFieldAssignment(code, finalField, builder);
   }
 
@@ -124,19 +127,19 @@ public abstract class PropertyCodeGenerator {
 
   /** Sets the property on a builder from within a partial value's toBuilder() method. */
   public void addSetBuilderFromPartial(Block code, String builder) {
-    addSetFromResult(code, builder, property.getName());
+    addSetFromResult(code, Excerpts.add(builder), property.getField());
   }
 
   /** Adds method annotations for the value type getter method. */
   public void addGetterAnnotations(@SuppressWarnings("unused") SourceBuilder code) {}
 
   /** Adds a fragment converting the value object's field to the property's type. */
-  public void addReadValueFragment(SourceBuilder code, String finalField) {
+  public void addReadValueFragment(SourceBuilder code, Excerpt finalField) {
     code.add("%s", finalField);
   }
 
   /** Adds a set call for the property from a function result to the builder's source code. */
-  public abstract void addSetFromResult(SourceBuilder code, String builder, String variable);
+  public abstract void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable);
 
   /** Adds a clear call for the property given a template builder to the builder's source code. */
   public abstract void addClearField(Block code);

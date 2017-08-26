@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import org.inferred.freebuilder.processor.BuilderFactory.TypeInference;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Excerpts;
 
 class Declarations {
 
@@ -18,11 +19,11 @@ class Declarations {
    */
   public static Excerpt upcastToGeneratedBuilder(Block block, Metadata metadata, String builder) {
     return block.declare(
+        Excerpts.add(
+            "// Upcast to access private fields; otherwise, oddly, we get an access violation.%n%s",
+            metadata.getGeneratedBuilder()),
         "base",
-        "// Upcast to access private fields; otherwise, oddly, we get an access violation.%n"
-            + "%1$s base = (%1$s) %2$s;",
-        metadata.getGeneratedBuilder(),
-        builder);
+        Excerpts.add(builder));
   }
 
   /**
@@ -35,10 +36,11 @@ class Declarations {
     if (!metadata.getBuilderFactory().isPresent()) {
       return Optional.absent();
     }
-    Excerpt defaults = block.declare("_defaults", "%s _defaults = %s;",
-          metadata.getGeneratedBuilder(),
-          metadata.getBuilderFactory().get()
-              .newBuilder(metadata.getBuilder(), TypeInference.INFERRED_TYPES));
+    Excerpt defaults = block.declare(
+        metadata.getGeneratedBuilder(),
+        "_defaults",
+        metadata.getBuilderFactory().get()
+            .newBuilder(metadata.getBuilder(), TypeInference.INFERRED_TYPES));
     return Optional.of(defaults);
   }
 

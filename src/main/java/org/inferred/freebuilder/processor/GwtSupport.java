@@ -9,10 +9,12 @@ import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.Visibility;
+import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -83,60 +85,10 @@ class GwtSupport {
           .addLine("  @%s", Override.class)
           .addLine("  public boolean hasCustomInstantiateInstance() {")
           .addLine("    return true;")
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @%s", Override.class)
-          .addLine("  public %s instantiateInstance(%s reader)",
-              metadata.getValueType(), SERIALIZATION_STREAM_READER)
-          .addLine("      throws %s {", SERIALIZATION_EXCEPTION)
-          .addLine("    %1$s builder = new %1$s();", metadata.getBuilder());
-      for (Property property : metadata.getProperties()) {
-        if (property.getType().getKind().isPrimitive()) {
-          code.addLine("      %s %s = reader.read%s();",
-              property.getType(), property.getName(), withInitialCapital(property.getType()));
-          property.getCodeGenerator()
-              .addSetFromResult(code, "builder", property.getName());
-        } else if (String.class.getName().equals(property.getType().toString())) {
-          code.addLine("      %s %s = reader.readString();",
-              property.getType(), property.getName());
-          property.getCodeGenerator()
-              .addSetFromResult(code, "builder", property.getName());
-        } else {
-          code.addLine("    try {");
-          if (!property.isFullyCheckedCast()) {
-            code.addLine("      @SuppressWarnings(\"unchecked\")");
-          }
-          code.addLine("      %1$s %2$s = (%1$s) reader.readObject();",
-                  property.getType(), property.getName());
-          property.getCodeGenerator()
-              .addSetFromResult(code, "builder", property.getName());
-          code.addLine("    } catch (%s e) {", ClassCastException.class)
-              .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
-              .addLine("          \"Wrong type for property '%s'\", e);", property.getName())
-              .addLine("    }");
-        }
-      }
-      code.addLine("    return (%s) builder.build();", metadata.getValueType())
-          .addLine("  }")
-          .addLine("")
-          .addLine("  @%s", Override.class)
-          .addLine("  public void serializeInstance(%s writer, %s instance)",
-              SERIALIZATION_STREAM_WRITER, metadata.getValueType())
-          .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
-      for (Property property : metadata.getProperties()) {
-        if (property.getType().getKind().isPrimitive()) {
-          code.add("    writer.write%s(",
-              withInitialCapital(property.getType()), property.getName());
-        } else if (String.class.getName().equals(property.getType().toString())) {
-          code.add("    writer.writeString(", property.getName());
-        } else {
-          code.add("    writer.writeObject(", property.getName());
-        }
-        property.getCodeGenerator().addReadValueFragment(code, "instance." + property.getName());
-        code.add(");\n");
-      }
-      code.addLine("  }")
-          .addLine("")
+          .addLine("  }");
+      addInstantiateInstance(code);
+      addSerializeInstance(code);
+      code.addLine("")
           .addLine("  private static final Value_CustomFieldSerializer INSTANCE ="
               + " new Value_CustomFieldSerializer();")
           .addLine("")
@@ -157,6 +109,78 @@ class GwtSupport {
           .addLine("    INSTANCE.serializeInstance(writer, instance);")
           .addLine("  }")
           .addLine("}");
+    }
+
+    private void addInstantiateInstance(SourceBuilder code) {
+      code.addLine("")
+          .addLine("  @%s", Override.class)
+          .addLine("  public %s instantiateInstance(%s reader)",
+              metadata.getValueType(), SERIALIZATION_STREAM_READER)
+          .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
+      Block body = Block.methodBody(code, "reader");
+      Excerpt builder = body.declare(
+          metadata.getBuilder(), "builder", Excerpts.add("new %s()", metadata.getBuilder()));
+      for (Property property : metadata.getProperties()) {
+        TypeMirrorExcerpt propertyType = new TypeMirrorExcerpt(property.getType());
+        if (property.getType().getKind().isPrimitive()) {
+          Excerpt value = body.declare(
+              propertyType,
+              property.getName(),
+              Excerpts.add("reader.read%s()", withInitialCapital(property.getType())));
+          property.getCodeGenerator()
+              .addSetFromResult(body, builder, value);
+        } else if (String.class.getName().equals(property.getType().toString())) {
+          Excerpt value = body.declare(
+              propertyType,
+              property.getName(),
+              Excerpts.add("reader.readString()"));
+          property.getCodeGenerator()
+              .addSetFromResult(body, builder, value);
+        } else {
+          body.addLine("    try {");
+          Block tryBlock = body.innerBlock();
+          Excerpt typeAndPreamble;
+          if (!property.isFullyCheckedCast()) {
+            typeAndPreamble = Excerpts.add("@SuppressWarnings(\"unchecked\") %s", propertyType);
+          } else {
+            typeAndPreamble = propertyType;
+          }
+          Excerpt value = tryBlock.declare(
+              typeAndPreamble,
+              property.getName(),
+              Excerpts.add("(%s) reader.readObject()", propertyType));
+          property.getCodeGenerator()
+              .addSetFromResult(tryBlock, builder, value);
+          body.add(tryBlock)
+              .addLine("    } catch (%s e) {", ClassCastException.class)
+              .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
+              .addLine("          \"Wrong type for property '%s'\", e);", property.getName())
+              .addLine("    }");
+        }
+      }
+      body.addLine("    return (%s) %s.build();", metadata.getValueType(), builder);
+      code.add(body)
+          .addLine("  }");
+    }
+
+    private void addSerializeInstance(SourceBuilder code) {
+      code.addLine("")
+          .addLine("  @%s", Override.class)
+          .addLine("  public void serializeInstance(%s writer, %s instance)",
+              SERIALIZATION_STREAM_WRITER, metadata.getValueType())
+          .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
+      for (Property property : metadata.getProperties()) {
+        if (property.getType().getKind().isPrimitive()) {
+          code.add("    writer.write%s(", withInitialCapital(property.getType()));
+        } else if (String.class.getName().equals(property.getType().toString())) {
+          code.add("    writer.writeString(");
+        } else {
+          code.add("    writer.writeObject(");
+        }
+        property.getCodeGenerator().addReadValueFragment(code, property.getField().on("instance"));
+        code.add(");\n");
+      }
+      code.addLine("  }");
     }
 
     @Override
@@ -190,7 +214,7 @@ class GwtSupport {
               metadata.getType())
           .addLine("");
       for (Property property : metadata.getProperties()) {
-        code.addLine("  %s %s;", property.getType(), property.getName());
+        code.addLine("  %s %s;", property.getType(), property.getField());
       }
       code.addLine("")
           .addLine("  private GwtWhitelist() {")
