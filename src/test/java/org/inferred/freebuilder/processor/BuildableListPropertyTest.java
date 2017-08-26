@@ -223,6 +223,79 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void addAllSpliteratorOfValueInstances() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addAllItems(Stream.of(candy, apple).spliterator())")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(candy, apple).inOrder();",
+                convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void addAllSpliteratorOfValueInstances_preservesPartials() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").buildPartial();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").buildPartial();")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addAllItems(Stream.of(candy, apple).spliterator())")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(candy, apple).inOrder();",
+                convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void addAllSpliteratorOfBuilders() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
+            .addLine("Item.Builder apple = new Item.Builder().name(\"apple\").price(50);")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addAllBuildersOfItems(Stream.of(candy, apple).spliterator())")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s)", convention.get("items"))
+            .addLine("    .containsExactly(candy.build(), apple.build()).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void addAllSpliteratorOfBuilders_copiesBuilderValues() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candyBuilder = new Item.Builder().name(\"candy\").price(15);")
+            .addLine("Item.Builder appleBuilder = new Item.Builder().name(\"apple\").price(15);")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addAllBuildersOfItems(")
+            .addLine("        Stream.of(candyBuilder, appleBuilder).spliterator())")
+            .addLine("    .build();")
+            .addLine("Item candy = candyBuilder.build();")
+            .addLine("Item apple = appleBuilder.build();")
+            .addLine("candyBuilder.name(\"poison\").price(500);")
+            .addLine("appleBuilder.name(\"brick\").price(200);")
+            .addLine("assertThat(value.%s).containsExactly(candy, apple).inOrder();",
+                convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void addAllIterableOfValueInstances() {
     behaviorTester
         .with(new Processor(features))

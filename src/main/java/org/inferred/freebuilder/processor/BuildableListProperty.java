@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 
 import javax.lang.model.type.DeclaredType;
@@ -132,8 +133,10 @@ class BuildableListProperty extends PropertyCodeGenerator {
     addBuilderAdd(code);
     addValueInstanceVarargsAdd(code);
     addBuilderVarargsAdd(code);
-    addValueInstanceAddAll(code);
-    addBuilderAddAll(code);
+    addSpliteratorValueInstanceAddAll(code);
+    addSpliteratorBuilderAddAll(code);
+    addIterableValueInstanceAddAll(code);
+    addIterableBuilderAddAll(code);
     addMutate(code);
     addClear(code);
     addGetter(code);
@@ -267,41 +270,67 @@ class BuildableListProperty extends PropertyCodeGenerator {
     }
   }
 
-  private void addValueInstanceAddAll(SourceBuilder code) {
+  private void addSpliteratorValueInstanceAddAll(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleValues(code);
-    addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type());
+            datatype.getBuilder(), addAllMethod(property), Spliterator.class, element.type());
     Block body = methodBody(code, "elements");
-    body.addLine("  if (elements instanceof %s) {", Collection.class);
-    Variable size = new Variable("elementsSize");
-    body.addLine("    int %s = ((%s<?>) elements).size();", size, Collection.class)
-        .addLine("    %1$s.ensureCapacity(%1$s.size() + %2$s);", property.getField(), size)
+    body.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class);
+    Variable newSize = new Variable("newSize");
+    body.addLine("    long %s = elements.estimateSize() + %s.size();", newSize, property.getField())
+        .addLine("    if (%s <= Integer.MAX_VALUE) {", newSize)
+        .addLine("      %s.ensureCapacity((int) %s);", property.getField(), newSize)
+        .addLine("    }")
         .addLine("  }")
-        .addLine("  elements.forEach(this::%s);", addMethod(property))
+        .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addBuilderAddAll(SourceBuilder code) {
+  private void addSpliteratorBuilderAddAll(SourceBuilder code) {
+    code.addLine("");
+    addJavadocForAddingMultipleBuilders(code);
+    code.addLine("public %s %s(%s<? extends %s> elementBuilders) {",
+            datatype.getBuilder(),
+            addAllBuildersOfMethod(property),
+            Spliterator.class,
+            element.builderType());
+    Block body = methodBody(code, "elementBuilders");
+    body.addLine("  if ((elementBuilders.characteristics() & %s.SIZED) != 0) {", Spliterator.class);
+    Variable newSize = new Variable("newSize");
+    body.addLine("    long %s = elementBuilders.estimateSize() + %s.size();",
+            newSize, property.getField())
+        .addLine("    if (%s <= Integer.MAX_VALUE) {", newSize)
+        .addLine("      %s.ensureCapacity((int) %s);", property.getField(), newSize)
+        .addLine("    }")
+        .addLine("  }")
+        .addLine("  elementBuilders.forEachRemaining(this::%s);", addMethod(property))
+        .addLine("  return (%s) this;", datatype.getBuilder());
+    code.add(body)
+        .addLine("}");
+  }
+
+  private void addIterableValueInstanceAddAll(SourceBuilder code) {
+    code.addLine("");
+    addJavadocForAddingMultipleValues(code);
+    addAccessorAnnotations(code);
+    code.addLine("public %s %s(%s<? extends %s> elements) {",
+            datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type())
+        .addLine("  return %s(elements.spliterator());", addAllMethod(property))
+        .addLine("}");
+  }
+
+  private void addIterableBuilderAddAll(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleBuilders(code);
     code.addLine("public %s %s(%s<? extends %s> elementBuilders) {",
             datatype.getBuilder(),
             addAllBuildersOfMethod(property),
             Iterable.class,
-            element.builderType());
-    Block body = methodBody(code, "elementBuilders");
-    body.addLine("  if (elementBuilders instanceof %s) {", Collection.class);
-    Variable size = new Variable("elementsSize");
-    body.addLine("    int %s = ((%s<?>) elementBuilders).size();", size, Collection.class)
-        .addLine("    %1$s.ensureCapacity(%1$s.size() + %2$s);", property.getField(), size)
-        .addLine("  }")
-        .addLine("  elementBuilders.forEach(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+            element.builderType())
+        .addLine("  return %s(elementBuilders.spliterator());", addAllBuildersOfMethod(property))
         .addLine("}");
   }
 
