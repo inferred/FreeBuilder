@@ -15,11 +15,13 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
 import org.inferred.freebuilder.processor.util.Variable;
@@ -429,18 +431,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
       Excerpt finalField,
       String builder,
       String buildMethod) {
-    Variable fieldBuilder = new Variable(property.getName() + "Builder");
-    Variable fieldElement = new Variable("element");
-    code.addLine("%s<%s> %s = %s.builder();",
-            ImmutableList.Builder.class,
-            element.type(),
-            fieldBuilder,
-            ImmutableList.class)
-        .addLine("for (%s %s : %s) {",
-            element.builderType(), fieldElement, property.getField().on(builder))
-        .addLine("  %s.add(%s.%s());", fieldBuilder, fieldElement, buildMethod)
-        .addLine("}")
-        .addLine("%s = %s.build();", finalField, fieldBuilder);
+    LazyName buildToListMethod = BuildToListMethod.reference(element, buildMethod);
+    code.addLine("%s = %s(%s);", finalField, buildToListMethod, property.getField().on(builder));
   }
 
   @Override
@@ -462,5 +454,70 @@ class BuildableListProperty extends PropertyCodeGenerator {
   @Override
   public void addClearField(Block code) {
     code.addLine("%s();", clearMethod(property));
+  }
+
+  private static class BuildToListMethod extends Excerpt {
+
+    static LazyName reference(BuildableType element, String buildMethod) {
+      return new BuildToListMethod(element, buildMethod).reference();
+    }
+
+    private final BuildableType element;
+    private final String buildMethod;
+
+    private BuildToListMethod(BuildableType element, String buildMethod) {
+      this.element = element;
+      this.buildMethod = buildMethod;
+    }
+
+    private LazyName reference() {
+      return new LazyName(buildMethod + "ToList", this);
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      code.addLine("")
+          .addLine("@%s(\"unchecked\")", SuppressWarnings.class)
+          .addLine("private static %1$s %2$s<%3$s> %4$s(%2$s<%5$s> builders) {",
+              element.typeClass().declarationParameters(),
+              List.class,
+              element.typeClass(),
+              reference(),
+              element.typeClassBuilder());
+      if (code.feature(GUAVA).isAvailable()) {
+        code.addLine("  %s<%s> values = %s.builder();",
+                ImmutableList.Builder.class,
+                element.typeClass(),
+                ImmutableList.class)
+            .addLine("  for (%s builder : builders) {", element.typeClassBuilder())
+            .addLine("    values.add(builder.%s());", buildMethod)
+            .addLine("  }")
+            .addLine("  return values.build();");
+      } else {
+        code
+            .addLine("  switch (builders.size()) {")
+            .addLine("    case 0:")
+            .addLine("      return %s.emptyList();", Collections.class)
+            .addLine("    case 1:")
+            .addLine("      return %s.singletonList(builders.get(0).%s());",
+                Collections.class, buildMethod)
+            .addLine("    default:")
+            .addLine("      Object[] values = new Object[builders.size()];")
+            .addLine("      for (int i = 0; i < builders.size(); i++) {")
+            .addLine("        values[i] = builders.get(i).%s();", buildMethod)
+            .addLine("      }")
+            .addLine("      return (%1$s<%2$s>)(%1$s<?>)", List.class, element.typeClass())
+            .addLine("          %s.unmodifiableList(%s.asList(values));",
+                Collections.class, Arrays.class)
+            .addLine("  }");
+      }
+      code.addLine("}");
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("elementType", element.type().toString());
+      fields.add("buildMethod", buildMethod);
+    }
   }
 }

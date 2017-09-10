@@ -27,6 +27,7 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.TypeClass;
 
 import java.util.List;
 import java.util.Optional;
@@ -67,8 +68,25 @@ abstract class BuildableType {
     MERGE_DIRECTLY, TO_BUILDER_AND_MERGE
   }
 
+  /**
+   * Returns the parameterized buildable type.
+   *
+   * <p>This may be parameterized with any compatible types, including concrete types, wildcards,
+   * type variables, or generic types containing any combination of the above.
+   */
   public abstract Type type();
+
+  /** Returns the builder type that will build instances of {@link #type()}. */
   public abstract Type builderType();
+
+  /**
+   * Returns the type class that {@link #type()} is an invocation of.
+   */
+  public abstract TypeClass typeClass();
+
+  /** Returns the builder type that will build instances of {@link #typeClass()}. */
+  public abstract Type typeClassBuilder();
+
   public abstract MergeBuilderMethod mergeBuilder();
   public abstract PartialToBuilderMethod partialToBuilder();
   public abstract BuilderFactory builderFactory();
@@ -166,10 +184,13 @@ abstract class BuildableType {
     PartialToBuilderMethod partialToBuilderMethod =
         detectPartialToBuilderMethod(datatype, builder, elements, types);
     Excerpt suppressUnchecked = suppressUncheckedExcerptFor(datatype);
+    TypeClass typeClass = TypeClass.from(asElement(datatype));
 
     return new Builder()
         .type(Type.from(datatype))
         .builderType(Type.from(builder))
+        .typeClass(typeClass)
+        .typeClassBuilder(Type.from(builder).withParametersFrom(typeClass))
         .mergeBuilder(mergeFromBuilderMethod)
         .partialToBuilder(partialToBuilderMethod)
         .builderFactory(builderFactory)

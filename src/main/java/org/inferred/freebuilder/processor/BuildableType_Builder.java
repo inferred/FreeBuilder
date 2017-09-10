@@ -9,6 +9,7 @@ import java.util.function.UnaryOperator;
 import javax.annotation.Generated;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.TypeClass;
 
 /**
  * Auto-generated superclass of {@link BuildableType.Builder}, derived from the API of {@link
@@ -25,6 +26,8 @@ abstract class BuildableType_Builder {
   private enum Property {
     TYPE("type"),
     BUILDER_TYPE("builderType"),
+    TYPE_CLASS("typeClass"),
+    TYPE_CLASS_BUILDER("typeClassBuilder"),
     MERGE_BUILDER("mergeBuilder"),
     PARTIAL_TO_BUILDER("partialToBuilder"),
     BUILDER_FACTORY("builderFactory"),
@@ -45,6 +48,8 @@ abstract class BuildableType_Builder {
 
   private Type type;
   private Type builderType;
+  private TypeClass typeClass;
+  private Type typeClassBuilder;
   private BuildableType.MergeBuilderMethod mergeBuilder;
   private BuildableType.PartialToBuilderMethod partialToBuilder;
   private BuilderFactory builderFactory;
@@ -120,6 +125,77 @@ abstract class BuildableType_Builder {
     Preconditions.checkState(
         !_unsetProperties.contains(Property.BUILDER_TYPE), "builderType not set");
     return builderType;
+  }
+
+  /**
+   * Sets the value to be returned by {@link BuildableType#typeClass()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code typeClass} is null
+   */
+  public BuildableType.Builder typeClass(TypeClass typeClass) {
+    this.typeClass = Objects.requireNonNull(typeClass);
+    _unsetProperties.remove(Property.TYPE_CLASS);
+    return (BuildableType.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link BuildableType#typeClass()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public BuildableType.Builder mapTypeClass(UnaryOperator<TypeClass> mapper) {
+    Objects.requireNonNull(mapper);
+    return typeClass(mapper.apply(typeClass()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link BuildableType#typeClass()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public TypeClass typeClass() {
+    Preconditions.checkState(!_unsetProperties.contains(Property.TYPE_CLASS), "typeClass not set");
+    return typeClass;
+  }
+
+  /**
+   * Sets the value to be returned by {@link BuildableType#typeClassBuilder()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code typeClassBuilder} is null
+   */
+  public BuildableType.Builder typeClassBuilder(Type typeClassBuilder) {
+    this.typeClassBuilder = Objects.requireNonNull(typeClassBuilder);
+    _unsetProperties.remove(Property.TYPE_CLASS_BUILDER);
+    return (BuildableType.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link BuildableType#typeClassBuilder()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public BuildableType.Builder mapTypeClassBuilder(UnaryOperator<Type> mapper) {
+    Objects.requireNonNull(mapper);
+    return typeClassBuilder(mapper.apply(typeClassBuilder()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link BuildableType#typeClassBuilder()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Type typeClassBuilder() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Property.TYPE_CLASS_BUILDER), "typeClassBuilder not set");
+    return typeClassBuilder;
   }
 
   /**
@@ -280,6 +356,14 @@ abstract class BuildableType_Builder {
         || !Objects.equals(value.builderType(), _defaults.builderType())) {
       builderType(value.builderType());
     }
+    if (_defaults._unsetProperties.contains(Property.TYPE_CLASS)
+        || !Objects.equals(value.typeClass(), _defaults.typeClass())) {
+      typeClass(value.typeClass());
+    }
+    if (_defaults._unsetProperties.contains(Property.TYPE_CLASS_BUILDER)
+        || !Objects.equals(value.typeClassBuilder(), _defaults.typeClassBuilder())) {
+      typeClassBuilder(value.typeClassBuilder());
+    }
     if (_defaults._unsetProperties.contains(Property.MERGE_BUILDER)
         || !Objects.equals(value.mergeBuilder(), _defaults.mergeBuilder())) {
       mergeBuilder(value.mergeBuilder());
@@ -317,6 +401,16 @@ abstract class BuildableType_Builder {
             || !Objects.equals(template.builderType(), _defaults.builderType()))) {
       builderType(template.builderType());
     }
+    if (!base._unsetProperties.contains(Property.TYPE_CLASS)
+        && (_defaults._unsetProperties.contains(Property.TYPE_CLASS)
+            || !Objects.equals(template.typeClass(), _defaults.typeClass()))) {
+      typeClass(template.typeClass());
+    }
+    if (!base._unsetProperties.contains(Property.TYPE_CLASS_BUILDER)
+        && (_defaults._unsetProperties.contains(Property.TYPE_CLASS_BUILDER)
+            || !Objects.equals(template.typeClassBuilder(), _defaults.typeClassBuilder()))) {
+      typeClassBuilder(template.typeClassBuilder());
+    }
     if (!base._unsetProperties.contains(Property.MERGE_BUILDER)
         && (_defaults._unsetProperties.contains(Property.MERGE_BUILDER)
             || !Objects.equals(template.mergeBuilder(), _defaults.mergeBuilder()))) {
@@ -345,6 +439,8 @@ abstract class BuildableType_Builder {
     BuildableType_Builder _defaults = new BuildableType.Builder();
     type = _defaults.type;
     builderType = _defaults.builderType;
+    typeClass = _defaults.typeClass;
+    typeClassBuilder = _defaults.typeClassBuilder;
     mergeBuilder = _defaults.mergeBuilder;
     partialToBuilder = _defaults.partialToBuilder;
     builderFactory = _defaults.builderFactory;
@@ -381,6 +477,8 @@ abstract class BuildableType_Builder {
   private static final class Value extends BuildableType {
     private final Type type;
     private final Type builderType;
+    private final TypeClass typeClass;
+    private final Type typeClassBuilder;
     private final BuildableType.MergeBuilderMethod mergeBuilder;
     private final BuildableType.PartialToBuilderMethod partialToBuilder;
     private final BuilderFactory builderFactory;
@@ -389,6 +487,8 @@ abstract class BuildableType_Builder {
     private Value(BuildableType_Builder builder) {
       this.type = builder.type;
       this.builderType = builder.builderType;
+      this.typeClass = builder.typeClass;
+      this.typeClassBuilder = builder.typeClassBuilder;
       this.mergeBuilder = builder.mergeBuilder;
       this.partialToBuilder = builder.partialToBuilder;
       this.builderFactory = builder.builderFactory;
@@ -403,6 +503,16 @@ abstract class BuildableType_Builder {
     @Override
     public Type builderType() {
       return builderType;
+    }
+
+    @Override
+    public TypeClass typeClass() {
+      return typeClass;
+    }
+
+    @Override
+    public Type typeClassBuilder() {
+      return typeClassBuilder;
     }
 
     @Override
@@ -433,6 +543,8 @@ abstract class BuildableType_Builder {
       Value other = (Value) obj;
       return Objects.equals(type, other.type)
           && Objects.equals(builderType, other.builderType)
+          && Objects.equals(typeClass, other.typeClass)
+          && Objects.equals(typeClassBuilder, other.typeClassBuilder)
           && Objects.equals(mergeBuilder, other.mergeBuilder)
           && Objects.equals(partialToBuilder, other.partialToBuilder)
           && Objects.equals(builderFactory, other.builderFactory)
@@ -442,7 +554,14 @@ abstract class BuildableType_Builder {
     @Override
     public int hashCode() {
       return Objects.hash(
-          type, builderType, mergeBuilder, partialToBuilder, builderFactory, suppressUnchecked);
+          type,
+          builderType,
+          typeClass,
+          typeClassBuilder,
+          mergeBuilder,
+          partialToBuilder,
+          builderFactory,
+          suppressUnchecked);
     }
 
     @Override
@@ -451,6 +570,10 @@ abstract class BuildableType_Builder {
           + type
           + ", builderType="
           + builderType
+          + ", typeClass="
+          + typeClass
+          + ", typeClassBuilder="
+          + typeClassBuilder
           + ", mergeBuilder="
           + mergeBuilder
           + ", partialToBuilder="
@@ -466,6 +589,8 @@ abstract class BuildableType_Builder {
   private static final class Partial extends BuildableType {
     private final Type type;
     private final Type builderType;
+    private final TypeClass typeClass;
+    private final Type typeClassBuilder;
     private final BuildableType.MergeBuilderMethod mergeBuilder;
     private final BuildableType.PartialToBuilderMethod partialToBuilder;
     private final BuilderFactory builderFactory;
@@ -475,6 +600,8 @@ abstract class BuildableType_Builder {
     Partial(BuildableType_Builder builder) {
       this.type = builder.type;
       this.builderType = builder.builderType;
+      this.typeClass = builder.typeClass;
+      this.typeClassBuilder = builder.typeClassBuilder;
       this.mergeBuilder = builder.mergeBuilder;
       this.partialToBuilder = builder.partialToBuilder;
       this.builderFactory = builder.builderFactory;
@@ -496,6 +623,22 @@ abstract class BuildableType_Builder {
         throw new UnsupportedOperationException("builderType not set");
       }
       return builderType;
+    }
+
+    @Override
+    public TypeClass typeClass() {
+      if (_unsetProperties.contains(Property.TYPE_CLASS)) {
+        throw new UnsupportedOperationException("typeClass not set");
+      }
+      return typeClass;
+    }
+
+    @Override
+    public Type typeClassBuilder() {
+      if (_unsetProperties.contains(Property.TYPE_CLASS_BUILDER)) {
+        throw new UnsupportedOperationException("typeClassBuilder not set");
+      }
+      return typeClassBuilder;
     }
 
     @Override
@@ -538,6 +681,8 @@ abstract class BuildableType_Builder {
       Partial other = (Partial) obj;
       return Objects.equals(type, other.type)
           && Objects.equals(builderType, other.builderType)
+          && Objects.equals(typeClass, other.typeClass)
+          && Objects.equals(typeClassBuilder, other.typeClassBuilder)
           && Objects.equals(mergeBuilder, other.mergeBuilder)
           && Objects.equals(partialToBuilder, other.partialToBuilder)
           && Objects.equals(builderFactory, other.builderFactory)
@@ -550,6 +695,8 @@ abstract class BuildableType_Builder {
       return Objects.hash(
           type,
           builderType,
+          typeClass,
+          typeClassBuilder,
           mergeBuilder,
           partialToBuilder,
           builderFactory,
@@ -567,6 +714,14 @@ abstract class BuildableType_Builder {
       }
       if (!_unsetProperties.contains(Property.BUILDER_TYPE)) {
         result.append(separator).append("builderType=").append(builderType);
+        separator = ", ";
+      }
+      if (!_unsetProperties.contains(Property.TYPE_CLASS)) {
+        result.append(separator).append("typeClass=").append(typeClass);
+        separator = ", ";
+      }
+      if (!_unsetProperties.contains(Property.TYPE_CLASS_BUILDER)) {
+        result.append(separator).append("typeClassBuilder=").append(typeClassBuilder);
         separator = ", ";
       }
       if (!_unsetProperties.contains(Property.MERGE_BUILDER)) {

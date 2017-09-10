@@ -48,7 +48,7 @@ public class BuildableListMutateMethodTest {
   @Parameters(name = "{0}, {1}")
   public static Iterable<Object[]> featureSets() {
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
-    List<FeatureSet> features = FeatureSets.WITH_GUAVA;
+    List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
         .cartesianProduct(conventions, features)
         .stream()
