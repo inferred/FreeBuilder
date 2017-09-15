@@ -6,6 +6,10 @@ language: java
 
 jdk:
   - oraclejdk8
+addons:
+  apt:
+    packages:
+      - oracle-java9-installer
 
 install: ./gradlew clean jar
 script: travis_wait 30 ./gradlew check
