@@ -47,6 +47,10 @@ public enum NamingConvention {
     return accessor("set", fieldName);
   }
 
+  public String is(String fieldName) {
+    return accessor("is", fieldName) + "()";
+  }
+
   abstract String accessor(String prefix, String fieldName);
 
   @Override
