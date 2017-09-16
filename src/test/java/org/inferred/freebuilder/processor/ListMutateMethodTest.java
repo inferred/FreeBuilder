@@ -15,6 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.junit.Assume.assumeTrue;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -27,10 +33,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.tools.JavaFileObject;
@@ -39,156 +45,182 @@ import javax.tools.JavaFileObject;
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class ListMutateMethodTest {
 
-  @Parameters(name = "{0}")
-  public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_LAMBDAS;
+  @SuppressWarnings("unchecked")
+  @Parameters(name = "List<{0}>, checked={1}, {2}, {3}")
+  public static Iterable<Object[]> parameters() {
+    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
+    List<Boolean> checked = ImmutableList.of(false, true);
+    List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
+    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    return () -> Lists
+        .cartesianProduct(elements, checked, conventions, features)
+        .stream()
+        .map(List::toArray)
+        .iterator();
   }
-
-  private static final JavaFileObject UNCHECKED_LIST_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer> getProperties();", List.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
-
-  private static final JavaFileObject CHECKED_LIST_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer> getProperties();", List.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder addProperties(int element) {")
-      .addLine("      if (element < 0) {")
-      .addLine("        throw new IllegalArgumentException(\"elements must be non-negative\");")
-      .addLine("      }")
-      .addLine("      return super.addProperties(element);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  private static final JavaFileObject CHECKED_NUMBER_LIST_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType<N extends Number> {")
-      .addLine("  %s<N> getProperties();", List.class)
-      .addLine("")
-      .addLine("  public static class Builder<N extends Number> extends DataType_Builder<N> {")
-      .addLine("    @Override public Builder<N> addProperties(N element) {")
-      .addLine("      if (element.intValue() < 0) {")
-      .addLine("        throw new IllegalArgumentException(\"elements must be non-negative\");")
-      .addLine("      }")
-      .addLine("      return super.addProperties(element);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  /** Simple type that substitutes passed-in objects, in this case by interning strings. */
-  private static final JavaFileObject INTERNED_STRINGS_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<String> getProperties();", List.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder addProperties(String element) {")
-      .addLine("      return super.addProperties(element.intern());")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  @Parameter public FeatureSet features;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
-  @Test
-  public void mutateAndAddModifiesUnderlyingPropertyWhenUnchecked() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(UNCHECKED_LIST_TYPE)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateProperties(map -> map.add(11))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(11);")
-            .build())
-        .runTest();
+  private final ElementFactory elements;
+  private final boolean checked;
+  private final NamingConvention convention;
+  private final FeatureSet features;
+
+  private final JavaFileObject listPropertyType;
+  private final JavaFileObject genericType;
+  /** Simple type that substitutes passed-in objects, in this case by interning strings. */
+  private final JavaFileObject internedStringsType;
+
+  public ListMutateMethodTest(
+      ElementFactory elements,
+      boolean checked,
+      NamingConvention convention,
+      FeatureSet features) {
+    this.elements = elements;
+    this.checked = checked;
+    this.convention = convention;
+    this.features = features;
+
+    SourceBuilder listPropertyTypeBuilder = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  %s<%s> %s;", List.class, elements.type(), convention.getter())
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {");
+    if (checked) {
+      listPropertyTypeBuilder
+          .addLine("    @Override public Builder addItems(%s element) {",
+              elements.unwrappedType())
+          .addLine("      if (!(%s)) {", elements.validation())
+          .addLine("        throw new IllegalArgumentException(\"%s\");", elements.errorMessage())
+          .addLine("      }")
+          .addLine("      return super.addItems(element);")
+          .addLine("    }");
+    }
+    listPropertyType = listPropertyTypeBuilder
+        .addLine("  }")
+        .addLine("}")
+        .build();
+
+    SourceBuilder genericTypeBuilder = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType<T extends %s> {", elements.supertype())
+        .addLine("  %s<T> %s;", List.class, convention.getter())
+        .addLine("")
+        .addLine("  public static class Builder<T extends %s> extends DataType_Builder<T> {",
+            elements.supertype());
+    if (checked) {
+      genericTypeBuilder
+          .addLine("    @Override public Builder addItems(T element) {")
+          .addLine("      if (!(%s)) {", elements.supertypeValidation())
+          .addLine("        throw new IllegalArgumentException(\"%s\");", elements.errorMessage())
+          .addLine("      }")
+          .addLine("      return super.addItems(element);")
+          .addLine("    }");
+    }
+    genericType = genericTypeBuilder
+        .addLine("  }")
+        .addLine("}")
+        .build();
+
+    if (!checked && elements == STRINGS) {
+      internedStringsType = new SourceBuilder()
+          .addLine("package com.example;")
+          .addLine("@%s", FreeBuilder.class)
+          .addLine("public interface DataType {")
+          .addLine("  %s<String> %s;", List.class, convention.getter())
+          .addLine("")
+          .addLine("  public static class Builder extends DataType_Builder {")
+          .addLine("    @Override public Builder addItems(String element) {")
+          .addLine("      return super.addItems(element.intern());")
+          .addLine("    }")
+          .addLine("  }")
+          .addLine("}")
+          .build();
+    } else {
+      internedStringsType = null;
+    }
   }
 
   @Test
-  public void mutateAndAddModifiesUnderlyingPropertyWhenChecked() {
+  public void mutateAndAddModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateProperties(map -> map.add(11))")
+            .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(11);")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.example(0))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(elements.errorMessage());
+    }
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
-            .addLine("new DataType.Builder().mutateProperties(map -> map.add(-3));")
+            .addLine("new DataType.Builder().mutateItems(items -> items.add(%s));",
+                elements.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
-  public void mutateAndAddModifiesUnderlyingPropertyWhenCheckedTypeVariable() {
+  public void mutateAndAddModifiesUnderlyingPropertyWhenGeneric() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_NUMBER_LIST_TYPE)
+        .with(genericType)
         .with(testBuilder()
-            .addLine("DataType<Integer> value = new DataType.Builder<Integer>()")
-            .addLine("    .mutateProperties(map -> map.add(11))")
+            .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
+            .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(11);")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.example(0))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddChecksArgumentsForTypeVariable() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(elements.errorMessage());
+    }
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_NUMBER_LIST_TYPE)
+        .with(genericType)
         .with(testBuilder()
-            .addLine("new DataType.Builder<Integer>().mutateProperties(map -> map.add(-3));")
+            .addLine("new DataType.Builder<%s>().mutateItems(items -> items.add(%s));",
+                elements.type(), elements.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddKeepsSubstitute() {
+    assumeTrue(internedStringsType != null);
     behaviorTester
         .with(new Processor(features))
-        .with(INTERNED_STRINGS_TYPE)
+        .with(internedStringsType)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
             .addLine("String i = s.intern();")
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateProperties(map -> map.add(s))")
+            .addLine("    .mutateItems(items -> items.add(s))")
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties().get(0)).isSameAs(i);")
+            .addLine("assertThat(value.%s.get(0)).isSameAs(i);", convention.getter())
             .build())
         .runTest();
   }
@@ -197,13 +229,14 @@ public class ListMutateMethodTest {
   public void mutateAndAddAtIndex0ModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.add(0, 11))")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.add(0, %s))", elements.example(3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(11, 1, 2, 3);")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(3, 0, 1, 2))
             .build())
         .runTest();
   }
@@ -212,13 +245,14 @@ public class ListMutateMethodTest {
   public void mutateAndAddAtIndex1ModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.add(1, 11))")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.add(1, %s))", elements.example(3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(1, 11, 2, 3);")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 3, 1, 2))
             .build())
         .runTest();
   }
@@ -227,13 +261,14 @@ public class ListMutateMethodTest {
   public void mutateAndAddAtIndex2ModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.add(2, 11))")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.add(2, %s))", elements.example(3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(1, 2, 11, 3);")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1, 3, 2))
             .build())
         .runTest();
   }
@@ -242,218 +277,178 @@ public class ListMutateMethodTest {
   public void mutateAndAddAtIndex3ModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.add(3, 11))")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.add(3, %s))", elements.example(3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(1, 2, 3, 11);")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1, 2, 3))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddAtIndexChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(elements.errorMessage());
+    }
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.add(2, -3));")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.add(2, %s));", elements.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddAtIndexKeepsSubstitute() {
+    assumeTrue(internedStringsType != null);
     behaviorTester
         .with(new Processor(features))
-        .with(INTERNED_STRINGS_TYPE)
+        .with(internedStringsType)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
             .addLine("String i = s.intern();")
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(\"one\", \"two\", \"three\")")
-            .addLine("    .mutateProperties(map -> map.add(2, s))")
+            .addLine("    .addItems(\"one\", \"two\", \"three\")")
+            .addLine("    .mutateItems(items -> items.add(2, s))")
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties().get(2)).isSameAs(i);")
+            .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.getter())
             .build())
         .runTest();
   }
 
   @Test
-  public void mutateAndSetModifiesUnderlyingPropertyWhenChecked() {
+  public void mutateAndSetModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.set(1, 11))")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.set(1, %s))", elements.example(3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(1, 11, 3).inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 3, 2))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndSetChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(elements.errorMessage());
+    }
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.set(1, -3));")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.set(1, %s));", elements.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndSetAtIndexKeepsSubstitute() {
+    assumeTrue(internedStringsType != null);
     behaviorTester
         .with(new Processor(features))
-        .with(INTERNED_STRINGS_TYPE)
+        .with(internedStringsType)
         .with(testBuilder()
             .addLine("String s = new String(\"foobar\");")
             .addLine("String i = s.intern();")
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(\"one\", \"two\", \"three\")")
-            .addLine("    .mutateProperties(map -> map.set(2, s))")
+            .addLine("    .addItems(\"one\", \"two\", \"three\")")
+            .addLine("    .mutateItems(items -> items.set(2, s))")
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties().get(2)).isSameAs(i);")
+            .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.getter())
             .build())
         .runTest();
   }
 
   @Test
-  public void mutateAndSizeReadsFromUnderlyingPropertyWhenChecked() {
+  public void mutateAndSizeReadsFromUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> assertThat(map.size()).isEqualTo(3));")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> assertThat(items.size()).isEqualTo(3));")
             .build())
         .runTest();
   }
 
   @Test
-  public void mutateAndGetReadsFromUnderlyingPropertyWhenChecked() {
+  public void mutateAndGetReadsFromUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> assertThat(map.get(1)).isEqualTo(2));")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> assertThat(items.get(1)).isEqualTo(%s));",
+                elements.example(1))
             .build())
         .runTest();
   }
 
   @Test
-  public void mutateAndRemoveModifiesUnderlyingPropertyWhenChecked() {
+  public void mutateAndRemoveModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.remove(1))")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.remove(1))")
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(1, 3).inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 2))
             .build())
         .runTest();
   }
 
   @Test
-  public void mutateAndClearModifiesUnderlyingPropertyWhenChecked() {
+  public void mutateAndClearModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3)")
-            .addLine("    .mutateProperties(map -> map.clear())")
-            .addLine("    .addProperties(4)")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+            .addLine("    .mutateItems(items -> items.clear())")
+            .addLine("    .addItems(%s)", elements.example(3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(4);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.getter(), elements.example(3))
             .build())
         .runTest();
   }
 
   @Test
-  public void mutateAndClearSubListModifiesUnderlyingPropertyWhenChecked() {
+  public void mutateAndClearSubListModifiesUnderlyingProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CHECKED_LIST_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(1, 2, 3, 4, 5, 6, 7)")
-            .addLine("    .mutateProperties(map -> map.subList(1, 5).clear())")
+            .addLine("    .addItems(%s)", elements.examples(0, 1, 2, 3, 4, 5, 6))
+            .addLine("    .mutateItems(items -> items.subList(1, 5).clear())")
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(1, 6, 7).inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mutateAndAddModifiesUnderlyingPropertyWhenUnchecked_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer> properties();", List.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateProperties(map -> map.add(11))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.properties()).containsExactly(11);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mutateAndAddModifiesUnderlyingPropertyWhenChecked_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer> properties();", List.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder addProperties(int element) {")
-            .addLine("      if (element < 0) {")
-            .addLine("        throw new IllegalArgumentException(")
-            .addLine("            \"elements must be non-negative\");")
-            .addLine("      }")
-            .addLine("      return super.addProperties(element);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateProperties(map -> map.add(11))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.properties()).containsExactly(11);")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 5, 6))
             .build())
         .runTest();
   }
@@ -461,5 +456,4 @@ public class ListMutateMethodTest {
   private static TestBuilder testBuilder() {
     return new TestBuilder().addImport("com.example.DataType");
   }
-
 }

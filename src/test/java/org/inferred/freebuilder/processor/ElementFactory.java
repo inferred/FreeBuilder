@@ -16,30 +16,39 @@ public enum ElementFactory {
       "String",
       CharSequence.class,
       "!element.isEmpty()",
+      "!element.toString().isEmpty()",
       "Cannot add empty string",
       "",
       new NameImpl("echo"),
       "alpha",
       "beta",
       "cappa",
-      "delta"),
+      "delta",
+      "echo",
+      "foxtrot",
+      "golf"),
   INTEGERS(
       "Integer",
       "int",
       Number.class,
       "element >= 0",
+      "element.intValue() >= 0",
       "Items must be non-negative",
       -4,
       2.7,
       1,
       3,
       6,
-      10);
+      10,
+      15,
+      21,
+      28);
 
   private final String type;
   private final String unwrappedType;
   private Class<?> supertype;
   private final String validation;
+  private final String supertypeValidation;
   private final String errorMessage;
   private final Comparable<?> invalidExample;
   private final Object supertypeExample;
@@ -50,6 +59,7 @@ public enum ElementFactory {
       String unwrappedType,
       Class<?> supertype,
       String validation,
+      String supertypeValidation,
       String errorMessage,
       Comparable<?> invalidExample,
       Object supertypeExample,
@@ -58,6 +68,7 @@ public enum ElementFactory {
     this.unwrappedType = unwrappedType;
     this.supertype = supertype;
     this.validation = validation;
+    this.supertypeValidation = supertypeValidation;
     this.errorMessage = errorMessage;
     this.invalidExample = invalidExample;
     this.supertypeExample = supertypeExample;
@@ -84,6 +95,10 @@ public enum ElementFactory {
 
   public String validation() {
     return validation;
+  }
+
+  public String supertypeValidation() {
+    return supertypeValidation;
   }
 
   public String errorMessage() {
