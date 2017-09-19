@@ -97,6 +97,16 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void addValueInstance_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder().addLine("new Receipt.Builder().addItems((Item) null);").build())
+        .runTest();
+  }
+
+  @Test
   public void addValueInstance_preservesPartials() {
     behaviorTester
         .with(new Processor(features))
@@ -129,6 +139,16 @@ public class BuildableListPropertyTest {
             .addLine("assertThat(value.%s)", convention.get("items"))
             .addLine("    .containsExactly(candy.build(), apple.build()).inOrder();")
             .build())
+        .runTest();
+  }
+
+  @Test
+  public void addBuilder_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder().addLine("new Receipt.Builder().addItems((Item.Builder) null);").build())
         .runTest();
   }
 
@@ -170,6 +190,19 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void varargsAddValueInstances_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("new Receipt.Builder().addItems(candy, null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void varargsAddValueInstances_preservesPartials() {
     behaviorTester
         .with(new Processor(features))
@@ -197,6 +230,19 @@ public class BuildableListPropertyTest {
             .addLine("Receipt value = new Receipt.Builder().addItems(candy, apple).build();")
             .addLine("assertThat(value.%s)", convention.get("items"))
             .addLine("    .containsExactly(candy.build(), apple.build()).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void varargsAddBuilders_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
+            .addLine("new Receipt.Builder().addItems(candy, null);")
             .build())
         .runTest();
   }
@@ -240,6 +286,19 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void addAllSpliteratorOfValueInstances_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("new Receipt.Builder().addAllItems(Stream.of(candy, null).spliterator());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void addAllSpliteratorOfValueInstances_preservesPartials() {
     behaviorTester
         .with(new Processor(features))
@@ -269,6 +328,20 @@ public class BuildableListPropertyTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s)", convention.get("items"))
             .addLine("    .containsExactly(candy.build(), apple.build()).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void addAllSpliteratorOfBuilders_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
+            .addLine("new Receipt.Builder()")
+            .addLine("    .addAllBuildersOfItems(Stream.of(candy, null).spliterator());")
             .build())
         .runTest();
   }
@@ -313,6 +386,19 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void addAllStreamOfValueInstances_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("new Receipt.Builder().addAllItems(Stream.of(candy, null));")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void addAllStreamOfValueInstances_preservesPartials() {
     behaviorTester
         .with(new Processor(features))
@@ -342,6 +428,19 @@ public class BuildableListPropertyTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s)", convention.get("items"))
             .addLine("    .containsExactly(candy.build(), apple.build()).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void addAllStreamOfBuilders_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
+            .addLine("new Receipt.Builder().addAllBuildersOfItems(Stream.of(candy, null));")
             .build())
         .runTest();
   }
@@ -386,6 +485,19 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void addAllIterableOfValueInstances_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("new Receipt.Builder().addAllItems(ImmutableList.of(candy, null));")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void addAllIterableOfValueInstances_preservesPartials() {
     behaviorTester
         .with(new Processor(features))
@@ -415,6 +527,19 @@ public class BuildableListPropertyTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s)", convention.get("items"))
             .addLine("    .containsExactly(candy.build(), apple.build()).inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void addAllIterableOfBuilders_null() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
+            .addLine("new Receipt.Builder().addAllBuildersOfItems(ImmutableList.of(candy, null));")
             .build())
         .runTest();
   }
