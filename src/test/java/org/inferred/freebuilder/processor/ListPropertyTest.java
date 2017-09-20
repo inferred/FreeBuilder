@@ -15,11 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,10 +40,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -53,78 +55,76 @@ import javax.tools.JavaFileObject;
 /** Behavioral tests for {@code List<?>} properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class ListPrefixlessPropertyTest {
+public class ListPropertyTest {
 
-  @Parameters(name = "{0}")
-  public static List<FeatureSet> featureSets() {
-    return FeatureSets.ALL;
+  @SuppressWarnings("unchecked")
+  @Parameters(name = "List<{0}>, {1}, {2}")
+  public static Iterable<Object[]> parameters() {
+    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
+    List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
+    List<FeatureSet> features = FeatureSets.ALL;
+    return () -> Lists
+        .cartesianProduct(elements, conventions, features)
+        .stream()
+        .map(List::toArray)
+        .iterator();
   }
-
-  private static final JavaFileObject LIST_PROPERTY_AUTO_BUILT_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> items();", List.class, String.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("  public static Builder builder() {")
-      .addLine("    return new Builder();")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  private static final String STRING_VALIDATION_ERROR_MESSAGE = "Cannot add empty string";
-
-  private static final JavaFileObject VALIDATED_STRINGS = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<%s> items();", List.class, String.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder addItems(String element) {")
-      .addLine("      if (element.isEmpty()) {")
-      .addLine("        throw new IllegalArgumentException(\"%s\");",
-          STRING_VALIDATION_ERROR_MESSAGE)
-      .addLine("      }")
-      .addLine("      return super.addItems(element);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  private static final String INT_VALIDATION_ERROR_MESSAGE = "Value must be non-negative";
-
-  private static final JavaFileObject VALIDATED_INTS = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<Integer> items();", List.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder addItems(int item) {")
-      .addLine("      if (item < 0) {")
-      .addLine("        throw new IllegalArgumentException(\"%s\");", INT_VALIDATION_ERROR_MESSAGE)
-      .addLine("      }")
-      .addLine("      return super.addItems(item);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  @Parameter public FeatureSet features;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
+
+  private final ElementFactory elements;
+  private final NamingConvention convention;
+  private final FeatureSet features;
+
+  private final JavaFileObject listPropertyType;
+  private final JavaFileObject validatedType;
+
+  public ListPropertyTest(
+      ElementFactory elements,
+      NamingConvention convention,
+      FeatureSet features) {
+    this.elements = elements;
+    this.convention = convention;
+    this.features = features;
+
+    listPropertyType = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public abstract class DataType {")
+        .addLine("  public abstract %s<%s> %s;", List.class, elements.type(), convention.getter())
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {}")
+        .addLine("  public abstract Builder toBuilder();")
+        .addLine("}")
+        .build();
+
+    validatedType = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public abstract class DataType {")
+        .addLine("  public abstract %s<%s> %s;", List.class, elements.type(), convention.getter())
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {")
+        .addLine("    @Override public Builder addItems(%s element) {", elements.unwrappedType())
+        .addLine("      if (!(%s)) {", elements.validation())
+        .addLine("        throw new IllegalArgumentException(\"%s\");", elements.errorMessage())
+        .addLine("      }")
+        .addLine("      return super.addItems(element);")
+        .addLine("    }")
+        .addLine("  }")
+        .addLine("}")
+        .build();
+  }
 
   @Test
   public void testDefaultEmpty() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertThat(value.items()).isEmpty();")
+            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
             .build())
         .runTest();
   }
@@ -133,13 +133,14 @@ public class ListPrefixlessPropertyTest {
   public void testAddSingleElement() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -149,10 +150,10 @@ public class ListPrefixlessPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addItems((String) null);")
+            .addLine("    .addItems((%s) null);", elements.type())
             .build())
         .runTest();
   }
@@ -161,12 +162,13 @@ public class ListPrefixlessPropertyTest {
   public void testAddVarargs() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -176,10 +178,10 @@ public class ListPrefixlessPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addItems(\"one\", null);")
+            .addLine("    .addItems(%s, (%s) null);", elements.example(0), elements.type())
             .build())
         .runTest();
   }
@@ -189,12 +191,13 @@ public class ListPrefixlessPropertyTest {
     assumeStreamsAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(Stream.of(\"one\", \"two\").spliterator())")
+            .addLine("    .addAllItems(Stream.of(%s).spliterator())", elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -205,10 +208,11 @@ public class ListPrefixlessPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(Stream.of(\"one\", null).spliterator());")
+            .addLine("    .addAllItems(Stream.of(%s, (%s) null).spliterator());",
+                elements.example(0), elements.type())
             .build())
         .runTest();
   }
@@ -218,12 +222,13 @@ public class ListPrefixlessPropertyTest {
     assumeStreamsAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(Stream.of(\"one\", \"two\"))")
+            .addLine("    .addAllItems(Stream.of(%s))", elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -234,10 +239,11 @@ public class ListPrefixlessPropertyTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(Stream.of(\"one\", null));")
+            .addLine("    .addAllItems(Stream.of(%s, (%s) null));",
+                elements.example(0), elements.type())
             .build())
         .runTest();
   }
@@ -245,25 +251,15 @@ public class ListPrefixlessPropertyTest {
   @Test
   public void testAddAllIntStream() {
     assumeStreamsAvailable();
+    assumeTrue(elements == INTEGERS);
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> items();", List.class, Integer.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
-            .addLine("}")
-            .build())
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 2))", IntStream.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(1, 2).inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(1, 2).inOrder();", convention.getter())
             .build())
         .runTest();
   }
@@ -272,12 +268,13 @@ public class ListPrefixlessPropertyTest {
   public void testAddAllIterable() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(\"one\", \"two\"))", ImmutableList.class)
+            .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -286,26 +283,29 @@ public class ListPrefixlessPropertyTest {
   public void testAddAllIterable_onlyIteratesOnce() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(new %s(\"one\", \"two\"))", DodgySingleIterable.class)
+            .addLine("    .addAllItems(new %s<%s>(%s))",
+                DodgySingleIterable.class, elements.type(), elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
 
   /** Throws a {@link NullPointerException} on second call to {@link #iterator()}. */
-  public static class DodgySingleIterable implements Iterable<String> {
-    private ImmutableList<String> values;
+  public static class DodgySingleIterable<T> implements Iterable<T> {
+    private ImmutableList<T> values;
 
-    public DodgySingleIterable(String... values) {
+    @SafeVarargs
+    public DodgySingleIterable(T... values) {
       this.values = ImmutableList.copyOf(values);
     }
 
     @Override
-    public Iterator<String> iterator() {
+    public Iterator<T> iterator() {
       try {
         return values.iterator();
       } finally {
@@ -318,14 +318,15 @@ public class ListPrefixlessPropertyTest {
   public void testClear() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .clearItems()")
-            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -334,13 +335,14 @@ public class ListPrefixlessPropertyTest {
   public void testClear_emptyList() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .clearItems()")
-            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -349,17 +351,20 @@ public class ListPrefixlessPropertyTest {
   public void testGetter_returnsLiveView() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<String> itemsView = builder.items();", List.class)
+            .addLine("%s<%s> itemsView = builder.%s;",
+                List.class, elements.type(), convention.getter())
             .addLine("assertThat(itemsView).isEmpty();")
-            .addLine("builder.addItems(\"one\", \"two\");")
-            .addLine("assertThat(itemsView).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("builder.addItems(%s);", elements.examples(0, 1))
+            .addLine("assertThat(itemsView).containsExactly(%s).inOrder();",
+                elements.examples(0, 1))
             .addLine("builder.clearItems();")
             .addLine("assertThat(itemsView).isEmpty();")
-            .addLine("builder.addItems(\"three\", \"four\");")
-            .addLine("assertThat(itemsView).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("builder.addItems(%s);", elements.examples(2, 3))
+            .addLine("assertThat(itemsView).containsExactly(%s).inOrder();",
+                elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -369,11 +374,12 @@ public class ListPrefixlessPropertyTest {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<String> itemsView = builder.items();", List.class)
-            .addLine("itemsView.add(\"something\");")
+            .addLine("%s<%s> itemsView = builder.%s;",
+                List.class, elements.type(), convention.getter())
+            .addLine("itemsView.add(%s);", elements.example(0))
             .build())
         .runTest();
   }
@@ -382,14 +388,15 @@ public class ListPrefixlessPropertyTest {
   public void testMergeFrom_valueInstance() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
-            .addLine("DataType value = DataType.builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -398,13 +405,14 @@ public class ListPrefixlessPropertyTest {
   public void testMergeFrom_builder() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .addItems(\"one\", \"two\");")
-            .addLine("DataType.Builder builder = DataType.builder()")
+            .addLine("DataType.Builder template = new DataType.Builder()")
+            .addLine("    .addItems(%s);", elements.examples(0, 1))
+            .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(builder.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -413,25 +421,16 @@ public class ListPrefixlessPropertyTest {
   public void testToBuilder_fromPartial() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> items();", List.class, String.class)
-            .addLine("")
-            .addLine("  public abstract Builder toBuilder();")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value1 = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .buildPartial();")
             .addLine("DataType value2 = value1.toBuilder()")
-            .addLine("    .addItems(\"three\")")
+            .addLine("    .addItems(%s)", elements.example(2))
             .addLine("    .build();")
-            .addLine("assertThat(value2.items())")
-            .addLine("    .containsExactly(\"one\", \"two\", \"three\")")
+            .addLine("assertThat(value2.%s)", convention.getter())
+            .addLine("    .containsExactly(%s)", elements.examples(0, 1, 2))
             .addLine("    .inOrder();")
             .build())
         .runTest();
@@ -441,14 +440,15 @@ public class ListPrefixlessPropertyTest {
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .clear()")
-            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -461,22 +461,24 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> items();", List.class, String.class)
+            .addLine("  public abstract %s<%s> %s;",
+                List.class, elements.type(), convention.getter())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    private Builder() { }")
             .addLine("  }")
-            .addLine("  public static Builder builder(String... items) {")
+            .addLine("  public static Builder builder(%s... items) {", elements.unwrappedType())
             .addLine("    return new Builder().addItems(items);")
             .addLine("  }")
             .addLine("}")
             .build())
         .with(testBuilder()
-            .addLine("DataType value = DataType.builder(\"one\", \"two\")")
+            .addLine("DataType value = DataType.builder(%s)", elements.examples(0, 1))
             .addLine("    .clear()")
-            .addLine("    .addItems(\"three\", \"four\")")
+            .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"three\", \"four\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -485,25 +487,25 @@ public class ListPrefixlessPropertyTest {
   public void testEquality() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("new %s()", EqualsTester.class)
             .addLine("    .addEqualityGroup(")
-            .addLine("        DataType.builder().build(),")
-            .addLine("        DataType.builder().build())")
+            .addLine("        new DataType.Builder().build(),")
+            .addLine("        new DataType.Builder().build())")
             .addLine("    .addEqualityGroup(")
-            .addLine("        DataType.builder()")
-            .addLine("            .addItems(\"one\", \"two\")")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .addItems(%s)", elements.examples(0, 1))
             .addLine("            .build(),")
-            .addLine("        DataType.builder()")
-            .addLine("            .addItems(\"one\", \"two\")")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .addItems(%s)", elements.examples(0, 1))
             .addLine("            .build())")
             .addLine("    .addEqualityGroup(")
-            .addLine("        DataType.builder()")
-            .addLine("            .addItems(\"one\")")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .addItems(%s)", elements.example(0))
             .addLine("            .build(),")
-            .addLine("        DataType.builder()")
-            .addLine("            .addItems(\"one\")")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .addItems(%s)", elements.example(0))
             .addLine("            .build())")
             .addLine("    .testEquals();")
             .build())
@@ -515,13 +517,13 @@ public class ListPrefixlessPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(value.items()).isSameAs(copy.items());")
+            .addLine("assertThat(value.%1$s).isSameAs(copy.%1$s);", convention.getter())
             .build())
         .runTest();
   }
@@ -531,15 +533,15 @@ public class ListPrefixlessPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(new TestBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(copy.items()).isSameAs(value.items());")
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
             .build())
         .runTest();
   }
@@ -549,15 +551,15 @@ public class ListPrefixlessPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(new TestBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = new DataType.Builder().mergeFrom(value).build();")
-            .addLine("assertThat(copy.items()).isSameAs(value.items());")
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
             .build())
         .runTest();
   }
@@ -567,18 +569,18 @@ public class ListPrefixlessPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(new TestBuilder()
             .addImport("com.example.DataType")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = new DataType.Builder()")
             .addLine("    .from(value)")
             .addLine("    .mergeFrom(new DataType.Builder())")
             .addLine("    .build();")
-            .addLine("assertThat(copy.items()).isSameAs(value.items());")
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
             .build())
         .runTest();
   }
@@ -587,16 +589,16 @@ public class ListPrefixlessPropertyTest {
   public void testPropertyClearAfterMergeFromValue() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder")
             .addLine("    .from(value)")
             .addLine("    .clearItems()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.items()).isEmpty();")
+            .addLine("assertThat(copy.%s).isEmpty();", convention.getter())
             .build())
         .runTest();
   }
@@ -605,16 +607,16 @@ public class ListPrefixlessPropertyTest {
   public void testBuilderClearAfterMergeFromValue() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\")")
+            .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder")
             .addLine("    .from(value)")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.items()).isEmpty();")
+            .addLine("assertThat(copy.%s).isEmpty();", convention.getter())
             .build())
         .runTest();
   }
@@ -628,17 +630,19 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> items();", Collection.class, String.class)
+            .addLine("  public abstract %s<%s> %s;",
+                Collection.class, elements.type(), convention.getter())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -651,17 +655,19 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<? extends %s> items();", Collection.class, Number.class)
+            .addLine("  public abstract %s<? extends %s> %s;",
+                Collection.class, elements.supertype(), convention.getter())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(1)")
-            .addLine("    .addItems(2.7)")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.supertypeExample())
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(1, 2.7).inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s, %s).inOrder();",
+                convention.getter(), elements.example(0), elements.supertypeExample())
             .build())
         .runTest();
   }
@@ -677,17 +683,18 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<E> {")
-            .addLine("  public abstract %s<E> items();", List.class)
+            .addLine("  public abstract %s<E> %s;", List.class, convention.getter())
             .addLine("")
             .addLine("  public static class Builder<E> extends DataType_Builder<E> {}")
             .addLine("}")
             .build())
         .with(testBuilder()
-            .addLine("DataType<String> value = new DataType.Builder<String>()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -700,17 +707,18 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<E> {")
-            .addLine("  public abstract %s<? extends E> items();", List.class)
+            .addLine("  public abstract %s<? extends E> %s;", List.class, convention.getter())
             .addLine("")
             .addLine("  public static class Builder<E> extends DataType_Builder<E> {}")
             .addLine("}")
             .build())
         .with(testBuilder()
-            .addLine("DataType<Number> value = new DataType.Builder<Number>()")
-            .addLine("    .addItems(1)")
-            .addLine("    .addItems(2.7)")
+            .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.supertype())
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.supertypeExample())
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(1, 2.7).inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s, %s).inOrder();",
+                convention.getter(), elements.example(0), elements.supertypeExample())
             .build())
         .runTest();
   }
@@ -724,17 +732,19 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> items();", ImmutableList.class, String.class)
+            .addLine("  public abstract %s<%s> %s;",
+                ImmutableList.class, elements.type(), convention.getter())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -748,30 +758,32 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<? extends %s> items();",
-                ImmutableList.class, Number.class)
+            .addLine("  public abstract %s<? extends %s> %s;",
+                ImmutableList.class, elements.supertype(), convention.getter())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(1)")
-            .addLine("    .addItems(2.7)")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.supertypeExample())
             .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(1, 2.7).inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s, %s).inOrder();",
+                convention.getter(), elements.example(0), elements.supertypeExample())
             .build())
         .runTest();
   }
 
   @Test
   public void testValidation_varargsAdd() {
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(elements.errorMessage());
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
+        .with(validatedType)
         .with(testBuilder()
-            .addLine("new DataType.Builder().addItems(\"item\", \"\");", ImmutableList.class)
+            .addLine("new DataType.Builder().addItems(%s, %s);",
+                elements.example(0), elements.invalidExample())
             .build())
         .runTest();
   }
@@ -779,13 +791,13 @@ public class ListPrefixlessPropertyTest {
   @Test
   public void testValidation_addAllSpliterator() {
     assumeStreamsAvailable();
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(elements.errorMessage());
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
+        .with(validatedType)
         .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(Stream.of(\"item\", \"\").spliterator());")
+            .addLine("new DataType.Builder().addAllItems(Stream.of(%s, %s).spliterator());",
+                elements.example(0), elements.invalidExample())
             .build())
         .runTest();
   }
@@ -793,89 +805,26 @@ public class ListPrefixlessPropertyTest {
   @Test
   public void testValidation_addAllStream() {
     assumeStreamsAvailable();
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(elements.errorMessage());
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
+        .with(validatedType)
         .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(Stream.of(\"item\", \"\"));")
+            .addLine("new DataType.Builder().addAllItems(Stream.of(%s, %s));",
+                elements.example(0), elements.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void testValidation_addAllIterable() {
-    thrown.expectMessage(STRING_VALIDATION_ERROR_MESSAGE);
+    thrown.expectMessage(elements.errorMessage());
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_STRINGS)
+        .with(validatedType)
         .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(\"item\", \"\"));", ImmutableList.class)
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testPrimitiveValidation_varargsAdd() {
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(VALIDATED_INTS)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().addItems(3, -2);", ImmutableList.class)
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testPrimitiveValidation_addAllSpliterator() {
-    assumeStreamsAvailable();
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(VALIDATED_INTS)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().addAllItems(Stream.of(3, -2).spliterator());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testPrimitiveValidation_addAllStream() {
-    assumeStreamsAvailable();
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(VALIDATED_INTS)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().addAllItems(Stream.of(3, -2));")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testPrimitiveValidation_addAllIntStream() {
-    assumeStreamsAvailable();
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(VALIDATED_INTS)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().addAllItems(%s.of(3, -2));", IntStream.class)
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testPrimitiveValidation_addAllIterable() {
-    thrown.expectMessage(INT_VALIDATION_ERROR_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(VALIDATED_INTS)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().addAllItems(%s.of(3, -2));", ImmutableList.class)
+            .addLine("new DataType.Builder().addAllItems(%s.of(%s, %s));",
+                ImmutableList.class, elements.example(0), elements.invalidExample())
             .build())
         .runTest();
   }
@@ -891,20 +840,22 @@ public class ListPrefixlessPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public interface DataType {")
-            .addLine("  @JsonProperty(\"stuff\") %s<%s> items();", List.class, String.class)
+            .addLine("  @JsonProperty(\"stuff\") %s<%s> %s;",
+                List.class, elements.type(), convention.getter())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\")")
-            .addLine("    .addItems(\"two\")")
+            .addLine("    .addItems(%s)", elements.example(0))
+            .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertThat(clone.items()).containsExactly(\"one\", \"two\").inOrder();")
+            .addLine("assertThat(clone.%s).containsExactly(%s).inOrder();",
+                convention.getter(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -913,13 +864,13 @@ public class ListPrefixlessPropertyTest {
   public void testCompilesWithoutWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(LIST_PROPERTY_AUTO_BUILT_TYPE)
+        .with(listPropertyType)
         .compiles()
         .withNoWarnings();
   }
 
   @Test
-  public void testCanNameBoxedPropertyElements() {
+  public void testCanNamePropertyElements() {
     // See also https://github.com/google/FreeBuilder/issues/258
     behaviorTester
         .with(new Processor(features))
@@ -927,45 +878,18 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> elements();", List.class, String.class)
+            .addLine("  public abstract %s<%s> %s;",
+                List.class, elements.type(), convention.getter("elements"))
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addElements(\"one\", \"two\")")
+            .addLine("    .addElements(%s)", elements.examples(0, 1))
             .addLine("    .build();")
-            .addLine("assertThat(value.elements()).containsExactly(\"one\", \"two\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testCanNamePrimitivePropertyElements() {
-    // See also https://github.com/google/FreeBuilder/issues/258
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> elements();", List.class, Integer.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addElements(1, 2)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.elements()).containsExactly(1, 2).inOrder();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.getter("elements"), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -979,15 +903,16 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %1$s<%1$s<%2$s>> items();", List.class, String.class)
+            .addLine("  public abstract %1$s<%1$s<%2$s>> %3$s;",
+                List.class, elements.type(), convention.getter())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
             .build())
         .with(testBuilder()
             .addLine("new DataType.Builder().addItems(")
-            .addLine("    ImmutableList.of(\"one\", \"two\"),")
-            .addLine("    ImmutableList.of(\"three\", \"four\"));")
+            .addLine("    ImmutableList.of(%s),", elements.examples(0, 1))
+            .addLine("    ImmutableList.of(%s));", elements.examples(2, 3))
             .build())
         .compiles()
         .withNoWarnings();
@@ -1002,14 +927,14 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
-            .addLine("  public abstract %s<T> items();", List.class)
+            .addLine("  public abstract %s<T> %s;", List.class, convention.getter())
             .addLine("")
             .addLine("  public static class Builder<T> extends DataType_Builder<T> {}")
             .addLine("}")
             .build())
         .with(testBuilder()
-            .addLine("new DataType.Builder<String>().addItems(\"one\", \"two\")")
-            .addLine("    .build();")
+            .addLine("new DataType.Builder<%s>().addItems(%s).build();",
+                elements.type(), elements.examples(0, 1))
             .build())
         .compiles()
         .withNoWarnings();
@@ -1025,14 +950,15 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
-            .addLine("  public abstract %1$s<%1$s<%2$s>> items();", List.class, String.class)
+            .addLine("  public abstract %1$s<%1$s<%2$s>> %3$s;",
+                List.class, elements.type(), convention.getter())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @%s", Override.class)
             .addLine("    @%s", SafeVarargs.class)
             .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
             .addLine("    public final Builder addItems(%s<%s>... items) {",
-                List.class, String.class)
+                List.class, elements.type())
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
@@ -1052,7 +978,7 @@ public class ListPrefixlessPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
-            .addLine("  public abstract %s<T> items();", List.class)
+            .addLine("  public abstract %s<T> %s;", List.class, convention.getter())
             .addLine("")
             .addLine("  public static class Builder<T> extends DataType_Builder<T> {")
             .addLine("    @%s", Override.class)

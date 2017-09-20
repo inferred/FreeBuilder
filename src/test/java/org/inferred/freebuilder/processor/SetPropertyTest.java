@@ -55,44 +55,12 @@ import javax.tools.JavaFileObject;
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class SetPropertyTest {
 
-  public enum TestConvention {
-    PREFIXLESS("prefixless") {
-      @Override
-      public String getter(String fieldName) {
-        return fieldName + "()";
-      }
-    },
-    BEAN("bean") {
-      @Override
-      public String getter(String fieldName) {
-        return "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1) + "()";
-      }
-    };
-
-    private final String name;
-
-    TestConvention(String name) {
-      this.name = name;
-    }
-
-    public String getter() {
-      return getter("items");
-    }
-
-    abstract public String getter(String fieldName);
-
-    @Override
-    public String toString() {
-      return name;
-    }
-  }
-
   @SuppressWarnings("unchecked")
   @Parameters(name = "{0}<{1}>, {2}, {3}")
   public static Iterable<Object[]> parameters() {
     List<SetType> sets = Arrays.asList(SetType.values());
     List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
-    List<TestConvention> conventions = Arrays.asList(TestConvention.values());
+    List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
         .cartesianProduct(sets, elements, conventions, features)
@@ -106,7 +74,7 @@ public class SetPropertyTest {
 
   private final SetType set;
   private final ElementFactory elements;
-  private final TestConvention convention;
+  private final NamingConvention convention;
   private final FeatureSet features;
 
   private final JavaFileObject setPropertyType;
@@ -114,7 +82,7 @@ public class SetPropertyTest {
   private final JavaFileObject validatedType;
 
   public SetPropertyTest(
-      SetType set, ElementFactory elements, TestConvention convention, FeatureSet features) {
+      SetType set, ElementFactory elements, NamingConvention convention, FeatureSet features) {
     this.set = set;
     this.elements = elements;
     this.convention = convention;
