@@ -49,6 +49,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
@@ -589,6 +590,60 @@ public class ProcessorTest {
             .addLine("    .setPropertyB(true)")
             .addLine("    .build();")
             .addLine("assertEquals(\"DataType{propertyA=11, propertyB=true}\", value.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToString_nullablePropertyNamedResult() {
+    // See https://github.com/google/FreeBuilder/issues/261
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract @%s String getValue();", Nullable.class)
+            .addLine("  public abstract @%s String getResult();", Nullable.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setResult(\"fred\")")
+            .addLine("    .build();")
+            .addLine("assertEquals(\"DataType{result=fred}\", value.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPartialToString_propertyNamedResult() {
+    // See https://github.com/google/FreeBuilder/issues/261
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract String getValue();")
+            .addLine("  public abstract String getResult();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setResult(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("assertEquals(\"partial DataType{result=fred}\", value.toString());")
             .build())
         .runTest();
   }

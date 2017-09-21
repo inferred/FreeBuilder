@@ -201,7 +201,7 @@ public class CodeGenerator {
         .addLine(" * Does not affect any properties not set on the input.")
         .addLine(" */")
         .addLine("public %1$s mergeFrom(%1$s template) {", metadata.getBuilder());
-    Block body = Block.methodBody(code, "template");
+    Block body = methodBody(code, "template");
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator().addMergeFromBuilder(body, "template");
     }
@@ -425,20 +425,21 @@ public class CodeGenerator {
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public %s toString() {", String.class);
+    Block body = methodBody(code);
     switch (metadata.getProperties().size()) {
       case 0: {
-        code.addLine("    return \"%s{}\";", metadata.getType().getSimpleName());
+        body.addLine("    return \"%s{}\";", metadata.getType().getSimpleName());
         break;
       }
 
       case 1: {
-        code.add("    return \"%s{", metadata.getType().getSimpleName());
+        body.add("    return \"%s{", metadata.getType().getSimpleName());
         Property property = getOnlyElement(metadata.getProperties());
         if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-          code.add("\" + (%1$s != null ? \"%2$s=\" + %1$s : \"\") + \"}\";\n",
+          body.add("\" + (%1$s != null ? \"%2$s=\" + %1$s : \"\") + \"}\";\n",
               property.getField(), property.getName());
         } else {
-          code.add("%s=\" + %s + \"}\";\n", property.getName(), property.getField());
+          body.add("%s=\" + %s + \"}\";\n", property.getName(), property.getField());
         }
         break;
       }
@@ -446,45 +447,46 @@ public class CodeGenerator {
       default: {
         if (!any(metadata.getProperties(), IS_OPTIONAL)) {
           // If none of the properties are optional, use string concatenation for performance.
-          code.addLine("    return \"%s{\"", metadata.getType().getSimpleName());
+          body.addLine("    return \"%s{\"", metadata.getType().getSimpleName());
           Property lastProperty = getLast(metadata.getProperties());
           for (Property property : metadata.getProperties()) {
-            code.add("        + \"%s=\" + %s", property.getName(), property.getField());
+            body.add("        + \"%s=\" + %s", property.getName(), property.getField());
             if (property != lastProperty) {
-              code.add(" + \", \"\n");
+              body.add(" + \", \"\n");
             } else {
-              code.add(" + \"}\";\n");
+              body.add(" + \"}\";\n");
             }
           }
-        } else if (code.feature(GUAVA).isAvailable()) {
+        } else if (body.feature(GUAVA).isAvailable()) {
           // If Guava is available, use COMMA_JOINER for readability.
-          code.addLine("    return \"%s{\"", metadata.getType().getSimpleName())
+          body.addLine("    return \"%s{\"", metadata.getType().getSimpleName())
               .addLine("        + COMMA_JOINER.join(");
           Property lastProperty = getLast(metadata.getProperties());
           for (Property property : metadata.getProperties()) {
-            code.add("            ");
+            body.add("            ");
             if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-              code.add("(%s != null ? ", property.getField());
+              body.add("(%s != null ? ", property.getField());
             }
-            code.add("\"%s=\" + %s", property.getName(), property.getField());
+            body.add("\"%s=\" + %s", property.getName(), property.getField());
             if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
-              code.add(" : null)");
+              body.add(" : null)");
             }
             if (property != lastProperty) {
-              code.add(",\n");
+              body.add(",\n");
             } else {
-              code.add(")\n");
+              body.add(")\n");
             }
           }
-          code.addLine("        + \"}\";");
+          body.addLine("        + \"}\";");
         } else {
           // Use StringBuilder if no better choice is available.
-          writeToStringWithBuilder(code, metadata, false);
+          writeToStringWithBuilder(body, metadata, false);
         }
         break;
       }
     }
-    code.addLine("  }");
+    code.add(body)
+        .addLine("  }");
   }
 
   private static void addPartialType(SourceBuilder code, Metadata metadata) {
@@ -626,12 +628,14 @@ public class CodeGenerator {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public %s toString() {", String.class);
-      if (metadata.getProperties().size() > 1 && !code.feature(GUAVA).isAvailable()) {
-        writeToStringWithBuilder(code, metadata, true);
+      Block body = methodBody(code);
+      if (metadata.getProperties().size() > 1 && !body.feature(GUAVA).isAvailable()) {
+        writeToStringWithBuilder(body, metadata, true);
       } else {
-        writePartialToStringWithConcatenation(code, metadata);
+        writePartialToStringWithConcatenation(body, metadata);
       }
-      code.addLine("  }");
+      code.add(body)
+          .addLine("  }");
     }
     code.addLine("}");
   }
@@ -668,14 +672,17 @@ public class CodeGenerator {
     code.addLine("  }");
   }
 
-  private static void writeToStringWithBuilder(
-      SourceBuilder code, Metadata metadata, boolean isPartial) {
-    code.addLine("%1$s result = new %1$s(\"%2$s%3$s{\");",
-        StringBuilder.class, isPartial ? "partial " : "", metadata.getType().getSimpleName());
+  private static void writeToStringWithBuilder(Block code, Metadata metadata, boolean isPartial) {
+    Excerpt result = code.declare(
+        Excerpts.add("%s", StringBuilder.class),
+        "result",
+        Excerpts.add("new %s(\"%s%s{\")",
+            StringBuilder.class, isPartial ? "partial " : "", metadata.getType().getSimpleName()));
     boolean noDefaults = !any(metadata.getProperties(), HAS_DEFAULT);
+    Excerpt separator = null;
     if (noDefaults) {
       // We need to keep track of whether to output a separator
-      code.addLine("String separator = \"\";");
+      separator = code.declare(Excerpts.add("String"), "separator", Excerpts.add("\"\""));
     }
     boolean seenDefault = false;
     Property first = metadata.getProperties().get(0);
@@ -699,15 +706,16 @@ public class CodeGenerator {
           break;
       }
       if (noDefaults && property != first) {
-        code.addLine("result.append(separator);");
+        code.addLine("%s.append(%s);", result, separator);
       } else if (!noDefaults && hadSeenDefault) {
-        code.addLine("result.append(\", \");");
+        code.addLine("%s.append(\", \");", result);
       }
-      code.addLine("result.append(\"%s=\").append(%s);", property.getName(), property.getField());
+      code.addLine("%s.append(\"%s=\").append(%s);",
+          result, property.getName(), property.getField());
       if (!noDefaults && !seenDefault) {
-        code.addLine("result.append(\", \");");
+        code.addLine("%s.append(\", \");", result);
       } else if (noDefaults && property != last) {
-        code.addLine("separator = \", \";");
+        code.addLine("%s = \", \";", separator);
       }
       switch (property.getCodeGenerator().getType()) {
         case HAS_DEFAULT:
@@ -724,8 +732,8 @@ public class CodeGenerator {
           break;
       }
     }
-    code.addLine("result.append(\"}\");")
-        .addLine("return result.toString();");
+    code.addLine("%s.append(\"}\");", result)
+        .addLine("return %s.toString();", result);
   }
 
   private static void writePartialToStringWithConcatenation(SourceBuilder code, Metadata metadata) {
