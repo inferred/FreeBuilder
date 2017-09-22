@@ -34,7 +34,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
@@ -46,11 +45,9 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.Collection;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -328,8 +325,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
             valueType);
     Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      body.addLine("  mutator.accept(new CheckedListMultimap<>(%s, this::%s));",
-          property.getField(), putMethod(property));
+      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
+          CheckedListMultimap.TYPE, property.getField(), putMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
@@ -396,14 +393,5 @@ class ListMultimapProperty extends PropertyCodeGenerator {
   @Override
   public void addClearField(Block code) {
     code.addLine("%s.clear();", property.getField());
-  }
-
-  @Override
-  public Set<StaticExcerpt> getStaticExcerpts() {
-    ImmutableSet.Builder<StaticExcerpt> staticMethods = ImmutableSet.builder();
-    if (overridesPutMethod) {
-      staticMethods.addAll(CheckedListMultimap.excerpts());
-    }
-    return staticMethods.build();
   }
 }

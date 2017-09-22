@@ -32,7 +32,6 @@ import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FU
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -45,11 +44,9 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.Collection;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -324,8 +321,8 @@ class SetMultimapProperty extends PropertyCodeGenerator {
             valueType);
     Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      body.addLine("  mutator.accept(new CheckedSetMultimap<>(%s, this::%s));",
-          property.getField(), putMethod(property));
+      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
+          CheckedSetMultimap.TYPE, property.getField(), putMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
@@ -393,14 +390,4 @@ class SetMultimapProperty extends PropertyCodeGenerator {
   public void addClearField(Block code) {
     code.addLine("%s.clear();", property.getField());
   }
-
-  @Override
-  public Set<StaticExcerpt> getStaticExcerpts() {
-    ImmutableSet.Builder<StaticExcerpt> staticMethods = ImmutableSet.builder();
-    if (overridesPutMethod) {
-      staticMethods.addAll(CheckedSetMultimap.excerpts());
-    }
-    return staticMethods.build();
-  }
-
 }

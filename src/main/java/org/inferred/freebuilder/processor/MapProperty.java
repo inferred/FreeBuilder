@@ -27,14 +27,12 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
@@ -45,13 +43,12 @@ import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.StaticExcerpt;
+import org.inferred.freebuilder.processor.util.LazyName;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -258,8 +255,8 @@ class MapProperty extends PropertyCodeGenerator {
             valueType);
     Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      body.addLine("  mutator.accept(new CheckedMap<>(%s, this::%s));",
-          property.getField(), putMethod(property));
+      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
+          CheckedMap.TYPE, property.getField(), putMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
@@ -298,13 +295,13 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
-    code.add("%s = ", finalField);
+    Excerpt immutableMapMethod;
     if (code.feature(GUAVA).isAvailable()) {
-      code.add("%s.copyOf", ImmutableMap.class);
+      immutableMapMethod = Excerpts.add("%s.copyOf", ImmutableMap.class);
     } else {
-      code.add("immutableMap");
+      immutableMapMethod = ImmutableMapMethod.REFERENCE;
     }
-    code.add("(%s);\n", property.getField().on(builder));
+    code.addLine("%s = %s(%s);", finalField, immutableMapMethod, property.getField().on(builder));
   }
 
   @Override
@@ -328,36 +325,32 @@ class MapProperty extends PropertyCodeGenerator {
     code.addLine("%s.clear();", property.getField());
   }
 
-  @Override
-  public Set<StaticExcerpt> getStaticExcerpts() {
-    ImmutableSet.Builder<StaticExcerpt> result = ImmutableSet.builder();
-    result.add(IMMUTABLE_MAP);
-    if (overridesPutMethod) {
-      result.addAll(CheckedMap.excerpts());
-    }
-    return result.build();
-  }
+  private static class ImmutableMapMethod extends Excerpt {
 
-  private static final StaticExcerpt IMMUTABLE_MAP = new StaticExcerpt(METHOD, "immutableMap") {
+    static final LazyName REFERENCE = new LazyName("immutableMap", new ImmutableMapMethod());
+
+    private ImmutableMapMethod() {}
+
     @Override
     public void addTo(SourceBuilder code) {
-      if (!code.feature(GUAVA).isAvailable()) {
-        code.addLine("")
-            .addLine("private static <K, V> %1$s<K, V> immutableMap(%1$s<K, V> entries) {",
-                Map.class)
-            .addLine("  switch (entries.size()) {")
-            .addLine("  case 0:")
-            .addLine("    return %s.emptyMap();", Collections.class)
-            .addLine("  case 1:")
-            .addLine("    %s<K, V> entry = entries.entrySet().iterator().next();", Map.Entry.class)
-            .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
-                Collections.class)
-            .addLine("  default:")
-            .addLine("    return %s.unmodifiableMap(new %s%s(entries));",
-                Collections.class, LinkedHashMap.class, diamondOperator("K, V"))
-            .addLine("  }")
-            .addLine("}");
-      }
+      code.addLine("")
+          .addLine("private static <K, V> %1$s<K, V> %2$s(%1$s<K, V> entries) {",
+              Map.class, REFERENCE)
+          .addLine("  switch (entries.size()) {")
+          .addLine("  case 0:")
+          .addLine("    return %s.emptyMap();", Collections.class)
+          .addLine("  case 1:")
+          .addLine("    %s<K, V> entry = entries.entrySet().iterator().next();", Map.Entry.class)
+          .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
+              Collections.class)
+          .addLine("  default:")
+          .addLine("    return %s.unmodifiableMap(new %s%s(entries));",
+              Collections.class, LinkedHashMap.class, diamondOperator("K, V"))
+          .addLine("  }")
+          .addLine("}");
     }
-  };
+
+    @Override
+    protected void addFields(FieldReceiver fields) {}
+  }
 }

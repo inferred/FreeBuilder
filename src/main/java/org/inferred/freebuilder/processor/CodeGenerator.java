@@ -23,6 +23,7 @@ import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.LazyName.addLazyDefinitions;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
@@ -53,8 +54,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
@@ -92,7 +91,7 @@ public class CodeGenerator {
     for (Function<Metadata, Excerpt> nestedClass : metadata.getNestedClasses()) {
       code.add(nestedClass.apply(metadata));
     }
-    addStaticMethods(code, metadata);
+    addLazyDefinitions(code);
     code.addLine("}");
   }
 
@@ -801,16 +800,6 @@ public class CodeGenerator {
         code.addLine("        + \"}\";");
         break;
       }
-    }
-  }
-
-  private static void addStaticMethods(SourceBuilder code, Metadata metadata) {
-    SortedSet<Excerpt> staticMethods = new TreeSet<Excerpt>();
-    for (Property property : metadata.getProperties()) {
-      staticMethods.addAll(property.getCodeGenerator().getStaticExcerpts());
-    }
-    for (Excerpt staticMethod : staticMethods) {
-      code.add(staticMethod);
     }
   }
 

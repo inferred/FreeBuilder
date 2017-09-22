@@ -29,7 +29,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVararg
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
-import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
@@ -38,7 +37,6 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamon
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedList;
@@ -48,7 +46,7 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.StaticExcerpt;
+import org.inferred.freebuilder.processor.util.LazyName;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -56,7 +54,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -380,8 +377,8 @@ class ListProperty extends PropertyCodeGenerator {
           .addLine("  }");
     }
     if (overridesAddMethod) {
-      body.addLine("  mutator.accept(new CheckedList<>(%s, this::%s));",
-          property.getField(), addMethod(property));
+      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
+          CheckedList.TYPE, property.getField(), addMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
@@ -434,12 +431,13 @@ class ListProperty extends PropertyCodeGenerator {
 
   @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
+    Excerpt immutableListMethod;
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("%s = %s.copyOf(%s);",
-          finalField, ImmutableList.class, property.getField().on(builder));
+      immutableListMethod = Excerpts.add("%s.copyOf", ImmutableList.class);
     } else {
-      code.addLine("%s = immutableList(%s);", finalField, property.getField().on(builder));
+      immutableListMethod = ImmutableListMethod.REFERENCE;
     }
+    code.addLine("%s = %s(%s);", finalField, immutableListMethod, property.getField().on(builder));
   }
 
   @Override
@@ -477,35 +475,31 @@ class ListProperty extends PropertyCodeGenerator {
     code.addLine("%s();", clearMethod(property));
   }
 
-  @Override
-  public Set<StaticExcerpt> getStaticExcerpts() {
-    ImmutableSet.Builder<StaticExcerpt> methods = ImmutableSet.builder();
-    methods.add(IMMUTABLE_LIST);
-    if (overridesAddMethod) {
-      methods.addAll(CheckedList.excerpts());
-    }
-    return methods.build();
-  }
+  private static class ImmutableListMethod extends Excerpt {
 
-  private static final StaticExcerpt IMMUTABLE_LIST = new StaticExcerpt(METHOD, "immutableList") {
+    static final LazyName REFERENCE = new LazyName("immutableList", new ImmutableListMethod());
+
+    private ImmutableListMethod() {}
+
     @Override
     public void addTo(SourceBuilder code) {
-      if (!code.feature(GUAVA).isAvailable()) {
-        code.addLine("")
-            .addLine("@%s(\"unchecked\")", SuppressWarnings.class)
-            .addLine("private static <E> %1$s<E> immutableList(%1$s<E> elements) {", List.class)
-            .addLine("  switch (elements.size()) {")
-            .addLine("  case 0:")
-            .addLine("    return %s.emptyList();", Collections.class)
-            .addLine("  case 1:")
-            .addLine("    return %s.singletonList(elements.get(0));", Collections.class)
-            .addLine("  default:")
-            .addLine("    return (%1$s<E>)(%1$s<?>) %2$s.unmodifiableList(%3$s.asList(",
-                List.class, Collections.class, Arrays.class)
-            .addLine("        elements.toArray()));", Array.class)
-            .addLine("  }")
-            .addLine("}");
-      }
+      code.addLine("")
+          .addLine("@%s(\"unchecked\")", SuppressWarnings.class)
+          .addLine("private static <E> %1$s<E> %2$s(%1$s<E> elements) {", List.class, REFERENCE)
+          .addLine("  switch (elements.size()) {")
+          .addLine("  case 0:")
+          .addLine("    return %s.emptyList();", Collections.class)
+          .addLine("  case 1:")
+          .addLine("    return %s.singletonList(elements.get(0));", Collections.class)
+          .addLine("  default:")
+          .addLine("    return (%1$s<E>)(%1$s<?>) %2$s.unmodifiableList(%3$s.asList(",
+              List.class, Collections.class, Arrays.class)
+          .addLine("        elements.toArray()));", Array.class)
+          .addLine("  }")
+          .addLine("}");
     }
-  };
+
+    @Override
+    protected void addFields(FieldReceiver fields) {}
+  }
 }

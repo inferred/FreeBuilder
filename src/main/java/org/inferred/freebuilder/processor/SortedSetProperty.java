@@ -38,7 +38,6 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamon
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.nestedDiamondOperator;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -50,13 +49,11 @@ import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.NavigableSet;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -401,8 +398,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
     Block body = methodBody(code, "mutator");
     addConvertToTreeSet(body);
     if (overridesAddMethod) {
-      body.addLine("  mutator.accept(new CheckedNavigableSet<%s>(%s, this::%s));",
-              elementType, property.getField(), addMethod(property));
+      body.addLine("  mutator.accept(new %s<%s>(%s, this::%s));",
+              CheckedNavigableSet.TYPE, elementType, property.getField(), addMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
@@ -520,14 +517,5 @@ class SortedSetProperty extends PropertyCodeGenerator {
   @Override
   public void addClearField(Block code) {
     code.addLine("%s();", clearMethod(property));
-  }
-
-  @Override
-  public Set<StaticExcerpt> getStaticExcerpts() {
-    ImmutableSet.Builder<StaticExcerpt> staticMethods = ImmutableSet.builder();
-    if (overridesAddMethod) {
-      staticMethods.addAll(CheckedNavigableSet.excerpts());
-    }
-    return staticMethods.build();
   }
 }
