@@ -117,14 +117,6 @@ public abstract class Type extends Excerpt {
   }
 
   /**
-   * Returns a new type of the same type class as this, parameterized with the same parameters as
-   * {@code other}.
-   */
-  public Type withParametersFrom(Type other) {
-    return new TypeImpl(getQualifiedName(), other.getTypeParameters());
-  }
-
-  /**
    * Returns a new type of the same class, parameterized with wildcards ("?").
    *
    * <p>If the type class is not generic, the returned object will be equal to this one.

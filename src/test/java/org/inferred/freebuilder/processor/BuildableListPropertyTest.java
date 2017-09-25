@@ -125,6 +125,24 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void addValueInstance_keepsSameInstance() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addItems(candy)")
+            .addLine("    .addItems(apple)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s.get(0)).isSameAs(candy);", convention.get("items"))
+            .addLine("assertThat(value.%s.get(1)).isSameAs(apple);", convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void addBuilder() {
     behaviorTester
         .with(new Processor(features))

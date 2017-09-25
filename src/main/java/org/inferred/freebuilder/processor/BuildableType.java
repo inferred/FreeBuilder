@@ -27,7 +27,6 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.Type;
-import org.inferred.freebuilder.processor.util.TypeClass;
 
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +55,7 @@ import javax.lang.model.util.Types;
  * <li> a mergeWith(Value) method.
  * </ul>
  */
-abstract class BuildableType {
+public abstract class BuildableType {
 
   /** How to merge the values from one Builder into another. */
   public enum MergeBuilderMethod {
@@ -78,14 +77,6 @@ abstract class BuildableType {
 
   /** Returns the builder type that will build instances of {@link #type()}. */
   public abstract Type builderType();
-
-  /**
-   * Returns the type class that {@link #type()} is an invocation of.
-   */
-  public abstract TypeClass typeClass();
-
-  /** Returns the builder type that will build instances of {@link #typeClass()}. */
-  public abstract Type typeClassBuilder();
 
   public abstract MergeBuilderMethod mergeBuilder();
   public abstract PartialToBuilderMethod partialToBuilder();
@@ -184,13 +175,10 @@ abstract class BuildableType {
     PartialToBuilderMethod partialToBuilderMethod =
         detectPartialToBuilderMethod(datatype, builder, elements, types);
     Excerpt suppressUnchecked = suppressUncheckedExcerptFor(datatype);
-    TypeClass typeClass = TypeClass.from(asElement(datatype));
 
     return new Builder()
         .type(Type.from(datatype))
         .builderType(Type.from(builder))
-        .typeClass(typeClass)
-        .typeClassBuilder(Type.from(builder).withParametersFrom(typeClass))
         .mergeBuilder(mergeFromBuilderMethod)
         .partialToBuilder(partialToBuilderMethod)
         .builderFactory(builderFactory)
