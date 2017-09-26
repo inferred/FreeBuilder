@@ -31,7 +31,7 @@ public class LazyName extends Excerpt implements Scope.Element<LazyName.Declarat
     SortedMap<Declaration, SourceStringBuilder> definitions = newTreeMap();
 
     // Definitions may lazily declare new names; ensure we add them all
-    Set<Declaration> declarations = code.scope().getAll(Declaration.class);
+    Set<Declaration> declarations = code.scope().keysOfType(Declaration.class);
     while (!definitions.keySet().containsAll(declarations)) {
       for (Declaration declaration : declarations) {
         if (!definitions.containsKey(declaration)) {
@@ -39,7 +39,7 @@ public class LazyName extends Excerpt implements Scope.Element<LazyName.Declarat
           definitions.put(declaration, code.subBuilder().add(lazyName.definition));
         }
       }
-      declarations = code.scope().getAll(Declaration.class);
+      declarations = code.scope().keysOfType(Declaration.class);
     }
 
     // Add the static excerpts in alphabetic order.

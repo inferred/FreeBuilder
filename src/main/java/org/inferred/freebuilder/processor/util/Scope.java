@@ -58,7 +58,7 @@ public abstract class Scope {
     }
   }
 
-  public <T> Set<T> getAll(Class<T> elementType) {
+  public <T> Set<T> keysOfType(Class<T> elementType) {
     return FluentIterable.from(elements.keySet()).filter(elementType).toSet();
   }
 
