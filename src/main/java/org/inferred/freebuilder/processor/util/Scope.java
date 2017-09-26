@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Maps.newLinkedHashMap;
 
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +60,12 @@ public abstract class Scope {
   }
 
   public <T> Set<T> keysOfType(Class<T> elementType) {
-    return FluentIterable.from(elements.keySet()).filter(elementType).toSet();
+    ImmutableSet.Builder<T> keys = ImmutableSet.builder();
+    if (parent != null) {
+      keys.addAll(parent.keysOfType(elementType));
+    }
+    keys.addAll(FluentIterable.from(elements.keySet()).filter(elementType).toSet());
+    return keys.build();
   }
 
   public <T extends Element<T>> void add(T element) {
