@@ -1,6 +1,8 @@
 package org.inferred.freebuilder.processor;
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeJava;
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.junit.Assume.assumeTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -524,9 +526,27 @@ public class BuildableListPropertyTest {
             .addLine("Item candy = new Item.Builder().name(\"candy\").buildPartial();")
             .addLine("Item apple = new Item.Builder().name(\"apple\").buildPartial();")
             .addLine("Receipt value = new Receipt.Builder()")
-            .addLine("    .addAllItems(ImmutableList.of(candy, apple))")
+            .addLine("    .addAllItems(ImmutableList.of(candy))")
+            .addLine("    .addAllItems(ImmutableList.of(apple))")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(candy, apple).inOrder();",
+                convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void addAllIterableOfValueInstances_keepsImmutableListInstance() {
+    assumeGuavaAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("ImmutableList<Item> items = ImmutableList.of(candy, apple);")
+            .addLine("Receipt value = new Receipt.Builder().addAllItems(items).build();")
+            .addLine("assertThat(value.%s).isSameAs(items);",
                 convention.get("items"))
             .build())
         .runTest();
@@ -1150,6 +1170,10 @@ public class BuildableListPropertyTest {
                 convention.get())
             .build())
         .runTest();
+  }
+
+  private void assumeGuavaAvailable() {
+    assumeTrue("Guava is available", features.get(GUAVA).isAvailable());
   }
 
   private static TestBuilder testBuilder() {

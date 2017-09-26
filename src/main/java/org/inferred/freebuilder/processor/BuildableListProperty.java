@@ -14,6 +14,7 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.collect.ImmutableList;
 
@@ -313,8 +314,15 @@ class BuildableListProperty extends PropertyCodeGenerator {
     addJavadocForAddingMultipleValues(code);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type())
-        .addLine("  return %s(elements.spliterator());", addAllMethod(property))
+            datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type());
+    Block body = methodBody(code, "elements");
+    if (code.feature(GUAVA).isAvailable()) {
+      body.addLine("  %s.addAllValues(elements);", property.getField())
+          .addLine("  return (%s) this;", datatype.getBuilder());
+    } else {
+      body.addLine("  return %s(elements.spliterator());", addAllMethod(property));
+    }
+    code.add(body)
         .addLine("}");
   }
 
