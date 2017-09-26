@@ -15,12 +15,19 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-public class Variable extends ValueType implements Scope.Element {
+import org.inferred.freebuilder.processor.util.Scope.Level;
+
+public class Variable extends ValueType implements Scope.Element<Variable> {
 
   private final String name;
 
   public Variable(String name) {
     this.name = name;
+  }
+
+  @Override
+  public Level level() {
+    return Level.METHOD;
   }
 
   @Override

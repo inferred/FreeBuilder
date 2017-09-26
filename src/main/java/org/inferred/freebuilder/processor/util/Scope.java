@@ -15,48 +15,88 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Sets.newLinkedHashSet;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Maps.newLinkedHashMap;
 
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Map;
 import java.util.Set;
 
-public interface Scope {
+public abstract class Scope {
 
-  interface Element {}
+  enum Level {
+    FILE, METHOD;
+  }
 
-  boolean contains(Element element);
+  interface Element<T> {
+    Level level();
+  }
 
-  void add(Element element);
+  private final Map<Element<?>, Object> elements = newLinkedHashMap();
+  private final Scope parent;
+  private final Level level;
 
-  class FileScope implements Scope {
+  private Scope(Scope parent, Level level) {
+    this.parent = parent;
+    this.level = level;
+  }
 
-    @Override
-    public boolean contains(Element element) {
-      return false;
-    }
+  public boolean contains(Element<?> element) {
+    return get(element) != null;
+  }
 
-    @Override
-    public void add(Element element) {
+  public <T> T get(Element<T> element) {
+    @SuppressWarnings("unchecked")
+    T value = (T) elements.get(element);
+    if (value != null) {
+      return value;
+    } else if (parent != null) {
+      return parent.get(element);
+    } else {
+      return null;
     }
   }
 
-  class MethodScope implements Scope {
-
-    private final Scope parent;
-    private final Set<Element> elements;
-
-    public MethodScope(Scope parent) {
-      this.parent = parent;
-      this.elements = newLinkedHashSet();
+  public <T> Set<T> keysOfType(Class<T> elementType) {
+    ImmutableSet.Builder<T> keys = ImmutableSet.builder();
+    if (parent != null) {
+      keys.addAll(parent.keysOfType(elementType));
     }
+    keys.addAll(FluentIterable.from(elements.keySet()).filter(elementType).toSet());
+    return keys.build();
+  }
 
-    @Override
-    public boolean contains(Element element) {
-      return elements.contains(element) || parent.contains(element);
+  public <T extends Element<T>> void add(T element) {
+    putIfAbsent(element, element);
+  }
+
+  public <T> T putIfAbsent(Element<T> element, T value) {
+    checkNotNull(element);
+    checkNotNull(value);
+    if (level == element.level()) {
+      @SuppressWarnings("unchecked")
+      T existingValue = (T) elements.get(element);
+      if (existingValue == null) {
+        elements.put(element, value);
+      }
+      return existingValue;
+    } else if (parent != null) {
+      return parent.putIfAbsent(element, value);
     }
+    return null;
+  }
 
-    @Override
-    public void add(Element element) {
-      elements.add(element);
+  static class FileScope extends Scope {
+    FileScope() {
+      super(null, Level.FILE);
+    }
+  }
+
+  static class MethodScope extends Scope {
+    MethodScope(Scope parent) {
+      super(parent, Level.METHOD);
     }
   }
 }

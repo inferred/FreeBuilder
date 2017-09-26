@@ -35,7 +35,6 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
@@ -47,10 +46,8 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.StaticExcerpt;
 
 import java.util.Collection;
-import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -330,8 +327,8 @@ class MultisetProperty extends PropertyCodeGenerator {
             elementType);
     Block body = methodBody(code, "mutator");
     if (overridesSetCountMethod) {
-      body.addLine("  mutator.accept(new CheckedMultiset<>(%s, this::%s));",
-          property.getField(), setCountMethod(property));
+      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
+          CheckedMultiset.TYPE, property.getField(), setCountMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               setCountMethod(property))
@@ -421,14 +418,5 @@ class MultisetProperty extends PropertyCodeGenerator {
   @Override
   public void addClearField(Block code) {
     code.addLine("%s.clear();", property.getField());
-  }
-
-  @Override
-  public Set<StaticExcerpt> getStaticExcerpts() {
-    ImmutableSet.Builder<StaticExcerpt> staticMethods = ImmutableSet.builder();
-    if (overridesSetCountMethod) {
-      staticMethods.addAll(CheckedMultiset.excerpts());
-    }
-    return staticMethods.build();
   }
 }

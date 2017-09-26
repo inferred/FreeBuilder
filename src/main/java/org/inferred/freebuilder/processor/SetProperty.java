@@ -30,7 +30,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVararg
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
-import static org.inferred.freebuilder.processor.util.StaticExcerpt.Type.METHOD;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
@@ -47,7 +46,7 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.StaticExcerpt;
+import org.inferred.freebuilder.processor.util.LazyName;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -356,8 +355,8 @@ class SetProperty extends PropertyCodeGenerator {
           .addLine("  }");
     }
     if (overridesAddMethod) {
-      body.addLine("  mutator.accept(new CheckedSet<%s>(%s, this::%s));",
-              elementType, property.getField(), addMethod(property));
+      body.addLine("  mutator.accept(new %s<%s>(%s, this::%s));",
+              CheckedSet.TYPE, elementType, property.getField(), addMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
@@ -410,13 +409,13 @@ class SetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
-    code.add("%s = ", finalField);
+    Excerpt immutableSetMethod;
     if (code.feature(GUAVA).isAvailable()) {
-      code.add("%s.copyOf", ImmutableSet.class);
+      immutableSetMethod = Excerpts.add("%s.copyOf", ImmutableSet.class);
     } else {
-      code.add("immutableSet");
+      immutableSetMethod = ImmutableSetMethod.REFERENCE;
     }
-    code.add("(%s);\n", property.getField().on(builder));
+    code.addLine("%s = %s(%s);", finalField, immutableSetMethod, property.getField().on(builder));
   }
 
   @Override
@@ -454,34 +453,29 @@ class SetProperty extends PropertyCodeGenerator {
     code.addLine("%s();", clearMethod(property));
   }
 
-  @Override
-  public Set<StaticExcerpt> getStaticExcerpts() {
-    ImmutableSet.Builder<StaticExcerpt> staticMethods = ImmutableSet.builder();
-    staticMethods.add(IMMUTABLE_SET);
-    if (overridesAddMethod) {
-      staticMethods.addAll(CheckedSet.excerpts());
-    }
-    return staticMethods.build();
-  }
+  private static class ImmutableSetMethod extends Excerpt {
 
-  private static final StaticExcerpt IMMUTABLE_SET = new StaticExcerpt(METHOD, "immutableSet") {
+    static final LazyName REFERENCE = new LazyName("immutableSet", new ImmutableSetMethod());
+
+    private ImmutableSetMethod() {}
+
     @Override
     public void addTo(SourceBuilder code) {
-      if (!code.feature(GUAVA).isAvailable()) {
-        code.addLine("")
-            .addLine("private static <E> %1$s<E> immutableSet(%1$s<E> elements) {",
-                Set.class, Class.class)
-            .addLine("  switch (elements.size()) {")
-            .addLine("  case 0:")
-            .addLine("    return %s.emptySet();", Collections.class)
-            .addLine("  case 1:")
-            .addLine("    return %s.singleton(elements.iterator().next());", Collections.class)
-            .addLine("  default:")
-            .addLine("    return %s.unmodifiableSet(new %s%s(elements));",
-                Collections.class, LinkedHashSet.class, diamondOperator("E"))
-            .addLine("  }")
-            .addLine("}");
-      }
+      code.addLine("")
+          .addLine("private static <E> %1$s<E> %2$s(%1$s<E> elements) {", Set.class, REFERENCE)
+          .addLine("  switch (elements.size()) {")
+          .addLine("  case 0:")
+          .addLine("    return %s.emptySet();", Collections.class)
+          .addLine("  case 1:")
+          .addLine("    return %s.singleton(elements.iterator().next());", Collections.class)
+          .addLine("  default:")
+          .addLine("    return %s.unmodifiableSet(new %s%s(elements));",
+              Collections.class, LinkedHashSet.class, diamondOperator("E"))
+          .addLine("  }")
+          .addLine("}");
     }
-  };
+
+    @Override
+    protected void addFields(FieldReceiver fields) {}
+  }
 }

@@ -67,13 +67,13 @@ public class SourceStringBuilder implements SourceBuilder {
   }
 
   @Override
-  public SourceBuilder add(Excerpt excerpt) {
+  public SourceStringBuilder add(Excerpt excerpt) {
     excerpt.addTo(this);
     return this;
   }
 
   @Override
-  public SourceBuilder add(String fmt, Object... args) {
+  public SourceStringBuilder add(String fmt, Object... args) {
     Object[] substituteArgs = new Object[args.length];
     for (int i = 0; i < args.length; i++) {
       substituteArgs[i] = substitute(args[i]);
@@ -83,7 +83,7 @@ public class SourceStringBuilder implements SourceBuilder {
   }
 
   @Override
-  public SourceBuilder addLine(String fmt, Object... args) {
+  public SourceStringBuilder addLine(String fmt, Object... args) {
     return add(fmt + "\n", args);
   }
 

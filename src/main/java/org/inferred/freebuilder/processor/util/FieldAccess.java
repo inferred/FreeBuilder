@@ -15,7 +15,9 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-public class FieldAccess extends Excerpt implements Scope.Element {
+import org.inferred.freebuilder.processor.util.Scope.Level;
+
+public class FieldAccess extends Excerpt implements Scope.Element<FieldAccess> {
 
   private static class ExplicitFieldAccess extends Excerpt {
     private final Object obj;
@@ -41,6 +43,11 @@ public class FieldAccess extends Excerpt implements Scope.Element {
 
   public FieldAccess(String fieldName) {
     this.fieldName = fieldName;
+  }
+
+  @Override
+  public Level level() {
+    return Level.METHOD;
   }
 
   @Override
