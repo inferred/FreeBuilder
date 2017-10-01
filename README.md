@@ -111,9 +111,10 @@ public interface Person {
 ```
 
 The `toBuilder()` method here is optional but highly recommended.
-If you are writing an abstract class, or using Java 8, you may wish to hide the
-builder's constructor and manually provide instead a static `builder()` method
-on the value type (though <em>Effective Java</em> does not do this).
+If you are writing an abstract class, or using Java 8, you may wish to make the
+builder's constructor package-protected and manually provide instead a static
+`builder()` method on the value type (though <em>Effective Java</em> does not do
+this).
 
 
 ### What you get

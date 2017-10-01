@@ -331,6 +331,23 @@ public class AnalyserTest {
   }
 
   @Test
+  public void toBuilderMethod_privateBuilderFactoryMethod() throws CannotGenerateCodeException {
+    analyser.analyse(model.newType(
+        "package com.example;",
+        "public abstract class DataType {",
+        "  public static Builder builder() { return new Builder(); }",
+        "  public abstract Builder toBuilder();",
+        "  public static class Builder extends DataType_Builder {",
+        "    private Builder() {}",
+        "  }",
+        "}"));
+    assertThat(messager.getMessagesByElement().keySet()).containsExactly("toBuilder");
+    assertThat(messager.getMessagesByElement().get("toBuilder"))
+        .containsExactly("[ERROR] No accessible no-args Builder constructor available to "
+            + "implement toBuilder");
+  }
+
+  @Test
   public void twoBeanGetters() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",

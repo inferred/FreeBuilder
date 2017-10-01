@@ -162,7 +162,7 @@ class Analyser {
         .addAllVisibleNestedTypes(visibleTypesIn(type))  // Because we inherit from type
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setHasToBuilderMethod(hasToBuilderMethod(
-            builder, constructionAndExtension.getBuilderFactory(), methods))
+            builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .addAllProperties(properties.values());
     Metadata baseMetadata = metadataBuilder.build();
@@ -311,18 +311,17 @@ class Analyser {
     return result.build();
   }
 
-  /** Find a toBuilder method, if the user has provided one.
-   * @param builderFactory */
+  /** Find a toBuilder method, if the user has provided one. */
   private boolean hasToBuilderMethod(
       Optional<TypeElement> builder,
-      Optional<BuilderFactory> builderFactory,
+      boolean isExtensible,
       Iterable<ExecutableElement> methods) {
     if (!builder.isPresent()) {
       return false;
     }
     for (ExecutableElement method : methods) {
       if (isToBuilderMethod(builder.get(), method)) {
-        if (!builderFactory.isPresent()) {
+        if (!isExtensible) {
           messager.printMessage(ERROR,
               "No accessible no-args Builder constructor available to implement toBuilder",
               method);
