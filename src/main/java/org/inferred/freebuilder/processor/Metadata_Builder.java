@@ -28,15 +28,12 @@ import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
 /**
- * Auto-generated superclass of {@link Metadata.Builder},
- * derived from the API of {@link Metadata}.
+ * Auto-generated superclass of {@link Metadata.Builder}, derived from the API of {@link Metadata}.
  */
 @Generated("org.inferred.freebuilder.processor.CodeGenerator")
 abstract class Metadata_Builder {
 
-  /**
-   * Creates a new builder using {@code value} as a template.
-   */
+  /** Creates a new builder using {@code value} as a template. */
   public static Metadata.Builder from(Metadata value) {
     return new Metadata.Builder().mergeFrom(value);
   }
@@ -46,6 +43,7 @@ abstract class Metadata_Builder {
   private enum Property {
     TYPE("type"),
     INTERFACE_TYPE("interfaceType"),
+    EXTENSIBLE("extensible"),
     GENERATED_BUILDER("generatedBuilder"),
     VALUE_TYPE("valueType"),
     PARTIAL_TYPE("partialType"),
@@ -73,6 +71,7 @@ abstract class Metadata_Builder {
   // allows the JVM to optimize away the Optional objects created by and
   // passed to our API.
   private ParameterizedType optionalBuilder = null;
+  private boolean extensible;
   // Store a nullable object instead of an Optional. Escape analysis then
   // allows the JVM to optimize away the Optional objects created by and
   // passed to our API.
@@ -80,20 +79,18 @@ abstract class Metadata_Builder {
   private ParameterizedType generatedBuilder;
   private ParameterizedType valueType;
   private ParameterizedType partialType;
-  private final LinkedHashSet<QualifiedName> visibleNestedTypes =
-      new LinkedHashSet<QualifiedName>();
+  private Set<QualifiedName> visibleNestedTypes = ImmutableSet.of();
   private ParameterizedType propertyEnum;
-  private final ArrayList<Metadata.Property> properties = new ArrayList<Metadata.Property>();
+  private List<Metadata.Property> properties = ImmutableList.of();
   private final LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
       standardMethodUnderrides =
           new LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>();
   private boolean builderSerializable;
   private boolean hasToBuilderMethod;
-  private final ArrayList<Excerpt> generatedBuilderAnnotations = new ArrayList<Excerpt>();
-  private final ArrayList<Excerpt> valueTypeAnnotations = new ArrayList<Excerpt>();
+  private List<Excerpt> generatedBuilderAnnotations = ImmutableList.of();
+  private List<Excerpt> valueTypeAnnotations = ImmutableList.of();
   private Metadata.Visibility valueTypeVisibility;
-  private final ArrayList<Function<Metadata, Excerpt>> nestedClasses =
-      new ArrayList<Function<Metadata, Excerpt>>();
+  private List<Function<Metadata, Excerpt>> nestedClasses = ImmutableList.of();
   private final EnumSet<Metadata_Builder.Property> _unsetProperties =
       EnumSet.allOf(Metadata_Builder.Property.class);
 
@@ -182,8 +179,8 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata#getOptionalBuilder()}
-   * to {@link Optional#absent() Optional.absent()}.
+   * Sets the value to be returned by {@link Metadata#getOptionalBuilder()} to {@link
+   * Optional#absent() Optional.absent()}.
    *
    * @return this {@code Builder} object
    */
@@ -192,11 +189,31 @@ abstract class Metadata_Builder {
     return (Metadata.Builder) this;
   }
 
-  /**
-   * Returns the value that will be returned by {@link Metadata#getOptionalBuilder()}.
-   */
+  /** Returns the value that will be returned by {@link Metadata#getOptionalBuilder()}. */
   public Optional<ParameterizedType> getOptionalBuilder() {
     return Optional.fromNullable(optionalBuilder);
+  }
+
+  /**
+   * Sets the value to be returned by {@link Metadata#isExtensible()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Builder setExtensible(boolean extensible) {
+    this.extensible = extensible;
+    _unsetProperties.remove(Metadata_Builder.Property.EXTENSIBLE);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Metadata#isExtensible()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public boolean isExtensible() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE), "extensible not set");
+    return extensible;
   }
 
   /**
@@ -237,8 +254,8 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata#getBuilderFactory()}
-   * to {@link Optional#absent() Optional.absent()}.
+   * Sets the value to be returned by {@link Metadata#getBuilderFactory()} to {@link
+   * Optional#absent() Optional.absent()}.
    *
    * @return this {@code Builder} object
    */
@@ -247,9 +264,7 @@ abstract class Metadata_Builder {
     return (Metadata.Builder) this;
   }
 
-  /**
-   * Returns the value that will be returned by {@link Metadata#getBuilderFactory()}.
-   */
+  /** Returns the value that will be returned by {@link Metadata#getBuilderFactory()}. */
   public Optional<BuilderFactory> getBuilderFactory() {
     return Optional.fromNullable(builderFactory);
   }
@@ -326,41 +341,39 @@ abstract class Metadata_Builder {
 
   /**
    * Adds {@code element} to the set to be returned from {@link Metadata#getVisibleNestedTypes()}.
-   * If the set already contains {@code element}, then {@code addVisibleNestedTypes}
-   * has no effect (only the previously added element is retained).
+   * If the set already contains {@code element}, then {@code addVisibleNestedTypes} has no effect
+   * (only the previously added element is retained).
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addVisibleNestedTypes(QualifiedName element) {
+    if (this.visibleNestedTypes instanceof ImmutableSet) {
+      this.visibleNestedTypes = new LinkedHashSet<QualifiedName>(this.visibleNestedTypes);
+    }
     this.visibleNestedTypes.add(Preconditions.checkNotNull(element));
     return (Metadata.Builder) this;
   }
 
   /**
-   * Adds each element of {@code elements} to the set to be returned from
-   * {@link Metadata#getVisibleNestedTypes()}, ignoring duplicate elements
-   * (only the first duplicate element is added).
+   * Adds each element of {@code elements} to the set to be returned from {@link
+   * Metadata#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
+   * element is added).
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addVisibleNestedTypes(QualifiedName... elements) {
-    for (QualifiedName element : elements) {
-      addVisibleNestedTypes(element);
-    }
-    return (Metadata.Builder) this;
+    return addAllVisibleNestedTypes(Arrays.asList(elements));
   }
 
   /**
-   * Adds each element of {@code elements} to the set to be returned from
-   * {@link Metadata#getVisibleNestedTypes()}, ignoring duplicate elements
-   * (only the first duplicate element is added).
+   * Adds each element of {@code elements} to the set to be returned from {@link
+   * Metadata#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
+   * element is added).
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addAllVisibleNestedTypes(Iterable<? extends QualifiedName> elements) {
     for (QualifiedName element : elements) {
@@ -370,13 +383,16 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Removes {@code element} from the set to be returned from {@link Metadata#getVisibleNestedTypes()}.
-   * Does nothing if {@code element} is not a member of the set.
+   * Removes {@code element} from the set to be returned from {@link
+   * Metadata#getVisibleNestedTypes()}. Does nothing if {@code element} is not a member of the set.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder removeVisibleNestedTypes(QualifiedName element) {
+    if (this.visibleNestedTypes instanceof ImmutableSet) {
+      this.visibleNestedTypes = new LinkedHashSet<QualifiedName>(this.visibleNestedTypes);
+    }
     this.visibleNestedTypes.remove(Preconditions.checkNotNull(element));
     return (Metadata.Builder) this;
   }
@@ -387,16 +403,22 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Builder clearVisibleNestedTypes() {
-    visibleNestedTypes.clear();
+    if (visibleNestedTypes instanceof ImmutableSet) {
+      visibleNestedTypes = ImmutableSet.of();
+    } else {
+      visibleNestedTypes.clear();
+    }
     return (Metadata.Builder) this;
   }
 
   /**
-   * Returns an unmodifiable view of the set that will be returned by
-   * {@link Metadata#getVisibleNestedTypes()}.
-   * Changes to this builder will be reflected in the view.
+   * Returns an unmodifiable view of the set that will be returned by {@link
+   * Metadata#getVisibleNestedTypes()}. Changes to this builder will be reflected in the view.
    */
   public Set<QualifiedName> getVisibleNestedTypes() {
+    if (visibleNestedTypes instanceof ImmutableSet) {
+      visibleNestedTypes = new LinkedHashSet<QualifiedName>(visibleNestedTypes);
+    }
     return Collections.unmodifiableSet(visibleNestedTypes);
   }
 
@@ -431,37 +453,40 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addProperties(Metadata.Property element) {
+    if (this.properties instanceof ImmutableList) {
+      this.properties = new ArrayList<Metadata.Property>(this.properties);
+    }
     this.properties.add(Preconditions.checkNotNull(element));
     return (Metadata.Builder) this;
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata#getProperties()}.
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getProperties()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addProperties(Metadata.Property... elements) {
-    properties.ensureCapacity(properties.size() + elements.length);
-    for (Metadata.Property element : elements) {
-      addProperties(element);
-    }
-    return (Metadata.Builder) this;
+    return addAllProperties(Arrays.asList(elements));
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata#getProperties()}.
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getProperties()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addAllProperties(Iterable<? extends Metadata.Property> elements) {
     if (elements instanceof Collection) {
-      properties.ensureCapacity(properties.size() + ((Collection<?>) elements).size());
+      int elementsSize = ((Collection<?>) elements).size();
+      if (elementsSize != 0) {
+        if (properties instanceof ImmutableList) {
+          properties = new ArrayList<Metadata.Property>(properties);
+        }
+        ((ArrayList<?>) properties).ensureCapacity(properties.size() + elementsSize);
+      }
     }
     for (Metadata.Property element : elements) {
       addProperties(element);
@@ -475,23 +500,28 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Builder clearProperties() {
-    this.properties.clear();
+    if (properties instanceof ImmutableList) {
+      properties = ImmutableList.of();
+    } else {
+      properties.clear();
+    }
     return (Metadata.Builder) this;
   }
 
   /**
-   * Returns an unmodifiable view of the list that will be returned by
-   * {@link Metadata#getProperties()}.
-   * Changes to this builder will be reflected in the view.
+   * Returns an unmodifiable view of the list that will be returned by {@link
+   * Metadata#getProperties()}. Changes to this builder will be reflected in the view.
    */
   public List<Metadata.Property> getProperties() {
+    if (properties instanceof ImmutableList) {
+      properties = new ArrayList<Metadata.Property>(properties);
+    }
     return Collections.unmodifiableList(properties);
   }
 
   /**
-   * Associates {@code key} with {@code value} in the map to be returned from
-   * {@link Metadata#getStandardMethodUnderrides()}.
-   * If the map previously contained a mapping for the key,
+   * Associates {@code key} with {@code value} in the map to be returned from {@link
+   * Metadata#getStandardMethodUnderrides()}. If the map previously contained a mapping for the key,
    * the old value is replaced by the specified value.
    *
    * @return this {@code Builder} object
@@ -506,12 +536,11 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Copies all of the mappings from {@code map} to the map to be returned from
-   * {@link Metadata#getStandardMethodUnderrides()}.
+   * Copies all of the mappings from {@code map} to the map to be returned from {@link
+   * Metadata#getStandardMethodUnderrides()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code map} is null or contains a
-   *     null key or value
+   * @throws NullPointerException if {@code map} is null or contains a null key or value
    */
   public Metadata.Builder putAllStandardMethodUnderrides(
       Map<? extends Metadata.StandardMethod, ? extends Metadata.UnderrideLevel> map) {
@@ -523,8 +552,8 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Removes the mapping for {@code key} from the map to be returned from
-   * {@link Metadata#getStandardMethodUnderrides()}, if one is present.
+   * Removes the mapping for {@code key} from the map to be returned from {@link
+   * Metadata#getStandardMethodUnderrides()}, if one is present.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code key} is null
@@ -536,8 +565,8 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Removes all of the mappings from the map to be returned from
-   * {@link Metadata#getStandardMethodUnderrides()}.
+   * Removes all of the mappings from the map to be returned from {@link
+   * Metadata#getStandardMethodUnderrides()}.
    *
    * @return this {@code Builder} object
    */
@@ -547,9 +576,8 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Returns an unmodifiable view of the map that will be returned by
-   * {@link Metadata#getStandardMethodUnderrides()}.
-   * Changes to this builder will be reflected in the view.
+   * Returns an unmodifiable view of the map that will be returned by {@link
+   * Metadata#getStandardMethodUnderrides()}. Changes to this builder will be reflected in the view.
    */
   public Map<Metadata.StandardMethod, Metadata.UnderrideLevel> getStandardMethodUnderrides() {
     return Collections.unmodifiableMap(standardMethodUnderrides);
@@ -602,45 +630,48 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Adds {@code element} to the list to be returned from {@link Metadata#getGeneratedBuilderAnnotations()}.
+   * Adds {@code element} to the list to be returned from {@link
+   * Metadata#getGeneratedBuilderAnnotations()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addGeneratedBuilderAnnotations(Excerpt element) {
+    if (this.generatedBuilderAnnotations instanceof ImmutableList) {
+      this.generatedBuilderAnnotations = new ArrayList<Excerpt>(this.generatedBuilderAnnotations);
+    }
     this.generatedBuilderAnnotations.add(Preconditions.checkNotNull(element));
     return (Metadata.Builder) this;
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata#getGeneratedBuilderAnnotations()}.
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getGeneratedBuilderAnnotations()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addGeneratedBuilderAnnotations(Excerpt... elements) {
-    generatedBuilderAnnotations.ensureCapacity(
-        generatedBuilderAnnotations.size() + elements.length);
-    for (Excerpt element : elements) {
-      addGeneratedBuilderAnnotations(element);
-    }
-    return (Metadata.Builder) this;
+    return addAllGeneratedBuilderAnnotations(Arrays.asList(elements));
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata#getGeneratedBuilderAnnotations()}.
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getGeneratedBuilderAnnotations()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addAllGeneratedBuilderAnnotations(Iterable<? extends Excerpt> elements) {
     if (elements instanceof Collection) {
-      generatedBuilderAnnotations.ensureCapacity(
-          generatedBuilderAnnotations.size() + ((Collection<?>) elements).size());
+      int elementsSize = ((Collection<?>) elements).size();
+      if (elementsSize != 0) {
+        if (generatedBuilderAnnotations instanceof ImmutableList) {
+          generatedBuilderAnnotations = new ArrayList<Excerpt>(generatedBuilderAnnotations);
+        }
+        ((ArrayList<?>) generatedBuilderAnnotations)
+            .ensureCapacity(generatedBuilderAnnotations.size() + elementsSize);
+      }
     }
     for (Excerpt element : elements) {
       addGeneratedBuilderAnnotations(element);
@@ -654,58 +685,69 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Builder clearGeneratedBuilderAnnotations() {
-    this.generatedBuilderAnnotations.clear();
-    return (Metadata.Builder) this;
-  }
-
-  /**
-   * Returns an unmodifiable view of the list that will be returned by
-   * {@link Metadata#getGeneratedBuilderAnnotations()}.
-   * Changes to this builder will be reflected in the view.
-   */
-  public List<Excerpt> getGeneratedBuilderAnnotations() {
-    return Collections.unmodifiableList(generatedBuilderAnnotations);
-  }
-
-  /**
-   * Adds {@code element} to the list to be returned from {@link Metadata#getValueTypeAnnotations()}.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code element} is null
-   */
-  public Metadata.Builder addValueTypeAnnotations(Excerpt element) {
-    this.valueTypeAnnotations.add(Preconditions.checkNotNull(element));
-    return (Metadata.Builder) this;
-  }
-
-  /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata#getValueTypeAnnotations()}.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
-   */
-  public Metadata.Builder addValueTypeAnnotations(Excerpt... elements) {
-    valueTypeAnnotations.ensureCapacity(valueTypeAnnotations.size() + elements.length);
-    for (Excerpt element : elements) {
-      addValueTypeAnnotations(element);
+    if (generatedBuilderAnnotations instanceof ImmutableList) {
+      generatedBuilderAnnotations = ImmutableList.of();
+    } else {
+      generatedBuilderAnnotations.clear();
     }
     return (Metadata.Builder) this;
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata#getValueTypeAnnotations()}.
+   * Returns an unmodifiable view of the list that will be returned by {@link
+   * Metadata#getGeneratedBuilderAnnotations()}. Changes to this builder will be reflected in the
+   * view.
+   */
+  public List<Excerpt> getGeneratedBuilderAnnotations() {
+    if (generatedBuilderAnnotations instanceof ImmutableList) {
+      generatedBuilderAnnotations = new ArrayList<Excerpt>(generatedBuilderAnnotations);
+    }
+    return Collections.unmodifiableList(generatedBuilderAnnotations);
+  }
+
+  /**
+   * Adds {@code element} to the list to be returned from {@link
+   * Metadata#getValueTypeAnnotations()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code element} is null
+   */
+  public Metadata.Builder addValueTypeAnnotations(Excerpt element) {
+    if (this.valueTypeAnnotations instanceof ImmutableList) {
+      this.valueTypeAnnotations = new ArrayList<Excerpt>(this.valueTypeAnnotations);
+    }
+    this.valueTypeAnnotations.add(Preconditions.checkNotNull(element));
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addValueTypeAnnotations(Excerpt... elements) {
+    return addAllValueTypeAnnotations(Arrays.asList(elements));
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addAllValueTypeAnnotations(Iterable<? extends Excerpt> elements) {
     if (elements instanceof Collection) {
-      valueTypeAnnotations.ensureCapacity(
-          valueTypeAnnotations.size() + ((Collection<?>) elements).size());
+      int elementsSize = ((Collection<?>) elements).size();
+      if (elementsSize != 0) {
+        if (valueTypeAnnotations instanceof ImmutableList) {
+          valueTypeAnnotations = new ArrayList<Excerpt>(valueTypeAnnotations);
+        }
+        ((ArrayList<?>) valueTypeAnnotations)
+            .ensureCapacity(valueTypeAnnotations.size() + elementsSize);
+      }
     }
     for (Excerpt element : elements) {
       addValueTypeAnnotations(element);
@@ -719,16 +761,22 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Builder clearValueTypeAnnotations() {
-    this.valueTypeAnnotations.clear();
+    if (valueTypeAnnotations instanceof ImmutableList) {
+      valueTypeAnnotations = ImmutableList.of();
+    } else {
+      valueTypeAnnotations.clear();
+    }
     return (Metadata.Builder) this;
   }
 
   /**
-   * Returns an unmodifiable view of the list that will be returned by
-   * {@link Metadata#getValueTypeAnnotations()}.
-   * Changes to this builder will be reflected in the view.
+   * Returns an unmodifiable view of the list that will be returned by {@link
+   * Metadata#getValueTypeAnnotations()}. Changes to this builder will be reflected in the view.
    */
   public List<Excerpt> getValueTypeAnnotations() {
+    if (valueTypeAnnotations instanceof ImmutableList) {
+      valueTypeAnnotations = new ArrayList<Excerpt>(valueTypeAnnotations);
+    }
     return Collections.unmodifiableList(valueTypeAnnotations);
   }
 
@@ -763,38 +811,41 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addNestedClasses(Function<Metadata, Excerpt> element) {
+    if (this.nestedClasses instanceof ImmutableList) {
+      this.nestedClasses = new ArrayList<Function<Metadata, Excerpt>>(this.nestedClasses);
+    }
     this.nestedClasses.add(Preconditions.checkNotNull(element));
     return (Metadata.Builder) this;
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata#getNestedClasses()}.
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getNestedClasses()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addNestedClasses(Function<Metadata, Excerpt>... elements) {
-    nestedClasses.ensureCapacity(nestedClasses.size() + elements.length);
-    for (Function<Metadata, Excerpt> element : elements) {
-      addNestedClasses(element);
-    }
-    return (Metadata.Builder) this;
+    return addAllNestedClasses(Arrays.asList(elements));
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata#getNestedClasses()}.
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getNestedClasses()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addAllNestedClasses(
       Iterable<? extends Function<Metadata, Excerpt>> elements) {
     if (elements instanceof Collection) {
-      nestedClasses.ensureCapacity(nestedClasses.size() + ((Collection<?>) elements).size());
+      int elementsSize = ((Collection<?>) elements).size();
+      if (elementsSize != 0) {
+        if (nestedClasses instanceof ImmutableList) {
+          nestedClasses = new ArrayList<Function<Metadata, Excerpt>>(nestedClasses);
+        }
+        ((ArrayList<?>) nestedClasses).ensureCapacity(nestedClasses.size() + elementsSize);
+      }
     }
     for (Function<Metadata, Excerpt> element : elements) {
       addNestedClasses(element);
@@ -808,22 +859,26 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Builder clearNestedClasses() {
-    this.nestedClasses.clear();
+    if (nestedClasses instanceof ImmutableList) {
+      nestedClasses = ImmutableList.of();
+    } else {
+      nestedClasses.clear();
+    }
     return (Metadata.Builder) this;
   }
 
   /**
-   * Returns an unmodifiable view of the list that will be returned by
-   * {@link Metadata#getNestedClasses()}.
-   * Changes to this builder will be reflected in the view.
+   * Returns an unmodifiable view of the list that will be returned by {@link
+   * Metadata#getNestedClasses()}. Changes to this builder will be reflected in the view.
    */
   public List<Function<Metadata, Excerpt>> getNestedClasses() {
+    if (nestedClasses instanceof ImmutableList) {
+      nestedClasses = new ArrayList<Function<Metadata, Excerpt>>(nestedClasses);
+    }
     return Collections.unmodifiableList(nestedClasses);
   }
 
-  /**
-   * Sets all property values using the given {@code Metadata} as a template.
-   */
+  /** Sets all property values using the given {@code Metadata} as a template. */
   public Metadata.Builder mergeFrom(Metadata value) {
     Metadata_Builder _defaults = new Metadata.Builder();
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.TYPE)
@@ -836,6 +891,10 @@ abstract class Metadata_Builder {
     }
     if (value.getOptionalBuilder().isPresent()) {
       setOptionalBuilder(value.getOptionalBuilder().get());
+    }
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
+        || value.isExtensible() != _defaults.isExtensible()) {
+      setExtensible(value.isExtensible());
     }
     if (value.getBuilderFactory().isPresent()) {
       setBuilderFactory(value.getBuilderFactory().get());
@@ -852,12 +911,22 @@ abstract class Metadata_Builder {
         || !value.getPartialType().equals(_defaults.getPartialType())) {
       setPartialType(value.getPartialType());
     }
-    addAllVisibleNestedTypes(value.getVisibleNestedTypes());
+    if (value instanceof Metadata_Builder.Value
+        && visibleNestedTypes == ImmutableSet.<QualifiedName>of()) {
+      visibleNestedTypes = ImmutableSet.copyOf(value.getVisibleNestedTypes());
+    } else {
+      addAllVisibleNestedTypes(value.getVisibleNestedTypes());
+    }
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)
         || !value.getPropertyEnum().equals(_defaults.getPropertyEnum())) {
       setPropertyEnum(value.getPropertyEnum());
     }
-    addAllProperties(value.getProperties());
+    if (value instanceof Metadata_Builder.Value
+        && properties == ImmutableList.<Metadata.Property>of()) {
+      properties = ImmutableList.copyOf(value.getProperties());
+    } else {
+      addAllProperties(value.getProperties());
+    }
     putAllStandardMethodUnderrides(value.getStandardMethodUnderrides());
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
         || value.isBuilderSerializable() != _defaults.isBuilderSerializable()) {
@@ -867,19 +936,34 @@ abstract class Metadata_Builder {
         || value.getHasToBuilderMethod() != _defaults.getHasToBuilderMethod()) {
       setHasToBuilderMethod(value.getHasToBuilderMethod());
     }
-    addAllGeneratedBuilderAnnotations(value.getGeneratedBuilderAnnotations());
-    addAllValueTypeAnnotations(value.getValueTypeAnnotations());
+    if (value instanceof Metadata_Builder.Value
+        && generatedBuilderAnnotations == ImmutableList.<Excerpt>of()) {
+      generatedBuilderAnnotations = ImmutableList.copyOf(value.getGeneratedBuilderAnnotations());
+    } else {
+      addAllGeneratedBuilderAnnotations(value.getGeneratedBuilderAnnotations());
+    }
+    if (value instanceof Metadata_Builder.Value
+        && valueTypeAnnotations == ImmutableList.<Excerpt>of()) {
+      valueTypeAnnotations = ImmutableList.copyOf(value.getValueTypeAnnotations());
+    } else {
+      addAllValueTypeAnnotations(value.getValueTypeAnnotations());
+    }
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
         || !value.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility())) {
       setValueTypeVisibility(value.getValueTypeVisibility());
     }
-    addAllNestedClasses(value.getNestedClasses());
+    if (value instanceof Metadata_Builder.Value
+        && nestedClasses == ImmutableList.<Function<Metadata, Excerpt>>of()) {
+      nestedClasses = ImmutableList.copyOf(value.getNestedClasses());
+    } else {
+      addAllNestedClasses(value.getNestedClasses());
+    }
     return (Metadata.Builder) this;
   }
 
   /**
-   * Copies values from the given {@code Builder}.
-   * Does not affect any properties not set on the input.
+   * Copies values from the given {@code Builder}. Does not affect any properties not set on the
+   * input.
    */
   public Metadata.Builder mergeFrom(Metadata.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
@@ -897,6 +981,11 @@ abstract class Metadata_Builder {
     }
     if (template.getOptionalBuilder().isPresent()) {
       setOptionalBuilder(template.getOptionalBuilder().get());
+    }
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
+            || template.isExtensible() != _defaults.isExtensible())) {
+      setExtensible(template.isExtensible());
     }
     if (template.getBuilderFactory().isPresent()) {
       setBuilderFactory(template.getBuilderFactory().get());
@@ -922,7 +1011,7 @@ abstract class Metadata_Builder {
             || !template.getPropertyEnum().equals(_defaults.getPropertyEnum()))) {
       setPropertyEnum(template.getPropertyEnum());
     }
-    addAllProperties(((Metadata_Builder) template).properties);
+    addAllProperties(base.properties);
     putAllStandardMethodUnderrides(((Metadata_Builder) template).standardMethodUnderrides);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
@@ -934,39 +1023,38 @@ abstract class Metadata_Builder {
             || template.getHasToBuilderMethod() != _defaults.getHasToBuilderMethod())) {
       setHasToBuilderMethod(template.getHasToBuilderMethod());
     }
-    addAllGeneratedBuilderAnnotations(((Metadata_Builder) template).generatedBuilderAnnotations);
-    addAllValueTypeAnnotations(((Metadata_Builder) template).valueTypeAnnotations);
+    addAllGeneratedBuilderAnnotations(base.generatedBuilderAnnotations);
+    addAllValueTypeAnnotations(base.valueTypeAnnotations);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
             || !template.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility()))) {
       setValueTypeVisibility(template.getValueTypeVisibility());
     }
-    addAllNestedClasses(((Metadata_Builder) template).nestedClasses);
+    addAllNestedClasses(base.nestedClasses);
     return (Metadata.Builder) this;
   }
 
-  /**
-   * Resets the state of this builder.
-   */
+  /** Resets the state of this builder. */
   public Metadata.Builder clear() {
     Metadata_Builder _defaults = new Metadata.Builder();
     type = _defaults.type;
     interfaceType = _defaults.interfaceType;
     optionalBuilder = _defaults.optionalBuilder;
+    extensible = _defaults.extensible;
     builderFactory = _defaults.builderFactory;
     generatedBuilder = _defaults.generatedBuilder;
     valueType = _defaults.valueType;
     partialType = _defaults.partialType;
-    visibleNestedTypes.clear();
+    clearVisibleNestedTypes();
     propertyEnum = _defaults.propertyEnum;
-    properties.clear();
+    clearProperties();
     standardMethodUnderrides.clear();
     builderSerializable = _defaults.builderSerializable;
     hasToBuilderMethod = _defaults.hasToBuilderMethod;
-    generatedBuilderAnnotations.clear();
-    valueTypeAnnotations.clear();
+    clearGeneratedBuilderAnnotations();
+    clearValueTypeAnnotations();
     valueTypeVisibility = _defaults.valueTypeVisibility;
-    nestedClasses.clear();
+    clearNestedClasses();
     _unsetProperties.clear();
     _unsetProperties.addAll(_defaults._unsetProperties);
     return (Metadata.Builder) this;
@@ -983,13 +1071,13 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Returns a newly-created partial {@link Metadata}
-   * based on the contents of the {@code Builder}.
-   * State checking will not be performed.
-   * Unset properties will throw an {@link UnsupportedOperationException}
-   * when accessed via the partial object.
+   * Returns a newly-created partial {@link Metadata} for use in unit tests. State checking will not
+   * be performed. Unset properties will throw an {@link UnsupportedOperationException} when
+   * accessed via the partial object.
    *
-   * <p>Partials should only ever be used in tests.
+   * <p>Partials should only ever be used in tests. They permit writing robust test cases that won't
+   * fail if this type gains more application-level constraints (e.g. new required fields) in
+   * future. If you require partially complete values in production code, consider using a Builder.
    */
   @VisibleForTesting()
   public Metadata buildPartial() {
@@ -1003,6 +1091,7 @@ abstract class Metadata_Builder {
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
     private final ParameterizedType optionalBuilder;
+    private final boolean extensible;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
@@ -1026,6 +1115,7 @@ abstract class Metadata_Builder {
       this.type = builder.type;
       this.interfaceType = builder.interfaceType;
       this.optionalBuilder = builder.optionalBuilder;
+      this.extensible = builder.extensible;
       this.builderFactory = builder.builderFactory;
       this.generatedBuilder = builder.generatedBuilder;
       this.valueType = builder.valueType;
@@ -1055,6 +1145,11 @@ abstract class Metadata_Builder {
     @Override
     public Optional<ParameterizedType> getOptionalBuilder() {
       return Optional.fromNullable(optionalBuilder);
+    }
+
+    @Override
+    public boolean isExtensible() {
+      return extensible;
     }
 
     @Override
@@ -1144,6 +1239,9 @@ abstract class Metadata_Builder {
           && (optionalBuilder == null || !optionalBuilder.equals(other.optionalBuilder))) {
         return false;
       }
+      if (extensible != other.extensible) {
+        return false;
+      }
       if (builderFactory != other.builderFactory
           && (builderFactory == null || !builderFactory.equals(other.builderFactory))) {
         return false;
@@ -1197,6 +1295,7 @@ abstract class Metadata_Builder {
             type,
             interfaceType,
             optionalBuilder,
+            extensible,
             builderFactory,
             generatedBuilder,
             valueType,
@@ -1221,6 +1320,7 @@ abstract class Metadata_Builder {
               "type=" + type,
               "interfaceType=" + interfaceType,
               (optionalBuilder != null ? "optionalBuilder=" + optionalBuilder : null),
+              "extensible=" + extensible,
               (builderFactory != null ? "builderFactory=" + builderFactory : null),
               "generatedBuilder=" + generatedBuilder,
               "valueType=" + valueType,
@@ -1246,6 +1346,7 @@ abstract class Metadata_Builder {
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
     private final ParameterizedType optionalBuilder;
+    private final boolean extensible;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
@@ -1270,6 +1371,7 @@ abstract class Metadata_Builder {
       this.type = builder.type;
       this.interfaceType = builder.interfaceType;
       this.optionalBuilder = builder.optionalBuilder;
+      this.extensible = builder.extensible;
       this.builderFactory = builder.builderFactory;
       this.generatedBuilder = builder.generatedBuilder;
       this.valueType = builder.valueType;
@@ -1306,6 +1408,14 @@ abstract class Metadata_Builder {
     @Override
     public Optional<ParameterizedType> getOptionalBuilder() {
       return Optional.fromNullable(optionalBuilder);
+    }
+
+    @Override
+    public boolean isExtensible() {
+      if (_unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)) {
+        throw new UnsupportedOperationException("extensible not set");
+      }
+      return extensible;
     }
 
     @Override
@@ -1416,6 +1526,9 @@ abstract class Metadata_Builder {
           && (optionalBuilder == null || !optionalBuilder.equals(other.optionalBuilder))) {
         return false;
       }
+      if (extensible != other.extensible) {
+        return false;
+      }
       if (builderFactory != other.builderFactory
           && (builderFactory == null || !builderFactory.equals(other.builderFactory))) {
         return false;
@@ -1475,6 +1588,7 @@ abstract class Metadata_Builder {
             type,
             interfaceType,
             optionalBuilder,
+            extensible,
             builderFactory,
             generatedBuilder,
             valueType,
@@ -1502,6 +1616,9 @@ abstract class Metadata_Builder {
                   ? "interfaceType=" + interfaceType
                   : null),
               (optionalBuilder != null ? "optionalBuilder=" + optionalBuilder : null),
+              (!_unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
+                  ? "extensible=" + extensible
+                  : null),
               (builderFactory != null ? "builderFactory=" + builderFactory : null),
               (!_unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)
                   ? "generatedBuilder=" + generatedBuilder

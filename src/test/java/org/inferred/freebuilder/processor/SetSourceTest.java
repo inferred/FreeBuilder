@@ -1451,6 +1451,7 @@ public class SetSourceTest {
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
+        .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters())

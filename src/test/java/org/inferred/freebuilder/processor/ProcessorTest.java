@@ -1035,6 +1035,67 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testToBuilder_fromPartial_withProtectedConstructorAndStaticBuilderMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  public static Builder builder() { return new Builder(); }")
+            .addLine("  public abstract Builder toBuilder();")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    Builder() {}")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("com.example.DataType.Builder copyBuilder = value.toBuilder();")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("com.example.DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"partial DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToBuilder_fromPartial_withProtectedConstructorAndParameterizedBuilderMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  public static Builder builder(String name) {")
+            .addLine("    return new Builder().setName(name);")
+            .addLine("  }")
+            .addLine("  public abstract Builder toBuilder();")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    Builder() {}")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType value = com.example.DataType.builder(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("com.example.DataType.Builder copyBuilder = value.toBuilder();")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("com.example.DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"partial DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testSiblingNameClashes() {
     behaviorTester
         .with(new Processor(features))
