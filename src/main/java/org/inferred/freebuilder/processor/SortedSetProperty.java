@@ -419,14 +419,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" */")
         .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property));
-    if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSortedSet.class)
-          .addLine("    %s = %s.of();", property.getField(), ImmutableSortedSet.class)
-          .add("  } else ");
-    }
-    code.addLine("  if (%s != null) {", property.getField())
-        .addLine("    %s.clear();", property.getField())
-        .addLine("  }")
+    addConvertToTreeSet(code);
+    code.addLine("  %s.clear();", property.getField())
         .addLine("  return (%s) this;", metadata.getBuilder())
         .addLine("}");
   }
