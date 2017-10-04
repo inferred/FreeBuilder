@@ -57,6 +57,10 @@ public enum SetType {
     return immutableSetType;
   }
 
+  public boolean isSorted() {
+    return SortedSet.class.isAssignableFrom(setType);
+  }
+
   public abstract int[] inOrder(int... exampleIds);
 
   public abstract String intsInOrder(int... examples);

@@ -421,7 +421,14 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property));
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSortedSet.class)
-          .addLine("    %s = %s.of();", property.getField(), ImmutableSortedSet.class)
+          .addLine("    if (%s.isEmpty()) {", property.getField())
+          .addLine("       // Do nothing")
+          .addLine("    } else if (%s.comparator() != null) {", property.getField())
+          .addLine("      %1$s = new %2$s<%3$s>(%1$s.comparator()).build();",
+              property.getField(), ImmutableSortedSet.Builder.class, elementType)
+          .addLine("    } else {")
+          .addLine("      %s = %s.of();", property.getField(), ImmutableSortedSet.class)
+          .addLine("    }")
           .add("  } else ");
     }
     code.addLine("  if (%s != null) {", property.getField())

@@ -17,6 +17,7 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.ComparisonChain;
@@ -35,6 +36,7 @@ import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTest
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -87,25 +89,42 @@ public class SetPropertyTest {
     this.elements = elements;
     this.convention = convention;
     this.features = features;
-    setPropertyType = new SourceBuilder()
+
+    SourceBuilder setPropertyTypeBuilder = new SourceBuilder()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
         .addLine("  public abstract %s<%s> %s;", set.type(), elements.type(), convention.getter())
         .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {}")
+        .addLine("  public abstract Builder toBuilder();")
+        .addLine("  public static class Builder extends DataType_Builder {");
+    if (set.isSorted() && elements.comparator().isPresent()) {
+      setPropertyTypeBuilder
+          .addLine("    public Builder() {")
+          .addLine("      setComparatorForItems(new %s());", elements.comparator().get())
+          .addLine("    }");
+    }
+    setPropertyType = setPropertyTypeBuilder
+        .addLine("  }")
         .addLine("}")
         .build();
 
     validationErrorMessage = elements.errorMessage();
 
-    validatedType = new SourceBuilder()
+    SourceBuilder validatedTypeBuilder = new SourceBuilder()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
         .addLine("  public abstract %s<%s> %s;", set.type(), elements.type(), convention.getter())
         .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {")
+        .addLine("  public static class Builder extends DataType_Builder {");
+    if (set.isSorted() && elements.comparator().isPresent()) {
+      validatedTypeBuilder
+          .addLine("    public Builder() {")
+          .addLine("      setComparatorForItems(new %s());", elements.comparator().get())
+          .addLine("    }");
+    }
+    validatedType = validatedTypeBuilder
         .addLine("    @Override public Builder addItems(%s element) {", elements.unwrappedType())
         .addLine("      if (!(%s)) {", elements.validation())
         .addLine("        throw new IllegalArgumentException(\"%s\");", validationErrorMessage)
@@ -115,6 +134,11 @@ public class SetPropertyTest {
         .addLine("  }")
         .addLine("}")
         .build();
+  }
+
+  @Before
+  public void setup() {
+    behaviorTester.withPermittedPackage(elements.type().getPackage());
   }
 
   @Test
@@ -508,16 +532,7 @@ public class SetPropertyTest {
   public void testToBuilder_fromPartial() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s> %s;", set.type(), elements.type(), convention.getter())
-            .addLine("")
-            .addLine("  Builder toBuilder();")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value1 = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.examples(0, 2))
@@ -550,6 +565,7 @@ public class SetPropertyTest {
 
   @Test
   public void testBuilderClear_noBuilderFactory() {
+    assumeNoComparatorRequired();
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -579,6 +595,7 @@ public class SetPropertyTest {
 
   @Test
   public void testImmutableSetProperty() {
+    assumeNoComparatorRequired();
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
@@ -604,6 +621,7 @@ public class SetPropertyTest {
 
   @Test
   public void testImmutableSetProperty_withWildcard() {
+    assumeNoComparatorRequired();
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
@@ -630,6 +648,7 @@ public class SetPropertyTest {
 
   @Test
   public void testSetOfParameters() {
+    assumeNoComparatorRequired();
     // See also https://github.com/google/FreeBuilder/issues/229
     behaviorTester
         .with(new Processor(features))
@@ -655,6 +674,7 @@ public class SetPropertyTest {
 
   @Test
   public void testSetOfParameterWildcards() {
+    assumeNoComparatorRequired();
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -767,6 +787,7 @@ public class SetPropertyTest {
 
   @Test
   public void testJacksonInteroperability() {
+    assumeNoComparatorRequired();
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
@@ -931,6 +952,7 @@ public class SetPropertyTest {
 
   @Test
   public void testMergeInvalidData() {
+    assumeNoComparatorRequired();
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(validationErrorMessage);
     behaviorTester
@@ -973,6 +995,7 @@ public class SetPropertyTest {
 
   @Test
   public void testCanNamePropertyElements() {
+    assumeNoComparatorRequired();
     // See also https://github.com/google/FreeBuilder/issues/258
     behaviorTester
         .with(new Processor(features))
@@ -1036,6 +1059,7 @@ public class SetPropertyTest {
 
   @Test
   public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
+    assumeTrue("Comparable element type", Comparable.class.isAssignableFrom(elements.type()));
     assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
@@ -1084,6 +1108,7 @@ public class SetPropertyTest {
   @Test
   public void testCanOverrideGenericFieldVarargsAdder() {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
+    assumeTrue("Comparable element type", Comparable.class.isAssignableFrom(elements.type()));
     assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
@@ -1141,6 +1166,10 @@ public class SetPropertyTest {
 
   private void assumeGuavaAvailable() {
     assumeTrue("Guava available", features.get(GUAVA).isAvailable());
+  }
+
+  private void assumeNoComparatorRequired() {
+    assumeFalse("Comparator required", set.isSorted() && elements.comparator().isPresent());
   }
 
   private static TestBuilder testBuilder() {

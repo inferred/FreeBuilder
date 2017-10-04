@@ -28,6 +28,7 @@ import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTest
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -114,7 +115,7 @@ public class ListMutateMethodTest {
             elements.supertype());
     if (checked) {
       genericTypeBuilder
-          .addLine("    @Override public Builder addItems(T element) {")
+          .addLine("    @Override public Builder<T> addItems(T element) {")
           .addLine("      if (!(%s)) {", elements.supertypeValidation())
           .addLine("        throw new IllegalArgumentException(\"%s\");", elements.errorMessage())
           .addLine("      }")
@@ -143,6 +144,11 @@ public class ListMutateMethodTest {
     } else {
       internedStringsType = null;
     }
+  }
+
+  @Before
+  public void setUp() {
+    behaviorTester.withPermittedPackage(elements.type().getPackage());
   }
 
   @Test

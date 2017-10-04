@@ -26,6 +26,7 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
@@ -57,8 +58,12 @@ import javax.tools.ToolProvider;
 
 class SingleBehaviorTester implements BehaviorTester {
 
-  private final FeatureSet features;
-
+  private final SourceLevel sourceLevel;
+  private final ImmutableSet.Builder<String> permittedPackages = ImmutableSet.<String>builder()
+      .add("java")
+      .add("sun.reflect")
+      .add("com.fasterxml.jackson.annotation")
+      .add("com.fasterxml.jackson.databind.annotation");
   private final List<Processor> processors = new ArrayList<>();
   private final List<JavaFileObject> compilationUnits = new ArrayList<>();
   private boolean shouldSetContextClassLoader = false;
@@ -66,7 +71,10 @@ class SingleBehaviorTester implements BehaviorTester {
   private final Map<TestSource, TestFile> testFilesBySource = new LinkedHashMap<>();
 
   SingleBehaviorTester(FeatureSet features) {
-    this.features = features;
+    sourceLevel = features.get(SOURCE_LEVEL);
+    if (features.get(GUAVA).isAvailable()) {
+      permittedPackages.add("com.google.common");
+    }
   }
 
   @Override
@@ -78,6 +86,12 @@ class SingleBehaviorTester implements BehaviorTester {
   @Override
   public BehaviorTester with(JavaFileObject compilationUnit) {
     compilationUnits.add(compilationUnit);
+    return this;
+  }
+
+  @Override
+  public BehaviorTester withPermittedPackage(Package pkg) {
+    permittedPackages.add(pkg.getName());
     return this;
   }
 
@@ -99,12 +113,13 @@ class SingleBehaviorTester implements BehaviorTester {
   public CompilationSubject compiles() {
     TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
     List<Diagnostic<? extends JavaFileObject>> diagnostics =
-        compile(fileManager, compilationUnits, processors, features.get(SOURCE_LEVEL));
+        compile(fileManager, compilationUnits, processors, sourceLevel);
     Set<String> testFiles =
         testFilesBySource.values().stream().map(TestFile::getClassName).collect(toSet());
 
-    // The compiled source classes may only access packages in the feature set.
-    ClassLoader restrictedClassLoader = new RestrictedClassLoader(features);
+    // The compiled source classes may only access packages in the feature set, and explicitly
+    // whitelisted test packages.
+    ClassLoader restrictedClassLoader = new RestrictedClassLoader(permittedPackages.build());
     ClassLoader sourceClassLoader =
         new SourceClassLoader(restrictedClassLoader, fileManager, testFiles);
 
@@ -121,23 +136,15 @@ class SingleBehaviorTester implements BehaviorTester {
    */
   private static class RestrictedClassLoader extends ClassLoader {
 
-    private final List<String> allowedPackages;
+    private final List<String> permittedPackages;
 
-    RestrictedClassLoader(FeatureSet features) {
-      ImmutableList.Builder<String> allowedPackages = ImmutableList.<String>builder()
-          .add("java.")
-          .add("sun.reflect.")
-          .add("com.fasterxml.jackson.annotation.")
-          .add("com.fasterxml.jackson.databind.annotation.");
-      if (features.get(GUAVA).isAvailable()) {
-        allowedPackages.add("com.google.common.");
-      }
-      this.allowedPackages = allowedPackages.build();
+    RestrictedClassLoader(Iterable<String> permittedPackages) {
+      this.permittedPackages = ImmutableList.copyOf(permittedPackages);
     }
 
     @Override
     public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-      if (!allowedPackages.stream().anyMatch(allowedPackage -> name.startsWith(allowedPackage))) {
+      if (!permittedPackages.stream().anyMatch(pkg -> name.startsWith(pkg))) {
         throw new ClassNotFoundException();
       }
       return super.loadClass(name, resolve);

@@ -35,6 +35,7 @@ import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTest
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -115,6 +116,11 @@ public class ListPropertyTest {
         .addLine("  }")
         .addLine("}")
         .build();
+  }
+
+  @Before
+  public void setUp() {
+    behaviorTester.withPermittedPackage(elements.type().getPackage());
   }
 
   @Test
