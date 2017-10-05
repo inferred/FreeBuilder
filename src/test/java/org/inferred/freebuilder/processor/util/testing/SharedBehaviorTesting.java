@@ -289,6 +289,7 @@ public class SharedBehaviorTesting {
     final FrameworkMethod method;
     boolean unmergeable = false;
     final Set<Processor> processors = new LinkedHashSet<>();
+    final Set<Package> permittedPackages = new LinkedHashSet<>();
     final List<JavaFileObject> compilationUnits = new ArrayList<>();
     final List<TestSource> testSources = new ArrayList<>();
 
@@ -316,6 +317,12 @@ public class SharedBehaviorTesting {
     @Override
     public BehaviorTester with(TestSource testSource) {
       testSources.add(testSource);
+      return this;
+    }
+
+    @Override
+    public BehaviorTester withPermittedPackage(Package pkg) {
+      permittedPackages.add(pkg);
       return this;
     }
 
@@ -359,6 +366,7 @@ public class SharedBehaviorTesting {
     private CompilationSubject subject;
     private RuntimeException compilationException;
     private final FeatureSet features;
+    private final Set<Package> permittedPackages = new LinkedHashSet<>();
 
     SharedCompiler(Child child, FeatureSet features) {
       children.add(child.method);
@@ -367,6 +375,7 @@ public class SharedBehaviorTesting {
       for (JavaFileObject compilationUnit : child.compilationUnits) {
         compilationUnits.put(compilationUnit.getName(), compilationUnit);
       }
+      permittedPackages.addAll(child.permittedPackages);
       testSources.addAll(child.testSources);
       this.features = features;
     }
@@ -392,6 +401,9 @@ public class SharedBehaviorTesting {
       for (JavaFileObject compilationUnit : child.compilationUnits) {
         compilationUnits.put(compilationUnit.getName(), compilationUnit);
       }
+      for (Package pkg : child.permittedPackages) {
+        permittedPackages.add(pkg);
+      }
       testSources.addAll(child.testSources);
       return this;
     }
@@ -411,6 +423,9 @@ public class SharedBehaviorTesting {
         }
         for (TestSource testSource : testSources) {
           tester.with(testSource);
+        }
+        for (Package pkg : permittedPackages) {
+          tester.withPermittedPackage(pkg);
         }
         try {
           subject = tester.compiles();
@@ -455,6 +470,12 @@ public class SharedBehaviorTesting {
     public BehaviorTester with(TestSource testSource) {
       testSources.add(testSource);
       fallbackCompiler.with(testSource);
+      return this;
+    }
+
+    @Override
+    public BehaviorTester withPermittedPackage(Package pkg) {
+      fallbackCompiler.withPermittedPackage(pkg);
       return this;
     }
 

@@ -111,6 +111,11 @@ public interface BehaviorTester {
   BehaviorTester withContextClassLoader();
 
   /**
+   * Whitelists a specific package for access by generated code.
+   */
+  BehaviorTester withPermittedPackage(Package pkg);
+
+  /**
    * Compiles everything given to {@link #with}.
    *
    * @return a {@link CompilationSubject} with which to make further assertions
