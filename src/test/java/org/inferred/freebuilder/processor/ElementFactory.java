@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
+import com.google.common.primitives.Primitives;
 
 import org.inferred.freebuilder.processor.testtype.AbstractNonComparable;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
@@ -23,7 +24,6 @@ import javax.annotation.Nullable;
 public enum ElementFactory {
   STRINGS(
       String.class,
-      "String",
       null,
       CharSequence.class,
       "!element.isEmpty()",
@@ -40,7 +40,6 @@ public enum ElementFactory {
       "golf"),
   INTEGERS(
       Integer.class,
-      "int",
       null,
       Number.class,
       "element >= 0",
@@ -57,7 +56,6 @@ public enum ElementFactory {
       28),
   NON_COMPARABLES(
       NonComparable.class,
-      NonComparable.class.getName(),
       AbstractNonComparable.ReverseIdComparator.class,
       AbstractNonComparable.class,
       "element.id() >= 0",
@@ -74,7 +72,6 @@ public enum ElementFactory {
       new NonComparable(4, "foxtrot"));
 
   private final Class<?> type;
-  private final String unwrappedType;
   @Nullable private final Class<?> comparator;
   private Class<?> supertype;
   private final String validation;
@@ -86,7 +83,6 @@ public enum ElementFactory {
 
   ElementFactory(
       Class<?> type,
-      String unwrappedType,
       @Nullable Class<? extends Comparator<?>> comparator,
       Class<?> supertype,
       String validation,
@@ -96,7 +92,6 @@ public enum ElementFactory {
       Object supertypeExample,
       Object... examples) {
     this.type = type;
-    this.unwrappedType = unwrappedType;
     this.comparator = comparator;
     this.supertype = supertype;
     this.validation = validation;
@@ -112,8 +107,8 @@ public enum ElementFactory {
     return type;
   }
 
-  public String unwrappedType() {
-    return unwrappedType;
+  public Class<?> unwrappedType() {
+    return Primitives.unwrap(type);
   }
 
   public Optional<Class<?>> comparator() {
@@ -125,7 +120,7 @@ public enum ElementFactory {
   }
 
   public boolean canRepresentSingleNullElement() {
-    return type.equals(unwrappedType);
+    return !Primitives.isWrapperType(type);
   }
 
   public String validation() {
