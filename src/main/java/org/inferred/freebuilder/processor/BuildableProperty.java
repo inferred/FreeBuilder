@@ -19,7 +19,7 @@ import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.tryFind;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.util.ElementFilter.typesIn;
-import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.INFERRED_TYPES;
+import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
@@ -36,9 +36,12 @@ import com.google.common.collect.FluentIterable;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.List;
 
@@ -172,6 +175,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   private final BuilderFactory builderFactory;
   private final MergeBuilderMethod mergeFromBuilderMethod;
   private final PartialToBuilderMethod partialToBuilderMethod;
+  private final Excerpt suppressUnchecked;
 
   private BuildableProperty(
       Metadata metadata,
@@ -185,12 +189,16 @@ class BuildableProperty extends PropertyCodeGenerator {
     this.builderFactory = builderFactory;
     this.mergeFromBuilderMethod = mergeFromBuilderMethod;
     this.partialToBuilderMethod = partialToBuilderMethod;
+    if (ModelUtils.needsSafeVarargs(property.getType())) {
+      suppressUnchecked = Excerpts.add("@SuppressWarnings(\"unchecked\")");
+    } else {
+      suppressUnchecked = Excerpts.empty();
+    }
   }
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %s %s = %s;",
-        builderType, property.getField(), builderFactory.newBuilder(builderType, INFERRED_TYPES));
+    code.addLine("private Object %s = null;", property.getField());
   }
 
   @Override
@@ -202,6 +210,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   private void addSetter(SourceBuilder code, Metadata metadata) {
+    Variable builder = new Variable("builder");
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
@@ -215,12 +224,20 @@ class BuildableProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             setter(property),
             property.getType(),
-            property.getName())
-        .add(methodBody(code, property.getName())
-            .add(PreconditionExcerpts.checkNotNull(property.getName()))
-            .addLine("  %s.clear();", property.getField())
-            .addLine("  %s.mergeFrom(%s);", property.getField(), property.getName())
-            .addLine("  return (%s) this;", metadata.getBuilder()))
+            property.getName());
+    Block body = methodBody(code, property.getName())
+        .add(PreconditionExcerpts.checkNotNull(property.getName()))
+        .addLine("  if (%1$s == null || %1$s instanceof %2$s) {",
+            property.getField(), ModelUtils.maybeAsTypeElement(property.getType()).get())
+        .addLine("    %s = %s;", property.getField(), property.getName())
+        .addLine("  } else {")
+        .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
+            suppressUnchecked, builderType, builder, property.getField())
+        .addLine("    %s.clear();", builder)
+        .addLine("    %s.mergeFrom(%s);", builder, property.getName())
+        .addLine("  }")
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -264,44 +281,115 @@ class BuildableProperty extends PropertyCodeGenerator {
             consumer.getQualifiedName(),
             builderType)
         .add(methodBody(code, "mutator")
-            .addLine("  mutator.accept(%s);", property.getField())
+            .addLine("  mutator.accept(%s());", getBuilderMethod(property))
             .addLine("  return (%s) this;", metadata.getBuilder()))
         .addLine("}");
   }
 
   private void addGetter(SourceBuilder code, Metadata metadata) {
+    Variable builder = new Variable("builder");
+    Variable value = new Variable("value");
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns a builder for the value that will be returned by %s.",
             metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
-        .addLine("public %s %s() {", builderType, getBuilderMethod(property))
-        .addLine("  return %s;", property.getField())
+        .addLine("public %s %s() {", builderType, getBuilderMethod(property));
+    Block body = methodBody(code)
+        .addLine("  if (%s == null) {", property.getField())
+        .addLine("    %s = %s;",
+            property.getField(), builderFactory.newBuilder(builderType, EXPLICIT_TYPES))
+        .addLine("  } else if (%s instanceof %s) {",
+            property.getField(), ModelUtils.maybeAsTypeElement(property.getType()).get())
+        .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
+            suppressUnchecked, property.getType(), value, property.getField());
+    if (partialToBuilderMethod == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
+      body.addLine("    %s = %s.toBuilder();", property.getField(), value);
+    } else {
+      body.addLine("    %s = %s",
+              property.getField(), builderFactory.newBuilder(builderType, EXPLICIT_TYPES))
+          .addLine("        .mergeFrom(%s);", value);
+    }
+    body.addLine("  }")
+        .addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
+            suppressUnchecked, builderType, builder, property.getField())
+        .addLine("  return %s;", builder);
+    code.add(body)
         .addLine("}");
   }
 
   @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
-    code.addLine("%s = %s.build();", finalField, property.getField().on(builder));
+    addFieldAssignment(code, finalField, builder, "build");
   }
 
   @Override
   public void addPartialFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
-    code.addLine("%s = %s.buildPartial();", finalField, property.getField().on(builder));
+    addFieldAssignment(code, finalField, builder, "buildPartial");
+  }
+
+  private void addFieldAssignment(
+      SourceBuilder code,
+      Excerpt finalField,
+      String builder,
+      String buildMethod) {
+    Variable fieldBuilder = new Variable(property.getName() + "Builder");
+    Variable fieldValue = new Variable(property.getName() + "Value");
+    code.addLine("if (%s == null) {", property.getField().on(builder))
+        .addLine("  %s = %s.%s();",
+            finalField, builderFactory.newBuilder(builderType, EXPLICIT_TYPES), buildMethod)
+        .addLine("} else if (%s instanceof %s) {",
+            property.getField().on(builder),
+            ModelUtils.maybeAsTypeElement(property.getType()).get());
+    if (suppressUnchecked != Excerpts.empty()) {
+      code.addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
+              suppressUnchecked, property.getType(), fieldValue, property.getField().on(builder))
+          .addLine("  %s = %s;", finalField, fieldValue);
+    } else {
+      code.addLine("  %s = (%s) %s;",
+              finalField, property.getType(), property.getField().on(builder));
+    }
+    code.addLine("} else {")
+        .addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
+            suppressUnchecked, builderType, fieldBuilder, property.getField().on(builder))
+        .addLine("  %s = %s.%s();", finalField, fieldBuilder, buildMethod)
+        .addLine("}");
   }
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    code.addLine("%s.mergeFrom(%s.%s());", property.getField(), value, property.getGetterName());
+    code.addLine("if (%s == null) {", property.getField())
+        .addLine("  %s = %s.%s();", property.getField(), value, property.getGetterName())
+        .addLine("} else {")
+        .addLine("  %s().mergeFrom(%s.%s());",
+            getBuilderMethod(property), value, property.getGetterName())
+        .addLine("}");
   }
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    code.add("%s.mergeFrom(%s.%s()", property.getField(), builder, getBuilderMethod(property));
+    Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+    Variable fieldValue = new Variable(property.getName() + "Value");
+    code.addLine("if (%s == null) {", property.getField().on(base))
+        .addLine("  // Nothing to merge")
+        .addLine("} else if (%s instanceof %s) {",
+            property.getField().on(base),
+            ModelUtils.maybeAsTypeElement(property.getType()).get())
+        .addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
+            suppressUnchecked, property.getType(), fieldValue, property.getField().on(base))
+        .addLine("  if (%s == null) {", property.getField())
+        .addLine("    %s = %s;", property.getField(), fieldValue)
+        .addLine("  } else {")
+        .addLine("    %s().mergeFrom(%s);", getBuilderMethod(property), fieldValue)
+        .addLine("  }")
+        .addLine("} else {")
+        .add("  %s().mergeFrom(%s.%s()",
+            getBuilderMethod(property), base, getBuilderMethod(property));
     if (mergeFromBuilderMethod == MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE) {
       code.add(".buildPartial()");
     }
-    code.add(");\n");
+    code.add(");\n")
+        .addLine("}");
   }
 
   @Override
@@ -322,7 +410,16 @@ class BuildableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addClearField(Block code) {
-    code.addLine("%s.clear();", property.getField());
+    Variable fieldBuilder = new Variable(property.getName() + "Builder");
+    code.addLine("  if (%1$s == null || %1$s instanceof %2$s) {",
+            property.getField(),
+            ModelUtils.maybeAsTypeElement(property.getType()).get())
+        .addLine("    %s = null;", property.getField())
+        .addLine("  } else {")
+        .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
+            suppressUnchecked, builderType, fieldBuilder, property.getField())
+        .addLine("    %s.clear();", fieldBuilder)
+        .addLine("  }");
   }
 
   private static final class IsCallableMethod implements Predicate<ExecutableElement> {

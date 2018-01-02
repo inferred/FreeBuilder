@@ -96,7 +96,7 @@ public abstract class ValueType {
   protected abstract void addFields(FieldReceiver fields);
 
   @Override
-  public final boolean equals(Object obj) {
+  public boolean equals(Object obj) {
     if ((obj == null) || (obj.getClass() != this.getClass())) {
       return false;
     }
@@ -108,7 +108,7 @@ public abstract class ValueType {
   }
 
   @Override
-  public final int hashCode() {
+  public int hashCode() {
     ReceiverIntoHashCode receiver = new ReceiverIntoHashCode();
     addFields(receiver);
     return receiver.get();

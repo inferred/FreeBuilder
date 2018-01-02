@@ -16,7 +16,7 @@ public class Block extends Excerpt implements SourceBuilder {
   public static Block methodBody(SourceBuilder parent, String... paramNames) {
     Scope methodScope = new Scope.MethodScope(parent.scope());
     for (String paramName : paramNames) {
-      methodScope.add(new Variable(paramName));
+      methodScope.add(new VariableName(paramName));
     }
     return new Block(parent, methodScope);
   }
@@ -58,7 +58,7 @@ public class Block extends Excerpt implements SourceBuilder {
     } else {
       name = pickName(preferredName);
       variableNames.put(preferredName, name);
-      body.scope().add(new Variable(name));
+      body.scope().add(new VariableName(name));
       Excerpt declaration = Excerpts.add("%s %s = %s;%n", typeAndPreamble, name, value);
       declarations.put(name, declaration);
       declarationsBlock.add(declaration);
@@ -89,7 +89,7 @@ public class Block extends Excerpt implements SourceBuilder {
   }
 
   private boolean nameCollides(String name) {
-    return body.scope().contains(new Variable(name))
+    return body.scope().contains(new VariableName(name))
         || body.scope().contains(new FieldAccess(name));
   }
 

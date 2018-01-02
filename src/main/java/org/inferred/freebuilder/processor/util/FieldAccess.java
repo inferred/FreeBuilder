@@ -52,7 +52,7 @@ public class FieldAccess extends Excerpt implements Scope.Element<FieldAccess> {
 
   @Override
   public void addTo(SourceBuilder source) {
-    if (source.scope().contains(new Variable(fieldName))) {
+    if (source.scope().contains(new VariableName(fieldName))) {
       source.add("this.");
     } else {
       // Prevent a new variable being declared and obscuring this field access
