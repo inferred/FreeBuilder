@@ -16,8 +16,8 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.BuildablePropertyTest.BuildableType.FREEBUILDER_LIKE;
+import static org.inferred.freebuilder.processor.BuildablePropertyTest.BuildableType.FREEBUILDER_WITH_TO_BUILDER;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
@@ -56,6 +56,9 @@ public class BuildablePropertyTest {
   public enum BuildableType {
     /** Use FreeBuilder to generate the buildable type. This tests we pick up the annotation. */
     FREEBUILDER("FreeBuilder-annotated", "new DataType.Item.Builder()"),
+    /** Use FreeBuilder with an abstract toBuilder() method, to ensure we use it correctly. */
+    FREEBUILDER_WITH_TO_BUILDER(
+        "FreeBuilder-annotated with toBuilder method", "new DataType.Item.Builder()"),
     /** Use a buildable type with a Proto-like API. */
     PROTO_LIKE("Proto-like", "DataType.Item.newBuilder()"),
     /** Use a type with a FreeBuilder-like API. This tests we work on pre-generated code. */
@@ -131,6 +134,7 @@ public class BuildablePropertyTest {
 
     switch (buildableType) {
       case FREEBUILDER:
+      case FREEBUILDER_WITH_TO_BUILDER:
       case FREEBUILDER_LIKE:
         if (buildableType != FREEBUILDER_LIKE) {
           code.addLine("  @%s", FreeBuilder.class);
@@ -142,8 +146,11 @@ public class BuildablePropertyTest {
         code.addLine("  interface Item {")
             .addLine("    String %s;", convention.getter("name"))
             .addLine("    int %s;", convention.getter("price"))
-            .addLine("")
-            .addLine("    class Builder extends DataType_Item_Builder {");
+            .addLine("");
+        if (buildableType == FREEBUILDER_WITH_TO_BUILDER) {
+          code.addLine("    Builder toBuilder();");
+        }
+        code.addLine("    class Builder extends DataType_Item_Builder {");
         if (hasDefaults) {
           code.addLine("      public Builder() {")
               .addLine("        %s(\"Air\");", convention.setter("name"))
@@ -168,8 +175,11 @@ public class BuildablePropertyTest {
       code.addLine("@%s(\"two\")", JsonProperty.class);
     }
     code.addLine("  Item %s;", convention.getter("item2"))
-        .addLine("")
-        .addLine("  class Builder extends DataType_Builder {}")
+        .addLine("");
+    if (buildableType == FREEBUILDER_WITH_TO_BUILDER) {
+      code.addLine("    Builder toBuilder();");
+    }
+    code.addLine("  class Builder extends DataType_Builder {}")
         .addLine("}");
 
     if (buildableType == FREEBUILDER_LIKE) {
@@ -397,14 +407,18 @@ public class BuildablePropertyTest {
         .addLine("public interface DataType {");
     switch (buildableType) {
       case FREEBUILDER:
+      case FREEBUILDER_WITH_TO_BUILDER:
       case FREEBUILDER_LIKE:
         if (buildableType != FREEBUILDER_LIKE) {
           code.addLine("  @%s", FreeBuilder.class);
         }
         code.addLine("  interface Item {")
             .addLine("    %s<String> names();", List.class)
-            .addLine("")
-            .addLine("    class Builder extends DataType_Item_Builder {}")
+            .addLine("");
+        if (buildableType == FREEBUILDER_WITH_TO_BUILDER) {
+          code.addLine("    Builder toBuilder();");
+        }
+        code.addLine("    class Builder extends DataType_Item_Builder {}")
             .addLine("  }");
         break;
 
@@ -675,7 +689,7 @@ public class BuildablePropertyTest {
 
   @Test
   public void testMutateMethod() {
-    assumeTrue("Environment has lambdas", features.get(FUNCTION_PACKAGE).consumer().isPresent());
+    assumeLambdas();
     behaviorTester
         .with(new Processor(features))
         .with(defaultsType)
@@ -862,29 +876,11 @@ public class BuildablePropertyTest {
 
   @Test
   public void testToBuilder_fromPartial() {
-    assumeTrue(features.get(SOURCE_LEVEL).hasLambdas());
+    assumeLambdas();
+    assumeTrue(buildableType == FREEBUILDER_WITH_TO_BUILDER);
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  @%s", FreeBuilder.class)
-            .addLine("  interface Item {")
-            .addLine("    String %s;", convention.getter("name"))
-            .addLine("    int %s;", convention.getter("price"))
-            .addLine("")
-            .addLine("    Builder toBuilder();")
-            .addLine("    class Builder extends DataType_Item_Builder {}")
-            .addLine("  }")
-            .addLine("")
-            .addLine("  Item %s;", convention.getter("item1"))
-            .addLine("  Item %s;", convention.getter("item2"))
-            .addLine("")
-            .addLine("  Builder toBuilder();")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+        .with(noDefaultsType)
         .with(testBuilder()
             .addLine("DataType value1 = new DataType.Builder()")
             .addLine("    .mutateItem1($ -> $")
@@ -915,11 +911,11 @@ public class BuildablePropertyTest {
         .with(noDefaultsType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item1"))
+            .addLine("    .%s(%s", convention.setter("item1"), buildableType.newBuilder())
             .addLine("        .%s(\"Foo\")", convention.setter("name"))
             .addLine("        .%s(1)", convention.setter("price"))
             .addLine("        .build())")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item2"))
+            .addLine("    .%s(%s", convention.setter("item2"), buildableType.newBuilder())
             .addLine("        .%s(\"Bar\")", convention.setter("name"))
             .addLine("        .%s(2)", convention.setter("price"))
             .addLine("        .build());")
@@ -1156,6 +1152,10 @@ public class BuildablePropertyTest {
             .addLine("}")
             .build())
         .compiles();
+  }
+
+  private void assumeLambdas() {
+    assumeTrue("Environment has lambdas", features.get(FUNCTION_PACKAGE).consumer().isPresent());
   }
 
   private static TestBuilder testBuilder() {
