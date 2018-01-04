@@ -874,10 +874,39 @@ public class BuildablePropertyTest {
         .runTest();
   }
 
+  public void testToBuilder_fromPartial_usingGetter() {
+    assumeHasToBuilder();
+    behaviorTester
+        .with(new Processor(features))
+        .with(noDefaultsType)
+        .with(testBuilder()
+            .addLine("DataType.Builder builder1 = new DataType.Builder();")
+            .addLine("builder1.%s.%s(\"Foo\");",
+                convention.getter("item1Builder"), convention.setter("name"))
+            .addLine("builder1.%s.%s(2);",
+                convention.getter("item2Builder"), convention.setter("price"))
+            .addLine("DataType value1 = builder1.buildPartial();")
+            .addLine("DataType.Builder builder2 = value1.toBuilder();")
+            .addLine("builder2.%s.%s(\"Bar\");",
+                convention.getter("item2Builder"), convention.setter("name"))
+            .addLine("DataType value2 = builder2.build();")
+            .addLine("DataType.Builder expected = new DataType.Builder();")
+            .addLine("expected.%s.%s(\"Foo\");",
+                convention.getter("item1Builder"), convention.setter("name"))
+            .addLine("expected.%s.%s(2);",
+                convention.getter("item2Builder"), convention.setter("price"))
+            .addLine("expected.%s.%s(\"Bar\");",
+                convention.getter("item2Builder"), convention.setter("name"))
+            .addLine("assertEquals(expected.buildPartial(), value2);")
+            .build())
+        .runTest();
+  }
+
+
   @Test
-  public void testToBuilder_fromPartial() {
+  public void testToBuilder_fromPartial_usingLambdas() {
     assumeLambdas();
-    assumeTrue(buildableType == FREEBUILDER_WITH_TO_BUILDER);
+    assumeHasToBuilder();
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
@@ -1156,6 +1185,10 @@ public class BuildablePropertyTest {
 
   private void assumeLambdas() {
     assumeTrue("Environment has lambdas", features.get(FUNCTION_PACKAGE).consumer().isPresent());
+  }
+
+  private void assumeHasToBuilder() {
+    assumeTrue(buildableType == FREEBUILDER_WITH_TO_BUILDER);
   }
 
   private static TestBuilder testBuilder() {
