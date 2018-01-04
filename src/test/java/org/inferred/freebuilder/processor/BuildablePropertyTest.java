@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.BuildablePropertyTest.BuildableType.FREEBUILDER_LIKE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
@@ -25,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -109,68 +111,305 @@ public class BuildablePropertyTest {
     this.convention = convention;
     this.features = features;
 
-    noDefaultsType = generateBuildableType(convention, false);
-    defaultsType = generateBuildableType(convention, true);
+    noDefaultsType = generateBuildableType(buildableType, convention, false, false);
+    defaultsType = generateBuildableType(buildableType, convention, true, false);
     nestedListType = generateNestedListType(buildableType);
   }
 
   private static JavaFileObject generateBuildableType(
+      BuildableType buildableType,
       NamingConvention convention,
-      boolean hasDefaults) {
+      boolean hasDefaults,
+      boolean hasJacksonAnnotations) {
     SourceBuilder code = new SourceBuilder()
         .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  @%s", FreeBuilder.class)
-        .addLine("  interface Item {")
-        .addLine("    String %s;", convention.getter("name"))
-        .addLine("    int %s;", convention.getter("price"))
-        .addLine("")
-        .addLine("    class Builder extends DataType_Item_Builder {");
-    if (hasDefaults) {
-      code.addLine("      public Builder() {")
-          .addLine("        %s(\"Air\");", convention.setter("name"))
-          .addLine("        %s(0);", convention.setter("price"))
-          .addLine("      }");
+        .addLine("@%s", FreeBuilder.class);
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class);
     }
-    return code
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("")
-        .addLine("  Item %s;", convention.getter("item1"))
-        .addLine("  Item %s;", convention.getter("item2"))
+    code.addLine("public interface DataType {");
+
+    switch (buildableType) {
+      case FREEBUILDER:
+      case FREEBUILDER_LIKE:
+        if (buildableType != FREEBUILDER_LIKE) {
+          code.addLine("  @%s", FreeBuilder.class);
+        }
+        if (hasJacksonAnnotations) {
+          code.addLine("@%s(builder = DataType.Item.Builder.class)",
+              JsonDeserialize.class);
+        }
+        code.addLine("  interface Item {")
+            .addLine("    String %s;", convention.getter("name"))
+            .addLine("    int %s;", convention.getter("price"))
+            .addLine("")
+            .addLine("    class Builder extends DataType_Item_Builder {");
+        if (hasDefaults) {
+          code.addLine("      public Builder() {")
+              .addLine("        %s(\"Air\");", convention.setter("name"))
+              .addLine("        %s(0);", convention.setter("price"))
+              .addLine("      }");
+        }
+        code.addLine("    }")
+            .addLine("  }");
+        break;
+
+      case PROTO_LIKE:
+      generateProtoLikeType(convention, hasDefaults, hasJacksonAnnotations, code);
+        break;
+    }
+
+    code.addLine("");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"one\")", JsonProperty.class);
+    }
+    code.addLine("  Item %s;", convention.getter("item1"));
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"two\")", JsonProperty.class);
+    }
+    code.addLine("  Item %s;", convention.getter("item2"))
         .addLine("")
         .addLine("  class Builder extends DataType_Builder {}")
+        .addLine("}");
+
+    if (buildableType == FREEBUILDER_LIKE) {
+      generateBuildableTypeBuilder(code, convention, hasDefaults, hasJacksonAnnotations);
+    }
+  return code.build();
+  }
+
+  private static void generateProtoLikeType(NamingConvention convention, boolean hasDefaults,
+      boolean hasJacksonAnnotations, SourceBuilder code) {
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(builder = DataType.Item.Builder.class)",
+          JsonDeserialize.class);
+    }
+    code.addLine("  class Item {");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"name\")", JsonProperty.class);
+    }
+    code.addLine("    public String %s {", convention.getter("name"));
+    if (!hasDefaults) {
+      code.addLine("      if (name == null) {")
+          .addLine("        throw new UnsupportedOperationException(\"name not set\");")
+          .addLine("      }");
+    }
+    code
+        .addLine("      return name;")
+        .addLine("    }");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"price\")", JsonProperty.class);
+    }
+    code.addLine("    public int %s {", convention.getter("price"));
+    if (!hasDefaults) {
+      code.addLine("      if (price == null) {")
+          .addLine("        throw new UnsupportedOperationException(\"price not set\");")
+          .addLine("      }");
+    }
+    code.addLine("      return price;")
+        .addLine("    }")
+        .addLine("")
+        .addLine("    public static Builder newBuilder() {")
+        .addLine("      return new Builder();")
+        .addLine("    }")
+        .addLine("")
+        .addLine("    public static class Builder {")
+        .addLine("")
+        .addLine("      private String name = null;")
+        .addLine("      private Integer price = null;")
+        .addLine("");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"name\")", JsonProperty.class);
+    }
+    code.addLine("      public Builder %s(String name) {", convention.setter("name"))
+        .addLine("        this.name = name;")
+        .addLine("        return this;")
+        .addLine("      }")
+        .addLine("");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"price\")", JsonProperty.class);
+    }
+    code.addLine("      public Builder %s(int price) {", convention.setter("price"))
+        .addLine("        this.price = price;")
+        .addLine("        return this;")
+        .addLine("      }")
+        .addLine("")
+        .addLine("      public Builder clear() {")
+        .addLine("        name = null;")
+        .addLine("        price = null;")
+        .addLine("        return this;")
+        .addLine("      }")
+        .addLine("")
+        .addLine("      public Builder mergeFrom(Item item) {")
+        .addLine("        if (item.name != null) {")
+        .addLine("          name = item.name;")
+        .addLine("        }")
+        .addLine("        if (item.price != null) {")
+        .addLine("          this.price = item.price;")
+        .addLine("        }")
+        .addLine("        return this;")
+        .addLine("      }")
+        .addLine("")
+        .addLine("      public Item build() {");
+    if (!hasDefaults) {
+      code.addLine("        if (name == null) {")
+          .addLine("          throw new IllegalStateException(\"name must be set\");")
+          .addLine("        }")
+          .addLine("        if (price == null) {")
+          .addLine("          throw new IllegalStateException(\"price must be set\");")
+          .addLine("        }")
+          .addLine("        return new Item(name, price);");
+    } else {
+      code.addLine("        return new Item(")
+          .addLine("            name != null ? name : \"Air\", price != null ? price : 0);");
+    }
+    code.addLine("      }")
+        .addLine("")
+        .addLine("      public Item buildPartial() {")
+        .addLine("        return new Item(name, price);")
+        .addLine("      }")
+        .addLine("")
+        .addLine("      private Builder() {}")
+        .addLine("    }")
+        .addLine("")
+        .addLine("    private final String name;")
+        .addLine("    private final Integer price;")
+        .addLine("")
+        .addLine("    private Item(String name, Integer price) {")
+        .addLine("      this.name = name;")
+        .addLine("      this.price = price;")
+        .addLine("    }")
+        .addLine("  }");
+  }
+
+  private static void generateBuildableTypeBuilder(SourceBuilder code, NamingConvention convention,
+      boolean hasDefaults, boolean hasJacksonAnnotations) {
+    code.addLine("")
+        .addLine("class DataType_Item_Builder {")
+        .addLine("")
+        .addLine("  private String name = %s;", hasDefaults ? "\"Air\"" : "null")
+        .addLine("  private Integer price = null;", hasDefaults ? "0" : "null")
+        .addLine("");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"name\")", JsonProperty.class);
+    }
+    code.addLine("  public DataType.Item.Builder %s(String name) {", convention.setter("name"))
+        .addLine("    this.name = name;")
+        .addLine("    return (DataType.Item.Builder) this;")
+        .addLine("  }")
+        .addLine("");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"price\")", JsonProperty.class);
+    }
+    code.addLine("  public DataType.Item.Builder %s(int price) {", convention.setter("price"))
+        .addLine("    this.price = price;")
+        .addLine("    return (DataType.Item.Builder) this;")
+        .addLine("  }")
+        .addLine("")
+        .addLine("  public DataType.Item.Builder clear() {");
+    if (hasDefaults) {
+      code.addLine("     name = \"Air\";")
+          .addLine("     price = 0;");
+    } else {
+      code.addLine("     name = null;")
+          .addLine("     price = null;");
+    }
+    code.addLine("    return (DataType.Item.Builder) this;")
+        .addLine("  }")
+        .addLine("")
+        .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item.Builder builder) {")
+        .addLine("    DataType_Item_Builder base = builder;");
+    if (hasDefaults) {
+      code.addLine("    if (!base.name.equals(\"Air\")) {");
+    } else {
+      code.addLine("    if (base.name != null) {");
+    }
+    code.addLine("      this.name = base.name;")
+        .addLine("    }")
+        .addLine("    if (base.price != %s) {", hasDefaults ? "0" : "null")
+        .addLine("      this.price = base.price;")
+        .addLine("    }")
+        .addLine("    return (DataType.Item.Builder) this;")
+        .addLine("  }")
+        .addLine("")
+        .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item item) {")
+        .addLine("    this.name = item.%s;", convention.getter("name"))
+        .addLine("    this.price = item.%s;", convention.getter("price"))
+        .addLine("    return (DataType.Item.Builder) this;")
+        .addLine("  }")
+        .addLine("")
+        .addLine("  public DataType.Item build() {");
+    if (!hasDefaults) {
+      code.addLine("    if (name == null) {")
+          .addLine("      throw new IllegalStateException(\"name not set\");")
+          .addLine("    }")
+          .addLine("    if (price == null) {")
+          .addLine("      throw new IllegalStateException(\"price not set\");")
+          .addLine("    }");
+    }
+    code.addLine("    return new Value(this);")
+        .addLine("  }")
+        .addLine("")
+        .addLine("  public DataType.Item buildPartial() { return new Value(this); }")
+        .addLine("")
+        .addLine("  private class Value implements DataType.Item {")
+        .addLine("")
+        .addLine("    private final String name;")
+        .addLine("    private final %s price;", hasDefaults ? "int" : "Integer")
+        .addLine("")
+        .addLine("    Value(DataType_Item_Builder builder) {")
+        .addLine("      name = builder.name;")
+        .addLine("      price = builder.price;")
+        .addLine("    }")
+        .addLine("");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"name\")", JsonProperty.class);
+    }
+    code.addLine("    @Override public String %s {", convention.getter("name"));
+    if (!hasDefaults) {
+      code.addLine("      if (name == null) {")
+          .addLine("        throw new UnsupportedOperationException(\"name not set\");")
+          .addLine("      }");
+    }
+    code.addLine("      return name;")
+        .addLine("    }")
+        .addLine("");
+    if (hasJacksonAnnotations) {
+      code.addLine("@%s(\"price\")", JsonProperty.class);
+    }
+    code.addLine("    @Override public int %s {", convention.getter("price"));
+    if (!hasDefaults) {
+      code.addLine("      if (price == null) {")
+          .addLine("        throw new UnsupportedOperationException(\"price not set\");")
+          .addLine("      }");
+    }
+    code.addLine("      return price;")
+        .addLine("    }")
+        .addLine("  }")
         .addLine("}")
         .build();
   }
 
   private static JavaFileObject generateNestedListType(BuildableType buildableType) {
+    SourceBuilder code = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {");
     switch (buildableType) {
       case FREEBUILDER:
-        return new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  @%s", FreeBuilder.class)
-            .addLine("  interface Item {")
+      case FREEBUILDER_LIKE:
+        if (buildableType != FREEBUILDER_LIKE) {
+          code.addLine("  @%s", FreeBuilder.class);
+        }
+        code.addLine("  interface Item {")
             .addLine("    %s<String> names();", List.class)
             .addLine("")
             .addLine("    class Builder extends DataType_Item_Builder {}")
-            .addLine("  }")
-            .addLine("")
-            .addLine("  Item item();")
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build();
+            .addLine("  }");
+        break;
 
       case PROTO_LIKE:
-        return new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  class Item {")
+        code.addLine("  class Item {")
             .addLine("    public %s<String> names() {", List.class)
             .addLine("      return names;")
             .addLine("    }")
@@ -218,27 +457,18 @@ public class BuildablePropertyTest {
             .addLine("      this.names = %s.unmodifiableList(new %s<String>(names));",
                 Collections.class, ArrayList.class)
             .addLine("    }")
-            .addLine("  }")
-            .addLine("")
-            .addLine("  Item item();")
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build();
+            .addLine("  }");
+        break;
+    }
 
-      case FREEBUILDER_LIKE:
-        return new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  interface Item {")
-            .addLine("    %s<String> names();", List.class)
-            .addLine("    class Builder extends DataType_Item_Builder {}")
-            .addLine("  }")
-            .addLine("  Item item();")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .addLine("")
+    code.addLine("")
+        .addLine("  Item item();")
+        .addLine("")
+        .addLine("  class Builder extends DataType_Builder {}")
+        .addLine("}");
+
+    if (buildableType == FREEBUILDER_LIKE) {
+        code.addLine("")
             .addLine("class DataType_Item_Builder {")
             .addLine("  private final %s<String> names = new %s<String>();",
                 List.class, ArrayList.class)
@@ -271,11 +501,9 @@ public class BuildablePropertyTest {
             .addLine("    @%s public %s<String> names() { return names; }",
                 Override.class, List.class)
             .addLine("  }")
-            .addLine("}")
-            .build();
+            .addLine("}");
     }
-
-    throw new AssertionError("Unrecognized buildable type " + buildableType.name());
+    return code.build();
   }
 
   @Test
@@ -344,11 +572,11 @@ public class BuildablePropertyTest {
         .with(noDefaultsType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item1"))
+            .addLine("    .%s(%s", convention.setter("item1"), buildableType.newBuilder())
             .addLine("        .%s(\"Foo\")", convention.setter("name"))
             .addLine("        .%s(1)", convention.setter("price"))
             .addLine("        .build())")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item2"))
+            .addLine("    .%s(%s", convention.setter("item2"), buildableType.newBuilder())
             .addLine("        .%s(\"Bar\")", convention.setter("name"))
             .addLine("        .%s(2)", convention.setter("price"))
             .addLine("        .build())")
@@ -393,10 +621,10 @@ public class BuildablePropertyTest {
         .with(noDefaultsType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item1"))
+            .addLine("    .%s(%s", convention.setter("item1"), buildableType.newBuilder())
             .addLine("        .%s(\"Foo\")", convention.setter("name"))
             .addLine("        .%s(1))", convention.setter("price"))
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item2"))
+            .addLine("    .%s(%s", convention.setter("item2"), buildableType.newBuilder())
             .addLine("        .%s(\"Bar\")", convention.setter("name"))
             .addLine("        .%s(2))", convention.setter("price"))
             .addLine("    .build();")
@@ -439,7 +667,7 @@ public class BuildablePropertyTest {
         .with(noDefaultsType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item1"))
+            .addLine("    .%s(%s", convention.setter("item1"), buildableType.newBuilder())
             .addLine("        .%s(\"Foo\"));", convention.setter("name"))
             .build())
         .runTest();
@@ -507,11 +735,11 @@ public class BuildablePropertyTest {
         .with(noDefaultsType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item1"))
+            .addLine("    .%s(%s", convention.setter("item1"), buildableType.newBuilder())
             .addLine("        .%s(\"Foo\")", convention.setter("name"))
             .addLine("        .%s(1)", convention.setter("price"))
             .addLine("        .build())")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item2"))
+            .addLine("    .%s(%s", convention.setter("item2"), buildableType.newBuilder())
             .addLine("        .%s(\"Bar\")", convention.setter("name"))
             .addLine("        .%s(2)", convention.setter("price"))
             .addLine("        .build());")
@@ -571,11 +799,11 @@ public class BuildablePropertyTest {
         .with(noDefaultsType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item1"))
+            .addLine("    .%s(%s", convention.setter("item1"), buildableType.newBuilder())
             .addLine("        .%s(\"Foo\")", convention.setter("name"))
             .addLine("        .%s(1)", convention.setter("price"))
             .addLine("        .build())")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item2"))
+            .addLine("    .%s(%s", convention.setter("item2"), buildableType.newBuilder())
             .addLine("        .%s(\"Bar\")", convention.setter("name"))
             .addLine("        .%s(2)", convention.setter("price"))
             .addLine("        .build());")
@@ -588,11 +816,11 @@ public class BuildablePropertyTest {
             .addLine("assertEquals(2, builder.build().%s.%s);",
                 convention.getter("item2"), convention.getter("price"))
             .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item1"))
+            .addLine("    .%s(%s", convention.setter("item1"), buildableType.newBuilder())
             .addLine("        .%s(\"Cheese\")", convention.setter("name"))
             .addLine("        .%s(3)", convention.setter("price"))
             .addLine("        .build())")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item2"))
+            .addLine("    .%s(%s", convention.setter("item2"), buildableType.newBuilder())
             .addLine("        .%s(\"Ham\")", convention.setter("name"))
             .addLine("        .%s(4)", convention.setter("price"))
             .addLine("        .build())")
@@ -704,11 +932,11 @@ public class BuildablePropertyTest {
             .addLine("assertEquals(2, builder.build().%s.%s);",
                 convention.getter("item2"), convention.getter("price"))
             .addLine("builder.clear().mergeFrom(new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item1"))
+            .addLine("    .%s(%s", convention.setter("item1"), buildableType.newBuilder())
             .addLine("        .%s(\"Cheese\")", convention.setter("name"))
             .addLine("        .%s(3)", convention.setter("price"))
             .addLine("        .build())")
-            .addLine("    .%s(new DataType.Item.Builder()", convention.setter("item2"))
+            .addLine("    .%s(%s", convention.setter("item2"), buildableType.newBuilder())
             .addLine("        .%s(\"Ham\")", convention.setter("name"))
             .addLine("        .%s(4)", convention.setter("price"))
             .addLine("        .build())")
@@ -842,33 +1070,19 @@ public class BuildablePropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("import " + JsonProperty.class.getName() + ";")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
-            .addLine("public interface DataType {")
-            .addLine("  @%s", FreeBuilder.class)
-            .addLine("  @%s(builder = Item.Builder.class)", JsonDeserialize.class)
-            .addLine("  interface Item {")
-            .addLine("    String %s;", convention.getter("name"))
-            .addLine("    int %s;", convention.getter("price"))
-            .addLine("")
-            .addLine("    class Builder extends DataType_Item_Builder {}")
-            .addLine("  }")
-            .addLine("")
-            .addLine("  @JsonProperty(\"one\") Item %s;", convention.getter("item1"))
-            .addLine("  @JsonProperty(\"two\") Item %s;", convention.getter("item2"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+        .with(generateBuildableType(buildableType, convention, false, true))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(new DataType.Item.Builder().%s(\"Foo\").%s(1).build())",
-                convention.setter("item1"), convention.setter("name"), convention.setter("price"))
-            .addLine("    .%s(new DataType.Item.Builder().%s(\"Bar\").%s(2).build())",
-                convention.setter("item2"), convention.setter("name"), convention.setter("price"))
+            .addLine("    .%s(%s.%s(\"Foo\").%s(1).build())",
+                convention.setter("item1"),
+                buildableType.newBuilder(),
+                convention.setter("name"),
+                convention.setter("price"))
+            .addLine("    .%s(%s.%s(\"Bar\").%s(2).build())",
+                convention.setter("item2"),
+                buildableType.newBuilder(),
+                convention.setter("name"),
+                convention.setter("price"))
             .addLine("    .build();")
             .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
             .addLine("String json = mapper.writeValueAsString(value);")
