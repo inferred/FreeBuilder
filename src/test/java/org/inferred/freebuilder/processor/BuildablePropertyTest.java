@@ -80,15 +80,17 @@ public class BuildablePropertyTest {
     this.convention = convention;
     this.features = features;
 
-    noDefaultsType = generateNoDefaultsType(convention);
-    defaultsType = generateDefaultsType(convention);
+    noDefaultsType = generateBuildableType(convention, false);
+    defaultsType = generateBuildableType(convention, true);
     nestedListType = generateNestedListType();
     protolikeType = generateProtoLikeType();
     freeBuilderLikeType = generateFreeBuilderLikeType();
   }
 
-  private static JavaFileObject generateNoDefaultsType(NamingConvention convention) {
-    return new SourceBuilder()
+  private static JavaFileObject generateBuildableType(
+      NamingConvention convention,
+      boolean hasDefaults) {
+    SourceBuilder code = new SourceBuilder()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -97,32 +99,14 @@ public class BuildablePropertyTest {
         .addLine("    String %s;", convention.getter("name"))
         .addLine("    int %s;", convention.getter("price"))
         .addLine("")
-        .addLine("    class Builder extends DataType_Item_Builder {}")
-        .addLine("  }")
-        .addLine("")
-        .addLine("  Item %s;", convention.getter("item1"))
-        .addLine("  Item %s;", convention.getter("item2"))
-        .addLine("")
-        .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
-  }
-
-  private static JavaFileObject generateDefaultsType(NamingConvention convention) {
-    return new SourceBuilder()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  @%s", FreeBuilder.class)
-        .addLine("  interface Item {")
-        .addLine("    String %s;", convention.getter("name"))
-        .addLine("    int %s;", convention.getter("price"))
-        .addLine("")
-        .addLine("    class Builder extends DataType_Item_Builder {")
-        .addLine("      public Builder() {")
-        .addLine("        %s(\"Air\");", convention.setter("name"))
-        .addLine("        %s(0);", convention.setter("price"))
-        .addLine("      }")
+        .addLine("    class Builder extends DataType_Item_Builder {");
+    if (hasDefaults) {
+      code.addLine("      public Builder() {")
+          .addLine("        %s(\"Air\");", convention.setter("name"))
+          .addLine("        %s(0);", convention.setter("price"))
+          .addLine("      }");
+    }
+    return code
         .addLine("    }")
         .addLine("  }")
         .addLine("")
