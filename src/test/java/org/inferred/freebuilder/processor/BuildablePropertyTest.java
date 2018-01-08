@@ -25,7 +25,6 @@ import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -52,13 +51,40 @@ import javax.tools.JavaFileObject;
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class BuildablePropertyTest {
 
+  public enum BuildableType {
+    /** Use FreeBuilder to generate the buildable type. This tests we pick up the annotation. */
+    FREEBUILDER("FreeBuilder-annotated", "new DataType.Item.Builder()"),
+    /** Use a buildable type with a Proto-like API. */
+    PROTO_LIKE("Proto-like", "DataType.Item.newBuilder()"),
+    /** Use a type with a FreeBuilder-like API. This tests we work on pre-generated code. */
+    FREEBUILDER_LIKE("FreeBuilder-like", "new DataType.Item.Builder()");
+
+    private String displayName;
+    private final String newBuilder;
+
+    BuildableType(String displayName, String newBuilder) {
+      this.displayName = displayName;
+      this.newBuilder = newBuilder;
+    }
+
+    public String newBuilder() {
+      return newBuilder;
+    }
+
+    @Override
+    public String toString() {
+      return displayName;
+    }
+  }
+
   @SuppressWarnings("unchecked")
-  @Parameters(name = "{0}, {1}")
+  @Parameters(name = "{0}, {1}, {2}")
   public static Iterable<Object[]> parameters() {
+    List<BuildableType> buildableTypes = Arrays.asList(BuildableType.values());
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
-        .cartesianProduct(conventions, features)
+        .cartesianProduct(buildableTypes, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();
@@ -67,24 +93,25 @@ public class BuildablePropertyTest {
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
+  private final BuildableType buildableType;
   private final NamingConvention convention;
   private final FeatureSet features;
 
   private final JavaFileObject noDefaultsType;
   private final JavaFileObject defaultsType;
   private final JavaFileObject nestedListType;
-  private final JavaFileObject protolikeType;
-  private final JavaFileObject freeBuilderLikeType;
 
-  public BuildablePropertyTest(NamingConvention convention, FeatureSet features) {
+  public BuildablePropertyTest(
+      BuildableType buildableType,
+      NamingConvention convention,
+      FeatureSet features) {
+    this.buildableType = buildableType;
     this.convention = convention;
     this.features = features;
 
     noDefaultsType = generateBuildableType(convention, false);
     defaultsType = generateBuildableType(convention, true);
-    nestedListType = generateNestedListType();
-    protolikeType = generateProtoLikeType();
-    freeBuilderLikeType = generateFreeBuilderLikeType();
+    nestedListType = generateNestedListType(buildableType);
   }
 
   private static JavaFileObject generateBuildableType(
@@ -118,132 +145,137 @@ public class BuildablePropertyTest {
         .build();
   }
 
-  private static JavaFileObject generateNestedListType() {
-    return new SourceBuilder()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  @%s", FreeBuilder.class)
-        .addLine("  interface Item {")
-        .addLine("    %s<String> names();", List.class)
-        .addLine("")
-        .addLine("    class Builder extends DataType_Item_Builder {}")
-        .addLine("  }")
-        .addLine("")
-        .addLine("  Item item();")
-        .addLine("")
-        .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
-  }
+  private static JavaFileObject generateNestedListType(BuildableType buildableType) {
+    switch (buildableType) {
+      case FREEBUILDER:
+        return new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s", FreeBuilder.class)
+            .addLine("  interface Item {")
+            .addLine("    %s<String> names();", List.class)
+            .addLine("")
+            .addLine("    class Builder extends DataType_Item_Builder {}")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  Item item();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build();
 
-  private static JavaFileObject generateProtoLikeType() {
-    return new SourceBuilder()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  class Item {")
-        .addLine("    public %s<String> names() {", List.class)
-        .addLine("      return names;")
-        .addLine("    }")
-        .addLine("")
-        .addLine("    public static Builder newBuilder() {")
-        .addLine("      return new Builder();")
-        .addLine("    }")
-        .addLine("")
-        .addLine("    public static class Builder {")
-        .addLine("")
-        .addLine("      private final %1$s<String> names = new %1$s<String>();", ArrayList.class)
-        .addLine("")
-        .addLine("      public Builder addNames(String... names) {")
-        .addLine("        for (String name : names) {")
-        .addLine("          this.names.add(name);")
-        .addLine("        }")
-        .addLine("        return this;")
-        .addLine("      }")
-        .addLine("")
-        .addLine("      public Builder clear() {")
-        .addLine("        names.clear();")
-        .addLine("        return this;")
-        .addLine("      }")
-        .addLine("")
-        .addLine("      public Builder mergeFrom(Item item) {")
-        .addLine("        names.addAll(item.names);")
-        .addLine("        return this;")
-        .addLine("      }")
-        .addLine("")
-        .addLine("      public Item build() {")
-        .addLine("        return new Item(names);")
-        .addLine("      }")
-        .addLine("")
-        .addLine("      public Item buildPartial() {")
-        .addLine("        return new Item(names);")
-        .addLine("      }")
-        .addLine("")
-        .addLine("      private Builder() {}")
-        .addLine("    }")
-        .addLine("")
-        .addLine("    private final %s<String> names;", List.class)
-        .addLine("")
-        .addLine("    private Item(%s<String> names) {", List.class)
-        .addLine("      this.names = %s.unmodifiableList(new %s<String>(names));",
-            Collections.class, ArrayList.class)
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("")
-        .addLine("  Item item();")
-        .addLine("")
-        .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
-  }
+      case PROTO_LIKE:
+        return new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  class Item {")
+            .addLine("    public %s<String> names() {", List.class)
+            .addLine("      return names;")
+            .addLine("    }")
+            .addLine("")
+            .addLine("    public static Builder newBuilder() {")
+            .addLine("      return new Builder();")
+            .addLine("    }")
+            .addLine("")
+            .addLine("    public static class Builder {")
+            .addLine("")
+            .addLine("      private final %1$s<String> names = new %1$s<String>();",
+                ArrayList.class)
+            .addLine("")
+            .addLine("      public Builder addNames(String... names) {")
+            .addLine("        for (String name : names) {")
+            .addLine("          this.names.add(name);")
+            .addLine("        }")
+            .addLine("        return this;")
+            .addLine("      }")
+            .addLine("")
+            .addLine("      public Builder clear() {")
+            .addLine("        names.clear();")
+            .addLine("        return this;")
+            .addLine("      }")
+            .addLine("")
+            .addLine("      public Builder mergeFrom(Item item) {")
+            .addLine("        names.addAll(item.names);")
+            .addLine("        return this;")
+            .addLine("      }")
+            .addLine("")
+            .addLine("      public Item build() {")
+            .addLine("        return new Item(names);")
+            .addLine("      }")
+            .addLine("")
+            .addLine("      public Item buildPartial() {")
+            .addLine("        return new Item(names);")
+            .addLine("      }")
+            .addLine("")
+            .addLine("      private Builder() {}")
+            .addLine("    }")
+            .addLine("")
+            .addLine("    private final %s<String> names;", List.class)
+            .addLine("")
+            .addLine("    private Item(%s<String> names) {", List.class)
+            .addLine("      this.names = %s.unmodifiableList(new %s<String>(names));",
+                Collections.class, ArrayList.class)
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  Item item();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build();
 
-  private static JavaFileObject generateFreeBuilderLikeType() {
-    return new SourceBuilder()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  interface Item {")
-        .addLine("    %s<String> names();", List.class)
-        .addLine("    class Builder extends DataType_Item_Builder {}")
-        .addLine("  }")
-        .addLine("  Item item();")
-        .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .addLine("")
-        .addLine("class DataType_Item_Builder {")
-        .addLine("  private final %s<String> names = new %s<String>();",
-            List.class, ArrayList.class)
-        .addLine("  public DataType.Item.Builder addNames(String... names) {")
-        .addLine("    for (String name : names) {")
-        .addLine("      this.names.add(name);")
-        .addLine("    }")
-        .addLine("    return (DataType.Item.Builder) this;")
-        .addLine("  }")
-        .addLine("  public DataType.Item.Builder clear() {")
-        .addLine("    names.clear();")
-        .addLine("    return (DataType.Item.Builder) this;")
-        .addLine("  }")
-        .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item.Builder builder) {")
-        .addLine("    names.addAll(((DataType_Item_Builder) builder).names);")
-        .addLine("    return (DataType.Item.Builder) this;")
-        .addLine("  }")
-        .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item item) {")
-        .addLine("    names.addAll(item.names());")
-        .addLine("    return (DataType.Item.Builder) this;")
-        .addLine("  }")
-        .addLine("  public DataType.Item build() { return new Value(this); }")
-        .addLine("  public DataType.Item buildPartial() { return new Value(this); }")
-        .addLine("  private class Value implements DataType.Item {")
-        .addLine("    private %s<String> names;", List.class)
-        .addLine("    Value(DataType_Item_Builder builder) {")
-        .addLine("      names = %s.unmodifiableList(new %s<String>(builder.names));",
-            Collections.class, ArrayList.class)
-        .addLine("    }")
-        .addLine("    @%s public %s<String> names() { return names; }", Override.class, List.class)
-        .addLine("  }")
-        .addLine("}")
-        .build();
+      case FREEBUILDER_LIKE:
+        return new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  interface Item {")
+            .addLine("    %s<String> names();", List.class)
+            .addLine("    class Builder extends DataType_Item_Builder {}")
+            .addLine("  }")
+            .addLine("  Item item();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .addLine("")
+            .addLine("class DataType_Item_Builder {")
+            .addLine("  private final %s<String> names = new %s<String>();",
+                List.class, ArrayList.class)
+            .addLine("  public DataType.Item.Builder addNames(String... names) {")
+            .addLine("    for (String name : names) {")
+            .addLine("      this.names.add(name);")
+            .addLine("    }")
+            .addLine("    return (DataType.Item.Builder) this;")
+            .addLine("  }")
+            .addLine("  public DataType.Item.Builder clear() {")
+            .addLine("    names.clear();")
+            .addLine("    return (DataType.Item.Builder) this;")
+            .addLine("  }")
+            .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item.Builder builder) {")
+            .addLine("    names.addAll(((DataType_Item_Builder) builder).names);")
+            .addLine("    return (DataType.Item.Builder) this;")
+            .addLine("  }")
+            .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item item) {")
+            .addLine("    names.addAll(item.names());")
+            .addLine("    return (DataType.Item.Builder) this;")
+            .addLine("  }")
+            .addLine("  public DataType.Item build() { return new Value(this); }")
+            .addLine("  public DataType.Item buildPartial() { return new Value(this); }")
+            .addLine("  private class Value implements DataType.Item {")
+            .addLine("    private %s<String> names;", List.class)
+            .addLine("    Value(DataType_Item_Builder builder) {")
+            .addLine("      names = %s.unmodifiableList(new %s<String>(builder.names));",
+                Collections.class, ArrayList.class)
+            .addLine("    }")
+            .addLine("    @%s public %s<String> names() { return names; }",
+                Override.class, List.class)
+            .addLine("  }")
+            .addLine("}")
+            .build();
+    }
+
+    throw new AssertionError("Unrecognized buildable type " + buildableType.name());
   }
 
   @Test
@@ -340,54 +372,12 @@ public class BuildablePropertyTest {
         .with(nestedListType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
+            .addLine("builder.item(%s", buildableType.newBuilder())
             .addLine("    .addNames(\"Foo\", \"Bar\")")
             .addLine("    .build());")
             .addLine("assertThat(builder.build().item().names())")
             .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
-            .addLine("    .addNames(\"Cheese\", \"Ham\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testSetToValue_protolike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(protolikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(DataType.Item.newBuilder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.item(DataType.Item.newBuilder()")
-            .addLine("    .addNames(\"Cheese\", \"Ham\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testSetToValue_freebuilderlike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(freeBuilderLikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
+            .addLine("builder.item(%s", buildableType.newBuilder())
             .addLine("    .addNames(\"Cheese\", \"Ham\")")
             .addLine("    .build());")
             .addLine("assertThat(builder.build().item().names())")
@@ -429,49 +419,11 @@ public class BuildablePropertyTest {
         .with(nestedListType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
+            .addLine("builder.item(%s", buildableType.newBuilder())
             .addLine("    .addNames(\"Foo\", \"Bar\"));")
             .addLine("assertThat(builder.build().item().names())")
             .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
-            .addLine("    .addNames(\"Cheese\", \"Ham\"));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testSetToBuilder_protolike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(protolikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(DataType.Item.newBuilder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\"));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.item(DataType.Item.newBuilder()")
-            .addLine("    .addNames(\"Cheese\", \"Ham\"));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testSetToBuilder_freebuilderlike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(freeBuilderLikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\"));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
+            .addLine("builder.item(%s", buildableType.newBuilder())
             .addLine("    .addNames(\"Cheese\", \"Ham\"));")
             .addLine("assertThat(builder.build().item().names())")
             .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
@@ -536,23 +488,10 @@ public class BuildablePropertyTest {
   }
 
   @Test
-  public void testGetBuilder_protolike() {
+  public void testGetBuilder_nestedList() {
     behaviorTester
         .with(new Processor(features))
-        .with(protolikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.itemBuilder().addNames(\"Foo\");")
-            .addLine("assertThat(builder.build().item().names()).containsExactly(\"Foo\");")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testGetBuilder_freebuilderlike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(freeBuilderLikeType)
+        .with(nestedListType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("builder.itemBuilder().addNames(\"Foo\");")
@@ -610,57 +549,13 @@ public class BuildablePropertyTest {
         .with(nestedListType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
+            .addLine("builder.item(%s", buildableType.newBuilder())
             .addLine("    .addNames(\"Foo\", \"Bar\")")
             .addLine("    .build());")
             .addLine("assertThat(builder.build().item().names())")
             .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
             .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .item(new DataType.Item.Builder()")
-            .addLine("        .addNames(\"Cheese\", \"Ham\")")
-            .addLine("        .build()));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFromBuilder_protolike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(protolikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(DataType.Item.newBuilder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .item(DataType.Item.newBuilder()")
-            .addLine("        .addNames(\"Cheese\", \"Ham\")")
-            .addLine("        .build()));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFromBuilder_freebuilderlike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(freeBuilderLikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .item(new DataType.Item.Builder()")
+            .addLine("    .item(%s", buildableType.newBuilder())
             .addLine("        .addNames(\"Cheese\", \"Ham\")")
             .addLine("        .build()));")
             .addLine("assertThat(builder.build().item().names())")
@@ -721,36 +616,13 @@ public class BuildablePropertyTest {
         .with(nestedListType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
+            .addLine("builder.item(%s", buildableType.newBuilder())
             .addLine("    .addNames(\"Foo\", \"Bar\")")
             .addLine("    .build());")
             .addLine("assertThat(builder.build().item().names())")
             .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
             .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .item(new DataType.Item.Builder()")
-            .addLine("        .addNames(\"Cheese\", \"Ham\")")
-            .addLine("        .build())")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testMergeFromValue_protolike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(protolikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(DataType.Item.newBuilder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .item(DataType.Item.newBuilder()")
+            .addLine("    .item(%s", buildableType.newBuilder())
             .addLine("        .addNames(\"Cheese\", \"Ham\")")
             .addLine("        .build())")
             .addLine("    .build());")
@@ -860,59 +732,13 @@ public class BuildablePropertyTest {
         .with(nestedListType)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
+            .addLine("builder.item(%s", buildableType.newBuilder())
             .addLine("    .addNames(\"Foo\", \"Bar\")")
             .addLine("    .build());")
             .addLine("assertThat(builder.build().item().names())")
             .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
             .addLine("builder.clear().mergeFrom(new DataType.Builder()")
-            .addLine("    .item(new DataType.Item.Builder()")
-            .addLine("        .addNames(\"Cheese\", \"Ham\")")
-            .addLine("        .build())")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testBuilderClear_protolike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(protolikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(DataType.Item.newBuilder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.clear().mergeFrom(new DataType.Builder()")
-            .addLine("    .item(DataType.Item.newBuilder()")
-            .addLine("        .addNames(\"Cheese\", \"Ham\")")
-            .addLine("        .build())")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testBuilderClear_freebuilderlike() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(freeBuilderLikeType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(new DataType.Item.Builder()")
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.clear().mergeFrom(new DataType.Builder()")
-            .addLine("    .item(new DataType.Item.Builder()")
+            .addLine("    .item(%s", buildableType.newBuilder())
             .addLine("        .addNames(\"Cheese\", \"Ham\")")
             .addLine("        .build())")
             .addLine("    .build());")
