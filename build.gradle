@@ -192,8 +192,7 @@ afterEvaluate {
   tasks.withType(JavaCompile) {
     if (targetCompatibility == "1.9") {
       options.with {
-        fork = true
-        forkOptions.executable = java9.javac
+        fork javaHome: file(java9Home)
       }
     }
   }
