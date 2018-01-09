@@ -255,7 +255,7 @@ task vanillaTest {
 
   def test = task("vanilla${jdk}Test", type: Test) {
     vanillaTest.dependsOn it
-    testClassesDir = sourceSets["vanilla${jdk}Test"].output.classesDir
+    testClassesDirs = sourceSets["vanilla${jdk}Test"].output.classesDirs
     classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
     if (jdk == 9) {
       executable java9.java
@@ -348,7 +348,7 @@ task gwtTest(type: Test) {
   group = 'Verification'
   check.dependsOn it
   dependsOn compileGwtToJs
-  testClassesDir = sourceSets.gwtTest.output.classesDir
+  testClassesDirs = sourceSets.gwtTest.output.classesDirs
   classpath = sourceSets.gwtTest.runtimeClasspath
   reports {
     html {
@@ -415,7 +415,7 @@ task noGuavaTest {
 
   def test = task("noGuava${jdk}Test", type: Test) {
     noGuavaTest.dependsOn it
-    testClassesDir = sourceSets["noGuava${jdk}Test"].output.classesDir
+    testClassesDirs = sourceSets["noGuava${jdk}Test"].output.classesDirs
     classpath = sourceSets["noGuava${jdk}Test"].runtimeClasspath
     reports {
       html {
@@ -461,7 +461,7 @@ task noGuavaJ8Test(type: Test) {
   description 'Runs the no-guava-j8 integration tests.'
   group = 'Verification'
   check.dependsOn it
-  testClassesDir = sourceSets.noGuavaJ8Test.output.classesDir
+  testClassesDirs = sourceSets.noGuavaJ8Test.output.classesDirs
   classpath = sourceSets.noGuavaJ8Test.runtimeClasspath
   reports {
     html {
@@ -507,7 +507,7 @@ task("lambdaTest", type: Test) {
   description 'Runs the lambda integration tests.'
   group = 'Verification'
   check.dependsOn it
-  testClassesDir = sourceSets["lambdaTest"].output.classesDir
+  testClassesDirs = sourceSets["lambdaTest"].output.classesDirs
   classpath = sourceSets["lambdaTest"].runtimeClasspath
   reports {
     html {
