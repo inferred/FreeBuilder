@@ -82,7 +82,7 @@ check.dependsOn javadoc
 //// Checkstyle //////////////////////////////////////////////////
 checkstyle {
   toolVersion = "6.19"
-  configProperties['config_loc'] = "$rootDir/config/checkstyle"
+  configProperties.configDir = "$rootDir/config/checkstyle"
 }
 
 tasks.withType(Checkstyle).each { checkstyleTask ->
