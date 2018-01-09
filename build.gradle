@@ -16,6 +16,8 @@ plugins {
   id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
+apply from: "gradle/travis-keep-alive.gradle"
+
 repositories {
   mavenCentral()
 }
