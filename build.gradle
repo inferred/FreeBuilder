@@ -196,11 +196,6 @@ afterEvaluate {
       }
     }
   }
-  tasks.withType(Test) {
-    if (executable == java9.java) {
-      jvmArgs += ['--add-opens', 'java.base/java.lang=ALL-UNNAMED']
-    }
-  }
 }
 
 //// Vanilla integration tests ///////////////////////////////////
