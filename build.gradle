@@ -145,7 +145,7 @@ task shadowTest {
   dependsOn shadowJar
   def expected = new File("$projectDir/jar-footprint.txt")
   def report = new File("$reportsDir/shadowJarFootprint.txt")
-  inputs.file shadowJar.outputs
+  inputs.files shadowJar.outputs
   inputs.file expected
   outputs.file report
   doFirst {
