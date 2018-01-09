@@ -78,6 +78,9 @@ test {
   }
 }
 check.dependsOn javadoc
+tasks.withType(Javadoc) {
+  options.addStringOption 'Xdoclint:-missing', '-quiet'
+}
 
 //// Checkstyle //////////////////////////////////////////////////
 checkstyle {
