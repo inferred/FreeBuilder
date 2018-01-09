@@ -262,7 +262,7 @@ task vanillaTest {
     }
     reports {
       html {
-        destination "$reportsDir/vanilla${jdk}"
+        destination file("$reportsDir/vanilla${jdk}")
       }
     }
   }
@@ -352,7 +352,7 @@ task gwtTest(type: Test) {
   classpath = sourceSets.gwtTest.runtimeClasspath
   reports {
     html {
-      destination "$reportsDir/gwt"
+      destination file("$reportsDir/gwt")
     }
   }
   testLogging.showStandardStreams = true
@@ -419,7 +419,7 @@ task noGuavaTest {
     classpath = sourceSets["noGuava${jdk}Test"].runtimeClasspath
     reports {
       html {
-        destination "$reportsDir/noGuava${jdk}"
+        destination file("$reportsDir/noGuava${jdk}")
       }
     }
   }
@@ -465,7 +465,7 @@ task noGuavaJ8Test(type: Test) {
   classpath = sourceSets.noGuavaJ8Test.runtimeClasspath
   reports {
     html {
-      destination "$reportsDir/noGuavaJ8"
+      destination file("$reportsDir/noGuavaJ8")
     }
   }
 }
@@ -511,7 +511,7 @@ task("lambdaTest", type: Test) {
   classpath = sourceSets["lambdaTest"].runtimeClasspath
   reports {
     html {
-      destination "$reportsDir/lambda"
+      destination file("$reportsDir/lambda")
     }
   }
 }
