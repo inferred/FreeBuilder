@@ -13,8 +13,10 @@ plugins {
   id 'eclipse'
   id 'java'
   id 'com.bmuschko.nexus' version '2.3.1'
-  id 'com.github.johnrengelman.shadow' version '1.2.3'
+  id 'com.github.johnrengelman.shadow' version '2.0.2'
 }
+
+apply from: "gradle/travis-keep-alive.gradle"
 
 repositories {
   mavenCentral()
@@ -76,11 +78,14 @@ test {
   }
 }
 check.dependsOn javadoc
+tasks.withType(Javadoc) {
+  options.addStringOption 'Xdoclint:-missing', '-quiet'
+}
 
 //// Checkstyle //////////////////////////////////////////////////
 checkstyle {
   toolVersion = "6.19"
-  configProperties['config_loc'] = "$rootDir/config/checkstyle"
+  configProperties.configDir = "$rootDir/config/checkstyle"
 }
 
 tasks.withType(Checkstyle).each { checkstyleTask ->
@@ -143,7 +148,7 @@ task shadowTest {
   dependsOn shadowJar
   def expected = new File("$projectDir/jar-footprint.txt")
   def report = new File("$reportsDir/shadowJarFootprint.txt")
-  inputs.file shadowJar.outputs
+  inputs.files shadowJar.outputs
   inputs.file expected
   outputs.file report
   doFirst {
@@ -190,14 +195,8 @@ afterEvaluate {
   tasks.withType(JavaCompile) {
     if (targetCompatibility == "1.9") {
       options.with {
-        fork = true
-        forkOptions.executable = java9.javac
+        fork javaHome: file(java9Home)
       }
-    }
-  }
-  tasks.withType(Test) {
-    if (executable == java9.java) {
-      jvmArgs += ['--add-opens', 'java.base/java.lang=ALL-UNNAMED']
     }
   }
 }
@@ -253,14 +252,14 @@ task vanillaTest {
 
   def test = task("vanilla${jdk}Test", type: Test) {
     vanillaTest.dependsOn it
-    testClassesDir = sourceSets["vanilla${jdk}Test"].output.classesDir
+    testClassesDirs = sourceSets["vanilla${jdk}Test"].output.classesDirs
     classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
     if (jdk == 9) {
       executable java9.java
     }
     reports {
       html {
-        destination "$reportsDir/vanilla${jdk}"
+        destination file("$reportsDir/vanilla${jdk}")
       }
     }
   }
@@ -346,11 +345,11 @@ task gwtTest(type: Test) {
   group = 'Verification'
   check.dependsOn it
   dependsOn compileGwtToJs
-  testClassesDir = sourceSets.gwtTest.output.classesDir
+  testClassesDirs = sourceSets.gwtTest.output.classesDirs
   classpath = sourceSets.gwtTest.runtimeClasspath
   reports {
     html {
-      destination "$reportsDir/gwt"
+      destination file("$reportsDir/gwt")
     }
   }
   testLogging.showStandardStreams = true
@@ -413,11 +412,11 @@ task noGuavaTest {
 
   def test = task("noGuava${jdk}Test", type: Test) {
     noGuavaTest.dependsOn it
-    testClassesDir = sourceSets["noGuava${jdk}Test"].output.classesDir
+    testClassesDirs = sourceSets["noGuava${jdk}Test"].output.classesDirs
     classpath = sourceSets["noGuava${jdk}Test"].runtimeClasspath
     reports {
       html {
-        destination "$reportsDir/noGuava${jdk}"
+        destination file("$reportsDir/noGuava${jdk}")
       }
     }
   }
@@ -459,11 +458,11 @@ task noGuavaJ8Test(type: Test) {
   description 'Runs the no-guava-j8 integration tests.'
   group = 'Verification'
   check.dependsOn it
-  testClassesDir = sourceSets.noGuavaJ8Test.output.classesDir
+  testClassesDirs = sourceSets.noGuavaJ8Test.output.classesDirs
   classpath = sourceSets.noGuavaJ8Test.runtimeClasspath
   reports {
     html {
-      destination "$reportsDir/noGuavaJ8"
+      destination file("$reportsDir/noGuavaJ8")
     }
   }
 }
@@ -505,11 +504,11 @@ task("lambdaTest", type: Test) {
   description 'Runs the lambda integration tests.'
   group = 'Verification'
   check.dependsOn it
-  testClassesDir = sourceSets["lambdaTest"].output.classesDir
+  testClassesDirs = sourceSets["lambdaTest"].output.classesDirs
   classpath = sourceSets["lambdaTest"].runtimeClasspath
   reports {
     html {
-      destination "$reportsDir/lambda"
+      destination file("$reportsDir/lambda")
     }
   }
 }
