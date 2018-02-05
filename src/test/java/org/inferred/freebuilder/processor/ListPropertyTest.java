@@ -93,7 +93,7 @@ public class ListPropertyTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<%s> %s;", List.class, elements.type(), convention.getter())
+        .addLine("  public abstract %s<%s> %s;", List.class, elements.type(), convention.get())
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {}")
         .addLine("  public abstract Builder toBuilder();")
@@ -104,7 +104,7 @@ public class ListPropertyTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<%s> %s;", List.class, elements.type(), convention.getter())
+        .addLine("  public abstract %s<%s> %s;", List.class, elements.type(), convention.get())
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {")
         .addLine("    @Override public Builder addItems(%s element) {", elements.unwrappedType())
@@ -130,7 +130,7 @@ public class ListPropertyTest {
         .with(listPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(value.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -146,7 +146,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -174,7 +174,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -203,7 +203,7 @@ public class ListPropertyTest {
             .addLine("    .addAllItems(Stream.of(%s).spliterator())", elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -234,7 +234,7 @@ public class ListPropertyTest {
             .addLine("    .addAllItems(Stream.of(%s))", elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -265,7 +265,7 @@ public class ListPropertyTest {
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 2))", IntStream.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(1, 2).inOrder();", convention.getter())
+            .addLine("assertThat(value.%s).containsExactly(1, 2).inOrder();", convention.get())
             .build())
         .runTest();
   }
@@ -280,7 +280,7 @@ public class ListPropertyTest {
             .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -296,7 +296,7 @@ public class ListPropertyTest {
                 DodgySingleIterable.class, elements.type(), elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -332,7 +332,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(2, 3))
+                convention.get(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -348,7 +348,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(2, 3))
+                convention.get(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -361,7 +361,7 @@ public class ListPropertyTest {
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("%s<%s> itemsView = builder.%s;",
-                List.class, elements.type(), convention.getter())
+                List.class, elements.type(), convention.get())
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.addItems(%s);", elements.examples(0, 1))
             .addLine("assertThat(itemsView).containsExactly(%s).inOrder();",
@@ -384,7 +384,7 @@ public class ListPropertyTest {
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("%s<%s> itemsView = builder.%s;",
-                List.class, elements.type(), convention.getter())
+                List.class, elements.type(), convention.get())
             .addLine("itemsView.add(%s);", elements.example(0))
             .build())
         .runTest();
@@ -402,7 +402,7 @@ public class ListPropertyTest {
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(value);")
             .addLine("assertThat(builder.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -418,7 +418,7 @@ public class ListPropertyTest {
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(template);")
             .addLine("assertThat(builder.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -435,7 +435,7 @@ public class ListPropertyTest {
             .addLine("DataType value2 = value1.toBuilder()")
             .addLine("    .addItems(%s)", elements.example(2))
             .addLine("    .build();")
-            .addLine("assertThat(value2.%s)", convention.getter())
+            .addLine("assertThat(value2.%s)", convention.get())
             .addLine("    .containsExactly(%s)", elements.examples(0, 1, 2))
             .addLine("    .inOrder();")
             .build())
@@ -454,7 +454,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(2, 3))
+                convention.get(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -468,7 +468,7 @@ public class ListPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<%s> %s;",
-                List.class, elements.type(), convention.getter())
+                List.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    private Builder() { }")
@@ -484,7 +484,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(2, 3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(2, 3))
+                convention.get(), elements.examples(2, 3))
             .build())
         .runTest();
   }
@@ -529,7 +529,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.example(0))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(value.%1$s).isSameAs(copy.%1$s);", convention.getter())
+            .addLine("assertThat(value.%1$s).isSameAs(copy.%1$s);", convention.get())
             .build())
         .runTest();
   }
@@ -547,7 +547,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.get())
             .build())
         .runTest();
   }
@@ -565,7 +565,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = new DataType.Builder().mergeFrom(value).build();")
-            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.get())
             .build())
         .runTest();
   }
@@ -586,7 +586,7 @@ public class ListPropertyTest {
             .addLine("    .from(value)")
             .addLine("    .mergeFrom(new DataType.Builder())")
             .addLine("    .build();")
-            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.get())
             .build())
         .runTest();
   }
@@ -604,7 +604,7 @@ public class ListPropertyTest {
             .addLine("    .from(value)")
             .addLine("    .clearItems()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(copy.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -622,7 +622,7 @@ public class ListPropertyTest {
             .addLine("    .from(value)")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(copy.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -637,7 +637,7 @@ public class ListPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<%s> %s;",
-                Collection.class, elements.type(), convention.getter())
+                Collection.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -648,7 +648,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -662,7 +662,7 @@ public class ListPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<? extends %s> %s;",
-                Collection.class, elements.supertype(), convention.getter())
+                Collection.class, elements.supertype(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -673,7 +673,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.supertypeExample())
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s, %s).inOrder();",
-                convention.getter(), elements.example(0), elements.supertypeExample())
+                convention.get(), elements.example(0), elements.supertypeExample())
             .build())
         .runTest();
   }
@@ -689,7 +689,7 @@ public class ListPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<E> {")
-            .addLine("  public abstract %s<E> %s;", List.class, convention.getter())
+            .addLine("  public abstract %s<E> %s;", List.class, convention.get())
             .addLine("")
             .addLine("  public static class Builder<E> extends DataType_Builder<E> {}")
             .addLine("}")
@@ -700,7 +700,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -713,7 +713,7 @@ public class ListPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<E> {")
-            .addLine("  public abstract %s<? extends E> %s;", List.class, convention.getter())
+            .addLine("  public abstract %s<? extends E> %s;", List.class, convention.get())
             .addLine("")
             .addLine("  public static class Builder<E> extends DataType_Builder<E> {}")
             .addLine("}")
@@ -724,7 +724,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.supertypeExample())
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s, %s).inOrder();",
-                convention.getter(), elements.example(0), elements.supertypeExample())
+                convention.get(), elements.example(0), elements.supertypeExample())
             .build())
         .runTest();
   }
@@ -739,7 +739,7 @@ public class ListPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<%s> %s;",
-                ImmutableList.class, elements.type(), convention.getter())
+                ImmutableList.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -750,7 +750,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -765,7 +765,7 @@ public class ListPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<? extends %s> %s;",
-                ImmutableList.class, elements.supertype(), convention.getter())
+                ImmutableList.class, elements.supertype(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -776,7 +776,7 @@ public class ListPropertyTest {
             .addLine("    .addItems(%s)", elements.supertypeExample())
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s, %s).inOrder();",
-                convention.getter(), elements.example(0), elements.supertypeExample())
+                convention.get(), elements.example(0), elements.supertypeExample())
             .build())
         .runTest();
   }
@@ -847,7 +847,7 @@ public class ListPropertyTest {
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public interface DataType {")
             .addLine("  @JsonProperty(\"stuff\") %s<%s> %s;",
-                List.class, elements.type(), convention.getter())
+                List.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -861,7 +861,7 @@ public class ListPropertyTest {
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
             .addLine("assertThat(clone.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -885,7 +885,7 @@ public class ListPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<%s> %s;",
-                List.class, elements.type(), convention.getter("elements"))
+                List.class, elements.type(), convention.get("elements"))
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -895,7 +895,7 @@ public class ListPropertyTest {
             .addLine("    .addElements(%s)", elements.examples(0, 1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter("elements"), elements.examples(0, 1))
+                convention.get("elements"), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -910,7 +910,7 @@ public class ListPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %1$s<%1$s<%2$s>> %3$s;",
-                List.class, elements.type(), convention.getter())
+                List.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -933,7 +933,7 @@ public class ListPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
-            .addLine("  public abstract %s<T> %s;", List.class, convention.getter())
+            .addLine("  public abstract %s<T> %s;", List.class, convention.get())
             .addLine("")
             .addLine("  public static class Builder<T> extends DataType_Builder<T> {}")
             .addLine("}")
@@ -957,7 +957,7 @@ public class ListPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %1$s<%1$s<%2$s>> %3$s;",
-                List.class, elements.type(), convention.getter())
+                List.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @%s", Override.class)
@@ -984,7 +984,7 @@ public class ListPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
-            .addLine("  public abstract %s<T> %s;", List.class, convention.getter())
+            .addLine("  public abstract %s<T> %s;", List.class, convention.get())
             .addLine("")
             .addLine("  public static class Builder<T> extends DataType_Builder<T> {")
             .addLine("    @%s", Override.class)

@@ -89,7 +89,7 @@ public class MapMutateMethodTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
-        .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.getter())
+        .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.get())
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (checked) {
@@ -130,7 +130,7 @@ public class MapMutateMethodTest {
                 keys.example(1), values.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -180,7 +180,7 @@ public class MapMutateMethodTest {
             .addLine("        i.remove();")
             .addLine("    })")
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.getter(), exampleMap(1, 1))
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(1, 1))
             .build())
         .runTest();
   }
@@ -235,7 +235,7 @@ public class MapMutateMethodTest {
             .addLine("    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s))",
                 values.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.getter(), exampleMap(0, 1))
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(0, 1))
             .build())
         .runTest();
   }
@@ -320,7 +320,7 @@ public class MapMutateMethodTest {
             .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
             .addLine("    .mutateItems(items -> items.remove(%s))", keys.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.getter(), exampleMap(1, 1))
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(1, 1))
             .build())
         .runTest();
   }
@@ -334,7 +334,7 @@ public class MapMutateMethodTest {
             .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
             .addLine("    .mutateItems(%s::clear)", Map.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(value.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }

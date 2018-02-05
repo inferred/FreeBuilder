@@ -91,7 +91,7 @@ public class SetMutateMethodTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
-        .addLine("  %s<%s> %s;", set.type(), elements.type(), convention.getter())
+        .addLine("  %s<%s> %s;", set.type(), elements.type(), convention.get())
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (checked) {
@@ -126,7 +126,7 @@ public class SetMutateMethodTest {
             .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -189,7 +189,7 @@ public class SetMutateMethodTest {
             .addLine("    .mutateItems(items -> items.remove(%s))", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s);",
-                convention.getter(), elements.example(1))
+                convention.get(), elements.example(1))
             .build())
         .runTest();
   }
@@ -209,7 +209,7 @@ public class SetMutateMethodTest {
             .addLine("      }")
             .addLine("    })")
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s);", convention.getter(),
+            .addLine("assertThat(value.%s).containsExactly(%s);", convention.get(),
                 elements.example(1))
             .build())
         .runTest();
@@ -223,7 +223,7 @@ public class SetMutateMethodTest {
             .addLine("    .addItems(%s)", elements.examples(0, 1))
             .addLine("    .mutateItems(items -> items.clear())")
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(value.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -254,7 +254,7 @@ public class SetMutateMethodTest {
             .addLine("    .mutateItems(items -> items.remove(%s))", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(copy.%s).containsExactly(%s);",
-                convention.getter(), elements.example(1))
+                convention.get(), elements.example(1))
             .build())
         .runTest();
   }
