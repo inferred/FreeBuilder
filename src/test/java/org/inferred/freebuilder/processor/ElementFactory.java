@@ -26,7 +26,8 @@ public enum ElementFactory {
       String.class,
       null,
       CharSequence.class,
-      "!element.isEmpty()",
+      true,
+      "!%s.isEmpty()",
       "!element.toString().isEmpty()",
       "Cannot add empty string",
       "",
@@ -42,7 +43,8 @@ public enum ElementFactory {
       Integer.class,
       null,
       Number.class,
-      "element >= 0",
+      true,
+      "%s >= 0",
       "element.intValue() >= 0",
       "Items must be non-negative",
       -4,
@@ -58,7 +60,8 @@ public enum ElementFactory {
       NonComparable.class,
       AbstractNonComparable.ReverseIdComparator.class,
       AbstractNonComparable.class,
-      "element.id() >= 0",
+      false,
+      "%s.id() >= 0",
       "element.id() >= 0",
       "ID must be non-negative",
       new NonComparable(-2, "broken"),
@@ -74,6 +77,7 @@ public enum ElementFactory {
   private final Class<?> type;
   @Nullable private final Class<?> comparator;
   private Class<?> supertype;
+  private final boolean serializableAsMapKey;
   private final String validation;
   private final String supertypeValidation;
   private final String errorMessage;
@@ -85,6 +89,7 @@ public enum ElementFactory {
       Class<?> type,
       @Nullable Class<? extends Comparator<?>> comparator,
       Class<?> supertype,
+      boolean serializableAsMapKey,
       String validation,
       String supertypeValidation,
       String errorMessage,
@@ -94,6 +99,7 @@ public enum ElementFactory {
     this.type = type;
     this.comparator = comparator;
     this.supertype = supertype;
+    this.serializableAsMapKey = serializableAsMapKey;
     this.validation = validation;
     this.supertypeValidation = supertypeValidation;
     this.errorMessage = errorMessage;
@@ -119,12 +125,20 @@ public enum ElementFactory {
     return supertype;
   }
 
+  public boolean isSerializableAsMapKey() {
+    return serializableAsMapKey;
+  }
+
   public boolean canRepresentSingleNullElement() {
     return !Primitives.isWrapperType(type);
   }
 
   public String validation() {
-    return validation;
+    return validation("element");
+  }
+
+  public String validation(String variableName) {
+    return String.format(validation, variableName);
   }
 
   public String supertypeValidation() {

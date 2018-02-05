@@ -15,24 +15,29 @@
  */
 package org.inferred.freebuilder.processor;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.testtype.NonComparable;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -43,88 +48,104 @@ import javax.tools.JavaFileObject;
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class MapMutateMethodTest {
 
-  @Parameters(name = "{0}")
-  public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_LAMBDAS;
+  @SuppressWarnings("unchecked")
+  @Parameters(name = "Map<{0}, {1}>, checked={2}, {3}, {4}")
+  public static Iterable<Object[]> parameters() {
+    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
+    List<Boolean> checked = ImmutableList.of(false, true);
+    List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
+    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    return () -> Lists
+        .cartesianProduct(elements, elements, checked, conventions, features)
+        .stream()
+        .map(List::toArray)
+        .iterator();
   }
-
-  private static final JavaFileObject UNCHECKED_SET_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer, String> getProperties();", Map.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
-
-  private static final JavaFileObject CHECKED_SET_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer, String> getProperties();", Map.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder putProperties(int key, String value) {")
-      .addLine("      if (key < 0) {")
-      .addLine("        throw new IllegalArgumentException(\"key must be non-negative\");")
-      .addLine("      }")
-      .addLine("      if (value.startsWith(\"-\")) {")
-      .addLine("        throw new IllegalArgumentException(\"value must not start with '-'\");")
-      .addLine("      }")
-      .addLine("      return super.putProperties(key, value);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  @Parameter public FeatureSet features;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
-  @Test
-  public void putModifiesUnderlyingPropertyWhenUnchecked() {
+  private final ElementFactory keys;
+  private final ElementFactory values;
+  private final boolean checked;
+  private final NamingConvention convention;
+  private final FeatureSet features;
+
+  private final JavaFileObject mapPropertyType;
+
+  public MapMutateMethodTest(
+      ElementFactory keys,
+      ElementFactory values,
+      boolean checked,
+      NamingConvention convention,
+      FeatureSet features) {
+    this.keys = keys;
+    this.values = values;
+    this.checked = checked;
+    this.convention = convention;
+    this.features = features;
+
+    SourceBuilder mapPropertyTypeBuilder = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.getter())
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {");
+    if (checked) {
+      mapPropertyTypeBuilder
+          .addLine("    @Override public Builder putItems(%s key, %s value) {",
+              keys.unwrappedType(), values.unwrappedType())
+          .addLine("      if (!(%s)) {", keys.validation("key"))
+          .addLine("        throw new IllegalArgumentException(\"key %s\");", keys.errorMessage())
+          .addLine("      }")
+          .addLine("      if (!(%s)) {", values.validation("value"))
+          .addLine("        throw new IllegalArgumentException(\"value %s\");",
+              values.errorMessage())
+          .addLine("      }")
+          .addLine("      return super.putItems(key, value);")
+          .addLine("    }");
+    }
+    mapPropertyType = mapPropertyTypeBuilder
+        .addLine("  }")
+        .addLine("}")
+        .build();
+  }
+
+  @Before
+  public void before() {
     behaviorTester
         .with(new Processor(features))
-        .with(UNCHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map -> map.put(11, \"eleven\"))")
+        .with(mapPropertyType)
+        .withPermittedPackage(NonComparable.class.getPackage());
+  }
+
+  @Test
+  public void putModifiesUnderlyingProperty() {
+    behaviorTester
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.put(%s, %s))",
+                keys.example(1), values.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).isEqualTo(%s.of(", ImmutableMap.class)
-            .addLine("    5, \"five\", 11, \"eleven\"));")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.getter(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
 
   @Test
   public void putChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("key must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage("key " + keys.errorMessage());
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .mutateProperties(map -> map.put(-1, \"minus one\"));")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void putModifiesUnderlyingPropertyWhenChecked() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map -> map.put(11, \"eleven\"))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).isEqualTo(%s.of(", ImmutableMap.class)
-            .addLine("    5, \"five\", 11, \"eleven\"));")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .mutateItems(items -> items.put(%s, %s));",
+                keys.invalidExample(), values.example(0))
             .build())
         .runTest();
   }
@@ -132,16 +153,14 @@ public class MapMutateMethodTest {
   @Test
   public void iterateEntrySetFindsContainedEntry() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map -> {")
-            .addLine("      %s<Integer, String> entry = map.entrySet().iterator().next();",
-                Map.Entry.class)
-            .addLine("      assertThat(entry.getKey()).isEqualTo(5);")
-            .addLine("      assertThat(entry.getValue()).isEqualTo(\"five\");")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> {")
+            .addLine("      Map.Entry<%s, %s> entry = items.entrySet().iterator().next();",
+                keys.type(), values.type())
+            .addLine("      assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
+            .addLine("      assertThat(entry.getValue()).isEqualTo(%s);", values.example(0))
             .addLine("    });")
             .build())
         .runTest();
@@ -150,21 +169,18 @@ public class MapMutateMethodTest {
   @Test
   public void callRemoveOnEntrySetIteratorModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .putProperties(6, \"six\")")
-            .addLine("    .mutateProperties(map -> {")
-            .addLine("        %s<%s<Integer, String>> i = map.entrySet().iterator();",
-                Iterator.class, Map.Entry.class)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .mutateItems(items -> {")
+            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                keys.type(), values.type())
             .addLine("        i.next();")
             .addLine("        i.remove();")
             .addLine("    })")
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).isEqualTo(%s.of(", ImmutableMap.class)
-            .addLine("    6, \"six\"));")
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.getter(), exampleMap(1, 1))
             .build())
         .runTest();
   }
@@ -172,24 +188,22 @@ public class MapMutateMethodTest {
   @Test
   public void entrySetIteratorRemainsUsableAfterCallingRemove() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .putProperties(6, \"six\")")
-            .addLine("    .mutateProperties(map -> {")
-            .addLine("        %s<%s<Integer, String>> i = map.entrySet().iterator();",
-                Iterator.class, Map.Entry.class)
-            .addLine("        %s<Integer, String> entry = i.next();", Map.Entry.class)
-            .addLine("        assertThat(entry.getKey()).isEqualTo(5);")
-            .addLine("        assertThat(entry.getValue()).isEqualTo(\"five\");")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .mutateItems(items -> {")
+            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                keys.type(), values.type())
+            .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
+            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
+            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(0))
             .addLine("        assertThat(i.hasNext()).isTrue();")
             .addLine("        i.remove();")
             .addLine("        assertThat(i.hasNext()).isTrue();")
             .addLine("        entry = i.next();", Map.Entry.class)
-            .addLine("        assertThat(entry.getKey()).isEqualTo(6);")
-            .addLine("        assertThat(entry.getValue()).isEqualTo(\"six\");")
+            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(1))
+            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(1))
             .addLine("        assertThat(i.hasNext()).isFalse();")
             .addLine("    });")
             .build())
@@ -198,16 +212,16 @@ public class MapMutateMethodTest {
 
   @Test
   public void callSetValueOnEntryChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("value must not start with '-'");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage("value " + values.errorMessage());
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map ->")
-            .addLine("        map.entrySet().iterator().next().setValue(\"-five-\"));")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s));",
+                values.invalidExample())
             .build())
         .runTest();
   }
@@ -215,16 +229,13 @@ public class MapMutateMethodTest {
   @Test
   public void callSetValueOnEntryModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map ->")
-            .addLine("        map.entrySet().iterator().next().setValue(\"cinco\"))")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s))",
+                values.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).isEqualTo(%s.of(", ImmutableMap.class)
-            .addLine("    5, \"cinco\"));")
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.getter(), exampleMap(0, 1))
             .build())
         .runTest();
   }
@@ -232,21 +243,17 @@ public class MapMutateMethodTest {
   @Test
   public void entryRemainsUsableAfterCallingSetValue() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .putProperties(6, \"six\")")
-            .addLine("    .mutateProperties(map -> {")
-            .addLine("        %s<%s<Integer, String>> i = map.entrySet().iterator();",
-                Iterator.class, Map.Entry.class)
-            .addLine("        %s<Integer, String> entry = i.next();", Map.Entry.class)
-            .addLine("        assertThat(entry.getKey()).isEqualTo(5);")
-            .addLine("        assertThat(entry.getValue()).isEqualTo(\"five\");")
-            .addLine("        entry.setValue(\"cinco\");")
-            .addLine("        assertThat(entry.getKey()).isEqualTo(5);")
-            .addLine("        assertThat(entry.getValue()).isEqualTo(\"cinco\");")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .mutateItems(items -> {")
+            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                keys.type(), values.type())
+            .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
+            .addLine("        entry.setValue(%s);", values.example(2))
+            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
+            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(2))
             .addLine("    });")
             .build())
         .runTest();
@@ -255,23 +262,19 @@ public class MapMutateMethodTest {
   @Test
   public void entrySetIteratorRemainsUsableAfterCallingSetValue() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .putProperties(6, \"six\")")
-            .addLine("    .mutateProperties(map -> {")
-            .addLine("        %s<%s<Integer, String>> i = map.entrySet().iterator();",
-                Iterator.class, Map.Entry.class)
-            .addLine("        %s<Integer, String> entry = i.next();", Map.Entry.class)
-            .addLine("        assertThat(entry.getKey()).isEqualTo(5);")
-            .addLine("        assertThat(entry.getValue()).isEqualTo(\"five\");")
-            .addLine("        entry.setValue(\"cinco\");")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .mutateItems(items -> {")
+            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                keys.type(), values.type())
+            .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
+            .addLine("        entry.setValue(%s);", values.example(2))
             .addLine("        assertThat(i.hasNext()).isTrue();")
             .addLine("        entry = i.next();", Map.Entry.class)
-            .addLine("        assertThat(entry.getKey()).isEqualTo(6);")
-            .addLine("        assertThat(entry.getValue()).isEqualTo(\"six\");")
+            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(1))
+            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(1))
             .addLine("        assertThat(i.hasNext()).isFalse();")
             .addLine("    });")
             .build())
@@ -281,13 +284,13 @@ public class MapMutateMethodTest {
   @Test
   public void getReturnsContainedValue() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map -> assertThat(map.get(5)).isEqualTo(\"five\"))")
-            .addLine("    .mutateProperties(map -> assertThat(map.get(3)).isEqualTo(null));")
+        .with(testBuilder()
+            .addLine("List<%1$s> values = new ArrayList<%1$s>();", values.type())
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> values.add(items.get(%s)))", keys.example(0))
+            .addLine("    .mutateItems(items -> values.add(items.get(%s)));", keys.example(1))
+            .addLine("assertThat(values).containsExactly(%s, null).inOrder();", values.example(0))
             .build())
         .runTest();
   }
@@ -295,13 +298,15 @@ public class MapMutateMethodTest {
   @Test
   public void containsKeyFindsContainedKey() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map -> assertThat(map.containsKey(5)).isTrue())")
-            .addLine("    .mutateProperties(map -> assertThat(map.containsKey(3)).isFalse());")
+        .with(testBuilder()
+            .addLine("List<Boolean> containsKeys = new ArrayList<Boolean>();")
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> containsKeys.add(items.containsKey(%s)))",
+                keys.example(0))
+            .addLine("    .mutateItems(items -> containsKeys.add(items.containsKey(%s)));",
+                keys.example(1))
+            .addLine("assertThat(containsKeys).containsExactly(true, false).inOrder();")
             .build())
         .runTest();
   }
@@ -309,16 +314,13 @@ public class MapMutateMethodTest {
   @Test
   public void removeModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .putProperties(6, \"six\")")
-            .addLine("    .mutateProperties(map -> map.remove(5))")
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .mutateItems(items -> items.remove(%s))", keys.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).isEqualTo(%s.of(", ImmutableMap.class)
-            .addLine("    6, \"six\"));")
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.getter(), exampleMap(1, 1))
             .build())
         .runTest();
   }
@@ -326,76 +328,33 @@ public class MapMutateMethodTest {
   @Test
   public void clearModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_SET_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .putProperties(6, \"six\")")
-            .addLine("    .mutateProperties(%s::clear)", Map.class)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .mutateItems(%s::clear)", Map.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).isEmpty();")
+            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
             .build())
         .runTest();
   }
 
-  @Test
-  public void putModifiesUnderlyingPropertyWhenUnchecked_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer, String> properties();", Map.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map -> map.put(11, \"eleven\"))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.properties()).isEqualTo(%s.of(", ImmutableMap.class)
-            .addLine("    5, \"five\", 11, \"eleven\"));")
-            .build())
-        .runTest();
+  private String exampleMap(int key, int value) {
+    return String.format("ImmutableMap.of(%s, %s)", keys.example(key), values.example(value));
   }
 
-  @Test
-  public void putModifiesUnderlyingPropertyWhenChecked_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer, String> properties();", Map.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder putProperties(int key, String value) {")
-            .addLine("      if (key < 0) {")
-            .addLine("        throw new IllegalArgumentException(\"key must be non-negative\");")
-            .addLine("      }")
-            .addLine("      if (value.startsWith(\"-\")) {")
-            .addLine("        throw new IllegalArgumentException(")
-            .addLine("            \"value must not start with '-'\");")
-            .addLine("      }")
-            .addLine("      return super.putProperties(key, value);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .putProperties(5, \"five\")")
-            .addLine("    .mutateProperties(map -> map.put(11, \"eleven\"))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.properties()).isEqualTo(%s.of(", ImmutableMap.class)
-            .addLine("    5, \"five\", 11, \"eleven\"));")
-            .build())
-        .runTest();
+  private String exampleMap(int key1, int value1, int key2, int value2) {
+    return String.format("ImmutableMap.of(%s, %s, %s, %s)",
+        keys.example(key1), values.example(value1), keys.example(key2), values.example(value2));
   }
 
+  private static TestBuilder testBuilder() {
+    return new TestBuilder()
+        .addImport("com.example.DataType")
+        .addImport(ArrayList.class)
+        .addImport(Iterator.class)
+        .addImport(List.class)
+        .addImport(Map.class)
+        .addImport(ImmutableMap.class);
+  }
 }
