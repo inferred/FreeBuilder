@@ -4,7 +4,7 @@
 _Automatic generation of the Builder pattern for Java 1.6+_
 
 [![Maven Central](https://img.shields.io/maven-central/v/org.inferred/freebuilder.svg)](http://mvnrepository.com/artifact/org.inferred/freebuilder)
-[![Travis CI](https://travis-ci.org/google/FreeBuilder.svg?branch=master)](https://travis-ci.org/google/FreeBuilder)
+[![Travis CI](https://travis-ci.org/inferred/FreeBuilder.svg?branch=master)](https://travis-ci.org/inferred/FreeBuilder)
 [![Gitter](https://img.shields.io/gitter/room/inferred/freebuilder.svg?style=flat-square)](https://gitter.im/inferred-freebuilder/Lobby)
 
 > The Builder pattern is a good choice when designing classes whose constructors
@@ -674,7 +674,7 @@ error you need to find and fix. (See also [the related issue][issue 3].)
 If you find yourself in this situation, search the output of `javac` for the
 string "@FreeBuilder type"; nearly all errors include this in their text.
 
-[issue 3]: https://github.com/google/FreeBuilder/issues/3
+[issue 3]: https://github.com/inferred/FreeBuilder/issues/3
 
 ### Troubleshooting Eclipse
 
@@ -697,8 +697,8 @@ relevant file to trigger the incremental compiler. (Or run javac.)
     contribute][contributing].
 
 [mailing list]: https://groups.google.com/forum/#!forum/freebuilder
-[issue tracker]: https://github.com/google/freebuilder/issues
-[contributing]: https://github.com/google/FreeBuilder/blob/master/CONTRIBUTING.md
+[issue tracker]: https://github.com/inferred/freebuilder/issues
+[contributing]: https://github.com/inferred/FreeBuilder/blob/master/CONTRIBUTING.md
 
 
 Alternatives
