@@ -28,7 +28,7 @@ https://github.com/google/auto/blob/0c06a2345f71f053714d37bb6549d3460c999f2d/che
 
     <!-- Space after 'for' and 'if' -->
     <module name="RegexpSingleline">
-        <property name="format" value="^\s*(for|if)[^ ]"/>
+        <property name="format" value="^\s*(for|if)[(]"/>
         <property name="message" value="Space needed before opening parenthesis."/>
     </module>
 

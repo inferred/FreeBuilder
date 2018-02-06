@@ -179,23 +179,60 @@ task shadowTest {
   }
 }
 
-//// Java 9 support (for tests) //////////////////////////////////
-if (!hasProperty('java9Home') && System.env.containsKey('JAVA_9_HOME')) {
-  project.ext.java9Home = System.env['JAVA_9_HOME']
+//// Java 6/7/9 support //////////////////////////////////////////
+import org.gradle.internal.jvm.JavaInfo
+import org.gradle.internal.jvm.Jvm
+
+// Map Java version to JVM information, using $JAVA_x_HOME environment variables
+// and falling back to gradle properties as an extra option for devs.
+Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
+  JavaVersion version = JavaVersion.toVersion(versionString)
+  String propertyName = "java${version.majorVersion}Home"
+  String envName = "JAVA_${version.majorVersion}_HOME"
+  JavaInfo javaInfo
+  if (hasProperty(propertyName)) {
+    javaInfo = Jvm.forHome(file(getProperty(propertyName)))
+  } else if (System.env.containsKey(envName)) {
+    javaInfo = Jvm.forHome(file(System.env[envName]))
+  } else {
+    throw new RuntimeException("Set the property $propertyName in your gradle.properties"
+        + " pointing to a Java $version installation")
+  }
+  logger.info "Java ${versionString} found at ${javaInfo.javaHome}"
+  return javaInfo
 }
-assert hasProperty('java9Home') : "Set the property 'java9Home' in your your gradle.properties pointing to a Java 9 installation"
-def java9Path = new File(java9Home, 'bin')
-def java9 = [:].withDefault { execName ->
-  def executable = new File(java9Path, execName)
-  assert executable.exists() : "There is no ${execName} executable in ${java9Path}"
-  executable.toString()
+jvms[(JavaVersion.current().name)] = Jvm.current()
+
+// Fork the correct JVM version if installed.
+// Runs lazily so users lacking Java 9 can still run most tasks.
+tasks.withType(JavaCompile) {
+  doFirst{
+    if (targetCompatibility != JavaVersion.current().name) {
+      options.with {
+        try {
+          fork javaHome: jvms[targetCompatibility].javaHome
+        } catch (RuntimeException e) {
+          if (JavaVersion.toVersion(targetCompatibility).compareTo(JavaVersion.current()) < 0) {
+            logger.warn "Java ${targetCompatibility} not available, using ${JavaVersion.current()}"
+          } else {
+            throw e
+          }
+        }
+      }
+    }
+  }
 }
 
+// Sets the correct JVM executable path on tests.
+// Runs lazily so users lacking the correct version can run all other tasks.
 afterEvaluate {
-  tasks.withType(JavaCompile) {
-    if (targetCompatibility == "1.9") {
-      options.with {
-        fork javaHome: file(java9Home)
+  tasks.withType(Test) {
+    if (executable =~ /^\d+\.\d+$/) {
+      def version = executable
+      executable = new Object() {
+        @Override public String toString() {
+          return jvms[version].javaExecutable.toString()
+        }
       }
     }
   }
@@ -254,9 +291,7 @@ task vanillaTest {
     vanillaTest.dependsOn it
     testClassesDirs = sourceSets["vanilla${jdk}Test"].output.classesDirs
     classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
-    if (jdk == 9) {
-      executable java9.java
-    }
+    executable "1.$jdk"
     reports {
       html {
         destination file("$reportsDir/vanilla${jdk}")
