@@ -194,7 +194,7 @@ task vanillaTest {
   check.dependsOn it
 }
 
-(6..9).each { jdk ->
+(6..10).each { jdk ->
   def sourceSet = sourceSets.create("vanilla${jdk}") {
     java {
       srcDir file('src/it/vanilla/src/main/java')

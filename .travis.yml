@@ -10,6 +10,7 @@ addons:
   apt:
     packages:
       - oracle-java9-installer
+      - oracle-java10-installer
 
 install: ./gradlew clean jar
 script: ./gradlew check
@@ -19,6 +20,7 @@ env:
     - JAVA_6_HOME=$(jdk_switcher home oraclejdk6)
     - JAVA_7_HOME=$(jdk_switcher home oraclejdk7)
     - JAVA_9_HOME=$(jdk_switcher home oraclejdk9)
+    - JAVA_10_HOME=$(jdk_switcher home oraclejdk10)
     - PGP_KEY_ID="2887CE9B"
     - PGP_PASSWORD=""
     - PGP_SECRET_KEY_RING_FILE=~/.gnupg/secring.gpg
