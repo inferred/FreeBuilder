@@ -16,6 +16,8 @@ script: ./gradlew check
 
 env:
   global:
+    - JAVA_6_HOME=$(jdk_switcher home oraclejdk6)
+    - JAVA_7_HOME=$(jdk_switcher home oraclejdk7)
     - JAVA_9_HOME=$(jdk_switcher home oraclejdk9)
     - PGP_KEY_ID="2887CE9B"
     - PGP_PASSWORD=""
