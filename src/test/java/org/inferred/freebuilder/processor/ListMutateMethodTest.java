@@ -87,7 +87,7 @@ public class ListMutateMethodTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
-        .addLine("  %s<%s> %s;", List.class, elements.type(), convention.getter())
+        .addLine("  %s<%s> %s;", List.class, elements.type(), convention.get())
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (checked) {
@@ -109,7 +109,7 @@ public class ListMutateMethodTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType<T extends %s> {", elements.supertype())
-        .addLine("  %s<T> %s;", List.class, convention.getter())
+        .addLine("  %s<T> %s;", List.class, convention.get())
         .addLine("")
         .addLine("  public static class Builder<T extends %s> extends DataType_Builder<T> {",
             elements.supertype());
@@ -132,7 +132,7 @@ public class ListMutateMethodTest {
           .addLine("package com.example;")
           .addLine("@%s", FreeBuilder.class)
           .addLine("public interface DataType {")
-          .addLine("  %s<String> %s;", List.class, convention.getter())
+          .addLine("  %s<String> %s;", List.class, convention.get())
           .addLine("")
           .addLine("  public static class Builder extends DataType_Builder {")
           .addLine("    @Override public Builder addItems(String element) {")
@@ -161,7 +161,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.example(0))
+                convention.get(), elements.example(0))
             .build())
         .runTest();
   }
@@ -192,7 +192,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.example(0))
+                convention.get(), elements.example(0))
             .build())
         .runTest();
   }
@@ -226,7 +226,7 @@ public class ListMutateMethodTest {
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> items.add(s))")
             .addLine("    .build();")
-            .addLine("assertThat(value.%s.get(0)).isSameAs(i);", convention.getter())
+            .addLine("assertThat(value.%s.get(0)).isSameAs(i);", convention.get())
             .build())
         .runTest();
   }
@@ -242,7 +242,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.add(0, %s))", elements.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(3, 0, 1, 2))
+                convention.get(), elements.examples(3, 0, 1, 2))
             .build())
         .runTest();
   }
@@ -258,7 +258,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.add(1, %s))", elements.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 3, 1, 2))
+                convention.get(), elements.examples(0, 3, 1, 2))
             .build())
         .runTest();
   }
@@ -274,7 +274,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.add(2, %s))", elements.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1, 3, 2))
+                convention.get(), elements.examples(0, 1, 3, 2))
             .build())
         .runTest();
   }
@@ -290,7 +290,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.add(3, %s))", elements.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1, 2, 3))
+                convention.get(), elements.examples(0, 1, 2, 3))
             .build())
         .runTest();
   }
@@ -326,7 +326,7 @@ public class ListMutateMethodTest {
             .addLine("    .addItems(\"one\", \"two\", \"three\")")
             .addLine("    .mutateItems(items -> items.add(2, s))")
             .addLine("    .build();")
-            .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.getter())
+            .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.get())
             .build())
         .runTest();
   }
@@ -342,7 +342,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.set(1, %s))", elements.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 3, 2))
+                convention.get(), elements.examples(0, 3, 2))
             .build())
         .runTest();
   }
@@ -378,7 +378,7 @@ public class ListMutateMethodTest {
             .addLine("    .addItems(\"one\", \"two\", \"three\")")
             .addLine("    .mutateItems(items -> items.set(2, s))")
             .addLine("    .build();")
-            .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.getter())
+            .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.get())
             .build())
         .runTest();
   }
@@ -421,7 +421,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.remove(1))")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 2))
+                convention.get(), elements.examples(0, 2))
             .build())
         .runTest();
   }
@@ -438,7 +438,7 @@ public class ListMutateMethodTest {
             .addLine("    .addItems(%s)", elements.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s);",
-                convention.getter(), elements.example(3))
+                convention.get(), elements.example(3))
             .build())
         .runTest();
   }
@@ -454,7 +454,7 @@ public class ListMutateMethodTest {
             .addLine("    .mutateItems(items -> items.subList(1, 5).clear())")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 5, 6))
+                convention.get(), elements.examples(0, 5, 6))
             .build())
         .runTest();
   }

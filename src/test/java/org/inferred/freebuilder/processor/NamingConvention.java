@@ -35,16 +35,20 @@ public enum NamingConvention {
     this.name = name;
   }
 
-  public String getter() {
-    return getter("items");
+  public String get() {
+    return get("items");
   }
 
-  public String setter(String fieldName) {
+  public String get(String fieldName) {
+    return accessor("get", fieldName) + "()";
+  }
+
+  public String set(String fieldName) {
     return accessor("set", fieldName);
   }
 
-  public String getter(String fieldName) {
-    return accessor("get", fieldName) + "()";
+  public String is(String fieldName) {
+    return accessor("is", fieldName) + "()";
   }
 
   abstract String accessor(String prefix, String fieldName);

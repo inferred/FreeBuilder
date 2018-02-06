@@ -91,7 +91,7 @@ public class MapPropertyTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
-        .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.getter())
+        .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.get())
         .addLine("")
         .addLine("  class Builder extends DataType_Builder {}")
         .addLine("}")
@@ -111,7 +111,7 @@ public class MapPropertyTest {
         .with(mapPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(value.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -125,7 +125,7 @@ public class MapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
             .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.getter())
+            .addLine("assertThat(value.%s)", convention.get())
             .addLine("    .isEqualTo(%s);", exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
@@ -164,7 +164,7 @@ public class MapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.getter(), exampleMap(0, 1))
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(0, 1))
             .build())
         .runTest();
   }
@@ -178,7 +178,7 @@ public class MapPropertyTest {
             .addLine("    .putAllItems(%s)", exampleMap(0, 0, 1, 1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -223,7 +223,7 @@ public class MapPropertyTest {
             .addLine("    .putAllItems(%s)", exampleMap(0, 2, 3, 3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 2, 1, 1, 3, 3))
+                convention.get(), exampleMap(0, 2, 1, 1, 3, 3))
             .build())
         .runTest();
   }
@@ -240,7 +240,7 @@ public class MapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(2), values.example(2))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 0, 2, 2))
+                convention.get(), exampleMap(0, 0, 2, 2))
             .build())
         .runTest();
   }
@@ -256,7 +256,7 @@ public class MapPropertyTest {
             .addLine("    .removeItems(%s)", keys.example(2))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -288,7 +288,7 @@ public class MapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(3), values.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 2, 3, 3))
+                convention.get(), exampleMap(0, 2, 3, 3))
             .build())
         .runTest();
   }
@@ -300,7 +300,7 @@ public class MapPropertyTest {
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("Map<%s, %s> itemsView = builder.%s;",
-                keys.type(), values.type(), convention.getter())
+                keys.type(), values.type(), convention.get())
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.putItems(%s, %s);", keys.example(0), values.example(0))
             .addLine("builder.putItems(%s, %s);", keys.example(1), values.example(1))
@@ -322,7 +322,7 @@ public class MapPropertyTest {
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("Map<%s, %s> itemsView = builder.%s;",
-                keys.type(), values.type(), convention.getter())
+                keys.type(), values.type(), convention.get())
             .addLine("itemsView.put(%s, %s);", keys.example(0), values.example(0))
             .build())
         .runTest();
@@ -341,7 +341,7 @@ public class MapPropertyTest {
             .addLine("    .mergeFrom(template)")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -358,7 +358,7 @@ public class MapPropertyTest {
             .addLine("    .mergeFrom(template)")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -376,7 +376,7 @@ public class MapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(3), values.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 2, 3, 3))
+                convention.get(), exampleMap(0, 2, 3, 3))
             .build())
         .runTest();
   }
@@ -388,7 +388,7 @@ public class MapPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.getter())
+            .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {")
             .addLine("    public Builder(%s key, %s value) {",
@@ -407,7 +407,7 @@ public class MapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(3), values.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 2, 3, 3))
+                convention.get(), exampleMap(0, 2, 3, 3))
             .build())
         .runTest();
   }
@@ -421,7 +421,7 @@ public class MapPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
             .addLine("  %s<%s, %s> %s;",
-                ImmutableMap.class, keys.type(), values.type(), convention.getter())
+                ImmutableMap.class, keys.type(), values.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -432,7 +432,7 @@ public class MapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -444,7 +444,7 @@ public class MapPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.getter())
+            .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {")
             .addLine("    @Override public Builder putItems(%s key, %s value) {",
@@ -460,7 +460,7 @@ public class MapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
             .addLine("    .putAllItems(%s)", exampleMap(2, 2, 3, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(value.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -507,7 +507,7 @@ public class MapPropertyTest {
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public interface DataType {")
             .addLine("  @JsonProperty(\"stuff\") %s<%s, %s> %s;",
-                Map.class, keys.type(), values.type(), convention.getter())
+                Map.class, keys.type(), values.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -522,7 +522,7 @@ public class MapPropertyTest {
             .addLine("%s.out.println(json);", System.class)
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
             .addLine("assertThat(clone.%s).isEqualTo(%s);",
-                convention.getter(), exampleMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }

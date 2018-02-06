@@ -94,7 +94,7 @@ public class SetPropertyTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<%s> %s;", set.type(), elements.type(), convention.getter())
+        .addLine("  public abstract %s<%s> %s;", set.type(), elements.type(), convention.get())
         .addLine("")
         .addLine("  public abstract Builder toBuilder();")
         .addLine("  public static class Builder extends DataType_Builder {");
@@ -115,7 +115,7 @@ public class SetPropertyTest {
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<%s> %s;", set.type(), elements.type(), convention.getter())
+        .addLine("  public abstract %s<%s> %s;", set.type(), elements.type(), convention.get())
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (set.isSorted() && elements.comparator().isPresent()) {
@@ -148,7 +148,7 @@ public class SetPropertyTest {
         .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(value.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -164,7 +164,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -194,7 +194,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.example(0))
+                convention.get(), elements.example(0))
             .build())
         .runTest();
   }
@@ -209,7 +209,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(1, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -237,7 +237,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(0, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.example(0))
+                convention.get(), elements.example(0))
             .build())
         .runTest();
   }
@@ -252,7 +252,7 @@ public class SetPropertyTest {
             .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, elements.examples(1, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -280,7 +280,7 @@ public class SetPropertyTest {
             .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, elements.examples(0, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.example(0))
+                convention.get(), elements.example(0))
             .build())
         .runTest();
   }
@@ -296,7 +296,7 @@ public class SetPropertyTest {
                 DodgyIterable.class, elements.type(), elements.examples(1, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -312,7 +312,7 @@ public class SetPropertyTest {
             .addLine("    .addAllItems(Stream.of(%s))", elements.examples(1, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -342,7 +342,7 @@ public class SetPropertyTest {
             .addLine("    .addAllItems(Stream.of(%s))", elements.examples(0, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.example(0))
+                convention.get(), elements.example(0))
             .build())
         .runTest();
   }
@@ -358,7 +358,7 @@ public class SetPropertyTest {
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 2))", IntStream.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(1, 2).inOrder();", convention.getter())
+            .addLine("assertThat(value.%s).containsExactly(1, 2).inOrder();", convention.get())
             .build())
         .runTest();
   }
@@ -374,7 +374,7 @@ public class SetPropertyTest {
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addAllItems(%s.of(1, 1))", IntStream.class)
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(1).inOrder();", convention.getter())
+            .addLine("assertThat(value.%s).containsExactly(1).inOrder();", convention.get())
             .build())
         .runTest();
   }
@@ -390,7 +390,7 @@ public class SetPropertyTest {
             .addLine("    .removeItems(%s)", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s);",
-                convention.getter(), elements.example(1))
+                convention.get(), elements.example(1))
             .build())
         .runTest();
   }
@@ -420,7 +420,7 @@ public class SetPropertyTest {
             .addLine("    .removeItems(%s)", elements.example(2))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s);",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -436,7 +436,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(3, 2))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(3, 2)))
+                convention.get(), elements.examples(set.inOrder(3, 2)))
             .build())
         .runTest();
   }
@@ -453,7 +453,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(3, 2))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(3, 2)))
+                convention.get(), elements.examples(set.inOrder(3, 2)))
             .build())
         .runTest();
   }
@@ -466,7 +466,7 @@ public class SetPropertyTest {
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("%s<%s> itemsView = builder.%s;",
-                set.type(), elements.type(), convention.getter())
+                set.type(), elements.type(), convention.get())
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.addItems(%s);", elements.examples(1, 0))
             .addLine("assertThat(itemsView).containsExactly(%s).inOrder();",
@@ -489,7 +489,7 @@ public class SetPropertyTest {
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder();")
             .addLine("%s<%s> itemsView = builder.%s;",
-                set.type(), elements.type(), convention.getter())
+                set.type(), elements.type(), convention.get())
             .addLine("itemsView.add(%s);", elements.example(0))
             .build())
         .runTest();
@@ -506,7 +506,7 @@ public class SetPropertyTest {
             .addLine("    .build();")
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(builder.build().%s)", convention.getter())
+            .addLine("assertThat(builder.build().%s)", convention.get())
             .addLine("    .containsExactly(%s).inOrder();", elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
@@ -522,7 +522,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s);", elements.examples(1, 0))
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.build().%s)", convention.getter())
+            .addLine("assertThat(builder.build().%s)", convention.get())
             .addLine("    .containsExactly(%s).inOrder();", elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
@@ -540,7 +540,7 @@ public class SetPropertyTest {
             .addLine("DataType value2 = value1.toBuilder()")
             .addLine("    .addItems(%s)", elements.examples(1))
             .addLine("    .build();")
-            .addLine("assertThat(value2.%s)", convention.getter())
+            .addLine("assertThat(value2.%s)", convention.get())
             .addLine("    .containsExactly(%s).inOrder();", elements.examples(set.inOrder(0, 2, 1)))
             .build())
         .runTest();
@@ -558,7 +558,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(3, 2))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(3, 2)))
+                convention.get(), elements.examples(set.inOrder(3, 2)))
             .build())
         .runTest();
   }
@@ -573,7 +573,7 @@ public class SetPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<%s> %s;",
-                set.type(), elements.type(), convention.getter())
+                set.type(), elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    public Builder(%s... items) {", elements.unwrappedType())
@@ -588,7 +588,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.examples(3, 2))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(3, 2)))
+                convention.get(), elements.examples(set.inOrder(3, 2)))
             .build())
         .runTest();
   }
@@ -603,7 +603,7 @@ public class SetPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  %s<%s> %s;", set.immutableType(), elements.type(), convention.getter())
+            .addLine("  %s<%s> %s;", set.immutableType(), elements.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -614,7 +614,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -630,7 +630,7 @@ public class SetPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
             .addLine("  %s<? extends %s> %s;",
-                set.immutableType(), elements.type(), convention.getter())
+                set.immutableType(), elements.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -641,7 +641,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -656,7 +656,7 @@ public class SetPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<E> {")
-            .addLine("  %s<E> %s;", set.type(), convention.getter())
+            .addLine("  %s<E> %s;", set.type(), convention.get())
             .addLine("")
             .addLine("  class Builder<E> extends DataType_Builder<E> {}")
             .addLine("}")
@@ -667,7 +667,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -681,7 +681,7 @@ public class SetPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<E> {")
-            .addLine("  %s<? extends E> %s;", set.type(), convention.getter())
+            .addLine("  %s<? extends E> %s;", set.type(), convention.get())
             .addLine("")
             .addLine("  class Builder<E> extends DataType_Builder<E> {}")
             .addLine("}")
@@ -692,7 +692,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(0, 1))
+                convention.get(), elements.examples(0, 1))
             .build())
         .runTest();
   }
@@ -798,7 +798,7 @@ public class SetPropertyTest {
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
             .addLine("public interface DataType {")
             .addLine("  @JsonProperty(\"stuff\") %s<%s> %s;",
-                set.type(), elements.type(), convention.getter())
+                set.type(), elements.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -812,7 +812,7 @@ public class SetPropertyTest {
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter(), elements.examples(set.inOrder(1, 0)))
+                convention.get(), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -829,7 +829,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(value).build();")
-            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.get())
             .build())
         .runTest();
   }
@@ -846,7 +846,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = new DataType.Builder().mergeFrom(value).build();")
-            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.get())
             .build())
         .runTest();
   }
@@ -866,7 +866,7 @@ public class SetPropertyTest {
             .addLine("    .from(value)")
             .addLine("    .mergeFrom(new DataType.Builder())")
             .addLine("    .build();")
-            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.getter())
+            .addLine("assertThat(copy.%1$s).isSameAs(value.%1$s);", convention.get())
             .build())
         .runTest();
   }
@@ -885,7 +885,7 @@ public class SetPropertyTest {
             .addLine("    .from(value)")
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(copy.%s)", convention.getter())
+            .addLine("assertThat(copy.%s)", convention.get())
             .addLine("    .containsExactly(%s)", elements.examples(set.inOrder(2, 0, 1)))
             .addLine("    .inOrder();")
             .build())
@@ -907,7 +907,7 @@ public class SetPropertyTest {
             .addLine("    .removeItems(%s)", elements.example(0))
             .addLine("    .build();")
             .addLine("assertThat(copy.%s).containsExactly(%s);",
-                convention.getter(), elements.example(1))
+                convention.get(), elements.example(1))
             .build())
         .runTest();
   }
@@ -926,7 +926,7 @@ public class SetPropertyTest {
             .addLine("    .from(value)")
             .addLine("    .clearItems()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(copy.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -945,7 +945,7 @@ public class SetPropertyTest {
             .addLine("    .from(value)")
             .addLine("    .clear()")
             .addLine("    .build();")
-            .addLine("assertThat(copy.%s).isEmpty();", convention.getter())
+            .addLine("assertThat(copy.%s).isEmpty();", convention.get())
             .build())
         .runTest();
   }
@@ -961,7 +961,7 @@ public class SetPropertyTest {
         .with(testBuilder()
             .addLine("DataType value = new DataType() {")
             .addLine("  @Override public %s<%s> %s {",
-                set.type(), elements.type(), convention.getter())
+                set.type(), elements.type(), convention.get())
             .addLine("    return %s.of(%s, %s);",
                 set.immutableType(), elements.example(0), elements.invalidExample())
             .addLine("  }")
@@ -986,7 +986,7 @@ public class SetPropertyTest {
             .addLine("    .addItems(%s)", elements.example(1))
             .addLine("    .build();")
             .addLine("DataType copy = DataType.Builder.from(data2).mergeFrom(data1).build();")
-            .addLine("assertThat(copy.%s)", convention.getter())
+            .addLine("assertThat(copy.%s)", convention.get())
             .addLine("    .containsExactly(%s)", elements.examples(set.inOrder(2, 1, 0)))
             .addLine("    .inOrder();")
             .build())
@@ -1004,7 +1004,7 @@ public class SetPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<%s> %s;",
-                set.type(), elements.type(), convention.getter("elements"))
+                set.type(), elements.type(), convention.get("elements"))
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -1014,7 +1014,7 @@ public class SetPropertyTest {
             .addLine("    .addElements(%s)", elements.examples(1, 0))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.getter("elements"), elements.examples(set.inOrder(1, 0)))
+                convention.get("elements"), elements.examples(set.inOrder(1, 0)))
             .build())
         .runTest();
   }
@@ -1068,7 +1068,7 @@ public class SetPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<%s<%s>> %s;",
-                set.type(), ComparablePair.class, elements.type(), convention.getter())
+                set.type(), ComparablePair.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}")
@@ -1091,7 +1091,7 @@ public class SetPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
-            .addLine("  public abstract %s<T> %s;", set.type(), convention.getter())
+            .addLine("  public abstract %s<T> %s;", set.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder<T> extends DataType_Builder<T> {}")
             .addLine("}")
@@ -1117,7 +1117,7 @@ public class SetPropertyTest {
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract %s<%s<%s>> %s;",
-                set.type(), ComparablePair.class, elements.type(), convention.getter())
+                set.type(), ComparablePair.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
             .addLine("    @%s", Override.class)
@@ -1144,7 +1144,7 @@ public class SetPropertyTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
-            .addLine("  public abstract %s<T> %s;", set.type(), convention.getter())
+            .addLine("  public abstract %s<T> %s;", set.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder<T> extends DataType_Builder<T> {")
             .addLine("    @%s", Override.class)
