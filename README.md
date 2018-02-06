@@ -799,7 +799,7 @@ Wait, why "free"?
 License
 -------
 
-    Copyright 2014 Google Inc. All rights reserved.
+    Copyright 2014-7 Google Inc., 2018 Inferred.Org. All rights reserved.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
