@@ -88,6 +88,7 @@ public class AnalyserTest {
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
     QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
+        .setExtensible(false)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder.withParameters())
@@ -123,6 +124,7 @@ public class AnalyserTest {
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
     QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
+        .setExtensible(false)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(true)
         .setGeneratedBuilder(expectedBuilder.withParameters())
@@ -186,6 +188,7 @@ public class AnalyserTest {
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
+    assertThat(dataType.isExtensible()).isTrue();
     assertThat(dataType.getBuilderFactory()).hasValue(NO_ARGS_CONSTRUCTOR);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
@@ -219,6 +222,49 @@ public class AnalyserTest {
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
+    assertThat(dataType.isExtensible()).isTrue();
+    assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertFalse(dataType.isBuilderSerializable());
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
+  public void builderSubclass_publicBuilderMethod_protectedConstructor()
+      throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    protected Builder() { }",
+        "  }",
+        "  public static Builder builder() { return new Builder(); }",
+        "}"));
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
+        dataType.getGeneratedBuilder());
+    assertEquals("com.example.DataType.Builder",
+        dataType.getBuilder().getQualifiedName().toString());
+    assertThat(dataType.isExtensible()).isTrue();
+    assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertFalse(dataType.isBuilderSerializable());
+    assertThat(messager.getMessagesByElement().keys()).isEmpty();
+  }
+
+  @Test
+  public void builderSubclass_publicBuilderMethod_privateConstructor()
+      throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    private Builder() { }",
+        "  }",
+        "  public static Builder builder() { return new Builder(); }",
+        "}"));
+    assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
+        dataType.getGeneratedBuilder());
+    assertEquals("com.example.DataType.Builder",
+        dataType.getBuilder().getQualifiedName().toString());
+    assertThat(dataType.isExtensible()).isFalse();
     assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
@@ -236,6 +282,7 @@ public class AnalyserTest {
         dataType.getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
+    assertThat(dataType.isExtensible()).isTrue();
     assertThat(dataType.getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
@@ -275,6 +322,23 @@ public class AnalyserTest {
         "  Builder toBuilder();",
         "  class Builder extends DataType_Builder {",
         "    public Builder(String unused) {}",
+        "  }",
+        "}"));
+    assertThat(messager.getMessagesByElement().keySet()).containsExactly("toBuilder");
+    assertThat(messager.getMessagesByElement().get("toBuilder"))
+        .containsExactly("[ERROR] No accessible no-args Builder constructor available to "
+            + "implement toBuilder");
+  }
+
+  @Test
+  public void toBuilderMethod_privateBuilderFactoryMethod() throws CannotGenerateCodeException {
+    analyser.analyse(model.newType(
+        "package com.example;",
+        "public abstract class DataType {",
+        "  public static Builder builder() { return new Builder(); }",
+        "  public abstract Builder toBuilder();",
+        "  public static class Builder extends DataType_Builder {",
+        "    private Builder() {}",
         "  }",
         "}"));
     assertThat(messager.getMessagesByElement().keySet()).containsExactly("toBuilder");
@@ -1026,6 +1090,7 @@ public class AnalyserTest {
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
+    assertThat(dataType.isExtensible()).isFalse();
     assertThat(dataType.getBuilderFactory()).isAbsent();
     assertThat(messager.getMessagesByElement().asMap()).containsEntry(
         "Builder", ImmutableList.of("[ERROR] Builder must be static on @FreeBuilder types"));
@@ -1041,6 +1106,7 @@ public class AnalyserTest {
         "  public static class Builder<A, B> extends DataType_Builder<A, B> {}",
         "}"));
     assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
+    assertThat(dataType.isExtensible()).isTrue();
     assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR), dataType.getBuilderFactory());
     assertEquals("com.example.DataType_Builder<A, B>", dataType.getGeneratedBuilder().toString());
     assertEquals("com.example.DataType_Builder.Partial<A, B>",
@@ -1077,6 +1143,7 @@ public class AnalyserTest {
         "}"));
     assertThat(messager.getMessagesByElement().asMap()).isEmpty();
     assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
+    assertThat(dataType.isExtensible()).isTrue();
     assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR), dataType.getBuilderFactory());
     assertEquals("com.example.DataType_Builder<A, B>", dataType.getGeneratedBuilder().toString());
     assertEquals("com.example.DataType_Builder.Partial<A, B>",
@@ -1150,6 +1217,7 @@ public class AnalyserTest {
     QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
         .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
+        .setExtensible(true)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder.withParameters())
@@ -1189,6 +1257,7 @@ public class AnalyserTest {
     QualifiedName valueType = expectedBuilder.nestedType("Value");
     Metadata expectedMetadata = new Metadata.Builder()
         .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
+        .setExtensible(true)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(expectedBuilder.withParameters())

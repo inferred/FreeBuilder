@@ -112,6 +112,9 @@ public abstract class Metadata {
     return getOptionalBuilder().get();
   }
 
+  /** Whether there is a package-visible, no-args constructor so we can subclass the Builder. */
+  public abstract boolean isExtensible();
+
   /** Returns the builder factory mechanism the user has exposed, if any. */
   public abstract Optional<BuilderFactory> getBuilderFactory();
 

@@ -643,8 +643,7 @@ public class CodeGenerator {
     if (!metadata.getHasToBuilderMethod()) {
       return;
     }
-    BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
-    if (builderFactory == BuilderFactory.NO_ARGS_CONSTRUCTOR) {
+    if (metadata.isExtensible()) {
       code.addLine("")
           .addLine("  private static class PartialBuilder%s extends %s {",
               metadata.getBuilder().declarationParameters(), metadata.getBuilder())
@@ -656,7 +655,7 @@ public class CodeGenerator {
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public %s toBuilder() {", metadata.getBuilder());
-    if (builderFactory == BuilderFactory.NO_ARGS_CONSTRUCTOR) {
+    if (metadata.isExtensible()) {
       code.addLine("    %s builder = new PartialBuilder%s();",
               metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
       Block block = new Block(code);

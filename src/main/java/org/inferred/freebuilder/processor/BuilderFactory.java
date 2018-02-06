@@ -104,7 +104,7 @@ public enum BuilderFactory {
       return Optional.of(BUILDER_METHOD);
     } else if (staticMethods.contains("newBuilder")) {
       return Optional.of(NEW_BUILDER_METHOD);
-    } else if (hasExplicitNoArgsConstructor(builderType)) {
+    } else if (hasNoArgsConstructor(builderType)) {
       return Optional.of(NO_ARGS_CONSTRUCTOR);
     } else {
       return Optional.absent();
@@ -118,7 +118,9 @@ public enum BuilderFactory {
     return type.getModifiers().contains(Modifier.ABSTRACT);
   }
 
-  private static boolean hasExplicitNoArgsConstructor(TypeElement type) {
+  static boolean hasNoArgsConstructor(TypeElement type) {
+    // A type with no explictly-declared constructors will still have an implicit constructor in its
+    // enclosed elements.
     for (ExecutableElement constructor : constructorsIn(type.getEnclosedElements())) {
       if (constructor.getParameters().isEmpty()
           && !constructor.getModifiers().contains(Modifier.PRIVATE)) {

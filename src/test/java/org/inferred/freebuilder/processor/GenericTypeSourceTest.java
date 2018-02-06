@@ -884,6 +884,7 @@ public class GenericTypeSourceTest {
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
+        .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters("A", "B"))

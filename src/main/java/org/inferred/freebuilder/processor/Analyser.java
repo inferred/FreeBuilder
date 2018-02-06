@@ -140,7 +140,7 @@ class Analyser {
     QualifiedName generatedBuilder = QualifiedName.of(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
     Optional<TypeElement> builder = tryFindBuilder(generatedBuilder, type);
-    Optional<BuilderFactory> builderFactory = builderFactory(builder);
+    Metadata.Builder constructionAndExtension = constructionAndExtension(builder);
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
@@ -151,7 +151,7 @@ class Analyser {
         .setType(QualifiedName.of(type).withParameters(typeParameters))
         .setInterfaceType(type.getKind().isInterface())
         .setBuilder(parameterized(builder, typeParameters))
-        .setBuilderFactory(builderFactory)
+        .mergeFrom(constructionAndExtension)
         .setGeneratedBuilder(generatedBuilder.withParameters(typeParameters))
         .setValueType(valueType.withParameters(typeParameters))
         .setPartialType(partialType.withParameters(typeParameters))
@@ -161,7 +161,8 @@ class Analyser {
         .addVisibleNestedTypes(propertyType)
         .addAllVisibleNestedTypes(visibleTypesIn(type))  // Because we inherit from type
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
-        .setHasToBuilderMethod(hasToBuilderMethod(builder, builderFactory, methods))
+        .setHasToBuilderMethod(hasToBuilderMethod(
+            builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .addAllProperties(properties.values());
     Metadata baseMetadata = metadataBuilder.build();
@@ -310,18 +311,17 @@ class Analyser {
     return result.build();
   }
 
-  /** Find a toBuilder method, if the user has provided one.
-   * @param builderFactory */
+  /** Find a toBuilder method, if the user has provided one. */
   private boolean hasToBuilderMethod(
       Optional<TypeElement> builder,
-      Optional<BuilderFactory> builderFactory,
+      boolean isExtensible,
       Iterable<ExecutableElement> methods) {
     if (!builder.isPresent()) {
       return false;
     }
     for (ExecutableElement method : methods) {
       if (isToBuilderMethod(builder.get(), method)) {
-        if (!builderFactory.isPresent()) {
+        if (!isExtensible) {
           messager.printMessage(ERROR,
               "No accessible no-args Builder constructor available to implement toBuilder",
               method);
@@ -408,15 +408,19 @@ class Analyser {
     return userClass;
   }
 
-  private Optional<BuilderFactory> builderFactory(Optional<TypeElement> builder) {
+  private Metadata.Builder constructionAndExtension(Optional<TypeElement> builder) {
     if (!builder.isPresent()) {
-      return Optional.of(NO_ARGS_CONSTRUCTOR);
+      return new Metadata.Builder()
+          .setExtensible(false)
+          .setBuilderFactory(NO_ARGS_CONSTRUCTOR);
     }
     if (!builder.get().getModifiers().contains(Modifier.STATIC)) {
       messager.printMessage(ERROR, "Builder must be static on @FreeBuilder types", builder.get());
-      return Optional.absent();
+      return new Metadata.Builder().setExtensible(false);
     }
-    return BuilderFactory.from(builder.get());
+    return new Metadata.Builder()
+        .setExtensible(BuilderFactory.hasNoArgsConstructor(builder.get()))
+        .setBuilderFactory(BuilderFactory.from(builder.get()));
   }
 
   private Map<ExecutableElement, Property> findProperties(
