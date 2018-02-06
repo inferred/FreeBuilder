@@ -49,10 +49,9 @@ public class SetPropertyTest {
     assertEquals(newHashSet(), builder.build().getNames());
   }
 
-  @SafeVarargs
-  private static <E> Set<E> newHashSet(E... items) {
-    Set<E> list = new HashSet<E>();
-    for (E item : items) {
+  private static Set<String> newHashSet(String... items) {
+    Set<String> list = new HashSet<String>();
+    for (String item : items) {
       list.add(item);
     }
     return list;

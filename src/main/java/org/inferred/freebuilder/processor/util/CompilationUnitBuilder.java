@@ -16,13 +16,13 @@
 package org.inferred.freebuilder.processor.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.googlejavaformat.java.Formatter;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -120,10 +120,18 @@ public class CompilationUnitBuilder implements SourceBuilder {
   @VisibleForTesting
   public static String formatSource(String source) {
     try {
-      return new Formatter().formatSource(source);
-    } catch (UnsupportedClassVersionError e) {
-      // Formatter requires Java 7+; do no formatting in Java 6.
-      return source;
+      Object formatter;
+      Method formatSourceMethod;
+      try {
+        Class<?> formatterCls = CompilationUnitBuilder.class.getClassLoader()
+            .loadClass("com.google.googlejavaformat.java.Formatter");
+        formatter = formatterCls.newInstance();
+        formatSourceMethod = formatterCls.getMethod("formatSource", String.class);
+      } catch (Error e) {
+        // Formatter requires Java 7+; do no formatting in Java 6.
+        return source;
+      }
+      return (String) formatSourceMethod.invoke(formatter, source);
     } catch (Exception e) {
       StringBuilder message = new StringBuilder()
           .append("Formatter failed:\n")
