@@ -16,6 +16,7 @@ plugins {
   id 'com.github.johnrengelman.shadow' version '2.0.2'
 }
 
+apply from: "gradle/java-compatibility.gradle"
 apply from: "gradle/travis-keep-alive.gradle"
 
 repositories {
@@ -176,65 +177,6 @@ task shadowTest {
       throw new GradleException(message.toString())
     }
     report.write 'shadow.jar correct'
-  }
-}
-
-//// Java 6/7/9 support //////////////////////////////////////////
-import org.gradle.internal.jvm.JavaInfo
-import org.gradle.internal.jvm.Jvm
-
-// Map Java version to JVM information, using $JAVA_x_HOME environment variables
-// and falling back to gradle properties as an extra option for devs.
-Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
-  JavaVersion version = JavaVersion.toVersion(versionString)
-  String propertyName = "java${version.majorVersion}Home"
-  String envName = "JAVA_${version.majorVersion}_HOME"
-  JavaInfo javaInfo
-  if (hasProperty(propertyName)) {
-    javaInfo = Jvm.forHome(file(getProperty(propertyName)))
-  } else if (System.env.containsKey(envName)) {
-    javaInfo = Jvm.forHome(file(System.env[envName]))
-  } else {
-    throw new RuntimeException("Set the property $propertyName in your gradle.properties"
-        + " pointing to a Java $version installation")
-  }
-  logger.info "Java ${versionString} found at ${javaInfo.javaHome}"
-  return javaInfo
-}
-jvms[(JavaVersion.current().name)] = Jvm.current()
-
-// Fork the correct JVM version if installed.
-// Runs lazily so users lacking Java 9 can still run most tasks.
-tasks.withType(JavaCompile) {
-  doFirst{
-    if (targetCompatibility != JavaVersion.current().name) {
-      options.with {
-        try {
-          fork javaHome: jvms[targetCompatibility].javaHome
-        } catch (RuntimeException e) {
-          if (JavaVersion.toVersion(targetCompatibility).compareTo(JavaVersion.current()) < 0) {
-            logger.warn "Java ${targetCompatibility} not available, using ${JavaVersion.current()}"
-          } else {
-            throw e
-          }
-        }
-      }
-    }
-  }
-}
-
-// Sets the correct JVM executable path on tests.
-// Runs lazily so users lacking the correct version can run all other tasks.
-afterEvaluate {
-  tasks.withType(Test) {
-    if (executable =~ /^\d+\.\d+$/) {
-      def version = executable
-      executable = new Object() {
-        @Override public String toString() {
-          return jvms[version].javaExecutable.toString()
-        }
-      }
-    }
   }
 }
 
