@@ -11,7 +11,12 @@ addons:
     packages:
       - oracle-java9-installer
 
-install: ./gradlew clean jar
+install:
+  - ./gradlew clean jar
+  - jdk_switcher home oraclejdk6
+  - jdk_switcher home oraclejdk7
+  - jdk_switcher home oraclejdk8
+  - jdk_switcher home oraclejdk9
 script: ./gradlew check
 
 env:
