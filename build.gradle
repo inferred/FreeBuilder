@@ -16,6 +16,7 @@ plugins {
   id 'com.github.johnrengelman.shadow' version '2.0.2'
 }
 
+apply from: "gradle/java-compatibility.gradle"
 apply from: "gradle/travis-keep-alive.gradle"
 
 repositories {
@@ -23,11 +24,9 @@ repositories {
 }
 
 sourceCompatibility = 1.6
-targetCompatibility = 1.6
 
 compileTestJava {
   sourceCompatibility = 1.8
-  targetCompatibility = 1.8
 }
 
 dependencies {
@@ -179,65 +178,6 @@ task shadowTest {
   }
 }
 
-//// Java 6/7/9 support //////////////////////////////////////////
-import org.gradle.internal.jvm.JavaInfo
-import org.gradle.internal.jvm.Jvm
-
-// Map Java version to JVM information, using $JAVA_x_HOME environment variables
-// and falling back to gradle properties as an extra option for devs.
-Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
-  JavaVersion version = JavaVersion.toVersion(versionString)
-  String propertyName = "java${version.majorVersion}Home"
-  String envName = "JAVA_${version.majorVersion}_HOME"
-  JavaInfo javaInfo
-  if (hasProperty(propertyName)) {
-    javaInfo = Jvm.forHome(file(getProperty(propertyName)))
-  } else if (System.env.containsKey(envName)) {
-    javaInfo = Jvm.forHome(file(System.env[envName]))
-  } else {
-    throw new RuntimeException("Set the property $propertyName in your gradle.properties"
-        + " pointing to a Java $version installation")
-  }
-  logger.info "Java ${versionString} found at ${javaInfo.javaHome}"
-  return javaInfo
-}
-jvms[(JavaVersion.current().name)] = Jvm.current()
-
-// Fork the correct JVM version if installed.
-// Runs lazily so users lacking Java 9 can still run most tasks.
-tasks.withType(JavaCompile) {
-  doFirst{
-    if (targetCompatibility != JavaVersion.current().name) {
-      options.with {
-        try {
-          fork javaHome: jvms[targetCompatibility].javaHome
-        } catch (RuntimeException e) {
-          if (JavaVersion.toVersion(targetCompatibility).compareTo(JavaVersion.current()) < 0) {
-            logger.warn "Java ${targetCompatibility} not available, using ${JavaVersion.current()}"
-          } else {
-            throw e
-          }
-        }
-      }
-    }
-  }
-}
-
-// Sets the correct JVM executable path on tests.
-// Runs lazily so users lacking the correct version can run all other tasks.
-afterEvaluate {
-  tasks.withType(Test) {
-    if (executable =~ /^\d+\.\d+$/) {
-      def version = executable
-      executable = new Object() {
-        @Override public String toString() {
-          return jvms[version].javaExecutable.toString()
-        }
-      }
-    }
-  }
-}
-
 //// Vanilla integration tests ///////////////////////////////////
 configurations {
   vanillaCompile
@@ -271,11 +211,9 @@ task vanillaTest {
 
   tasks.getByName("compileVanilla${jdk}Java") {
     sourceCompatibility = "1.$jdk"
-    targetCompatibility = "1.$jdk"
   }
   tasks.getByName("compileVanilla${jdk}TestJava") {
     sourceCompatibility = "1.$jdk"
-    targetCompatibility = "1.$jdk"
   }
 
   def compile = configurations["vanilla${jdk}Compile"]
@@ -344,11 +282,9 @@ sourceSets.create('gwtTest') {
 
 tasks.compileGwtJava {
   sourceCompatibility = "1.7"
-  targetCompatibility = "1.7"
 }
 tasks.compileGwtTestJava {
   sourceCompatibility = "1.7"
-  targetCompatibility = "1.7"
 }
 
 import de.richsource.gradle.plugins.gwt.GwtCompile
@@ -429,11 +365,9 @@ task noGuavaTest {
 
   tasks.getByName("compileNoGuava${jdk}Java") {
     sourceCompatibility = "1.$jdk"
-    targetCompatibility = "1.$jdk"
   }
   tasks.getByName("compileNoGuava${jdk}TestJava") {
     sourceCompatibility = "1.$jdk"
-    targetCompatibility = "1.$jdk"
   }
 
   def compile = configurations["noGuava${jdk}Compile"]
@@ -482,11 +416,9 @@ sourceSets.create("noGuavaJ8Test") {
 
 tasks.compileNoGuavaJ8Java {
   sourceCompatibility = "1.8"
-  targetCompatibility = "1.8"
 }
 tasks.compileNoGuavaJ8TestJava {
   sourceCompatibility = "1.8"
-  targetCompatibility = "1.8"
 }
 
 task noGuavaJ8Test(type: Test) {
@@ -528,11 +460,9 @@ sourceSets.create('lambdaTest') {
 
 tasks.compileLambdaJava {
   sourceCompatibility = "1.8"
-  targetCompatibility = "1.8"
 }
 tasks.compileLambdaTestJava {
   sourceCompatibility = "1.8"
-  targetCompatibility = "1.8"
 }
 
 task("lambdaTest", type: Test) {
