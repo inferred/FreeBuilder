@@ -543,9 +543,9 @@ modifyPom {
     url 'http://freebuilder.inferred.org/'
 
     scm {
-      url 'https://github.com/google/freebuilder'
-      connection 'scm:git:git://github.com/google/freebuilder.git'
-      developerConnection 'scm:git:git@github.com:google/freebuilder.git'
+      url 'https://github.com/inferred/freebuilder'
+      connection 'scm:git:git://github.com/inferred/freebuilder.git'
+      developerConnection 'scm:git:git@github.com:inferred/freebuilder.git'
     }
 
     licenses {
