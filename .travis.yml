@@ -10,15 +10,22 @@ addons:
   apt:
     packages:
       - openjdk-6-jdk
+      - openjdk-7-jdk
       - oraclejdk7
 
 install:
   - ./gradlew clean jar
   - ls /usr/lib/jvm
   - jdk_switcher home openjdk6
+  - ls $(jdk_switcher home openjdk6)
+  - jdk_switcher home openjdk7
+  - ls $(jdk_switcher home openjdk7)
   - jdk_switcher home oraclejdk7
+  - ls $(jdk_switcher home oraclejdk7)
   - jdk_switcher home oraclejdk8
+  - ls $(jdk_switcher home oraclejdk8)
   - jdk_switcher home oraclejdk9
+  - ls $(jdk_switcher home oraclejdk9)
 script: ./gradlew check
 
 env:
