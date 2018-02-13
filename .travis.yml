@@ -10,6 +10,7 @@ addons:
   apt:
     packages:
       - openjdk-6-jdk
+      - oraclejdk7
 
 install:
   - ./gradlew clean jar
