@@ -752,12 +752,11 @@ using `@FreeBuilder` to implement the Builder pattern.
 <em><strong>I used [AutoValue][], but now have more than three properties! How
 do I migrate to `@FreeBuilder`?</strong></em>
 
-  1. Ensure your getter methods start with 'get' or 'is'.
-  2. Change your annotation to `@FreeBuilder`.
-  3. Rewrite your factory method(s) to use the builder API.
-  4. Inline your factory method(s) with a refactoring tool (e.g. Eclipse).
+  1. Change your annotation to `@FreeBuilder`.
+  2. Rewrite your factory method(s) to use the builder API.
+  3. Inline your factory method(s) with a refactoring tool (e.g. Eclipse).
 
-You can always skip step 4 and have both factory and builder methods, if that
+You can always skip step 3 and have both factory and builder methods, if that
 seems cleaner!
 
 
