@@ -9,13 +9,26 @@ jdk:
 addons:
   apt:
     packages:
-      - oracle-java9-installer
+      - openjdk-6-jdk
+      - openjdk-7-jdk
 
-install: ./gradlew clean jar
+install:
+  - ./gradlew clean jar
+  - ls /usr/lib/jvm
+  - jdk_switcher home openjdk6
+  - ls $(jdk_switcher home openjdk6)
+  - jdk_switcher home openjdk7
+  - ls $(jdk_switcher home openjdk7)
+  - jdk_switcher home oraclejdk8
+  - ls $(jdk_switcher home oraclejdk8)
+  - jdk_switcher home oraclejdk9
+  - ls $(jdk_switcher home oraclejdk9)
 script: ./gradlew check
 
 env:
   global:
+    - JAVA_6_HOME=$(jdk_switcher home openjdk6)
+    - JAVA_7_HOME=$(jdk_switcher home openjdk7)
     - JAVA_9_HOME=$(jdk_switcher home oraclejdk9)
     - PGP_KEY_ID="2887CE9B"
     - PGP_PASSWORD=""
