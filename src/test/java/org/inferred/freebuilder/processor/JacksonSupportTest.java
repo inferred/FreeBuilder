@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -34,6 +35,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.Map;
+import java.util.Optional;
 
 import javax.lang.model.element.TypeElement;
 
@@ -85,7 +87,25 @@ public class JacksonSupportTest {
     Metadata metadata = analyser.analyse(dataType);
 
     Property property = getOnlyElement(metadata.getProperties());
-    assertPropertyHasJsonPropertyAnnotation(property, "bob");
+    assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"bob\")");
+  }
+  @Test
+  public void jacksonXmlAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    TypeElement dataType = model.newType(
+        "package com.example;",
+         "import " + JacksonXmlProperty.class.getName() + ";",
+        "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
+        "public interface DataType {",
+        "  @JacksonXmlProperty(localName=\"b-ob\") int getFooBar();",
+        "  class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    Property property = getOnlyElement(metadata.getProperties());
+    assertPropertyHasAnnotation(property,
+            JacksonXmlProperty.class, "@JacksonXmlProperty(localName = \"b-ob\")");
   }
 
   @Test
@@ -102,7 +122,7 @@ public class JacksonSupportTest {
     Metadata metadata = analyser.analyse(dataType);
 
     Property property = getOnlyElement(metadata.getProperties());
-    assertPropertyHasJsonPropertyAnnotation(property, "fooBar");
+    assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"fooBar\")");
   }
 
   @Test
@@ -122,11 +142,15 @@ public class JacksonSupportTest {
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
-  private static void assertPropertyHasJsonPropertyAnnotation(
-      Property property, String propertyName) {
-    assertThat(property.getAccessorAnnotations()).named("property accessor annotations").hasSize(1);
-    Excerpt accessorAnnotation = getOnlyElement(property.getAccessorAnnotations());
-    assertThat(asString(accessorAnnotation)).isEqualTo("@JsonProperty(\"" + propertyName + "\")\n");
+  private void assertPropertyHasAnnotation(Property property, Class annotationClass,
+                                           String annotationString) {
+    Optional<Excerpt> annotationExcerpt = property.getAccessorAnnotations()
+            .stream()
+            .filter(excerpt -> excerpt.toString().contains(annotationClass.getCanonicalName()))
+            .findFirst();
+    assertThat(annotationExcerpt).named("property accessor annotations").isNotNull();
+    assertThat(asString(annotationExcerpt.get()))
+            .isEqualTo(String.format("%s%n", annotationString));
   }
 
   private static String asString(Excerpt excerpt) {

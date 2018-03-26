@@ -53,6 +53,7 @@ dependencies {
   testCompile jackson('databind')
   testCompile jackson('datatype-guava')
   testCompile jackson('datatype-jdk8')
+  testCompile jackson('dataformat-xml')
   testCompile javassist
   testCompile junit
   testCompile mockito
@@ -63,6 +64,8 @@ String jackson(String pkg) {
   String namespace
   if (pkg.startsWith('datatype-')) {
     namespace = 'datatype'
+  } else if (pkg.startsWith('dataformat-')) {
+    namespace = 'dataformat'
   } else {
     namespace = 'core'
   }
