@@ -30,6 +30,6 @@ before_deploy: ./scripts/install_codesigning_key.sh
 deploy:
   skip_cleanup: true
   provider: script
-  script: ./gradlew --no-parallel upload closeAndReleaseRepository
+  script: ./gradlew --no-parallel --debug upload closeAndReleaseRepository
   on:
     tags: true
