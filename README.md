@@ -3,7 +3,7 @@
 
 _Automatic generation of the Builder pattern for Java 1.6+_
 
-[![Maven Central](https://img.shields.io/maven-central/v/org.inferred/freebuilder.svg)](http://mvnrepository.com/artifact/org.inferred/freebuilder)
+[![Maven](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/org/inferred/freebuilder/maven-metadata.xml.svg)](https://bintray.com/inferred/maven/freebuilder)
 [![Travis CI](https://travis-ci.org/inferred/FreeBuilder.svg?branch=master)](https://travis-ci.org/inferred/FreeBuilder)
 [![Gitter](https://img.shields.io/gitter/room/inferred/freebuilder.svg?style=flat-square)](https://gitter.im/inferred-freebuilder/Lobby)
 
