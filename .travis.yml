@@ -17,19 +17,14 @@ script: ./gradlew check
 env:
   global:
     - JAVA_9_HOME=$(jdk_switcher home oraclejdk9)
-    - PGP_KEY_ID="2887CE9B"
-    - PGP_PASSWORD=""
-    - PGP_SECRET_KEY_RING_FILE=~/.gnupg/secring.gpg
-      # NEXUS_USERNAME
-    - secure: "DUvIXg1aLxpnWv7K7VeIWvb704Puat98zb++GKLkkHfdcyQn+t+mYQsMJPMKXa5iqWNfwoFSpmPrPmcTW5sGAg8vJ/OmZFJdtIdPaeykr+8kYIIHbS7Pquqr/4iN2UKaJ4TbMOj0sgEiu573CyW5JtRmRWVQuKG0rKJKsDf2XKc="
-      # NEXUS_PASSWORD
-    - secure: "SZcQ+0AhVo25fCCDQqc/kUVe4mcS0lVuzUAZPCXOmr146BAHTJ/HEae8OAkHEvFUZmGWlrG/FR1P6BQ+OnBOsnjei0sYokdg6w0e+bQ9wPaY4zsMsgSzPWscwt7pjVS05aSsS9uEEOCzM1nLCBzfEw7W8mWIQWeTPOa8Erzdtss="
-
-before_deploy: ./scripts/install_codesigning_key.sh
+    - BINTRAY_USER=cjp39
+    - BINTRAY_ORG=inferred
+      # BINTRAY_KEY
+    - secure: "c0Z97k2GsIMwz4zk0sOhujwDohMzyaGO8Sdi//mqv0lLCanSrSdX0j5KAeUrT6vL3DjqgKvvDoMCq6JB29mJfQS9e4WuJHKwW8kTKh2yy/hNcQYVl+xie+gj5GfLnsW3CwW8rY6cHKtfkaFIPFkUoG1hEiezM7HukN146yf0y7U="
 
 deploy:
   skip_cleanup: true
   provider: script
-  script: ./gradlew upload closeAndPromoteRepository
+  script: ./gradlew bintrayUpload --stacktrace --info
   on:
     tags: true

@@ -1,0 +1,182 @@
+if (System.env.TRAVIS_TAG != null && !System.env.TRAVIS_TAG.isEmpty()) {
+  version = System.env.TRAVIS_TAG.replaceAll('^v','')
+} else if (System.env.TRAVIS_BRANCH != null && !System.env.TRAVIS_BRANCH.isEmpty()) {
+  version = System.env.TRAVIS_BRANCH + '-alpha.' + System.env.TRAVIS_BUILD_NUMBER
+}
+
+class PomConvention {
+
+  class ProjectData {
+
+    class LicenseData {
+      String shortName
+      String name
+      String url
+      String distribution = 'repo'
+
+      Closure asClosure() {
+        return {
+          delegate.name name
+          delegate.url url
+          delegate.distribution distribution
+        }
+      }
+    }
+
+    String groupId
+    String artifactId
+    String name
+    String description
+    String url
+    LicenseData license
+
+    LicenseData apache2 = new LicenseData()
+
+    ProjectData() {
+      apache2.shortName = 'Apache-2.0'
+      apache2.name = 'The Apache Software License, Version 2.0'
+      apache2.url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    }
+  }
+
+  class ScmData {
+    String url
+    String connection
+    String developerConnection
+
+    def github(String slug) {
+      url = "https://github.com/${slug}"
+      connection = "scm:git:https://github.com/${slug}.git"
+      developerConnection = "scm:git:git@github.com:${slug}.git"
+    }
+  }
+
+  class DeveloperData {
+    String id
+    String name
+    String email
+    String timezone
+  }
+
+  class DevelopersData {
+    List<DeveloperData> developers = new ArrayList<>()
+
+    def developer(Closure closure) {
+      def data = new DeveloperData()
+      closure.delegate = data
+      closure.resolveStrategy = Closure.DELEGATE_FIRST
+      closure()
+      developers.add(data)
+    }
+  }
+
+  ProjectData project = new ProjectData()
+  ScmData scm = new ScmData()
+  DevelopersData developers = new DevelopersData()
+
+  def project(Closure closure) {
+    closure.delegate = project
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
+    closure()
+  }
+
+  def scm(Closure closure) {
+    closure.delegate = scm
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
+    closure()
+  }
+
+  def developers(Closure closure) {
+    closure.delegate = developers
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
+    closure()
+  }
+
+  static Closure injectFieldsFrom(Object object) {
+    return {
+      def myDelegate = delegate
+      object.class.declaredFields.findAll { !it.synthetic }.each {
+        myDelegate."$it.name" object."$it.name"
+      }
+    }
+  }
+
+  Closure asClosure() {
+    return {
+      delegate.licenses {
+        delegate.license project.license.asClosure()
+      }
+      delegate.scm injectFieldsFrom(scm)
+      delegate.developers {
+        developers.developers.each { delegate.developer injectFieldsFrom(it) }
+      }
+    }
+  }
+}
+
+project.convention.plugins.pom = new PomConvention()
+project.convention.pom = project.convention.plugins.pom
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+afterEvaluate {
+  group = pom.project.groupId
+  archivesBaseName = pom.project.artifactId
+
+  publishing {
+    publications {
+      JarPublication(MavenPublication) {
+        project.shadow.component(delegate)
+        artifact project.sourcesJar
+        artifact project.javadocJar
+        groupId project.pom.project.groupId
+        artifactId project.pom.project.artifactId
+        version project.version
+
+        pom.withXml {
+          if (project.version == "unspecified") {
+            throw new IllegalStateException("version not specified")
+          }
+          def root = asNode()
+          root.appendNode('description', project.pom.project.description)
+          root.appendNode('name', project.pom.project.name)
+          root.appendNode('url', project.pom.project.url)
+          root.children().last() + project.pom.asClosure()
+        }
+      }
+    }
+  }
+
+  bintray {
+    user = System.env.BINTRAY_USER
+    key = System.env.BINTRAY_KEY
+    publications = ['JarPublication']
+    publish = true
+    pkg {
+      name = project.pom.project.artifactId
+      repo = 'maven'
+      userOrg = System.env.BINTRAY_ORG ?: System.env.BINTRAY_USER
+      vcsUrl = project.pom.scm.connection.replaceAll('^scm:[^:]*:', '')
+      licenses = [project.pom.project.license.shortName]
+      version {
+        name = project.version
+        desc = "$project.archivesBaseName $project.version"
+        released = new Date()
+        vcsTag = System.env.TRAVIS_TAG
+      }
+    }
+  }
+}

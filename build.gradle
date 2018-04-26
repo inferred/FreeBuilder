@@ -4,7 +4,6 @@ buildscript {
   }
   dependencies {
     classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.6'
-    classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3'
   }
 }
 
@@ -12,10 +11,13 @@ plugins {
   id 'checkstyle'
   id 'eclipse'
   id 'java'
-  id 'com.bmuschko.nexus' version '2.3.1'
-  id 'com.github.johnrengelman.shadow' version '2.0.2'
+  id 'java-library'
+  id 'maven-publish'
+  id 'com.github.johnrengelman.shadow' version '2.0.3'
+  id 'com.jfrog.bintray' version '1.7.3'
 }
 
+apply from: "gradle/publication.gradle"
 apply from: "gradle/travis-keep-alive.gradle"
 
 repositories {
@@ -528,61 +530,28 @@ if (System.env.TRAVIS_TAG != null && !System.env.TRAVIS_TAG.isEmpty()) {
   version = 'UNKNOWN-SNAPSHOT'
 }
 
-artifacts {
-  archives shadowJar
-}
-configurations.archives.artifacts.with { archives ->
-  // Don't publish the unshaded jar
-  def unshadedJar = archives.findAll { it.classifier == 'only' }
-  archives.removeAll(unshadedJar)
-}
-
-modifyPom {
+pom {
   project {
-    name '@FreeBuilder'
-    packaging 'jar'
-    artifactId 'freebuilder'
-    description 'Automatic generation of the Builder pattern for Java 1.6+'
-    url 'http://freebuilder.inferred.org/'
-
-    scm {
-      url 'https://github.com/inferred/freebuilder'
-      connection 'scm:git:git://github.com/inferred/freebuilder.git'
-      developerConnection 'scm:git:git@github.com:inferred/freebuilder.git'
-    }
-
-    licenses {
-      license {
-        name 'Apache 2.0'
-        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-      }
-    }
-
-    developers {
-      developer {
-        id 'chrisalice'
-        name 'Alice Purcell'
-        email 'Alice.Purcell.39@gmail.com'
-        timezone 'Europe/London'
-      }
-    }
-
-    // We shade all our dependencies
-    dependencies.clear()
+    groupId = 'org.inferred'
+    artifactId = 'freebuilder'
+    name = 'FreeBuilder'
+    description = 'Automatic generation of the Builder pattern for Java 1.6+'
+    url = 'http://freebuilder.inferred.org/'
+    license = apache2
   }
-}
 
-ext['signing.keyId'] = System.env.PGP_KEY_ID
-ext['signing.password'] = System.env.PGP_PASSWORD
-ext['signing.secretKeyRingFile'] = System.env.PGP_SECRET_KEY_RING_FILE
-ext['nexusUsername'] = System.env.NEXUS_USERNAME
-ext['nexusPassword'] = System.env.NEXUS_PASSWORD
+  scm {
+    github 'inferred/freebuilder'
+  }
 
-apply plugin: 'io.codearte.nexus-staging'
-
-nexusStaging {
-  numberOfRetries = 20
-  delayBetweenRetriesInMillis = 3000
+  developers {
+    developer {
+      id = 'chrisalice'
+      name = 'Alice Purcell'
+      email = 'Alice.Purcell.39@gmail.com'
+      timezone = 'Europe/London'
+    }
+  }
 }
 
 //// Eclipse /////////////////////////////////////////////////////
