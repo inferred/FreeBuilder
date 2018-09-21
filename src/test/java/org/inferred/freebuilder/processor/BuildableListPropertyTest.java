@@ -81,6 +81,18 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void defaultsToEmpty() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Receipt value = new Receipt.Builder().build();")
+            .addLine("assertThat(value.%s).isEmpty();", convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void addValueInstance() {
     behaviorTester
         .with(new Processor(features))
