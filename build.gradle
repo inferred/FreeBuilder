@@ -81,6 +81,7 @@ test {
   testLogging {
     exceptionFormat = 'full'
   }
+  maxParallelForks = Runtime.runtime.availableProcessors()
 }
 check.dependsOn javadoc
 tasks.withType(Javadoc) {
