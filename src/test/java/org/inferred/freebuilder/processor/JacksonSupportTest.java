@@ -15,13 +15,12 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.truth.Truth.assertThat;
-
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -34,10 +33,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import javax.lang.model.element.TypeElement;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.lang.model.element.TypeElement;
+import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.truth.Truth.assertThat;
 
 /** Unit tests for {@link Analyser}. */
 @RunWith(JUnit4.class)
@@ -89,8 +90,9 @@ public class JacksonSupportTest {
     Property property = getOnlyElement(metadata.getProperties());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"bob\")");
   }
+
   @Test
-  public void jacksonXmlAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
+  public void jacksonXmlPropertyAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/68
     TypeElement dataType = model.newType(
         "package com.example;",
@@ -106,6 +108,44 @@ public class JacksonSupportTest {
     Property property = getOnlyElement(metadata.getProperties());
     assertPropertyHasAnnotation(property,
             JacksonXmlProperty.class, "@JacksonXmlProperty(localName = \"b-ob\")");
+  }
+
+  @Test
+  public void jacksonXmlTextAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    TypeElement dataType = model.newType(
+            "package com.example;",
+            "import " + JacksonXmlText.class.getName() + ";",
+            "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
+            "public interface DataType {",
+            "  @JacksonXmlText(value = false) int getFooBar();",
+            "  class Builder extends DataType_Builder {}",
+            "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    Property property = getOnlyElement(metadata.getProperties());
+    assertPropertyHasAnnotation(property, JacksonXmlText.class, "@JacksonXmlText(false)");
+  }
+
+  @Test
+  public void jacksonXmlElementWrapperAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    TypeElement dataType = model.newType(
+            "package com.example;",
+            "import " + JacksonXmlElementWrapper.class.getName() + ";",
+            "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
+            "public interface DataType {",
+            "  @JacksonXmlElementWrapper(namespace=\"b-ob\", localName=\"john\", useWrapping=false) int getFooBar();",
+            "  class Builder extends DataType_Builder {}",
+            "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+
+    Property property = getOnlyElement(metadata.getProperties());
+    assertPropertyHasAnnotation(property,
+            JacksonXmlElementWrapper.class,
+            "@JacksonXmlElementWrapper(namespace = \"b-ob\", localName = \"john\", useWrapping = false)");
   }
 
   @Test

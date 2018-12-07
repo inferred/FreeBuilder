@@ -1,19 +1,17 @@
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
-import java.util.Set;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import java.util.Set;
+
+import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
 class JacksonSupport {
 
@@ -21,8 +19,10 @@ class JacksonSupport {
       "com.fasterxml.jackson.databind.annotation.JsonDeserialize";
   private static final QualifiedName JSON_PROPERTY =
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonProperty");
-  private static final QualifiedName JACKSON_XML_PROPERTY =
-      QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation", "JacksonXmlProperty");
+  private static final Set<QualifiedName> JACKSON_XML_ANNOTATIONS = ImmutableSet.of(
+          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation", "JacksonXmlProperty"),
+          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation", "JacksonXmlText"),
+          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation", "JacksonXmlElementWrapper"));
   /** Annotations which disable automatic generation of JsonProperty annotations. */
   private static final Set<QualifiedName> DISABLE_PROPERTY_ANNOTATIONS = ImmutableSet.of(
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonAnyGetter"),
@@ -50,11 +50,12 @@ class JacksonSupport {
           "@%s(\"%s\")%n", JSON_PROPERTY, resultBuilder.getName()));
     }
 
-    Optional<AnnotationMirror> jacksonXmlPropertyAnnotation = findAnnotationMirror(getterMethod,
-            JACKSON_XML_PROPERTY);
-    if (jacksonXmlPropertyAnnotation.isPresent()) {
-      resultBuilder
-              .addAccessorAnnotations(Excerpts.add("%s%n", jacksonXmlPropertyAnnotation.get()));
+    for (QualifiedName jacksonXmlAnnotation : JACKSON_XML_ANNOTATIONS) {
+      Optional<AnnotationMirror> jacksonXmlPropertyAnnotation = findAnnotationMirror(getterMethod,
+              jacksonXmlAnnotation);
+      if (jacksonXmlPropertyAnnotation.isPresent()) {
+        resultBuilder.addAccessorAnnotations(Excerpts.add("%s%n", jacksonXmlPropertyAnnotation.get()));
+      }
     }
   }
 
