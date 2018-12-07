@@ -20,9 +20,10 @@ class JacksonSupport {
   private static final QualifiedName JSON_PROPERTY =
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonProperty");
   private static final Set<QualifiedName> JACKSON_XML_ANNOTATIONS = ImmutableSet.of(
-          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation", "JacksonXmlProperty"),
-          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation", "JacksonXmlText"),
-          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation", "JacksonXmlElementWrapper"));
+          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation","JacksonXmlProperty"),
+          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation","JacksonXmlText"),
+          QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation",
+                  "JacksonXmlElementWrapper"));
   /** Annotations which disable automatic generation of JsonProperty annotations. */
   private static final Set<QualifiedName> DISABLE_PROPERTY_ANNOTATIONS = ImmutableSet.of(
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonAnyGetter"),
@@ -54,7 +55,8 @@ class JacksonSupport {
       Optional<AnnotationMirror> jacksonXmlPropertyAnnotation = findAnnotationMirror(getterMethod,
               jacksonXmlAnnotation);
       if (jacksonXmlPropertyAnnotation.isPresent()) {
-        resultBuilder.addAccessorAnnotations(Excerpts.add("%s%n", jacksonXmlPropertyAnnotation.get()));
+        resultBuilder.addAccessorAnnotations(Excerpts.add("%s%n",
+                jacksonXmlPropertyAnnotation.get()));
       }
     }
   }
