@@ -23,6 +23,7 @@ abstract class BuildableType_Builder {
   }
 
   private enum Property {
+    TYPE("type"),
     BUILDER_TYPE("builderType"),
     MERGE_BUILDER("mergeBuilder"),
     PARTIAL_TO_BUILDER("partialToBuilder"),
@@ -42,12 +43,48 @@ abstract class BuildableType_Builder {
     }
   }
 
+  private Type type;
   private Type builderType;
   private BuildableType.MergeBuilderMethod mergeBuilder;
   private BuildableType.PartialToBuilderMethod partialToBuilder;
   private BuilderFactory builderFactory;
   private Excerpt suppressUnchecked;
   private final EnumSet<Property> _unsetProperties = EnumSet.allOf(Property.class);
+
+  /**
+   * Sets the value to be returned by {@link BuildableType#type()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code type} is null
+   */
+  public BuildableType.Builder type(Type type) {
+    this.type = Objects.requireNonNull(type);
+    _unsetProperties.remove(Property.TYPE);
+    return (BuildableType.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link BuildableType#type()} by applying {@code mapper} to
+   * it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public BuildableType.Builder mapType(UnaryOperator<Type> mapper) {
+    Objects.requireNonNull(mapper);
+    return type(mapper.apply(type()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link BuildableType#type()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Type type() {
+    Preconditions.checkState(!_unsetProperties.contains(Property.TYPE), "type not set");
+    return type;
+  }
 
   /**
    * Sets the value to be returned by {@link BuildableType#builderType()}.
@@ -235,6 +272,10 @@ abstract class BuildableType_Builder {
   /** Sets all property values using the given {@code BuildableType} as a template. */
   public BuildableType.Builder mergeFrom(BuildableType value) {
     BuildableType_Builder _defaults = new BuildableType.Builder();
+    if (_defaults._unsetProperties.contains(Property.TYPE)
+        || !Objects.equals(value.type(), _defaults.type())) {
+      type(value.type());
+    }
     if (_defaults._unsetProperties.contains(Property.BUILDER_TYPE)
         || !Objects.equals(value.builderType(), _defaults.builderType())) {
       builderType(value.builderType());
@@ -266,6 +307,11 @@ abstract class BuildableType_Builder {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
     BuildableType_Builder base = template;
     BuildableType_Builder _defaults = new BuildableType.Builder();
+    if (!base._unsetProperties.contains(Property.TYPE)
+        && (_defaults._unsetProperties.contains(Property.TYPE)
+            || !Objects.equals(template.type(), _defaults.type()))) {
+      type(template.type());
+    }
     if (!base._unsetProperties.contains(Property.BUILDER_TYPE)
         && (_defaults._unsetProperties.contains(Property.BUILDER_TYPE)
             || !Objects.equals(template.builderType(), _defaults.builderType()))) {
@@ -297,6 +343,7 @@ abstract class BuildableType_Builder {
   /** Resets the state of this builder. */
   public BuildableType.Builder clear() {
     BuildableType_Builder _defaults = new BuildableType.Builder();
+    type = _defaults.type;
     builderType = _defaults.builderType;
     mergeBuilder = _defaults.mergeBuilder;
     partialToBuilder = _defaults.partialToBuilder;
@@ -332,6 +379,7 @@ abstract class BuildableType_Builder {
   }
 
   private static final class Value extends BuildableType {
+    private final Type type;
     private final Type builderType;
     private final BuildableType.MergeBuilderMethod mergeBuilder;
     private final BuildableType.PartialToBuilderMethod partialToBuilder;
@@ -339,11 +387,17 @@ abstract class BuildableType_Builder {
     private final Excerpt suppressUnchecked;
 
     private Value(BuildableType_Builder builder) {
+      this.type = builder.type;
       this.builderType = builder.builderType;
       this.mergeBuilder = builder.mergeBuilder;
       this.partialToBuilder = builder.partialToBuilder;
       this.builderFactory = builder.builderFactory;
       this.suppressUnchecked = builder.suppressUnchecked;
+    }
+
+    @Override
+    public Type type() {
+      return type;
     }
 
     @Override
@@ -377,7 +431,8 @@ abstract class BuildableType_Builder {
         return false;
       }
       Value other = (Value) obj;
-      return Objects.equals(builderType, other.builderType)
+      return Objects.equals(type, other.type)
+          && Objects.equals(builderType, other.builderType)
           && Objects.equals(mergeBuilder, other.mergeBuilder)
           && Objects.equals(partialToBuilder, other.partialToBuilder)
           && Objects.equals(builderFactory, other.builderFactory)
@@ -387,12 +442,14 @@ abstract class BuildableType_Builder {
     @Override
     public int hashCode() {
       return Objects.hash(
-          builderType, mergeBuilder, partialToBuilder, builderFactory, suppressUnchecked);
+          type, builderType, mergeBuilder, partialToBuilder, builderFactory, suppressUnchecked);
     }
 
     @Override
     public String toString() {
-      return "BuildableType{builderType="
+      return "BuildableType{type="
+          + type
+          + ", builderType="
           + builderType
           + ", mergeBuilder="
           + mergeBuilder
@@ -407,6 +464,7 @@ abstract class BuildableType_Builder {
   }
 
   private static final class Partial extends BuildableType {
+    private final Type type;
     private final Type builderType;
     private final BuildableType.MergeBuilderMethod mergeBuilder;
     private final BuildableType.PartialToBuilderMethod partialToBuilder;
@@ -415,12 +473,21 @@ abstract class BuildableType_Builder {
     private final EnumSet<Property> _unsetProperties;
 
     Partial(BuildableType_Builder builder) {
+      this.type = builder.type;
       this.builderType = builder.builderType;
       this.mergeBuilder = builder.mergeBuilder;
       this.partialToBuilder = builder.partialToBuilder;
       this.builderFactory = builder.builderFactory;
       this.suppressUnchecked = builder.suppressUnchecked;
       this._unsetProperties = builder._unsetProperties.clone();
+    }
+
+    @Override
+    public Type type() {
+      if (_unsetProperties.contains(Property.TYPE)) {
+        throw new UnsupportedOperationException("type not set");
+      }
+      return type;
     }
 
     @Override
@@ -469,7 +536,8 @@ abstract class BuildableType_Builder {
         return false;
       }
       Partial other = (Partial) obj;
-      return Objects.equals(builderType, other.builderType)
+      return Objects.equals(type, other.type)
+          && Objects.equals(builderType, other.builderType)
           && Objects.equals(mergeBuilder, other.mergeBuilder)
           && Objects.equals(partialToBuilder, other.partialToBuilder)
           && Objects.equals(builderFactory, other.builderFactory)
@@ -480,6 +548,7 @@ abstract class BuildableType_Builder {
     @Override
     public int hashCode() {
       return Objects.hash(
+          type,
           builderType,
           mergeBuilder,
           partialToBuilder,
@@ -492,8 +561,12 @@ abstract class BuildableType_Builder {
     public String toString() {
       StringBuilder result = new StringBuilder("partial BuildableType{");
       String separator = "";
+      if (!_unsetProperties.contains(Property.TYPE)) {
+        result.append("type=").append(type);
+        separator = ", ";
+      }
       if (!_unsetProperties.contains(Property.BUILDER_TYPE)) {
-        result.append("builderType=").append(builderType);
+        result.append(separator).append("builderType=").append(builderType);
         separator = ", ";
       }
       if (!_unsetProperties.contains(Property.MERGE_BUILDER)) {

@@ -67,6 +67,7 @@ abstract class BuildableType {
     MERGE_DIRECTLY, TO_BUILDER_AND_MERGE
   }
 
+  public abstract Type type();
   public abstract Type builderType();
   public abstract MergeBuilderMethod mergeBuilder();
   public abstract PartialToBuilderMethod partialToBuilder();
@@ -167,6 +168,7 @@ abstract class BuildableType {
     Excerpt suppressUnchecked = suppressUncheckedExcerptFor(datatype);
 
     return new Builder()
+        .type(Type.from(datatype))
         .builderType(Type.from(builder))
         .mergeBuilder(mergeFromBuilderMethod)
         .partialToBuilder(partialToBuilderMethod)
