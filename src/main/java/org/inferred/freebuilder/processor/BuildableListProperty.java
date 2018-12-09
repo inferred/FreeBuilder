@@ -52,6 +52,9 @@ class BuildableListProperty extends PropertyCodeGenerator {
           || !erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
         return Optional.empty();
       }
+      if (disablingGetterExists(config)) {
+        return Optional.empty();
+      }
 
       TypeMirror rawElementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       DeclaredType elementType = maybeDeclared(rawElementType).orElse(null);
@@ -80,6 +83,11 @@ class BuildableListProperty extends PropertyCodeGenerator {
           overridesValueInstanceVarargsAddMethod,
           overridesBuilderVarargsAddMethod,
           element));
+    }
+
+    private static boolean disablingGetterExists(Config config) {
+      String getterName = config.getProperty().getGetterName();
+      return overrides(config.getBuilder(), config.getTypes(), getterName);
     }
 
     private static boolean hasValueInstanceVarargsAddMethodOverride(

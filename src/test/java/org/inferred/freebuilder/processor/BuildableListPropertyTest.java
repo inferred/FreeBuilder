@@ -1182,6 +1182,48 @@ public class BuildableListPropertyTest {
   }
 
   @Test
+  public void canDisableListOfBuilderSupportWithGetterDeclaration() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface Receipt {")
+            .addLine("  @%s", FreeBuilder.class)
+            .addLine("  public abstract class Item {")
+            .addLine("    public abstract String name();")
+            .addLine("    public int price = 0;")
+            .addLine("")
+            .addLine("    public abstract Builder toBuilder();")
+            .addLine("    public static class Builder extends Receipt_Item_Builder {}")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  %s<Item> %s;", List.class, convention.get("items"))
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends Receipt_Builder {")
+            .addLine("    @Override public %s<Item> %s {", List.class, convention.get("items"))
+            .addLine("      return super.%s;", convention.get("items"))
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").build();")
+            .addLine("candy.price = 10;")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addItems(candy, candy)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s.get(0).price).isEqualTo(10);", convention.get("items"))
+            .addLine("candy.price = 20;")
+            .addLine("assertThat(value.%s.get(1).price).isEqualTo(20);", convention.get("items"))
+            .build())
+        .compiles()
+        .withNoWarnings()
+        .allTestsPass();
+  }
+
+  @Test
   public void testJacksonInteroperability() {
     behaviorTester
         .with(new Processor(features))
