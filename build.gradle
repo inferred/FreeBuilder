@@ -24,8 +24,8 @@ repositories {
   mavenCentral()
 }
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 compileTestJava {
   sourceCompatibility = 1.8
@@ -224,7 +224,7 @@ task vanillaTest {
   check.dependsOn it
 }
 
-(6..9).each { jdk ->
+(8..9).each { jdk ->
   def sourceSet = sourceSets.create("vanilla${jdk}") {
     java {
       srcDir file('src/it/vanilla/src/main/java')
@@ -317,12 +317,12 @@ sourceSets.create('gwtTest') {
 }
 
 tasks.compileGwtJava {
-  sourceCompatibility = "1.7"
-  targetCompatibility = "1.7"
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
 }
 tasks.compileGwtTestJava {
-  sourceCompatibility = "1.7"
-  targetCompatibility = "1.7"
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
 }
 
 import de.richsource.gradle.plugins.gwt.GwtCompile
@@ -343,7 +343,7 @@ task compileGwtToJs(type: GwtCompile) {
               sourceSets['gwtTest'].output.resourcesDir)
   classpath = (sourceSets['gwt'].compileClasspath +
                sourceSets['gwtTest'].compileClasspath)
-  sourceLevel = '1.7'
+  sourceLevel = '1.8'
   incremental = false
   strict = true
   dependsOn gwtClasses, gwtTestClasses
@@ -386,7 +386,7 @@ task noGuavaTest {
   check.dependsOn it
 }
 
-(6..8).each { jdk ->
+(8..8).each { jdk ->
   def sourceSet = sourceSets.create("noGuava${jdk}") {
     java {
       srcDir file('src/it/no-guava/src/main/java')
@@ -542,7 +542,7 @@ pom {
     groupId = 'org.inferred'
     artifactId = 'freebuilder'
     name = 'FreeBuilder'
-    description = 'Automatic generation of the Builder pattern for Java 1.6+'
+    description = 'Automatic generation of the Builder pattern for Java 1.8+'
     url = 'http://freebuilder.inferred.org/'
     license = apache2
   }
@@ -563,7 +563,8 @@ pom {
 
 //// Eclipse /////////////////////////////////////////////////////
 eclipse.classpath {
-  // Only src/main/java is compiled with JDK 6
+  // src/main/java is compiled in a separate project
+  // This allows us to compile it with an older JVM than the tests
   file.withXml { xml ->
     node = xml.asNode()
     node.findAll { it.@kind == 'src' && it.@path != 'src/main/java' }.each { src ->

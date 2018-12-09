@@ -1,7 +1,7 @@
 `@FreeBuilder`
 ==============
 
-_Automatic generation of the Builder pattern for Java 1.6+_
+_Automatic generation of the Builder pattern for Java 1.8+_
 
 [![Maven Central](https://img.shields.io/maven-central/v/org.inferred/freebuilder.svg)](https://mvnrepository.com/artifact/org.inferred/freebuilder)
 [![Bintray](https://api.bintray.com/packages/inferred/maven/org.inferred%3Afreebuilder/images/download.svg)](https://bintray.com/inferred/maven/org.inferred%3Afreebuilder/_latestVersion)
