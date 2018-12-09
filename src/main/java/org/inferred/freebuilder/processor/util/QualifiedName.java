@@ -119,7 +119,8 @@ public class QualifiedName extends ValueType {
   }
 
   public ParameterizedType withParameters(TypeMirror first, TypeMirror... rest) {
-    return new ParameterizedType(this, ImmutableList.builder().add(first).add(rest).build());
+    return new ParameterizedType(this,
+        ImmutableList.builder().add(first).add((Object[]) rest).build());
   }
 
   public ParameterizedType withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
