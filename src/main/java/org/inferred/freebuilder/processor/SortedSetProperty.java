@@ -31,8 +31,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
@@ -54,6 +52,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.NavigableSet;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -236,8 +235,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
     if (unboxedType.isPresent()) {
       body.addLine("  %s.add(element);", property.getField());
     } else {
-      body.add(checkNotNullPreamble("element"))
-          .addLine("  %s.add(%s);", property.getField(), checkNotNullInline("element"));
+      body.addLine("  %s.add(%s.requireNonNull(element));", property.getField(), Objects.class);
     }
     body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
@@ -380,8 +378,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
     if (unboxedType.isPresent()) {
       body.addLine("  %s.remove(element);", property.getField());
     } else {
-      body.add(checkNotNullPreamble("element"))
-          .addLine("  %s.remove(%s);", property.getField(), checkNotNullInline("element"));
+      body.addLine("  %s.remove(%s.requireNonNull(element));", property.getField(), Objects.class);
     }
     body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
@@ -500,10 +497,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
           .addLine("          || (%s instanceof %s ",
               property.getField(), ImmutableSortedSet.class)
           .addLine("              && %s.isEmpty()", property.getField())
-          .addLine("              && %s))) {",
-              Excerpts.equals(
-                  Excerpts.add("%s.comparator()", property.getField()),
-                  Excerpts.add("%s.%s().comparator()", value, property.getGetterName())))
+          .addLine("              && %s.equals(%s.comparator(), %s.%s().comparator())))) {",
+              Objects.class, property.getField(), value, property.getGetterName())
           .addLine("  @%s(\"unchecked\")", SuppressWarnings.class)
           .addLine("  %1$s<%2$s> _temporary = (%1$s<%2$s>) (%1$s<?>) %3$s.%4$s();",
               ImmutableSortedSet.class,

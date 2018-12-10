@@ -1,7 +1,6 @@
 package org.inferred.freebuilder.processor.util;
 
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
@@ -71,84 +70,6 @@ public class PreconditionExcerpts {
     }
   }
 
-  private static final class CheckNotNullPreambleExcerpt extends Excerpt {
-    private final Object reference;
-
-    private CheckNotNullPreambleExcerpt(Object reference) {
-      this.reference = reference;
-    }
-
-    @Override
-    public void addTo(SourceBuilder code) {
-      if (code.feature(GUAVA).isAvailable()) {
-        // No preamble needed
-      } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-        // No preamble needed
-      } else {
-        code.addLine("if (%s == null) {", reference)
-            .addLine("  throw new NullPointerException();")
-            .addLine("}");
-      }
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("reference", reference);
-    }
-  }
-
-  private static final class CheckNotNullInlineExcerpt extends Excerpt {
-    private final Object reference;
-
-    private CheckNotNullInlineExcerpt(Object reference) {
-      this.reference = reference;
-    }
-
-    @Override
-    public void addTo(SourceBuilder code) {
-      if (code.feature(GUAVA).isAvailable()) {
-        code.add("%s.checkNotNull(%s)", Preconditions.class, reference);
-      } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-        code.add("%s.requireNonNull(%s)",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), reference);
-      } else {
-        code.add("%s", reference);
-      }
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("reference", reference);
-    }
-  }
-
-  private static final class CheckNotNullExcerpt extends Excerpt {
-    private final Object reference;
-
-    private CheckNotNullExcerpt(Object reference) {
-      this.reference = reference;
-    }
-
-    @Override
-    public void addTo(SourceBuilder code) {
-      if (code.feature(GUAVA).isAvailable()) {
-        code.addLine("%s.checkNotNull(%s);", Preconditions.class, reference);
-      } else if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-        code.addLine("%s.requireNonNull(%s);",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), reference);
-      } else {
-        code.addLine("if (%s == null) {", reference)
-            .addLine("  throw new NullPointerException();")
-            .addLine("}");
-      }
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("reference", reference);
-    }
-  }
-
   private static final Escaper JAVA_STRING_ESCAPER = Escapers.builder()
       .addEscape('"', "\"")
       .addEscape('\\', "\\\\")
@@ -162,64 +83,6 @@ public class PreconditionExcerpts {
    * even though they might actually be in a string.
    */
   private static final Pattern ANY_OPERATOR = Pattern.compile("[+=<>!&^|?:]|\\binstanceof\\b");
-
-  /**
-   * Returns an excerpt of the preamble required to emulate an inline call to Guava's
-   * {@link Preconditions#checkNotNull(Object)} method.
-   *
-   * <p>If Guava or Java 7's Objects are available, no preamble will be generated. Otherwise, the
-   * check will be done out-of-line with an if block in this excerpt.
-   *
-   * <p>If you use this, you <b>must</b> also use {@link #checkNotNullInline} to allow the check to
-   * be performed inline when possible:
-   *
-   * <pre>code.add(checkNotNullPreamble("value"))
-   *    .addLine("this.property = %s;", checkNotNullInline("value"));</pre>
-   *
-   * @param reference an excerpt containing the reference to pass to the checkNotNull method
-   */
-  public static Excerpt checkNotNullPreamble(final Object reference) {
-    return new CheckNotNullPreambleExcerpt(reference);
-  }
-
-  /**
-   * Returns an excerpt equivalent to an inline call to Guava's
-   * {@link Preconditions#checkNotNull(Object)}.
-   * <ul>
-   * <li>If Guava is available, Preconditions.checkNotNull will be used.
-   * <li>If Objects.requireNonNull is available, it will be used if Guava cannot be.
-   * <li>If neither are available, the check will be done out-of-line with an if block.
-   * </ul>
-   *
-   * <p>If you use this, you <b>must</b> also use {@link #checkNotNullPreamble} to allow the
-   * check to be performed out-of-line if necessary:
-   *
-   * <pre>code.add(checkNotNullPreamble("value"))
-   *    .addLine("this.property = %s;", checkNotNullInline("value"));</pre>
-   *
-   * @param reference an excerpt containing the reference to pass to the checkNotNull method
-   */
-  public static Excerpt checkNotNullInline(final Object reference) {
-    return new CheckNotNullInlineExcerpt(reference);
-  }
-
-  /**
-   * Returns an excerpt equivalent to Guava's {@link Preconditions#checkNotNull(Object)}.
-   * <ul>
-   * <li>If Guava is available, Preconditions.checkNotNull will be used.
-   * <li>If Objects.requireNonNull is available, it will be used if Guava cannot be.
-   * <li>If neither are available, the check will be done with an if block.
-   * </ul>
-   *
-   * <pre>code.add(checkNotNull("key"))
-   *    .add(checkNotNull("value"))
-   *    .addLine("map.put(key, value);");</pre>
-   *
-   * @param reference an excerpt containing the reference to pass to the checkNotNull method
-   */
-  public static Excerpt checkNotNull(final Object reference) {
-    return new CheckNotNullExcerpt(reference);
-  }
 
   /**
    * Returns an excerpt equivalent to Guava's

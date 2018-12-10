@@ -65,10 +65,6 @@ public enum SourceLevel implements Feature<SourceLevel> {
     this.version = version;
   }
 
-  public Optional<QualifiedName> javaUtilObjects() {
-    return Optional.of(QualifiedName.of("java.util", "Objects"));
-  }
-
   public Optional<QualifiedName> baseStream() {
     return Optional.of(QualifiedName.of("java.util.stream", "BaseStream"));
   }

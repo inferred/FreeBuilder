@@ -1,7 +1,6 @@
 package org.inferred.freebuilder.processor.util;
 
 import static java.util.Arrays.asList;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.collect.ImmutableList;
 
@@ -119,37 +118,6 @@ public class Excerpts {
 
   public static Object join(final String separator, final Iterable<?> excerpts) {
     return new JoiningExcerpt(separator, excerpts);
-  }
-
-  private static final class EqualsExcerpt extends Excerpt {
-    private final Object a;
-    private final Object b;
-
-    private EqualsExcerpt(Object a, Object b) {
-      this.a = a;
-      this.b = b;
-    }
-
-    @Override
-    public void addTo(SourceBuilder source) {
-      QualifiedName objects = source.feature(SOURCE_LEVEL).javaUtilObjects().orNull();
-      if (objects != null) {
-        source.add("%s.equals(%s, %s)", objects, a, b);
-      } else {
-        source.add("(%1$s == %2$s || (%1$s != null && %1$s.equals(%2$s)))", a, b);
-      }
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("a", a);
-      fields.add("b", b);
-    }
-  }
-
-  /** Returns an excerpt equivalent to Java 7's {@code Object.equals(a, b)}. */
-  public static Object equals(Object a, Object b) {
-    return new EqualsExcerpt(a, b);
   }
 
   private Excerpts() {}

@@ -36,10 +36,11 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
+
+import java.util.Objects;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -66,7 +67,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         // turning a null into an empty (absent) optional as that is the de facto standard
         // now. (If the mapper type *can* return null, of course.)
         if (mapperType.canReturnNull()) {
-          code.add(PreconditionExcerpts.checkNotNull("mapper"))
+          code.addLine("%s.requireNonNull(mapper);", Objects.class)
               .addLine("  %s old%s = %s();",
                   property.getType(), property.getCapitalizedName(), getter(property))
               .addLine("  if (old%s.isPresent()) {", property.getCapitalizedName())
@@ -251,9 +252,8 @@ class OptionalProperty extends PropertyCodeGenerator {
     if (unboxedType.isPresent()) {
       body.addLine("  %s = %s;", property.getField(), property.getName());
     } else {
-      body.add(PreconditionExcerpts.checkNotNullPreamble(property.getName()))
-          .addLine("  %s = %s;",
-              property.getField(), PreconditionExcerpts.checkNotNullInline(property.getName()));
+      body.addLine("  %s = %s.requireNonNull(%s);",
+          property.getField(), Objects.class, property.getName());
     }
     body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)

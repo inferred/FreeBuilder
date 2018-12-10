@@ -23,10 +23,7 @@ import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.ToStringGenerator.addToString;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.LazyName.addLazyDefinitions;
-import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
-import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -41,17 +38,16 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
-import org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -398,29 +394,17 @@ class GeneratedBuilder extends GeneratedType {
         .addLine("    %1$s other = (%1$s) obj;", datatype.getValueType().withWildcards());
     if (generatorsByProperty.isEmpty()) {
       body.addLine("    return true;");
-    } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+    } else {
       String prefix = "    return ";
       for (Property property : generatorsByProperty.keySet()) {
         body.add(prefix);
         body.add(ObjectsExcerpts.equals(
             property.getField(),
             property.getField().on("other"),
-            property.getType().getKind(),
-            nullabilityOf(generatorsByProperty.get(property), false)));
+            property.getType().getKind()));
         prefix = "\n        && ";
       }
       body.add(";\n");
-    } else {
-      for (Property property : generatorsByProperty.keySet()) {
-        body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
-                property.getField(),
-                property.getField().on("other"),
-                property.getType().getKind(),
-                nullabilityOf(generatorsByProperty.get(property), false)))
-            .addLine("      return false;")
-            .addLine("    }");
-      }
-      body.addLine("    return true;");
     }
     code.add(body)
         .addLine("  }");
@@ -440,14 +424,9 @@ class GeneratedBuilder extends GeneratedType {
     FieldAccessList fields = getFields(generatorsByProperty.keySet());
     code.addLine("")
         .addLine("  @%s", Override.class)
-        .addLine("  public int hashCode() {");
-    if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-      code.addLine("    return %s.hash(%s);",
-          code.feature(SOURCE_LEVEL).javaUtilObjects().get(), fields);
-    } else {
-      code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, fields);
-    }
-    code.addLine("  }");
+        .addLine("  public int hashCode() {")
+        .addLine("    return %s.hash(%s);", Objects.class, fields)
+        .addLine("  }");
   }
 
   private void addPartialType(SourceBuilder code) {
@@ -564,41 +543,22 @@ class GeneratedBuilder extends GeneratedType {
         .addLine("    %1$s other = (%1$s) obj;", datatype.getPartialType().withWildcards());
     if (generatorsByProperty.isEmpty()) {
       body.addLine("    return true;");
-    } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+    } else {
       String prefix = "    return ";
       for (Property property : generatorsByProperty.keySet()) {
         body.add(prefix);
         body.add(ObjectsExcerpts.equals(
             property.getField(),
             property.getField().on("other"),
-            property.getType().getKind(),
-            nullabilityOf(generatorsByProperty.get(property), true)));
+            property.getType().getKind()));
         prefix = "\n        && ";
       }
       if (hasRequiredProperties) {
         body.add(prefix);
         body.add("%s.equals(%s, %s)",
-            body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
-            UNSET_PROPERTIES,
-            UNSET_PROPERTIES.on("other"));
+            Objects.class, UNSET_PROPERTIES, UNSET_PROPERTIES.on("other"));
       }
       body.add(";\n");
-    } else {
-      for (Property property : generatorsByProperty.keySet()) {
-        body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
-                property.getField(),
-                property.getField().on("other"),
-                property.getType().getKind(),
-                nullabilityOf(generatorsByProperty.get(property), true)))
-            .addLine("      return false;")
-            .addLine("    }");
-      }
-      if (hasRequiredProperties) {
-        body.addLine("    return %s.equals(%s);",
-            UNSET_PROPERTIES, UNSET_PROPERTIES.on("other"));
-      } else {
-        body.addLine("    return true;");
-      }
     }
     code.add(body)
         .addLine("  }");
@@ -614,27 +574,8 @@ class GeneratedBuilder extends GeneratedType {
       fields = fields.plus(UNSET_PROPERTIES);
     }
 
-    if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-      code.addLine("    return %s.hash(%s);",
-          code.feature(SOURCE_LEVEL).javaUtilObjects().get(), fields);
-    } else {
-      code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, fields);
-    }
-    code.addLine("  }");
-  }
-
-  private static Nullability nullabilityOf(PropertyCodeGenerator generator, boolean inPartial) {
-    switch (generator.initialState()) {
-      case HAS_DEFAULT:
-        return NOT_NULLABLE;
-
-      case OPTIONAL:
-        return NULLABLE;
-
-      case REQUIRED:
-        return inPartial ? NULLABLE : NOT_NULLABLE;
-    }
-    throw new IllegalStateException("Unexpected initial state " + generator.initialState());
+    code.addLine("    return %s.hash(%s);", Objects.class, fields)
+        .addLine("  }");
   }
 
   /** Returns an {@link Excerpt} of "implements/extends {@code type}". */
