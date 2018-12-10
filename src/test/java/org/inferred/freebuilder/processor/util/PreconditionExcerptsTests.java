@@ -26,40 +26,6 @@ import org.junit.runners.JUnit4;
 public class PreconditionExcerptsTests {
 
   @Test
-  public void testCheckNotNull_guava() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
-        .add(PreconditionExcerpts.checkNotNull("foo"))
-        .toString();
-    assertEquals("Preconditions.checkNotNull(foo);\n", source);
-  }
-
-  @Test
-  public void testCheckNotNull_j8() {
-    String source = SourceStringBuilder.simple()
-        .add(PreconditionExcerpts.checkNotNull("foo"))
-        .toString();
-    assertEquals("Objects.requireNonNull(foo);\n", source);
-  }
-
-  @Test
-  public void testCheckNotNullInline_guava() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
-        .add(PreconditionExcerpts.checkNotNullPreamble("foo"))
-        .addLine("this.foo = %s;", PreconditionExcerpts.checkNotNullInline("foo"))
-        .toString();
-    assertEquals("this.foo = Preconditions.checkNotNull(foo);\n", source);
-  }
-
-  @Test
-  public void testCheckNotNullInline_j8() {
-    String source = SourceStringBuilder.simple()
-        .add(PreconditionExcerpts.checkNotNullPreamble("foo"))
-        .addLine("this.foo = %s;", PreconditionExcerpts.checkNotNullInline("foo"))
-        .toString();
-    assertEquals("this.foo = Objects.requireNonNull(foo);\n", source);
-  }
-
-  @Test
   public void testCheckArgument_guava_simpleMessage() {
     String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument("foo != 0", "foo must not be zero"))

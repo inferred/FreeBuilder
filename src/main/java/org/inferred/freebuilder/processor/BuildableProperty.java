@@ -42,11 +42,11 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -241,7 +241,7 @@ class BuildableProperty extends PropertyCodeGenerator {
             property.getType(),
             property.getName());
     Block body = methodBody(code, property.getName())
-        .add(PreconditionExcerpts.checkNotNull(property.getName()))
+        .addLine("  %s.requireNonNull(%s);", Objects.class, property.getName())
         .addLine("  if (%1$s == null || %1$s instanceof %2$s) {",
             property.getField(), ModelUtils.maybeAsTypeElement(property.getType()).get())
         .addLine("    %s = %s;", property.getField(), property.getName())
