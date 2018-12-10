@@ -1,37 +1,27 @@
 package org.inferred.freebuilder.processor.util;
 
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+import java.util.Objects;
 
 import javax.lang.model.type.TypeKind;
 
 public class ObjectsExcerpts {
 
-  public enum Nullability {
-    NULLABLE, NOT_NULLABLE;
-
-    public boolean isNullable() {
-      return this == NULLABLE;
-    }
-  }
-
   /**
    * Returns an Excerpt equivalent to {@code Objects.equals(a, b)}.
    *
-   * <p>If Objects is not available, {@code kind} and {@code nullability} are needed to generate
-   * the most idiomatic equivalent.
+   * <p>Uses == for appropriate primitive types, as this is generally more readable.
    */
-  public static Excerpt equals(Object a, Object b, TypeKind kind, Nullability nullability) {
-    return new EqualsExcerpt(true, a, b, kind, nullability);
+  public static Excerpt equals(Object a, Object b, TypeKind kind) {
+    return new EqualsExcerpt(true, a, b, kind);
   }
 
   /**
    * Returns an Excerpt equivalent to {@code !Objects.equals(a, b)}.
    *
-   * <p>If Objects is not available, {@code kind} and {@code nullability} are needed to generate
-   * the most idiomatic equivalent.
+   * <p>Uses != for appropriate primitive types, as this is generally more readable.
    */
-  public static Excerpt notEquals(Object a, Object b, TypeKind kind, Nullability nullability) {
-    return new EqualsExcerpt(false, a, b, kind, nullability);
+  public static Excerpt notEquals(Object a, Object b, TypeKind kind) {
+    return new EqualsExcerpt(false, a, b, kind);
   }
 
   private static class EqualsExcerpt extends Excerpt {
@@ -40,44 +30,20 @@ public class ObjectsExcerpts {
     private final Object a;
     private final Object b;
     private final TypeKind kind;
-    private final Nullability nullability;
 
-    EqualsExcerpt(boolean areEqual, Object a, Object b, TypeKind kind, Nullability nullability) {
+    EqualsExcerpt(boolean areEqual, Object a, Object b, TypeKind kind) {
       this.areEqual = areEqual;
       this.a = a;
       this.b = b;
       this.kind = kind;
-      this.nullability = nullability;
     }
 
     @Override
     public void addTo(SourceBuilder code) {
-      QualifiedName javaUtilObjects = code.feature(SOURCE_LEVEL).javaUtilObjects().orNull();
-      if (javaUtilObjects != null) {
-        code.add("%s%s.equals(%s, %s)", areEqual ? "" : "!", javaUtilObjects, a, b);
-      } else if (nullability.isNullable()) {
-        if (areEqual) {
-          code.add("%1$s == %2$s || (%1$s != null && %1$s.equals(%2$s))", a, b);
-        } else {
-          code.add("%1$s != %2$s && (%1$s == null || !%1$s.equals(%2$s))", a, b);
-        }
-      } else if (kind.isPrimitive()) {
-        switch (kind) {
-        case FLOAT:
-          code.add("%1$s.floatToIntBits(%2$s) %3$s %1$s.floatToIntBits(%4$s)",
-              Float.class, a, areEqual ? "==" : "!=", b);
-          break;
-
-        case DOUBLE:
-          code.add("%1$s.doubleToLongBits(%2$s) %3$s %1$s.doubleToLongBits(%4$s)",
-              Double.class, a, areEqual ? "==" : "!=", b);
-          break;
-
-        default:
-          code.add("%s %s %s", a, areEqual ? "==" : "!=", b);
-        }
+      if (isComparableWithOperator(kind)) {
+        code.add("%s %s %s", a, areEqual ? "==" : "!=", b);
       } else {
-        code.add("%s%s.equals(%s)", areEqual ? "" : "!", a, b);
+        code.add("%s%s.equals(%s, %s)", areEqual ? "" : "!", Objects.class, a, b);
       }
     }
 
@@ -87,12 +53,23 @@ public class ObjectsExcerpts {
       fields.add("a", a);
       fields.add("b", b);
       fields.add("kind", kind);
-      fields.add("nullable", nullability);
     }
-
   }
 
+  private static boolean isComparableWithOperator(TypeKind kind) {
+    switch (kind) {
+      case BOOLEAN:
+      case BYTE:
+      case SHORT:
+      case INT:
+      case LONG:
+      case CHAR:
+        return true;
 
+      default:
+        return false;
+    }
+  }
 
   private ObjectsExcerpts() {}
 }

@@ -21,7 +21,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
-import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
@@ -34,10 +33,10 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
+import java.util.Objects;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -139,7 +138,7 @@ class NullableProperty extends PropertyCodeGenerator {
             metadata.getBuilder(),
             mapper(property),
             unaryOperator.withParameters(typeParam))
-        .add(PreconditionExcerpts.checkNotNull("mapper"));
+        .addLine("  %s.requireNonNull(mapper);", Objects.class);
     Block body = methodBody(code, "mapper");
     Excerpt propertyValue = body.declare(new TypeMirrorExcerpt(
         property.getType()), property.getName(), Excerpts.add("%s()", getter(property)));
@@ -181,8 +180,7 @@ class NullableProperty extends PropertyCodeGenerator {
       code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", value, property.getGetterName()),
           Excerpts.add("%s.%s()", defaults, getter(property)),
-          DECLARED,
-          NULLABLE));
+          DECLARED));
     }
     code.addLine("  %s(%s.%s());", setter(property), value, property.getGetterName());
     if (defaults != null) {
@@ -197,8 +195,7 @@ class NullableProperty extends PropertyCodeGenerator {
       code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", builder, getter(property)),
           Excerpts.add("%s.%s()", defaults, getter(property)),
-          DECLARED,
-          NULLABLE));
+          DECLARED));
     }
     code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
     if (defaults != null) {

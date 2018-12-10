@@ -24,10 +24,7 @@ import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.LazyName.addLazyDefinitions;
-import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
-import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -51,9 +48,9 @@ import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
@@ -365,14 +362,9 @@ public class CodeGenerator {
       FieldAccessList properties = getFields(metadata.getProperties());
       code.addLine("")
           .addLine("  @%s", Override.class)
-          .addLine("  public int hashCode() {");
-      if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-        code.addLine("    return %s.hash(%s);",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), properties);
-      } else {
-        code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, properties);
-      }
-      code.addLine("  }");
+          .addLine("  public int hashCode() {")
+          .addLine("    return %s.hash(%s);", Objects.class, properties)
+          .addLine("  }");
     }
     // toString
     if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
@@ -393,28 +385,17 @@ public class CodeGenerator {
         .addLine("    %1$s other = (%1$s) obj;", metadata.getValueType().withWildcards());
     if (metadata.getProperties().isEmpty()) {
       body.addLine("    return true;");
-    } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+    } else {
       String prefix = "    return ";
       for (Property property : metadata.getProperties()) {
         body.add(prefix);
-        body.add("%s.equals(%s, %s)",
-            body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+        body.add(ObjectsExcerpts.equals(
             property.getField(),
-            property.getField().on("other"));
+            property.getField().on("other"),
+            property.getType().getKind()));
         prefix = "\n        && ";
       }
       body.add(";\n");
-    } else {
-      for (Property property : metadata.getProperties()) {
-        body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
-                property.getField(),
-                property.getField().on("other"),
-                property.getType().getKind(),
-                (property.getCodeGenerator().getType() == Type.OPTIONAL) ? NULLABLE : NOT_NULLABLE))
-            .addLine("      return false;")
-            .addLine("    }");
-      }
-      body.addLine("    return true;");
     }
     code.add(body)
         .addLine("  }");
@@ -548,57 +529,24 @@ public class CodeGenerator {
           .addLine("    %1$s other = (%1$s) obj;", metadata.getPartialType().withWildcards());
       if (metadata.getProperties().isEmpty()) {
         body.addLine("    return true;");
-      } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+      } else {
         String prefix = "    return ";
         for (Property property : metadata.getProperties()) {
           body.add(prefix);
-          body.add("%s.equals(%s, %s)",
-              body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+          body.add(ObjectsExcerpts.equals(
               property.getField(),
-              property.getField().on("other"));
+              property.getField().on("other"),
+              property.getType().getKind()));
           prefix = "\n        && ";
         }
         if (hasRequiredProperties) {
           body.add(prefix);
           body.add("%s.equals(%s, %s)",
-              body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+              Objects.class,
               UNSET_PROPERTIES,
               UNSET_PROPERTIES.on("other"));
         }
         body.add(";\n");
-      } else {
-        for (Property property : metadata.getProperties()) {
-          switch (property.getType().getKind()) {
-            case FLOAT:
-            case DOUBLE:
-              body.addLine("    if (%s.doubleToLongBits(%s)", Double.class, property.getField())
-                  .addLine("        != %s.doubleToLongBits(%s)) {",
-                      Double.class, property.getField().on("other"));
-              break;
-
-            default:
-              if (property.getType().getKind().isPrimitive()) {
-                body.addLine("    if (%s != %s) {",
-                    property.getField(), property.getField().on("other"));
-              } else if (property.getCodeGenerator().getType() == Type.HAS_DEFAULT) {
-                body.addLine("    if (!%s.equals(%s)) {",
-                    property.getField(), property.getField().on("other"));
-              } else {
-                body.addLine("    if (%s != %s",
-                        property.getField(), property.getField().on("other"))
-                    .addLine("        && (%1$s == null || !%1$s.equals(%2$s))) {",
-                        property.getField(), property.getField().on("other"));
-              }
-          }
-          body.addLine("      return false;")
-              .addLine("    }");
-        }
-        if (hasRequiredProperties) {
-          body.addLine("    return %s.equals(%s);",
-              UNSET_PROPERTIES, UNSET_PROPERTIES.on("other"));
-        } else {
-          body.addLine("    return true;");
-        }
       }
       code.add(body)
           .addLine("  }");
@@ -613,14 +561,8 @@ public class CodeGenerator {
       if (hasRequiredProperties) {
         properties = properties.plus(UNSET_PROPERTIES);
       }
-
-      if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-        code.addLine("    return %s.hash(%s);",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), properties);
-      } else {
-        code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, properties);
-      }
-      code.addLine("  }");
+      code.addLine("    return %s.hash(%s);", Objects.class, properties)
+          .addLine("  }");
     }
     // toString
     if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) != FINAL) {

@@ -21,9 +21,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.CodeGenerator.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
-import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
@@ -37,6 +34,8 @@ import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import java.util.Objects;
 
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -99,8 +98,8 @@ class DefaultProperty extends PropertyCodeGenerator {
     if (kind.isPrimitive()) {
       body.addLine("  %s = %s;", property.getField(), property.getName());
     } else {
-      body.add(checkNotNullPreamble(property.getName()))
-          .addLine("  %s = %s;", property.getField(), checkNotNullInline(property.getName()));
+      body.addLine("  %s = %s.requireNonNull(%s);",
+          property.getField(), Objects.class, property.getName());
     }
     if (!hasDefault) {
       body.addLine("  %s.remove(%s.%s);",
@@ -139,7 +138,7 @@ class DefaultProperty extends PropertyCodeGenerator {
             mapper(property),
             unaryOperator.withParameters(typeParam));
     if (!hasDefault) {
-      code.add(PreconditionExcerpts.checkNotNull("mapper"));
+      code.addLine("  %s.requireNonNull(mapper);", Objects.class);
     }
     code.addLine("  return %s(mapper.apply(%s()));", setter(property), getter(property))
         .addLine("}");
@@ -187,8 +186,7 @@ class DefaultProperty extends PropertyCodeGenerator {
       code.add(ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", value, property.getGetterName()),
           Excerpts.add("%s.%s()", defaults, getter(property)),
-          kind,
-          NOT_NULLABLE));
+          kind));
       code.add(") {%n");
     }
     code.addLine("  %s(%s.%s());", setter(property), value, property.getGetterName());
@@ -215,8 +213,7 @@ class DefaultProperty extends PropertyCodeGenerator {
       code.add(ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", builder, getter(property)),
           Excerpts.add("%s.%s()", defaults, getter(property)),
-          kind,
-          NOT_NULLABLE));
+          kind));
       if (!hasDefault) {
         code.add(")");
       }

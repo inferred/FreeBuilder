@@ -27,8 +27,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
@@ -53,6 +51,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -177,8 +176,7 @@ class ListProperty extends PropertyCodeGenerator {
     if (unboxedType.isPresent()) {
       body.addLine("  %s.add(element);", property.getField());
     } else {
-      body.add(checkNotNullPreamble("element"))
-          .addLine("  %s.add(%s);", property.getField(), checkNotNullInline("element"));
+      body.addLine("  %s.add(%s.requireNonNull(element));", property.getField(), Objects.class);
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)

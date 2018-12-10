@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.processor.FeatureSets;
-import org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -74,7 +73,7 @@ public class ObjectsExcerptsTest {
                 i,
                 j,
                 ObjectsExcerpts.equals(
-                    "value" + i, "value" + j, valueSet.kind, Nullability.NOT_NULLABLE));
+                    "value" + i, "value" + j, valueSet.kind));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
@@ -95,7 +94,7 @@ public class ObjectsExcerptsTest {
                 i,
                 j,
                 ObjectsExcerpts.equals(
-                    "value" + i, "value" + j, valueSet.kind, Nullability.NULLABLE));
+                    "value" + i, "value" + j, valueSet.kind));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
@@ -115,7 +114,7 @@ public class ObjectsExcerptsTest {
                 i,
                 j,
                 ObjectsExcerpts.notEquals(
-                    "value" + i, "value" + j, valueSet.kind, Nullability.NOT_NULLABLE));
+                    "value" + i, "value" + j, valueSet.kind));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
@@ -136,7 +135,7 @@ public class ObjectsExcerptsTest {
                 i,
                 j,
                 ObjectsExcerpts.notEquals(
-                    "value" + i, "value" + j, valueSet.kind, Nullability.NULLABLE));
+                    "value" + i, "value" + j, valueSet.kind));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
