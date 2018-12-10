@@ -73,10 +73,6 @@ public enum SourceLevel implements Feature<SourceLevel> {
     return Optional.of(QualifiedName.of("java.util", "Objects"));
   }
 
-  public boolean hasLambdas() {
-    return true;
-  }
-
   public Optional<QualifiedName> baseStream() {
     return Optional.of(QualifiedName.of("java.util.stream", "BaseStream"));
   }
