@@ -1,15 +1,13 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
-
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.LazyName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Excerpts defining a set implementation that delegates to a provided add method to perform
@@ -23,7 +21,6 @@ public class CheckedSet extends Excerpt {
 
   @Override
   public void addTo(SourceBuilder code) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().get();
     code.addLine("")
         .addLine("/**")
         .addLine(" * A set implementation that delegates to a provided add method")
@@ -32,9 +29,9 @@ public class CheckedSet extends Excerpt {
         .addLine("private static class %s<E> extends %s<E> {", TYPE, AbstractSet.class)
         .addLine("")
         .addLine("  private final %s<E> set;", Set.class)
-        .addLine("  private final %s<E> add;", consumer.getQualifiedName())
+        .addLine("  private final %s<E> add;", Consumer.class)
         .addLine("")
-        .addLine("  %s(%s<E> set, %s<E> add) {", TYPE, Set.class, consumer.getQualifiedName())
+        .addLine("  %s(%s<E> set, %s<E> add) {", TYPE, Set.class, Consumer.class)
         .addLine("    this.set = set;")
         .addLine("    this.add = add;")
         .addLine("  }")
