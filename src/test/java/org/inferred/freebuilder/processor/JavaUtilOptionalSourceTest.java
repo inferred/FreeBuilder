@@ -23,7 +23,6 @@ import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +40,7 @@ public class JavaUtilOptionalSourceTest {
 
   @Test
   public void testJ8() {
-    assertThat(builder(BEAN)).given(JAVA_8, GuavaLibrary.AVAILABLE).generates(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -354,7 +353,7 @@ public class JavaUtilOptionalSourceTest {
 
   @Test
   public void testJ8_noGuava() {
-    assertThat(builder(BEAN)).given(JAVA_8).generates(
+    assertThat(builder(BEAN)).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -666,7 +665,7 @@ public class JavaUtilOptionalSourceTest {
 
   @Test
   public void testPrefixless() {
-    assertThat(builder(PREFIXLESS)).given(JAVA_8, GuavaLibrary.AVAILABLE).generates(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
