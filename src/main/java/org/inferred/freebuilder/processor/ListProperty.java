@@ -34,7 +34,6 @@ import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.check
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -167,11 +166,10 @@ class ListProperty extends PropertyCodeGenerator {
           property.getField(),
           ImmutableList.class);
     } else {
-      code.addLine("private final %1$s<%2$s> %3$s = new %1$s%4$s();",
+      code.addLine("private final %1$s<%2$s> %3$s = new %1$s<>();",
           ArrayList.class,
           elementType,
-          property.getField(),
-          diamondOperator(elementType));
+          property.getField());
     }
   }
 
@@ -201,10 +199,7 @@ class ListProperty extends PropertyCodeGenerator {
     Block body = methodBody(code, "element");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
-          .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getField(),
-              ArrayList.class,
-              diamondOperator(elementType))
+          .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("  }");
     }
     if (unboxedType.isPresent()) {
@@ -287,8 +282,7 @@ class ListProperty extends PropertyCodeGenerator {
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("    if (elementsSize != 0) {")
           .addLine("      if (%s instanceof %s) {", property.getField(), ImmutableList.class)
-          .addLine("        %1$s = new %2$s%3$s(%1$s);",
-              property.getField(), ArrayList.class, diamondOperator(elementType))
+          .addLine("        %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("      }")
           .add("      ((%s<?>) %s)", ArrayList.class, property.getField());
     } else {
@@ -319,8 +313,7 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("    if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("      if (%s instanceof %s) {", property.getField(), ImmutableList.class)
-          .addLine("        %1$s = new %2$s%3$s(%1$s);",
-              property.getField(), ArrayList.class, diamondOperator(elementType))
+          .addLine("        %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("      }")
           .add("      ((%s<?>) %s)", ArrayList.class, property.getField());
     } else {
@@ -395,10 +388,7 @@ class ListProperty extends PropertyCodeGenerator {
     Block body = methodBody(code, "mutator");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
-          .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getField(),
-              ArrayList.class,
-              diamondOperator(elementType))
+          .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("  }");
     }
     if (overridesAddMethod) {
@@ -446,8 +436,7 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("public %s<%s> %s() {", List.class, elementType, getter(property));
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
-          .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getField(), ArrayList.class, diamondOperator(elementType))
+          .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("  }");
     }
     code.addLine("  return %s.unmodifiableList(%s);", Collections.class, property.getField())
