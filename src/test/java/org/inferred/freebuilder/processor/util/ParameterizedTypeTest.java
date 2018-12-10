@@ -35,13 +35,13 @@ public class ParameterizedTypeTest {
     ParameterizedType type = ParameterizedType.from(MY_TYPE);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertFalse(type.isParameterized());
-    assertEquals("MyType", prettyPrint(type, SourceLevel.JAVA_7));
-    assertEquals("new MyType", prettyPrint(type.constructor(), SourceLevel.JAVA_6));
-    assertEquals("new MyType", prettyPrint(type.constructor(), SourceLevel.JAVA_7));
-    assertEquals("MyType", prettyPrint(type.declaration(), SourceLevel.JAVA_7));
-    assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_7));
+    assertEquals("MyType", prettyPrint(type, SourceLevel.JAVA_8));
+    assertEquals("new MyType", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
+    assertEquals("new MyType", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
+    assertEquals("MyType", prettyPrint(type.declaration(), SourceLevel.JAVA_8));
+    assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType#foo()}",
-        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_7));
+        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
   }
 
   @Test
@@ -50,14 +50,14 @@ public class ParameterizedTypeTest {
     assertEquals(QualifiedName.of("com.example", "MyType", "MyNestedType"),
         type.getQualifiedName());
     assertFalse(type.isParameterized());
-    assertEquals("MyType.MyNestedType", prettyPrint(type, SourceLevel.JAVA_7));
-    assertEquals("new MyType.MyNestedType", prettyPrint(type.constructor(), SourceLevel.JAVA_6));
-    assertEquals("new MyType.MyNestedType", prettyPrint(type.constructor(), SourceLevel.JAVA_7));
-    assertEquals("MyNestedType", prettyPrint(type.declaration(), SourceLevel.JAVA_7));
+    assertEquals("MyType.MyNestedType", prettyPrint(type, SourceLevel.JAVA_8));
+    assertEquals("new MyType.MyNestedType", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
+    assertEquals("new MyType.MyNestedType", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
+    assertEquals("MyNestedType", prettyPrint(type.declaration(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType.MyNestedType}",
-        prettyPrint(type.javadocLink(), SourceLevel.JAVA_7));
+        prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType.MyNestedType#foo()}",
-        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_7));
+        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
   }
 
   @Test
@@ -66,13 +66,12 @@ public class ParameterizedTypeTest {
     ParameterizedType type = ParameterizedType.from(myType);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertTrue(type.isParameterized());
-    assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_7));
-    assertEquals("new MyType<V>", prettyPrint(type.constructor(), SourceLevel.JAVA_6));
-    assertEquals("new MyType<>", prettyPrint(type.constructor(), SourceLevel.JAVA_7));
-    assertEquals("MyType<V>", prettyPrint(type.declaration(), SourceLevel.JAVA_7));
-    assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_7));
+    assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_8));
+    assertEquals("new MyType<>", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
+    assertEquals("MyType<V>", prettyPrint(type.declaration(), SourceLevel.JAVA_8));
+    assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType#foo()}",
-        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_7));
+        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
   }
 
   @Test
@@ -83,13 +82,12 @@ public class ParameterizedTypeTest {
     ParameterizedType type = ParameterizedType.from(myType);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertTrue(type.isParameterized());
-    assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_7));
-    assertEquals("new MyType<V>", prettyPrint(type.constructor(), SourceLevel.JAVA_6));
-    assertEquals("new MyType<>", prettyPrint(type.constructor(), SourceLevel.JAVA_7));
-    assertEquals("MyType<V extends Number>", prettyPrint(type.declaration(), SourceLevel.JAVA_7));
-    assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_7));
+    assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_8));
+    assertEquals("new MyType<>", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
+    assertEquals("MyType<V extends Number>", prettyPrint(type.declaration(), SourceLevel.JAVA_8));
+    assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType#foo()}",
-        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_7));
+        prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
   }
 
   @Test
@@ -102,7 +100,7 @@ public class ParameterizedTypeTest {
         .build();
     ParameterizedType type = ParameterizedType.from(myType);
     assertEquals("MyType<V extends Number & Comparable & Formattable>",
-        prettyPrint(type.declaration(), SourceLevel.JAVA_7));
+        prettyPrint(type.declaration(), SourceLevel.JAVA_8));
   }
 
   private static String prettyPrint(Excerpt type, SourceLevel sourceLevel) {
