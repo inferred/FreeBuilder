@@ -30,7 +30,6 @@ import com.google.common.testing.EqualsTester;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
-import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
@@ -70,10 +69,6 @@ public class OptionalPropertyTest {
           FeatureSet featureSet = (FeatureSet) parameters.get(3);
           if (optional.equals(com.google.common.base.Optional.class)
               && !featureSet.get(GuavaLibrary.GUAVA).isAvailable()) {
-            return false;
-          }
-          if (optional.equals(java.util.Optional.class)
-              && !featureSet.get(SourceLevel.SOURCE_LEVEL).hasLambdas()) {
             return false;
           }
           return true;

@@ -293,7 +293,7 @@ class SetProperty extends PropertyCodeGenerator {
             addAllMethod(property),
             Iterable.class,
             elementType)
-        .add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
+        .addLine("  elements.forEach(this::%s);", addMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
