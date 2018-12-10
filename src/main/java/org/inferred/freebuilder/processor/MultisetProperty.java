@@ -32,7 +32,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -45,11 +44,12 @@ import org.inferred.freebuilder.processor.excerpt.CheckedMultiset;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
 
 import java.util.Collection;
+import java.util.Spliterator;
+import java.util.stream.BaseStream;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -160,7 +160,9 @@ class MultisetProperty extends PropertyCodeGenerator {
   public void addBuilderFieldAccessors(SourceBuilder code) {
     addAdd(code);
     addVarargsAdd(code);
-    addAddAllMethods(code);
+    addSpliteratorAddAll(code);
+    addStreamAddAll(code);
+    addIterableAddAll(code);
     addAddCopiesTo(code);
     addMutate(code);
     addClear(code);
@@ -223,23 +225,12 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code) {
-    if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code);
-      addStreamAddAll(code);
-      addIterableAddAll(code);
-    } else {
-      addPreStreamsAddAll(code);
-    }
-  }
-
   private void addSpliteratorAddAll(SourceBuilder code) {
-    QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
     addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
-            spliterator,
+            Spliterator.class,
             elementType)
         .addLine("  elements.forEachRemaining(element -> {")
         .addLine("    %s(element, 1);", addCopiesMethod(property))
@@ -249,12 +240,11 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   private void addStreamAddAll(SourceBuilder code) {
-    QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
     addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
-            baseStream,
+            BaseStream.class,
             elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
@@ -269,21 +259,6 @@ class MultisetProperty extends PropertyCodeGenerator {
             Iterable.class,
             elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
-        .addLine("}");
-  }
-
-  private void addPreStreamsAddAll(SourceBuilder code) {
-    addJavadocForAddAll(code);
-    addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(),
-            addAllMethod(property),
-            Iterable.class,
-            elementType)
-        .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-        .addLine("    %s(element, 1);", addCopiesMethod(property))
-        .addLine("  }")
-        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 

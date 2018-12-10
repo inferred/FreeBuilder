@@ -31,7 +31,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVararg
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -43,7 +42,6 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
-import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
 
@@ -54,6 +52,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Spliterator;
+import java.util.stream.BaseStream;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -173,7 +173,9 @@ class ListProperty extends PropertyCodeGenerator {
   public void addBuilderFieldAccessors(SourceBuilder code) {
     addAdd(code);
     addVarargsAdd(code);
-    addAddAllMethods(code);
+    addSpliteratorAddAll(code);
+    addStreamAddAll(code);
+    addIterableAddAll(code);
     addMutate(code);
     addClear(code);
     addGetter(code);
@@ -252,57 +254,15 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code) {
-    if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code);
-      addStreamAddAll(code);
-      addIterableAddAll(code);
-    } else {
-      addPreStreamsAddAll(code);
-    }
-  }
-
-  private void addPreStreamsAddAll(SourceBuilder code) {
-    addJavadocForAddAll(code);
-    addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-        datatype.getBuilder(),
-        addAllMethod(property),
-        Iterable.class,
-        elementType);
-    Block body = methodBody(code, "elements");
-    body.addLine("  if (elements instanceof %s) {", Collection.class)
-        .addLine("    int elementsSize = ((%s<?>) elements).size();", Collection.class);
-    if (body.feature(GUAVA).isAvailable()) {
-      body.addLine("    if (elementsSize != 0) {")
-          .addLine("      if (%s instanceof %s) {", property.getField(), ImmutableList.class)
-          .addLine("        %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
-          .addLine("      }")
-          .add("      ((%s<?>) %s)", ArrayList.class, property.getField());
-    } else {
-      body.add("    %s", property.getField());
-    }
-    body.add(".ensureCapacity(%s.size() + elementsSize);%n", property.getField())
-        .addLine("  }");
-    if (body.feature(GUAVA).isAvailable()) {
-      body.addLine("  }");
-    }
-    body.addLine("  elements.forEach(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
-        .addLine("}");
-  }
-
   private void addSpliteratorAddAll(SourceBuilder code) {
-    QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
     addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
-            spliterator,
+            Spliterator.class,
             elementType);
     Block body = methodBody(code, "elements");
-    body.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", spliterator)
+    body.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class)
         .addLine("    long elementsSize = elements.estimateSize();")
         .addLine("    if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {");
     if (body.feature(GUAVA).isAvailable()) {
@@ -335,12 +295,11 @@ class ListProperty extends PropertyCodeGenerator {
   }
 
   private void addStreamAddAll(SourceBuilder code) {
-    QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
     addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
-            baseStream,
+            BaseStream.class,
             elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
