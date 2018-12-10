@@ -20,7 +20,6 @@ import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelC
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeVariable;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 
 import com.google.common.base.Function;
 
@@ -92,7 +91,7 @@ public class GenericElementTest {
       @Override public Void apply(DeclaredType foobar) {
         assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
         assertThat(foobar.getTypeArguments()).hasSize(2);
-        assertThat(SourceStringBuilder.simple(JAVA_7).add("%s", foobar).toString())
+        assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
             .isEqualTo("FooBar<T, C>");
         return null;
       }
@@ -114,7 +113,7 @@ public class GenericElementTest {
       @Override public Void apply(DeclaredType foobar) {
         assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
         assertThat(foobar.getTypeArguments()).hasSize(2);
-        assertThat(SourceStringBuilder.simple(JAVA_7).add("%s", foobar).toString())
+        assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
             .isEqualTo("FooBar<T, C>");
         return null;
       }
@@ -138,7 +137,7 @@ public class GenericElementTest {
         TypeElement foobarElement = maybeAsTypeElement(foobar).get();
         assertThat(foobarElement.getSimpleName().toString()).isEqualTo("FooBar");
         assertThat(foobar.getTypeArguments()).hasSize(1);
-        assertThat(SourceStringBuilder.simple(JAVA_7).add("%s", foobar).toString())
+        assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
             .isEqualTo("FooBar<E>");
         // E extends FooBar<E>
         TypeParameterElement typeParameter = foobarElement.getTypeParameters().get(0);
