@@ -1,7 +1,5 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.FunctionalType.BI_CONSUMER;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ForwardingMultiset;
 import com.google.common.collect.Multiset;
@@ -11,6 +9,7 @@ import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
+import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
@@ -34,10 +33,10 @@ public class CheckedMultiset extends Excerpt {
         .addLine("private static class %s<E> extends %s<E> {", TYPE, ForwardingMultiset.class)
         .addLine("")
         .addLine("  private final %s<E> multiset;", Multiset.class)
-        .addLine("  private final %s<E, Integer> setCount;", BI_CONSUMER)
+        .addLine("  private final %s<E, Integer> setCount;", BiConsumer.class)
         .addLine("")
         .addLine("  %s(%s<E> multiset, %s<E, Integer> setCount) {",
-            TYPE, Multiset.class, BI_CONSUMER)
+            TYPE, Multiset.class, BiConsumer.class)
         .addLine("    this.multiset = multiset;")
         .addLine("    this.setCount = setCount;")
         .addLine("  }")

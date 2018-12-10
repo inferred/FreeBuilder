@@ -1,7 +1,5 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.FunctionalType.BI_CONSUMER;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ForwardingListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -16,6 +14,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
@@ -41,9 +40,10 @@ public class CheckedListMultimap extends Excerpt {
             TYPE, ForwardingListMultimap.class)
         .addLine("")
         .addLine("  private final %s<K, V> multimap;", ListMultimap.class)
-        .addLine("  private final %s<K, V> put;", BI_CONSUMER)
+        .addLine("  private final %s<K, V> put;", BiConsumer.class)
         .addLine("")
-        .addLine("  %s(%s<K, V> multimap, %s<K, V> put) {", TYPE, ListMultimap.class, BI_CONSUMER)
+        .addLine("  %s(%s<K, V> multimap, %s<K, V> put) {",
+            TYPE, ListMultimap.class, BiConsumer.class)
         .addLine("    this.multimap = multimap;")
         .addLine("    this.put = put;")
         .addLine("  }")

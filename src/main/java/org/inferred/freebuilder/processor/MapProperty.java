@@ -29,7 +29,6 @@ import static org.inferred.freebuilder.processor.util.FunctionalType.functionalT
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.base.Optional;
@@ -250,9 +249,6 @@ class MapProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Invokes {@code mutator} with the map to be returned from")

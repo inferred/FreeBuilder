@@ -27,7 +27,6 @@ import static org.inferred.freebuilder.processor.util.FunctionalType.functionalT
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -41,6 +40,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -99,7 +99,7 @@ class OptionalProperty extends PropertyCodeGenerator {
           Property property) {
         code.add("  return %s(%s().map(mapper", setter(property), getter(property));
         if (!mapperType.getFunctionalInterface().getQualifiedName()
-            .equals(FunctionalType.UNARY_OPERATOR)) {
+            .equals(QualifiedName.of(UnaryOperator.class))) {
           code.add("::%s", mapperType.getMethodName());
         }
         code.add("));%n");
@@ -308,9 +308,6 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is present,",

@@ -1,7 +1,5 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.FunctionalType.CONSUMER;
-
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
@@ -12,6 +10,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Excerpts defining a navigable set implementation that delegates to a provided add method to
@@ -35,13 +34,14 @@ public class CheckedNavigableSet extends Excerpt {
             TYPE, AbstractSet.class, NavigableSet.class)
         .addLine("")
         .addLine("  private final %s<E> set;", NavigableSet.class)
-        .addLine("  private final %s<E> add;", CONSUMER)
+        .addLine("  private final %s<E> add;", Consumer.class)
         .addLine("  private final E fromElement;")
         .addLine("  private final boolean fromInclusive;")
         .addLine("  private final E toElement;")
         .addLine("  private final boolean toInclusive;")
         .addLine("")
-        .addLine("  %s(%s<E> set, %s<E> add) {", TYPE, NavigableSet.class, CONSUMER)
+        .addLine("  %s(%s<E> set, %s<E> add) {",
+            TYPE, NavigableSet.class, Consumer.class)
         .addLine("    this.set = set;")
         .addLine("    this.add = add;")
         .addLine("    this.fromElement = null;")
@@ -52,7 +52,7 @@ public class CheckedNavigableSet extends Excerpt {
         .addLine("")
         .addLine("  %s(", TYPE)
         .addLine("      %s<E> set,", NavigableSet.class)
-        .addLine("      %s<E> add,", CONSUMER)
+        .addLine("      %s<E> add,", Consumer.class)
         .addLine("      E fromElement,")
         .addLine("      boolean fromInclusive,")
         .addLine("      E toElement,")

@@ -2,11 +2,13 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static javax.lang.model.element.Modifier.ABSTRACT;
+
 import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.only;
+
+import static javax.lang.model.element.Modifier.ABSTRACT;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -18,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import javax.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
@@ -35,15 +39,6 @@ import javax.lang.model.util.Types;
  */
 public class FunctionalType extends ValueType {
 
-  private static final String FUNCTION_PACKAGE = "java.util.function";
-
-  public static final QualifiedName CONSUMER =
-      QualifiedName.of(FUNCTION_PACKAGE, "Consumer");
-  public static final QualifiedName BI_CONSUMER =
-      QualifiedName.of(FUNCTION_PACKAGE, "BiConsumer");
-  public static final QualifiedName UNARY_OPERATOR =
-      QualifiedName.of(FUNCTION_PACKAGE, "UnaryOperator");
-
   private static final ErrorTypeHandling<RuntimeException> IGNORE_ERROR_TYPES =
       new ErrorTypeHandling<RuntimeException>() {
         @Override public void handleErrorType(ErrorType type) { }
@@ -52,7 +47,7 @@ public class FunctionalType extends ValueType {
   public static FunctionalType consumer(TypeMirror type) {
     checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
     return new FunctionalType(
-        CONSUMER.withParameters(type),
+        QualifiedName.of(Consumer.class).withParameters(type),
         "accept",
         ImmutableList.of(type),
         null);
@@ -61,7 +56,7 @@ public class FunctionalType extends ValueType {
   public static FunctionalType unaryOperator(TypeMirror type) {
     checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
     return new FunctionalType(
-        UNARY_OPERATOR.withParameters(type),
+        QualifiedName.of(UnaryOperator.class).withParameters(type),
         "apply",
         ImmutableList.of(type),
         type);

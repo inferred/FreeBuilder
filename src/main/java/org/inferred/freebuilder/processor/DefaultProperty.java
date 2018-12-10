@@ -23,7 +23,6 @@ import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTI
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
 
@@ -129,9 +128,6 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Replaces the value to be returned by %s",

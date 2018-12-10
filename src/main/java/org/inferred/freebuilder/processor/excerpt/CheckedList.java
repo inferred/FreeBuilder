@@ -1,7 +1,5 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.FunctionalType.CONSUMER;
-
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -9,6 +7,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.RandomAccess;
+import java.util.function.Consumer;
 
 /**
  * Excerpts defining a list implementation that delegates to a provided add method to perform
@@ -31,9 +30,9 @@ public class CheckedList extends Excerpt {
             TYPE, AbstractList.class, RandomAccess.class)
         .addLine("")
         .addLine("  private final %s<E> list;", List.class)
-        .addLine("  private final %s<E> add;", CONSUMER)
+        .addLine("  private final %s<E> add;", Consumer.class)
         .addLine("")
-        .addLine("  %s(%s<E> list, %s<E> add) {", TYPE, List.class, CONSUMER)
+        .addLine("  %s(%s<E> list, %s<E> add) {", TYPE, List.class, Consumer.class)
         .addLine("    this.list = list;")
         .addLine("    this.add = add;")
         .addLine("  }")
