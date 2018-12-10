@@ -57,7 +57,7 @@ public class MultisetMutateMethodTest {
   public static Iterable<Object[]> featureSets() {
     List<Boolean> checkedAndInterned = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
-    List<FeatureSet> features = FeatureSets.WITH_GUAVA_AND_LAMBDAS;
+    List<FeatureSet> features = FeatureSets.WITH_GUAVA;
     return () -> Lists
         .cartesianProduct(TYPES, checkedAndInterned, conventions, features)
         .stream()

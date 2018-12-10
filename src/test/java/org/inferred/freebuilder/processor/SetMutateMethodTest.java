@@ -56,7 +56,7 @@ public class SetMutateMethodTest {
     List<SetType> sets = Arrays.asList(SetType.values());
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
-    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
         .cartesianProduct(sets, TYPES, checked, conventions, features)
         .stream()

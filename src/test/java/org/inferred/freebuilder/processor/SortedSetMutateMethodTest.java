@@ -50,7 +50,7 @@ public class SortedSetMutateMethodTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> parameters() {
-    return FeatureSets.WITH_LAMBDAS;
+    return FeatureSets.ALL;
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();

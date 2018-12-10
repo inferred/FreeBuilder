@@ -1,8 +1,5 @@
 package org.inferred.freebuilder.processor.util.feature;
 
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
-
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -27,8 +24,7 @@ public enum JavaxPackage implements Feature<JavaxPackage> {
 
         @Override
         protected JavaxPackage testDefault(FeatureSet features) {
-          boolean isJava8OrHigher = features.get(SOURCE_LEVEL).compareTo(JAVA_8) >= 0;
-          return isJava8OrHigher ? UNAVAILABLE : AVAILABLE;
+          return UNAVAILABLE;
         }
 
         @Override

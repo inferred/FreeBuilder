@@ -54,7 +54,7 @@ public class OptionalMapperMethodTest {
         com.google.common.base.Optional.class);
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
-    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
         .cartesianProduct(optionals, TYPES, checked, conventions, features)
         .stream()
