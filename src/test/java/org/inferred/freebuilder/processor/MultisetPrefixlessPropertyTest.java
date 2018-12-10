@@ -18,18 +18,17 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.testing.EqualsTester;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.CompilationException;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -994,7 +993,6 @@ public class MultisetPrefixlessPropertyTest {
 
   @Test
   public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -1018,7 +1016,6 @@ public class MultisetPrefixlessPropertyTest {
 
   @Test
   public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -1041,7 +1038,6 @@ public class MultisetPrefixlessPropertyTest {
   @Test
   public void testCanOverrideGenericFieldVarargsAdder() {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -1069,7 +1065,6 @@ public class MultisetPrefixlessPropertyTest {
   @Test
   public void testCanOverrideGenericBuildableVarargsAdder() {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()

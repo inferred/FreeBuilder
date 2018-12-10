@@ -27,7 +27,6 @@ import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.util.Elements;
 
 /**
  * Compliance levels which are idiomatically supported by this processor.
@@ -39,7 +38,7 @@ import javax.lang.model.util.Elements;
  */
 public enum SourceLevel implements Feature<SourceLevel> {
 
-  JAVA_6("Java 6", 6), JAVA_7("Java 7", 7), JAVA_8("Java 8+", 8);
+  JAVA_8("Java 8+", 8);
 
   /**
    * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current
@@ -49,38 +48,22 @@ public enum SourceLevel implements Feature<SourceLevel> {
 
     @Override
     protected SourceLevel testDefault(FeatureSet features) {
-      return JAVA_6;
+      return JAVA_8;
     }
 
     @Override
     protected SourceLevel forEnvironment(ProcessingEnvironment env, FeatureSet features) {
-      int sourceVersion = env.getSourceVersion().ordinal();
-
-      if (sourceVersion <= 6) {
-        // RELEASE_6 is always available, as previous releases did not support annotation processing
-        return JAVA_6;
-      } else if (sourceVersion >= 8) {
-        // Return JAVA_8 for versions 9+ also.
-        return JAVA_8;
-      } else if (runningInEclipse()) {
-        // Some versions of Eclipse erroneously return RELEASE_7 instead of RELEASE_8.
-        // Work around this by checking for the presence of java.util.Stream instead.
-        return hasType(env.getElementUtils(), STREAM) ? JAVA_8 : JAVA_7;
-      } else {
-        return JAVA_7;
-      }
+      return JAVA_8;
     }
   };
 
   private static final QualifiedName STREAM = QualifiedName.of("java.util.stream", "Stream");
-  private static final String ECLIPSE_DISPATCHER =
-      Shading.unshadedName("org.eclipse.jdt.internal.compiler.apt.dispatch.RoundDispatcher");
 
   /**
    * An excerpt that uses the diamond operator (&lt;&gt;) whenever available.
    */
   public static Excerpt diamondOperator(Object type) {
-    return new DiamondOperator("diamondOperator", type, JAVA_7);
+    return new DiamondOperator("diamondOperator");
   }
 
   /**
@@ -88,39 +71,29 @@ public enum SourceLevel implements Feature<SourceLevel> {
    * (Java 8+).
    */
   public static Excerpt nestedDiamondOperator(Object type) {
-    return new DiamondOperator("nestedDiamondOperator", type, JAVA_8);
+    return new DiamondOperator("nestedDiamondOperator");
   }
 
   private static final class DiamondOperator extends Excerpt {
     private final String methodName;
-    private final Object type;
-    private final SourceLevel minimumSourceLevel;
 
-    private DiamondOperator(String methodName, Object type, SourceLevel minimumSourceLevel) {
+    private DiamondOperator(String methodName) {
       this.methodName = methodName;
-      this.type = type;
-      this.minimumSourceLevel = minimumSourceLevel;
     }
 
     @Override
     public void addTo(SourceBuilder source) {
-      if (source.feature(SOURCE_LEVEL).compareTo(minimumSourceLevel) >= 0) {
-        source.add("<>");
-      } else {
-        source.add("<%s>", type);
-      }
+      source.add("<>");
     }
 
     @Override
     public String toString() {
-      return methodName + "(" + type + ")";
+      return methodName;
     }
 
     @Override
     protected void addFields(FieldReceiver fields) {
       fields.add("methodName", methodName);
-      fields.add("type", type);
-      fields.add("minimumSourceLevel", minimumSourceLevel);
     }
   }
 
@@ -133,60 +106,27 @@ public enum SourceLevel implements Feature<SourceLevel> {
   }
 
   public Optional<QualifiedName> safeVarargs() {
-    switch (this) {
-      case JAVA_6:
-        return Optional.absent();
-
-      default:
-        return Optional.of(QualifiedName.of("java.lang", "SafeVarargs"));
-    }
+    return Optional.of(QualifiedName.of("java.lang", "SafeVarargs"));
   }
 
   public Optional<QualifiedName> javaUtilObjects() {
-    switch (this) {
-      case JAVA_6:
-        return Optional.absent();
-
-      default:
-        return Optional.of(QualifiedName.of("java.util", "Objects"));
-    }
+    return Optional.of(QualifiedName.of("java.util", "Objects"));
   }
 
   public boolean hasLambdas() {
-    return compareTo(JAVA_8) >= 0;
+    return true;
   }
 
   public Optional<QualifiedName> baseStream() {
-    switch (this) {
-      case JAVA_6:
-      case JAVA_7:
-        return Optional.absent();
-
-      default:
-        return Optional.of(QualifiedName.of("java.util.stream", "BaseStream"));
-    }
+    return Optional.of(QualifiedName.of("java.util.stream", "BaseStream"));
   }
 
   public Optional<QualifiedName> stream() {
-    switch (this) {
-      case JAVA_6:
-      case JAVA_7:
-        return Optional.absent();
-
-      default:
-        return Optional.of(STREAM);
-    }
+    return Optional.of(STREAM);
   }
 
   public Optional<QualifiedName> spliterator() {
-    switch (this) {
-      case JAVA_6:
-      case JAVA_7:
-        return Optional.absent();
-
-      default:
-        return Optional.of(QualifiedName.of("java.util", "Spliterator"));
-    }
+    return Optional.of(QualifiedName.of("java.util", "Spliterator"));
   }
 
   public List<String> javacArguments() {
@@ -196,24 +136,6 @@ public enum SourceLevel implements Feature<SourceLevel> {
   @Override
   public String toString() {
     return humanReadableFormat;
-  }
-
-  private static boolean hasType(Elements elements, QualifiedName type) {
-    return elements.getTypeElement(type.toString()) != null;
-  }
-
-  private static boolean runningInEclipse() {
-    // If we're running in Eclipse, we will have been invoked by the Eclipse round dispatcher.
-    Throwable t = new Throwable();
-    t.fillInStackTrace();
-    for (StackTraceElement method : t.getStackTrace()) {
-      if (method.getClassName().equals(ECLIPSE_DISPATCHER)) {
-        return true;
-      } else if (!method.getClassName().startsWith("org.inferred")) {
-        return false;
-      }
-    }
-    return false;
   }
 
 }

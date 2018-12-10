@@ -16,8 +16,6 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_6;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -28,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
+import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 import org.junit.Rule;
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -143,13 +141,8 @@ public class BehaviorTesterTest {
 
   @Test
   public void sourceLevelAffectsCompilationErrors() {
-    TestSource test = new TestBuilder()
-        .addLine("%s<String> list = new %s<>();", List.class, ArrayList.class)
-        .build();
-    behaviorTesterWith(JAVA_8).with(test).compiles();
-    thrown.expect(CompilationException.class);
-    thrown.expectMessage("diamond operator is not supported");
-    behaviorTesterWith(JAVA_6).with(test).compiles();
+    // Cannot currently write this test as there is only one supported Java source level
+    assertThat(SourceLevel.values()).hasLength(1);
   }
 
   @Test
