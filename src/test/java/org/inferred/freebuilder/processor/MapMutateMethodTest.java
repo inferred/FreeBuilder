@@ -56,7 +56,7 @@ public class MapMutateMethodTest {
   public static Iterable<Object[]> parameters() {
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
-    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
         .cartesianProduct(TYPES, TYPES, checked, conventions, features)
         .stream()

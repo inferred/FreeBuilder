@@ -17,15 +17,9 @@ public final class FeatureSets {
       new StaticFeatureSet(JAVA_8),
       new StaticFeatureSet(JAVA_8, GuavaLibrary.AVAILABLE));
 
-  /** For mapper and mutate method tests. */
-  public static final List<FeatureSet> WITH_LAMBDAS = ALL;
-
   /** For tests using Guava types. */
   public static final List<FeatureSet> WITH_GUAVA = ImmutableList.of(
       new StaticFeatureSet(JAVA_8, GuavaLibrary.AVAILABLE));
-
-  /** For mutate method tests using Guava types. */
-  public static final List<FeatureSet> WITH_GUAVA_AND_LAMBDAS = WITH_GUAVA;
 
   private FeatureSets() {}
 }
