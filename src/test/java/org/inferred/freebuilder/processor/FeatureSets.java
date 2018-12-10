@@ -1,7 +1,5 @@
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
-
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
@@ -14,18 +12,12 @@ public final class FeatureSets {
 
   /** For tests valid in any environment. */
   public static final List<FeatureSet> ALL = ImmutableList.of(
-      new StaticFeatureSet(JAVA_8),
-      new StaticFeatureSet(JAVA_8, GuavaLibrary.AVAILABLE));
-
-  /** For mapper and mutate method tests. */
-  public static final List<FeatureSet> WITH_LAMBDAS = ALL;
+      new StaticFeatureSet(),
+      new StaticFeatureSet(GuavaLibrary.AVAILABLE));
 
   /** For tests using Guava types. */
   public static final List<FeatureSet> WITH_GUAVA = ImmutableList.of(
-      new StaticFeatureSet(JAVA_8, GuavaLibrary.AVAILABLE));
-
-  /** For mutate method tests using Guava types. */
-  public static final List<FeatureSet> WITH_GUAVA_AND_LAMBDAS = WITH_GUAVA;
+      new StaticFeatureSet(GuavaLibrary.AVAILABLE));
 
   private FeatureSets() {}
 }

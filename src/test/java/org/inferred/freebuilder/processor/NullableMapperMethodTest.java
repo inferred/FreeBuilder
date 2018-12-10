@@ -42,7 +42,7 @@ public class NullableMapperMethodTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_LAMBDAS;
+    return FeatureSets.ALL;
   }
 
   private static final JavaFileObject NULLABLE_INTEGER_BEAN_TYPE = new SourceBuilder()

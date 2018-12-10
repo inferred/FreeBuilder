@@ -44,13 +44,13 @@ public class OptionalMapperMethodTest {
   @Parameters(name = "{1}: {0}")
   public static List<Object[]> parameters() {
     ImmutableList.Builder<Object[]> parameters = ImmutableList.builder();
-    for (FeatureSet features :  FeatureSets.WITH_LAMBDAS) {
+    for (FeatureSet features :  FeatureSets.ALL) {
       parameters.add(new Object[] {
           features,
           java.util.Optional.class
       });
     }
-    for (FeatureSet features :  FeatureSets.WITH_GUAVA_AND_LAMBDAS) {
+    for (FeatureSet features :  FeatureSets.WITH_GUAVA) {
       parameters.add(new Object[] {
           features,
           com.google.common.base.Optional.class

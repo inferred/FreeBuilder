@@ -41,7 +41,7 @@ public class DefaultMapperMethodTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_LAMBDAS;
+    return FeatureSets.ALL;
   }
 
   private static final JavaFileObject REQUIRED_INTEGER_BEAN_TYPE = new SourceBuilder()

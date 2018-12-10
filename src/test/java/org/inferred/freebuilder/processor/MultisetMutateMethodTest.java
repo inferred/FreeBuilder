@@ -46,7 +46,7 @@ public class MultisetMutateMethodTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_GUAVA_AND_LAMBDAS;
+    return FeatureSets.WITH_GUAVA;
   }
 
   private static final JavaFileObject UNCHECKED_PROPERTY = new SourceBuilder()

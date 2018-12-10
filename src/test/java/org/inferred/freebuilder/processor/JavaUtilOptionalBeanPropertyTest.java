@@ -50,7 +50,7 @@ public class JavaUtilOptionalBeanPropertyTest {
 
   @Parameters(name = "{0}")
   public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_LAMBDAS;
+    return FeatureSets.ALL;
   }
 
   private static final JavaFileObject TWO_OPTIONAL_PROPERTIES_TYPE = new SourceBuilder()
