@@ -21,17 +21,16 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
@@ -1060,7 +1059,6 @@ public class SetPropertyTest {
   @Test
   public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
     assumeTrue("Comparable element type", Comparable.class.isAssignableFrom(elements.type()));
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -1084,7 +1082,6 @@ public class SetPropertyTest {
 
   @Test
   public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -1109,7 +1106,6 @@ public class SetPropertyTest {
   public void testCanOverrideGenericFieldVarargsAdder() {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     assumeTrue("Comparable element type", Comparable.class.isAssignableFrom(elements.type()));
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -1137,7 +1133,6 @@ public class SetPropertyTest {
   @Test
   public void testCanOverrideGenericBuildableVarargsAdder() {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
