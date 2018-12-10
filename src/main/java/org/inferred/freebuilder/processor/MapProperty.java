@@ -29,7 +29,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -39,11 +38,11 @@ import org.inferred.freebuilder.processor.excerpt.CheckedMap;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.LazyName;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -120,12 +119,11 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %1$s<%2$s, %3$s> %4$s = new %1$s%5$s();",
+    code.addLine("private final %1$s<%2$s, %3$s> %4$s = new %1$s<>();",
         LinkedHashMap.class,
         keyType,
         valueType,
-        property.getField(),
-        diamondOperator(Excerpts.add("%s, %s", keyType, valueType)));
+        property.getField());
   }
 
   @Override
@@ -344,8 +342,8 @@ class MapProperty extends PropertyCodeGenerator {
           .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
               Collections.class)
           .addLine("  default:")
-          .addLine("    return %s.unmodifiableMap(new %s%s(entries));",
-              Collections.class, LinkedHashMap.class, diamondOperator("K, V"))
+          .addLine("    return %s.unmodifiableMap(new %s<>(entries));",
+              Collections.class, LinkedHashMap.class)
           .addLine("  }")
           .addLine("}");
     }

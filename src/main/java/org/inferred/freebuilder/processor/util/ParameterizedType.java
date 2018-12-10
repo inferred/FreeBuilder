@@ -22,7 +22,6 @@ import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -118,13 +117,10 @@ public class ParameterizedType extends Excerpt {
   }
 
   /**
-   * Returns a source excerpt of the type parameters of this type, including angle brackets, unless
-   * the diamond operator is available, in which case only the angle brackets will be emitted.
+   * Returns the diamond operator if this type is parameterized, or an empty excerpt otherwise.
    */
   public Excerpt typeParametersOrDiamondOperator() {
-    return isParameterized()
-        ? diamondOperator(Excerpts.join(", ", typeParameters))
-        : Excerpts.empty();
+    return isParameterized() ? Excerpts.add("<>") : Excerpts.empty();
   }
 
   /**

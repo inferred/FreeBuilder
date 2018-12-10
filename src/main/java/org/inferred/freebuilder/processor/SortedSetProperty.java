@@ -34,8 +34,6 @@ import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.check
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.nestedDiamondOperator;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -185,8 +183,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
               property.getField(), ImmutableSortedSet.Builder.class, elementType)
           .addLine("  }");
     } else {
-      body.addLine("  %s = new %s%s(comparator);",
-          property.getField(), TreeSet.class, diamondOperator(elementType));
+      body.addLine("  %s = new %s<>(comparator);", property.getField(), TreeSet.class);
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
@@ -227,13 +224,11 @@ class SortedSetProperty extends PropertyCodeGenerator {
   private void addConvertToTreeSet(SourceBuilder code) {
     code.addLine("  if (%s == null) {", property.getField())
         .addLine("    // Use default comparator")
-        .addLine("    %s = new %s%s();",
-            property.getField(), TreeSet.class, diamondOperator(elementType));
+        .addLine("    %s = new %s<>();", property.getField(), TreeSet.class);
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  } else if (%s instanceof %s) {",
               property.getField(), ImmutableSortedSet.class)
-          .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getField(), TreeSet.class, diamondOperator(elementType));
+          .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), TreeSet.class);
     }
     code.addLine("  }");
   }
@@ -465,18 +460,11 @@ class SortedSetProperty extends PropertyCodeGenerator {
           .addLine("  %s = %s.copyOfSorted(%s);",
               finalField, ImmutableSortedSet.class, property.getField().on(builder));
     } else {
-      code.addLine("  %s = %s.unmodifiableSortedSet(new %s%s());",
-              finalField,
-              Collections.class,
-              TreeSet.class,
-              nestedDiamondOperator(elementType))
+      code.addLine("  %s = %s.unmodifiableSortedSet(new %s<>());",
+              finalField, Collections.class, TreeSet.class)
           .addLine("} else {")
-          .addLine("  %s = %s.unmodifiableSortedSet(new %s%s(%s));",
-              finalField,
-              Collections.class,
-              TreeSet.class,
-              diamondOperator(elementType),
-              property.getField().on(builder));
+          .addLine("  %s = %s.unmodifiableSortedSet(new %s<>(%s));",
+              finalField, Collections.class, TreeSet.class, property.getField().on(builder));
     }
     code.addLine("}");
   }
