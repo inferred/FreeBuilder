@@ -35,7 +35,6 @@ import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.check
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -159,8 +158,8 @@ class SetProperty extends PropertyCodeGenerator {
       code.addLine("private %s<%s> %s = %s.of();",
           Set.class, elementType, property.getField(), ImmutableSet.class);
     } else {
-      code.addLine("private final %1$s<%2$s> %3$s = new %1$s%4$s();",
-          LinkedHashSet.class, elementType, property.getField(), diamondOperator(elementType));
+      code.addLine("private final %1$s<%2$s> %3$s = new %1$s<>();",
+          LinkedHashSet.class, elementType, property.getField());
     }
   }
 
@@ -196,8 +195,7 @@ class SetProperty extends PropertyCodeGenerator {
     Block body = methodBody(code, "element");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
-          .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getField(), LinkedHashSet.class, diamondOperator(elementType))
+          .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), LinkedHashSet.class)
           .addLine("  }");
     }
     if (unboxedType.isPresent()) {
@@ -334,8 +332,7 @@ class SetProperty extends PropertyCodeGenerator {
     Block body = methodBody(code, "element");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
-          .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getField(), LinkedHashSet.class, diamondOperator(elementType))
+          .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), LinkedHashSet.class)
           .addLine("  }");
     }
     if (unboxedType.isPresent()) {
@@ -371,8 +368,7 @@ class SetProperty extends PropertyCodeGenerator {
     Block body = methodBody(code, "mutator");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
-          .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getField(), LinkedHashSet.class, diamondOperator(elementType))
+          .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), LinkedHashSet.class)
           .addLine("  }");
     }
     if (overridesAddMethod) {
@@ -424,8 +420,7 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine("public %s<%s> %s() {", Set.class, elementType, getter(property));
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
-          .addLine("    %1$s = new %2$s%3$s(%1$s);",
-              property.getField(), LinkedHashSet.class, diamondOperator(elementType))
+          .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), LinkedHashSet.class)
           .addLine("  }");
     }
     code.addLine("  return %s.unmodifiableSet(%s);", Collections.class, property.getField())
@@ -494,8 +489,8 @@ class SetProperty extends PropertyCodeGenerator {
           .addLine("  case 1:")
           .addLine("    return %s.singleton(elements.iterator().next());", Collections.class)
           .addLine("  default:")
-          .addLine("    return %s.unmodifiableSet(new %s%s(elements));",
-              Collections.class, LinkedHashSet.class, diamondOperator("E"))
+          .addLine("    return %s.unmodifiableSet(new %s<>(elements));",
+              Collections.class, LinkedHashSet.class)
           .addLine("  }")
           .addLine("}");
     }
