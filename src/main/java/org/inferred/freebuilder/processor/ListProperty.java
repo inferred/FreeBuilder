@@ -265,7 +265,7 @@ class ListProperty extends PropertyCodeGenerator {
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  }");
     }
-    body.add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
+    body.addLine("  elements.forEach(this::%s);", addMethod(property))
         .addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
         .addLine("}");
