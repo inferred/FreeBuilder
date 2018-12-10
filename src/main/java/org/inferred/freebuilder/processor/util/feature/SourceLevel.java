@@ -15,11 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util.feature;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.Shading;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.List;
@@ -56,26 +53,12 @@ public enum SourceLevel implements Feature<SourceLevel> {
     }
   };
 
-  private static final QualifiedName STREAM = QualifiedName.of("java.util.stream", "Stream");
-
   private final String humanReadableFormat;
   private final int version;
 
   SourceLevel(String humanReadableFormat, int version) {
     this.humanReadableFormat = humanReadableFormat;
     this.version = version;
-  }
-
-  public Optional<QualifiedName> baseStream() {
-    return Optional.of(QualifiedName.of("java.util.stream", "BaseStream"));
-  }
-
-  public Optional<QualifiedName> stream() {
-    return Optional.of(STREAM);
-  }
-
-  public Optional<QualifiedName> spliterator() {
-    return Optional.of(QualifiedName.of("java.util", "Spliterator"));
   }
 
   public List<String> javacArguments() {
