@@ -197,17 +197,16 @@ class ListProperty extends PropertyCodeGenerator {
           .addLine(" *     null element");
     }
     code.addLine(" */");
-    QualifiedName safeVarargs = code.feature(SOURCE_LEVEL).safeVarargs().orNull();
-    if (safeVarargs != null && needsSafeVarargs) {
+    if (needsSafeVarargs) {
       if (!overridesVarargsAddMethod) {
-        code.addLine("@%s", safeVarargs)
+        code.addLine("@%s", SafeVarargs.class)
             .addLine("@%s({\"varargs\"})", SuppressWarnings.class);
       } else {
         code.addLine("@%s({\"unchecked\", \"varargs\"})", SuppressWarnings.class);
       }
     }
     code.add("public ");
-    if (safeVarargs != null && needsSafeVarargs && !overridesVarargsAddMethod) {
+    if (needsSafeVarargs && !overridesVarargsAddMethod) {
       code.add("final ");
     }
     code.add("%s %s(%s... elements) {\n",
