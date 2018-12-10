@@ -21,7 +21,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -32,12 +31,12 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
@@ -120,10 +119,6 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code, final Metadata metadata) {
-    ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
-    if (unaryOperator == null) {
-      return;
-    }
     TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
     code.addLine("")
         .addLine("/**")
@@ -134,10 +129,11 @@ class NullableProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mapper} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s mapper) {",
+        .addLine("public %s %s(%s<%s> mapper) {",
             metadata.getBuilder(),
             mapper(property),
-            unaryOperator.withParameters(typeParam))
+            UnaryOperator.class,
+            typeParam)
         .addLine("  %s.requireNonNull(mapper);", Objects.class);
     Block body = methodBody(code, "mapper");
     Excerpt propertyValue = body.declare(new TypeMirrorExcerpt(

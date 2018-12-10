@@ -27,7 +27,6 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -44,6 +43,7 @@ import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -259,10 +259,6 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code, Metadata metadata) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the builder for the value that will be")
@@ -278,7 +274,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s<%s> mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
+            Consumer.class,
             builderType)
         .add(methodBody(code, "mutator")
             .addLine("  mutator.accept(%s());", getBuilderMethod(property))

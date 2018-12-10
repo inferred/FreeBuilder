@@ -27,7 +27,6 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.base.Optional;
@@ -48,6 +47,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -227,10 +227,6 @@ class MapProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code, Metadata metadata) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Invokes {@code mutator} with the map to be returned from")
@@ -247,7 +243,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s<? super %s<%s, %s>> mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
+            Consumer.class,
             Map.class,
             keyType,
             valueType);

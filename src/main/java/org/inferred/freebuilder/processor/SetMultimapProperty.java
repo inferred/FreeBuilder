@@ -28,7 +28,6 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -42,11 +41,11 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedSetMultimap;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -297,10 +296,6 @@ class SetMultimapProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code, Metadata metadata) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the multimap to be returned from %s.",
@@ -315,7 +310,7 @@ class SetMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s<%s<%s, %s>> mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
+            Consumer.class,
             SetMultimap.class,
             keyType,
             valueType);

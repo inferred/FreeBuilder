@@ -29,7 +29,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.base.Optional;
@@ -53,6 +52,7 @@ import java.util.Objects;
 import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.stream.BaseStream;
 
 import javax.lang.model.type.DeclaredType;
@@ -356,10 +356,6 @@ class SortedSetProperty extends PropertyCodeGenerator {
   }
 
   private void addMutator(SourceBuilder code, Metadata metadata) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the set to be returned from %s.",
@@ -376,7 +372,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
+            Consumer.class,
             SortedSet.class,
             elementType);
     Block body = methodBody(code, "mutator");

@@ -17,15 +17,13 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.BuildablePropertyTest.BuildableType.FREEBUILDER_LIKE;
 import static org.inferred.freebuilder.processor.BuildablePropertyTest.BuildableType.FREEBUILDER_WITH_TO_BUILDER;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.junit.Assume.assumeTrue;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
@@ -763,7 +761,6 @@ public class BuildablePropertyTest {
 
   @Test
   public void testMutateMethod() {
-    assumeLambdas();
     behaviorTester
         .with(new Processor(features))
         .with(defaultsType)
@@ -1026,7 +1023,6 @@ public class BuildablePropertyTest {
 
   @Test
   public void testToBuilder_fromPartial_usingLambdas() {
-    assumeLambdas();
     assumeHasToBuilder();
     behaviorTester
         .with(new Processor(features))
@@ -1302,10 +1298,6 @@ public class BuildablePropertyTest {
             .addLine("}")
             .build())
         .compiles();
-  }
-
-  private void assumeLambdas() {
-    assumeTrue("Environment has lambdas", features.get(FUNCTION_PACKAGE).consumer().isPresent());
   }
 
   private void assumeHasToBuilder() {

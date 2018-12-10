@@ -29,7 +29,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -48,6 +47,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
 import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.stream.BaseStream;
 
 import javax.lang.model.type.DeclaredType;
@@ -277,10 +277,6 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code, Metadata metadata) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the multiset to be returned from %s.",
@@ -297,7 +293,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s<%s<%s>> mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
+            Consumer.class,
             Multiset.class,
             elementType);
     Block body = methodBody(code, "mutator");

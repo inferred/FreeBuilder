@@ -25,7 +25,6 @@ import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -34,11 +33,11 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -270,10 +269,6 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code, Metadata metadata) {
-    ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
-    if (unaryOperator == null) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is present,",
@@ -285,10 +280,11 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mapper} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s mapper) {",
+        .addLine("public %s %s(%s<%s> mapper) {",
             metadata.getBuilder(),
             mapper(property),
-            unaryOperator.withParameters(elementType));
+            UnaryOperator.class,
+            elementType);
     optional.applyMapper(code, metadata, property);
     code.addLine("}");
   }

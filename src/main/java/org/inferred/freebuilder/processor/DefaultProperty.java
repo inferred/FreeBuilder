@@ -21,7 +21,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.CodeGenerator.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
 
@@ -31,11 +30,11 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -115,10 +114,6 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code, final Metadata metadata) {
-    ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
-    if (unaryOperator == null) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Replaces the value to be returned by %s",
@@ -133,10 +128,11 @@ class DefaultProperty extends PropertyCodeGenerator {
     }
     TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
     code.addLine(" */")
-        .add("public %s %s(%s mapper) {",
+        .add("public %s %s(%s<%s> mapper) {",
             metadata.getBuilder(),
             mapper(property),
-            unaryOperator.withParameters(typeParam));
+            UnaryOperator.class,
+            typeParam);
     if (!hasDefault) {
       code.addLine("  %s.requireNonNull(mapper);", Objects.class);
     }
