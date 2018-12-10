@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor.util.feature;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
@@ -57,44 +56,6 @@ public enum SourceLevel implements Feature<SourceLevel> {
   };
 
   private static final QualifiedName STREAM = QualifiedName.of("java.util.stream", "Stream");
-
-  /**
-   * An excerpt that uses the diamond operator (&lt;&gt;) whenever available.
-   */
-  public static Excerpt diamondOperator(Object type) {
-    return new DiamondOperator("diamondOperator");
-  }
-
-  /**
-   * An excerpt that uses the diamond operator (&lt;&gt;) whenever nested inference is available
-   * (Java 8+).
-   */
-  public static Excerpt nestedDiamondOperator(Object type) {
-    return new DiamondOperator("nestedDiamondOperator");
-  }
-
-  private static final class DiamondOperator extends Excerpt {
-    private final String methodName;
-
-    private DiamondOperator(String methodName) {
-      this.methodName = methodName;
-    }
-
-    @Override
-    public void addTo(SourceBuilder source) {
-      source.add("<>");
-    }
-
-    @Override
-    public String toString() {
-      return methodName;
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("methodName", methodName);
-    }
-  }
 
   private final String humanReadableFormat;
   private final int version;
