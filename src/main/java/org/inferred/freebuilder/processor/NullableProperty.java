@@ -23,7 +23,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -131,9 +130,6 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code, final Metadata metadata) {
-    if (!code.feature(FUNCTION_PACKAGE).unaryOperator().isPresent()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is not",

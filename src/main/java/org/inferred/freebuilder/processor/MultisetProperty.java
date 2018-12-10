@@ -31,7 +31,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -303,10 +302,6 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code, Metadata metadata) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the multiset to be returned from %s.",
