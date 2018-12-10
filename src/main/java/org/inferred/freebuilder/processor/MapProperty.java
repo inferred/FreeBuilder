@@ -42,7 +42,6 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
@@ -50,6 +49,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -191,10 +191,10 @@ class MapProperty extends PropertyCodeGenerator {
             unboxedValueType.or(valueType));
     Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
-      body.add(PreconditionExcerpts.checkNotNull("key"));
+      body.addLine("  %s.requireNonNull(key);", Objects.class);
     }
     if (!unboxedValueType.isPresent()) {
-      body.add(PreconditionExcerpts.checkNotNull("value"));
+      body.addLine("  %s.requireNonNull(value);", Objects.class);
     }
     body.addLine("  %s.put(key, value);", property.getField())
         .addLine("  return (%s) this;", datatype.getBuilder());
@@ -245,7 +245,7 @@ class MapProperty extends PropertyCodeGenerator {
             unboxedKeyType.or(keyType));
     Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
-      body.add(PreconditionExcerpts.checkNotNull("key"));
+      body.addLine("  %s.requireNonNull(key);", Objects.class);
     }
     body.addLine("  %s.remove(key);", property.getField())
         .addLine("  return (%s) this;", datatype.getBuilder());

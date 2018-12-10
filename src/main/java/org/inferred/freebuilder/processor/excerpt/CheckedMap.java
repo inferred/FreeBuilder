@@ -3,15 +3,15 @@ package org.inferred.freebuilder.processor.excerpt;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.LazyName;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -52,7 +52,7 @@ public class CheckedMap extends Excerpt {
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public V setValue(V value) {")
-          .add(PreconditionExcerpts.checkNotNull("value"))
+          .addLine("    %s.requireNonNull(value);", Objects.class)
           .addLine("    V oldValue = entry.getValue();")
           .addLine("    put.accept(entry.getKey(), value);")
           .addLine("    return oldValue;")
