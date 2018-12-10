@@ -66,10 +66,6 @@ public enum SourceLevel implements Feature<SourceLevel> {
     this.version = version;
   }
 
-  public Optional<QualifiedName> safeVarargs() {
-    return Optional.of(QualifiedName.of("java.lang", "SafeVarargs"));
-  }
-
   public Optional<QualifiedName> javaUtilObjects() {
     return Optional.of(QualifiedName.of("java.util", "Objects"));
   }
