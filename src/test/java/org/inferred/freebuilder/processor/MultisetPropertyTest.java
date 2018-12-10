@@ -16,8 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
-import static org.junit.Assume.assumeTrue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -282,7 +280,6 @@ public class MultisetPropertyTest {
 
   @Test
   public void testAddAllStream() {
-    assumeStreamsAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
@@ -298,7 +295,6 @@ public class MultisetPropertyTest {
 
   @Test
   public void testAddAllStream_null() {
-    assumeStreamsAvailable();
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
@@ -312,7 +308,6 @@ public class MultisetPropertyTest {
 
   @Test
   public void testAddAllStream_duplicate() {
-    assumeStreamsAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
@@ -328,7 +323,6 @@ public class MultisetPropertyTest {
 
   @Test
   public void testAddAllSpliterator() {
-    assumeStreamsAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
@@ -345,7 +339,6 @@ public class MultisetPropertyTest {
 
   @Test
   public void testAddAllSpliterator_null() {
-    assumeStreamsAvailable();
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
@@ -360,7 +353,6 @@ public class MultisetPropertyTest {
 
   @Test
   public void testAddAllSpliterator_duplicate() {
-    assumeStreamsAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
@@ -836,10 +828,6 @@ public class MultisetPropertyTest {
             .build())
         .compiles()
         .withNoWarnings();
-  }
-
-  private void assumeStreamsAvailable() {
-    assumeTrue("Streams available", features.get(SOURCE_LEVEL).stream().isPresent());
   }
 
   private static TestBuilder testBuilder() {

@@ -31,7 +31,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVararg
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -55,6 +54,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Spliterator;
+import java.util.stream.BaseStream;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -177,7 +178,9 @@ class ListProperty extends PropertyCodeGenerator {
   public void addBuilderFieldAccessors(SourceBuilder code) {
     addAdd(code, metadata);
     addVarargsAdd(code, metadata);
-    addAddAllMethods(code, metadata);
+    addSpliteratorAddAll(code, metadata);
+    addStreamAddAll(code, metadata);
+    addIterableAddAll(code, metadata);
     addMutate(code, metadata);
     addClear(code, metadata);
     addGetter(code, metadata);
@@ -256,57 +259,15 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code, Metadata metadata) {
-    if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code, metadata);
-      addStreamAddAll(code, metadata);
-      addIterableAddAll(code, metadata);
-    } else {
-      addPreStreamsAddAll(code, metadata);
-    }
-  }
-
-  private void addPreStreamsAddAll(SourceBuilder code, Metadata metadata) {
-    addJavadocForAddAll(code, metadata);
-    addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-        metadata.getBuilder(),
-        addAllMethod(property),
-        Iterable.class,
-        elementType);
-    Block body = methodBody(code, "elements");
-    body.addLine("  if (elements instanceof %s) {", Collection.class)
-        .addLine("    int elementsSize = ((%s<?>) elements).size();", Collection.class);
-    if (body.feature(GUAVA).isAvailable()) {
-      body.addLine("    if (elementsSize != 0) {")
-          .addLine("      if (%s instanceof %s) {", property.getField(), ImmutableList.class)
-          .addLine("        %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
-          .addLine("      }")
-          .add("      ((%s<?>) %s)", ArrayList.class, property.getField());
-    } else {
-      body.add("    %s", property.getField());
-    }
-    body.add(".ensureCapacity(%s.size() + elementsSize);%n", property.getField())
-        .addLine("  }");
-    if (body.feature(GUAVA).isAvailable()) {
-      body.addLine("  }");
-    }
-    body.addLine("  elements.forEach(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", metadata.getBuilder());
-    code.add(body)
-        .addLine("}");
-  }
-
   private void addSpliteratorAddAll(SourceBuilder code, Metadata metadata) {
-    QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
     addJavadocForAddAll(code, metadata);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             metadata.getBuilder(),
             addAllMethod(property),
-            spliterator,
+            Spliterator.class,
             elementType);
     Block body = methodBody(code, "elements");
-    body.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", spliterator)
+    body.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class)
         .addLine("    long elementsSize = elements.estimateSize();")
         .addLine("    if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {");
     if (body.feature(GUAVA).isAvailable()) {
@@ -339,12 +300,11 @@ class ListProperty extends PropertyCodeGenerator {
   }
 
   private void addStreamAddAll(SourceBuilder code, Metadata metadata) {
-    QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
     addJavadocForAddAll(code, metadata);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
             metadata.getBuilder(),
             addAllMethod(property),
-            baseStream,
+            BaseStream.class,
             elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");

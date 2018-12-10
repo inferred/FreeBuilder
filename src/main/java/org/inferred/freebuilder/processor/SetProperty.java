@@ -32,7 +32,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVararg
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +52,8 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.stream.BaseStream;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -166,7 +167,9 @@ class SetProperty extends PropertyCodeGenerator {
   public void addBuilderFieldAccessors(SourceBuilder code) {
     addAdd(code, metadata);
     addVarargsAdd(code, metadata);
-    addAddAllMethods(code, metadata);
+    addSpliteratorAddAll(code, metadata);
+    addStreamAddAll(code, metadata);
+    addIterableAddAll(code, metadata);
     addRemove(code, metadata);
     addMutator(code, metadata);
     addClear(code, metadata);
@@ -250,21 +253,12 @@ class SetProperty extends PropertyCodeGenerator {
     code.addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code, Metadata metadata) {
-    if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code, metadata);
-      addStreamAddAll(code, metadata);
-    }
-    addIterableAddAll(code, metadata);
-  }
-
   private void addSpliteratorAddAll(SourceBuilder code, Metadata metadata) {
-    QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
     addJavadocForAddAll(code, metadata);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             metadata.getBuilder(),
             addAllMethod(property),
-            spliterator,
+            Spliterator.class,
             elementType)
         .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
         .addLine("  return (%s) this;", metadata.getBuilder())
@@ -272,12 +266,11 @@ class SetProperty extends PropertyCodeGenerator {
   }
 
   private void addStreamAddAll(SourceBuilder code, Metadata metadata) {
-    QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
     addJavadocForAddAll(code, metadata);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
             metadata.getBuilder(),
             addAllMethod(property),
-            baseStream,
+            BaseStream.class,
             elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
