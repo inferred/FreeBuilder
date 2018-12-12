@@ -27,7 +27,7 @@ class ToStringGenerator {
     Predicate<Property> isOptional = new Predicate<Property>() {
       @Override
       public boolean apply(Property property) {
-        Type type = property.getCodeGenerator().getType();
+        Type type = property.getCodeGenerator().get().getType();
         return (type == Type.OPTIONAL || (type == Type.REQUIRED && forPartial));
       }
     };
@@ -110,7 +110,7 @@ class ToStringGenerator {
           code.add(";%n  ");
         }
         code.add("if (");
-        if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
+        if (property.getCodeGenerator().get().getType() == Type.OPTIONAL) {
           code.add("%s != null", property.getField());
         } else {
           code.add("!%s.contains(%s.%s)",
@@ -187,7 +187,7 @@ class ToStringGenerator {
     Property first = metadata.getProperties().get(0);
     Property last = Iterables.getLast(metadata.getProperties());
     for (Property property : metadata.getProperties()) {
-      switch (property.getCodeGenerator().getType()) {
+      switch (property.getCodeGenerator().get().getType()) {
         case HAS_DEFAULT:
           throw new RuntimeException("Internal error: unexpected default field");
 

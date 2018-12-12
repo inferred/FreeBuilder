@@ -124,7 +124,7 @@ public class CodeGenerator {
   private static void addFieldDeclarations(SourceBuilder code, Metadata metadata) {
     code.addLine("");
     for (Property property : metadata.getProperties()) {
-      PropertyCodeGenerator codeGenerator = property.getCodeGenerator();
+      PropertyCodeGenerator codeGenerator = property.getCodeGenerator().get();
       codeGenerator.addBuilderFieldDeclaration(code);
     }
     // Unset properties
@@ -137,7 +137,7 @@ public class CodeGenerator {
 
   private static void addAccessors(Metadata metadata, SourceBuilder body) {
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addBuilderFieldAccessors(body);
+      property.getCodeGenerator().get().addBuilderFieldAccessors(body);
     }
   }
 
@@ -170,7 +170,7 @@ public class CodeGenerator {
         .addLine("public %s mergeFrom(%s value) {", metadata.getBuilder(), metadata.getType());
     Block body = methodBody(code, "value");
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addMergeFromValue(body, "value");
+      property.getCodeGenerator().get().addMergeFromValue(body, "value");
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
@@ -187,7 +187,7 @@ public class CodeGenerator {
         .addLine("public %1$s mergeFrom(%1$s template) {", metadata.getBuilder());
     Block body = methodBody(code, "template");
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addMergeFromBuilder(body, "template");
+      property.getCodeGenerator().get().addMergeFromBuilder(body, "template");
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
@@ -255,7 +255,7 @@ public class CodeGenerator {
     code.addLine("")
         .addLine("private enum %s {", metadata.getPropertyEnum().getSimpleName());
     for (Property property : metadata.getProperties()) {
-      if (property.getCodeGenerator().getType() == Type.REQUIRED) {
+      if (property.getCodeGenerator().get().getType() == Type.REQUIRED) {
         code.addLine("  %s(\"%s\"),", property.getAllCapsName(), property.getName());
       }
     }
@@ -285,7 +285,7 @@ public class CodeGenerator {
         extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addValueFieldDeclaration(code, property.getField());
+      property.getCodeGenerator().get().addValueFieldDeclaration(code, property.getField());
     }
     // Constructor
     code.addLine("")
@@ -294,7 +294,7 @@ public class CodeGenerator {
             metadata.getGeneratedBuilder());
     Block body = methodBody(code, "builder");
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator()
+      property.getCodeGenerator().get()
           .addFinalFieldAssignment(body, property.getField().on("this"), "builder");
     }
     code.add(body)
@@ -303,11 +303,11 @@ public class CodeGenerator {
     for (Property property : metadata.getProperties()) {
       code.addLine("")
           .addLine("  @%s", Override.class);
-      property.getCodeGenerator().addAccessorAnnotations(code);
-      property.getCodeGenerator().addGetterAnnotations(code);
+      property.getCodeGenerator().get().addAccessorAnnotations(code);
+      property.getCodeGenerator().get().addGetterAnnotations(code);
       code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
       code.add("    return ");
-      property.getCodeGenerator().addReadValueFragment(code, property.getField());
+      property.getCodeGenerator().get().addReadValueFragment(code, property.getField());
       code.add(";\n");
       code.addLine("  }");
     }
@@ -397,7 +397,7 @@ public class CodeGenerator {
             extending(metadata.getType(), metadata.isInterfaceType()));
     // Fields
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator().addValueFieldDeclaration(code, property.getField());
+      property.getCodeGenerator().get().addValueFieldDeclaration(code, property.getField());
     }
     if (hasRequiredProperties) {
       code.addLine("  private final %s<%s> %s;",
@@ -409,7 +409,7 @@ public class CodeGenerator {
             metadata.getPartialType().getSimpleName(),
             metadata.getGeneratedBuilder());
     for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator()
+      property.getCodeGenerator().get()
           .addPartialFieldAssignment(code, property.getField().on("this"), "builder");
     }
     if (hasRequiredProperties) {
@@ -421,10 +421,10 @@ public class CodeGenerator {
     for (Property property : metadata.getProperties()) {
       code.addLine("")
           .addLine("  @%s", Override.class);
-      property.getCodeGenerator().addAccessorAnnotations(code);
-      property.getCodeGenerator().addGetterAnnotations(code);
+      property.getCodeGenerator().get().addAccessorAnnotations(code);
+      property.getCodeGenerator().get().addGetterAnnotations(code);
       code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
-      if (property.getCodeGenerator().getType() == Type.REQUIRED) {
+      if (property.getCodeGenerator().get().getType() == Type.REQUIRED) {
         code.addLine("    if (%s.contains(%s.%s)) {",
                 UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName())
             .addLine("      throw new %s(\"%s not set\");",
@@ -432,7 +432,7 @@ public class CodeGenerator {
             .addLine("    }");
       }
       code.add("    return ");
-      property.getCodeGenerator().addReadValueFragment(code, property.getField());
+      property.getCodeGenerator().get().addReadValueFragment(code, property.getField());
       code.add(";\n");
       code.addLine("  }");
     }
@@ -512,7 +512,7 @@ public class CodeGenerator {
               metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
       Block block = new Block(code);
       for (Property property : metadata.getProperties()) {
-        property.getCodeGenerator().addSetBuilderFromPartial(block, "builder");
+        property.getCodeGenerator().get().addSetBuilderFromPartial(block, "builder");
       }
       code.add(block)
           .addLine("    return builder;");
@@ -575,7 +575,7 @@ public class CodeGenerator {
 
   private static final Predicate<Property> IS_REQUIRED = new Predicate<Property>() {
     @Override public boolean apply(Property property) {
-      return property.getCodeGenerator().getType() == Type.REQUIRED;
+      return property.getCodeGenerator().get().getType() == Type.REQUIRED;
     }
   };
 }

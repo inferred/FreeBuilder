@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Generated;
-import javax.annotation.Nullable;
 import org.inferred.freebuilder.processor.BuilderFactory;
 import org.inferred.freebuilder.processor.Metadata;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -170,7 +169,7 @@ abstract class Metadata_Builder {
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Builder setNullableOptionalBuilder(@Nullable ParameterizedType optionalBuilder) {
+  public Metadata.Builder setNullableOptionalBuilder(ParameterizedType optionalBuilder) {
     if (optionalBuilder != null) {
       return setOptionalBuilder(optionalBuilder);
     } else {
@@ -245,7 +244,7 @@ abstract class Metadata_Builder {
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Builder setNullableBuilderFactory(@Nullable BuilderFactory builderFactory) {
+  public Metadata.Builder setNullableBuilderFactory(BuilderFactory builderFactory) {
     if (builderFactory != null) {
       return setBuilderFactory(builderFactory);
     } else {
@@ -967,7 +966,7 @@ abstract class Metadata_Builder {
    */
   public Metadata.Builder mergeFrom(Metadata.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
-    Metadata_Builder base = (Metadata_Builder) template;
+    Metadata_Builder base = template;
     Metadata_Builder _defaults = new Metadata.Builder();
     if (!base._unsetProperties.contains(Metadata_Builder.Property.TYPE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.TYPE)
