@@ -13,24 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor;
+package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
@@ -166,15 +170,55 @@ public class MethodFinderTest {
     assertThat(methodsOn(MySink.class)).containsExactly("void MySink::accept(String)");
   }
 
+  @Test
+  public void testSkipsErrorTypes() {
+    TypeElement testClass = model.newType(
+        "package com.example;",
+        "class TestClass extends MissingType implements OtherMissingType {",
+        "  public int foo(short a);",
+        "}");
+    List<ErrorType> errorTypes = new ArrayList<>();
+
+    List<String> methods =
+        toStrings(MethodFinder.methodsOn(testClass, model.elementUtils(), errorTypes::add));
+
+    assertThat(methods).containsExactly("int TestClass::foo(short)");
+    assertThat(errorTypes).hasSize(2);
+  }
+
+  interface RedeclaresToString {
+    @Override String toString();
+  }
+
+  @Test
+  public void testIgnoredObjectMethodRedeclarations() {
+    List<String> methods = methodsOn(RedeclaresToString.class);
+
+    assertThat(methods).isEmpty();
+  }
+
+  class OverridesToString {
+    @Override
+    public String toString() {
+      return "OverridesToString";
+    }
+  }
+
+  @Test
+  public void testKeepsObjectMethodOverrides() {
+    List<String> methods = methodsOn(OverridesToString.class);
+
+    assertThat(methods).containsExactly("String OverridesToString::toString()");
+  }
+
   // Utility methods
   ///////////////////////////////////////////////////////////////////////////////////////////////
 
   private static ImmutableList<String> methodsOn(Class<?> cls) {
-    try {
-      return toStrings(MethodFinder.methodsOn(model.typeElement(cls), model.elementUtils()));
-    } catch (CannotGenerateCodeException e) {
-      throw new AssertionError(e);
-    }
+    return toStrings(MethodFinder.methodsOn(
+        model.typeElement(cls),
+        model.elementUtils(),
+        errorType -> fail("Error type encountered: " + errorType)));
   }
 
   private static ImmutableList<String> toStrings(Iterable<? extends ExecutableElement> methods) {
