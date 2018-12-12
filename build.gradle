@@ -45,7 +45,7 @@ dependencies {
   compile guava
   compile jsr305
   compileOnly autoService
-  compileOnly sorcerer
+  compileOnly files(org.gradle.internal.jvm.Jvm.current().toolsJar)
 
   testCompile guavaTestlib
   testCompile gwtUser
@@ -557,17 +557,6 @@ pom {
 
 //// Eclipse /////////////////////////////////////////////////////
 eclipse.classpath {
-  // We include sorceror so we can link against internal JVM classes.
-  // Eclipse doesn't handle that well; instead, we just mark those classes as accessible.
-  // Note: this requires you to have JDK 6 installed, as later JDKs don't seem to expose
-  // the internal classes at all (hence the workaroud with sorceror).
-  minusConfigurations += [ configurations.detachedConfiguration(dependencies.create(sorcerer)) ]
-  file.withXml { xml ->
-    xml.asNode().findAll { it.@kind == 'con' }.each { node ->
-        node.appendNode('accessrules')
-            .appendNode('accessrule', [kind: 'accessible', pattern: 'com/sun/source/**'])
-    }
-  }
   // Only src/main/java is compiled with JDK 6
   file.withXml { xml ->
     node = xml.asNode()
