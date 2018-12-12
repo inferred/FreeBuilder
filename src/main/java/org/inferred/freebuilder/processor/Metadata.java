@@ -29,7 +29,6 @@ import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
-import javax.annotation.Nullable;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -174,8 +173,8 @@ public abstract class Metadata {
     /** Returns the type of the property. */
     public abstract TypeMirror getType();
 
-    /** Returns the boxed form of {@link #getType()}, or null if type is not primitive. */
-    @Nullable public abstract TypeMirror getBoxedType();
+    /** Returns the boxed form of {@link #getType()}, if type is primitive. */
+    public abstract Optional<TypeMirror> getBoxedType();
 
     /** Returns the name of the property, e.g. myProperty. */
     public abstract String getName();
@@ -198,10 +197,10 @@ public abstract class Metadata {
     public abstract String getGetterName();
 
     /**
-     * Returns the code generator to use for this property, or null if no generator has been picked
-     * (i.e. when passed to {@link PropertyCodeGenerator.Factory#create}.
+     * Returns the code generator to use for this property, if one has been picked
+     * (i.e. after being passed to {@link PropertyCodeGenerator.Factory#create}.
      */
-    @Nullable public abstract PropertyCodeGenerator getCodeGenerator();
+    public abstract Optional<PropertyCodeGenerator> getCodeGenerator();
 
     /**
      * Returns true if a cast to this property type is guaranteed to be fully checked at runtime.
@@ -227,12 +226,7 @@ public abstract class Metadata {
   }
 
   public static final Function<Property, PropertyCodeGenerator> GET_CODE_GENERATOR =
-      new Function<Property, PropertyCodeGenerator>() {
-        @Override
-        public PropertyCodeGenerator apply(Property input) {
-          return input.getCodeGenerator();
-        }
-      };
+      property -> property.getCodeGenerator().orNull();
 
   /** Builder for {@link Metadata}. */
   public static class Builder extends Metadata_Builder {

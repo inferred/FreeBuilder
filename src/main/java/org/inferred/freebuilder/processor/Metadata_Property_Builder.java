@@ -3,6 +3,7 @@ package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -11,8 +12,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+
 import javax.annotation.Generated;
-import javax.annotation.Nullable;
 import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.Metadata;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator;
@@ -57,13 +58,13 @@ abstract class Metadata_Property_Builder {
   }
 
   private TypeMirror type;
-  @Nullable private TypeMirror boxedType = null;
+  private TypeMirror boxedType = null;
   private String name;
   private String capitalizedName;
   private String allCapsName;
   private boolean usingBeanConvention;
   private String getterName;
-  @Nullable private PropertyCodeGenerator codeGenerator = null;
+  private PropertyCodeGenerator codeGenerator = null;
   private boolean fullyCheckedCast;
   private final ArrayList<Excerpt> accessorAnnotations = new ArrayList<Excerpt>();
   private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties =
@@ -96,18 +97,28 @@ abstract class Metadata_Property_Builder {
    * Sets the value to be returned by {@link Metadata.Property#getBoxedType()}.
    *
    * @return this {@code Builder} object
+   * @throws NullPointerException if {@code boxedType} is null
    */
-  public Metadata.Property.Builder setBoxedType(@Nullable TypeMirror boxedType) {
-    this.boxedType = boxedType;
+  public Metadata.Property.Builder setBoxedType(TypeMirror boxedType) {
+    this.boxedType = Preconditions.checkNotNull(boxedType);
+    return (Metadata.Property.Builder) this;
+  }
+
+  /**
+   * Sets the value to be returned by {@link Metadata.Property#getBoxedType()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Property.Builder setBoxedType(Optional<TypeMirror> boxedType) {
+    this.boxedType = boxedType.orNull();
     return (Metadata.Property.Builder) this;
   }
 
   /**
    * Returns the value that will be returned by {@link Metadata.Property#getBoxedType()}.
    */
-  @Nullable
-  public TypeMirror getBoxedType() {
-    return boxedType;
+  public Optional<TypeMirror> getBoxedType() {
+    return Optional.fromNullable(boxedType);
   }
 
   /**
@@ -232,18 +243,28 @@ abstract class Metadata_Property_Builder {
    * Sets the value to be returned by {@link Metadata.Property#getCodeGenerator()}.
    *
    * @return this {@code Builder} object
+   * @throws NullPointerException if {@code codeGenerator} is null
    */
-  public Metadata.Property.Builder setCodeGenerator(@Nullable PropertyCodeGenerator codeGenerator) {
-    this.codeGenerator = codeGenerator;
+  public Metadata.Property.Builder setCodeGenerator(PropertyCodeGenerator codeGenerator) {
+    this.codeGenerator = Preconditions.checkNotNull(codeGenerator);
+    return (Metadata.Property.Builder) this;
+  }
+
+  /**
+   * Sets the value to be returned by {@link Metadata.Property#getCodeGenerator()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Metadata.Property.Builder setCodeGenerator(Optional<PropertyCodeGenerator> codeGenerator) {
+    this.codeGenerator = codeGenerator.orNull();
     return (Metadata.Property.Builder) this;
   }
 
   /**
    * Returns the value that will be returned by {@link Metadata.Property#getCodeGenerator()}.
    */
-  @Nullable
-  public PropertyCodeGenerator getCodeGenerator() {
-    return codeGenerator;
+  public Optional<PropertyCodeGenerator> getCodeGenerator() {
+    return Optional.fromNullable(codeGenerator);
   }
 
   /**
@@ -380,7 +401,7 @@ abstract class Metadata_Property_Builder {
    */
   public Metadata.Property.Builder mergeFrom(Metadata.Property.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
-    Metadata_Property_Builder base = (Metadata_Property_Builder) template;
+    Metadata_Property_Builder base = template;
     Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
     if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
         && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
@@ -471,13 +492,13 @@ abstract class Metadata_Property_Builder {
 
   private static final class Value extends Metadata.Property {
     private final TypeMirror type;
-    @Nullable private final TypeMirror boxedType;
+    private final TypeMirror boxedType;
     private final String name;
     private final String capitalizedName;
     private final String allCapsName;
     private final boolean usingBeanConvention;
     private final String getterName;
-    @Nullable private final PropertyCodeGenerator codeGenerator;
+    private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
 
@@ -500,9 +521,8 @@ abstract class Metadata_Property_Builder {
     }
 
     @Override
-    @Nullable
-    public TypeMirror getBoxedType() {
-      return boxedType;
+    public Optional<TypeMirror> getBoxedType() {
+      return Optional.fromNullable(boxedType);
     }
 
     @Override
@@ -531,9 +551,8 @@ abstract class Metadata_Property_Builder {
     }
 
     @Override
-    @Nullable
-    public PropertyCodeGenerator getCodeGenerator() {
-      return codeGenerator;
+    public Optional<PropertyCodeGenerator> getCodeGenerator() {
+      return Optional.fromNullable(codeGenerator);
     }
 
     @Override
@@ -624,13 +643,13 @@ abstract class Metadata_Property_Builder {
 
   private static final class Partial extends Metadata.Property {
     private final TypeMirror type;
-    @Nullable private final TypeMirror boxedType;
+    private final TypeMirror boxedType;
     private final String name;
     private final String capitalizedName;
     private final String allCapsName;
     private final boolean usingBeanConvention;
     private final String getterName;
-    @Nullable private final PropertyCodeGenerator codeGenerator;
+    private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
     private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties;
@@ -658,9 +677,8 @@ abstract class Metadata_Property_Builder {
     }
 
     @Override
-    @Nullable
-    public TypeMirror getBoxedType() {
-      return boxedType;
+    public Optional<TypeMirror> getBoxedType() {
+      return Optional.fromNullable(boxedType);
     }
 
     @Override
@@ -704,9 +722,8 @@ abstract class Metadata_Property_Builder {
     }
 
     @Override
-    @Nullable
-    public PropertyCodeGenerator getCodeGenerator() {
-      return codeGenerator;
+    public Optional<PropertyCodeGenerator> getCodeGenerator() {
+      return Optional.fromNullable(codeGenerator);
     }
 
     @Override
