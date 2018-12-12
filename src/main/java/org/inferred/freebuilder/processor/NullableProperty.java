@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
@@ -58,7 +57,7 @@ class NullableProperty extends PropertyCodeGenerator {
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
           mapper(property),
-          unaryOperator(firstNonNull(property.getBoxedType(), property.getType())),
+          unaryOperator(property.getBoxedType().orElse(property.getType())),
           config.getElements(),
           config.getTypes());
       return Optional.of(new NullableProperty(

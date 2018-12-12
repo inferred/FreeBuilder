@@ -7,11 +7,10 @@ import com.google.common.collect.Multiset;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.feature.Jsr305;
 
 import java.util.Collection;
 import java.util.function.BiConsumer;
-
-import javax.annotation.Nullable;
 
 /**
  * Excerpts defining a multiset implementation that delegates to a provided setCount method to
@@ -45,12 +44,12 @@ public class CheckedMultiset extends Excerpt {
         .addLine("    return multiset;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean add(@%s E element) {", Nullable.class)
+        .addLine("  @Override public boolean add(%s E element) {", Jsr305.nullable())
         .addLine("    return standardAdd(element);")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public int add(@%s E element, int occurrences) {",
-            Nullable.class)
+        .addLine("  @Override public int add(%s E element, int occurrences) {",
+            Jsr305.nullable())
         .addLine("    %s.checkArgument(occurrences >= 0,", Preconditions.class)
         .addLine("        \"occurrences cannot be negative: %%s\", occurrences);")
         .addLine("    int oldCount = multiset.count(element);")
@@ -69,13 +68,13 @@ public class CheckedMultiset extends Excerpt {
         .addLine("    return standardAddAll(elementsToAdd);")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public int setCount(@%s E element, int count) {",
-            Nullable.class)
+        .addLine("  @Override public int setCount(%s E element, int count) {",
+            Jsr305.nullable())
         .addLine("    return standardSetCount(element, count);")
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public boolean setCount(")
-        .addLine("      @%s E element, int oldCount, int newCount) {", Nullable.class)
+        .addLine("      %s E element, int oldCount, int newCount) {", Jsr305.nullable())
         .addLine("    return standardSetCount(element, oldCount, newCount);")
         .addLine("  }")
         .addLine("}");

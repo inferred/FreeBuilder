@@ -23,7 +23,6 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.BaseStream;
 import javax.annotation.Generated;
-import javax.annotation.Nullable;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.Type;
@@ -96,7 +95,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code type} is null
    */
   public Datatype.Builder setType(TypeClass type) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = Objects.requireNonNull(type);
     _unsetProperties.remove(Property.TYPE);
     return (Datatype.Builder) this;
   }
@@ -110,7 +109,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapType(UnaryOperator<TypeClass> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setType(mapper.apply(getType()));
   }
 
@@ -144,7 +143,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapInterfaceType(UnaryOperator<Boolean> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setInterfaceType(mapper.apply(isInterfaceType()));
   }
 
@@ -166,7 +165,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code builder} is null
    */
   public Datatype.Builder setBuilder(Type builder) {
-    this.builder = Preconditions.checkNotNull(builder);
+    this.builder = Objects.requireNonNull(builder);
     _unsetProperties.remove(Property.BUILDER);
     return (Datatype.Builder) this;
   }
@@ -180,7 +179,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapBuilder(UnaryOperator<Type> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setBuilder(mapper.apply(getBuilder()));
   }
 
@@ -214,7 +213,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapExtensible(UnaryOperator<Boolean> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setExtensible(mapper.apply(isExtensible()));
   }
 
@@ -235,7 +234,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code builderFactory} is null
    */
   public Datatype.Builder setBuilderFactory(BuilderFactory builderFactory) {
-    this.builderFactory = Preconditions.checkNotNull(builderFactory);
+    this.builderFactory = Objects.requireNonNull(builderFactory);
     return (Datatype.Builder) this;
   }
 
@@ -257,7 +256,7 @@ abstract class Datatype_Builder {
    *
    * @return this {@code Builder} object
    */
-  public Datatype.Builder setNullableBuilderFactory(@Nullable BuilderFactory builderFactory) {
+  public Datatype.Builder setNullableBuilderFactory(BuilderFactory builderFactory) {
     if (builderFactory != null) {
       return setBuilderFactory(builderFactory);
     } else {
@@ -275,7 +274,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code mapper} is null
    */
   public Datatype.Builder mapBuilderFactory(UnaryOperator<BuilderFactory> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     Optional<BuilderFactory> oldBuilderFactory = getBuilderFactory();
     if (oldBuilderFactory.isPresent()) {
       setNullableBuilderFactory(mapper.apply(oldBuilderFactory.get()));
@@ -306,7 +305,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code generatedBuilder} is null
    */
   public Datatype.Builder setGeneratedBuilder(TypeClass generatedBuilder) {
-    this.generatedBuilder = Preconditions.checkNotNull(generatedBuilder);
+    this.generatedBuilder = Objects.requireNonNull(generatedBuilder);
     _unsetProperties.remove(Property.GENERATED_BUILDER);
     return (Datatype.Builder) this;
   }
@@ -320,7 +319,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapGeneratedBuilder(UnaryOperator<TypeClass> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setGeneratedBuilder(mapper.apply(getGeneratedBuilder()));
   }
 
@@ -342,7 +341,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code valueType} is null
    */
   public Datatype.Builder setValueType(TypeClass valueType) {
-    this.valueType = Preconditions.checkNotNull(valueType);
+    this.valueType = Objects.requireNonNull(valueType);
     _unsetProperties.remove(Property.VALUE_TYPE);
     return (Datatype.Builder) this;
   }
@@ -356,7 +355,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapValueType(UnaryOperator<TypeClass> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setValueType(mapper.apply(getValueType()));
   }
 
@@ -377,7 +376,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code partialType} is null
    */
   public Datatype.Builder setPartialType(TypeClass partialType) {
-    this.partialType = Preconditions.checkNotNull(partialType);
+    this.partialType = Objects.requireNonNull(partialType);
     _unsetProperties.remove(Property.PARTIAL_TYPE);
     return (Datatype.Builder) this;
   }
@@ -391,7 +390,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapPartialType(UnaryOperator<TypeClass> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setPartialType(mapper.apply(getPartialType()));
   }
 
@@ -418,7 +417,7 @@ abstract class Datatype_Builder {
     if (visibleNestedTypes instanceof ImmutableSet) {
       visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
     }
-    visibleNestedTypes.add(Preconditions.checkNotNull(element));
+    visibleNestedTypes.add(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 
@@ -484,7 +483,7 @@ abstract class Datatype_Builder {
     if (visibleNestedTypes instanceof ImmutableSet) {
       visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
     }
-    visibleNestedTypes.remove(Preconditions.checkNotNull(element));
+    visibleNestedTypes.remove(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 
@@ -540,7 +539,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code propertyEnum} is null
    */
   public Datatype.Builder setPropertyEnum(TypeClass propertyEnum) {
-    this.propertyEnum = Preconditions.checkNotNull(propertyEnum);
+    this.propertyEnum = Objects.requireNonNull(propertyEnum);
     _unsetProperties.remove(Property.PROPERTY_ENUM);
     return (Datatype.Builder) this;
   }
@@ -554,7 +553,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapPropertyEnum(UnaryOperator<TypeClass> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setPropertyEnum(mapper.apply(getPropertyEnum()));
   }
 
@@ -579,8 +578,8 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder putStandardMethodUnderrides(
       Datatype.StandardMethod key, Datatype.UnderrideLevel value) {
-    Preconditions.checkNotNull(key);
-    Preconditions.checkNotNull(value);
+    Objects.requireNonNull(key);
+    Objects.requireNonNull(value);
     standardMethodUnderrides.put(key, value);
     return (Datatype.Builder) this;
   }
@@ -609,7 +608,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code key} is null
    */
   public Datatype.Builder removeStandardMethodUnderrides(Datatype.StandardMethod key) {
-    Preconditions.checkNotNull(key);
+    Objects.requireNonNull(key);
     standardMethodUnderrides.remove(key);
     return (Datatype.Builder) this;
   }
@@ -671,7 +670,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapBuilderSerializable(UnaryOperator<Boolean> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setBuilderSerializable(mapper.apply(isBuilderSerializable()));
   }
 
@@ -706,7 +705,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapHasToBuilderMethod(UnaryOperator<Boolean> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setHasToBuilderMethod(mapper.apply(getHasToBuilderMethod()));
   }
 
@@ -732,7 +731,7 @@ abstract class Datatype_Builder {
     if (generatedBuilderAnnotations instanceof ImmutableList) {
       generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
     }
-    generatedBuilderAnnotations.add(Preconditions.checkNotNull(element));
+    generatedBuilderAnnotations.add(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 
@@ -851,7 +850,7 @@ abstract class Datatype_Builder {
     if (valueTypeAnnotations instanceof ImmutableList) {
       valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
     }
-    valueTypeAnnotations.add(Preconditions.checkNotNull(element));
+    valueTypeAnnotations.add(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 
@@ -962,7 +961,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code valueTypeVisibility} is null
    */
   public Datatype.Builder setValueTypeVisibility(Datatype.Visibility valueTypeVisibility) {
-    this.valueTypeVisibility = Preconditions.checkNotNull(valueTypeVisibility);
+    this.valueTypeVisibility = Objects.requireNonNull(valueTypeVisibility);
     _unsetProperties.remove(Property.VALUE_TYPE_VISIBILITY);
     return (Datatype.Builder) this;
   }
@@ -976,7 +975,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Datatype.Builder mapValueTypeVisibility(UnaryOperator<Datatype.Visibility> mapper) {
-    Preconditions.checkNotNull(mapper);
+    Objects.requireNonNull(mapper);
     return setValueTypeVisibility(mapper.apply(getValueTypeVisibility()));
   }
 
@@ -1001,7 +1000,7 @@ abstract class Datatype_Builder {
     if (nestedClasses instanceof ImmutableList) {
       nestedClasses = new ArrayList<>(nestedClasses);
     }
-    nestedClasses.add(Preconditions.checkNotNull(element));
+    nestedClasses.add(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 

@@ -36,7 +36,6 @@ dependencies {
   compile commonsLang3
   compile googleJavaFormat
   compile guava
-  compile jsr305
   compileOnly autoService
   compileOnly files(org.gradle.internal.jvm.Jvm.current().toolsJar)
   annotationProcessor autoService
@@ -51,6 +50,7 @@ dependencies {
   testCompile jackson('datatype-jdk8')
   testCompile jackson('dataformat-xml')
   testCompile javassist
+  testCompile jsr305
   testCompile junit
   testCompile mockito
   testCompile truth
@@ -136,11 +136,6 @@ shadowJar {
   // (Used to correctly quote Java string literals)
   include 'org/apache/commons/lang3/StringEscapeUtils.class'
   include 'org/apache/commons/lang3/text/translate/CharSequenceTranslator.class'
-
-  // Include jsr305's Nullable and dependencies
-  include 'javax/annotation/Nonnull*'
-  include 'javax/annotation/Nullable.*'
-  include 'javax/annotation/meta/When.*'
 }
 tasks.shadowJar.shouldRunAfter tasks.test
 
