@@ -279,7 +279,7 @@ configurations {
   gwtTestCompile.extendsFrom gwtCompile
 }
 dependencies {
-  gwtCompile 'com.google.guava:guava-gwt:18.0'
+  gwtCompile 'com.google.guava:guava-gwt:20.0'
   gwtCompile gwt('codeserver')
   gwtCompileOnly gwt('dev')
   gwtCompile gwt('elemental')
@@ -289,7 +289,7 @@ dependencies {
 }
 
 String gwt(String pkg) {
-  return 'com.google.gwt:gwt-' + pkg + ':2.7.0'
+  return 'com.google.gwt:gwt-' + pkg + ':2.8.0'
 }
 
 sourceSets.create('gwt') {
@@ -354,6 +354,7 @@ task gwtTest(type: Test) {
   dependsOn compileGwtToJs
   testClassesDirs = sourceSets.gwtTest.output.classesDirs
   classpath = sourceSets.gwtTest.runtimeClasspath
+  include 'org/inferred/freebuilder/GwtTests'
   reports {
     html {
       destination file("$reportsDir/gwt")
