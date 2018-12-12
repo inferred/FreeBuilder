@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.BaseStream;
 import javax.annotation.Generated;
-import javax.annotation.Nullable;
+import org.inferred.freebuilder.processor.BuilderFactory;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -189,7 +189,6 @@ abstract class Datatype_Builder {
   /**
    * Returns the value that will be returned by {@link Datatype#getBuilder()}.
    *
-   * @throws IllegalStateException if the field has not been set
    */
   public ParameterizedType getBuilder() {
     Preconditions.checkState(
@@ -261,7 +260,7 @@ abstract class Datatype_Builder {
    *
    * @return this {@code Builder} object
    */
-  public Datatype.Builder setNullableBuilderFactory(@Nullable BuilderFactory builderFactory) {
+  public Datatype.Builder setNullableBuilderFactory(BuilderFactory builderFactory) {
     if (builderFactory != null) {
       return setBuilderFactory(builderFactory);
     } else {

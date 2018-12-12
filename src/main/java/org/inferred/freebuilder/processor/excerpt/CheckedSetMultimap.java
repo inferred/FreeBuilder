@@ -10,13 +10,12 @@ import com.google.common.collect.SetMultimap;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.feature.Jsr305;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
-
-import javax.annotation.Nullable;
 
 /**
  * Excerpts defining a multimap implementation that delegates to a provided put method to perform
@@ -51,14 +50,13 @@ public class CheckedSetMultimap extends Excerpt {
         .addLine("    return multimap;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean put(@%1$s K key, @%1$s V value) {",
-            Nullable.class)
+        .addLine("  @Override public boolean put(%1$s K key, %1$s V value) {", Jsr305.nullable())
         .addLine("    put.accept(key, value);")
         .addLine("    return true;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean putAll(@%s K key, %s<? extends V> values) {",
-            Nullable.class, Iterable.class)
+        .addLine("  @Override public boolean putAll(%s K key, %s<? extends V> values) {",
+            Jsr305.nullable(), Iterable.class)
         .addLine("    boolean anyModified = false;")
         .addLine("    for (V value : values) {")
         .addLine("      put.accept(key, value);")
@@ -79,15 +77,15 @@ public class CheckedSetMultimap extends Excerpt {
         .addLine("  }")
         .addLine("")
         .addLine("  @Override")
-        .addLine("  public %s<V> replaceValues(@%s K key, %s<? extends V> values) {",
-            Set.class, Nullable.class, Iterable.class)
+        .addLine("  public %s<V> replaceValues(%s K key, %s<? extends V> values) {",
+            Set.class, Jsr305.nullable(), Iterable.class)
         .addLine("    %s.checkNotNull(values);", Preconditions.class)
         .addLine("    %s<V> result = removeAll(key);", Set.class)
         .addLine("    putAll(key, values);")
         .addLine("    return result;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public %s<V> get(@%s K key) {", Set.class, Nullable.class)
+        .addLine("  @Override public %s<V> get(%s K key) {", Set.class, Jsr305.nullable())
         .addLine("    return new %s<>(", CheckedSet.TYPE)
         .addLine("        multimap.get(key), value -> put.accept(key, value));")
         .addLine("  }")

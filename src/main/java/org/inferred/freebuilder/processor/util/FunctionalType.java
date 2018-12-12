@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -145,15 +144,14 @@ public class FunctionalType extends ValueType {
     return isAssignable(fromType.getReturnType(), toType.getReturnType(), types);
   }
 
-  private static boolean isAssignable(
-      @Nullable TypeMirror fromParam, @Nullable TypeMirror toParam, Types types) {
+  private static boolean isAssignable(TypeMirror fromParam, TypeMirror toParam, Types types) {
     if (isVoid(fromParam) || isVoid(toParam)) {
       return isVoid(fromParam) && isVoid(toParam);
     }
     return types.isAssignable(fromParam, toParam);
   }
 
-  private static boolean isVoid(@Nullable TypeMirror type) {
+  private static boolean isVoid(TypeMirror type) {
     return type == null || type.getKind() == TypeKind.VOID;
   }
 

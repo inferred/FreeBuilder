@@ -5,7 +5,8 @@ import com.google.common.collect.ImmutableList;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
+
 import javax.lang.model.type.TypeMirror;
 
 /** Datatype about a property of a {@link Datatype}. */
@@ -15,7 +16,7 @@ public abstract class Property {
   public abstract TypeMirror getType();
 
   /** Returns the boxed form of {@link #getType()}, or null if type is not primitive. */
-  @Nullable public abstract TypeMirror getBoxedType();
+  public abstract Optional<TypeMirror> getBoxedType();
 
   /** Returns the name of the property, e.g. myProperty. */
   public abstract String getName();
