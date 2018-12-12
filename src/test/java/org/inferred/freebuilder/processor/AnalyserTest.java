@@ -25,7 +25,6 @@ import static org.inferred.freebuilder.processor.Metadata.Visibility.PACKAGE;
 import static org.inferred.freebuilder.processor.Metadata.Visibility.PRIVATE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -360,7 +359,7 @@ public class AnalyserTest {
 
     Property age = properties.get("age");
     assertEquals(model.typeMirror(int.class), age.getType());
-    assertEquals(model.typeMirror(Integer.class), age.getBoxedType());
+    assertThat(age.getBoxedType()).hasValue(model.typeMirror(Integer.class));
     assertEquals("AGE", age.getAllCapsName());
     assertEquals("Age", age.getCapitalizedName());
     assertEquals("getAge", age.getGetterName());
@@ -368,7 +367,7 @@ public class AnalyserTest {
 
     Property name = properties.get("name");
     assertEquals("java.lang.String", name.getType().toString());
-    assertNull(name.getBoxedType());
+    assertThat(name.getBoxedType()).isAbsent();
     assertEquals("NAME", name.getAllCapsName());
     assertEquals("Name", name.getCapitalizedName());
     assertEquals("getName", name.getGetterName());
@@ -388,7 +387,7 @@ public class AnalyserTest {
 
     Property age = properties.get("age");
     assertEquals(model.typeMirror(int.class), age.getType());
-    assertEquals(model.typeMirror(Integer.class), age.getBoxedType());
+    assertThat(age.getBoxedType()).hasValue(model.typeMirror(Integer.class));
     assertEquals("AGE", age.getAllCapsName());
     assertEquals("Age", age.getCapitalizedName());
     assertEquals("age", age.getGetterName());
@@ -396,7 +395,7 @@ public class AnalyserTest {
 
     Property name = properties.get("name");
     assertEquals("java.lang.String", name.getType().toString());
-    assertNull(name.getBoxedType());
+    assertThat(name.getBoxedType()).isAbsent();
     assertEquals("NAME", name.getAllCapsName());
     assertEquals("Name", name.getCapitalizedName());
     assertEquals("name", name.getGetterName());
@@ -476,7 +475,7 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = uniqueIndex(metadata.getProperties(), GET_NAME);
-    assertEquals(DefaultProperty.class, properties.get("name").getCodeGenerator().getClass());
+    assertEquals(DefaultProperty.class, properties.get("name").getCodeGenerator().get().getClass());
   }
 
   @Test
@@ -674,8 +673,8 @@ public class AnalyserTest {
         "  }",
         "}"));
     Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
-    assertEquals(Type.REQUIRED, properties.get("name").getCodeGenerator().getType());
-    assertEquals(Type.REQUIRED, properties.get("age").getCodeGenerator().getType());
+    assertEquals(Type.REQUIRED, properties.get("name").getCodeGenerator().get().getType());
+    assertEquals(Type.REQUIRED, properties.get("age").getCodeGenerator().get().getType());
   }
 
   @Test
@@ -1086,7 +1085,7 @@ public class AnalyserTest {
     Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name");
     assertEquals("java.lang.String", properties.get("name").getType().toString());
-    assertNull(properties.get("name").getBoxedType());
+    assertThat(properties.get("name").getBoxedType()).isAbsent();
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
@@ -1117,12 +1116,12 @@ public class AnalyserTest {
     Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
-    assertNull(properties.get("age").getBoxedType());
+    assertThat(properties.get("age").getBoxedType()).isAbsent();
     assertEquals("AGE", properties.get("age").getAllCapsName());
     assertEquals("Age", properties.get("age").getCapitalizedName());
     assertEquals("getAge", properties.get("age").getGetterName());
     assertEquals("A", properties.get("name").getType().toString());
-    assertNull(properties.get("name").getBoxedType());
+    assertThat(properties.get("name").getBoxedType()).isAbsent();
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
@@ -1154,12 +1153,12 @@ public class AnalyserTest {
     Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
-    assertNull(properties.get("age").getBoxedType());
+    assertThat(properties.get("age").getBoxedType()).isAbsent();
     assertEquals("AGE", properties.get("age").getAllCapsName());
     assertEquals("Age", properties.get("age").getCapitalizedName());
     assertEquals("getAge", properties.get("age").getGetterName());
     assertEquals("A", properties.get("name").getType().toString());
-    assertNull(properties.get("name").getBoxedType());
+    assertThat(properties.get("name").getBoxedType()).isAbsent();
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());

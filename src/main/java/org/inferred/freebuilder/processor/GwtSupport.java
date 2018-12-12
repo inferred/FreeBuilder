@@ -127,14 +127,14 @@ class GwtSupport {
               propertyType,
               property.getName(),
               Excerpts.add("reader.read%s()", withInitialCapital(property.getType())));
-          property.getCodeGenerator()
+          property.getCodeGenerator().get()
               .addSetFromResult(body, builder, value);
         } else if (String.class.getName().equals(property.getType().toString())) {
           Excerpt value = body.declare(
               propertyType,
               property.getName(),
               Excerpts.add("reader.readString()"));
-          property.getCodeGenerator()
+          property.getCodeGenerator().get()
               .addSetFromResult(body, builder, value);
         } else {
           body.addLine("    try {");
@@ -149,7 +149,7 @@ class GwtSupport {
               typeAndPreamble,
               property.getName(),
               Excerpts.add("(%s) reader.readObject()", propertyType));
-          property.getCodeGenerator()
+          property.getCodeGenerator().get()
               .addSetFromResult(tryBlock, builder, value);
           body.add(tryBlock)
               .addLine("    } catch (%s e) {", ClassCastException.class)
@@ -177,7 +177,8 @@ class GwtSupport {
         } else {
           code.add("    writer.writeObject(");
         }
-        property.getCodeGenerator().addReadValueFragment(code, property.getField().on("instance"));
+        property.getCodeGenerator().get()
+            .addReadValueFragment(code, property.getField().on("instance"));
         code.add(");\n");
       }
       code.addLine("  }");

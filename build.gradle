@@ -43,7 +43,6 @@ dependencies {
     exclude module: 'org.eclipse.equinox.registry'
   }
   compile guava
-  compile jsr305
   compileOnly autoService
   compileOnly files(org.gradle.internal.jvm.Jvm.current().toolsJar)
 
@@ -57,6 +56,7 @@ dependencies {
   testCompile jackson('datatype-jdk8')
   testCompile jackson('dataformat-xml')
   testCompile javassist
+  testCompile jsr305
   testCompile junit
   testCompile mockito
   testCompile truth
@@ -125,22 +125,6 @@ shadowJar {
   // Exclude common META-INF detritus
   exclude 'META-INF/*.txt'
   exclude 'META-INF/maven/**'
-
-  // Exclude all of jsr305 except Nullable, Nonnull and meta.When
-  exclude 'javax/annotation/C*'
-  exclude 'javax/annotation/D*'
-  exclude 'javax/annotation/M*'
-  exclude 'javax/annotation/Nonnegative*'
-  exclude 'javax/annotation/O*'
-  exclude 'javax/annotation/P*'
-  exclude 'javax/annotation/R*'
-  exclude 'javax/annotation/S*'
-  exclude 'javax/annotation/T*'
-  exclude 'javax/annotation/U*'
-  exclude 'javax/annotation/W*'
-  exclude 'javax/annotation/concurrent/*'
-  exclude 'javax/annotation/meta/E*'
-  exclude 'javax/annotation/meta/T*'
 }
 tasks.shadowJar.shouldRunAfter tasks.test
 

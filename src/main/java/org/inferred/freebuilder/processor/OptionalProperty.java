@@ -35,6 +35,7 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.feature.Jsr305;
 
 import java.util.Objects;
 import java.util.function.UnaryOperator;
@@ -253,10 +254,10 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s(@%s %s %s) {",
+        .addLine("public %s %s(%s %s %s) {",
             metadata.getBuilder(),
             nullableSetter(property),
-            javax.annotation.Nullable.class,
+            Jsr305.nullable(),
             elementType,
             property.getName())
         .add(methodBody(code, property.getName())

@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
@@ -126,7 +125,7 @@ class DefaultProperty extends PropertyCodeGenerator {
     if (!hasDefault) {
       code.addLine(" * @throws IllegalStateException if the field has not been set");
     }
-    TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
+    TypeMirror typeParam = property.getBoxedType().or(property.getType());
     code.addLine(" */")
         .add("public %s %s(%s<%s> mapper) {",
             metadata.getBuilder(),

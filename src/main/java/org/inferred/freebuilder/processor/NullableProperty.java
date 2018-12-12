@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
@@ -119,7 +118,7 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code, final Metadata metadata) {
-    TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
+    TypeMirror typeParam = property.getBoxedType().or(property.getType());
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is not",
