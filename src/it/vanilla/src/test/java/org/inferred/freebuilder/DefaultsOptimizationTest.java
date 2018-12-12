@@ -1,22 +1,39 @@
 package org.inferred.freebuilder;
 
-import org.junit.Rule;
+import static org.junit.Assert.assertEquals;
+
+import com.google.common.collect.ImmutableSet;
+
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DefaultsOptimizationTest {
 
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
-
   @Test
-  public void testNoDefaultsNoOptimisation() throws NoSuchFieldException, SecurityException {
-    RequiredPropertiesType.Builder.class.getSuperclass().getDeclaredField("_unsetProperties");
+  public void testNoDefaultsNoOptimisation() {
+    assertEquals(
+        ImmutableSet.of("firstName", "surname", "_unsetProperties"),
+        fieldsOn(RequiredPropertiesType.Builder.class.getSuperclass()));
   }
 
   @Test
-  public void testDefaultsOptimisation() throws NoSuchFieldException, SecurityException {
-    thrown.expect(NoSuchFieldException.class);
-    DefaultedPropertiesType.Builder.class.getSuperclass().getDeclaredField("_unsetProperties");
+  public void testDefaultsOptimisation() {
+    assertEquals(
+        ImmutableSet.of("firstName", "surname"),
+        fieldsOn(DefaultedPropertiesType.Builder.class.getSuperclass()));
+  }
+
+  private static Set<String> fieldsOn(Class<?> cls) {
+    Set<String> generatedFields = new HashSet<>();
+    for (Field field : cls.getDeclaredFields()) {
+      if (!Modifier.isStatic(field.getModifiers())) {
+        generatedFields.add(field.getName());
+      }
+    }
+    return generatedFields;
   }
 }
