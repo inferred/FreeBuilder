@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
@@ -961,10 +962,12 @@ public class NullableSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new NullableProperty(metadata, name, ImmutableSet.of(nullable)))
+            .setCodeGenerator(new NullableProperty(
+                metadata, name, ImmutableSet.of(nullable), unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new NullableProperty(metadata, age, ImmutableSet.of(nullable)))
+            .setCodeGenerator(new NullableProperty(
+                metadata, age, ImmutableSet.of(nullable), unaryOperator(INTEGER)))
             .build())
         .build();
   }

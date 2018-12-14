@@ -21,6 +21,8 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
@@ -32,8 +34,8 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
@@ -42,7 +44,6 @@ import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 
 /** {@link PropertyCodeGenerator} providing reference semantics for Nullable properties. */
 class NullableProperty extends PropertyCodeGenerator {
@@ -57,7 +58,14 @@ class NullableProperty extends PropertyCodeGenerator {
       if (isPrimitive || nullableAnnotations.isEmpty()) {
         return Optional.absent();
       }
-      return Optional.of(new NullableProperty(config.getMetadata(), property, nullableAnnotations));
+      FunctionalType mapperType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mapper(property),
+          unaryOperator(firstNonNull(property.getBoxedType(), property.getType())),
+          config.getElements(),
+          config.getTypes());
+      return Optional.of(new NullableProperty(
+          config.getMetadata(), property, nullableAnnotations, mapperType));
     }
 
     private static Set<TypeElement> nullablesIn(Iterable<? extends AnnotationMirror> annotations) {
@@ -75,13 +83,16 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   private final Set<TypeElement> nullables;
+  private final FunctionalType mapperType;
 
   NullableProperty(
       Metadata metadata,
       Property property,
-      Iterable<TypeElement> nullableAnnotations) {
+      Iterable<TypeElement> nullableAnnotations,
+      FunctionalType mapperType) {
     super(metadata, property);
     this.nullables = ImmutableSet.copyOf(nullableAnnotations);
+    this.mapperType = mapperType;
   }
 
   @Override
@@ -121,11 +132,9 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code, final Metadata metadata) {
-    ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
-    if (unaryOperator == null) {
+    if (!code.feature(FUNCTION_PACKAGE).unaryOperator().isPresent()) {
       return;
     }
-    TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is not",
@@ -136,15 +145,14 @@ class NullableProperty extends PropertyCodeGenerator {
         .addLine(" * @throws NullPointerException if {@code mapper} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mapper) {",
-            metadata.getBuilder(),
-            mapper(property),
-            unaryOperator.withParameters(typeParam))
+            metadata.getBuilder(), mapper(property), mapperType.getFunctionalInterface())
         .add(PreconditionExcerpts.checkNotNull("mapper"));
     Block body = methodBody(code, "mapper");
     Excerpt propertyValue = body.declare(new TypeMirrorExcerpt(
         property.getType()), property.getName(), Excerpts.add("%s()", getter(property)));
     body.addLine("  if (%s != null) {", propertyValue)
-        .addLine("    %s(mapper.apply(%s));", setter(property), propertyValue)
+        .addLine("    %s(mapper.%s(%s));",
+            setter(property), mapperType.getMethodName(), propertyValue)
         .addLine("  }")
         .addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
