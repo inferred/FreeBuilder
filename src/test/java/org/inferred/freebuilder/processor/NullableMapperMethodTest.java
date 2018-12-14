@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
+import com.google.common.collect.Lists;
+
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -27,10 +29,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -40,53 +42,108 @@ import javax.tools.JavaFileObject;
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class NullableMapperMethodTest {
 
-  @Parameters(name = "{0}")
-  public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_LAMBDAS;
+  @SuppressWarnings("unchecked")
+  @Parameters(name = "{0}, {1}")
+  public static Iterable<Object[]> parameters() {
+    List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
+    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    return () -> Lists
+        .cartesianProduct(conventions, features)
+        .stream()
+        .map(List::toArray)
+        .iterator();
   }
-
-  private static final JavaFileObject NULLABLE_INTEGER_BEAN_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  @%s Integer getProperty();", Nullable.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
-
-  private static final JavaFileObject NULLABLE_INTEGER_PREFIXLESS_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  @%s Integer property();", Nullable.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
-
-  @Parameter public FeatureSet features;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
+  private final NamingConvention convention;
+  private final FeatureSet features;
+  private final JavaFileObject nullableIntegerType;
+
+  public NullableMapperMethodTest(NamingConvention convention, FeatureSet features) {
+    this.convention = convention;
+    this.features = features;
+    nullableIntegerType = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  @%s Integer %s;", Nullable.class, convention.get("property"))
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {}")
+        .addLine("}")
+        .build();
+  }
+
   @Test
-  public void replacesValueToBeReturnedFromGetter_bean() {
+  public void replacesValueToBeReturnedFromGetter() {
     behaviorTester
         .with(new Processor(features))
-        .with(NULLABLE_INTEGER_BEAN_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
+        .with(nullableIntegerType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
             .addLine("    .mapProperty(a -> a + 3)")
             .addLine("    .build();")
-            .addLine("assertEquals(14, (int) value.getProperty());")
+            .addLine("assertEquals(14, (int) value.%s);", convention.get("property"))
             .build())
         .runTest();
   }
 
   @Test
-  public void delegatesToSetterForValidation_bean() {
+  public void throwsNpeIfMapperIsNull() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(nullableIntegerType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .mapProperty(null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void throwsNpeIfMapperIsNullForUnsetNullableProperty() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(nullableIntegerType)
+        .with(testBuilder().addLine("new DataType.Builder().mapProperty(null);").build())
+        .runTest();
+  }
+
+  @Test
+  public void allowsNullReturn() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(nullableIntegerType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .mapProperty(a -> null)")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isNull();", convention.get("property"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void skipsMapperIfNullablePropertyIsUnset() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(nullableIntegerType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder().mapProperty(a -> {")
+            .addLine("  throw new AssertionError(\"shouldn't hit this\");")
+            .addLine("});")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void delegatesToSetterForValidation() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("property must be non-negative");
     behaviorTester
@@ -95,182 +152,30 @@ public class NullableMapperMethodTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  @%s Integer getProperty();", Nullable.class)
+            .addLine("  @%s Integer %s;", Nullable.class, convention.get("property"))
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setProperty(@%s Integer property) {",
-                Nullable.class)
+            .addLine("    @Override public Builder %s(@%s Integer property) {",
+                convention.set("property"), Nullable.class)
             .addLine("      if (property != null && property < 0) {")
             .addLine("        throw new IllegalArgumentException(")
             .addLine("              \"property must be non-negative\");")
             .addLine("      }")
-            .addLine("      return super.setProperty(property);")
+            .addLine("      return super.%s(property);", convention.set("property"))
             .addLine("    }")
             .addLine("  }")
             .addLine("}")
             .build())
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
             .addLine("    .mapProperty(a -> -3);")
             .build())
         .runTest();
   }
 
-  @Test
-  public void throwsNpeIfMapperIsNull_bean() {
-    thrown.expect(NullPointerException.class);
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_BEAN_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
-            .addLine("    .mapProperty(null);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void throwsNpeIfMapperIsNullForUnsetNullableProperty_bean() {
-    thrown.expect(NullPointerException.class);
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_BEAN_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .mapProperty(null);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void allowsNullReturn_bean() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_BEAN_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
-            .addLine("    .mapProperty(a -> null)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getProperty()).isNull();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void skipsMapperIfNullablePropertyIsUnset_bean() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_BEAN_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().mapProperty(a -> {")
-            .addLine("  throw new AssertionError(\"shouldn't hit this\");")
-            .addLine("});")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void replacesValueToBeReturnedFromGetter_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_PREFIXLESS_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .property(11)")
-            .addLine("    .mapProperty(a -> a + 3)")
-            .addLine("    .build();")
-            .addLine("assertEquals(14, (int) value.property());")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void delegatesToSetterForValidation_prefixless() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("property must be non-negative");
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  @%s Integer property();", Nullable.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder property(@%s Integer property) {",
-                Nullable.class)
-            .addLine("      if (property != null && property < 0) {")
-            .addLine("        throw new IllegalArgumentException(")
-            .addLine("              \"property must be non-negative\");")
-            .addLine("      }")
-            .addLine("      return super.property(property);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .property(11)")
-            .addLine("    .mapProperty(a -> -3);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void throwsNpeIfMapperIsNull_prefixless() {
-    thrown.expect(NullPointerException.class);
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_PREFIXLESS_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .property(11)")
-            .addLine("    .mapProperty(null);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void throwsNpeIfMapperIsNullForUnsetNullableProperty_prefixless() {
-    thrown.expect(NullPointerException.class);
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_PREFIXLESS_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .mapProperty(null);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void allowsNullReturn_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_PREFIXLESS_TYPE)
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .property(11)")
-            .addLine("    .mapProperty(a -> null)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.property()).isNull();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void skipsMapperIfNullablePropertyIsUnset_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(NULLABLE_INTEGER_PREFIXLESS_TYPE)
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder().mapProperty(a -> {")
-            .addLine("  throw new AssertionError(\"shouldn't hit this\");")
-            .addLine("});")
-            .build())
-        .runTest();
+  private static TestBuilder testBuilder() {
+    return new TestBuilder()
+        .addImport("com.example.DataType");
   }
 }
