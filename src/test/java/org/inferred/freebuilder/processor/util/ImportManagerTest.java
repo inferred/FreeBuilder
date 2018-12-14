@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedClass;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
@@ -58,7 +59,7 @@ public class ImportManagerTest {
   @Test
   public void testTypeMirrorShortening() {
     ImportManager manager = new ImportManager.Builder().build();
-    assertEquals("String", manager.shorten(newTopLevelClass("java.lang.String")));
+    assertEquals("String", manager.shorten(STRING));
     assertEquals("List", manager.shorten(newTopLevelClass("java.util.List")));
     assertEquals("java.awt.List", manager.shorten(newTopLevelClass("java.awt.List")));
     ClassTypeImpl mapType = newTopLevelClass("java.util.Map");
@@ -77,7 +78,7 @@ public class ImportManagerTest {
         .addImplicitImport(QualifiedName.of(stringType))
         .build();
     assertEquals("java.lang.String",
-        manager.shorten(newTopLevelClass("java.lang.String")));
+        manager.shorten(ClassTypeImpl.STRING));
     assertEquals("java.util.List", manager.shorten(newTopLevelClass("java.util.List")));
     ClassTypeImpl awtListType = newTopLevelClass("java.awt.List");
     assertEquals("java.awt.List", manager.shorten(awtListType));

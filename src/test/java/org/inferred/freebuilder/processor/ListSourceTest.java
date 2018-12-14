@@ -17,6 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
@@ -1967,10 +1969,8 @@ public class ListSourceTest {
    */
   private static Metadata createMetadata(boolean bean) {
     GenericTypeElementImpl list = newTopLevelGenericType("java.util.List");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    GenericTypeMirrorImpl listInteger = list.newMirror(integer);
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl listString = list.newMirror(string);
+    GenericTypeMirrorImpl listInteger = list.newMirror(INTEGER);
+    GenericTypeMirrorImpl listString = list.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -2010,11 +2010,11 @@ public class ListSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new ListProperty(
-                metadata, name, false, false, false, string, Optional.<TypeMirror>absent()))
+                metadata, name, false, false, false, STRING, Optional.<TypeMirror>absent()))
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new ListProperty(
-                metadata, age, false, false, false, integer, Optional.<TypeMirror>of(INT)))
+                metadata, age, false, false, false, INTEGER, Optional.<TypeMirror>of(INT)))
             .build())
         .build();
   }
