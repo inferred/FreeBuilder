@@ -29,8 +29,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -131,8 +129,8 @@ public class SourceStringBuilder implements SourceBuilder {
       }
     } else if (arg instanceof Class<?>) {
       return shortener.shorten(QualifiedName.of((Class<?>) arg));
-    } else if ((arg instanceof TypeMirror) && (((TypeMirror) arg).getKind() == TypeKind.DECLARED)) {
-      DeclaredType mirror = (DeclaredType) arg;
+    } else if (arg instanceof TypeMirror) {
+      TypeMirror mirror = (TypeMirror) arg;
       checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
       return shortener.shorten(mirror);
     } else if (arg instanceof QualifiedName) {

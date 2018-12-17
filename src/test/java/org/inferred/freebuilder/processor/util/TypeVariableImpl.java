@@ -17,6 +17,11 @@ package org.inferred.freebuilder.processor.util;
 
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -60,5 +65,17 @@ public abstract class TypeVariableImpl implements TypeVariable {
   @Override
   public String toString() {
     return variableName;
+  }
+
+  @Override
+  public TypeParameterElement asElement() {
+    return Partial.of(ElementImpl.class, this);
+  }
+
+  abstract class ElementImpl implements TypeParameterElement {
+    @Override
+    public List<? extends TypeMirror> getBounds() {
+      return ImmutableList.of();
+    }
   }
 }
