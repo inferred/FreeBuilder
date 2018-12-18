@@ -192,9 +192,10 @@ if (!hasProperty('java9Home') && System.env.containsKey('JAVA_9_HOME')) {
 assert hasProperty('java9Home') : "Set the property 'java9Home' in your your gradle.properties pointing to a Java 9 installation"
 def java9Path = new File(java9Home, 'bin')
 def java9 = [:].withDefault { execName ->
-  def executable = new File(java9Path, execName)
-  assert executable.exists() : "There is no ${execName} executable in ${java9Path}"
-  executable.toString()
+    def unixExec = new File(java9Path, execName)
+    def winExec = new File(java9Path, execName + ".exe")
+    assert unixExec.exists() || winExec.exists() : "There is no ${execName} executable in ${java9Path}"
+    unixExec.exists() ? unixExec : winExec
 }
 
 afterEvaluate {
