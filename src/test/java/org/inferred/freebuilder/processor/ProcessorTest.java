@@ -174,6 +174,28 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testGenericInterfaceWithBound() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<N extends Number> {")
+            .addLine("  N getProperty();")
+            .addLine("  class Builder<N extends Number> extends DataType_Builder<N> { }")
+            .addLine("}")
+            .build())
+        .with(new TestBuilder()
+            .addLine("com.example.DataType<Integer> value =")
+            .addLine("    new com.example.DataType.Builder<Integer>()")
+            .addLine("        .setProperty(11)")
+            .addLine("        .build();")
+            .addLine("assertEquals(11, (int) value.getProperty());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void test_nullPointerException() {
     behaviorTester
         .with(new Processor(features))
@@ -1017,7 +1039,7 @@ public class ProcessorTest {
             .addLine("  T getName();")
             .addLine("  int getAge();")
             .addLine("")
-            .addLine("  Builder toBuilder();")
+            .addLine("  Builder<T> toBuilder();")
             .addLine("  class Builder<T> extends DataType_Builder<T> {}")
             .addLine("}")
             .build())

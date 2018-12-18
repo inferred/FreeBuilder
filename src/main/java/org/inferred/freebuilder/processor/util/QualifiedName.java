@@ -121,6 +121,14 @@ public class QualifiedName extends ValueType {
     return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
   }
 
+  public ParameterizedType withParameters(
+      TypeParameterElement typeParameter, TypeParameterElement... typeParameters) {
+    return withParameters(ImmutableList.<TypeParameterElement>builder()
+        .add(typeParameter)
+        .add(typeParameters)
+        .build());
+  }
+
   /**
    * Returns the {@link QualifiedName} of the type enclosing this one.
    *

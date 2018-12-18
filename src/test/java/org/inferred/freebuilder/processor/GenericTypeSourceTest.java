@@ -16,7 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.inferred.freebuilder.processor.util.TypeVariableImpl.newTypeVariable;
+import static org.inferred.freebuilder.processor.util.TypeParameterElementImpl.newTypeParameterElement;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
@@ -28,13 +28,12 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.TypeParameterElementImpl;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import javax.lang.model.type.TypeVariable;
 
 @RunWith(JUnit4.class)
 public class GenericTypeSourceTest {
@@ -855,6 +854,10 @@ public class GenericTypeSourceTest {
     try {
       return new Formatter().formatSource(sourceBuilder.toString());
     } catch (FormatterException e) {
+      int no = 0;
+      for (String line : sourceBuilder.toString().split("\n")) {
+        System.err.println((++no) + ": " + line);
+      }
       throw new RuntimeException(e);
     }
   }
@@ -862,24 +865,24 @@ public class GenericTypeSourceTest {
   private static Metadata createMetadata() {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    TypeVariable typeVariableA = newTypeVariable("A");
+    TypeParameterElementImpl paramA = newTypeParameterElement("A");
+    TypeParameterElementImpl paramB = newTypeParameterElement("B");
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(typeVariableA)
+        .setType(paramA.asType())
         .setUsingBeanConvention(true)
         .build();
-    TypeVariable typeVariableB = newTypeVariable("B");
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(typeVariableB)
+        .setType(paramB.asType())
         .setUsingBeanConvention(true)
         .build();
     Metadata metadata = new Metadata.Builder()
@@ -887,13 +890,13 @@ public class GenericTypeSourceTest {
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters("A", "B"))
+        .setGeneratedBuilder(generatedBuilder.withParameters(paramA, paramB))
         .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters("A", "B"))
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters(paramA, paramB))
         .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters("A", "B"))
-        .setValueType(generatedBuilder.nestedType("Value").withParameters("A", "B"))
+        .setType(person.withParameters(paramA, paramB))
+        .setValueType(generatedBuilder.nestedType("Value").withParameters(paramA, paramB))
         .build();
     return metadata.toBuilder()
         .clearProperties()

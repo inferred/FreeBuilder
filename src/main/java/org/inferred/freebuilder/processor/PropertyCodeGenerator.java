@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -52,8 +52,11 @@ public abstract class PropertyCodeGenerator {
     /** Returns annotations on the property requiring code generation. */
     List<? extends AnnotationMirror> getAnnotations();
 
-    /** The user's Builder type. */
-    TypeElement getBuilder();
+    /**
+     * The user's Builder type. If generic, will be parameterized with the type variables of the
+     * value type, for simpler type comparisons.
+     */
+    DeclaredType getBuilder();
 
     /**
      * A set of methods that are definitely invoked in the builder constructor. This may have false

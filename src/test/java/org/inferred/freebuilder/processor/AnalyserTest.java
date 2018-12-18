@@ -1103,7 +1103,7 @@ public class AnalyserTest {
         "public class DataType<A, B> {",
         "  public abstract A getName();",
         "  public abstract B getAge();",
-        "  public static class Builder<A, B> extends DataType_Builder<A, B> {}",
+        "  public static class Builder<Q, R> extends DataType_Builder<Q, R> {}",
         "}"));
     assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
     assertThat(dataType.isExtensible()).isTrue();
@@ -1126,6 +1126,20 @@ public class AnalyserTest {
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
+  }
+
+  @Test
+  public void genericTypeWithBounds() throws CannotGenerateCodeException {
+    Metadata dataType = analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType<A extends CharSequence, B extends Temporal> {",
+        "  public abstract A getName();",
+        "  public abstract B getAge();",
+        "  public static class Builder<Q, R> extends DataType_Builder<Q, R> {}",
+        "}"));
+    assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
+    assertEquals("DataType<A extends CharSequence, B extends Temporal>",
+        SourceStringBuilder.simple().add(dataType.getType().declaration()).toString());
   }
 
   /** @see <a href="https://github.com/google/FreeBuilder/issues/111">Issue 111</a> */
@@ -1514,6 +1528,38 @@ public class AnalyserTest {
         QualifiedName.of("com.example", "DataType_Builder", "Partial"),
         QualifiedName.of("com.example", "DataType_Builder", "Property"),
         QualifiedName.of("com.example", "DataType_Builder", "Value"));
+  }
+
+  @Test
+  public void missingGenericParametersOnBuilder() throws CannotGenerateCodeException {
+    // See also https://github.com/inferred/FreeBuilder/issues/110
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "import java.util.*;",
+        "public class DataType<A> {",
+        "  public static class Builder extends DataType_Builder {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+    assertThat(metadata.getOptionalBuilder()).isAbsent();
+    assertThat(messager.getMessagesByElement().asMap())
+        .containsEntry("Builder", ImmutableList.of("[ERROR] Builder must be generic"));
+  }
+
+  @Test
+  public void incorrectGenericParametersOnBuilder() throws CannotGenerateCodeException {
+    TypeElement dataType = model.newType(
+        "package com.example;",
+        "import java.util.*;",
+        "public class DataType<A> {",
+        "  public static class Builder<Q, R> extends DataType_Builder<Q, R> {}",
+        "}");
+
+    Metadata metadata = analyser.analyse(dataType);
+    assertThat(metadata.getOptionalBuilder()).isAbsent();
+    assertThat(messager.getMessagesByElement().asMap())
+        .containsEntry("Builder", ImmutableList.of(
+            "[ERROR] Builder has the wrong type parameters"));
   }
 
   private static String asSource(Excerpt annotation) {

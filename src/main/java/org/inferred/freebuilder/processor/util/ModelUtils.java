@@ -135,6 +135,11 @@ public class ModelUtils {
     return false;
   }
 
+  public static boolean overrides(
+      DeclaredType type, Types types, String methodName, TypeMirror... params) {
+    return overrides(asElement(type), types, methodName, params);
+  }
+
   /**
    * Returns true if a method with a variable number of {@code elementType} arguments needs a
    * {@code &#64;SafeVarargs} annotation to avoid compiler warnings in Java 7+.
