@@ -120,7 +120,7 @@ public class CodeGenerator {
         .addLine(" * Creates a new builder using {@code value} as a template.")
         .addLine(" */")
         .addLine("public static %s %s from(%s value) {",
-            metadata.getBuilder().declarationParameters(),
+            metadata.getType().declarationParameters(),
             metadata.getBuilder(),
             metadata.getType())
         .addLine("  return %s.mergeFrom(value);",
@@ -646,7 +646,7 @@ public class CodeGenerator {
     if (metadata.isExtensible()) {
       code.addLine("")
           .addLine("  private static class PartialBuilder%s extends %s {",
-              metadata.getBuilder().declarationParameters(), metadata.getBuilder())
+              metadata.getType().declarationParameters(), metadata.getBuilder())
           .addLine("    @Override public %s build() {", metadata.getType())
           .addLine("      return buildPartial();")
           .addLine("    }")
