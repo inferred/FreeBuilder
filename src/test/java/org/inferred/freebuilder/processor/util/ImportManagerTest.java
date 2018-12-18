@@ -124,11 +124,12 @@ public class ImportManagerTest {
     createModel();
     ImportManager manager = new ImportManager.Builder().build();
 
-    // Wildcards work differently between Java versions. We make no attempt to shorten them.
-    assertEquals("Map<Name, ? extends java.util.logging.Logger>",
+    assertEquals("Map<Name, ? extends Logger>",
         manager.shorten(model.typeMirror(new TypeToken<Map<Name, ? extends Logger>>() {})));
     assertThat(manager.getClassImports())
-        .containsExactly("java.util.Map", "javax.lang.model.element.Name").inOrder();
+        .containsExactly(
+            "java.util.Map", "java.util.logging.Logger", "javax.lang.model.element.Name")
+        .inOrder();
   }
 
   @Test
