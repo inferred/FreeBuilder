@@ -29,8 +29,8 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
-import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.naming.NamingConventions.determineNamingConvention;
+import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
@@ -48,6 +48,7 @@ import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
+import org.inferred.freebuilder.processor.util.MethodFinder.ErrorTypeHandling;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -115,6 +116,14 @@ class Analyser {
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
 
+  private static final ErrorTypeHandling<CannotGenerateCodeException> CANNOT_GENERATE_ON_ERROR =
+      new ErrorTypeHandling<CannotGenerateCodeException>() {
+        @Override
+        public void handleErrorType(ErrorType type) throws CannotGenerateCodeException {
+          throw new CannotGenerateCodeException();
+        }
+      };
+
   private final Elements elements;
   private final Messager messager;
   private final MethodIntrospector methodIntrospector;
@@ -136,7 +145,7 @@ class Analyser {
   Metadata analyse(TypeElement type) throws CannotGenerateCodeException {
     PackageElement pkg = elements.getPackageOf(type);
     verifyType(type, pkg);
-    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements);
+    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, CANNOT_GENERATE_ON_ERROR);
     QualifiedName generatedBuilder = QualifiedName.of(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
     Optional<DeclaredType> builder = tryFindBuilder(generatedBuilder, type);
