@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.TypeParameterElementImpl.newTypeParameterElement;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
@@ -901,10 +902,12 @@ public class GenericTypeSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, false))
+            .setCodeGenerator(new DefaultProperty(
+                metadata, name, false, unaryOperator(paramA.asType())))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, false))
+            .setCodeGenerator(new DefaultProperty(
+                metadata, age, false, unaryOperator(paramB.asType())))
             .build())
         .build();
   }

@@ -21,6 +21,8 @@ import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.CodeGenerator.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
 import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
@@ -33,13 +35,12 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 
 /** Default {@link PropertyCodeGenerator}, providing reference semantics for any type. */
 class DefaultProperty extends PropertyCodeGenerator {
@@ -51,16 +52,29 @@ class DefaultProperty extends PropertyCodeGenerator {
       Property property = config.getProperty();
       boolean hasDefault = config.getMethodsInvokedInBuilderConstructor()
           .contains(setter(property));
-      return Optional.of(new DefaultProperty(config.getMetadata(), property, hasDefault));
+      FunctionalType mapperType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mapper(property),
+          unaryOperator(firstNonNull(property.getBoxedType(), property.getType())),
+          config.getElements(),
+          config.getTypes());
+      return Optional.of(new DefaultProperty(
+          config.getMetadata(), property, hasDefault, mapperType));
     }
   }
 
   private final boolean hasDefault;
+  private final FunctionalType mapperType;
   private final TypeKind kind;
 
-  DefaultProperty(Metadata metadata, Property property, boolean hasDefault) {
+  DefaultProperty(
+      Metadata metadata,
+      Property property,
+      boolean hasDefault,
+      FunctionalType mapperType) {
     super(metadata, property);
     this.hasDefault = hasDefault;
+    this.mapperType = mapperType;
     this.kind = property.getType().getKind();
   }
 
@@ -116,8 +130,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code, final Metadata metadata) {
-    ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
-    if (unaryOperator == null) {
+    if (!code.feature(FUNCTION_PACKAGE).unaryOperator().isPresent()) {
       return;
     }
     code.addLine("")
@@ -127,21 +140,23 @@ class DefaultProperty extends PropertyCodeGenerator {
         .addLine(" * by applying {@code mapper} to it and using the result.")
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-        .addLine(" * @throws NullPointerException if {@code mapper} is null"
-        + " or returns null");
+        .addLine(" * @throws NullPointerException if {@code mapper} is null");
+    if (mapperType.canReturnNull()) {
+      code.addLine(" * or returns null");
+    }
     if (!hasDefault) {
       code.addLine(" * @throws IllegalStateException if the field has not been set");
     }
-    TypeMirror typeParam = firstNonNull(property.getBoxedType(), property.getType());
     code.addLine(" */")
         .add("public %s %s(%s mapper) {",
             metadata.getBuilder(),
             mapper(property),
-            unaryOperator.withParameters(typeParam));
+            mapperType.getFunctionalInterface());
     if (!hasDefault) {
       code.add(PreconditionExcerpts.checkNotNull("mapper"));
     }
-    code.addLine("  return %s(mapper.apply(%s()));", setter(property), getter(property))
+    code.addLine("  return %s(mapper.%s(%s()));",
+            setter(property), mapperType.getMethodName(), getter(property))
         .addLine("}");
   }
 

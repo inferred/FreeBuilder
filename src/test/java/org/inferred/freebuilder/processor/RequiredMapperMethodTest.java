@@ -15,6 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.junit.Assume.assumeTrue;
+
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
@@ -34,6 +37,8 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.IntUnaryOperator;
+import java.util.function.UnaryOperator;
 
 import javax.tools.JavaFileObject;
 
@@ -167,6 +172,95 @@ public class RequiredMapperMethodTest {
             .addLine("    .mapProperty(a -> -3);")
             .build())
         .runTest();
+  }
+
+  @Test
+  public void mapCanAcceptPrimitiveFunctionalInterface() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  int %s;", convention.get("property"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder mapProperty(%s mapper) {",
+                IntUnaryOperator.class)
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, value.%s);", convention.get("property"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapCanAcceptGenericFunctionalInterface() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  int %s;", convention.get("property"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder mapProperty(%s<Integer> mapper) {",
+                UnaryOperator.class)
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, value.%s);", convention.get("property"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapCanAcceptOtherFunctionalInterface() {
+    assumeGuavaAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  int %s;", convention.get("property"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder mapProperty(%s<Integer, Integer> mapper) {",
+                com.google.common.base.Function.class)
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, value.%s);", convention.get("property"))
+            .build())
+        .runTest();
+  }
+
+  private void assumeGuavaAvailable() {
+    assumeTrue("Guava available", features.get(GUAVA).isAvailable());
   }
 
   private static TestBuilder testBuilder() {

@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
@@ -692,13 +693,14 @@ public class DefaultedPropertiesSourceTest {
     Metadata metadataWithCodeGenerators = metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, false))
+            .setCodeGenerator(new DefaultProperty(metadata, name, false, unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, true))
+            .setCodeGenerator(new DefaultProperty(metadata, age, true, unaryOperator(INTEGER)))
             .build())
         .addProperties(shoeSize.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, shoeSize, false))
+            .setCodeGenerator(new DefaultProperty(
+                metadata, shoeSize, false, unaryOperator(INTEGER)))
             .build())
         .build();
 
@@ -1719,10 +1721,10 @@ public class DefaultedPropertiesSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, true))
+            .setCodeGenerator(new DefaultProperty(metadata, name, true, unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, true))
+            .setCodeGenerator(new DefaultProperty(metadata, age, true, unaryOperator(INTEGER)))
             .build())
         .build();
   }
