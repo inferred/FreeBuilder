@@ -51,6 +51,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.time.temporal.Temporal;
 import java.util.Map;
 
 import javax.annotation.Generated;
@@ -1132,7 +1133,8 @@ public class AnalyserTest {
   public void genericTypeWithBounds() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
-        "public class DataType<A extends CharSequence, B extends Temporal> {",
+        "public class DataType<A extends CharSequence, B extends " + Temporal.class.getName()
+            + "> {",
         "  public abstract A getName();",
         "  public abstract B getAge();",
         "  public static class Builder<Q, R> extends DataType_Builder<Q, R> {}",
