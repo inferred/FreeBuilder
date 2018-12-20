@@ -35,12 +35,11 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.Nullable;
 import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
-public class NullableMapperMethodTest {
+public class DefaultedMapperMethodTest {
 
   @SuppressWarnings("unchecked")
   @Parameters(name = "{0}, {1}")
@@ -59,91 +58,62 @@ public class NullableMapperMethodTest {
 
   private final NamingConvention convention;
   private final FeatureSet features;
-  private final JavaFileObject nullableIntegerType;
+  private final JavaFileObject defaultIntegerType;
 
-  public NullableMapperMethodTest(NamingConvention convention, FeatureSet features) {
+  public DefaultedMapperMethodTest(NamingConvention convention, FeatureSet features) {
     this.convention = convention;
     this.features = features;
-    nullableIntegerType = new SourceBuilder()
+    defaultIntegerType = new SourceBuilder()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
-        .addLine("  @%s Integer %s;", Nullable.class, convention.get("property"))
+        .addLine("  int %s;", convention.get("property"))
         .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {}")
+        .addLine("  public static class Builder extends DataType_Builder {")
+        .addLine("    public Builder() {")
+        .addLine("      %s(11);", convention.set("property"))
+        .addLine("    }")
+        .addLine("  }")
         .addLine("}")
         .build();
   }
 
   @Test
-  public void replacesValueToBeReturnedFromGetter() {
+  public void mapReplacesValueToBeReturnedFromGetter() {
     behaviorTester
         .with(new Processor(features))
-        .with(nullableIntegerType)
+        .with(defaultIntegerType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
             .addLine("    .mapProperty(a -> a + 3)")
             .addLine("    .build();")
-            .addLine("assertEquals(14, (int) value.%s);", convention.get("property"))
+            .addLine("assertEquals(14, value.%s);", convention.get("property"))
             .build())
         .runTest();
   }
 
   @Test
-  public void throwsNpeIfMapperIsNull() {
+  public void mapThrowsNpeIfMapperIsNull() {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(nullableIntegerType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
-            .addLine("    .mapProperty(null);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void throwsNpeIfMapperIsNullForUnsetNullableProperty() {
-    thrown.expect(NullPointerException.class);
-    behaviorTester
-        .with(new Processor(features))
-        .with(nullableIntegerType)
+        .with(defaultIntegerType)
         .with(testBuilder().addLine("new DataType.Builder().mapProperty(null);").build())
         .runTest();
   }
 
   @Test
-  public void allowsNullReturn() {
+  public void mapThrowsNpeIfMapperReturnsNull() {
+    thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(nullableIntegerType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
-            .addLine("    .mapProperty(a -> null)")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isNull();", convention.get("property"))
-            .build())
+        .with(defaultIntegerType)
+        .with(testBuilder().addLine("new DataType.Builder().mapProperty(a -> null);").build())
         .runTest();
   }
 
   @Test
-  public void skipsMapperIfNullablePropertyIsUnset() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(nullableIntegerType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().mapProperty(a -> {")
-            .addLine("  throw new AssertionError(\"shouldn't hit this\");")
-            .addLine("});")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void delegatesToSetterForValidation() {
+  public void mapDelegatesToSetterForValidation() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("property must be non-negative");
     behaviorTester
@@ -152,14 +122,17 @@ public class NullableMapperMethodTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  @%s Integer %s;", Nullable.class, convention.get("property"))
+            .addLine("  int %s;", convention.get("property"))
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder %s(@%s Integer property) {",
-                convention.set("property"), Nullable.class)
-            .addLine("      if (property != null && property < 0) {")
+            .addLine("    public Builder() {")
+            .addLine("      %s(11);", convention.set("property"))
+            .addLine("    }")
+            .addLine("")
+            .addLine("    @Override public Builder %s(int property) {", convention.set("property"))
+            .addLine("      if (property < 0) {")
             .addLine("        throw new IllegalArgumentException(")
-            .addLine("              \"property must be non-negative\");")
+            .addLine("            \"property must be non-negative\");")
             .addLine("      }")
             .addLine("      return super.%s(property);", convention.set("property"))
             .addLine("    }")
@@ -168,7 +141,6 @@ public class NullableMapperMethodTest {
             .build())
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
             .addLine("    .mapProperty(a -> -3);")
             .build())
         .runTest();
