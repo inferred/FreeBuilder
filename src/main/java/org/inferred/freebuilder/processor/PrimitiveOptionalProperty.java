@@ -9,6 +9,7 @@ import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
@@ -19,7 +20,11 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
+import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 
 /**
  * This property class handles the primitive optional fields, including
@@ -99,7 +104,8 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
                  property.getName())
         .add(methodBody(code, property.getName())
                      .addLine("  if (%s.isPresent()) {", property.getName())
-                     .addLine("    return %s(%s.get());", setter(property), property.getName())
+                     .addLine("    return %s(%s.%s());", setter(property), property.getName(),
+                              optional.getAsMethod)
                      .addLine("  } else {")
                      .addLine("    return %s();", clearMethod(property))
                      .addLine("  }"))
@@ -121,8 +127,10 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s mapper) {",
                  metadata.getBuilder(),
                  mapper(property),
-                 optional.unaryType);
-    optional.applyMapper(code, metadata, property);
+                 optional.unaryType)
+        .addLine("  %s().ifPresent(value -> %s(mapper.%s(value)));", getter(property),
+                 setter(property), optional.unaryMethod)
+        .addLine("  return (%s) this;", metadata.getBuilder());
     code.addLine("}");
   }
 
@@ -190,7 +198,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
     if (defaults.isPresent()) {
       code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
     } else {
-      code.addLine("%s = null;", property.getField());
+      code.addLine("%s = %s.%s();", property.getField(), optional.cls, optional.empty);
     }
   }
 
@@ -205,14 +213,16 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
     private final String primitiveType;
     private final QualifiedName unaryType;
     private final String unaryMethod;
+    private final String getAsMethod;
 
     OptionalType(QualifiedName qualifiedName, String primitiveType) {
       this.cls = qualifiedName;
       this.primitiveType = primitiveType;
 
       String upperCamelName = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, primitiveType);
-      this.unaryType = QualifiedName.of("java.util", upperCamelName + "UnaryOperator");
+      this.unaryType = QualifiedName.of("java.util.function", upperCamelName + "UnaryOperator");
       this.unaryMethod = "applyAs" + upperCamelName;
+      this.getAsMethod = "getAs" + upperCamelName;
     }
 
     public static OptionalType lookup(TypeMirror elementType) {
@@ -227,15 +237,37 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
       throw new IllegalStateException("Not a supported type: " + type);
     }
 
-    protected void applyMapper(SourceBuilder code, Metadata metadata, Metadata.Property property) {
-      // getProperty().ifPresent(value -> setProperty(mapper.apply(value)));
-      code.addLine("%s().isPresent(value -> %s(mapper.%s(value)));", getter(property),
-                   setter(property), unaryMethod);
-      code.addLine("return (%s) this;", metadata.getBuilder());
-    }
-
     protected void invokeIfPresent(SourceBuilder code, String value, String method) {
       code.addLine("%s.ifPresent(this::%s);", value, method);
+    }
+  }
+
+  static class Factory implements PropertyCodeGenerator.Factory {
+
+    @Override
+    public Optional<PrimitiveOptionalProperty> create(Config config) {
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      if (type == null) {
+        return Optional.absent();
+      }
+
+      OptionalType optionalType = maybeOptional(type).orNull();
+      if (optionalType == null) {
+        return Optional.absent();
+      }
+
+      return Optional.of(new PrimitiveOptionalProperty(
+              config.getMetadata(),
+              config.getProperty()));
+    }
+
+    private static Optional<OptionalType> maybeOptional(DeclaredType type) {
+      for (OptionalType optionalType : OptionalType.values()) {
+        if (erasesToAnyOf(type, optionalType.cls)) {
+          return Optional.of(optionalType);
+        }
+      }
+      return Optional.absent();
     }
   }
 }
