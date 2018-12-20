@@ -18,6 +18,8 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
@@ -1464,7 +1466,14 @@ public class SetSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new SetProperty(
-                metadata, name, STRING, Optional.<TypeMirror>absent(), false, false, false))
+                metadata,
+                name,
+                STRING,
+                Optional.<TypeMirror>absent(),
+                consumer(wildcardSuper(setString)),
+                false,
+                false,
+                false))
             .build())
         .build();
   }

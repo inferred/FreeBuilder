@@ -125,8 +125,8 @@ class ListProperty extends PropertyCodeGenerator {
         TypeMirror elementType,
         Elements elements,
         Types types) {
-      TypeElement arrayListType = elements.getTypeElement(List.class.getName());
-      return types.getWildcardType(null, types.getDeclaredType(arrayListType, elementType));
+      TypeElement listType = elements.getTypeElement(List.class.getName());
+      return types.getWildcardType(null, types.getDeclaredType(listType, elementType));
     }
   }
 

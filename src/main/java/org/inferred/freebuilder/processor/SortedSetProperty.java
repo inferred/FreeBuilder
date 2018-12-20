@@ -25,6 +25,8 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setComparatorMet
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
@@ -45,6 +47,7 @@ import org.inferred.freebuilder.processor.excerpt.CheckedNavigableSet;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -57,8 +60,11 @@ import java.util.NavigableSet;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * {@link PropertyCodeGenerator} providing fluent methods for {@link SortedSet} properties.
@@ -80,11 +86,20 @@ class SortedSetProperty extends PropertyCodeGenerator {
       boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
       boolean overridesVarargsAddMethod =
           hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
+
+      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mutator(config.getProperty()),
+          consumer(wildcardSuperSortedSet(elementType, config.getElements(), config.getTypes())),
+          config.getElements(),
+          config.getTypes());
+
       return Optional.of(new SortedSetProperty(
           config.getMetadata(),
           config.getProperty(),
           elementType,
           unboxedType,
+          mutatorType,
           needsSafeVarargs,
           overridesAddMethod,
           overridesVarargsAddMethod));
@@ -105,12 +120,21 @@ class SortedSetProperty extends PropertyCodeGenerator {
           addMethod(config.getProperty()),
           config.getTypes().getArrayType(elementType));
     }
+
+    private static TypeMirror wildcardSuperSortedSet(
+        TypeMirror elementType,
+        Elements elements,
+        Types types) {
+      TypeElement setType = elements.getTypeElement(SortedSet.class.getName());
+      return types.getWildcardType(null, types.getDeclaredType(setType, elementType));
+    }
   }
 
   private static final ParameterizedType COLLECTION =
       QualifiedName.of(Collection.class).withParameters("E");
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;
+  private final FunctionalType mutatorType;
   private final boolean needsSafeVarargs;
   private final boolean overridesAddMethod;
   private final boolean overridesVarargsAddMethod;
@@ -120,12 +144,14 @@ class SortedSetProperty extends PropertyCodeGenerator {
       Property property,
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
+      FunctionalType mutatorType,
       boolean needsSafeVarargs,
       boolean overridesAddMethod,
       boolean overridesVarargsAddMethod) {
     super(metadata, property);
     this.elementType = elementType;
     this.unboxedType = unboxedType;
+    this.mutatorType = mutatorType;
     this.needsSafeVarargs = needsSafeVarargs;
     this.overridesAddMethod = overridesAddMethod;
     this.overridesVarargsAddMethod = overridesVarargsAddMethod;
@@ -389,21 +415,23 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
+        .addLine("public %s %s(%s mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
-            SortedSet.class,
-            elementType);
+            mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
     addConvertToTreeSet(body);
     if (overridesAddMethod) {
-      body.addLine("  mutator.accept(new %s<%s>(%s, this::%s));",
-              CheckedNavigableSet.TYPE, elementType, property.getField(), addMethod(property));
+      body.addLine("  mutator.%s(new %s<%s>(%s, this::%s));",
+          mutatorType.getMethodName(),
+          CheckedNavigableSet.TYPE,
+          elementType,
+          property.getField(),
+          addMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
-          .addLine("  mutator.accept(%s);", property.getField());
+          .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
