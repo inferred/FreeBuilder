@@ -23,6 +23,8 @@ import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
@@ -43,10 +45,11 @@ import org.inferred.freebuilder.processor.excerpt.CheckedList;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FunctionalType;
+import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.LazyName;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -55,8 +58,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * {@link PropertyCodeGenerator} providing fluent methods for {@link List} properties.
@@ -77,6 +83,14 @@ class ListProperty extends PropertyCodeGenerator {
       boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
       boolean overridesVarargsAddMethod =
           hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
+
+      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mutator(config.getProperty()),
+          consumer(wildcardSuperList(elementType, config.getElements(), config.getTypes())),
+          config.getElements(),
+          config.getTypes());
+
       return Optional.of(new ListProperty(
           config.getMetadata(),
           config.getProperty(),
@@ -84,7 +98,8 @@ class ListProperty extends PropertyCodeGenerator {
           overridesAddMethod,
           overridesVarargsAddMethod,
           elementType,
-          unboxedType));
+          unboxedType,
+          mutatorType));
     }
 
     private static boolean hasAddMethodOverride(Config config, TypeMirror elementType) {
@@ -102,6 +117,17 @@ class ListProperty extends PropertyCodeGenerator {
           addMethod(config.getProperty()),
           config.getTypes().getArrayType(elementType));
     }
+
+    /**
+     * Returns {@code ? super List<elementType>}.
+     */
+    private static TypeMirror wildcardSuperList(
+        TypeMirror elementType,
+        Elements elements,
+        Types types) {
+      TypeElement arrayListType = elements.getTypeElement(List.class.getName());
+      return types.getWildcardType(null, types.getDeclaredType(arrayListType, elementType));
+    }
   }
 
   private static final ParameterizedType COLLECTION =
@@ -112,6 +138,7 @@ class ListProperty extends PropertyCodeGenerator {
   private final boolean overridesVarargsAddMethod;
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;
+  private final FunctionalType mutatorType;
 
   @VisibleForTesting
   ListProperty(
@@ -121,13 +148,15 @@ class ListProperty extends PropertyCodeGenerator {
       boolean overridesAddMethod,
       boolean overridesVarargsAddMethod,
       TypeMirror elementType,
-      Optional<TypeMirror> unboxedType) {
+      Optional<TypeMirror> unboxedType,
+      FunctionalType mutatorType) {
     super(metadata, property);
     this.needsSafeVarargs = needsSafeVarargs;
     this.overridesAddMethod = overridesAddMethod;
     this.overridesVarargsAddMethod = overridesVarargsAddMethod;
     this.elementType = elementType;
     this.unboxedType = unboxedType;
+    this.mutatorType = mutatorType;
   }
 
   @Override
@@ -344,8 +373,7 @@ class ListProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code, Metadata metadata) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
+    if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
     code.addLine("")
@@ -361,12 +389,10 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
+        .addLine("public %s %s(%s mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
-            List.class,
-            elementType);
+            mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
@@ -377,12 +403,12 @@ class ListProperty extends PropertyCodeGenerator {
           .addLine("  }");
     }
     if (overridesAddMethod) {
-      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
-          CheckedList.TYPE, property.getField(), addMethod(property));
+      body.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+          mutatorType.getMethodName(), CheckedList.TYPE, property.getField(), addMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
-          .addLine("  mutator.accept(%s);", property.getField());
+          .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)

@@ -20,6 +20,7 @@ import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLe
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
+import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
@@ -29,6 +30,7 @@ import com.google.common.base.Optional;
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
@@ -2008,11 +2010,25 @@ public class ListSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new ListProperty(
-                metadata, name, false, false, false, STRING, Optional.<TypeMirror>absent()))
+                metadata,
+                name,
+                false,
+                false,
+                false,
+                STRING,
+                Optional.<TypeMirror>absent(),
+                FunctionalType.consumer(wildcardSuper(listString))))
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new ListProperty(
-                metadata, age, false, false, false, INTEGER, Optional.<TypeMirror>of(INT)))
+                metadata,
+                age,
+                false,
+                false,
+                false,
+                INTEGER,
+                Optional.<TypeMirror>of(INT),
+                FunctionalType.consumer(wildcardSuper(listInteger))))
             .build())
         .build();
   }
