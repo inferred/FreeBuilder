@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
@@ -1032,11 +1033,23 @@ public class JavaUtilOptionalSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new OptionalProperty(
-                metadata, name, OptionalType.JAVA8, STRING, Optional.<TypeMirror>absent(), false))
+                metadata,
+                name,
+                OptionalType.JAVA8,
+                STRING,
+                Optional.<TypeMirror>absent(),
+                unaryOperator(STRING),
+                false))
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new OptionalProperty(
-                metadata, age, OptionalType.JAVA8, INTEGER, Optional.<TypeMirror>of(INT), false))
+                metadata,
+                age,
+                OptionalType.JAVA8,
+                INTEGER,
+                Optional.<TypeMirror>of(INT),
+                unaryOperator(INTEGER),
+                false))
             .build())
         .build();
   }
