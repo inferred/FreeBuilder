@@ -56,14 +56,14 @@ import javax.tools.JavaFileObject;
 public class OptionalPropertyTest {
 
   @SuppressWarnings("unchecked")
-  @Parameters(name = "Optional<{0}>, {1}, {2}")
+  @Parameters(name = "{0}<{1}>, {2}, {3}")
   public static Iterable<Object[]> parameters() {
     List<Class<?>> optionals = Arrays.asList(
         java.util.Optional.class,
         com.google.common.base.Optional.class);
     List<ElementFactory> elements = Arrays.asList(INTEGERS, STRINGS);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
-    List<FeatureSet> features = FeatureSets.WITH_GUAVA;
+    List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
         .cartesianProduct(optionals, elements, conventions, features)
         .stream()
