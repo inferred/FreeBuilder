@@ -30,7 +30,7 @@ public enum ElementFactory {
       "%s.intern()",
       "!%s.isEmpty()",
       "!element.toString().isEmpty()",
-      "Cannot add empty string",
+      "%s cannot be empty",
       "",
       new NameImpl("echo"),
       "alpha",
@@ -48,7 +48,7 @@ public enum ElementFactory {
       "Integer.valueOf((int) %s)",
       "%s >= 0",
       "element.intValue() >= 0",
-      "Items must be non-negative",
+      "%s must be non-negative",
       -4,
       2.7,
       1,
@@ -66,7 +66,7 @@ public enum ElementFactory {
       "%s.intern()",
       "%s.id() >= 0",
       "element.id() >= 0",
-      "ID must be non-negative",
+      "%s must be non-negative",
       NonComparable.of(-2, "broken"),
       new OtherNonComparable(88, "other"),
       NonComparable.of(10, "alpha"),
@@ -152,7 +152,11 @@ public enum ElementFactory {
   }
 
   public String errorMessage() {
-    return errorMessage;
+    return errorMessage("element");
+  }
+
+  public String errorMessage(String variableName) {
+    return String.format(errorMessage, variableName);
   }
 
   public String invalidExample() {

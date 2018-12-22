@@ -15,28 +15,35 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
+import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.junit.Assume.assumeTrue;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.testtype.NonComparable;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -46,94 +53,89 @@ import javax.tools.JavaFileObject;
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class ListMultimapMutateMethodTest {
 
-  @Parameters(name = "{0}")
-  public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_GUAVA_AND_LAMBDAS;
+  @SuppressWarnings("unchecked")
+  @Parameters(name = "ListMultimap<{0}, {1}>, checked={2}, {3}, {4}")
+  public static Iterable<Object[]> featureSets() {
+    List<ElementFactory> elements = Arrays.asList(INTEGERS, STRINGS);
+    List<Boolean> checkedAndInterned = ImmutableList.of(false, true);
+    List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
+    List<FeatureSet> features = FeatureSets.WITH_GUAVA_AND_LAMBDAS;
+    return () -> Lists
+        .cartesianProduct(elements, elements, checkedAndInterned, conventions, features)
+        .stream()
+        .map(List::toArray)
+        .iterator();
   }
-
-  private static final JavaFileObject UNCHECKED_PROPERTY = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<String, String> getItems();", ListMultimap.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
-
-  private static final JavaFileObject CHECKED_PROPERTY = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<String, String> getItems();", ListMultimap.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder putItems(String key, String value) {")
-      .addLine("      %s.checkArgument(!key.isEmpty(), \"key may not be empty\");",
-          Preconditions.class)
-      .addLine("      %s.checkArgument(!value.isEmpty(), \"value may not be empty\");",
-          Preconditions.class)
-      .addLine("      return super.putItems(key, value);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  private static final JavaFileObject INTERNED_PROPERTY = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<String, String> getItems();", ListMultimap.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder putItems(String key, String value) {")
-      .addLine("      return super.putItems(key.intern(), value.intern());")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  @Parameter public FeatureSet features;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
-  @Test
-  public void mutateAndPutModifiesUnderlyingProperty_whenUnchecked() {
+  private final ElementFactory key;
+  private final ElementFactory value;
+  private final boolean checked;
+  private final boolean interned;
+  private final NamingConvention convention;
+  private final FeatureSet features;
+  private final JavaFileObject dataType;
+
+  public ListMultimapMutateMethodTest(
+      ElementFactory key,
+      ElementFactory value,
+      boolean checkedAndInterned,
+      NamingConvention convention,
+      FeatureSet features) {
+    this.key = key;
+    this.value = value;
+    this.checked = checkedAndInterned;
+    this.interned = checkedAndInterned;
+    this.convention = convention;
+    this.features = features;
+
+    SourceBuilder dataType = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  %s<%s, %s> %s;", ListMultimap.class, key.type(), value.type(), convention.get())
+        .addLine("")
+        .addLine("  class Builder extends DataType_Builder {");
+    if (checkedAndInterned) {
+      dataType
+          .addLine("    @Override public Builder putItems(%s key, %s value) {",
+              key.unwrappedType(), value.unwrappedType())
+          .addLine("      %s.checkArgument(%s, \"%s\");",
+              Preconditions.class, key.validation("key"), key.errorMessage("key"))
+          .addLine("      %s.checkArgument(%s, \"%s\");",
+              Preconditions.class, value.validation("value"), value.errorMessage("value"))
+          .addLine("      return super.putItems(%s, %s);", key.intern("key"), value.intern("value"))
+          .addLine("    }");
+    }
+    dataType
+        .addLine("  }")
+        .addLine("}");
+    this.dataType = dataType.build();
+  }
+
+  @Before
+  public void before() {
     behaviorTester
         .with(new Processor(features))
-        .with(UNCHECKED_PROPERTY)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("      items.put(\"one\", \"A\");")
-            .addLine("      items.put(\"two\", \"B\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getItems())")
-            .addLine("    .contains(\"one\", \"A\")")
-            .addLine("    .and(\"two\", \"B\")")
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
-        .runTest();
+        .withPermittedPackage(NonComparable.class.getPackage());
   }
 
   @Test
-  public void mutateAndPutModifiesUnderlyingProperty_whenChecked() {
+  public void mutateAndPutModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
-            .addLine("      items.put(\"one\", \"A\");")
-            .addLine("      items.put(\"two\", \"B\");")
+            .addLine("      items.put(%s, %s);", key.example(0), value.example(1))
+            .addLine("      items.put(%s, %s);", key.example(2), value.example(3))
             .addLine("    })")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems())")
-            .addLine("    .contains(\"one\", \"A\")")
-            .addLine("    .and(\"two\", \"B\")")
+            .addLine("assertThat(value.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
             .addLine("    .andNothingElse()")
             .addLine("    .inOrder();")
             .build())
@@ -142,30 +144,33 @@ public class ListMultimapMutateMethodTest {
 
   @Test
   public void mutateAndPutChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("value may not be empty");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(value.errorMessage("value"));
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("new DataType.Builder().mutateItems(items -> items.put(\"one\", \"\"));")
+            .addLine("new DataType.Builder().mutateItems(items -> items.put(%s, %s));",
+                key.example(0), value.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndPutKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", value.type(), value.example(0))
+            .addLine("%s i = %s;", value.type(), value.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.put(\"one\", s))")
+            .addLine("    .mutateItems(items -> items.put(%s, s))", key.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().values().iterator().next()).isSameAs(i);")
+            .addLine("assertThat(value.%s.values().iterator().next()).isSameAs(i);",
+                convention.get())
             .build())
         .runTest();
   }
@@ -173,18 +178,19 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndPutAllValuesModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
-            .addLine("      items.putAll(\"one\", ImmutableList.of(\"A\", \"a\"));")
-            .addLine("      items.putAll(\"two\", ImmutableList.of(\"B\", \"b\"));")
+            .addLine("      items.putAll(%s, ImmutableList.of(%s));",
+                key.example(0), value.examples(1, 2))
+            .addLine("      items.putAll(%s, ImmutableList.of(%s));",
+                key.example(3), value.examples(4, 5))
             .addLine("    })")
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems())")
-            .addLine("    .contains(\"one\", \"A\", \"a\")")
-            .addLine("    .and(\"two\", \"B\", \"b\")")
+            .addLine("assertThat(value.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.examples(1, 2))
+            .addLine("    .and(%s, %s)", key.example(3), value.examples(4, 5))
             .addLine("    .andNothingElse()")
             .addLine("    .inOrder();")
             .build())
@@ -193,32 +199,36 @@ public class ListMultimapMutateMethodTest {
 
   @Test
   public void mutateAndPutAllValuesChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("value may not be empty");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(value.errorMessage("value"));
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder().mutateItems(items -> items")
-            .addLine("    .putAll(\"one\", ImmutableList.of(\"A\", \"\")));")
+            .addLine("    .putAll(%s, ImmutableList.of(%s, %s)));",
+                key.example(0), value.example(1), value.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndPutAllValuesKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", value.type(), value.example(0))
+            .addLine("%s i = %s;", value.type(), value.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> items")
-            .addLine("        .putAll(\"one\", ImmutableList.of(s, \"bazbam\")))")
+            .addLine("        .putAll(%s, ImmutableList.of(s, %s)))",
+                key.example(0), value.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().values().iterator().next()).isSameAs(i);")
+            .addLine("assertThat(value.%s.values().iterator().next()).isSameAs(i);",
+                convention.get())
             .build())
         .runTest();
   }
@@ -226,16 +236,16 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndPutAllMultimapModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> items")
-            .addLine("        .putAll(ImmutableMultimap.of(\"one\", \"A\", \"two\", \"B\")))")
+            .addLine("        .putAll(ImmutableMultimap.of(%s, %s, %s, %s)))",
+                key.example(0), value.example(1), key.example(2), value.example(3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems())")
-            .addLine("    .contains(\"one\", \"A\")")
-            .addLine("    .and(\"two\", \"B\")")
+            .addLine("assertThat(value.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
             .addLine("    .andNothingElse()")
             .addLine("    .inOrder();")
             .build())
@@ -244,32 +254,36 @@ public class ListMultimapMutateMethodTest {
 
   @Test
   public void mutateAndPutAllMultimapChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("value may not be empty");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(value.errorMessage("value"));
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder().mutateItems(items -> items")
-            .addLine("    .putAll(ImmutableMultimap.of(\"one\", \"A\", \"two\", \"\")));")
+            .addLine("    .putAll(ImmutableMultimap.of(%s, %s, %s, %s)));",
+                key.example(0), value.example(1), key.example(2), value.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndPutAllMultimapKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", value.type(), value.example(0))
+            .addLine("%s i = %s;", value.type(), value.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> items")
-            .addLine("        .putAll(ImmutableMultimap.of(\"one\", s, \"two\", \"bazbam\")))")
+            .addLine("        .putAll(ImmutableMultimap.of(%s, s, %s, %s)))",
+                key.example(0), key.example(1), value.example(2))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().values().iterator().next()).isSameAs(i);")
+            .addLine("assertThat(value.%s.values().iterator().next()).isSameAs(i);",
+                convention.get())
             .build())
         .runTest();
   }
@@ -277,16 +291,16 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndReplaceValuesModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"i\")")
+            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
             .addLine("    .mutateItems(items -> items")
-            .addLine("        .replaceValues(\"one\", ImmutableList.of(\"A\", \"a\")))")
+            .addLine("        .replaceValues(%s, ImmutableList.of(%s)))",
+                key.example(0), value.examples(2, 3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems())")
-            .addLine("    .contains(\"one\", \"A\", \"a\")")
+            .addLine("assertThat(value.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.examples(2, 3))
             .addLine("    .andNothingElse()")
             .addLine("    .inOrder();")
             .build())
@@ -295,35 +309,39 @@ public class ListMultimapMutateMethodTest {
 
   @Test
   public void mutateAndReplaceValuesChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("value may not be empty");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(value.errorMessage("value"));
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"i\")")
+            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
             .addLine("    .mutateItems(items -> items")
-            .addLine("        .replaceValues(\"one\", ImmutableList.of(\"A\", \"\")));")
+            .addLine("        .replaceValues(%s, ImmutableList.of(%s, %s)));",
+                key.example(0), value.example(2), value.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndReplaceValuesKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", value.type(), value.example(0))
+            .addLine("%s i = %s;", value.type(), value.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"i\")")
+            .addLine("    .putItems(%s, %s)", key.example(1), value.example(2))
             .addLine("    .mutateItems(items -> items")
-            .addLine("        .replaceValues(\"one\", ImmutableList.of(s, \"a\")))")
+            .addLine("        .replaceValues(%s, ImmutableList.of(s, %s)))",
+                key.example(1), value.example(3))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().values().iterator().next()).isSameAs(i);")
+            .addLine("assertThat(value.%s.values().iterator().next()).isSameAs(i);",
+                convention.get())
             .build())
         .runTest();
   }
@@ -331,15 +349,15 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddViaGetModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"A\")")
-            .addLine("    .mutateItems(items -> items.get(\"one\").add(\"a\"))")
+            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .mutateItems(items -> items.get(%s).add(%s))",
+                key.example(0), value.example(2))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems())")
-            .addLine("    .contains(\"one\", \"A\", \"a\")")
+            .addLine("assertThat(value.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.examples(1, 2))
             .addLine("    .andNothingElse()")
             .addLine("    .inOrder();")
             .build())
@@ -348,33 +366,36 @@ public class ListMultimapMutateMethodTest {
 
   @Test
   public void mutateAndAddViaGetChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("value may not be empty");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(value.errorMessage("value"));
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"A\")")
-            .addLine("    .mutateItems(items -> items.get(\"one\").add(\"\"));")
+            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .mutateItems(items -> items.get(%s).add(%s));",
+                key.example(0), value.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddViaGetKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", value.type(), value.example(0))
+            .addLine("%s i = %s;", value.type(), value.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"A\")")
-            .addLine("    .mutateItems(items -> items.get(\"one\").add(s))")
+            .addLine("    .putItems(%s, %s)", key.example(1), value.example(2))
+            .addLine("    .mutateItems(items -> items.get(%s).add(s))", key.example(1))
             .addLine("    .build();")
-            .addLine("Iterator<? extends String> it = value.getItems().values().iterator();")
+            .addLine("Iterator<? extends %s> it = value.%s.values().iterator();",
+                value.type(), convention.get())
             .addLine("it.next();")
             .addLine("assertThat(it.next()).isSameAs(i);")
             .build())
@@ -384,15 +405,15 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddViaAsMapModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"A\")")
-            .addLine("    .mutateItems(items -> items.asMap().get(\"one\").add(\"a\"))")
+            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .mutateItems(items -> items.asMap().get(%s).add(%s))",
+                key.example(0), value.example(2))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems())")
-            .addLine("    .contains(\"one\", \"A\", \"a\")")
+            .addLine("assertThat(value.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.examples(1, 2))
             .addLine("    .andNothingElse()")
             .addLine("    .inOrder();")
             .build())
@@ -401,33 +422,36 @@ public class ListMultimapMutateMethodTest {
 
   @Test
   public void mutateAndAddViaAsMapChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("value may not be empty");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(value.errorMessage("value"));
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"A\")")
-            .addLine("    .mutateItems(items -> items.asMap().get(\"one\").add(\"\"));")
+            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .mutateItems(items -> items.asMap().get(%s).add(%s));",
+                key.example(0), value.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddViaAsMapKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", value.type(), value.example(0))
+            .addLine("%s i = %s;", value.type(), value.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(\"one\", \"A\")")
-            .addLine("    .mutateItems(items -> items.asMap().get(\"one\").add(s))")
+            .addLine("    .putItems(%s, %s)", key.example(1), value.example(2))
+            .addLine("    .mutateItems(items -> items.asMap().get(%s).add(s))", key.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().get(\"one\").get(1)).isSameAs(i);")
+            .addLine("assertThat(value.%s.get(%s).get(1)).isSameAs(i);",
+                convention.get(), key.example(1))
             .build())
         .runTest();
   }
@@ -435,16 +459,16 @@ public class ListMultimapMutateMethodTest {
   @Test
   public void mutateAndAddAtIndexViaAsMapModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(\"one\", ImmutableList.of(\"A\", \"B\", \"C\"))")
-            .addLine("    .mutateItems(items -> %s.asMap(items).get(\"one\").add(2, \"foo\"))",
-                Multimaps.class)
+            .addLine("    .putAllItems(%s, ImmutableList.of(%s))",
+                key.example(0), value.examples(1, 2, 3))
+            .addLine("    .mutateItems(items -> %s.asMap(items).get(%s).add(2, %s))",
+                Multimaps.class, key.example(0), value.examples(4))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems())")
-            .addLine("    .contains(\"one\", \"A\", \"B\", \"foo\", \"C\")")
+            .addLine("assertThat(value.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.examples(1, 2, 4, 3))
             .addLine("    .andNothingElse()")
             .addLine("    .inOrder();")
             .build())
@@ -453,101 +477,39 @@ public class ListMultimapMutateMethodTest {
 
   @Test
   public void mutateAndAddAtIndexViaAsMapChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("value may not be empty");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(value.errorMessage("value"));
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .putAllItems(\"one\", ImmutableList.of(\"A\", \"B\", \"C\"))")
-            .addLine("    .mutateItems(items -> %s.asMap(items).get(\"one\").add(2, \"\"));",
-                Multimaps.class)
+            .addLine("    .putAllItems(%s, ImmutableList.of(%s))",
+                key.example(0), value.examples(1, 2, 3))
+            .addLine("    .mutateItems(items -> %s.asMap(items).get(%s).add(2, %s));",
+                Multimaps.class, key.example(0), value.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddAtIndexViaAsMapKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", value.type(), value.example(0))
+            .addLine("%s i = %s;", value.type(), value.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(\"one\", ImmutableList.of(\"A\", \"B\", \"C\"))")
-            .addLine("    .mutateItems(items -> %s.asMap(items).get(\"one\").add(2, s))",
-                Multimaps.class)
+            .addLine("    .putAllItems(%s, ImmutableList.of(%s))",
+                key.example(0), value.examples(1, 2, 3))
+            .addLine("    .mutateItems(items -> %s.asMap(items).get(%s).add(2, s))",
+                Multimaps.class, key.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getItems().get(\"one\").get(2)).isSameAs(i);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mutateAndPutModifiesUnderlyingProperty_whenUnchecked_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<String, String> items();", ListMultimap.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("      items.put(\"one\", \"A\");")
-            .addLine("      items.put(\"two\", \"B\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items())")
-            .addLine("    .contains(\"one\", \"A\")")
-            .addLine("    .and(\"two\", \"B\")")
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mutateAndPutModifiesUnderlyingProperty_whenChecked_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<String, String> items();", ListMultimap.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder putItems(String key, String value) {")
-            .addLine("      %s.checkArgument(!key.isEmpty(), \"key may not be empty\");",
-                Preconditions.class)
-            .addLine("      %s.checkArgument(!value.isEmpty(), \"value may not be empty\");",
-                Preconditions.class)
-            .addLine("      return super.putItems(key, value);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("      items.put(\"one\", \"A\");")
-            .addLine("      items.put(\"two\", \"B\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items())")
-            .addLine("    .contains(\"one\", \"A\")")
-            .addLine("    .and(\"two\", \"B\")")
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
+            .addLine("assertThat(value.%s.get(%s).get(2)).isSameAs(i);",
+                convention.get(), key.example(0))
             .build())
         .runTest();
   }
@@ -560,5 +522,4 @@ public class ListMultimapMutateMethodTest {
         .addImport(ImmutableMultimap.class)
         .addImport(Iterator.class);
   }
-
 }
