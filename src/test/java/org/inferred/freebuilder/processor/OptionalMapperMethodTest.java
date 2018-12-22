@@ -15,24 +15,30 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
+import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
+import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.tools.JavaFileObject;
@@ -41,83 +47,118 @@ import javax.tools.JavaFileObject;
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class OptionalMapperMethodTest {
 
-  @Parameters(name = "{1}: {0}")
-  public static List<Object[]> parameters() {
-    ImmutableList.Builder<Object[]> parameters = ImmutableList.builder();
-    for (FeatureSet features :  FeatureSets.WITH_LAMBDAS) {
-      parameters.add(new Object[] {
-          features,
-          java.util.Optional.class
-      });
-    }
-    for (FeatureSet features :  FeatureSets.WITH_GUAVA_AND_LAMBDAS) {
-      parameters.add(new Object[] {
-          features,
-          com.google.common.base.Optional.class
-      });
-    }
-    return parameters.build();
-  }
-
-  private static JavaFileObject optionalIntegerType(Class<?> optionalType) {
-    return new SourceBuilder()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  %s<Integer> getProperty();", optionalType)
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
+  @SuppressWarnings("unchecked")
+  @Parameters(name = "{0}<{1}>, checked={2}, {3}, {4}")
+  public static Iterable<Object[]> parameters() {
+    List<Class<?>> optionals = Arrays.asList(
+        java.util.Optional.class,
+        com.google.common.base.Optional.class);
+    List<ElementFactory> elements = Arrays.asList(INTEGERS, STRINGS);
+    List<Boolean> checked = ImmutableList.of(false, true);
+    List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
+    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    return () -> Lists
+        .cartesianProduct(optionals, elements, checked, conventions, features)
+        .stream()
+        .filter(parameters -> {
+          Class<?> optional = (Class<?>) parameters.get(0);
+          FeatureSet featureSet = (FeatureSet) parameters.get(4);
+          if (optional.equals(com.google.common.base.Optional.class)
+              && !featureSet.get(GuavaLibrary.GUAVA).isAvailable()) {
+            return false;
+          }
+          return true;
+        })
+        .map(List::toArray)
+        .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
-  @Parameter(value = 0) public FeatureSet features;
-  @Parameter(value = 1) public Class<?> optionalType;
+
+  private final ElementFactory element;
+  private final boolean checked;
+  private final NamingConvention convention;
+  private final FeatureSet features;
+
+  private final JavaFileObject dataType;
+
+  public OptionalMapperMethodTest(
+      Class<?> optional,
+      ElementFactory element,
+      boolean checked,
+      NamingConvention convention,
+      FeatureSet features) {
+    this.element = element;
+    this.checked = checked;
+    this.convention = convention;
+    this.features = features;
+
+    SourceBuilder dataType = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  %s<%s> %s;", optional, element.type(), convention.get("property"))
+        .addLine("")
+        .addLine("  class Builder extends DataType_Builder {");
+    if (checked) {
+      dataType
+          .addLine("    @Override public Builder %s(%s element) {",
+              convention.set("property"), element.unwrappedType())
+          .addLine("      if (!(%s)) {", element.validation())
+          .addLine("        throw new IllegalArgumentException(\"%s\");", element.errorMessage())
+          .addLine("      }")
+          .addLine("      return super.%s(element);", convention.set("property"))
+          .addLine("    }");
+    }
+    dataType
+        .addLine("  }")
+        .addLine("}");
+    this.dataType = dataType.build();
+  }
 
   @Test
   public void mapReplacesValueToBeReturnedFromGetter() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(optionalIntegerType(optionalType))
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
+    TestBuilder test = testBuilder()
+        .addLine("DataType value = new DataType.Builder()");
+    switch (element) {
+      case INTEGERS:
+        test.addLine("    .%s(11)", convention.set("property"))
             .addLine("    .mapProperty(a -> a + 3)")
             .addLine("    .build();")
-            .addLine("assertEquals(14, (int) value.getProperty().get());")
-            .build())
+            .addLine("assertEquals(14, (int) value.%s.get());", convention.get("property"));
+        break;
+
+      case STRINGS:
+        test.addLine("    .%s(\"foo\")", convention.set("property"))
+            .addLine("    .mapProperty(a -> a + \"bar\")")
+            .addLine("    .build();")
+            .addLine("assertEquals(\"foobar\", value.%s.get());", convention.get("property"));
+        break;
+
+      default:
+        throw new AssumptionViolatedException("Expected integers or strings, got " + element);
+    }
+    behaviorTester
+        .with(new Processor(features))
+        .with(dataType)
+        .with(test.build())
         .runTest();
   }
 
   @Test
   public void mapDelegatesToSetterForValidation() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("property must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(element.errorMessage());
+    }
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer> getProperty();", optionalType)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setProperty(int property) {")
-            .addLine("      if (property < 0) {")
-            .addLine("        throw new IllegalArgumentException(")
-            .addLine("            \"property must be non-negative\");")
-            .addLine("      }")
-            .addLine("      return super.setProperty(property);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
-            .addLine("    .mapProperty(a -> -3);")
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+            .addLine("    .mapProperty(a -> %s);", element.invalidExample())
             .build())
         .runTest();
   }
@@ -127,10 +168,10 @@ public class OptionalMapperMethodTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(optionalIntegerType(optionalType))
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
             .addLine("    .mapProperty(null);")
             .build())
         .runTest();
@@ -141,9 +182,9 @@ public class OptionalMapperMethodTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(optionalIntegerType(optionalType))
-        .with(new TestBuilder()
-            .addLine("new com.example.DataType.Builder()")
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
             .addLine("    .mapProperty(null);")
             .build())
         .runTest();
@@ -153,13 +194,13 @@ public class OptionalMapperMethodTest {
   public void mapAllowsNullReturn() {
     behaviorTester
         .with(new Processor(features))
-        .with(optionalIntegerType(optionalType))
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .setProperty(11)")
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
             .addLine("    .mapProperty(a -> null)")
             .addLine("    .build();")
-            .addLine("assertFalse(value.getProperty().isPresent());")
+            .addLine("assertFalse(value.%s.isPresent());", convention.get("property"))
             .build())
         .runTest();
   }
@@ -168,36 +209,18 @@ public class OptionalMapperMethodTest {
   public void mapSkipsMapperIfPropertyIsEmpty() {
     behaviorTester
         .with(new Processor(features))
-        .with(optionalIntegerType(optionalType))
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mapProperty(a -> { fail(\"mapper called\"); return null; })")
             .addLine("    .build();")
-            .addLine("assertFalse(value.getProperty().isPresent());")
+            .addLine("assertFalse(value.%s.isPresent());", convention.get("property"))
             .build())
         .runTest();
   }
 
-  @Test
-  public void mapReplacesValueToBeReturnedFromPrefixlessGetter() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer> property();", optionalType)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
-        .with(new TestBuilder()
-            .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-            .addLine("    .property(11)")
-            .addLine("    .mapProperty(a -> a + 3)")
-            .addLine("    .build();")
-            .addLine("assertEquals(14, (int) value.property().get());")
-            .build())
-        .runTest();
+  private static TestBuilder testBuilder() {
+    return new TestBuilder()
+        .addImport("com.example.DataType");
   }
 }
