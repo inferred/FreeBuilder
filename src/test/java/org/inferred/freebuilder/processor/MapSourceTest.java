@@ -19,7 +19,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
+import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 
 import com.google.common.base.Joiner;
@@ -1092,7 +1094,8 @@ public class MapSourceTest {
                 INTEGER,
                 Optional.<TypeMirror>of(INT),
                 STRING,
-                Optional.<TypeMirror>absent()))
+                Optional.<TypeMirror>absent(),
+                consumer(wildcardSuper(mapIntString))))
             .build())
         .build();
   }
