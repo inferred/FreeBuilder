@@ -21,16 +21,33 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class NonComparable extends AbstractNonComparable {
+
+  private static final ConcurrentMap<NonComparable, NonComparable> interned =
+      new ConcurrentHashMap<>();
 
   private final int id;
   private final String name;
 
   @JsonCreator
-  public NonComparable(@JsonProperty("id") int id, @JsonProperty("name") String name) {
+  public static NonComparable of(@JsonProperty("id") int id, @JsonProperty("name") String name) {
+    return new NonComparable(id, name).intern();
+  }
+
+  private NonComparable(int id, String name) {
     this.id = requireNonNull(id);
     this.name = requireNonNull(name);
+  }
+
+  public NonComparable(NonComparable other) {
+    this(other.id, other.name);
+  }
+
+  public NonComparable intern() {
+    return interned.computeIfAbsent(this, k -> k);
   }
 
   @Override

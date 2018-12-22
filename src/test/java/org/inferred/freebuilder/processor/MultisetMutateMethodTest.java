@@ -15,27 +15,33 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.testtype.NonComparable;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.tools.JavaFileObject;
@@ -44,97 +50,99 @@ import javax.tools.JavaFileObject;
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class MultisetMutateMethodTest {
 
-  @Parameters(name = "{0}")
-  public static List<FeatureSet> featureSets() {
-    return FeatureSets.WITH_GUAVA_AND_LAMBDAS;
+  @SuppressWarnings("unchecked")
+  @Parameters(name = "Multiset<{0}>, checked={1}, {2}, {3}")
+  public static Iterable<Object[]> featureSets() {
+    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
+    List<Boolean> checkedAndInterned = ImmutableList.of(false, true);
+    List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
+    List<FeatureSet> features = FeatureSets.WITH_GUAVA_AND_LAMBDAS;
+    return () -> Lists
+        .cartesianProduct(elements, checkedAndInterned, conventions, features)
+        .stream()
+        .map(List::toArray)
+        .iterator();
   }
-
-  private static final JavaFileObject UNCHECKED_PROPERTY = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer> getProperties();", Multiset.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {}")
-      .addLine("}")
-      .build();
-
-  private static final JavaFileObject CHECKED_PROPERTY = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<Integer> getProperties();", Multiset.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder setCountOfProperties(int element, int count) {")
-      .addLine("      %s.checkArgument(element >= 0, \"elements must be non-negative\");",
-          Preconditions.class)
-      .addLine("      return super.setCountOfProperties(element, count);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  private static final JavaFileObject INTERNED_PROPERTY = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public interface DataType {")
-      .addLine("  %s<String> getProperties();", Multiset.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override public Builder setCountOfProperties(String element, int count) {")
-      .addLine("      return super.setCountOfProperties(element.intern(), count);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
-
-  @Parameter public FeatureSet features;
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
-  @Test
-  public void mutateAndAddModifiesUnderlyingProperty_whenUnchecked() {
+  private final ElementFactory element;
+  private final NamingConvention convention;
+  private final boolean checked;
+  private final boolean interned;
+  private final FeatureSet features;
+
+  private final JavaFileObject dataType;
+
+  public MultisetMutateMethodTest(
+      ElementFactory element,
+      boolean checkedAndInterned,
+      NamingConvention convention,
+      FeatureSet features) {
+    this.element = element;
+    this.checked = checkedAndInterned;
+    this.interned = checkedAndInterned;
+    this.convention = convention;
+    this.features = features;
+
+    SourceBuilder dataType = new SourceBuilder()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  %s<%s> %s;", Multiset.class, element.type(), convention.get("properties"))
+        .addLine("")
+        .addLine("  class Builder extends DataType_Builder {");
+    if (checkedAndInterned) {
+      dataType
+          .addLine("    @Override public Builder setCountOfProperties(%s element, int count) {",
+              element.unwrappedType())
+          .addLine("      %s.checkArgument(%s, \"%s\");",
+              Preconditions.class, element.validation(), element.errorMessage())
+          .addLine("      return super.setCountOfProperties(%s, count);",
+              element.intern("element"))
+          .addLine("    }");
+    }
+    dataType
+        .addLine("  }")
+        .addLine("}");
+    this.dataType = dataType.build();
+  }
+
+  @Before
+  public void before() {
     behaviorTester
         .with(new Processor(features))
-        .with(UNCHECKED_PROPERTY)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(11))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(5, 11);")
-            .build())
-        .runTest();
+        .withPermittedPackage(NonComparable.class.getPackage());
   }
 
   @Test
-  public void mutateAndAddModifiesUnderlyingProperty_whenChecked() {
+  public void mutateAndAddModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(11))")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s))", element.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(5, 11);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.examples(0, 1))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(element.errorMessage());
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(-3));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s));", element.invalidExample())
             .build())
         .runTest();
   }
@@ -142,14 +150,14 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddAcceptsMaxIntOccurrences() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addCopiesToProperties(5, Integer.MAX_VALUE - 1)")
-            .addLine("    .mutateProperties(set -> set.add(5))")
+            .addLine("    .addCopiesToProperties(%s, Integer.MAX_VALUE - 1)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s))", element.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties().count(5)).isEqualTo(Integer.MAX_VALUE);")
+            .addLine("assertThat(value.%s.count(%s)).isEqualTo(Integer.MAX_VALUE);",
+                convention.get("properties"), element.examples(0))
             .build())
         .runTest();
   }
@@ -159,29 +167,28 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("too many occurrences: 2147483648");
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addCopiesToProperties(5, Integer.MAX_VALUE)")
-            .addLine("    .mutateProperties(set -> set.add(5));")
+            .addLine("    .addCopiesToProperties(%s, Integer.MAX_VALUE)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s));", element.example(0))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", element.type(), element.example(0))
+            .addLine("%s i = %s;", element.type(), element.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(set -> set.add(s))")
             .addLine("    .build();")
-            .addLine("assertThat(get(value.getProperties(), 0)).isSameAs(i);")
+            .addLine("assertThat(get(value.%s, 0)).isSameAs(i);", convention.get("properties"))
             .build())
         .runTest();
   }
@@ -189,14 +196,14 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddMultipleModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(11, 3))")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s, 3))", element.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(5, 11, 11, 11);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.examples(0, 1, 1, 1))
             .build())
         .runTest();
   }
@@ -206,12 +213,11 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("occurrences cannot be negative: -2");
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(11, -2));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s, -2));", element.example(1))
             .build())
         .runTest();
   }
@@ -219,14 +225,15 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddMultipleAcceptsMaxIntOccurrences() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(11, Integer.MAX_VALUE))")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s, Integer.MAX_VALUE))",
+                element.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties().count(11)).isEqualTo(Integer.MAX_VALUE);")
+            .addLine("assertThat(value.%s.count(%s)).isEqualTo(Integer.MAX_VALUE);",
+                convention.get("properties"), element.example(1))
             .build())
         .runTest();
   }
@@ -236,12 +243,12 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("too many occurrences: 2147483648");
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(5, Integer.MAX_VALUE));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s, Integer.MAX_VALUE));",
+                element.example(0))
             .build())
         .runTest();
   }
@@ -249,44 +256,45 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddMultipleReturnsOldCount() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> assertThat(set.add(5, 3)).isEqualTo(1));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> assertThat(set.add(%s, 3)).isEqualTo(1));",
+                element.example(0))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddMultipleChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(element.errorMessage());
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(-3, 3));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s, 3));", element.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddMultipleKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", element.type(), element.example(0))
+            .addLine("%s i = %s;", element.type(), element.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(set -> set.add(s, 3))")
             .addLine("    .build();")
-            .addLine("assertThat(get(value.getProperties(), 1)).isSameAs(i);")
+            .addLine("assertThat(get(value.%s, 1)).isSameAs(i);", convention.get("properties"))
             .build())
         .runTest();
   }
@@ -294,14 +302,14 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndSetCountModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.setCount(5, 3))")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.setCount(%s, 3))", element.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(5, 5, 5);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.examples(0, 0, 0))
             .build())
         .runTest();
   }
@@ -309,27 +317,28 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndSetCountReturnsOldCount() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> assertThat(set.setCount(5, 3)).isEqualTo(1));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> assertThat(set.setCount(%s, 3)).isEqualTo(1));",
+                element.example(0))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndSetCountChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(element.errorMessage());
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.setCount(-3, 3));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.setCount(%s, 3));", element.invalidExample())
             .build())
         .runTest();
   }
@@ -339,29 +348,28 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("count cannot be negative but was: -3");
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.setCount(3, -3));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.setCount(%s, -3));", element.example(1))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndSetCountKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", element.type(), element.example(0))
+            .addLine("%s i = %s;", element.type(), element.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(set -> set.setCount(s, 3))")
             .addLine("    .build();")
-            .addLine("assertThat(get(value.getProperties(), 1)).isSameAs(i);")
+            .addLine("assertThat(get(value.%s, 1)).isSameAs(i);", convention.get("properties"))
             .build())
         .runTest();
   }
@@ -369,14 +377,14 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountModifiesUnderlyingPropertyIfOldCountMatches() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.setCount(5, 1, 3))")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.setCount(%s, 1, 3))", element.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(5, 5, 5);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.examples(0, 0, 0))
             .build())
         .runTest();
   }
@@ -384,14 +392,14 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountDoesNothingIfOldCountDoesNotMatch() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.setCount(5, 2, 3))")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.setCount(%s, 2, 3))", element.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(5);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.example(0))
             .build())
         .runTest();
   }
@@ -399,12 +407,12 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountReturnsTrueIfOldCountMatches() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> assertThat(set.setCount(5, 1, 3)).isTrue());")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> assertThat(set.setCount(%s, 1, 3)).isTrue());",
+                element.example(0))
             .build())
         .runTest();
   }
@@ -412,27 +420,29 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndConditionallySetCountReturnsFalseIfOldCountDoesNotMatch() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> assertThat(set.setCount(5, 2, 3)).isFalse());")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> assertThat(set.setCount(%s, 2, 3)).isFalse());",
+                element.example(0))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndConditionallySetCountChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(element.errorMessage());
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.setCount(-3, 0, 3));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.setCount(%s, 0, 3));",
+                element.invalidExample())
             .build())
         .runTest();
   }
@@ -442,29 +452,28 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("newCount cannot be negative but was: -3");
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.setCount(3, 1, -3));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.setCount(%s, 1, -3));", element.example(1))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndConditionallySetCountKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", element.type(), element.example(0))
+            .addLine("%s i = %s;", element.type(), element.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateProperties(set -> set.setCount(s, 3))")
             .addLine("    .build();")
-            .addLine("assertThat(get(value.getProperties(), 1)).isSameAs(i);")
+            .addLine("assertThat(get(value.%s, 1)).isSameAs(i);", convention.get("properties"))
             .build())
         .runTest();
   }
@@ -472,29 +481,32 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddAllModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(11, 11, 12)))")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(%s)))",
+                element.examples(1, 1, 2))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(5, 11, 11, 12);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.examples(0, 1, 1, 2))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddAllChecksArguments() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("elements must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(element.errorMessage());
+    }
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(11, -3)));")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(%s, %s)));",
+                element.example(1), element.invalidExample())
             .build())
         .runTest();
   }
@@ -502,14 +514,15 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndAddAllAcceptsMaxIntOccurrences() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addCopiesToProperties(5, Integer.MAX_VALUE - 2)")
-            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(5, 11, 5)))")
+            .addLine("    .addCopiesToProperties(%s, Integer.MAX_VALUE - 2)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(%s)))",
+                element.examples(0, 1, 0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties().count(5)).isEqualTo(Integer.MAX_VALUE);")
+            .addLine("assertThat(value.%s.count(%s)).isEqualTo(Integer.MAX_VALUE);",
+                convention.get("properties"), element.example(0))
             .build())
         .runTest();
   }
@@ -519,29 +532,30 @@ public class MultisetMutateMethodTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("too many occurrences: 2147483648");
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addCopiesToProperties(5, Integer.MAX_VALUE - 1)")
-            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(5, 11, 5)));")
+            .addLine("    .addCopiesToProperties(%s, Integer.MAX_VALUE - 1)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(%s)));",
+                element.examples(0, 1, 0))
             .build())
         .runTest();
   }
 
   @Test
   public void mutateAndAddAllKeepsSubstitute() {
+    assumeTrue(interned);
     behaviorTester
-        .with(new Processor(features))
-        .with(INTERNED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
+            .addLine("%1$s s = new %1$s(%2$s);", element.type(), element.example(0))
+            .addLine("%s i = %s;", element.type(), element.intern("s"))
             .addLine("assertThat(s).isNotSameAs(i);")
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(s, \"baz\", s)))")
+            .addLine("    .mutateProperties(set -> set.addAll(ImmutableList.of(s, %s, s)))",
+                element.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(get(value.getProperties(), 0)).isSameAs(i);")
+            .addLine("assertThat(get(value.%s, 0)).isSameAs(i);", convention.get("properties"))
             .build())
         .runTest();
   }
@@ -549,11 +563,10 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndSizeReturnsSize() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
+            .addLine("    .addProperties(%s)", element.example(0))
             .addLine("    .mutateProperties(set -> assertThat(set.size()).equals(1));")
             .build())
         .runTest();
@@ -562,12 +575,25 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndContainsReturnsTrueForContainedElement() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> assertThat(set.contains(5)).isTrue());")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> assertThat(set.contains(%s)).isTrue());",
+                element.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mutateAndContainsReturnsFalseForMissingElement() {
+    behaviorTester
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> assertThat(set.contains(%s)).isFalse());",
+                element.example(1))
             .build())
         .runTest();
   }
@@ -575,14 +601,13 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndIterateFindsContainedElement() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .addProperties(5)")
+            .addLine("    .addProperties(%s)", element.example(0))
             .addLine("    .mutateProperties(set -> {")
-            .addLine("      assertThat(%s.copyOf(set.iterator())).containsExactly(5);",
-                ImmutableMultiset.class)
+            .addLine("      assertThat(%s.copyOf(set.iterator())).containsExactly(%s);",
+                ImmutableMultiset.class, element.example(0))
             .addLine("    });")
             .build())
         .runTest();
@@ -591,14 +616,14 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndRemoveModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5, 11)")
-            .addLine("    .mutateProperties(set -> set.remove(5))")
+            .addLine("    .addProperties(%s)", element.examples(0, 1))
+            .addLine("    .mutateProperties(set -> set.remove(%s))", element.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(11);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.example(1))
             .build())
         .runTest();
   }
@@ -606,21 +631,21 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5, 11)")
+            .addLine("    .addProperties(%s)", element.examples(0, 1))
             .addLine("    .mutateProperties(set -> {")
-            .addLine("      Iterator<Integer> it = set.iterator();")
+            .addLine("      Iterator<%s> it = set.iterator();", element.type())
             .addLine("      while (it.hasNext()) {")
-            .addLine("        if (it.next() == 5) {")
+            .addLine("        if (it.next().equals(%s)) {", element.example(0))
             .addLine("          it.remove();")
             .addLine("        }")
             .addLine("      }")
             .addLine("    })")
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).containsExactly(11);")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.example(1))
             .build())
         .runTest();
   }
@@ -628,66 +653,13 @@ public class MultisetMutateMethodTest {
   @Test
   public void mutateAndClearModifiesUnderlyingProperty() {
     behaviorTester
-        .with(new Processor(features))
-        .with(CHECKED_PROPERTY)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5, 11)")
+            .addLine("    .addProperties(%s)", element.examples(0, 1))
             .addLine("    .mutateProperties(set -> set.clear())")
             .addLine("    .build();")
-            .addLine("assertThat(value.getProperties()).isEmpty();")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mutateAndAddModifiesUnderlyingProperty_whenUnchecked_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer> properties();", Multiset.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(11))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.properties()).containsExactly(5, 11);")
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mutateAndAddModifiesUnderlyingProperty_whenChecked_prefixless() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<Integer> properties();", Multiset.class)
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setCountOfProperties(int element, int count) {")
-            .addLine("      %s.checkArgument(element >= 0, \"elements must be non-negative\");",
-                Preconditions.class)
-            .addLine("      return super.setCountOfProperties(element, count);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addProperties(5)")
-            .addLine("    .mutateProperties(set -> set.add(11))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.properties()).containsExactly(5, 11);")
+            .addLine("assertThat(value.%s).isEmpty();",  convention.get("properties"))
             .build())
         .runTest();
   }
@@ -699,5 +671,4 @@ public class MultisetMutateMethodTest {
         .addPackageImport("com.google.common.collect")
         .addStaticImport(Iterables.class, "get");
   }
-
 }

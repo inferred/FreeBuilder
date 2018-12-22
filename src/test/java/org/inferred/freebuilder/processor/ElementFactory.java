@@ -27,6 +27,7 @@ public enum ElementFactory {
       null,
       CharSequence.class,
       true,
+      "%s.intern()",
       "!%s.isEmpty()",
       "!element.toString().isEmpty()",
       "Cannot add empty string",
@@ -44,6 +45,7 @@ public enum ElementFactory {
       null,
       Number.class,
       true,
+      "Integer.valueOf((int) %s)",
       "%s >= 0",
       "element.intValue() >= 0",
       "Items must be non-negative",
@@ -61,23 +63,25 @@ public enum ElementFactory {
       AbstractNonComparable.ReverseIdComparator.class,
       AbstractNonComparable.class,
       false,
+      "%s.intern()",
       "%s.id() >= 0",
       "element.id() >= 0",
       "ID must be non-negative",
-      new NonComparable(-2, "broken"),
+      NonComparable.of(-2, "broken"),
       new OtherNonComparable(88, "other"),
-      new NonComparable(10, "alpha"),
-      new NonComparable(9, "cappa"),
-      new NonComparable(8, "echo"),
-      new NonComparable(7, "golf"),
-      new NonComparable(6, "beta"),
-      new NonComparable(5, "delta"),
-      new NonComparable(4, "foxtrot"));
+      NonComparable.of(10, "alpha"),
+      NonComparable.of(9, "cappa"),
+      NonComparable.of(8, "echo"),
+      NonComparable.of(7, "golf"),
+      NonComparable.of(6, "beta"),
+      NonComparable.of(5, "delta"),
+      NonComparable.of(4, "foxtrot"));
 
   private final Class<?> type;
   @Nullable private final Class<?> comparator;
   private Class<?> supertype;
   private final boolean serializableAsMapKey;
+  private final String intern;
   private final String validation;
   private final String supertypeValidation;
   private final String errorMessage;
@@ -90,6 +94,7 @@ public enum ElementFactory {
       @Nullable Class<? extends Comparator<?>> comparator,
       Class<?> supertype,
       boolean serializableAsMapKey,
+      String intern,
       String validation,
       String supertypeValidation,
       String errorMessage,
@@ -100,6 +105,7 @@ public enum ElementFactory {
     this.comparator = comparator;
     this.supertype = supertype;
     this.serializableAsMapKey = serializableAsMapKey;
+    this.intern = intern;
     this.validation = validation;
     this.supertypeValidation = supertypeValidation;
     this.errorMessage = errorMessage;
@@ -165,6 +171,10 @@ public enum ElementFactory {
     return IntStream.of(ids).mapToObj(this::example).collect(Collectors.joining(", "));
   }
 
+  public Object intern(String variableName) {
+    return String.format(intern, variableName);
+  }
+
   @Override
   public String toString() {
     return type.getSimpleName();
@@ -177,7 +187,7 @@ public enum ElementFactory {
       return "new " + NameImpl.class.getName() + "(\"" + example + "\")";
     } else if (example instanceof NonComparable) {
       NonComparable nonComparable = (NonComparable) example;
-      return "new " + NonComparable.class.getName() + "(" + nonComparable.id() + ", \""
+      return NonComparable.class.getName() + ".of(" + nonComparable.id() + ", \""
           + nonComparable.name() + "\")";
     } else if (example instanceof OtherNonComparable) {
       OtherNonComparable otherNonComparable = (OtherNonComparable) example;
