@@ -104,6 +104,7 @@ class Analyser {
       new MultisetProperty.Factory(),
       new ListMultimapProperty.Factory(),
       new SetMultimapProperty.Factory(),
+      new PrimitiveOptionalProperty.Factory(),
       new OptionalProperty.Factory(),
       new BuildableProperty.Factory(),
       new DefaultProperty.Factory()); // Must be last, as it will always return a CodeGenerator
