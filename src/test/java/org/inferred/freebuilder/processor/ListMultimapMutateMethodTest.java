@@ -43,6 +43,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -510,6 +511,41 @@ public class ListMultimapMutateMethodTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s.get(%s).get(2)).isSameAs(i);",
                 convention.get(), key.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void canUseCustomFunctionalInterface() throws IOException {
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+      customMutatorType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("    public interface Mutator {")
+            .addLine("      void mutate(%s<%s, %s> multimap);",
+                ListMultimap.class, key.type(), value.type())
+            .addLine("    }")
+            .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
+            .addLine("      return super.mutateItems(mutator);")
+            .addLine("    }");
+      }
+    }
+
+    behaviorTester
+        .with(customMutatorType.build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .mutateItems(items -> {")
+            .addLine("      items.put(%s, %s);", key.example(0), value.example(1))
+            .addLine("      items.put(%s, %s);", key.example(2), value.example(3))
+            .addLine("    })")
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
             .build())
         .runTest();
   }
