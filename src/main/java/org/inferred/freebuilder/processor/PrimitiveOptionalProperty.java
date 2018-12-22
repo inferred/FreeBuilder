@@ -33,12 +33,15 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   private final OptionalType optional;
   private final TypeMirror elementType;
+  private final Metadata.Property flag;
 
   @VisibleForTesting
   PrimitiveOptionalProperty(Metadata metadata, Metadata.Property property) {
     super(metadata, property);
     this.elementType = property.getType();
     this.optional = OptionalType.lookup(this.elementType);
+    this.flag = Metadata.Property.Builder.from(property).setName(property.getName() + "Valid")
+                                         .build();
   }
 
   @Override
@@ -48,13 +51,13 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
-    code.addLine("private final %s %s;", elementType, finalField);
+    code.addLine("private final %s %s;", optional.wrapper, finalField);
   }
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private %s %s = %s.%s();", elementType, property.getField(), elementType,
-                 optional.empty);
+    code.addLine("private %s %s;", optional.primitiveType, property.getField())
+        .addLine("private boolean %s = false;", flag.getField());
   }
 
   @Override
@@ -73,16 +76,15 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
                  metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
-
     code.addLine(" */")
         .addLine("public %s %s(%s %s) {",
                  metadata.getBuilder(),
                  setter(property),
                  optional.primitiveType,
                  property.getName());
-    Block body = methodBody(code, property.getName());
-    body.addLine("  %s = %s.of(%s);", property.getField(), elementType, property.getName());
-
+    Block body = methodBody(code, property.getName(), flag.getName());
+    body.addLine("  %s = %s;", property.getField(), property.getName());
+    body.addLine("  %s = true;", flag.getField());
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
         .addLine("}");
@@ -103,12 +105,12 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
                  optional.cls,
                  property.getName())
         .add(methodBody(code, property.getName())
-                     .addLine("  if (%s.isPresent()) {", property.getName())
-                     .addLine("    return %s(%s.%s());", setter(property), property.getName(),
-                              optional.getAsMethod)
-                     .addLine("  } else {")
-                     .addLine("    return %s();", clearMethod(property))
-                     .addLine("  }"))
+               .addLine("  if (%s.isPresent()) {", property.getName())
+               .addLine("    return %s(%s.%s());", setter(property), property.getName(),
+                        optional.getAsMethod)
+               .addLine("  } else {")
+               .addLine("    return %s();", clearMethod(property))
+               .addLine("  }"))
         .addLine("}");
   }
 
@@ -139,13 +141,15 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s",
                  metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-        .addLine(" * to {@link %1$s#%2$s() Optional.%2$s()}.", optional.cls, optional.empty)
+        .addLine(" * to {@link %1$s#empty() %2$s}.", optional.cls, optional.empty)
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
-        .addLine("  %s = %s.%s();", property.getField(), elementType, optional.empty)
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property));
+    Block body = methodBody(code, property.getName(), flag.getName());
+    body.addLine("  %s = false;", flag.getField())
+        .addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -156,13 +160,15 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
                  metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
         .addLine("public %s %s() {", property.getType(), getter(property));
-    code.add("return %s;\n", property.getField())
+    code.add("return %s ? %s.of(%s) : %s;\n", flag.getField(), optional.cls,
+             property.getField(), optional.empty)
         .addLine("}");
   }
 
   @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
-    code.addLine("%s = %s;", finalField, property.getField().on(builder));
+    code.addLine("%s = %s ? %s : null;", finalField, flag.getField().on(builder),
+                 property.getField().on(builder));
   }
 
   @Override
@@ -184,7 +190,8 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addReadValueFragment(SourceBuilder code, Excerpt finalField) {
-    code.add("%s", finalField);
+    code.add("%s == null ? %s : %s.of(%s)", finalField, optional.empty, optional.cls,
+             finalField);
   }
 
   @Override
@@ -196,33 +203,36 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   public void addClearField(Block code) {
     Optional<Excerpt> defaults = Declarations.freshBuilder(code, metadata);
     if (defaults.isPresent()) {
-      code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
+      code.addLine("%s(%s.%s());", setter(property), defaults.get(), getter(property));
     } else {
-      code.addLine("%s = %s.%s();", property.getField(), optional.cls, optional.empty);
+      code.addLine("%s = false;", flag.getField());
     }
   }
 
   @VisibleForTesting
   enum OptionalType {
-    INT(QualifiedName.of("java.util", "OptionalInt"), "int"),
-    LONG(QualifiedName.of("java.util", "OptionalLong"), "long"),
-    DOUBLE(QualifiedName.of("java.util", "OptionalDouble"), "double");
+    INT(QualifiedName.of("java.util", "OptionalInt"), Integer.class, "int"),
+    LONG(QualifiedName.of("java.util", "OptionalLong"), Long.class, "long"),
+    DOUBLE(QualifiedName.of("java.util", "OptionalDouble"), Double.class, "double");
 
     private final QualifiedName cls;
-    private final String empty = "empty";
+    private final QualifiedName wrapper;
+    private final String empty;
     private final String primitiveType;
     private final QualifiedName unaryType;
     private final String unaryMethod;
     private final String getAsMethod;
 
-    OptionalType(QualifiedName qualifiedName, String primitiveType) {
+    OptionalType(QualifiedName qualifiedName, Class<?> wrapper, String primitiveType) {
       this.cls = qualifiedName;
+      this.wrapper = QualifiedName.of(wrapper);
       this.primitiveType = primitiveType;
 
       String upperCamelName = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, primitiveType);
       this.unaryType = QualifiedName.of("java.util.function", upperCamelName + "UnaryOperator");
       this.unaryMethod = "applyAs" + upperCamelName;
       this.getAsMethod = "getAs" + upperCamelName;
+      this.empty = qualifiedName.getSimpleName() + ".empty()";
     }
 
     public static OptionalType lookup(TypeMirror elementType) {
@@ -257,8 +267,8 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
       }
 
       return Optional.of(new PrimitiveOptionalProperty(
-              config.getMetadata(),
-              config.getProperty()));
+        config.getMetadata(),
+        config.getProperty()));
     }
 
     private static Optional<OptionalType> maybeOptional(DeclaredType type) {

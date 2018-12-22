@@ -64,4 +64,9 @@ public class OptionalIntBeanPropertyTest extends PrimitiveOptionalBeanPropertyTe
   protected Class<? extends Number> wrapper() {
     return Integer.class;
   }
+
+  @Override
+  protected Number num(Integer value) {
+    return value;
+  }
 }

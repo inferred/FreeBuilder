@@ -17,4 +17,9 @@ public class OptionalDoubleBeanPropertyTest extends PrimitiveOptionalBeanPropert
   protected Class<? extends Number> wrapper() {
     return Double.class;
   }
+
+  @Override
+  protected Number num(Integer value) {
+    return value.doubleValue();
+  }
 }

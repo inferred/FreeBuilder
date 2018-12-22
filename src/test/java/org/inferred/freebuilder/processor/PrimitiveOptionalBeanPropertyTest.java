@@ -69,8 +69,12 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
   private final String primitive = primitive();
 
   protected abstract Class<?> type();
+
   protected abstract String primitive();
+
   protected abstract Class<? extends Number> wrapper();
+
+  protected abstract Number num(Integer value);
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
@@ -120,8 +124,8 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
       .with(optionalPropertyType(type))
       .with(new TestBuilder()
               .addLine("com.example.DataType.Builder builder = new com.example.DataType.Builder()")
-              .addLine("    .setItem(-21);")
-              .addLine("assertEquals(%s.of(-21), builder.getItem());", type)
+              .addLine("    .setItem(%s);", num(-21))
+              .addLine("assertEquals(%s.of(%s), builder.getItem());", type, num(-21))
               .build())
       .runTest();
   }
@@ -133,9 +137,9 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
       .with(optionalPropertyType(type))
       .with(new TestBuilder()
               .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-              .addLine("    .setItem(15)")
+              .addLine("    .setItem(%s)", num(15))
               .addLine("    .build();")
-              .addLine("assertEquals(%s.of(15), value.getItem());", type)
+              .addLine("assertEquals(%s.of(%s), value.getItem());", type, num(15))
               .build())
       .runTest();
   }
@@ -160,9 +164,9 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
       .with(optionalPropertyType(type))
       .with(new TestBuilder()
               .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-              .addLine("    .setItem(%s.of(42))", type)
+              .addLine("    .setItem(%s.of(%s))", type, num(42))
               .addLine("    .build();")
-              .addLine("assertEquals(%s.of(42), value.getItem());", type)
+              .addLine("assertEquals(%s.of(%s), value.getItem());", type, num(42))
               .build())
       .runTest();
   }
@@ -216,9 +220,9 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
       .with(optionalPropertyType(type))
       .with(new TestBuilder()
               .addLine("com.example.DataType value = new com.example.DataType.Builder()")
-              .addLine("    .setItem(5)")
+              .addLine("    .setItem(%s)", num(5))
               .addLine("    .build();")
-              .addLine("assertEquals(%s.of(5), value.getItem());", type)
+              .addLine("assertEquals(%s.of(%s), value.getItem());", type, num(5))
               .build())
       .runTest();
   }
@@ -607,10 +611,10 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
               .addLine("com.example.DataType empty = com.example.DataType.builder()")
               .addLine("    .build();")
               .addLine("com.example.DataType present = com.example.DataType.builder()")
-              .addLine("    .setItem(42)")
+              .addLine("    .setItem(%s)", num(42))
               .addLine("    .build();")
               .addLine("assertEquals(\"DataType{}\", empty.toString());")
-              .addLine("assertEquals(\"DataType{item=42}\", present.toString());")
+              .addLine("assertEquals(\"DataType{item=%s}\", present.toString());", num(42))
               .build())
       .runTest();
   }
@@ -624,19 +628,20 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
               .addLine("com.example.DataType aa = com.example.DataType.builder()")
               .addLine("    .build();")
               .addLine("com.example.DataType pa = com.example.DataType.builder()")
-              .addLine("    .setItem1(3)")
+              .addLine("    .setItem1(%s)", num(3))
               .addLine("    .build();")
               .addLine("com.example.DataType ap = com.example.DataType.builder()")
               .addLine("    .setItem2(5)")
               .addLine("    .build();")
               .addLine("com.example.DataType pp = com.example.DataType.builder()")
-              .addLine("    .setItem1(3)")
+              .addLine("    .setItem1(3)", num(3))
               .addLine("    .setItem2(5)")
               .addLine("    .build();")
               .addLine("assertEquals(\"DataType{}\", aa.toString());")
-              .addLine("assertEquals(\"DataType{item1=3}\", pa.toString());")
-              .addLine("assertEquals(\"DataType{item2=5}\", ap.toString());")
-              .addLine("assertEquals(\"DataType{item1=3, item2=5}\", pp.toString());")
+              .addLine("assertEquals(\"DataType{item1=%s}\", pa.toString());", num(3))
+              .addLine("assertEquals(\"DataType{item2=%s}\", ap.toString());", num(5))
+              .addLine("assertEquals(\"DataType{item1=%s, item2=%s}\", pp.toString());", num(3),
+                       num(5))
               .build())
       .runTest();
   }
@@ -650,10 +655,10 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
               .addLine("com.example.DataType empty = com.example.DataType.builder()")
               .addLine("    .buildPartial();")
               .addLine("com.example.DataType present = com.example.DataType.builder()")
-              .addLine("    .setItem(234)")
+              .addLine("    .setItem(%s)", num(234))
               .addLine("    .buildPartial();")
               .addLine("assertEquals(\"partial DataType{}\", empty.toString());")
-              .addLine("assertEquals(\"partial DataType{item=234}\", present.toString());")
+              .addLine("assertEquals(\"partial DataType{item=%s}\", present.toString());", num(234))
               .build())
       .runTest();
   }
@@ -667,19 +672,20 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
               .addLine("com.example.DataType aa = com.example.DataType.builder()")
               .addLine("    .buildPartial();")
               .addLine("com.example.DataType pa = com.example.DataType.builder()")
-              .addLine("    .setItem1(5)")
+              .addLine("    .setItem1(%s)", num(5))
               .addLine("    .buildPartial();")
               .addLine("com.example.DataType ap = com.example.DataType.builder()")
-              .addLine("    .setItem2(27)")
+              .addLine("    .setItem2(%s)", num(27))
               .addLine("    .buildPartial();")
               .addLine("com.example.DataType pp = com.example.DataType.builder()")
-              .addLine("    .setItem1(5)")
-              .addLine("    .setItem2(27)")
+              .addLine("    .setItem1(%s)", num(5))
+              .addLine("    .setItem2(%s)", num(27))
               .addLine("    .buildPartial();")
               .addLine("assertEquals(\"partial DataType{}\", aa.toString());")
-              .addLine("assertEquals(\"partial DataType{item1=5}\", pa.toString());")
-              .addLine("assertEquals(\"partial DataType{item2=27}\", ap.toString());")
-              .addLine("assertEquals(\"partial DataType{item1=5, item2=27}\", pp.toString());")
+              .addLine("assertEquals(\"partial DataType{item1=%s}\", pa.toString());", num(5))
+              .addLine("assertEquals(\"partial DataType{item2=%s}\", ap.toString());", num(27))
+              .addLine("assertEquals(\"partial DataType{item1=%s, item2=%s}\", pp.toString());",
+                       num(5), num(27))
               .build())
       .runTest();
   }

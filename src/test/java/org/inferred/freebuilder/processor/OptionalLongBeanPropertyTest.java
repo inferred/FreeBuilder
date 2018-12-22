@@ -17,4 +17,9 @@ public class OptionalLongBeanPropertyTest extends PrimitiveOptionalBeanPropertyT
   protected Class<? extends Number> wrapper() {
     return Long.class;
   }
+
+  @Override
+  protected Number num(Integer value) {
+    return value.longValue();
+  }
 }
