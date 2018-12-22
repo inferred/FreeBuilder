@@ -26,6 +26,7 @@ _Automatic generation of the Builder pattern for Java 1.6+_
   - [Collections and Maps](#collections-and-maps)
   - [Nested buildable types](#nested-buildable-types)
   - [Custom toString method](#custom-tostring-method)
+  - [Custom functional interfaces](#custom-functional-interfaces)
   - [Builder construction](#builder-construction)
   - [Partials](#partials)
   - [Jackson](#jackson)
@@ -459,6 +460,22 @@ Note that it is a compile error to leave hashCode abstract if equals is implemen
 It is rarely a good idea to redefine equality on a value type, as it makes testing very hard.
 For instance, `assertEquals` in JUnit relies on equality; it will not know to check individual fields, and as a result, tests may be failing to catch bugs that, on the face of it, they looks like they should be.
 If you are only testing a subset of your fields for equality, consider separating your class in two, as you may have accidentally combined the key and the value of a map into a single object, and you may find your code becomes healthier after the separation.
+
+### Custom functional interfaces
+
+FreeBuilder's generated map and mutate methods take [UnaryOperator] or [Consumer] functional interfaces. If you need to use a different functional interface, you can override the generated methods in your Builder and change the parameter type. FreeBuilder will spot the incompatible override and change the code it generates to match:
+
+```java
+public interface MyType {
+  String property();
+
+  class Builder extends MyType_Builder {
+    @Override public Builder mapProperty(
+        com.google.common.base.Function<Integer, Integer> mapper) {
+      return super.mapProperty(mapper);
+    }
+  }
+}
 
 ### Builder construction
 
