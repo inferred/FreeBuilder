@@ -15,6 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
+import static org.junit.Assume.assumeTrue;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -27,6 +30,7 @@ import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
+import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
@@ -44,6 +48,7 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.tools.JavaFileObject;
 
@@ -277,6 +282,101 @@ public class MultisetPropertyTest {
   }
 
   @Test
+  public void testAddAllStream() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(%s))", Stream.class, element.examples(0, 1))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).iteratesAs(%s);",
+                convention.get("items"), element.examples(0, 1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllStream_null() {
+    assumeStreamsAvailable();
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(%s, null));", Stream.class, element.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllStream_duplicate() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(%s))", Stream.class, element.examples(0, 0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).iteratesAs(%s);",
+                convention.get("items"), element.examples(0, 0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllSpliterator() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(%s).spliterator())",
+                 Stream.class, element.examples(0, 1))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).iteratesAs(%s);",
+                convention.get("items"), element.examples(0, 1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllSpliterator_null() {
+    assumeStreamsAvailable();
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(%s, null).spliterator());",
+                Stream.class, element.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testAddAllSpliterator_duplicate() {
+    assumeStreamsAvailable();
+    behaviorTester
+        .with(new Processor(features))
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addAllItems(%s.of(%s).spliterator())",
+                 Stream.class, element.examples(0, 0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).iteratesAs(%s);",
+                convention.get("items"), element.examples(0, 0))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testAddCopies() {
     behaviorTester
         .with(new Processor(features))
@@ -457,6 +557,33 @@ public class MultisetPropertyTest {
   }
 
   @Test
+  public void testToBuilder_fromPartial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s> %s;", Multiset.class, element.type(), convention.get())
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value1 = new DataType.Builder()")
+            .addLine("    .addItems(%s)", element.examples(0, 1))
+            .addLine("    .buildPartial();")
+            .addLine("DataType value2 = value1.toBuilder()")
+            .addLine("    .addItems(%s)", element.example(2))
+            .addLine("    .build();")
+            .addLine("assertThat(value2.%s).iteratesAs(%s);",
+                convention.get(), element.examples(0, 1, 2))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))
@@ -613,6 +740,111 @@ public class MultisetPropertyTest {
                 convention.get("items"), element.examples(0, 1))
             .build())
         .runTest();
+  }
+
+  @Test
+  public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s<%s>> %s;",
+                Multiset.class, List.class, element.type(), convention.get())
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("new DataType.Builder().addItems(")
+            .addLine("    %s.asList(%s),", Arrays.class, element.examples(0, 1))
+            .addLine("    %s.asList(%s));", Arrays.class, element.examples(2, 3))
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<T> {")
+            .addLine("  %s<T> %s;", Multiset.class, convention.get())
+            .addLine("")
+            .addLine("  class Builder<T> extends DataType_Builder<T> {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("new DataType.Builder<%s>().addItems(%s)",
+                element.type(), element.examples(0, 1))
+            .addLine("    .build();")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testCanOverrideGenericFieldVarargsAdder() {
+    // Ensure we remove the final annotation needed to apply @SafeVarargs.
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s<%s>> %s;",
+                Multiset.class, List.class, element.type(), convention.get())
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    @%s", Override.class)
+            .addLine("    @%s", SafeVarargs.class)
+            .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
+            .addLine("    public final Builder addItems(%s<%s>... items) {",
+                List.class, element.type())
+            .addLine("      return super.addItems(items);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void testCanOverrideGenericBuildableVarargsAdder() {
+    // Ensure we remove the final annotation needed to apply @SafeVarargs.
+    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<T> {")
+            .addLine("  %s<T> %s;", Multiset.class, convention.get())
+            .addLine("")
+            .addLine("  class Builder<T> extends DataType_Builder<T> {")
+            .addLine("    @%s", Override.class)
+            .addLine("    @%s", SafeVarargs.class)
+            .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
+            .addLine("    public final Builder<T> addItems(T... items) {")
+            .addLine("      return super.addItems(items);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
+  private void assumeStreamsAvailable() {
+    assumeTrue("Streams available", features.get(SOURCE_LEVEL).stream().isPresent());
   }
 
   private static TestBuilder testBuilder() {
