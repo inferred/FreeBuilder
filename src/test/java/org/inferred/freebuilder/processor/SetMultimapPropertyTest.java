@@ -57,7 +57,7 @@ import javax.tools.JavaFileObject;
 public class SetMultimapPropertyTest {
 
   @SuppressWarnings("unchecked")
-  @Parameters(name = "ListMultimap<{0}, {1}>, {2}, {3}")
+  @Parameters(name = "SetMultimap<{0}, {1}>, {2}, {3}")
   public static Iterable<Object[]> parameters() {
     List<ElementFactory> types = Arrays.asList(INTEGERS, STRINGS);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
@@ -577,6 +577,37 @@ public class SetMultimapPropertyTest {
             .addLine("assertThat(builder.build().%s)", convention.get("items"))
             .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
             .addLine("    .and(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToBuilder_fromPartial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s, %s> %s;",
+                SetMultimap.class, key.type(), value.type(), convention.get())
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value1 = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .buildPartial();")
+            .addLine("DataType value2 = value1.toBuilder()")
+            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+            .addLine("    .build();")
+            .addLine("assertThat(value2.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
             .addLine("    .andNothingElse()")
             .addLine("    .inOrder();")
             .build())

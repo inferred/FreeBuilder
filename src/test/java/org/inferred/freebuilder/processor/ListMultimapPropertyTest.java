@@ -588,6 +588,36 @@ public class ListMultimapPropertyTest {
   }
 
   @Test
+  public void testToBuilder_fromPartial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s, %s> %s;", Multimap.class, key.type(), value.type(), convention.get())
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value1 = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .buildPartial();")
+            .addLine("DataType value2 = value1.toBuilder()")
+            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+            .addLine("    .build();")
+            .addLine("assertThat(value2.%s)", convention.get())
+            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
+            .addLine("    .andNothingElse()")
+            .addLine("    .inOrder();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testBuilderClear() {
     behaviorTester
         .with(new Processor(features))
