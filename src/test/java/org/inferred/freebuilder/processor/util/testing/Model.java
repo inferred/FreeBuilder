@@ -22,7 +22,6 @@ import static javax.tools.ToolProvider.getSystemJavaCompiler;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -400,7 +399,7 @@ public class Model {
         // Sets.filter call, just to be sure.
         Set<? extends Element> elements = Sets.filter(
             roundEnv.getElementsAnnotatedWith(annotationType),
-            new HasAnnotationOfType(annotationType));
+            element -> element.getAnnotation(annotationType) != null);
         Element element;
         try {
           element = getOnlyElement(elements, null);
@@ -443,18 +442,6 @@ public class Model {
           elementFuture.setException(e);
         }
       }
-    }
-  }
-
-  private static class HasAnnotationOfType implements Predicate<Element> {
-    private final Class<? extends Annotation> annotationType;
-
-    HasAnnotationOfType(Class<? extends Annotation> annotationType) {
-      this.annotationType = annotationType;
-    }
-
-    @Override public boolean apply(Element input) {
-      return input.getAnnotation(annotationType) != null;
     }
   }
 

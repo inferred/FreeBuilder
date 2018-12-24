@@ -88,9 +88,9 @@ public enum GuavaLibrary implements Feature<GuavaLibrary> {
    */
   public Optional<Class<?>> arrayUtils(TypeMirror elementType) {
     if (!elementType.getKind().isPrimitive()) {
-      return Optional.<Class<?>>of(Arrays.class);
+      return Optional.of(Arrays.class);
     } else if (isAvailable()) {
-      return Optional.<Class<?>>fromNullable(primitiveUtils(elementType));
+      return Optional.of(primitiveUtils(elementType));
     } else {
       return Optional.absent();
     }

@@ -4,7 +4,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationM
 import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
 
 import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -43,8 +42,8 @@ class GwtSupport {
         extraMetadata.setValueTypeVisibility(Visibility.PACKAGE);
         extraMetadata.addValueTypeAnnotations(Excerpts.add(
             "@%s(serializable = true)%n", GwtCompatible.class));
-        extraMetadata.addNestedClasses(new CustomValueSerializer());
-        extraMetadata.addNestedClasses(new GwtWhitelist());
+        extraMetadata.addNestedClasses(CustomValueSerializerExcerpt::new);
+        extraMetadata.addNestedClasses(GwtWhitelistExcerpt::new);
         QualifiedName builderName = metadata.getGeneratedBuilder().getQualifiedName();
         extraMetadata.addVisibleNestedTypes(
             builderName.nestedType("Value_CustomFieldSerializer"),
@@ -52,13 +51,6 @@ class GwtSupport {
       }
     }
     return extraMetadata;
-  }
-
-  private static final class CustomValueSerializer implements Function<Metadata, Excerpt> {
-    @Override
-    public Excerpt apply(final Metadata metadata) {
-      return new CustomValueSerializerExcerpt(metadata);
-    }
   }
 
   private static final class CustomValueSerializerExcerpt extends Excerpt {
@@ -187,13 +179,6 @@ class GwtSupport {
     @Override
     protected void addFields(FieldReceiver fields) {
       fields.add("metadata", metadata);
-    }
-  }
-
-  private static final class GwtWhitelist implements Function<Metadata, Excerpt> {
-    @Override
-    public Excerpt apply(final Metadata metadata) {
-      return new GwtWhitelistExcerpt(metadata);
     }
   }
 
