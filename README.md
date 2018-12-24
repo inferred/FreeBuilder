@@ -476,6 +476,7 @@ public interface MyType {
     }
   }
 }
+```
 
 ### Builder construction
 
