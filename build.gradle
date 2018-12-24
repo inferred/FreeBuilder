@@ -59,6 +59,7 @@ dependencies {
   testCompile jsr305
   testCompile junit
   testCompile mockito
+  testCompile reflections
   testCompile truth
 }
 

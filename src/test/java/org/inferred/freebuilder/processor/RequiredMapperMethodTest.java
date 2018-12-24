@@ -157,7 +157,7 @@ public class RequiredMapperMethodTest {
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .%s(%s)", convention.set("property"), property.example(0))
-            .addLine("    .mapProperty(a -> null);")
+            .addLine("    .mapProperty(a -> (%s) null);", property.type())
             .build())
         .runTest();
   }
