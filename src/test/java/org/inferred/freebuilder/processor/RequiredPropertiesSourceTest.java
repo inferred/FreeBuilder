@@ -20,6 +20,7 @@ import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
 import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.intUnaryOperator;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
@@ -123,12 +124,12 @@ public class RequiredPropertiesSourceTest {
         "   * and using the result.",
         "   *",
         "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
+        "   * @throws NullPointerException if {@code mapper} is null",
         "   * @throws IllegalStateException if the field has not been set",
         "   */",
-        "  public Person.Builder mapAge(UnaryOperator<Integer> mapper) {",
+        "  public Person.Builder mapAge(IntUnaryOperator mapper) {",
         "    Objects.requireNonNull(mapper);",
-        "    return setAge(mapper.apply(getAge()));",
+        "    return setAge(mapper.applyAsInt(getAge()));",
         "  }",
         "",
         "  /**",
@@ -406,12 +407,12 @@ public class RequiredPropertiesSourceTest {
         "   * and using the result.",
         "   *",
         "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
+        "   * @throws NullPointerException if {@code mapper} is null",
         "   * @throws IllegalStateException if the field has not been set",
         "   */",
-        "  public Person.Builder mapAge(UnaryOperator<Integer> mapper) {",
+        "  public Person.Builder mapAge(IntUnaryOperator mapper) {",
         "    Objects.requireNonNull(mapper);",
-        "    return setAge(mapper.apply(getAge()));",
+        "    return setAge(mapper.applyAsInt(getAge()));",
         "  }",
         "",
         "  /**",
@@ -688,12 +689,12 @@ public class RequiredPropertiesSourceTest {
         "   * using the result.",
         "   *",
         "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
+        "   * @throws NullPointerException if {@code mapper} is null",
         "   * @throws IllegalStateException if the field has not been set",
         "   */",
-        "  public Person.Builder mapAge(UnaryOperator<Integer> mapper) {",
+        "  public Person.Builder mapAge(IntUnaryOperator mapper) {",
         "    Objects.requireNonNull(mapper);",
-        "    return age(mapper.apply(age()));",
+        "    return age(mapper.applyAsInt(age()));",
         "  }",
         "",
         "  /**",
@@ -921,6 +922,6 @@ public class RequiredPropertiesSourceTest {
 
     return new GeneratedBuilder(datatype, ImmutableMap.of(
         name, new DefaultProperty(datatype, name, false, unaryOperator(STRING)),
-        age, new DefaultProperty(datatype, age, false, unaryOperator(INTEGER))));
+        age, new DefaultProperty(datatype, age, false, intUnaryOperator(INT))));
   }
 }

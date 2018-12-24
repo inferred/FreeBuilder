@@ -143,7 +143,9 @@ public class DefaultedMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder().addLine("new DataType.Builder().mapProperty(a -> null);").build())
+        .with(testBuilder()
+            .addLine("new DataType.Builder().mapProperty(a -> (%s) null);", property.type())
+            .build())
         .runTest();
   }
 
