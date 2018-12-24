@@ -524,11 +524,7 @@ class BuildableProperty extends PropertyCodeGenerator {
     }
   }
 
-  private static final Predicate<Element> IS_BUILDER_TYPE = new Predicate<Element>() {
-    @Override public boolean apply(Element element) {
-      return element.getSimpleName().contentEquals("Builder")
-          && element.getModifiers().contains(PUBLIC);
-    }
-  };
+  private static final Predicate<Element> IS_BUILDER_TYPE = element ->
+      element.getSimpleName().contentEquals("Builder") && element.getModifiers().contains(PUBLIC);
 
 }

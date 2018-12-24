@@ -45,7 +45,6 @@ import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
-import org.inferred.freebuilder.processor.util.MethodFinder.ErrorTypeHandling;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -113,14 +112,6 @@ class Analyser {
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
 
-  private static final ErrorTypeHandling<CannotGenerateCodeException> CANNOT_GENERATE_ON_ERROR =
-      new ErrorTypeHandling<CannotGenerateCodeException>() {
-        @Override
-        public void handleErrorType(ErrorType type) throws CannotGenerateCodeException {
-          throw new CannotGenerateCodeException();
-        }
-      };
-
   private final Elements elements;
   private final Messager messager;
   private final MethodIntrospector methodIntrospector;
@@ -152,7 +143,9 @@ class Analyser {
         generatedBuilder.withParameters(typeParameters));
     }
 
-    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, CANNOT_GENERATE_ON_ERROR);
+    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, errorType -> {
+      throw new CannotGenerateCodeException();
+    });
     Datatype.Builder constructionAndExtension = constructionAndExtension(builder);
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
@@ -374,11 +367,8 @@ class Analyser {
   private Optional<DeclaredType> tryFindBuilder(
       final QualifiedName superclass, TypeElement valueType) {
     TypeElement builderType =
-        tryFind(typesIn(valueType.getEnclosedElements()), new Predicate<Element>() {
-          @Override public boolean apply(Element input) {
-            return input.getSimpleName().contentEquals(USER_BUILDER_NAME);
-          }
-        }).orNull();
+        tryFind(typesIn(valueType.getEnclosedElements()),
+            element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME)).orNull();
     if (builderType == null) {
       if (valueType.getKind() == INTERFACE) {
         messager.printMessage(
@@ -711,10 +701,6 @@ class Analyser {
 
   private Predicate<TypeMirror> isEqualTo(Class<?> cls) {
     final TypeMirror typeMirror = elements.getTypeElement(cls.getCanonicalName()).asType();
-    return new Predicate<TypeMirror>() {
-      @Override public boolean apply(TypeMirror input) {
-        return types.isSameType(input, typeMirror);
-      }
-    };
+    return input -> types.isSameType(input, typeMirror);
   }
 }

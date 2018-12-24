@@ -58,6 +58,6 @@ public enum JavaxPackage implements Feature<JavaxPackage> {
   }
 
   private <T> Optional<T> ifAvailable(T value) {
-    return (this == AVAILABLE) ? Optional.of(value) : Optional.<T>absent();
+    return (this == AVAILABLE) ? Optional.of(value) : Optional.absent();
   }
 }

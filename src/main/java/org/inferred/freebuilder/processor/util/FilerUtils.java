@@ -15,11 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import com.google.common.base.Throwables;
-
 import java.io.IOException;
 import java.io.Writer;
-import java.lang.reflect.Method;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
@@ -30,50 +27,19 @@ public class FilerUtils {
   /**
    * Writes {@code source} to the correct file for {@code classToWrite}.
    *
-   * <p>This is complicated mainly by an EJC bug that returns the wrong object from
-   * {@link Writer#append(CharSequence)}, plus how to handle any exception thrown from
-   * {@link Writer#close()}.
+   * <p>This is complicated by an EJC bug that returns the wrong object from
+   * {@link Writer#append(CharSequence)}.
    */
   public static void writeCompilationUnit(
       Filer filer,
       QualifiedName classToWrite,
       Element originatingElement,
       String source) throws IOException {
-    Writer writer = filer
+    try (Writer writer = filer
         .createSourceFile(classToWrite.toString(), originatingElement)
-        .openWriter();
-    try {
+        .openWriter()) {
       writer.append(source);
-    } catch (Throwable e) {
-      try {
-        writer.close();
-      } catch (Throwable t) {
-        // Use suppressed exceptions in Java 7+
-        if (ADD_SUPPRESSED != null) {
-          try {
-            ADD_SUPPRESSED.invoke(e, t);
-          } catch (Exception x) {
-            throw new RuntimeException("Failed to add suppressed exception: " + x.getMessage(), e);
-          }
-        }
-        // Ignore any error thrown calling close() in Java 6
-      }
-      Throwables.propagateIfPossible(e, IOException.class);
-      throw Throwables.propagate(e);
     }
-    writer.close();
-  }
-
-  private static final Method ADD_SUPPRESSED;
-
-  static {
-    Method addSuppressed;
-    try {
-      addSuppressed = Throwable.class.getMethod("addSuppressed", Throwable.class);
-    } catch (NoSuchMethodException e) {
-      addSuppressed = null;
-    }
-    ADD_SUPPRESSED = addSuppressed;
   }
 
   private FilerUtils() {}

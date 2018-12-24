@@ -17,7 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -44,6 +43,7 @@ import javax.lang.model.util.Elements;
  */
 public class MethodFinder {
 
+  @FunctionalInterface
   public interface ErrorTypeHandling<E extends Exception> {
     void handleErrorType(ErrorType type) throws E;
   }
@@ -62,7 +62,7 @@ public class MethodFinder {
       ErrorTypeHandling<E> errorTypeHandling) throws E {
     TypeElement objectType = elements.getTypeElement(Object.class.getCanonicalName());
     Map<Signature, ExecutableElement> objectMethods = Maps.uniqueIndex(
-        methodsIn(objectType.getEnclosedElements()), Signature.NEW);
+        methodsIn(objectType.getEnclosedElements()), Signature::new);
     SetMultimap<Signature, ExecutableElement> methods = LinkedHashMultimap.create();
     for (TypeElement supertype : getSupertypes(type, errorTypeHandling)) {
       for (ExecutableElement method : methodsIn(supertype.getEnclosedElements())) {
@@ -129,14 +129,6 @@ public class MethodFinder {
    * {@link Elements#overrides}.
    */
   private static class Signature {
-
-    private static final Function<ExecutableElement, Signature> NEW =
-        new Function<ExecutableElement, Signature>() {
-          @Override
-          public Signature apply(ExecutableElement method) {
-            return new Signature(method);
-          }
-        };
 
     final Name name;
     final int params;
