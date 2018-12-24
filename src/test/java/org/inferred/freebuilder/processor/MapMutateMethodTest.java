@@ -36,6 +36,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -116,13 +117,13 @@ public class MapMutateMethodTest {
   public void before() {
     behaviorTester
         .with(new Processor(features))
-        .with(mapPropertyType)
         .withPermittedPackage(NonComparable.class.getPackage());
   }
 
   @Test
   public void putModifiesUnderlyingProperty() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -142,6 +143,7 @@ public class MapMutateMethodTest {
       thrown.expectMessage("key " + keys.errorMessage());
     }
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .mutateItems(items -> items.put(%s, %s));",
@@ -153,6 +155,7 @@ public class MapMutateMethodTest {
   @Test
   public void iterateEntrySetFindsContainedEntry() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -169,6 +172,7 @@ public class MapMutateMethodTest {
   @Test
   public void callRemoveOnEntrySetIteratorModifiesUnderlyingProperty() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -188,6 +192,7 @@ public class MapMutateMethodTest {
   @Test
   public void entrySetIteratorRemainsUsableAfterCallingRemove() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -217,6 +222,7 @@ public class MapMutateMethodTest {
       thrown.expectMessage("value " + values.errorMessage());
     }
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -229,6 +235,7 @@ public class MapMutateMethodTest {
   @Test
   public void callSetValueOnEntryModifiesUnderlyingProperty() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -243,6 +250,7 @@ public class MapMutateMethodTest {
   @Test
   public void entryRemainsUsableAfterCallingSetValue() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -262,6 +270,7 @@ public class MapMutateMethodTest {
   @Test
   public void entrySetIteratorRemainsUsableAfterCallingSetValue() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -284,6 +293,7 @@ public class MapMutateMethodTest {
   @Test
   public void getReturnsContainedValue() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("List<%1$s> values = new ArrayList<%1$s>();", values.type())
             .addLine("new DataType.Builder()")
@@ -298,6 +308,7 @@ public class MapMutateMethodTest {
   @Test
   public void containsKeyFindsContainedKey() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("List<Boolean> containsKeys = new ArrayList<Boolean>();")
             .addLine("new DataType.Builder()")
@@ -314,6 +325,7 @@ public class MapMutateMethodTest {
   @Test
   public void removeModifiesUnderlyingProperty() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -328,6 +340,7 @@ public class MapMutateMethodTest {
   @Test
   public void clearModifiesUnderlyingProperty() {
     behaviorTester
+        .with(mapPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -335,6 +348,37 @@ public class MapMutateMethodTest {
             .addLine("    .mutateItems(%s::clear)", Map.class)
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEmpty();", convention.get())
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void canUseCustomFunctionalInterface() throws IOException {
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : mapPropertyType.getCharContent(true).toString().split("\n")) {
+      customMutatorType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("    public interface Mutator {")
+            .addLine("      void mutate(%s<%s, %s> multimap);",
+                Map.class, keys.type(), values.type())
+            .addLine("    }")
+            .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
+            .addLine("      return super.mutateItems(mutator);")
+            .addLine("    }");
+      }
+    }
+
+    behaviorTester
+        .with(customMutatorType.build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.put(%s, %s))",
+                keys.example(1), values.example(1))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }

@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * The qualified name of a type. Lets us pass a type to a {@link TypeShortener} without a Class or
@@ -115,6 +116,10 @@ public class QualifiedName extends ValueType {
 
   public ParameterizedType withParameters(String... typeParameters) {
     return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
+  }
+
+  public ParameterizedType withParameters(TypeMirror first, TypeMirror... rest) {
+    return new ParameterizedType(this, ImmutableList.builder().add(first).add(rest).build());
   }
 
   public ParameterizedType withParameters(Iterable<? extends TypeParameterElement> typeParameters) {

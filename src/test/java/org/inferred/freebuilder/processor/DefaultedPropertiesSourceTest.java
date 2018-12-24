@@ -16,7 +16,9 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
@@ -34,8 +36,6 @@ import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import javax.lang.model.type.TypeMirror;
 
 @RunWith(JUnit4.class)
 public class DefaultedPropertiesSourceTest {
@@ -646,21 +646,20 @@ public class DefaultedPropertiesSourceTest {
   @Test
   public void testJ6_noGuava_oneDefaultProperty() {
     QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
-        .setBoxedType(string)
+        .setBoxedType(STRING)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(string)
+        .setType(STRING)
         .setUsingBeanConvention(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
+        .setBoxedType(INTEGER)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
@@ -670,7 +669,7 @@ public class DefaultedPropertiesSourceTest {
         .build();
     Property shoeSize = new Property.Builder()
         .setAllCapsName("SHOE_SIZE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
+        .setBoxedType(INTEGER)
         .setCapitalizedName("ShoeSize")
         .setFullyCheckedCast(true)
         .setGetterName("getShoeSize")
@@ -694,13 +693,14 @@ public class DefaultedPropertiesSourceTest {
     Metadata metadataWithCodeGenerators = metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, false))
+            .setCodeGenerator(new DefaultProperty(metadata, name, false, unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, true))
+            .setCodeGenerator(new DefaultProperty(metadata, age, true, unaryOperator(INTEGER)))
             .build())
         .addProperties(shoeSize.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, shoeSize, false))
+            .setCodeGenerator(new DefaultProperty(
+                metadata, shoeSize, false, unaryOperator(INTEGER)))
             .build())
         .build();
 
@@ -1684,21 +1684,20 @@ public class DefaultedPropertiesSourceTest {
 
   private static Metadata createMetadata(boolean bean) {
     QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
-        .setBoxedType(string)
+        .setBoxedType(STRING)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName(bean ? "getName" : "name")
         .setName("name")
-        .setType(string)
+        .setType(STRING)
         .setUsingBeanConvention(bean)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
+        .setBoxedType(INTEGER)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName(bean ? "getAge" : "age")
@@ -1722,10 +1721,10 @@ public class DefaultedPropertiesSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, true))
+            .setCodeGenerator(new DefaultProperty(metadata, name, true, unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, true))
+            .setCodeGenerator(new DefaultProperty(metadata, age, true, unaryOperator(INTEGER)))
             .build())
         .build();
   }

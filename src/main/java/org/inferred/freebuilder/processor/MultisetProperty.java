@@ -25,6 +25,8 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setCountMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
@@ -43,15 +45,19 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedMultiset;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * {@link PropertyCodeGenerator} providing fluent methods for {@link Multiset} properties.
@@ -74,6 +80,14 @@ class MultisetProperty extends PropertyCodeGenerator {
           hasSetCountMethodOverride(config, unboxedType.or(elementType));
       boolean overridesVarargsAddMethod =
           hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
+
+      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mutator(config.getProperty()),
+          consumer(multiset(elementType, config.getElements(), config.getTypes())),
+          config.getElements(),
+          config.getTypes());
+
       return Optional.of(new MultisetProperty(
           config.getMetadata(),
           config.getProperty(),
@@ -81,7 +95,8 @@ class MultisetProperty extends PropertyCodeGenerator {
           overridesSetCountMethod,
           overridesVarargsAddMethod,
           elementType,
-          unboxedType));
+          unboxedType,
+          mutatorType));
     }
 
     private static boolean hasSetCountMethodOverride(
@@ -101,6 +116,14 @@ class MultisetProperty extends PropertyCodeGenerator {
           addMethod(config.getProperty()),
           config.getTypes().getArrayType(elementType));
     }
+
+    private static TypeMirror multiset(
+        TypeMirror elementType,
+        Elements elements,
+        Types types) {
+      TypeElement multisetType = elements.getTypeElement(Multiset.class.getName());
+      return types.getDeclaredType(multisetType, elementType);
+    }
   }
 
   private static final ParameterizedType COLLECTION =
@@ -110,6 +133,7 @@ class MultisetProperty extends PropertyCodeGenerator {
   private final boolean overridesVarargsAddMethod;
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;
+  private final FunctionalType mutatorType;
 
   MultisetProperty(
       Metadata metadata,
@@ -118,13 +142,15 @@ class MultisetProperty extends PropertyCodeGenerator {
       boolean overridesSetCountMethod,
       boolean overridesVarargsAddMethod,
       TypeMirror elementType,
-      Optional<TypeMirror> unboxedType) {
+      Optional<TypeMirror> unboxedType,
+      FunctionalType mutatorType) {
     super(metadata, property);
     this.needsSafeVarargs = needsSafeVarargs;
     this.overridesSetCountMethod = overridesSetCountMethod;
     this.overridesVarargsAddMethod = overridesVarargsAddMethod;
     this.elementType = elementType;
     this.unboxedType = unboxedType;
+    this.mutatorType = mutatorType;
   }
 
   @Override
@@ -319,20 +345,21 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<%s<%s>> mutator) {",
+        .addLine("public %s %s(%s mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
-            Multiset.class,
-            elementType);
+            mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
     if (overridesSetCountMethod) {
-      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
-          CheckedMultiset.TYPE, property.getField(), setCountMethod(property));
+      body.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+          mutatorType.getMethodName(),
+          CheckedMultiset.TYPE,
+          property.getField(),
+          setCountMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               setCountMethod(property))
-          .addLine("  mutator.accept(%s);", property.getField());
+          .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)

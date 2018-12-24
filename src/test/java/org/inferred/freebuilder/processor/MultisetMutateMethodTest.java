@@ -41,6 +41,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -660,6 +661,35 @@ public class MultisetMutateMethodTest {
             .addLine("    .mutateProperties(set -> set.clear())")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEmpty();",  convention.get("properties"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void canUseCustomFunctionalInterface() throws IOException {
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+      customMutatorType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("    public interface Mutator {")
+            .addLine("      void mutate(%s<%s> multiset);", Multiset.class, element.type())
+            .addLine("    }")
+            .addLine("    @Override public Builder mutateProperties(Mutator mutator) {")
+            .addLine("      return super.mutateProperties(mutator);")
+            .addLine("    }");
+      }
+    }
+
+    behaviorTester
+        .with(customMutatorType.build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addProperties(%s)", element.example(0))
+            .addLine("    .mutateProperties(set -> set.add(%s))", element.example(1))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s);",
+                convention.get("properties"), element.examples(0, 1))
             .build())
         .runTest();
   }

@@ -38,6 +38,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -215,6 +216,66 @@ public class OptionalMapperMethodTest {
             .addLine("    .mapProperty(a -> { fail(\"mapper called\"); return null; })")
             .addLine("    .build();")
             .addLine("assertFalse(value.%s.isPresent());", convention.get("property"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void canUseCustomBoxedFunctionalInterface() throws IOException {
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+      customMutatorType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("    public interface Mapper {")
+            .addLine("      %1$s map(%1$s value);", element.type())
+            .addLine("    }")
+            .addLine("    @Override public Builder mapProperty(Mapper mapper) {")
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }");
+      }
+    }
+
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMutatorType.build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+            .addLine("    .mapProperty(a -> %s)", element.example(1))
+            .addLine("    .build();")
+            .addLine("assertEquals(%s, (%s) value.%s.get());",
+                element.example(1), element.unwrappedType(), convention.get("property"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void canUseCustomUnboxedFunctionalInterface() throws IOException {
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+      customMutatorType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("    public interface Mapper {")
+            .addLine("      %1$s map(%1$s value);", element.unwrappedType())
+            .addLine("    }")
+            .addLine("    @Override public Builder mapProperty(Mapper mapper) {")
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }");
+      }
+    }
+
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMutatorType.build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+            .addLine("    .mapProperty(a -> %s)", element.example(1))
+            .addLine("    .build();")
+            .addLine("assertEquals(%s, (%s) value.%s.get());",
+                element.example(1), element.unwrappedType(), convention.get("property"))
             .build())
         .runTest();
   }

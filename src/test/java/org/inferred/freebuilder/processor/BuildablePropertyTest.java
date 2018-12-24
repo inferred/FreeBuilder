@@ -20,12 +20,11 @@ import static org.inferred.freebuilder.processor.BuildablePropertyTest.Buildable
 import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.junit.Assume.assumeTrue;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
@@ -42,6 +41,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -767,6 +767,53 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(defaultsType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .mutateItem1(b -> b")
+            .addLine("        .%s(\"Bananas\")", convention.set("name"))
+            .addLine("        .%s(5))", convention.set("price"))
+            .addLine("    .mutateItem2(b -> b")
+            .addLine("        .%s(\"Pears\")", convention.set("name"))
+            .addLine("        .%s(15))", convention.set("price"))
+            .addLine("    .build();")
+            .addLine("assertEquals(\"Bananas\", value.%s.%s);",
+                convention.get("item1"), convention.get("name"))
+            .addLine("assertEquals(5, value.%s.%s);",
+                convention.get("item1"), convention.get("price"))
+            .addLine("assertEquals(\"Pears\", value.%s.%s);",
+                convention.get("item2"), convention.get("name"))
+            .addLine("assertEquals(15, value.%s.%s);",
+                convention.get("item2"), convention.get("price"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMutateMethod_canUseCustomFunctionalInterface() throws IOException {
+    assumeLambdas();
+    String defaultsTypeCode = defaultsType.getCharContent(true).toString();
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : defaultsTypeCode.split("\n")) {
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public interface Mutator {")
+            .addLine("      void mutate(Item.Builder itemBuilder);")
+            .addLine("    }")
+            .addLine("    @Override public Builder mutateItem1(Mutator mutator) {")
+            .addLine("      return super.mutateItem1(mutator);")
+            .addLine("    }")
+            .addLine("    @Override public Builder mutateItem2(Mutator mutator) {")
+            .addLine("      return super.mutateItem2(mutator);")
+            .addLine("    }")
+            .addLine("  }");
+      } else {
+        customMutatorType.addLine("%s", line);
+      }
+    }
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMutatorType.build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItem1(b -> b")

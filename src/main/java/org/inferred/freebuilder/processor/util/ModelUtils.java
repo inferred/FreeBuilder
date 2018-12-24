@@ -18,14 +18,17 @@ package org.inferred.freebuilder.processor.util;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
@@ -172,6 +175,16 @@ public class ModelUtils {
         return false;
       }
     }, null);
+  }
+
+  public static Set<ExecutableElement> only(Modifier modifier, Set<ExecutableElement> methods) {
+    ImmutableSet.Builder<ExecutableElement> result = ImmutableSet.builder();
+    for (ExecutableElement method : methods) {
+      if (method.getModifiers().contains(modifier)) {
+        result.add(method);
+      }
+    }
+    return result.build();
   }
 
   private static boolean isPlainWildcard(TypeMirror type) {

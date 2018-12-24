@@ -17,8 +17,11 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
+import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 
 import com.google.common.base.Joiner;
@@ -26,7 +29,6 @@ import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -1056,9 +1058,7 @@ public class MapSourceTest {
    */
   private static Metadata createMetadata(boolean bean) {
     GenericTypeElementImpl map = newTopLevelGenericType("java.util.Map");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl mapIntString = map.newMirror(integer, string);
+    GenericTypeMirrorImpl mapIntString = map.newMirror(INTEGER, STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -1091,10 +1091,11 @@ public class MapSourceTest {
                 metadata,
                 name,
                 false,
-                integer,
+                INTEGER,
                 Optional.<TypeMirror>of(INT),
-                string,
-                Optional.<TypeMirror>absent()))
+                STRING,
+                Optional.<TypeMirror>absent(),
+                consumer(wildcardSuper(mapIntString))))
             .build())
         .build();
   }

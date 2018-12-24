@@ -17,7 +17,9 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
@@ -26,7 +28,6 @@ import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -1435,8 +1436,7 @@ public class SetSourceTest {
    */
   private static Metadata createMetadata(boolean bean) {
     GenericTypeElementImpl set = newTopLevelGenericType("java.util.Set");
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl setString = set.newMirror(string);
+    GenericTypeMirrorImpl setString = set.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -1466,7 +1466,14 @@ public class SetSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new SetProperty(
-                metadata, name, string, Optional.<TypeMirror>absent(), false, false, false))
+                metadata,
+                name,
+                STRING,
+                Optional.<TypeMirror>absent(),
+                consumer(wildcardSuper(setString)),
+                false,
+                false,
+                false))
             .build())
         .build();
   }

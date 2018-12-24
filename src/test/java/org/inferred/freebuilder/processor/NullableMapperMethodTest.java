@@ -34,6 +34,8 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.IntUnaryOperator;
+import java.util.function.UnaryOperator;
 
 import javax.annotation.Nullable;
 import javax.tools.JavaFileObject;
@@ -170,6 +172,62 @@ public class NullableMapperMethodTest {
             .addLine("new DataType.Builder()")
             .addLine("    .%s(11)", convention.set("property"))
             .addLine("    .mapProperty(a -> -3);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapCanAcceptGenericFunctionalInterface() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s Integer %s;", Nullable.class, convention.get("property"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder mapProperty(%s<Integer> mapper) {",
+                UnaryOperator.class)
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, (int) value.%s);", convention.get("property"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapCanAcceptPrimitiveFunctionalInterface() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s Integer %s;", Nullable.class, convention.get("property"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder mapProperty(%s mapper) {",
+                IntUnaryOperator.class)
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .build();")
+            .addLine("assertEquals(14, (int) value.%s);", convention.get("property"))
             .build())
         .runTest();
   }

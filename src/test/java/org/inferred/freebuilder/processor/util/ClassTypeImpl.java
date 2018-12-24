@@ -37,6 +37,9 @@ import javax.lang.model.type.TypeVisitor;
  */
 public abstract class ClassTypeImpl implements DeclaredType {
 
+  public static final ClassTypeImpl INTEGER = newTopLevelClass(Integer.class.getName());
+  public static final ClassTypeImpl STRING = newTopLevelClass(String.class.getName());
+
   private final Element enclosingElement;
   private final TypeMirror enclosingType;
   private final String simpleName;

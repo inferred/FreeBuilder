@@ -24,6 +24,8 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -37,6 +39,7 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
@@ -161,11 +164,20 @@ class BuildableProperty extends PropertyCodeGenerator {
         partialToBuilderMethod = PartialToBuilderMethod.MERGE_DIRECTLY;
       }
 
+      // Find any mutate method override
+      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mutator(config.getProperty()),
+          consumer(builder.get().asType()),
+          config.getElements(),
+          config.getTypes());
+
       return Optional.of(new BuildableProperty(
           config.getMetadata(),
           config.getProperty(),
           ParameterizedType.from(builder.get()),
           builderFactory.get(),
+          mutatorType,
           mergeFromBuilderMethod,
           partialToBuilderMethod));
     }
@@ -173,6 +185,7 @@ class BuildableProperty extends PropertyCodeGenerator {
 
   private final ParameterizedType builderType;
   private final BuilderFactory builderFactory;
+  private final FunctionalType mutatorType;
   private final MergeBuilderMethod mergeFromBuilderMethod;
   private final PartialToBuilderMethod partialToBuilderMethod;
   private final Excerpt suppressUnchecked;
@@ -182,11 +195,13 @@ class BuildableProperty extends PropertyCodeGenerator {
       Property property,
       ParameterizedType builderType,
       BuilderFactory builderFactory,
+      FunctionalType mutatorType,
       MergeBuilderMethod mergeFromBuilderMethod,
       PartialToBuilderMethod partialToBuilderMethod) {
     super(metadata, property);
     this.builderType = builderType;
     this.builderFactory = builderFactory;
+    this.mutatorType = mutatorType;
     this.mergeFromBuilderMethod = mergeFromBuilderMethod;
     this.partialToBuilderMethod = partialToBuilderMethod;
     if (ModelUtils.needsSafeVarargs(property.getType())) {
@@ -259,8 +274,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code, Metadata metadata) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
+    if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
     code.addLine("")
@@ -275,13 +289,12 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<%s> mutator) {",
+        .addLine("public %s %s(%s mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            consumer.getQualifiedName(),
-            builderType)
+            mutatorType.getFunctionalInterface())
         .add(methodBody(code, "mutator")
-            .addLine("  mutator.accept(%s());", getBuilderMethod(property))
+            .addLine("  mutator.%s(%s());", mutatorType.getMethodName(), getBuilderMethod(property))
             .addLine("  return (%s) this;", metadata.getBuilder()))
         .addLine("}");
   }
