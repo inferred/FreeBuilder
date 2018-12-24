@@ -15,8 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
-import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.base.Preconditions;
@@ -57,12 +56,11 @@ public class SetMultimapMutateMethodTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "SetMultimap<{0}, {1}>, checked={2}, {3}, {4}")
   public static Iterable<Object[]> featureSets() {
-    List<ElementFactory> elements = Arrays.asList(INTEGERS, STRINGS);
     List<Boolean> checkedAndInterned = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_GUAVA_AND_LAMBDAS;
     return () -> Lists
-        .cartesianProduct(elements, elements, checkedAndInterned, conventions, features)
+        .cartesianProduct(TYPES, TYPES, checkedAndInterned, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();

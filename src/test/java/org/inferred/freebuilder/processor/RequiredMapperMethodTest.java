@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.junit.Assume.assumeTrue;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
@@ -35,9 +36,9 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
 
 import javax.tools.JavaFileObject;
@@ -47,12 +48,14 @@ import javax.tools.JavaFileObject;
 public class RequiredMapperMethodTest {
 
   @SuppressWarnings("unchecked")
-  @Parameters(name = "{0}, {1}")
+  @Parameters(name = "{0}, checked={1}, {2}, {3}")
   public static Iterable<Object[]> parameters() {
+    List<ElementFactory> types = ElementFactory.TYPES_WITH_EXTRA_PRIMITIVES;
+    List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
     return () -> Lists
-        .cartesianProduct(conventions, features)
+        .cartesianProduct(types, checked, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();
@@ -61,35 +64,62 @@ public class RequiredMapperMethodTest {
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Shared public BehaviorTester behaviorTester;
 
+  private final ElementFactory property;
+  private final boolean checked;
   private final NamingConvention convention;
   private final FeatureSet features;
-  private final JavaFileObject requiredIntegerType;
+  private final JavaFileObject dataType;
 
-  public RequiredMapperMethodTest(NamingConvention convention, FeatureSet features) {
+  public RequiredMapperMethodTest(
+      ElementFactory property,
+      boolean checked,
+      NamingConvention convention,
+      FeatureSet features) {
+    this.property = property;
+    this.checked = checked;
     this.convention = convention;
     this.features = features;
-    requiredIntegerType = new SourceBuilder()
+
+    SourceBuilder dataType = new SourceBuilder()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
-        .addLine("  int %s;", convention.get("property"))
+        .addLine("  %s %s;", property.unwrappedType(), convention.get("property"))
         .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
+        .addLine("  class Builder extends DataType_Builder {");
+    if (checked) {
+      dataType
+          .addLine("    @Override public Builder %s(%s property) {",
+              convention.set("property"), property.unwrappedType())
+          .addLine("      if (!(%s)) {", property.validation("property"))
+          .addLine("        throw new IllegalArgumentException(\"%s\");",
+              property.errorMessage("property"))
+          .addLine("      }")
+          .addLine("      return super.%s(property);", convention.set("property"))
+          .addLine("    }");
+    }
+    dataType
+        .addLine("  }")
+        .addLine("}");
+    this.dataType = dataType.build();
   }
 
   @Test
   public void mapReplacesValueToBeReturnedFromGetter() {
     behaviorTester
         .with(new Processor(features))
-        .with(requiredIntegerType)
+        .with(dataType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
-            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .%s(%s)", convention.set("property"), property.example(0))
+            .addLine("    .mapProperty(a -> (%s) (a + %s))",
+                property.unwrappedType(), property.example(1))
             .addLine("    .build();")
-            .addLine("assertEquals(14, value.%s);", convention.get("property"))
+            .addLine("assertEquals((%s) (%s + %s), value.%s);",
+                property.unwrappedType(),
+                property.example(0),
+                property.example(1),
+                convention.get("property"))
             .build())
         .runTest();
   }
@@ -99,10 +129,10 @@ public class RequiredMapperMethodTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(requiredIntegerType)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .%s(%s)", convention.set("property"), property.example(0))
             .addLine("    .mapProperty(null);")
             .build())
         .runTest();
@@ -113,7 +143,7 @@ public class RequiredMapperMethodTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(requiredIntegerType)
+        .with(dataType)
         .with(testBuilder().addLine("new DataType.Builder().mapProperty(null);").build())
         .runTest();
   }
@@ -123,10 +153,10 @@ public class RequiredMapperMethodTest {
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
-        .with(requiredIntegerType)
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
+            .addLine("    .%s(%s)", convention.set("property"), property.example(0))
             .addLine("    .mapProperty(a -> null);")
             .build())
         .runTest();
@@ -138,123 +168,120 @@ public class RequiredMapperMethodTest {
     thrown.expectMessage("property not set");
     behaviorTester
         .with(new Processor(features))
-        .with(requiredIntegerType)
-        .with(testBuilder().addLine("new DataType.Builder().mapProperty(a -> 14);").build())
+        .with(dataType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder().mapProperty(a -> %s);", property.example(0))
+            .build())
         .runTest();
   }
 
   @Test
   public void mapDelegatesToSetterForValidation() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("property must be non-negative");
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage(property.errorMessage("property"));
+    }
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  int %s;", convention.get("property"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder %s(int property) {", convention.set("property"))
-            .addLine("      if (property < 0) {")
-            .addLine("        throw new IllegalArgumentException(")
-            .addLine("            \"property must be non-negative\");")
-            .addLine("      }")
-            .addLine("      return super.%s(property);", convention.set("property"))
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
+        .with(dataType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
-            .addLine("    .mapProperty(a -> -3);")
+            .addLine("    .%s(%s)", convention.set("property"), property.example(0))
+            .addLine("    .mapProperty(a -> %s);", property.invalidExample())
             .build())
         .runTest();
   }
 
   @Test
-  public void mapCanAcceptPrimitiveFunctionalInterface() {
-    behaviorTester
-        .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  int %s;", convention.get("property"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
+  public void mapCanAcceptPrimitiveFunctionalInterface() throws IOException {
+    SourceBuilder customMapperType = new SourceBuilder();
+    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+      customMapperType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMapperType
             .addLine("    @Override public Builder mapProperty(%s mapper) {",
-                IntUnaryOperator.class)
+                property.unboxedUnaryOperator())
             .addLine("      return super.mapProperty(mapper);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
-            .addLine("    .mapProperty(a -> a + 3)")
-            .addLine("    .build();")
-            .addLine("assertEquals(14, value.%s);", convention.get("property"))
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void mapCanAcceptGenericFunctionalInterface() {
+            .addLine("    }");
+      }
+    }
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  int %s;", convention.get("property"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder mapProperty(%s<Integer> mapper) {",
-                UnaryOperator.class)
-            .addLine("      return super.mapProperty(mapper);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
+        .with(customMapperType.build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
-            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .%s(%s)", convention.set("property"), property.example(0))
+            .addLine("    .mapProperty(a -> (%s) (a + %s))",
+                property.unwrappedType(), property.example(1))
             .addLine("    .build();")
-            .addLine("assertEquals(14, value.%s);", convention.get("property"))
+            .addLine("assertEquals((%s) (%s + %s), value.%s);",
+                property.unwrappedType(),
+                property.example(0),
+                property.example(1),
+                convention.get("property"))
             .build())
         .runTest();
   }
 
   @Test
-  public void mapCanAcceptOtherFunctionalInterface() {
+  public void mapCanAcceptGenericFunctionalInterface() throws IOException {
+    SourceBuilder customMapperType = new SourceBuilder();
+    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+      customMapperType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMapperType
+            .addLine("    @Override public Builder mapProperty(%s<%s> mapper) {",
+                UnaryOperator.class, property.type())
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }");
+      }
+    }
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMapperType.build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("property"), property.example(0))
+            .addLine("    .mapProperty(a -> (%s) (a + %s))",
+                property.unwrappedType(), property.example(1))
+            .addLine("    .build();")
+            .addLine("assertEquals((%s) (%s + %s), value.%s);",
+                property.unwrappedType(),
+                property.example(0),
+                property.example(1),
+                convention.get("property"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void mapCanAcceptOtherFunctionalInterface() throws IOException {
     assumeGuavaAvailable();
+    SourceBuilder customMapperType = new SourceBuilder();
+    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+      customMapperType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMapperType
+            .addLine("    @Override public Builder mapProperty(%1$s<%2$s, %2$s> mapper) {",
+                com.google.common.base.Function.class, property.type())
+            .addLine("      return super.mapProperty(mapper);")
+            .addLine("    }");
+      }
+    }
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  int %s;", convention.get("property"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder mapProperty(%s<Integer, Integer> mapper) {",
-                com.google.common.base.Function.class)
-            .addLine("      return super.mapProperty(mapper);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}")
-            .build())
+        .with(customMapperType.build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("property"))
-            .addLine("    .mapProperty(a -> a + 3)")
+            .addLine("    .%s(%s)", convention.set("property"), property.example(0))
+            .addLine("    .mapProperty(a -> (%s) (a + %s))",
+                property.unwrappedType(), property.example(1))
             .addLine("    .build();")
-            .addLine("assertEquals(14, value.%s);", convention.get("property"))
+            .addLine("assertEquals((%s) (%s + %s), value.%s);",
+                property.unwrappedType(),
+                property.example(0),
+                property.example(1),
+                convention.get("property"))
             .build())
         .runTest();
   }

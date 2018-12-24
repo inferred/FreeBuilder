@@ -15,16 +15,16 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.junit.Assume.assumeTrue;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.testing.EqualsTester;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
@@ -57,11 +57,10 @@ public class MapPropertyTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "Map<{0}, {1}>, {2}, {3}")
   public static Iterable<Object[]> parameters() {
-    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
-        .cartesianProduct(elements, elements, conventions, features)
+        .cartesianProduct(TYPES, TYPES, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();
