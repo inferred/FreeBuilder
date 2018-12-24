@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
@@ -50,12 +51,11 @@ public class ListMutateMethodTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "List<{0}>, checked={1}, {2}, {3}")
   public static Iterable<Object[]> parameters() {
-    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
     return () -> Lists
-        .cartesianProduct(elements, checked, conventions, features)
+        .cartesianProduct(TYPES, checked, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();

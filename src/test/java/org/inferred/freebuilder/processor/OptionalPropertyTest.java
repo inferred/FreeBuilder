@@ -15,8 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
-import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.Module;
@@ -61,11 +60,10 @@ public class OptionalPropertyTest {
     List<Class<?>> optionals = Arrays.asList(
         java.util.Optional.class,
         com.google.common.base.Optional.class);
-    List<ElementFactory> elements = Arrays.asList(INTEGERS, STRINGS);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
-        .cartesianProduct(optionals, elements, conventions, features)
+        .cartesianProduct(optionals, TYPES, conventions, features)
         .stream()
         .filter(parameters -> {
           Class<?> optional = (Class<?>) parameters.get(0);

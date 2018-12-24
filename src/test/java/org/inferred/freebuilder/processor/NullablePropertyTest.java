@@ -15,8 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
-import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 
 import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
@@ -49,11 +48,10 @@ public class NullablePropertyTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "@Nullable {0}, {1}, {2}")
   public static Iterable<Object[]> parameters() {
-    List<ElementFactory> elements = Arrays.asList(INTEGERS, STRINGS);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
-        .cartesianProduct(elements, conventions, features)
+        .cartesianProduct(TYPES, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();

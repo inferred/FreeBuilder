@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
 
@@ -59,11 +60,10 @@ public class MultisetPropertyTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "Multiset<{0}>, {1}, {2}")
   public static Iterable<Object[]> parameters() {
-    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_GUAVA;
     return () -> Lists
-        .cartesianProduct(elements, conventions, features)
+        .cartesianProduct(TYPES, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();

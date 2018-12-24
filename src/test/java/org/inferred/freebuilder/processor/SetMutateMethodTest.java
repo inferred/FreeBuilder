@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -52,12 +54,11 @@ public class SetMutateMethodTest {
   @Parameters(name = "{0}<{1}>, checked={2}, {3}, {4}")
   public static Iterable<Object[]> featureSets() {
     List<SetType> sets = Arrays.asList(SetType.values());
-    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
     return () -> Lists
-        .cartesianProduct(sets, elements, checked, conventions, features)
+        .cartesianProduct(sets, TYPES, checked, conventions, features)
         .stream()
         .filter(list -> list.get(0) != SetType.SORTED_SET
             || list.get(1) != ElementFactory.NON_COMPARABLES)

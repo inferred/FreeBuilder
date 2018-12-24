@@ -15,8 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
-import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,11 +59,10 @@ public class ListMultimapPropertyTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "ListMultimap<{0}, {1}>, {2}, {3}")
   public static Iterable<Object[]> parameters() {
-    List<ElementFactory> types = Arrays.asList(INTEGERS, STRINGS);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_GUAVA;
     return () -> Lists
-        .cartesianProduct(types, types, conventions, features)
+        .cartesianProduct(TYPES, TYPES, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();

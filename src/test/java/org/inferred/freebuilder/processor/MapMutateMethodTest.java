@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -52,12 +54,11 @@ public class MapMutateMethodTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "Map<{0}, {1}>, checked={2}, {3}, {4}")
   public static Iterable<Object[]> parameters() {
-    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
     return () -> Lists
-        .cartesianProduct(elements, elements, checked, conventions, features)
+        .cartesianProduct(TYPES, TYPES, checked, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();

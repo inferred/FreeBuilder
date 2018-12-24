@@ -15,8 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
-import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -29,7 +28,6 @@ import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTest
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
-import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -54,12 +52,11 @@ public class OptionalMapperMethodTest {
     List<Class<?>> optionals = Arrays.asList(
         java.util.Optional.class,
         com.google.common.base.Optional.class);
-    List<ElementFactory> elements = Arrays.asList(INTEGERS, STRINGS);
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
     return () -> Lists
-        .cartesianProduct(optionals, elements, checked, conventions, features)
+        .cartesianProduct(optionals, TYPES, checked, conventions, features)
         .stream()
         .filter(parameters -> {
           Class<?> optional = (Class<?>) parameters.get(0);
@@ -120,30 +117,20 @@ public class OptionalMapperMethodTest {
 
   @Test
   public void mapReplacesValueToBeReturnedFromGetter() {
-    TestBuilder test = testBuilder()
-        .addLine("DataType value = new DataType.Builder()");
-    switch (element) {
-      case INTEGERS:
-        test.addLine("    .%s(11)", convention.set("property"))
-            .addLine("    .mapProperty(a -> a + 3)")
-            .addLine("    .build();")
-            .addLine("assertEquals(14, (int) value.%s.get());", convention.get("property"));
-        break;
-
-      case STRINGS:
-        test.addLine("    .%s(\"foo\")", convention.set("property"))
-            .addLine("    .mapProperty(a -> a + \"bar\")")
-            .addLine("    .build();")
-            .addLine("assertEquals(\"foobar\", value.%s.get());", convention.get("property"));
-        break;
-
-      default:
-        throw new AssumptionViolatedException("Expected integers or strings, got " + element);
-    }
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(test.build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+            .addLine("    .mapProperty(a -> a + %s)", element.example(1))
+            .addLine("    .build();")
+            .addLine("assertEquals(%s + %s, (%s) value.%s.get());",
+                element.example(0),
+                element.example(1),
+                element.unwrappedType(),
+                convention.get("property"))
+            .build())
         .runTest();
   }
 
