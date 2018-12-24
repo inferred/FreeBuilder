@@ -14,8 +14,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.MethodFinder.ErrorTypeHandling;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,7 +24,6 @@ import java.util.function.UnaryOperator;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -37,11 +34,6 @@ import javax.lang.model.util.Types;
  * Metadata about a functional interface.
  */
 public class FunctionalType extends ValueType {
-
-  private static final ErrorTypeHandling<RuntimeException> IGNORE_ERROR_TYPES =
-      new ErrorTypeHandling<RuntimeException>() {
-        @Override public void handleErrorType(ErrorType type) { }
-      };
 
   public static FunctionalType consumer(TypeMirror type) {
     checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
@@ -75,7 +67,7 @@ public class FunctionalType extends ValueType {
       Elements elements,
       Types types) {
     TypeElement typeElement = asElement(type);
-    for (ExecutableElement method : methodsOn(typeElement, elements, IGNORE_ERROR_TYPES)) {
+    for (ExecutableElement method : methodsOn(typeElement, elements, errorType -> { })) {
       if (!method.getSimpleName().contentEquals(methodName)
           || method.getParameters().size() != 1) {
         continue;
@@ -111,7 +103,7 @@ public class FunctionalType extends ValueType {
       return Optional.absent();
     }
     Set<ExecutableElement> abstractMethods =
-        only(ABSTRACT, methodsOn(typeElement, elements, IGNORE_ERROR_TYPES));
+        only(ABSTRACT, methodsOn(typeElement, elements, errorType -> { }));
     if (abstractMethods.size() != 1) {
       return Optional.absent();
     }

@@ -44,6 +44,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -612,7 +613,7 @@ class GeneratedBuilder extends GeneratedType {
     }
   }
 
-  private static FieldAccessList getFields(Iterable<Property> properties) {
+  private static FieldAccessList getFields(Collection<Property> properties) {
     ImmutableList.Builder<FieldAccess> fieldAccesses = ImmutableList.builder();
     for (Property property : properties) {
       fieldAccesses.add(property.getField());
@@ -621,9 +622,5 @@ class GeneratedBuilder extends GeneratedType {
   }
 
   private static final Predicate<PropertyCodeGenerator> IS_REQUIRED =
-      new Predicate<PropertyCodeGenerator>() {
-        @Override public boolean apply(PropertyCodeGenerator generator) {
-          return generator.initialState() == Initially.REQUIRED;
-        }
-      };
+      generator -> generator.initialState() == Initially.REQUIRED;
 }
