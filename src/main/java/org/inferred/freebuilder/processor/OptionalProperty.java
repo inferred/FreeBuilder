@@ -41,6 +41,7 @@ import org.inferred.freebuilder.processor.util.Variable;
 import org.inferred.freebuilder.processor.util.feature.Jsr305;
 
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -98,8 +99,8 @@ class OptionalProperty extends PropertyCodeGenerator {
           FunctionalType mapperType,
           Property property) {
         code.add("  return %s(%s().map(mapper", setter(property), getter(property));
-        if (!mapperType.getFunctionalInterface().getQualifiedName()
-            .equals(FunctionalType.UNARY_OPERATOR)) {
+        if (!mapperType.getFunctionalInterface().getQualifiedName().toString()
+            .equals(UnaryOperator.class.getName())) {
           code.add("::%s", mapperType.getMethodName());
         }
         code.add("));%n");
