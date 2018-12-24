@@ -121,7 +121,7 @@ public class ModelUtils {
   /** Applies unboxing conversion to {@code mirror}, if it can be unboxed. */
   public static Optional<TypeMirror> maybeUnbox(TypeMirror mirror, Types types) {
     try {
-      return Optional.<TypeMirror>of(types.unboxedType(mirror));
+      return Optional.of(types.unboxedType(mirror));
     } catch (IllegalArgumentException e) {
       return Optional.absent();
     }

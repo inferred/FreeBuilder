@@ -45,6 +45,7 @@ import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -565,7 +566,7 @@ public class CodeGenerator {
     }
   }
 
-  private static FieldAccessList getFields(Iterable<Property> properties) {
+  private static FieldAccessList getFields(Collection<Property> properties) {
     ImmutableList.Builder<FieldAccess> fieldAccesses = ImmutableList.builder();
     for (Property property : properties) {
       fieldAccesses.add(property.getField());
@@ -573,9 +574,6 @@ public class CodeGenerator {
     return new FieldAccessList(fieldAccesses.build());
   }
 
-  private static final Predicate<Property> IS_REQUIRED = new Predicate<Property>() {
-    @Override public boolean apply(Property property) {
-      return property.getCodeGenerator().get().getType() == Type.REQUIRED;
-    }
-  };
+  private static final Predicate<Property> IS_REQUIRED = property ->
+      property.getCodeGenerator().get().getType() == Type.REQUIRED;
 }

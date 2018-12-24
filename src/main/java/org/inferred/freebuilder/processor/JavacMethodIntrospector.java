@@ -64,13 +64,13 @@ class JavacMethodIntrospector extends MethodIntrospector {
           .names);
     } catch (RuntimeException e) {
       // Fail gracefully
-      return ImmutableSet.<Name>of();
+      return ImmutableSet.of();
     }
   }
 
   /** Data object retuned by {@link #OWN_METHOD_INVOCATIONS_FETCHER}. */
   private static class TreeAnalysis {
-    private final Set<Name> names = new HashSet<Name>();
+    private final Set<Name> names = new HashSet<>();
     private boolean explicitReturn = false;
   }
 
