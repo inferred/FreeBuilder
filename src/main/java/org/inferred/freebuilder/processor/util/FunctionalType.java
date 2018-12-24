@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -31,17 +33,10 @@ import javax.lang.model.util.Types;
  */
 public class FunctionalType extends ValueType {
 
-  private static final String FUNCTION_PACKAGE = "java.util.function";
-  private static final QualifiedName CONSUMER =
-      QualifiedName.of(FUNCTION_PACKAGE, "Consumer");
-
-  public static final QualifiedName UNARY_OPERATOR =
-      QualifiedName.of(FUNCTION_PACKAGE, "UnaryOperator");
-
   public static FunctionalType consumer(TypeMirror type) {
     checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
     return new FunctionalType(
-        CONSUMER.withParameters(type),
+        QualifiedName.of(Consumer.class).withParameters(type),
         "accept",
         ImmutableList.of(type),
         null);
@@ -50,7 +45,7 @@ public class FunctionalType extends ValueType {
   public static FunctionalType unaryOperator(TypeMirror type) {
     checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
     return new FunctionalType(
-        UNARY_OPERATOR.withParameters(type),
+        QualifiedName.of(UnaryOperator.class).withParameters(type),
         "apply",
         ImmutableList.of(type),
         type);
