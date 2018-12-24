@@ -21,7 +21,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unboxedUnaryOperator;
 
 import com.google.common.base.Optional;
 
@@ -52,7 +52,7 @@ class DefaultProperty extends PropertyCodeGenerator {
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
           mapper(property),
-          unaryOperator(property.getBoxedType().orElse(property.getType())),
+          unboxedUnaryOperator(property.getType(), config.getTypes()),
           config.getElements(),
           config.getTypes());
       return Optional.of(new DefaultProperty(

@@ -83,7 +83,7 @@ import javax.tools.JavaFileObject;
  */
 public interface BehaviorTester {
 
-  static SingleBehaviorTester create(FeatureSet features) {
+  static BehaviorTester create(FeatureSet features) {
     return new SingleBehaviorTester(features);
   }
 

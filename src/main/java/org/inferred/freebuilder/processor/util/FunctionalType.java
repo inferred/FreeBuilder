@@ -12,6 +12,7 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -19,12 +20,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.IntUnaryOperator;
+import java.util.function.LongUnaryOperator;
 import java.util.function.UnaryOperator;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -51,6 +56,46 @@ public class FunctionalType extends ValueType {
         "apply",
         ImmutableList.of(type),
         type);
+  }
+
+  public static FunctionalType intUnaryOperator(PrimitiveType type) {
+    Preconditions.checkArgument(type.getKind() == TypeKind.INT);
+    return new FunctionalType(
+        Type.from(IntUnaryOperator.class),
+        "applyAsInt",
+        ImmutableList.of(type),
+        type);
+  }
+
+  public static FunctionalType unboxedUnaryOperator(TypeMirror type, Types types) {
+    switch (type.getKind()) {
+      case INT:
+        return intUnaryOperator((PrimitiveType) type);
+
+      case LONG:
+        return new FunctionalType(
+            Type.from(LongUnaryOperator.class),
+            "applyAsLong",
+            ImmutableList.of(type),
+            type);
+
+      case DOUBLE:
+        return new FunctionalType(
+            Type.from(DoubleUnaryOperator.class),
+            "applyAsDouble",
+            ImmutableList.of(type),
+            type);
+
+      case BOOLEAN:
+      case BYTE:
+      case CHAR:
+      case SHORT:
+      case FLOAT:
+        return unaryOperator(types.boxedClass((PrimitiveType) type).asType());
+
+      default:
+        return unaryOperator(type);
+    }
   }
 
   /**
