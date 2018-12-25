@@ -2,13 +2,15 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,13 +20,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+
 import javax.annotation.Generated;
-import org.inferred.freebuilder.processor.BuilderFactory;
-import org.inferred.freebuilder.processor.Metadata;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
 
 /**
  * Auto-generated superclass of {@link Metadata.Builder}, derived from the API of {@link Metadata}.
@@ -36,8 +36,6 @@ abstract class Metadata_Builder {
   public static Metadata.Builder from(Metadata value) {
     return new Metadata.Builder().mergeFrom(value);
   }
-
-  private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
   private enum Property {
     TYPE("type"),
@@ -190,7 +188,7 @@ abstract class Metadata_Builder {
 
   /** Returns the value that will be returned by {@link Metadata#getOptionalBuilder()}. */
   public Optional<ParameterizedType> getOptionalBuilder() {
-    return Optional.fromNullable(optionalBuilder);
+    return Optional.ofNullable(optionalBuilder);
   }
 
   /**
@@ -265,7 +263,7 @@ abstract class Metadata_Builder {
 
   /** Returns the value that will be returned by {@link Metadata#getBuilderFactory()}. */
   public Optional<BuilderFactory> getBuilderFactory() {
-    return Optional.fromNullable(builderFactory);
+    return Optional.ofNullable(builderFactory);
   }
 
   /**
@@ -824,7 +822,8 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Metadata.Builder addNestedClasses(Function<Metadata, Excerpt>... elements) {
+  @SafeVarargs
+  public final Metadata.Builder addNestedClasses(Function<Metadata, Excerpt>... elements) {
     return addAllNestedClasses(Arrays.asList(elements));
   }
 
@@ -1143,7 +1142,7 @@ abstract class Metadata_Builder {
 
     @Override
     public Optional<ParameterizedType> getOptionalBuilder() {
-      return Optional.fromNullable(optionalBuilder);
+      return Optional.ofNullable(optionalBuilder);
     }
 
     @Override
@@ -1153,7 +1152,7 @@ abstract class Metadata_Builder {
 
     @Override
     public Optional<BuilderFactory> getBuilderFactory() {
-      return Optional.fromNullable(builderFactory);
+      return Optional.ofNullable(builderFactory);
     }
 
     @Override
@@ -1314,27 +1313,30 @@ abstract class Metadata_Builder {
 
     @Override
     public String toString() {
-      return "Metadata{"
-          + COMMA_JOINER.join(
-              "type=" + type,
-              "interfaceType=" + interfaceType,
-              (optionalBuilder != null ? "optionalBuilder=" + optionalBuilder : null),
-              "extensible=" + extensible,
-              (builderFactory != null ? "builderFactory=" + builderFactory : null),
-              "generatedBuilder=" + generatedBuilder,
-              "valueType=" + valueType,
-              "partialType=" + partialType,
-              "visibleNestedTypes=" + visibleNestedTypes,
-              "propertyEnum=" + propertyEnum,
-              "properties=" + properties,
-              "standardMethodUnderrides=" + standardMethodUnderrides,
-              "builderSerializable=" + builderSerializable,
-              "hasToBuilderMethod=" + hasToBuilderMethod,
-              "generatedBuilderAnnotations=" + generatedBuilderAnnotations,
-              "valueTypeAnnotations=" + valueTypeAnnotations,
-              "valueTypeVisibility=" + valueTypeVisibility,
-              "nestedClasses=" + nestedClasses)
-          + "}";
+      StringBuilder result = new StringBuilder("Metadata{type=").append(type)
+          .append(", interfaceType=").append(interfaceType);
+      if (optionalBuilder != null) {
+        result.append(", optionalBuilder=").append(optionalBuilder);
+      }
+      result.append(", extensible=").append(extensible);
+      if (builderFactory != null) {
+        result.append(", builderFactory=").append(builderFactory);
+      }
+      return result
+        .append(", generatedBuilder=").append(generatedBuilder)
+        .append(", valueType=").append(valueType)
+        .append(", partialType=").append(partialType)
+        .append(", visibleNestedTypes=").append(visibleNestedTypes)
+        .append(", propertyEnum=").append(propertyEnum)
+        .append(", properties=").append(properties)
+        .append(", standardMethodUnderrides=").append(standardMethodUnderrides)
+        .append(", builderSerializable=").append(builderSerializable)
+        .append(", hasToBuilderMethod=").append(hasToBuilderMethod)
+        .append(", generatedBuilderAnnotations=").append(generatedBuilderAnnotations)
+        .append(", valueTypeAnnotations=").append(valueTypeAnnotations)
+        .append(", valueTypeVisibility=").append(valueTypeVisibility)
+        .append(", nestedClasses=").append(nestedClasses)
+        .append("}").toString();
     }
   }
 
@@ -1406,7 +1408,7 @@ abstract class Metadata_Builder {
 
     @Override
     public Optional<ParameterizedType> getOptionalBuilder() {
-      return Optional.fromNullable(optionalBuilder);
+      return Optional.ofNullable(optionalBuilder);
     }
 
     @Override
@@ -1419,7 +1421,7 @@ abstract class Metadata_Builder {
 
     @Override
     public Optional<BuilderFactory> getBuilderFactory() {
-      return Optional.fromNullable(builderFactory);
+      return Optional.ofNullable(builderFactory);
     }
 
     @Override
@@ -1608,45 +1610,52 @@ abstract class Metadata_Builder {
 
     @Override
     public String toString() {
-      return "partial Metadata{"
-          + COMMA_JOINER.join(
-              (!_unsetProperties.contains(Metadata_Builder.Property.TYPE) ? "type=" + type : null),
-              (!_unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)
-                  ? "interfaceType=" + interfaceType
-                  : null),
-              (optionalBuilder != null ? "optionalBuilder=" + optionalBuilder : null),
-              (!_unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
-                  ? "extensible=" + extensible
-                  : null),
-              (builderFactory != null ? "builderFactory=" + builderFactory : null),
-              (!_unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)
-                  ? "generatedBuilder=" + generatedBuilder
-                  : null),
-              (!_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)
-                  ? "valueType=" + valueType
-                  : null),
-              (!_unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)
-                  ? "partialType=" + partialType
-                  : null),
-              "visibleNestedTypes=" + visibleNestedTypes,
-              (!_unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)
-                  ? "propertyEnum=" + propertyEnum
-                  : null),
-              "properties=" + properties,
-              "standardMethodUnderrides=" + standardMethodUnderrides,
-              (!_unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
-                  ? "builderSerializable=" + builderSerializable
-                  : null),
-              (!_unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD)
-                  ? "hasToBuilderMethod=" + hasToBuilderMethod
-                  : null),
-              "generatedBuilderAnnotations=" + generatedBuilderAnnotations,
-              "valueTypeAnnotations=" + valueTypeAnnotations,
-              (!_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
-                  ? "valueTypeVisibility=" + valueTypeVisibility
-                  : null),
-              "nestedClasses=" + nestedClasses)
-          + "}";
+      StringBuilder result = new StringBuilder("partial Metadata{");
+      if (!_unsetProperties.contains(Metadata_Builder.Property.TYPE)) {
+        result.append("type=").append(type).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)) {
+        result.append("interfaceType=").append(interfaceType).append(", ");
+      }
+      if (optionalBuilder != null) {
+        result.append("optionalBuilder=").append(optionalBuilder).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)) {
+        result.append("extensible=").append(extensible).append(", ");
+      }
+      if (builderFactory != null) {
+        result.append("builderFactory=").append(builderFactory).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)) {
+        result.append("generatedBuilder=").append(generatedBuilder).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)) {
+        result.append("valueType=").append(valueType).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)) {
+        result.append("partialType=").append(partialType).append(", ");
+      }
+      result.append("visibleNestedTypes=").append(visibleNestedTypes);
+      if (!_unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)) {
+        result.append(", propertyEnum=").append(propertyEnum);
+      }
+      result
+          .append(", properties=").append(properties)
+          .append(", standardMethodUnderrides=").append(standardMethodUnderrides);
+      if (!_unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)) {
+        result.append(", builderSerializable=").append(builderSerializable);
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD)) {
+        result.append(", hasToBuilderMethod=").append(hasToBuilderMethod);
+      }
+      result
+          .append(", generatedBuilderAnnotations=").append(generatedBuilderAnnotations)
+          .append(", valueTypeAnnotations=").append(valueTypeAnnotations);
+      if (!_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)) {
+        result.append(", valueTypeVisibility=").append(valueTypeVisibility);
+      }
+      return result.append(", nestedClasses=").append(nestedClasses)
+          .append("}").toString();
     }
   }
 }

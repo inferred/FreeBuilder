@@ -23,8 +23,6 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unboxedUnaryOperator;
 
-import com.google.common.base.Optional;
-
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -36,6 +34,7 @@ import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.lang.model.type.TypeKind;
 
@@ -186,7 +185,7 @@ class DefaultProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, metadata).orElse(null);
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {
@@ -209,7 +208,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   public void addMergeFromBuilder(Block code, String builder) {
     Excerpt base =
         hasDefault ? null : Declarations.upcastToGeneratedBuilder(code, metadata, builder);
-    Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, metadata).orElse(null);
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {

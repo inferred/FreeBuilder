@@ -32,7 +32,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.LinkedHashMultiset;
@@ -49,6 +48,7 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.stream.BaseStream;
 
@@ -68,18 +68,18 @@ class MultisetProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<MultisetProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
       if (type == null || !erasesToAnyOf(type, Multiset.class, ImmutableMultiset.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.or(elementType));
+      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.orElse(elementType));
       boolean overridesSetCountMethod =
-          hasSetCountMethodOverride(config, unboxedType.or(elementType));
+          hasSetCountMethodOverride(config, unboxedType.orElse(elementType));
       boolean overridesVarargsAddMethod =
-          hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
+          hasVarargsAddMethodOverride(config, unboxedType.orElse(elementType));
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -187,7 +187,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element) {",
             metadata.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType))
+            unboxedType.orElse(elementType))
         .addLine("  %s(element, 1);", addCopiesMethod(property))
         .addLine("  return (%s) this;", metadata.getBuilder())
         .addLine("}");
@@ -220,8 +220,8 @@ class MultisetProperty extends PropertyCodeGenerator {
     code.add("%s %s(%s... elements) {\n",
            metadata.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType))
-        .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
+            unboxedType.orElse(elementType))
+        .addLine("  for (%s element : elements) {", unboxedType.orElse(elementType))
         .addLine("    %s(element, 1);", addCopiesMethod(property))
         .addLine("  }")
         .addLine("  return (%s) this;", metadata.getBuilder())
@@ -293,7 +293,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element, int occurrences) {",
             metadata.getBuilder(),
             addCopiesMethod(property),
-            unboxedType.or(elementType))
+            unboxedType.orElse(elementType))
         .add(methodBody(code, "element", "occurrences")
             .addLine("  %s(element, %s.count(element) + occurrences);",
                 setCountMethod(property), property.getField())
@@ -367,7 +367,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element, int occurrences) {",
             metadata.getBuilder(),
             setCountMethod(property),
-            unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
     Block body = methodBody(code, "element", "occurrences");
     if (!unboxedType.isPresent()) {
       code.addLine("  %s.checkNotNull(element);", Preconditions.class);

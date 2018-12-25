@@ -31,7 +31,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -49,6 +48,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -66,24 +66,24 @@ class ListMultimapProperty extends PropertyCodeGenerator {
     @Override
     public Optional<ListMultimapProperty> create(Config config) {
       Property property = config.getProperty();
-      DeclaredType type = maybeDeclared(property.getType()).orNull();
+      DeclaredType type = maybeDeclared(property.getType()).orElse(null);
       if (type == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
       if (!erasesToAnyOf(type,
           Multimap.class,
           ImmutableMultimap.class,
           ListMultimap.class,
           ImmutableListMultimap.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
-      boolean overridesPutMethod =
-          hasPutMethodOverride(config, unboxedKeyType.or(keyType), unboxedValueType.or(valueType));
+      boolean overridesPutMethod = hasPutMethodOverride(
+          config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -189,8 +189,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s value) {",
             metadata.getBuilder(),
             putMethod(property),
-            unboxedKeyType.or(keyType),
-            unboxedValueType.or(valueType));
+            unboxedKeyType.orElse(keyType),
+            unboxedValueType.orElse(valueType));
     Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.checkNotNull(key);", Preconditions.class);
@@ -223,10 +223,10 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s<? extends %s> values) {",
             metadata.getBuilder(),
             putAllMethod(property),
-            unboxedKeyType.or(keyType),
+            unboxedKeyType.orElse(keyType),
             Iterable.class,
             valueType)
-        .addLine("  for (%s value : values) {", unboxedValueType.or(valueType))
+        .addLine("  for (%s value : values) {", unboxedValueType.orElse(valueType))
         .addLine("    %s(key, value);", putMethod(property))
         .addLine("  }")
         .addLine("  return (%s) this;", metadata.getBuilder())
@@ -285,8 +285,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s value) {",
             metadata.getBuilder(),
             removeMethod(property),
-            unboxedKeyType.or(keyType),
-            unboxedValueType.or(valueType));
+            unboxedKeyType.orElse(keyType),
+            unboxedValueType.orElse(valueType));
     Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.checkNotNull(key);", Preconditions.class);
@@ -315,7 +315,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key) {",
             metadata.getBuilder(),
             removeAllMethod(property),
-            unboxedKeyType.or(keyType));
+            unboxedKeyType.orElse(keyType));
     Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.checkNotNull(key);", Preconditions.class);

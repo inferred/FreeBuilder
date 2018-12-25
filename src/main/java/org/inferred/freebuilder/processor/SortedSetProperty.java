@@ -33,7 +33,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVararg
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -52,6 +51,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.NavigableSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.TreeSet;
@@ -72,17 +72,17 @@ class SortedSetProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<SortedSetProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
       if (type == null || !erasesToAnyOf(type, SortedSet.class, ImmutableSortedSet.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.or(elementType));
-      boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
+      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.orElse(elementType));
+      boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.orElse(elementType));
       boolean overridesVarargsAddMethod =
-          hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
+          hasVarargsAddMethodOverride(config, unboxedType.orElse(elementType));
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -234,7 +234,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element) {",
             metadata.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
     Block body = methodBody(code, "element");
     addConvertToTreeSet(body);
     if (unboxedType.isPresent()) {
@@ -288,8 +288,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
     code.add("%s %s(%s... elements) {\n",
             metadata.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType));
-    Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
+    Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.orElse(elementType));
     if (arrayUtils.isPresent()) {
       code.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
     } else {
@@ -367,7 +367,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element) {",
             metadata.getBuilder(),
             removeMethod(property),
-            unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
     Block body = methodBody(code, "mutator");
     addConvertToTreeSet(body);
     if (unboxedType.isPresent()) {

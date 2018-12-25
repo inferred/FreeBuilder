@@ -2,22 +2,21 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import org.inferred.freebuilder.processor.util.Excerpt;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Generated;
 import javax.lang.model.type.TypeMirror;
-import org.inferred.freebuilder.processor.Metadata;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator;
-import org.inferred.freebuilder.processor.util.Excerpt;
 
 /**
  * Auto-generated superclass of {@link Metadata.Property.Builder},
@@ -32,8 +31,6 @@ abstract class Metadata_Property_Builder {
   public static Metadata.Property.Builder from(Metadata.Property value) {
     return new Metadata.Property.Builder().mergeFrom(value);
   }
-
-  private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
   private enum Property {
     TYPE("type"),
@@ -110,7 +107,7 @@ abstract class Metadata_Property_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Property.Builder setBoxedType(Optional<TypeMirror> boxedType) {
-    this.boxedType = boxedType.orNull();
+    this.boxedType = boxedType.orElse(null);
     return (Metadata.Property.Builder) this;
   }
 
@@ -118,7 +115,7 @@ abstract class Metadata_Property_Builder {
    * Returns the value that will be returned by {@link Metadata.Property#getBoxedType()}.
    */
   public Optional<TypeMirror> getBoxedType() {
-    return Optional.fromNullable(boxedType);
+    return Optional.ofNullable(boxedType);
   }
 
   /**
@@ -256,7 +253,7 @@ abstract class Metadata_Property_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Property.Builder setCodeGenerator(Optional<PropertyCodeGenerator> codeGenerator) {
-    this.codeGenerator = codeGenerator.orNull();
+    this.codeGenerator = codeGenerator.orElse(null);
     return (Metadata.Property.Builder) this;
   }
 
@@ -264,7 +261,7 @@ abstract class Metadata_Property_Builder {
    * Returns the value that will be returned by {@link Metadata.Property#getCodeGenerator()}.
    */
   public Optional<PropertyCodeGenerator> getCodeGenerator() {
-    return Optional.fromNullable(codeGenerator);
+    return Optional.ofNullable(codeGenerator);
   }
 
   /**
@@ -522,7 +519,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public Optional<TypeMirror> getBoxedType() {
-      return Optional.fromNullable(boxedType);
+      return Optional.ofNullable(boxedType);
     }
 
     @Override
@@ -552,7 +549,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public Optional<PropertyCodeGenerator> getCodeGenerator() {
-      return Optional.fromNullable(codeGenerator);
+      return Optional.ofNullable(codeGenerator);
     }
 
     @Override
@@ -625,19 +622,23 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public String toString() {
-      return "Property{"
-          + COMMA_JOINER.join(
-              "type=" + type,
-              (boxedType != null ? "boxedType=" + boxedType : null),
-              "name=" + name,
-              "capitalizedName=" + capitalizedName,
-              "allCapsName=" + allCapsName,
-              "usingBeanConvention=" + usingBeanConvention,
-              "getterName=" + getterName,
-              (codeGenerator != null ? "codeGenerator=" + codeGenerator : null),
-              "fullyCheckedCast=" + fullyCheckedCast,
-              "accessorAnnotations=" + accessorAnnotations)
-          + "}";
+      StringBuilder result = new StringBuilder("Property{type=").append(type);
+      if (boxedType != null) {
+        result.append(", boxedType=").append(boxedType);
+      }
+      result
+          .append(", name=").append(name)
+          .append(", capitalizedName=").append(capitalizedName)
+          .append(", allCapsName=").append(allCapsName)
+          .append(", usingBeanConvention=").append(usingBeanConvention)
+          .append(", getterName=").append(getterName);
+      if (codeGenerator != null) {
+        result.append(", codeGenerator=").append(codeGenerator);
+      }
+      return result
+          .append(", fullyCheckedCast=").append(fullyCheckedCast)
+          .append(", accessorAnnotations=").append(accessorAnnotations)
+          .append("}").toString();
     }
   }
 
@@ -678,7 +679,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public Optional<TypeMirror> getBoxedType() {
-      return Optional.fromNullable(boxedType);
+      return Optional.ofNullable(boxedType);
     }
 
     @Override
@@ -723,7 +724,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public Optional<PropertyCodeGenerator> getCodeGenerator() {
-      return Optional.fromNullable(codeGenerator);
+      return Optional.ofNullable(codeGenerator);
     }
 
     @Override
@@ -803,33 +804,36 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public String toString() {
-      return "partial Property{"
-          + COMMA_JOINER.join(
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
-                  ? "type=" + type
-                  : null),
-              (boxedType != null ? "boxedType=" + boxedType : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
-                  ? "name=" + name
-                  : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
-                  ? "capitalizedName=" + capitalizedName
-                  : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
-                  ? "allCapsName=" + allCapsName
-                  : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
-                  ? "usingBeanConvention=" + usingBeanConvention
-                  : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
-                  ? "getterName=" + getterName
-                  : null),
-              (codeGenerator != null ? "codeGenerator=" + codeGenerator : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
-                  ? "fullyCheckedCast=" + fullyCheckedCast
-                  : null),
-              "accessorAnnotations=" + accessorAnnotations)
-          + "}";
+      StringBuilder result = new StringBuilder("partial Property{");
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)) {
+        result.append("type=").append(type).append(", ");
+      }
+      if (boxedType != null) {
+        result.append("boxedType=").append(boxedType).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.NAME)) {
+        result.append("name=").append(name).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)) {
+        result.append("capitalizedName=").append(capitalizedName).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)) {
+        result.append("allCapsName=").append(allCapsName).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)) {
+        result.append("usingBeanConvention=").append(usingBeanConvention).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)) {
+        result.append("getterName=").append(getterName).append(", ");
+      }
+      if (codeGenerator != null) {
+        result.append("codeGenerator=").append(codeGenerator).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)) {
+        result.append("fullyCheckedCast=").append(fullyCheckedCast).append(", ");
+      }
+      return result.append("accessorAnnotations=").append(accessorAnnotations)
+          .append("}").toString();
     }
   }
 }

@@ -15,8 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.collect.Iterables.any;
-import static com.google.common.collect.Iterables.tryFind;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
@@ -30,10 +29,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -46,6 +41,10 @@ import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -80,23 +79,23 @@ class BuildableProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<BuildableProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
       if (type == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
       TypeElement element = asElement(type);
 
       // Find the builder
       Optional<TypeElement> builder =
-          tryFind(typesIn(element.getEnclosedElements()), IS_BUILDER_TYPE);
+          typesIn(element.getEnclosedElements()).stream().filter(IS_BUILDER_TYPE).findAny();
       if (!builder.isPresent()) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       // Verify the builder can be constructed
       Optional<BuilderFactory> builderFactory = BuilderFactory.from(builder.get());
       if (!builderFactory.isPresent()) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       MergeBuilderMethod mergeFromBuilderMethod;
@@ -115,49 +114,54 @@ class BuildableProperty extends PropertyCodeGenerator {
          */
         mergeFromBuilderMethod = MergeBuilderMethod.MERGE_DIRECTLY;
       } else {
-        List<ExecutableElement> methods = FluentIterable
-            .from(config.getElements().getAllMembers(builder.get()))
-            .filter(ExecutableElement.class)
+        List<ExecutableElement> methods = config.getElements()
+            .getAllMembers(builder.get())
+            .stream()
+            .flatMap(instancesOf(ExecutableElement.class))
             .filter(new IsCallableMethod())
-            .toList();
+            .collect(toList());
 
         // Check there is a build() method
-        if (!any(methods, new IsBuildMethod("build", type, config.getTypes()))) {
-          return Optional.absent();
+        if (!methods.stream().anyMatch(new IsBuildMethod("build", type, config.getTypes()))) {
+          return Optional.empty();
         }
 
         // Check there is a buildPartial() method
-        if (!any(methods, new IsBuildMethod("buildPartial", type, config.getTypes()))) {
-          return Optional.absent();
+        if (!methods.stream().anyMatch(
+            new IsBuildMethod("buildPartial", type, config.getTypes()))) {
+          return Optional.empty();
         }
 
         // Check there is a clear() method
-        if (!any(methods, new IsClearMethod())) {
-          return Optional.absent();
+        if (!methods.stream().anyMatch(IS_CLEAR_METHOD)) {
+          return Optional.empty();
         }
 
         // Check there is a mergeFrom(Value) method
-        if (!any(methods, new IsMergeFromMethod(type, config.getTypes()))) {
-          return Optional.absent();
+        if (!methods.stream().anyMatch(new IsMergeFromMethod(type, config.getTypes()))) {
+          return Optional.empty();
         }
 
         // Check whether there is a mergeFrom(Builder) method
-        if (any(methods, new IsMergeFromMethod(builder.get().asType(), config.getTypes()))) {
+        if (methods.stream().anyMatch(
+            new IsMergeFromMethod(builder.get().asType(), config.getTypes()))) {
           mergeFromBuilderMethod = MergeBuilderMethod.MERGE_DIRECTLY;
         } else {
           mergeFromBuilderMethod = MergeBuilderMethod.BUILD_PARTIAL_AND_MERGE;
         }
       }
 
-      List<ExecutableElement> valueMethods = FluentIterable
-          .from(config.getElements().getAllMembers(element))
-          .filter(ExecutableElement.class)
+      List<ExecutableElement> valueMethods = config.getElements()
+          .getAllMembers(element)
+          .stream()
+          .flatMap(instancesOf(ExecutableElement.class))
           .filter(new IsCallableMethod())
-          .toList();
+          .collect(toList());
 
       // Check whether there is a toBuilder() method
       PartialToBuilderMethod partialToBuilderMethod;
-      if (any(valueMethods, new IsToBuilderMethod(builder.get().asType(), config.getTypes()))) {
+      if (valueMethods.stream().anyMatch(
+          new IsToBuilderMethod(builder.get().asType(), config.getTypes()))) {
         partialToBuilderMethod = PartialToBuilderMethod.TO_BUILDER_AND_MERGE;
       } else {
         partialToBuilderMethod = PartialToBuilderMethod.MERGE_DIRECTLY;
@@ -431,9 +435,13 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("  }");
   }
 
+  private static <T, S extends T> Function<T, Stream<S>> instancesOf(Class<S> subclass) {
+    return x -> subclass.isInstance(x) ? Stream.of(subclass.cast(x)) : Stream.empty();
+  }
+
   private static final class IsCallableMethod implements Predicate<ExecutableElement> {
     @Override
-    public boolean apply(ExecutableElement element) {
+    public boolean test(ExecutableElement element) {
       boolean isMethod = (element.getKind() == ElementKind.METHOD);
       boolean isPublic = element.getModifiers().contains(Modifier.PUBLIC);
       boolean isNotStatic = !element.getModifiers().contains(Modifier.STATIC);
@@ -453,7 +461,7 @@ class BuildableProperty extends PropertyCodeGenerator {
       this.types = types;
     }
 
-    @Override public boolean apply(ExecutableElement element) {
+    @Override public boolean test(ExecutableElement element) {
       if (!element.getParameters().isEmpty()) {
         return false;
       }
@@ -467,17 +475,15 @@ class BuildableProperty extends PropertyCodeGenerator {
     }
   }
 
-  private static final class IsClearMethod implements Predicate<ExecutableElement> {
-    @Override public boolean apply(ExecutableElement element) {
-      if (!element.getParameters().isEmpty()) {
-        return false;
-      }
-      if (!element.getSimpleName().contentEquals("clear")) {
-        return false;
-      }
-      return true;
+  private static final Predicate<ExecutableElement> IS_CLEAR_METHOD = element -> {
+    if (!element.getParameters().isEmpty()) {
+      return false;
     }
-  }
+    if (!element.getSimpleName().contentEquals("clear")) {
+      return false;
+    }
+    return true;
+  };
 
   private static final class IsMergeFromMethod implements Predicate<ExecutableElement> {
     final TypeMirror builderType;
@@ -488,7 +494,7 @@ class BuildableProperty extends PropertyCodeGenerator {
       this.types = types;
     }
 
-    @Override public boolean apply(ExecutableElement element) {
+    @Override public boolean test(ExecutableElement element) {
       if (element.getParameters().size() != 1) {
         return false;
       }
@@ -511,7 +517,7 @@ class BuildableProperty extends PropertyCodeGenerator {
       this.types = types;
     }
 
-    @Override public boolean apply(ExecutableElement element) {
+    @Override public boolean test(ExecutableElement element) {
       if (element.getParameters().size() != 0) {
         return false;
       }

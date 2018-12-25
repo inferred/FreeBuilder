@@ -2,13 +2,13 @@ package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -31,10 +31,8 @@ class JacksonSupport {
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonValue"));
 
   public static Optional<JacksonSupport> create(TypeElement userValueType) {
-    if (findAnnotationMirror(userValueType, JSON_DESERIALIZE).isPresent()) {
-      return Optional.of(new JacksonSupport());
-    }
-    return Optional.absent();
+    return findAnnotationMirror(userValueType, JSON_DESERIALIZE)
+        .map($ -> new JacksonSupport());
   }
 
   private JacksonSupport() {}

@@ -16,9 +16,9 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
@@ -227,7 +227,7 @@ public class MethodFinderTest {
       resultBuilder.add(
           STRINGIFY.visit(method.getReturnType()) + " "
               + method.getEnclosingElement().getSimpleName() + "::" + method.getSimpleName() + "("
-              + Joiner.on(", ").join(variablesToStrings(method.getParameters())) + ")");
+              + variablesToStrings(method.getParameters()).stream().collect(joining(", ")) + ")");
     }
     return resultBuilder.build();
   }

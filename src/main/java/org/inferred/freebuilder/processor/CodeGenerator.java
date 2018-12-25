@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.collect.Iterables.any;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
 import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
@@ -26,11 +25,7 @@ import static org.inferred.freebuilder.processor.util.LazyName.addLazyDefinition
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -49,6 +44,9 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
@@ -67,7 +65,7 @@ public class CodeGenerator {
     addBuilderTypeDeclaration(code, metadata);
     code.addLine(" {");
     addStaticFromMethod(code, metadata);
-    if (any(metadata.getProperties(), IS_REQUIRED)) {
+    if (metadata.getProperties().stream().anyMatch(IS_REQUIRED)) {
       addPropertyEnum(metadata, code);
     }
 
@@ -105,7 +103,7 @@ public class CodeGenerator {
   }
 
   private static void addStaticFromMethod(SourceBuilder code, Metadata metadata) {
-    BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+    BuilderFactory builderFactory = metadata.getBuilderFactory().orElse(null);
     if (builderFactory == null) {
       return;
     }
@@ -129,7 +127,7 @@ public class CodeGenerator {
       codeGenerator.addBuilderFieldDeclaration(code);
     }
     // Unset properties
-    if (any(metadata.getProperties(), IS_REQUIRED)) {
+    if (metadata.getProperties().stream().anyMatch(IS_REQUIRED)) {
       code.addLine("private final %s<%s> %s =",
               EnumSet.class, metadata.getPropertyEnum(), UNSET_PROPERTIES)
           .addLine("    %s.allOf(%s.class);", EnumSet.class, metadata.getPropertyEnum());
@@ -143,7 +141,7 @@ public class CodeGenerator {
   }
 
   private static void addBuildMethod(SourceBuilder code, Metadata metadata) {
-    boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
+    boolean hasRequiredProperties = metadata.getProperties().stream().anyMatch(IS_REQUIRED);
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns a newly-created %s based on the contents of the {@code %s}.",
@@ -202,13 +200,11 @@ public class CodeGenerator {
         .addLine(" */")
         .addLine("public %s clear() {", metadata.getBuilder());
     Block body = new Block(code);
-    List<PropertyCodeGenerator> codeGenerators =
-        Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
-    for (PropertyCodeGenerator codeGenerator : codeGenerators) {
+    metadata.getProperties().stream().map(GET_CODE_GENERATOR).forEach(codeGenerator -> {
       codeGenerator.addClearField(body);
-    }
+    });
     code.add(body);
-    if (any(metadata.getProperties(), IS_REQUIRED)) {
+    if (metadata.getProperties().stream().anyMatch(IS_REQUIRED)) {
       Optional<Excerpt> defaults = Declarations.freshBuilder(body, metadata);
       if (defaults.isPresent()) {
         code.addLine("  %s.clear();", UNSET_PROPERTIES)
@@ -224,7 +220,7 @@ public class CodeGenerator {
         .addLine("/**")
         .addLine(" * Returns a newly-created partial %s", metadata.getType().javadocLink())
         .addLine(" * for use in unit tests. State checking will not be performed.");
-    if (any(metadata.getProperties(), IS_REQUIRED)) {
+    if (metadata.getProperties().stream().anyMatch(IS_REQUIRED)) {
       code.addLine(" * Unset properties will throw an {@link %s}",
               UnsupportedOperationException.class)
           .addLine(" * when accessed via the partial object.");
@@ -317,7 +313,7 @@ public class CodeGenerator {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public %s toBuilder() {", metadata.getBuilder());
-      BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+      BuilderFactory builderFactory = metadata.getBuilderFactory().orElse(null);
       if (builderFactory != null) {
         code.addLine("    return %s.mergeFrom(this);",
                 builderFactory.newBuilder(metadata.getBuilder(), EXPLICIT_TYPES));
@@ -391,7 +387,7 @@ public class CodeGenerator {
   }
 
   private static void addPartialType(SourceBuilder code, Metadata metadata) {
-    boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
+    boolean hasRequiredProperties = metadata.getProperties().stream().anyMatch(IS_REQUIRED);
     code.addLine("")
         .addLine("private static final class %s %s {",
             metadata.getPartialType().declaration(),

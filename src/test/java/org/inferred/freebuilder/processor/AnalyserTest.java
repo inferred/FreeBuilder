@@ -16,8 +16,8 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.toMap;
 import static org.inferred.freebuilder.processor.BuilderFactory.BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NEW_BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
@@ -29,8 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -52,6 +50,8 @@ import org.junit.runners.JUnit4;
 
 import java.time.temporal.Temporal;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
@@ -189,7 +189,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
     assertThat(dataType.isExtensible()).isTrue();
-    assertThat(dataType.getBuilderFactory()).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(dataType.getBuilderFactory().get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
@@ -223,7 +223,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
     assertThat(dataType.isExtensible()).isTrue();
-    assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(dataType.getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
@@ -244,7 +244,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
     assertThat(dataType.isExtensible()).isTrue();
-    assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(dataType.getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
@@ -265,7 +265,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
     assertThat(dataType.isExtensible()).isFalse();
-    assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(dataType.getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
@@ -283,7 +283,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
     assertThat(dataType.isExtensible()).isTrue();
-    assertThat(dataType.getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
+    assertThat(dataType.getBuilderFactory().get()).isEqualTo(NEW_BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
     assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
@@ -355,12 +355,13 @@ public class AnalyserTest {
         "  public abstract String getName();",
         "  public abstract int getAge();",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
 
     Property age = properties.get("age");
     assertEquals(model.typeMirror(int.class), age.getType());
-    assertThat(age.getBoxedType()).hasValue(model.typeMirror(Integer.class));
+    assertThat(age.getBoxedType().get()).isEqualTo(model.typeMirror(Integer.class));
     assertEquals("AGE", age.getAllCapsName());
     assertEquals("Age", age.getCapitalizedName());
     assertEquals("getAge", age.getGetterName());
@@ -368,7 +369,7 @@ public class AnalyserTest {
 
     Property name = properties.get("name");
     assertEquals("java.lang.String", name.getType().toString());
-    assertThat(name.getBoxedType()).isAbsent();
+    assertThat(name.getBoxedType()).isEqualTo(Optional.empty());
     assertEquals("NAME", name.getAllCapsName());
     assertEquals("Name", name.getCapitalizedName());
     assertEquals("getName", name.getGetterName());
@@ -383,12 +384,13 @@ public class AnalyserTest {
         "  public abstract String name();",
         "  public abstract int age();",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
 
     Property age = properties.get("age");
     assertEquals(model.typeMirror(int.class), age.getType());
-    assertThat(age.getBoxedType()).hasValue(model.typeMirror(Integer.class));
+    assertThat(age.getBoxedType().get()).isEqualTo(model.typeMirror(Integer.class));
     assertEquals("AGE", age.getAllCapsName());
     assertEquals("Age", age.getCapitalizedName());
     assertEquals("age", age.getGetterName());
@@ -396,7 +398,7 @@ public class AnalyserTest {
 
     Property name = properties.get("name");
     assertEquals("java.lang.String", name.getType().toString());
-    assertThat(name.getBoxedType()).isAbsent();
+    assertThat(name.getBoxedType()).isEqualTo(Optional.empty());
     assertEquals("NAME", name.getAllCapsName());
     assertEquals("Name", name.getCapitalizedName());
     assertEquals("name", name.getGetterName());
@@ -412,7 +414,8 @@ public class AnalyserTest {
         "  public abstract String getTop50Sites();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("customURLTemplate", "top50Sites");
     assertEquals("CUSTOM_URL_TEMPLATE", properties.get("customURLTemplate").getAllCapsName());
     assertEquals("TOP50_SITES", properties.get("top50Sites").getAllCapsName());
@@ -428,7 +431,8 @@ public class AnalyserTest {
         "  int getAge();",
         "  class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals(model.typeMirror(int.class), properties.get("age").getType());
     assertEquals("Age", properties.get("age").getCapitalizedName());
@@ -446,7 +450,8 @@ public class AnalyserTest {
         "  public abstract boolean isAvailable();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("available");
     assertEquals(model.typeMirror(boolean.class), properties.get("available").getType());
     assertEquals("Available", properties.get("available").getCapitalizedName());
@@ -475,7 +480,8 @@ public class AnalyserTest {
         "  String getName();",
         "  class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(metadata.getProperties(), GET_NAME);
+    Map<String, Property> properties = metadata.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertEquals(DefaultProperty.class, properties.get("name").getCodeGenerator().get().getClass());
   }
 
@@ -557,7 +563,8 @@ public class AnalyserTest {
         "  public abstract String get();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("get");
     assertEquals("Get", properties.get("get").getCapitalizedName());
     assertEquals("get", properties.get("get").getGetterName());
@@ -573,7 +580,8 @@ public class AnalyserTest {
         "  public abstract String getter();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("getter");
     assertEquals("Getter", properties.get("getter").getCapitalizedName());
     assertEquals("getter", properties.get("getter").getGetterName());
@@ -589,7 +597,8 @@ public class AnalyserTest {
         "  public abstract String issue();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("issue");
     assertEquals("ISSUE", properties.get("issue").getAllCapsName());
     assertEquals("Issue", properties.get("issue").getCapitalizedName());
@@ -606,7 +615,8 @@ public class AnalyserTest {
         "  public abstract String getürkt();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("getürkt");
     assertEquals("GETÜRKT", properties.get("getürkt").getAllCapsName());
     assertEquals("Getürkt", properties.get("getürkt").getCapitalizedName());
@@ -623,7 +633,8 @@ public class AnalyserTest {
         "  public abstract boolean is();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("is");
     assertEquals("IS", properties.get("is").getAllCapsName());
     assertEquals("Is", properties.get("is").getCapitalizedName());
@@ -643,7 +654,8 @@ public class AnalyserTest {
         "  public abstract float isDoubleBarrelled();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("AGE", properties.get("age").getAllCapsName());
     assertEquals("Age", properties.get("age").getCapitalizedName());
@@ -673,7 +685,8 @@ public class AnalyserTest {
         "    }",
         "  }",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertEquals(Type.REQUIRED, properties.get("name").getCodeGenerator().get().getType());
     assertEquals(Type.REQUIRED, properties.get("age").getCodeGenerator().get().getType());
   }
@@ -691,7 +704,8 @@ public class AnalyserTest {
         "public class DataType implements IDataType {",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
   }
 
@@ -707,7 +721,8 @@ public class AnalyserTest {
         "public class DataType implements IDataType<String> {",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("property");
     assertEquals("java.lang.String", properties.get("property").getType().toString());
   }
@@ -1083,15 +1098,16 @@ public class AnalyserTest {
         "  public abstract String getName();",
         "  public class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("name");
     assertEquals("java.lang.String", properties.get("name").getType().toString());
-    assertThat(properties.get("name").getBoxedType()).isAbsent();
+    assertThat(properties.get("name").getBoxedType()).isEqualTo(Optional.empty());
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
     assertThat(dataType.isExtensible()).isFalse();
-    assertThat(dataType.getBuilderFactory()).isAbsent();
+    assertThat(dataType.getBuilderFactory()).isEqualTo(Optional.empty());
     assertThat(messager.getMessagesByElement().asMap()).containsEntry(
         "Builder", ImmutableList.of("[ERROR] Builder must be static on @FreeBuilder types"));
   }
@@ -1114,15 +1130,16 @@ public class AnalyserTest {
     assertEquals("com.example.DataType_Builder.Property", dataType.getPropertyEnum().toString());
     assertEquals("com.example.DataType<A, B>", dataType.getType().toString());
     assertEquals("com.example.DataType_Builder.Value<A, B>", dataType.getValueType().toString());
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
-    assertThat(properties.get("age").getBoxedType()).isAbsent();
+    assertThat(properties.get("age").getBoxedType()).isEqualTo(Optional.empty());
     assertEquals("AGE", properties.get("age").getAllCapsName());
     assertEquals("Age", properties.get("age").getCapitalizedName());
     assertEquals("getAge", properties.get("age").getGetterName());
     assertEquals("A", properties.get("name").getType().toString());
-    assertThat(properties.get("name").getBoxedType()).isAbsent();
+    assertThat(properties.get("name").getBoxedType()).isEqualTo(Optional.empty());
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
@@ -1166,15 +1183,16 @@ public class AnalyserTest {
     assertEquals("com.example.DataType_Builder.Property", dataType.getPropertyEnum().toString());
     assertEquals("com.example.DataType<A, B>", dataType.getType().toString());
     assertEquals("com.example.DataType_Builder.Value<A, B>", dataType.getValueType().toString());
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+    Map<String, Property> properties = dataType.getProperties().stream()
+        .collect(toMap(GET_NAME, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
-    assertThat(properties.get("age").getBoxedType()).isAbsent();
+    assertThat(properties.get("age").getBoxedType()).isEqualTo(Optional.empty());
     assertEquals("AGE", properties.get("age").getAllCapsName());
     assertEquals("Age", properties.get("age").getCapitalizedName());
     assertEquals("getAge", properties.get("age").getGetterName());
     assertEquals("A", properties.get("name").getType().toString());
-    assertThat(properties.get("name").getBoxedType()).isAbsent();
+    assertThat(properties.get("name").getBoxedType()).isEqualTo(Optional.empty());
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
@@ -1542,7 +1560,7 @@ public class AnalyserTest {
         "}");
 
     Metadata metadata = analyser.analyse(dataType);
-    assertThat(metadata.getOptionalBuilder()).isAbsent();
+    assertThat(metadata.getOptionalBuilder()).isEqualTo(Optional.empty());
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("Builder", ImmutableList.of("[ERROR] Builder must be generic"));
   }
@@ -1557,7 +1575,7 @@ public class AnalyserTest {
         "}");
 
     Metadata metadata = analyser.analyse(dataType);
-    assertThat(metadata.getOptionalBuilder()).isAbsent();
+    assertThat(metadata.getOptionalBuilder()).isEqualTo(Optional.empty());
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("Builder", ImmutableList.of(
             "[ERROR] Builder has the wrong type parameters"));

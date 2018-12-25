@@ -18,9 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Iterables.tryFind;
 import static com.google.common.collect.Maps.newLinkedHashMap;
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
@@ -36,8 +34,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,10 +49,13 @@ import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
@@ -374,9 +373,11 @@ class Analyser {
    */
   private Optional<DeclaredType> tryFindBuilder(
       final QualifiedName superclass, TypeElement valueType) {
-    TypeElement builderType =
-        tryFind(typesIn(valueType.getEnclosedElements()),
-            element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME)).orNull();
+    TypeElement builderType = typesIn(valueType.getEnclosedElements())
+        .stream()
+        .filter(element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME))
+        .findAny()
+        .orElse(null);
     if (builderType == null) {
       if (valueType.getKind() == INTERFACE) {
         messager.printMessage(
@@ -393,7 +394,7 @@ class Analyser {
                 + " {}\" to your class to enable the @FreeBuilder API",
             valueType);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
 
     boolean extendsSuperclass =
@@ -404,7 +405,7 @@ class Analyser {
           ERROR,
           "Builder extends the wrong type (should be " + superclass.getSimpleName() + ")",
           builderType);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     if (builderType.getTypeParameters().size() != valueType.getTypeParameters().size()) {
@@ -413,7 +414,7 @@ class Analyser {
       } else {
         messager.printMessage(ERROR, "Builder has the wrong type parameters", builderType);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
 
     DeclaredType declaredValueType = (DeclaredType) valueType.asType();
@@ -440,16 +441,15 @@ class Analyser {
   }
 
   private Map<ExecutableElement, Property> findProperties(
-      TypeElement type, Iterable<ExecutableElement> methods) {
+      TypeElement type, Collection<ExecutableElement> methods) {
     NamingConvention namingConvention = determineNamingConvention(type, methods, messager, types);
     Map<ExecutableElement, Property> propertiesByMethod = newLinkedHashMap();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
-      Property.Builder propertyBuilder = namingConvention.getPropertyNames(type, method).orNull();
-      if (propertyBuilder != null) {
+      namingConvention.getPropertyNames(type, method).ifPresent(propertyBuilder -> {
         addPropertyData(propertyBuilder, type, method, jacksonSupport);
         propertiesByMethod.put(method, propertyBuilder.build());
-      }
+      });
     }
     return propertiesByMethod;
   }
@@ -643,7 +643,10 @@ class Analyser {
     }
     // If there is a user-provided subclass, only make its generated superclass serializable if
     // it is itself; otherwise, tools may complain about missing a serialVersionUID field.
-    return any(asElement(builder.get()).getInterfaces(), isEqualTo(Serializable.class));
+    return asElement(builder.get())
+        .getInterfaces()
+        .stream()
+        .anyMatch(isEqualTo(Serializable.class));
   }
 
   /** Returns whether a method is one of the {@link StandardMethod}s, and if so, which. */
@@ -654,22 +657,22 @@ class Analyser {
           && method.getParameters().get(0).asType().toString().equals("java.lang.Object")) {
         return Optional.of(StandardMethod.EQUALS);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else if (methodName.equals("hashCode")) {
       if (method.getParameters().isEmpty()) {
         return Optional.of(StandardMethod.HASH_CODE);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else if (methodName.equals("toString")) {
       if (method.getParameters().isEmpty()) {
         return Optional.of(StandardMethod.TO_STRING);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

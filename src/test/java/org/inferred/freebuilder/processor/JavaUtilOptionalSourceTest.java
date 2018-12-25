@@ -16,14 +16,13 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
@@ -39,7 +38,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class JavaUtilOptionalSourceTest {
@@ -49,7 +49,7 @@ public class JavaUtilOptionalSourceTest {
     Metadata metadata = createMetadataWithOptionalProperties(true);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -357,7 +357,7 @@ public class JavaUtilOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
@@ -365,7 +365,7 @@ public class JavaUtilOptionalSourceTest {
     Metadata metadata = createMetadataWithOptionalProperties(true);
 
     String source = generateSource(metadata);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -672,7 +672,7 @@ public class JavaUtilOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
@@ -680,7 +680,7 @@ public class JavaUtilOptionalSourceTest {
     Metadata metadata = createMetadataWithOptionalProperties(false);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -988,7 +988,7 @@ public class JavaUtilOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -1048,7 +1048,7 @@ public class JavaUtilOptionalSourceTest {
                 name,
                 OptionalType.JAVA8,
                 STRING,
-                Optional.<TypeMirror>absent(),
+                Optional.empty(),
                 unaryOperator(STRING),
                 false))
             .build())
@@ -1058,7 +1058,7 @@ public class JavaUtilOptionalSourceTest {
                 age,
                 OptionalType.JAVA8,
                 INTEGER,
-                Optional.<TypeMirror>of(INT),
+                Optional.of(INT),
                 unaryOperator(INTEGER),
                 false))
             .build())
