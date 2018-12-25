@@ -1,21 +1,17 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.all;
-import static com.google.common.collect.Iterables.any;
-import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.getLast;
 import static org.inferred.freebuilder.processor.CodeGenerator.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
+
+import java.util.function.Predicate;
 
 class ToStringGenerator {
 
@@ -24,15 +20,12 @@ class ToStringGenerator {
    */
   public static void addToString(SourceBuilder code, Metadata metadata, final boolean forPartial) {
     String typename = (forPartial ? "partial " : "") + metadata.getType().getSimpleName();
-    Predicate<Property> isOptional = new Predicate<Property>() {
-      @Override
-      public boolean apply(Property property) {
-        Type type = property.getCodeGenerator().get().getType();
-        return (type == Type.OPTIONAL || (type == Type.REQUIRED && forPartial));
-      }
+    Predicate<Property> isOptional = property -> {
+      Type type = property.getCodeGenerator().get().getType();
+      return (type == Type.OPTIONAL || (type == Type.REQUIRED && forPartial));
     };
-    boolean anyOptional = any(metadata.getProperties(), isOptional);
-    boolean allOptional = all(metadata.getProperties(), isOptional)
+    boolean anyOptional = metadata.getProperties().stream().anyMatch(isOptional);
+    boolean allOptional = metadata.getProperties().stream().allMatch(isOptional)
         && !metadata.getProperties().isEmpty();
 
     code.addLine("")
@@ -99,10 +92,15 @@ class ToStringGenerator {
     boolean midAppends = true;
     boolean prependCommas = false;
 
-    Property lastOptionalProperty = getLast(filter(metadata.getProperties(), isOptional));
+    Property lastOptionalProperty = metadata.getProperties()
+        .reverse()
+        .stream()
+        .filter(isOptional)
+        .findFirst()
+        .get();
 
     for (Property property : metadata.getProperties()) {
-      if (isOptional.apply(property)) {
+      if (isOptional.test(property)) {
         if (midStringLiteral) {
           code.add("\")");
         }
@@ -185,7 +183,7 @@ class ToStringGenerator {
     }
 
     Property first = metadata.getProperties().get(0);
-    Property last = Iterables.getLast(metadata.getProperties());
+    Property last = getLast(metadata.getProperties());
     for (Property property : metadata.getProperties()) {
       switch (property.getCodeGenerator().get().getType()) {
         case HAS_DEFAULT:

@@ -284,11 +284,11 @@ public class FunctionalTypeTest {
 
   private FunctionalType functionalType(Class<?> cls) {
     DeclaredType declaredType = maybeDeclared(model.typeMirror(cls)).get();
-    return maybeFunctionalType(declaredType, model.elementUtils(), model.typeUtils()).orNull();
+    return maybeFunctionalType(declaredType, model.elementUtils(), model.typeUtils()).orElse(null);
   }
 
   private FunctionalType functionalType(TypeToken<?> type) {
     DeclaredType declaredType = maybeDeclared(model.typeMirror(type)).get();
-    return maybeFunctionalType(declaredType, model.elementUtils(), model.typeUtils()).orNull();
+    return maybeFunctionalType(declaredType, model.elementUtils(), model.typeUtils()).orElse(null);
   }
 }

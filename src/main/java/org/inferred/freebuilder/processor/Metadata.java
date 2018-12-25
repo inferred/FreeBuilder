@@ -17,8 +17,6 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -28,6 +26,9 @@ import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import java.util.Optional;
+import java.util.function.Function;
 
 import javax.lang.model.type.TypeMirror;
 
@@ -226,7 +227,7 @@ public abstract class Metadata {
   }
 
   public static final Function<Property, PropertyCodeGenerator> GET_CODE_GENERATOR =
-      property -> property.getCodeGenerator().orNull();
+      property -> property.getCodeGenerator().orElse(null);
 
   /** Builder for {@link Metadata}. */
   public static class Builder extends Metadata_Builder {

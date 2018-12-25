@@ -18,10 +18,9 @@ package org.inferred.freebuilder.processor.naming;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 
-import com.google.common.base.Optional;
-
 import org.inferred.freebuilder.processor.Metadata.Property;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.processing.Messager;
@@ -46,7 +45,7 @@ class PrefixlessConvention implements NamingConvention {
   public Optional<Property.Builder> getPropertyNames(
       TypeElement valueType, ExecutableElement method) {
     if (!methodIsAbstractGetter(valueType, method)) {
-      return Optional.absent();
+      return Optional.empty();
     }
     String name = method.getSimpleName().toString();
     String capitalizedName = name.substring(0, 1).toUpperCase() + name.substring(1);

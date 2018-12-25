@@ -16,14 +16,12 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -38,7 +36,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class ListSourceTest {
@@ -48,7 +47,7 @@ public class ListSourceTest {
     Metadata metadata = createMetadata(true);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -424,14 +423,14 @@ public class ListSourceTest {
         "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void test_noGuava_j8() {
     Metadata metadata = createMetadata(true);
 
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -783,14 +782,14 @@ public class ListSourceTest {
             + "Arrays.asList(elements.toArray()));",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void test_prefixless() {
     Metadata metadata = createMetadata(false);
 
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -1166,7 +1165,7 @@ public class ListSourceTest {
         "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -1228,7 +1227,7 @@ public class ListSourceTest {
                 false,
                 false,
                 STRING,
-                Optional.<TypeMirror>absent(),
+                Optional.empty(),
                 FunctionalType.consumer(wildcardSuper(listString))))
             .build())
         .addProperties(age.toBuilder()
@@ -1239,7 +1238,7 @@ public class ListSourceTest {
                 false,
                 false,
                 INTEGER,
-                Optional.<TypeMirror>of(INT),
+                Optional.of(INT),
                 FunctionalType.consumer(wildcardSuper(listInteger))))
             .build())
         .build();

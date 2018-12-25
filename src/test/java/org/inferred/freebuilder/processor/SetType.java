@@ -1,15 +1,15 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.joining;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.primitives.Ints;
 
 import java.util.Arrays;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.stream.IntStream;
 
 @SuppressWarnings("rawtypes")
 public enum SetType {
@@ -21,7 +21,7 @@ public enum SetType {
 
     @Override
     public String intsInOrder(int... examples) {
-      return Joiner.on(", ").join(Ints.asList(examples));
+      return IntStream.of(examples).mapToObj(Integer::toString).collect(joining(", "));
     }
   },
   SORTED_SET(SortedSet.class, ImmutableSortedSet.class) {
@@ -34,9 +34,7 @@ public enum SetType {
 
     @Override
     public String intsInOrder(int... examples) {
-      int[] sortedExamples = examples.clone();
-      Arrays.sort(sortedExamples);
-      return Joiner.on(", ").join(Ints.asList(sortedExamples));
+      return IntStream.of(examples).sorted().mapToObj(Integer::toString).collect(joining(", "));
     }
   };
 

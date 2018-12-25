@@ -18,13 +18,13 @@ package org.inferred.freebuilder.processor;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.Element;
@@ -99,7 +99,7 @@ public enum BuilderFactory {
   public static Optional<BuilderFactory> from(TypeElement builderType) {
     ImmutableSet<String> staticMethods = findPotentialStaticFactoryMethods(builderType);
     if (typeIsAbstract(builderType)) {
-      return Optional.absent();
+      return Optional.empty();
     } else if (staticMethods.contains("builder")) {
       return Optional.of(BUILDER_METHOD);
     } else if (staticMethods.contains("newBuilder")) {
@@ -107,7 +107,7 @@ public enum BuilderFactory {
     } else if (hasNoArgsConstructor(builderType)) {
       return Optional.of(NO_ARGS_CONSTRUCTOR);
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

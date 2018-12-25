@@ -18,8 +18,8 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getLast;
+import static java.util.stream.Collectors.joining;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -88,7 +88,7 @@ public class QualifiedName extends ValueType {
    */
   @Override
   public String toString() {
-    return packageName + "." + Joiner.on('.').join(simpleNames);
+    return packageName + "." + simpleNames.stream().collect(joining("."));
   }
 
   public String getPackage() {

@@ -18,11 +18,10 @@ package org.inferred.freebuilder.processor.util.testing;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static java.util.stream.Collectors.joining;
 import static javax.tools.ToolProvider.getSystemJavaCompiler;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -35,6 +34,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -217,7 +217,7 @@ public class Model {
 
   /** Parses the supplied type definition, returning its {@link TypeElement}. */
   public TypeElement newType(final String... code) {
-    String codeString = Joiner.on("\n").join(code);
+    String codeString = Arrays.stream(code).collect(joining("\n"));
     codeString = TYPE_NAME_PATTERN.matcher(codeString)
         .replaceFirst("@" + Target.class.getCanonicalName() + " $0");
     return (TypeElement) newElementAnnotatedWith(Target.class, codeString);
@@ -236,7 +236,7 @@ public class Model {
    * </pre></code></blockquote>
    */
   public Element newElementWithMarker(final String... code) {
-    String codeString = Joiner.on("\n").join(code);
+    String codeString = Arrays.stream(code).collect(joining("\n"));
     checkMarkerPresentExactlyOnce(codeString);
     codeString = codeString.replaceFirst(
         IDENTIFYING_STRING, " @" + Target.class.getCanonicalName() + " ");
@@ -257,7 +257,7 @@ public class Model {
       Class<? extends Annotation> annotationType,
       String... code) {
     try {
-      String codeString = Joiner.on("\n").join(code);
+      String codeString = Arrays.stream(code).collect(joining("\n"));
       GenerationRequest request = new GenerationRequest(codeString, annotationType);
       if (!requestQueue.offer(request, TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
         throw new UncheckedTimeoutException("Code generation request timed out");
@@ -293,9 +293,9 @@ public class Model {
       return future.get(timeout, unit);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     } catch (TimeoutException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     } catch (ExecutionException e) {
       if (e.getCause() instanceof Error) {
         throw new ExecutionError((Error) e.getCause());

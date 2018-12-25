@@ -15,9 +15,9 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
-import com.google.common.base.Optional;
-
 import org.inferred.freebuilder.processor.Metadata.Property;
+
+import java.util.Optional;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;

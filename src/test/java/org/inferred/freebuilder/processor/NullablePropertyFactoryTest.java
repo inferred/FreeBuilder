@@ -24,7 +24,6 @@ import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -36,6 +35,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
@@ -72,7 +73,7 @@ public class NullablePropertyFactoryTest {
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).isAbsent();
+    assertThat(codeGenerator).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -97,7 +98,7 @@ public class NullablePropertyFactoryTest {
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullableProperty(
+    assertThat(codeGenerator.get()).isEqualTo(new NullableProperty(
         metadata,
         property,
         ImmutableSet.of(model.typeElement(Nullable.class)),
@@ -129,7 +130,7 @@ public class NullablePropertyFactoryTest {
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullableProperty(
+    assertThat(codeGenerator.get()).isEqualTo(new NullableProperty(
         metadata,
         property,
         ImmutableSet.of(model.typeElement("foo.bar.Nullable")),
@@ -164,7 +165,7 @@ public class NullablePropertyFactoryTest {
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullableProperty(
+    assertThat(codeGenerator.get()).isEqualTo(new NullableProperty(
         metadata,
         property,
         ImmutableSet.of(
@@ -189,6 +190,6 @@ public class NullablePropertyFactoryTest {
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).isAbsent();
+    assertThat(codeGenerator).isEqualTo(Optional.empty());
   }
 }
