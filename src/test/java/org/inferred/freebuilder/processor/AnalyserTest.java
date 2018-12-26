@@ -555,7 +555,7 @@ public class AnalyserTest {
         "}"));
 
     assertThat(builder.getGeneratorsByProperty()).isEmpty();
-    messager.verifyError("getName", "Getter methods must not be void on @FreeBuilder types");
+    messager.verifyError("getName", "Getter methods must not be void on FreeBuilder types");
   }
 
   @Test
@@ -569,7 +569,7 @@ public class AnalyserTest {
 
     assertThat(builder.getGeneratorsByProperty()).isEmpty();
     messager.verifyError(
-        "isName", "Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
+        "isName", "Getter methods starting with 'is' must return a boolean on FreeBuilder types");
   }
 
   @Test
@@ -582,7 +582,7 @@ public class AnalyserTest {
         "}"));
 
     assertThat(builder.getGeneratorsByProperty()).isEmpty();
-    messager.verifyError("getName", "Getter methods cannot take parameters on @FreeBuilder types");
+    messager.verifyError("getName", "Getter methods cannot take parameters on FreeBuilder types");
   }
 
   @Test
@@ -682,10 +682,10 @@ public class AnalyserTest {
 
     Map<String, Property> properties = propertiesByName(builder);
     assertThat(properties.keySet()).containsExactly("name", "age");
-    messager.verifyError("getNothing", "Getter methods must not be void on @FreeBuilder types");
+    messager.verifyError("getNothing", "Getter methods must not be void on FreeBuilder types");
     messager.verifyError(
         "isDoubleBarrelled",
-        "Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
+        "Getter methods starting with 'is' must return a boolean on FreeBuilder types");
   }
 
   @Test
@@ -798,7 +798,7 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE));
     messager.verifyError(
-        "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
+        "equals", "hashCode and equals must be implemented together on FreeBuilder types");
   }
 
   @Test
@@ -815,7 +815,7 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
     messager.verifyError(
-        "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
+        "hashCode", "hashCode and equals must be implemented together on FreeBuilder types");
   }
 
   @Test
@@ -889,7 +889,7 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL));
     messager.verifyError(
-        "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
+        "equals", "hashCode and equals must be implemented together on FreeBuilder types");
   }
 
   @Test
@@ -906,7 +906,7 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
     messager.verifyError(
-        "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
+        "hashCode", "hashCode and equals must be implemented together on FreeBuilder types");
   }
 
   @Test
@@ -1017,7 +1017,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    messager.verifyError("PrivateType", "@FreeBuilder types cannot be private");
+    messager.verifyError("PrivateType", "FreeBuilder types cannot be private");
   }
 
   @Test
@@ -1036,7 +1036,7 @@ public class AnalyserTest {
 
     messager.verifyError(
         "NestedType",
-        "@FreeBuilder types cannot be private, but enclosing type PrivateType is inaccessible");
+        "FreeBuilder types cannot be private, but enclosing type PrivateType is inaccessible");
   }
 
   @Test
@@ -1053,7 +1053,7 @@ public class AnalyserTest {
 
     messager.verifyError(
         "InnerType",
-        "Inner classes cannot be @FreeBuilder types (did you forget the static keyword?)");
+        "Inner classes cannot be FreeBuilder types (did you forget the static keyword?)");
   }
 
   @Test
@@ -1069,7 +1069,7 @@ public class AnalyserTest {
     assertThat(properties.keySet()).containsExactly("name");
     assertThat(builder.getDatatype().isExtensible()).isFalse();
     assertThat(builder.getDatatype().getBuilderFactory()).isEqualTo(Optional.empty());
-    messager.verifyError("Builder", "Builder must be static on @FreeBuilder types");
+    messager.verifyError("Builder", "Builder must be static on FreeBuilder types");
   }
 
   @Test
@@ -1277,7 +1277,7 @@ public class AnalyserTest {
     } catch (CannotGenerateCodeException expected) { }
 
     messager.verifyError(
-        "<init>", "@FreeBuilder types must have a package-visible no-args constructor");
+        "<init>", "FreeBuilder types must have a package-visible no-args constructor");
   }
 
   @Test
@@ -1292,7 +1292,7 @@ public class AnalyserTest {
     } catch (CannotGenerateCodeException expected) { }
 
     messager.verifyError(
-        "DataType", "@FreeBuilder types must have a package-visible no-args constructor");
+        "DataType", "FreeBuilder types must have a package-visible no-args constructor");
   }
 
   @Test
@@ -1304,7 +1304,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    messager.verifyError("DataType", "@FreeBuilder does not support enum types");
+    messager.verifyError("DataType", "FreeBuilder does not support enum types");
   }
 
   @Test
@@ -1314,7 +1314,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    messager.verifyError("DataType", "@FreeBuilder does not support types in unnamed packages");
+    messager.verifyError("DataType", "FreeBuilder does not support types in unnamed packages");
   }
 
   @Test
@@ -1326,7 +1326,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    messager.verifyError("DataType", "@FreeBuilder does not support annotation types");
+    messager.verifyError("DataType", "FreeBuilder does not support annotation types");
   }
 
   @Test
@@ -1520,13 +1520,13 @@ public class AnalyserTest {
   private static String addBuilderToClassMessage(String builder) {
     return "Add \"public static class Builder extends "
         + builder
-        + " {}\" to your class to enable the @FreeBuilder API";
+        + " {}\" to your class to enable the FreeBuilder API";
   }
 
   private static String addBuilderToInterfaceMessage(String builder) {
     return "Add \"class Builder extends "
         + builder
-        + " {}\" to your interface to enable the @FreeBuilder API";
+        + " {}\" to your interface to enable the FreeBuilder API";
   }
 
   private static String asSource(Excerpt annotation) {
