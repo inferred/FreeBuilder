@@ -44,6 +44,7 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
+import org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
@@ -385,10 +386,11 @@ public class CodeGenerator {
       String prefix = "    return ";
       for (Property property : metadata.getProperties()) {
         body.add(prefix);
-        body.add("%s.equals(%s, %s)",
-            body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+        body.add(ObjectsExcerpts.equals(
             property.getField(),
-            property.getField().on("other"));
+            property.getField().on("other"),
+            property.getType().getKind(),
+            nullabilityOf(property, false)));
         prefix = "\n        && ";
       }
       body.add(";\n");
@@ -398,7 +400,7 @@ public class CodeGenerator {
                 property.getField(),
                 property.getField().on("other"),
                 property.getType().getKind(),
-                (property.getCodeGenerator().getType() == Type.OPTIONAL) ? NULLABLE : NOT_NULLABLE))
+                nullabilityOf(property, false)))
             .addLine("      return false;")
             .addLine("    }");
       }
@@ -472,10 +474,11 @@ public class CodeGenerator {
         String prefix = "    return ";
         for (Property property : metadata.getProperties()) {
           body.add(prefix);
-          body.add("%s.equals(%s, %s)",
-              body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+          body.add(ObjectsExcerpts.equals(
               property.getField(),
-              property.getField().on("other"));
+              property.getField().on("other"),
+              property.getType().getKind(),
+              nullabilityOf(property, true)));
           prefix = "\n        && ";
         }
         if (hasRequiredProperties) {
@@ -488,29 +491,12 @@ public class CodeGenerator {
         body.add(";\n");
       } else {
         for (Property property : metadata.getProperties()) {
-          switch (property.getType().getKind()) {
-            case FLOAT:
-            case DOUBLE:
-              body.addLine("    if (%s.doubleToLongBits(%s)", Double.class, property.getField())
-                  .addLine("        != %s.doubleToLongBits(%s)) {",
-                      Double.class, property.getField().on("other"));
-              break;
-
-            default:
-              if (property.getType().getKind().isPrimitive()) {
-                body.addLine("    if (%s != %s) {",
-                    property.getField(), property.getField().on("other"));
-              } else if (property.getCodeGenerator().getType() == Type.HAS_DEFAULT) {
-                body.addLine("    if (!%s.equals(%s)) {",
-                    property.getField(), property.getField().on("other"));
-              } else {
-                body.addLine("    if (%s != %s",
-                        property.getField(), property.getField().on("other"))
-                    .addLine("        && (%1$s == null || !%1$s.equals(%2$s))) {",
-                        property.getField(), property.getField().on("other"));
-              }
-          }
-          body.addLine("      return false;")
+          body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
+                  property.getField(),
+                  property.getField().on("other"),
+                  property.getType().getKind(),
+                  nullabilityOf(property, true)))
+              .addLine("      return false;")
               .addLine("    }");
         }
         if (hasRequiredProperties) {
@@ -587,6 +573,21 @@ public class CodeGenerator {
         .addLine(" */")
         .add(Excerpts.generated(getClass()))
         .addLine("abstract class %s {}", metadata.getGeneratedBuilder().declaration());
+  }
+
+  private static Nullability nullabilityOf(Property property, boolean inPartial) {
+    switch (property.getCodeGenerator().getType()) {
+      case HAS_DEFAULT:
+        return NOT_NULLABLE;
+
+      case OPTIONAL:
+        return NULLABLE;
+
+      case REQUIRED:
+        return inPartial ? NULLABLE : NOT_NULLABLE;
+    }
+    throw new IllegalStateException(
+        "Unexpected property type " + property.getCodeGenerator().getType());
   }
 
   /** Returns an {@link Excerpt} of "implements/extends {@code type}". */
