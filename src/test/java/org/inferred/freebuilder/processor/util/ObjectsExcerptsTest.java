@@ -95,7 +95,7 @@ public class ObjectsExcerptsTest {
                 i,
                 j,
                 ObjectsExcerpts.equals(
-                    "value" + i, "value" + j, valueSet.kind, Nullability.NULLABLE));
+                    "value" + i, "value" + j, TypeKind.DECLARED, Nullability.NULLABLE));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
@@ -136,7 +136,7 @@ public class ObjectsExcerptsTest {
                 i,
                 j,
                 ObjectsExcerpts.notEquals(
-                    "value" + i, "value" + j, valueSet.kind, Nullability.NULLABLE));
+                    "value" + i, "value" + j, TypeKind.DECLARED, Nullability.NULLABLE));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();

@@ -2,6 +2,8 @@ package org.inferred.freebuilder.processor.util;
 
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
+import com.google.common.base.Preconditions;
+
 import javax.lang.model.type.TypeKind;
 
 public class ObjectsExcerpts {
@@ -52,32 +54,41 @@ public class ObjectsExcerpts {
 
     @Override
     public void addTo(SourceBuilder code) {
-      QualifiedName javaUtilObjects = code.feature(SOURCE_LEVEL).javaUtilObjects().orNull();
-      if (javaUtilObjects != null) {
-        code.add("%s%s.equals(%s, %s)", areEqual ? "" : "!", javaUtilObjects, a, b);
-      } else if (nullability.isNullable()) {
-        if (areEqual) {
-          code.add("%1$s == %2$s || (%1$s != null && %1$s.equals(%2$s))", a, b);
-        } else {
-          code.add("%1$s != %2$s && (%1$s == null || !%1$s.equals(%2$s))", a, b);
-        }
-      } else if (kind.isPrimitive()) {
-        switch (kind) {
+      switch (kind) {
         case FLOAT:
           code.add("%1$s.floatToIntBits(%2$s) %3$s %1$s.floatToIntBits(%4$s)",
               Float.class, a, areEqual ? "==" : "!=", b);
-          break;
+          return;
 
         case DOUBLE:
           code.add("%1$s.doubleToLongBits(%2$s) %3$s %1$s.doubleToLongBits(%4$s)",
               Double.class, a, areEqual ? "==" : "!=", b);
-          break;
+          return;
+
+        case BOOLEAN:
+        case BYTE:
+        case SHORT:
+        case INT:
+        case LONG:
+        case CHAR:
+          code.add("%s %s %s", a, areEqual ? "==" : "!=", b);
+          return;
 
         default:
-          code.add("%s %s %s", a, areEqual ? "==" : "!=", b);
-        }
-      } else {
-        code.add("%s%s.equals(%s)", areEqual ? "" : "!", a, b);
+          Preconditions.checkState(!kind.isPrimitive(), "Unexpected primitive type " + kind);
+          QualifiedName javaUtilObjects = code.feature(SOURCE_LEVEL).javaUtilObjects().orNull();
+          if (javaUtilObjects != null) {
+            code.add("%s%s.equals(%s, %s)", areEqual ? "" : "!", javaUtilObjects, a, b);
+          } else if (nullability.isNullable()) {
+            if (areEqual) {
+              code.add("%1$s == %2$s || (%1$s != null && %1$s.equals(%2$s))", a, b);
+            } else {
+              code.add("%1$s != %2$s && (%1$s == null || !%1$s.equals(%2$s))", a, b);
+            }
+          } else {
+            code.add("%s%s.equals(%s)", areEqual ? "" : "!", a, b);
+          }
+          return;
       }
     }
 
@@ -89,10 +100,7 @@ public class ObjectsExcerpts {
       fields.add("kind", kind);
       fields.add("nullable", nullability);
     }
-
   }
-
-
 
   private ObjectsExcerpts() {}
 }
