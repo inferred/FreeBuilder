@@ -69,7 +69,7 @@ class BeanConvention implements NamingConvention {
         messager.printMessage(
             ERROR,
             "Only getter methods (starting with '" + GET_PREFIX
-                + "' or '" + IS_PREFIX + "') may be declared abstract on @FreeBuilder types",
+                + "' or '" + IS_PREFIX + "') may be declared abstract on FreeBuilder types",
             method);
       } else {
         printNoImplementationMessage(valueType, method);
@@ -83,7 +83,7 @@ class BeanConvention implements NamingConvention {
         String message = new StringBuilder()
             .append("Getter methods cannot have a lowercase character immediately after the '")
             .append(prefix)
-            .append("' prefix on @FreeBuilder types (did you mean '")
+            .append("' prefix on FreeBuilder types (did you mean '")
             .append(prefix)
             .appendCodePoint(Character.toUpperCase(capitalizedName.codePointAt(0)))
             .append(capitalizedName.substring(capitalizedName.offsetByCodePoints(0, 1)))
@@ -99,7 +99,7 @@ class BeanConvention implements NamingConvention {
     if (returnType.getKind() == TypeKind.VOID) {
       if (declaredOnValueType) {
         messager.printMessage(
-            ERROR, "Getter methods must not be void on @FreeBuilder types", method);
+            ERROR, "Getter methods must not be void on FreeBuilder types", method);
       } else {
         printNoImplementationMessage(valueType, method);
       }
@@ -110,7 +110,7 @@ class BeanConvention implements NamingConvention {
         messager.printMessage(
             ERROR,
             "Getter methods starting with '" + IS_PREFIX
-                + "' must return a boolean on @FreeBuilder types",
+                + "' must return a boolean on FreeBuilder types",
             method);
       } else {
         printNoImplementationMessage(valueType, method);
@@ -120,7 +120,7 @@ class BeanConvention implements NamingConvention {
     if (!method.getParameters().isEmpty()) {
       if (declaredOnValueType) {
         messager.printMessage(
-            ERROR, "Getter methods cannot take parameters on @FreeBuilder types", method);
+            ERROR, "Getter methods cannot take parameters on FreeBuilder types", method);
       } else {
         printNoImplementationMessage(valueType, method);
       }
@@ -147,7 +147,7 @@ class BeanConvention implements NamingConvention {
     messager.printMessage(
         ERROR,
         "No implementation found for non-getter method '" + method + "'; "
-            + "cannot generate @FreeBuilder implementation",
+            + "cannot generate FreeBuilder implementation",
         valueType);
   }
 
