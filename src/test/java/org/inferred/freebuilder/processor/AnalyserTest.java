@@ -107,7 +107,7 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
             "[NOTE] Add \"public static class Builder extends DataType_Builder {}\" to your class "
-                + "to enable the @FreeBuilder API"));
+                + "to enable the FreeBuilder API"));
   }
 
   @Test
@@ -143,7 +143,7 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
             "[NOTE] Add \"class Builder extends DataType_Builder {}\" to your interface "
-                + "to enable the @FreeBuilder API"));
+                + "to enable the FreeBuilder API"));
   }
 
   @Test
@@ -524,7 +524,7 @@ public class AnalyserTest {
     assertThat(dataType.getProperties()).isEmpty();
     assertThat(messager.getMessagesByElement().keys()).containsExactly("getName");
     assertThat(messager.getMessagesByElement().get("getName"))
-        .containsExactly("[ERROR] Getter methods must not be void on @FreeBuilder types");
+        .containsExactly("[ERROR] Getter methods must not be void on FreeBuilder types");
   }
 
   @Test
@@ -538,7 +538,7 @@ public class AnalyserTest {
     assertThat(dataType.getProperties()).isEmpty();
     assertThat(messager.getMessagesByElement().keys()).containsExactly("isName");
     assertThat(messager.getMessagesByElement().get("isName")).containsExactly(
-        "[ERROR] Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
+        "[ERROR] Getter methods starting with 'is' must return a boolean on FreeBuilder types");
   }
 
   @Test
@@ -552,7 +552,7 @@ public class AnalyserTest {
     assertThat(dataType.getProperties()).isEmpty();
     assertThat(messager.getMessagesByElement().keys()).containsExactly("getName");
     assertThat(messager.getMessagesByElement().get("getName"))
-        .containsExactly("[ERROR] Getter methods cannot take parameters on @FreeBuilder types");
+        .containsExactly("[ERROR] Getter methods cannot take parameters on FreeBuilder types");
   }
 
   @Test
@@ -667,10 +667,10 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().keys())
         .containsExactly("getNothing", "isDoubleBarrelled");
     assertThat(messager.getMessagesByElement().get("getNothing"))
-        .containsExactly("[ERROR] Getter methods must not be void on @FreeBuilder types");
+        .containsExactly("[ERROR] Getter methods must not be void on FreeBuilder types");
     assertThat(messager.getMessagesByElement().get("isDoubleBarrelled"))
         .containsExactly("[ERROR] Getter methods starting with 'is' must return a boolean"
-            + " on @FreeBuilder types");
+            + " on FreeBuilder types");
   }
 
   @Test
@@ -786,7 +786,7 @@ public class AnalyserTest {
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("equals", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on FreeBuilder types"));
   }
 
   @Test
@@ -806,7 +806,7 @@ public class AnalyserTest {
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on FreeBuilder types"));
   }
 
   @Test
@@ -892,7 +892,7 @@ public class AnalyserTest {
         StandardMethod.EQUALS, UnderrideLevel.FINAL));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("equals", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on FreeBuilder types"));
   }
 
   @Test
@@ -912,7 +912,7 @@ public class AnalyserTest {
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on FreeBuilder types"));
   }
 
   @Test
@@ -1045,7 +1045,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("PrivateType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types cannot be private"));
+            "[ERROR] FreeBuilder types cannot be private"));
   }
 
   @Test
@@ -1066,7 +1066,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("NestedType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types cannot be private, "
+            "[ERROR] FreeBuilder types cannot be private, "
                 + "but enclosing type PrivateType is inaccessible"));
   }
 
@@ -1086,7 +1086,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("InnerType", ImmutableList.of(
-            "[ERROR] Inner classes cannot be @FreeBuilder types "
+            "[ERROR] Inner classes cannot be FreeBuilder types "
                 + "(did you forget the static keyword?)"));
   }
 
@@ -1109,7 +1109,7 @@ public class AnalyserTest {
     assertThat(dataType.isExtensible()).isFalse();
     assertThat(dataType.getBuilderFactory()).isEqualTo(Optional.empty());
     assertThat(messager.getMessagesByElement().asMap()).containsEntry(
-        "Builder", ImmutableList.of("[ERROR] Builder must be static on @FreeBuilder types"));
+        "Builder", ImmutableList.of("[ERROR] Builder must be static on FreeBuilder types"));
   }
 
   @Test
@@ -1325,7 +1325,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("<init>", ImmutableList.of(
-            "[ERROR] @FreeBuilder types must have a package-visible no-args constructor"));
+            "[ERROR] FreeBuilder types must have a package-visible no-args constructor"));
   }
 
   @Test
@@ -1343,7 +1343,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types must have a package-visible no-args constructor"));
+            "[ERROR] FreeBuilder types must have a package-visible no-args constructor"));
   }
 
   @Test
@@ -1359,7 +1359,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support enum types"));
+            "[ERROR] FreeBuilder does not support enum types"));
   }
 
   @Test
@@ -1374,7 +1374,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support types in unnamed packages"));
+            "[ERROR] FreeBuilder does not support types in unnamed packages"));
   }
 
   @Test
@@ -1390,7 +1390,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support annotation types"));
+            "[ERROR] FreeBuilder does not support annotation types"));
   }
 
   @Test
@@ -1497,7 +1497,7 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
             "[NOTE] Add \"class Builder extends DataType_Builder {}\" to your interface "
-                + "to enable the @FreeBuilder API"));
+                + "to enable the FreeBuilder API"));
   }
 
   @Test
