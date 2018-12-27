@@ -38,6 +38,7 @@ _Automatic generation of the Builder pattern for Java 1.8+_
   - [Gradle](#gradle)
   - [Eclipse](#eclipse)
   - [IntelliJ](#intellij)
+- [Upgrading from v1](#upgrading-from-v1)
 - [Troubleshooting](#troubleshooting)
   - [Troubleshooting javac](#troubleshooting-javac)
   - [Troubleshooting Eclipse](#troubleshooting-eclipse)
@@ -671,6 +672,39 @@ directory** setting) and select **Mark Directory As > Generated Sources Root**.
 [IntelliJ 14.0.3 documentation]: http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html
 [Auto Issue #106]: https://github.com/google/auto/issues/106
 
+
+Upgrading from v1
+-----------------
+
+There are three API-breaking changes between v1 and v2 of FreeBuilder:
+
+ * Mapper methods use primitive, not boxed, functional interfaces for `int`,
+   `long` and `double` properties.
+
+   **This will likely break binary backwards compatibility** for any library
+   using FreeBuilder to generate its builders. We apologise profusely for the
+   hassle this causes. If you simply cannot break your clients, but want to
+   upgrade to v2, you can force FreeBuilder to adhere to your old API with
+   [custom functional interfaces](#custom-functional-interfaces). To do this,
+   use your IDE to override all mapper methods taking a `UnaryOperator<Integer>`,
+   `UnaryOperator<Long>` or `UnaryOperator<Double>` (the implementations can
+   just delegate to super). One of these will have been generated for each
+   `int`, `long` and `double` property. Once all such methods are overridden,
+   upgrading to v2 should now leave your APIs unaltered.
+
+ * No more support for Java 6/7
+
+   If you are still on Java 6/7, please continue to use the v1 releases of FreeBuilder.
+
+ * No longer ships with `javax.annotation.Nullable`
+
+   FreeBuilder treats _any_ annotation named Nullable the same way, so you can either
+   explicitly compile against the old annotation by including
+   [the JSR-305 jar](https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305),
+   or use a more modern alternative, like
+   [org.jetbrains.annotations](https://mvnrepository.com/artifact/org.jetbrains/annotations).
+   (Or use optionals! See [Converting from `@Nullable`](#converting-from-nullable) for
+   advice.)
 
 Troubleshooting
 ---------------
