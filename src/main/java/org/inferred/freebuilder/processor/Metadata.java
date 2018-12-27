@@ -35,15 +35,15 @@ import javax.lang.model.type.TypeMirror;
 /**
  * Metadata about a &#64;{@link org.inferred.freebuilder.FreeBuilder FreeBuilder} type.
  */
-public abstract class Metadata {
+public interface Metadata {
 
   /** Standard Java methods that may be underridden. */
-  public enum StandardMethod {
+  enum StandardMethod {
     TO_STRING, HASH_CODE, EQUALS
   }
 
   /** How compulsory the underride is. */
-  public enum UnderrideLevel {
+  enum UnderrideLevel {
     /** There is no underride. */
     ABSENT,
     /** The underride can be overridden (viz. to respect Partials). */
@@ -52,7 +52,7 @@ public abstract class Metadata {
     FINAL;
   }
 
-  public static class Visibility extends Excerpt {
+  class Visibility extends Excerpt {
     public static final Visibility PUBLIC = new Visibility(0, "PUBLIC", "public ");
     public static final Visibility PROTECTED = new Visibility(1, "PROTECTED", "protected ");
     public static final Visibility PACKAGE = new Visibility(2, "PACKAGE", "");
@@ -89,17 +89,17 @@ public abstract class Metadata {
   }
 
   /** Returns the type itself. */
-  public abstract ParameterizedType getType();
+  ParameterizedType getType();
 
   /** Returns true if the type is an interface. */
-  public abstract boolean isInterfaceType();
+  boolean isInterfaceType();
 
-  abstract Optional<ParameterizedType> getOptionalBuilder();
+  Optional<ParameterizedType> getOptionalBuilder();
 
   /**
    * Returns true if there is a user-visible Builder subclass defined.
    */
-  public boolean hasBuilder() {
+  default boolean hasBuilder() {
     return getOptionalBuilder().isPresent();
   }
 
@@ -108,107 +108,105 @@ public abstract class Metadata {
    *
    * @throws IllegalStateException if {@link #hasBuilder} returns false.
    */
-  public ParameterizedType getBuilder() {
+  default ParameterizedType getBuilder() {
     return getOptionalBuilder().get();
   }
 
   /** Whether there is a package-visible, no-args constructor so we can subclass the Builder. */
-  public abstract boolean isExtensible();
+  boolean isExtensible();
 
   /** Returns the builder factory mechanism the user has exposed, if any. */
-  public abstract Optional<BuilderFactory> getBuilderFactory();
+  Optional<BuilderFactory> getBuilderFactory();
 
   /** Returns the builder class that should be generated. */
-  public abstract ParameterizedType getGeneratedBuilder();
+  ParameterizedType getGeneratedBuilder();
 
   /** Returns the value class that should be generated. */
-  public abstract ParameterizedType getValueType();
+  ParameterizedType getValueType();
 
   /** Returns the partial value class that should be generated. */
-  public abstract ParameterizedType getPartialType();
+  ParameterizedType getPartialType();
 
   /**
    * Returns a set of nested types that will be visible in the generated class, either because they
    * will be generated, or because they are present in a superclass.
    */
-  public abstract ImmutableSet<QualifiedName> getVisibleNestedTypes();
+  ImmutableSet<QualifiedName> getVisibleNestedTypes();
 
   /** Returns the Property enum that may be generated. */
-  public abstract ParameterizedType getPropertyEnum();
+  ParameterizedType getPropertyEnum();
 
   /** Returns metadata about the properties of the type. */
-  public abstract ImmutableList<Property> getProperties();
+  ImmutableList<Property> getProperties();
 
-  public UnderrideLevel standardMethodUnderride(StandardMethod standardMethod) {
+  default UnderrideLevel standardMethodUnderride(StandardMethod standardMethod) {
     UnderrideLevel underrideLevel = getStandardMethodUnderrides().get(standardMethod);
     return (underrideLevel == null) ? UnderrideLevel.ABSENT : underrideLevel;
   }
 
-  public abstract ImmutableMap<StandardMethod, UnderrideLevel> getStandardMethodUnderrides();
+  ImmutableMap<StandardMethod, UnderrideLevel> getStandardMethodUnderrides();
 
   /** Returns whether the builder type should be serializable. */
-  public abstract boolean isBuilderSerializable();
+  boolean isBuilderSerializable();
 
   /** Returns whether the value type has a toBuilder method that needs to be generated. */
-  public abstract boolean getHasToBuilderMethod();
+  boolean getHasToBuilderMethod();
 
   /** Returns a list of annotations that should be applied to the generated builder class. */
-  public abstract ImmutableList<Excerpt> getGeneratedBuilderAnnotations();
+  ImmutableList<Excerpt> getGeneratedBuilderAnnotations();
 
   /** Returns a list of annotations that should be applied to the generated value class. */
-  public abstract ImmutableList<Excerpt> getValueTypeAnnotations();
+  ImmutableList<Excerpt> getValueTypeAnnotations();
 
   /** Returns the visibility of the generated value class. */
-  public abstract Visibility getValueTypeVisibility();
+  Visibility getValueTypeVisibility();
 
   /** Returns a list of nested classes that should be added to the generated builder class. */
-  public abstract ImmutableList<Function<Metadata, Excerpt>> getNestedClasses();
+  ImmutableList<Function<Metadata, Excerpt>> getNestedClasses();
 
-  public Builder toBuilder() {
-    return new Builder().mergeFrom(this);
-  }
+  Builder toBuilder();
 
   /** Metadata about a property of a {@link Metadata}. */
-  public abstract static class Property {
+  interface Property {
 
     /** Returns the type of the property. */
-    public abstract TypeMirror getType();
+    TypeMirror getType();
 
     /** Returns the boxed form of {@link #getType()}, if type is primitive. */
-    public abstract Optional<TypeMirror> getBoxedType();
+    Optional<TypeMirror> getBoxedType();
 
     /** Returns the name of the property, e.g. myProperty. */
-    public abstract String getName();
+    String getName();
 
     /** Returns the field name that stores the property, e.g. myProperty. */
-    public FieldAccess getField() {
+    default FieldAccess getField() {
       return new FieldAccess(getName());
     }
 
     /** Returns the capitalized name of the property, e.g. MyProperty. */
-    public abstract String getCapitalizedName();
+    String getCapitalizedName();
 
     /** Returns the name of the property in all-caps with underscores, e.g. MY_PROPERTY. */
-    public abstract String getAllCapsName();
+    String getAllCapsName();
 
     /** Returns true if getters start with "get"; setters should follow suit with "set". */
-    public abstract boolean isUsingBeanConvention();
+    boolean isUsingBeanConvention();
 
     /** Returns the name of the getter for the property, e.g. getMyProperty, or isSomethingTrue. */
-    public abstract String getGetterName();
+    String getGetterName();
 
     /**
      * Returns the code generator to use for this property, if one has been picked
      * (i.e. after being passed to {@link PropertyCodeGenerator.Factory#create}.
      */
-    public abstract Optional<PropertyCodeGenerator> getCodeGenerator();
+    Optional<PropertyCodeGenerator> getCodeGenerator();
 
     /**
      * Returns true if a cast to this property type is guaranteed to be fully checked at runtime.
      * This is true for any type that is non-generic, raw, or parameterized with unbounded
      * wildcards, such as {@code Integer}, {@code List} or {@code Map<?, ?>}.
      */
-    public abstract boolean isFullyCheckedCast();
+    boolean isFullyCheckedCast();
 
     /**
      * Returns a list of annotations that should be applied to the accessor methods of this
@@ -216,21 +214,19 @@ public abstract class Metadata {
      * of the getter method as its argument. For a list, for example, that would be getX() and
      * addAllX().
      */
-    public abstract ImmutableList<Excerpt> getAccessorAnnotations();
+    ImmutableList<Excerpt> getAccessorAnnotations();
 
-    public Builder toBuilder() {
-      return new Builder().mergeFrom(this);
-    }
+    Builder toBuilder();
 
     /** Builder for {@link Property}. */
-    public static class Builder extends Metadata_Property_Builder {}
+    class Builder extends Metadata_Property_Builder {}
   }
 
-  public static final Function<Property, PropertyCodeGenerator> GET_CODE_GENERATOR =
+  Function<Property, PropertyCodeGenerator> GET_CODE_GENERATOR =
       property -> property.getCodeGenerator().orElse(null);
 
   /** Builder for {@link Metadata}. */
-  public static class Builder extends Metadata_Builder {
+  class Builder extends Metadata_Builder {
 
     public Builder() {
       super.setValueTypeVisibility(Visibility.PRIVATE);

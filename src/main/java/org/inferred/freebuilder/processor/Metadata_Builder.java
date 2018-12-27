@@ -6,11 +6,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,11 +15,18 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.function.Function;
-
+import java.util.function.UnaryOperator;
+import java.util.stream.BaseStream;
 import javax.annotation.Generated;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 
 /**
  * Auto-generated superclass of {@link Metadata.Builder}, derived from the API of {@link Metadata}.
@@ -80,8 +82,7 @@ abstract class Metadata_Builder {
   private ParameterizedType propertyEnum;
   private List<Metadata.Property> properties = ImmutableList.of();
   private final LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
-      standardMethodUnderrides =
-          new LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>();
+      standardMethodUnderrides = new LinkedHashMap<>();
   private boolean builderSerializable;
   private boolean hasToBuilderMethod;
   private List<Excerpt> generatedBuilderAnnotations = ImmutableList.of();
@@ -98,9 +99,22 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code type} is null
    */
   public Metadata.Builder setType(ParameterizedType type) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = Objects.requireNonNull(type);
     _unsetProperties.remove(Metadata_Builder.Property.TYPE);
     return (Metadata.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Metadata#getType()} by applying {@code mapper} to
+   * it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapType(UnaryOperator<ParameterizedType> mapper) {
+    Objects.requireNonNull(mapper);
+    return setType(mapper.apply(getType()));
   }
 
   /**
@@ -126,6 +140,19 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link Metadata#isInterfaceType()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapInterfaceType(UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setInterfaceType(mapper.apply(isInterfaceType()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link Metadata#isInterfaceType()}.
    *
    * @throws IllegalStateException if the field has not been set
@@ -144,7 +171,7 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code optionalBuilder} is null
    */
   public Metadata.Builder setOptionalBuilder(ParameterizedType optionalBuilder) {
-    this.optionalBuilder = Preconditions.checkNotNull(optionalBuilder);
+    this.optionalBuilder = Objects.requireNonNull(optionalBuilder);
     return (Metadata.Builder) this;
   }
 
@@ -176,13 +203,26 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * If the value to be returned by {@link Metadata#getOptionalBuilder()} is present, replaces it by
+   * applying {@code mapper} to it and using the result.
+   *
+   * <p>If the result is null, clears the value.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null
+   */
+  public Metadata.Builder mapOptionalBuilder(UnaryOperator<ParameterizedType> mapper) {
+    return setOptionalBuilder(getOptionalBuilder().map(mapper));
+  }
+
+  /**
    * Sets the value to be returned by {@link Metadata#getOptionalBuilder()} to {@link
-   * Optional#absent() Optional.absent()}.
+   * Optional#empty() Optional.empty()}.
    *
    * @return this {@code Builder} object
    */
   public Metadata.Builder clearOptionalBuilder() {
-    this.optionalBuilder = null;
+    optionalBuilder = null;
     return (Metadata.Builder) this;
   }
 
@@ -203,6 +243,19 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link Metadata#isExtensible()} by applying {@code mapper}
+   * to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapExtensible(UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setExtensible(mapper.apply(isExtensible()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link Metadata#isExtensible()}.
    *
    * @throws IllegalStateException if the field has not been set
@@ -220,7 +273,7 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code builderFactory} is null
    */
   public Metadata.Builder setBuilderFactory(BuilderFactory builderFactory) {
-    this.builderFactory = Preconditions.checkNotNull(builderFactory);
+    this.builderFactory = Objects.requireNonNull(builderFactory);
     return (Metadata.Builder) this;
   }
 
@@ -251,13 +304,26 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * If the value to be returned by {@link Metadata#getBuilderFactory()} is present, replaces it by
+   * applying {@code mapper} to it and using the result.
+   *
+   * <p>If the result is null, clears the value.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null
+   */
+  public Metadata.Builder mapBuilderFactory(UnaryOperator<BuilderFactory> mapper) {
+    return setBuilderFactory(getBuilderFactory().map(mapper));
+  }
+
+  /**
    * Sets the value to be returned by {@link Metadata#getBuilderFactory()} to {@link
-   * Optional#absent() Optional.absent()}.
+   * Optional#empty() Optional.empty()}.
    *
    * @return this {@code Builder} object
    */
   public Metadata.Builder clearBuilderFactory() {
-    this.builderFactory = null;
+    builderFactory = null;
     return (Metadata.Builder) this;
   }
 
@@ -273,9 +339,22 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code generatedBuilder} is null
    */
   public Metadata.Builder setGeneratedBuilder(ParameterizedType generatedBuilder) {
-    this.generatedBuilder = Preconditions.checkNotNull(generatedBuilder);
+    this.generatedBuilder = Objects.requireNonNull(generatedBuilder);
     _unsetProperties.remove(Metadata_Builder.Property.GENERATED_BUILDER);
     return (Metadata.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Metadata#getGeneratedBuilder()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapGeneratedBuilder(UnaryOperator<ParameterizedType> mapper) {
+    Objects.requireNonNull(mapper);
+    return setGeneratedBuilder(mapper.apply(getGeneratedBuilder()));
   }
 
   /**
@@ -297,9 +376,22 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code valueType} is null
    */
   public Metadata.Builder setValueType(ParameterizedType valueType) {
-    this.valueType = Preconditions.checkNotNull(valueType);
+    this.valueType = Objects.requireNonNull(valueType);
     _unsetProperties.remove(Metadata_Builder.Property.VALUE_TYPE);
     return (Metadata.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Metadata#getValueType()} by applying {@code mapper}
+   * to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapValueType(UnaryOperator<ParameterizedType> mapper) {
+    Objects.requireNonNull(mapper);
+    return setValueType(mapper.apply(getValueType()));
   }
 
   /**
@@ -320,9 +412,22 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code partialType} is null
    */
   public Metadata.Builder setPartialType(ParameterizedType partialType) {
-    this.partialType = Preconditions.checkNotNull(partialType);
+    this.partialType = Objects.requireNonNull(partialType);
     _unsetProperties.remove(Metadata_Builder.Property.PARTIAL_TYPE);
     return (Metadata.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Metadata#getPartialType()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapPartialType(UnaryOperator<ParameterizedType> mapper) {
+    Objects.requireNonNull(mapper);
+    return setPartialType(mapper.apply(getPartialType()));
   }
 
   /**
@@ -345,10 +450,10 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addVisibleNestedTypes(QualifiedName element) {
-    if (this.visibleNestedTypes instanceof ImmutableSet) {
-      this.visibleNestedTypes = new LinkedHashSet<QualifiedName>(this.visibleNestedTypes);
+    if (visibleNestedTypes instanceof ImmutableSet) {
+      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
     }
-    this.visibleNestedTypes.add(Preconditions.checkNotNull(element));
+    visibleNestedTypes.add(Objects.requireNonNull(element));
     return (Metadata.Builder) this;
   }
 
@@ -372,10 +477,34 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
+  public Metadata.Builder addAllVisibleNestedTypes(Spliterator<? extends QualifiedName> elements) {
+    elements.forEachRemaining(this::addVisibleNestedTypes);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the set to be returned from {@link
+   * Metadata#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
+   * element is added).
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllVisibleNestedTypes(
+      BaseStream<? extends QualifiedName, ?> elements) {
+    return addAllVisibleNestedTypes(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the set to be returned from {@link
+   * Metadata#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
+   * element is added).
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
   public Metadata.Builder addAllVisibleNestedTypes(Iterable<? extends QualifiedName> elements) {
-    for (QualifiedName element : elements) {
-      addVisibleNestedTypes(element);
-    }
+    elements.forEach(this::addVisibleNestedTypes);
     return (Metadata.Builder) this;
   }
 
@@ -387,10 +516,30 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder removeVisibleNestedTypes(QualifiedName element) {
-    if (this.visibleNestedTypes instanceof ImmutableSet) {
-      this.visibleNestedTypes = new LinkedHashSet<QualifiedName>(this.visibleNestedTypes);
+    if (visibleNestedTypes instanceof ImmutableSet) {
+      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
     }
-    this.visibleNestedTypes.remove(Preconditions.checkNotNull(element));
+    visibleNestedTypes.remove(Objects.requireNonNull(element));
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Applies {@code mutator} to the set to be returned from {@link
+   * Metadata#getVisibleNestedTypes()}.
+   *
+   * <p>This method mutates the set in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Metadata.Builder mutateVisibleNestedTypes(Consumer<? super Set<QualifiedName>> mutator) {
+    if (visibleNestedTypes instanceof ImmutableSet) {
+      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
+    }
+    // If addVisibleNestedTypes is overridden, this method will be updated to delegate to it
+    mutator.accept(visibleNestedTypes);
     return (Metadata.Builder) this;
   }
 
@@ -414,7 +563,7 @@ abstract class Metadata_Builder {
    */
   public Set<QualifiedName> getVisibleNestedTypes() {
     if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = new LinkedHashSet<QualifiedName>(visibleNestedTypes);
+      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
     }
     return Collections.unmodifiableSet(visibleNestedTypes);
   }
@@ -426,9 +575,22 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code propertyEnum} is null
    */
   public Metadata.Builder setPropertyEnum(ParameterizedType propertyEnum) {
-    this.propertyEnum = Preconditions.checkNotNull(propertyEnum);
+    this.propertyEnum = Objects.requireNonNull(propertyEnum);
     _unsetProperties.remove(Metadata_Builder.Property.PROPERTY_ENUM);
     return (Metadata.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Metadata#getPropertyEnum()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapPropertyEnum(UnaryOperator<ParameterizedType> mapper) {
+    Objects.requireNonNull(mapper);
+    return setPropertyEnum(mapper.apply(getPropertyEnum()));
   }
 
   /**
@@ -450,10 +612,10 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addProperties(Metadata.Property element) {
-    if (this.properties instanceof ImmutableList) {
-      this.properties = new ArrayList<Metadata.Property>(this.properties);
+    if (properties instanceof ImmutableList) {
+      properties = new ArrayList<>(properties);
     }
-    this.properties.add(Preconditions.checkNotNull(element));
+    properties.add(Objects.requireNonNull(element));
     return (Metadata.Builder) this;
   }
 
@@ -475,19 +637,58 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Metadata.Builder addAllProperties(Iterable<? extends Metadata.Property> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
+  public Metadata.Builder addAllProperties(Spliterator<? extends Metadata.Property> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
         if (properties instanceof ImmutableList) {
-          properties = new ArrayList<Metadata.Property>(properties);
+          properties = new ArrayList<>(properties);
         }
-        ((ArrayList<?>) properties).ensureCapacity(properties.size() + elementsSize);
+        ((ArrayList<?>) properties).ensureCapacity(properties.size() + (int) elementsSize);
       }
     }
-    for (Metadata.Property element : elements) {
-      addProperties(element);
+    elements.forEachRemaining(this::addProperties);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getProperties()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllProperties(BaseStream<? extends Metadata.Property, ?> elements) {
+    return addAllProperties(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getProperties()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllProperties(Iterable<? extends Metadata.Property> elements) {
+    return addAllProperties(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link Metadata#getProperties()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Metadata.Builder mutateProperties(Consumer<? super List<Metadata.Property>> mutator) {
+    if (properties instanceof ImmutableList) {
+      properties = new ArrayList<>(properties);
     }
+    // If addProperties is overridden, this method will be updated to delegate to it
+    mutator.accept(properties);
     return (Metadata.Builder) this;
   }
 
@@ -511,7 +712,7 @@ abstract class Metadata_Builder {
    */
   public List<Metadata.Property> getProperties() {
     if (properties instanceof ImmutableList) {
-      properties = new ArrayList<Metadata.Property>(properties);
+      properties = new ArrayList<>(properties);
     }
     return Collections.unmodifiableList(properties);
   }
@@ -526,8 +727,8 @@ abstract class Metadata_Builder {
    */
   public Metadata.Builder putStandardMethodUnderrides(
       Metadata.StandardMethod key, Metadata.UnderrideLevel value) {
-    Preconditions.checkNotNull(key);
-    Preconditions.checkNotNull(value);
+    Objects.requireNonNull(key);
+    Objects.requireNonNull(value);
     standardMethodUnderrides.put(key, value);
     return (Metadata.Builder) this;
   }
@@ -556,8 +757,26 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code key} is null
    */
   public Metadata.Builder removeStandardMethodUnderrides(Metadata.StandardMethod key) {
-    Preconditions.checkNotNull(key);
+    Objects.requireNonNull(key);
     standardMethodUnderrides.remove(key);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Invokes {@code mutator} with the map to be returned from {@link
+   * Metadata#getStandardMethodUnderrides()}.
+   *
+   * <p>This method mutates the map in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Metadata.Builder mutateStandardMethodUnderrides(
+      Consumer<? super Map<Metadata.StandardMethod, Metadata.UnderrideLevel>> mutator) {
+    // If putStandardMethodUnderrides is overridden, this method will be updated to delegate to it
+    mutator.accept(standardMethodUnderrides);
     return (Metadata.Builder) this;
   }
 
@@ -592,6 +811,19 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link Metadata#isBuilderSerializable()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapBuilderSerializable(UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setBuilderSerializable(mapper.apply(isBuilderSerializable()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link Metadata#isBuilderSerializable()}.
    *
    * @throws IllegalStateException if the field has not been set
@@ -615,6 +847,19 @@ abstract class Metadata_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link Metadata#getHasToBuilderMethod()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapHasToBuilderMethod(UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setHasToBuilderMethod(mapper.apply(getHasToBuilderMethod()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link Metadata#getHasToBuilderMethod()}.
    *
    * @throws IllegalStateException if the field has not been set
@@ -634,10 +879,10 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addGeneratedBuilderAnnotations(Excerpt element) {
-    if (this.generatedBuilderAnnotations instanceof ImmutableList) {
-      this.generatedBuilderAnnotations = new ArrayList<Excerpt>(this.generatedBuilderAnnotations);
+    if (generatedBuilderAnnotations instanceof ImmutableList) {
+      generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
     }
-    this.generatedBuilderAnnotations.add(Preconditions.checkNotNull(element));
+    generatedBuilderAnnotations.add(Objects.requireNonNull(element));
     return (Metadata.Builder) this;
   }
 
@@ -659,20 +904,63 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Metadata.Builder addAllGeneratedBuilderAnnotations(Iterable<? extends Excerpt> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
+  public Metadata.Builder addAllGeneratedBuilderAnnotations(
+      Spliterator<? extends Excerpt> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
         if (generatedBuilderAnnotations instanceof ImmutableList) {
-          generatedBuilderAnnotations = new ArrayList<Excerpt>(generatedBuilderAnnotations);
+          generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
         }
         ((ArrayList<?>) generatedBuilderAnnotations)
-            .ensureCapacity(generatedBuilderAnnotations.size() + elementsSize);
+            .ensureCapacity(generatedBuilderAnnotations.size() + (int) elementsSize);
       }
     }
-    for (Excerpt element : elements) {
-      addGeneratedBuilderAnnotations(element);
+    elements.forEachRemaining(this::addGeneratedBuilderAnnotations);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getGeneratedBuilderAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllGeneratedBuilderAnnotations(
+      BaseStream<? extends Excerpt, ?> elements) {
+    return addAllGeneratedBuilderAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getGeneratedBuilderAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllGeneratedBuilderAnnotations(Iterable<? extends Excerpt> elements) {
+    return addAllGeneratedBuilderAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link
+   * Metadata#getGeneratedBuilderAnnotations()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Metadata.Builder mutateGeneratedBuilderAnnotations(
+      Consumer<? super List<Excerpt>> mutator) {
+    if (generatedBuilderAnnotations instanceof ImmutableList) {
+      generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
     }
+    // If addGeneratedBuilderAnnotations is overridden, this method will be updated to delegate to it
+    mutator.accept(generatedBuilderAnnotations);
     return (Metadata.Builder) this;
   }
 
@@ -697,7 +985,7 @@ abstract class Metadata_Builder {
    */
   public List<Excerpt> getGeneratedBuilderAnnotations() {
     if (generatedBuilderAnnotations instanceof ImmutableList) {
-      generatedBuilderAnnotations = new ArrayList<Excerpt>(generatedBuilderAnnotations);
+      generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
     }
     return Collections.unmodifiableList(generatedBuilderAnnotations);
   }
@@ -710,10 +998,10 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addValueTypeAnnotations(Excerpt element) {
-    if (this.valueTypeAnnotations instanceof ImmutableList) {
-      this.valueTypeAnnotations = new ArrayList<Excerpt>(this.valueTypeAnnotations);
+    if (valueTypeAnnotations instanceof ImmutableList) {
+      valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
     }
-    this.valueTypeAnnotations.add(Preconditions.checkNotNull(element));
+    valueTypeAnnotations.add(Objects.requireNonNull(element));
     return (Metadata.Builder) this;
   }
 
@@ -735,20 +1023,60 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Metadata.Builder addAllValueTypeAnnotations(Iterable<? extends Excerpt> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
+  public Metadata.Builder addAllValueTypeAnnotations(Spliterator<? extends Excerpt> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
         if (valueTypeAnnotations instanceof ImmutableList) {
-          valueTypeAnnotations = new ArrayList<Excerpt>(valueTypeAnnotations);
+          valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
         }
         ((ArrayList<?>) valueTypeAnnotations)
-            .ensureCapacity(valueTypeAnnotations.size() + elementsSize);
+            .ensureCapacity(valueTypeAnnotations.size() + (int) elementsSize);
       }
     }
-    for (Excerpt element : elements) {
-      addValueTypeAnnotations(element);
+    elements.forEachRemaining(this::addValueTypeAnnotations);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllValueTypeAnnotations(BaseStream<? extends Excerpt, ?> elements) {
+    return addAllValueTypeAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllValueTypeAnnotations(Iterable<? extends Excerpt> elements) {
+    return addAllValueTypeAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link
+   * Metadata#getValueTypeAnnotations()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Metadata.Builder mutateValueTypeAnnotations(Consumer<? super List<Excerpt>> mutator) {
+    if (valueTypeAnnotations instanceof ImmutableList) {
+      valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
     }
+    // If addValueTypeAnnotations is overridden, this method will be updated to delegate to it
+    mutator.accept(valueTypeAnnotations);
     return (Metadata.Builder) this;
   }
 
@@ -772,7 +1100,7 @@ abstract class Metadata_Builder {
    */
   public List<Excerpt> getValueTypeAnnotations() {
     if (valueTypeAnnotations instanceof ImmutableList) {
-      valueTypeAnnotations = new ArrayList<Excerpt>(valueTypeAnnotations);
+      valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
     }
     return Collections.unmodifiableList(valueTypeAnnotations);
   }
@@ -784,9 +1112,22 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code valueTypeVisibility} is null
    */
   public Metadata.Builder setValueTypeVisibility(Metadata.Visibility valueTypeVisibility) {
-    this.valueTypeVisibility = Preconditions.checkNotNull(valueTypeVisibility);
+    this.valueTypeVisibility = Objects.requireNonNull(valueTypeVisibility);
     _unsetProperties.remove(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY);
     return (Metadata.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Metadata#getValueTypeVisibility()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Metadata.Builder mapValueTypeVisibility(UnaryOperator<Metadata.Visibility> mapper) {
+    Objects.requireNonNull(mapper);
+    return setValueTypeVisibility(mapper.apply(getValueTypeVisibility()));
   }
 
   /**
@@ -808,10 +1149,10 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Builder addNestedClasses(Function<Metadata, Excerpt> element) {
-    if (this.nestedClasses instanceof ImmutableList) {
-      this.nestedClasses = new ArrayList<Function<Metadata, Excerpt>>(this.nestedClasses);
+    if (nestedClasses instanceof ImmutableList) {
+      nestedClasses = new ArrayList<>(nestedClasses);
     }
-    this.nestedClasses.add(Preconditions.checkNotNull(element));
+    nestedClasses.add(Objects.requireNonNull(element));
     return (Metadata.Builder) this;
   }
 
@@ -823,6 +1164,7 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   @SafeVarargs
+  @SuppressWarnings({"varargs"})
   public final Metadata.Builder addNestedClasses(Function<Metadata, Excerpt>... elements) {
     return addAllNestedClasses(Arrays.asList(elements));
   }
@@ -835,19 +1177,61 @@ abstract class Metadata_Builder {
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Builder addAllNestedClasses(
-      Iterable<? extends Function<Metadata, Excerpt>> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
+      Spliterator<? extends Function<Metadata, Excerpt>> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
         if (nestedClasses instanceof ImmutableList) {
-          nestedClasses = new ArrayList<Function<Metadata, Excerpt>>(nestedClasses);
+          nestedClasses = new ArrayList<>(nestedClasses);
         }
-        ((ArrayList<?>) nestedClasses).ensureCapacity(nestedClasses.size() + elementsSize);
+        ((ArrayList<?>) nestedClasses).ensureCapacity(nestedClasses.size() + (int) elementsSize);
       }
     }
-    for (Function<Metadata, Excerpt> element : elements) {
-      addNestedClasses(element);
+    elements.forEachRemaining(this::addNestedClasses);
+    return (Metadata.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getNestedClasses()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllNestedClasses(
+      BaseStream<? extends Function<Metadata, Excerpt>, ?> elements) {
+    return addAllNestedClasses(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata#getNestedClasses()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Metadata.Builder addAllNestedClasses(
+      Iterable<? extends Function<Metadata, Excerpt>> elements) {
+    return addAllNestedClasses(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link Metadata#getNestedClasses()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Metadata.Builder mutateNestedClasses(
+      Consumer<? super List<Function<Metadata, Excerpt>>> mutator) {
+    if (nestedClasses instanceof ImmutableList) {
+      nestedClasses = new ArrayList<>(nestedClasses);
     }
+    // If addNestedClasses is overridden, this method will be updated to delegate to it
+    mutator.accept(nestedClasses);
     return (Metadata.Builder) this;
   }
 
@@ -871,7 +1255,7 @@ abstract class Metadata_Builder {
    */
   public List<Function<Metadata, Excerpt>> getNestedClasses() {
     if (nestedClasses instanceof ImmutableList) {
-      nestedClasses = new ArrayList<Function<Metadata, Excerpt>>(nestedClasses);
+      nestedClasses = new ArrayList<>(nestedClasses);
     }
     return Collections.unmodifiableList(nestedClasses);
   }
@@ -880,33 +1264,29 @@ abstract class Metadata_Builder {
   public Metadata.Builder mergeFrom(Metadata value) {
     Metadata_Builder _defaults = new Metadata.Builder();
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.TYPE)
-        || !value.getType().equals(_defaults.getType())) {
+        || !Objects.equals(value.getType(), _defaults.getType())) {
       setType(value.getType());
     }
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)
         || value.isInterfaceType() != _defaults.isInterfaceType()) {
       setInterfaceType(value.isInterfaceType());
     }
-    if (value.getOptionalBuilder().isPresent()) {
-      setOptionalBuilder(value.getOptionalBuilder().get());
-    }
+    value.getOptionalBuilder().ifPresent(this::setOptionalBuilder);
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
         || value.isExtensible() != _defaults.isExtensible()) {
       setExtensible(value.isExtensible());
     }
-    if (value.getBuilderFactory().isPresent()) {
-      setBuilderFactory(value.getBuilderFactory().get());
-    }
+    value.getBuilderFactory().ifPresent(this::setBuilderFactory);
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)
-        || !value.getGeneratedBuilder().equals(_defaults.getGeneratedBuilder())) {
+        || !Objects.equals(value.getGeneratedBuilder(), _defaults.getGeneratedBuilder())) {
       setGeneratedBuilder(value.getGeneratedBuilder());
     }
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)
-        || !value.getValueType().equals(_defaults.getValueType())) {
+        || !Objects.equals(value.getValueType(), _defaults.getValueType())) {
       setValueType(value.getValueType());
     }
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)
-        || !value.getPartialType().equals(_defaults.getPartialType())) {
+        || !Objects.equals(value.getPartialType(), _defaults.getPartialType())) {
       setPartialType(value.getPartialType());
     }
     if (value instanceof Metadata_Builder.Value
@@ -916,7 +1296,7 @@ abstract class Metadata_Builder {
       addAllVisibleNestedTypes(value.getVisibleNestedTypes());
     }
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)
-        || !value.getPropertyEnum().equals(_defaults.getPropertyEnum())) {
+        || !Objects.equals(value.getPropertyEnum(), _defaults.getPropertyEnum())) {
       setPropertyEnum(value.getPropertyEnum());
     }
     if (value instanceof Metadata_Builder.Value
@@ -947,7 +1327,7 @@ abstract class Metadata_Builder {
       addAllValueTypeAnnotations(value.getValueTypeAnnotations());
     }
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
-        || !value.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility())) {
+        || !Objects.equals(value.getValueTypeVisibility(), _defaults.getValueTypeVisibility())) {
       setValueTypeVisibility(value.getValueTypeVisibility());
     }
     if (value instanceof Metadata_Builder.Value
@@ -969,7 +1349,7 @@ abstract class Metadata_Builder {
     Metadata_Builder _defaults = new Metadata.Builder();
     if (!base._unsetProperties.contains(Metadata_Builder.Property.TYPE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.TYPE)
-            || !template.getType().equals(_defaults.getType()))) {
+            || !Objects.equals(template.getType(), _defaults.getType()))) {
       setType(template.getType());
     }
     if (!base._unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)
@@ -977,40 +1357,36 @@ abstract class Metadata_Builder {
             || template.isInterfaceType() != _defaults.isInterfaceType())) {
       setInterfaceType(template.isInterfaceType());
     }
-    if (template.getOptionalBuilder().isPresent()) {
-      setOptionalBuilder(template.getOptionalBuilder().get());
-    }
+    template.getOptionalBuilder().ifPresent(this::setOptionalBuilder);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
             || template.isExtensible() != _defaults.isExtensible())) {
       setExtensible(template.isExtensible());
     }
-    if (template.getBuilderFactory().isPresent()) {
-      setBuilderFactory(template.getBuilderFactory().get());
-    }
+    template.getBuilderFactory().ifPresent(this::setBuilderFactory);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)
-            || !template.getGeneratedBuilder().equals(_defaults.getGeneratedBuilder()))) {
+            || !Objects.equals(template.getGeneratedBuilder(), _defaults.getGeneratedBuilder()))) {
       setGeneratedBuilder(template.getGeneratedBuilder());
     }
     if (!base._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)
-            || !template.getValueType().equals(_defaults.getValueType()))) {
+            || !Objects.equals(template.getValueType(), _defaults.getValueType()))) {
       setValueType(template.getValueType());
     }
     if (!base._unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)
-            || !template.getPartialType().equals(_defaults.getPartialType()))) {
+            || !Objects.equals(template.getPartialType(), _defaults.getPartialType()))) {
       setPartialType(template.getPartialType());
     }
-    addAllVisibleNestedTypes(((Metadata_Builder) template).visibleNestedTypes);
+    addAllVisibleNestedTypes(base.visibleNestedTypes);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)
-            || !template.getPropertyEnum().equals(_defaults.getPropertyEnum()))) {
+            || !Objects.equals(template.getPropertyEnum(), _defaults.getPropertyEnum()))) {
       setPropertyEnum(template.getPropertyEnum());
     }
     addAllProperties(base.properties);
-    putAllStandardMethodUnderrides(((Metadata_Builder) template).standardMethodUnderrides);
+    putAllStandardMethodUnderrides(base.standardMethodUnderrides);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)
             || template.isBuilderSerializable() != _defaults.isBuilderSerializable())) {
@@ -1025,7 +1401,8 @@ abstract class Metadata_Builder {
     addAllValueTypeAnnotations(base.valueTypeAnnotations);
     if (!base._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)
-            || !template.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility()))) {
+            || !Objects.equals(
+                template.getValueTypeVisibility(), _defaults.getValueTypeVisibility()))) {
       setValueTypeVisibility(template.getValueTypeVisibility());
     }
     addAllNestedClasses(base.nestedClasses);
@@ -1082,7 +1459,7 @@ abstract class Metadata_Builder {
     return new Metadata_Builder.Partial(this);
   }
 
-  private static final class Value extends Metadata {
+  private static final class Value implements Metadata {
     private final ParameterizedType type;
     private final boolean interfaceType;
     // Store a nullable object instead of an Optional. Escape analysis then
@@ -1222,99 +1599,66 @@ abstract class Metadata_Builder {
     }
 
     @Override
+    public Metadata.Builder toBuilder() {
+      return new Metadata.Builder().mergeFrom(this);
+    }
+
+    @Override
     public boolean equals(Object obj) {
       if (!(obj instanceof Metadata_Builder.Value)) {
         return false;
       }
       Metadata_Builder.Value other = (Metadata_Builder.Value) obj;
-      if (!type.equals(other.type)) {
-        return false;
-      }
-      if (interfaceType != other.interfaceType) {
-        return false;
-      }
-      if (optionalBuilder != other.optionalBuilder
-          && (optionalBuilder == null || !optionalBuilder.equals(other.optionalBuilder))) {
-        return false;
-      }
-      if (extensible != other.extensible) {
-        return false;
-      }
-      if (builderFactory != other.builderFactory
-          && (builderFactory == null || !builderFactory.equals(other.builderFactory))) {
-        return false;
-      }
-      if (!generatedBuilder.equals(other.generatedBuilder)) {
-        return false;
-      }
-      if (!valueType.equals(other.valueType)) {
-        return false;
-      }
-      if (!partialType.equals(other.partialType)) {
-        return false;
-      }
-      if (!visibleNestedTypes.equals(other.visibleNestedTypes)) {
-        return false;
-      }
-      if (!propertyEnum.equals(other.propertyEnum)) {
-        return false;
-      }
-      if (!properties.equals(other.properties)) {
-        return false;
-      }
-      if (!standardMethodUnderrides.equals(other.standardMethodUnderrides)) {
-        return false;
-      }
-      if (builderSerializable != other.builderSerializable) {
-        return false;
-      }
-      if (hasToBuilderMethod != other.hasToBuilderMethod) {
-        return false;
-      }
-      if (!generatedBuilderAnnotations.equals(other.generatedBuilderAnnotations)) {
-        return false;
-      }
-      if (!valueTypeAnnotations.equals(other.valueTypeAnnotations)) {
-        return false;
-      }
-      if (!valueTypeVisibility.equals(other.valueTypeVisibility)) {
-        return false;
-      }
-      if (!nestedClasses.equals(other.nestedClasses)) {
-        return false;
-      }
-      return true;
+      return Objects.equals(type, other.type)
+          && interfaceType == other.interfaceType
+          && Objects.equals(optionalBuilder, other.optionalBuilder)
+          && extensible == other.extensible
+          && Objects.equals(builderFactory, other.builderFactory)
+          && Objects.equals(generatedBuilder, other.generatedBuilder)
+          && Objects.equals(valueType, other.valueType)
+          && Objects.equals(partialType, other.partialType)
+          && Objects.equals(visibleNestedTypes, other.visibleNestedTypes)
+          && Objects.equals(propertyEnum, other.propertyEnum)
+          && Objects.equals(properties, other.properties)
+          && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
+          && builderSerializable == other.builderSerializable
+          && hasToBuilderMethod == other.hasToBuilderMethod
+          && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
+          && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
+          && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
+          && Objects.equals(nestedClasses, other.nestedClasses);
     }
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(
-          new Object[] {
-            type,
-            interfaceType,
-            optionalBuilder,
-            extensible,
-            builderFactory,
-            generatedBuilder,
-            valueType,
-            partialType,
-            visibleNestedTypes,
-            propertyEnum,
-            properties,
-            standardMethodUnderrides,
-            builderSerializable,
-            hasToBuilderMethod,
-            generatedBuilderAnnotations,
-            valueTypeAnnotations,
-            valueTypeVisibility,
-            nestedClasses
-          });
+      return Objects.hash(
+          type,
+          interfaceType,
+          optionalBuilder,
+          extensible,
+          builderFactory,
+          generatedBuilder,
+          valueType,
+          partialType,
+          visibleNestedTypes,
+          propertyEnum,
+          properties,
+          standardMethodUnderrides,
+          builderSerializable,
+          hasToBuilderMethod,
+          generatedBuilderAnnotations,
+          valueTypeAnnotations,
+          valueTypeVisibility,
+          nestedClasses);
     }
 
     @Override
     public String toString() {
-      StringBuilder result = new StringBuilder("Metadata{type=").append(type)
-          .append(", interfaceType=").append(interfaceType);
+      StringBuilder result =
+          new StringBuilder("Metadata{type=")
+              .append(type)
+              .append(", interfaceType=")
+              .append(interfaceType);
       if (optionalBuilder != null) {
         result.append(", optionalBuilder=").append(optionalBuilder);
       }
@@ -1323,24 +1667,38 @@ abstract class Metadata_Builder {
         result.append(", builderFactory=").append(builderFactory);
       }
       return result
-        .append(", generatedBuilder=").append(generatedBuilder)
-        .append(", valueType=").append(valueType)
-        .append(", partialType=").append(partialType)
-        .append(", visibleNestedTypes=").append(visibleNestedTypes)
-        .append(", propertyEnum=").append(propertyEnum)
-        .append(", properties=").append(properties)
-        .append(", standardMethodUnderrides=").append(standardMethodUnderrides)
-        .append(", builderSerializable=").append(builderSerializable)
-        .append(", hasToBuilderMethod=").append(hasToBuilderMethod)
-        .append(", generatedBuilderAnnotations=").append(generatedBuilderAnnotations)
-        .append(", valueTypeAnnotations=").append(valueTypeAnnotations)
-        .append(", valueTypeVisibility=").append(valueTypeVisibility)
-        .append(", nestedClasses=").append(nestedClasses)
-        .append("}").toString();
+          .append(", generatedBuilder=")
+          .append(generatedBuilder)
+          .append(", valueType=")
+          .append(valueType)
+          .append(", partialType=")
+          .append(partialType)
+          .append(", visibleNestedTypes=")
+          .append(visibleNestedTypes)
+          .append(", propertyEnum=")
+          .append(propertyEnum)
+          .append(", properties=")
+          .append(properties)
+          .append(", standardMethodUnderrides=")
+          .append(standardMethodUnderrides)
+          .append(", builderSerializable=")
+          .append(builderSerializable)
+          .append(", hasToBuilderMethod=")
+          .append(hasToBuilderMethod)
+          .append(", generatedBuilderAnnotations=")
+          .append(generatedBuilderAnnotations)
+          .append(", valueTypeAnnotations=")
+          .append(valueTypeAnnotations)
+          .append(", valueTypeVisibility=")
+          .append(valueTypeVisibility)
+          .append(", nestedClasses=")
+          .append(nestedClasses)
+          .append("}")
+          .toString();
     }
   }
 
-  private static final class Partial extends Metadata {
+  private static final class Partial implements Metadata {
     private final ParameterizedType type;
     private final boolean interfaceType;
     // Store a nullable object instead of an Optional. Escape analysis then
@@ -1511,101 +1869,106 @@ abstract class Metadata_Builder {
       return nestedClasses;
     }
 
+    private static class PartialBuilder extends Metadata.Builder {
+      @Override
+      public Metadata build() {
+        return buildPartial();
+      }
+    }
+
+    @Override
+    public Metadata.Builder toBuilder() {
+      Metadata.Builder builder = new PartialBuilder();
+      if (!_unsetProperties.contains(Metadata_Builder.Property.TYPE)) {
+        builder.setType(type);
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)) {
+        builder.setInterfaceType(interfaceType);
+      }
+      builder.setNullableOptionalBuilder(optionalBuilder);
+      if (!_unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)) {
+        builder.setExtensible(extensible);
+      }
+      builder.setNullableBuilderFactory(builderFactory);
+      if (!_unsetProperties.contains(Metadata_Builder.Property.GENERATED_BUILDER)) {
+        builder.setGeneratedBuilder(generatedBuilder);
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE)) {
+        builder.setValueType(valueType);
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.PARTIAL_TYPE)) {
+        builder.setPartialType(partialType);
+      }
+      builder.addAllVisibleNestedTypes(visibleNestedTypes);
+      if (!_unsetProperties.contains(Metadata_Builder.Property.PROPERTY_ENUM)) {
+        builder.setPropertyEnum(propertyEnum);
+      }
+      builder.addAllProperties(properties);
+      builder.putAllStandardMethodUnderrides(standardMethodUnderrides);
+      if (!_unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)) {
+        builder.setBuilderSerializable(builderSerializable);
+      }
+      if (!_unsetProperties.contains(Metadata_Builder.Property.HAS_TO_BUILDER_METHOD)) {
+        builder.setHasToBuilderMethod(hasToBuilderMethod);
+      }
+      builder.addAllGeneratedBuilderAnnotations(generatedBuilderAnnotations);
+      builder.addAllValueTypeAnnotations(valueTypeAnnotations);
+      if (!_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)) {
+        builder.setValueTypeVisibility(valueTypeVisibility);
+      }
+      builder.addAllNestedClasses(nestedClasses);
+      return builder;
+    }
+
     @Override
     public boolean equals(Object obj) {
       if (!(obj instanceof Metadata_Builder.Partial)) {
         return false;
       }
       Metadata_Builder.Partial other = (Metadata_Builder.Partial) obj;
-      if (type != other.type && (type == null || !type.equals(other.type))) {
-        return false;
-      }
-      if (interfaceType != other.interfaceType) {
-        return false;
-      }
-      if (optionalBuilder != other.optionalBuilder
-          && (optionalBuilder == null || !optionalBuilder.equals(other.optionalBuilder))) {
-        return false;
-      }
-      if (extensible != other.extensible) {
-        return false;
-      }
-      if (builderFactory != other.builderFactory
-          && (builderFactory == null || !builderFactory.equals(other.builderFactory))) {
-        return false;
-      }
-      if (generatedBuilder != other.generatedBuilder
-          && (generatedBuilder == null || !generatedBuilder.equals(other.generatedBuilder))) {
-        return false;
-      }
-      if (valueType != other.valueType
-          && (valueType == null || !valueType.equals(other.valueType))) {
-        return false;
-      }
-      if (partialType != other.partialType
-          && (partialType == null || !partialType.equals(other.partialType))) {
-        return false;
-      }
-      if (!visibleNestedTypes.equals(other.visibleNestedTypes)) {
-        return false;
-      }
-      if (propertyEnum != other.propertyEnum
-          && (propertyEnum == null || !propertyEnum.equals(other.propertyEnum))) {
-        return false;
-      }
-      if (!properties.equals(other.properties)) {
-        return false;
-      }
-      if (!standardMethodUnderrides.equals(other.standardMethodUnderrides)) {
-        return false;
-      }
-      if (builderSerializable != other.builderSerializable) {
-        return false;
-      }
-      if (hasToBuilderMethod != other.hasToBuilderMethod) {
-        return false;
-      }
-      if (!generatedBuilderAnnotations.equals(other.generatedBuilderAnnotations)) {
-        return false;
-      }
-      if (!valueTypeAnnotations.equals(other.valueTypeAnnotations)) {
-        return false;
-      }
-      if (valueTypeVisibility != other.valueTypeVisibility
-          && (valueTypeVisibility == null
-              || !valueTypeVisibility.equals(other.valueTypeVisibility))) {
-        return false;
-      }
-      if (!nestedClasses.equals(other.nestedClasses)) {
-        return false;
-      }
-      return _unsetProperties.equals(other._unsetProperties);
+      return Objects.equals(type, other.type)
+          && interfaceType == other.interfaceType
+          && Objects.equals(optionalBuilder, other.optionalBuilder)
+          && extensible == other.extensible
+          && Objects.equals(builderFactory, other.builderFactory)
+          && Objects.equals(generatedBuilder, other.generatedBuilder)
+          && Objects.equals(valueType, other.valueType)
+          && Objects.equals(partialType, other.partialType)
+          && Objects.equals(visibleNestedTypes, other.visibleNestedTypes)
+          && Objects.equals(propertyEnum, other.propertyEnum)
+          && Objects.equals(properties, other.properties)
+          && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
+          && builderSerializable == other.builderSerializable
+          && hasToBuilderMethod == other.hasToBuilderMethod
+          && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
+          && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
+          && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
+          && Objects.equals(nestedClasses, other.nestedClasses)
+          && Objects.equals(_unsetProperties, other._unsetProperties);
     }
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(
-          new Object[] {
-            type,
-            interfaceType,
-            optionalBuilder,
-            extensible,
-            builderFactory,
-            generatedBuilder,
-            valueType,
-            partialType,
-            visibleNestedTypes,
-            propertyEnum,
-            properties,
-            standardMethodUnderrides,
-            builderSerializable,
-            hasToBuilderMethod,
-            generatedBuilderAnnotations,
-            valueTypeAnnotations,
-            valueTypeVisibility,
-            nestedClasses,
-            _unsetProperties
-          });
+      return Objects.hash(
+          type,
+          interfaceType,
+          optionalBuilder,
+          extensible,
+          builderFactory,
+          generatedBuilder,
+          valueType,
+          partialType,
+          visibleNestedTypes,
+          propertyEnum,
+          properties,
+          standardMethodUnderrides,
+          builderSerializable,
+          hasToBuilderMethod,
+          generatedBuilderAnnotations,
+          valueTypeAnnotations,
+          valueTypeVisibility,
+          nestedClasses,
+          _unsetProperties);
     }
 
     @Override
@@ -1640,8 +2003,10 @@ abstract class Metadata_Builder {
         result.append(", propertyEnum=").append(propertyEnum);
       }
       result
-          .append(", properties=").append(properties)
-          .append(", standardMethodUnderrides=").append(standardMethodUnderrides);
+          .append(", properties=")
+          .append(properties)
+          .append(", standardMethodUnderrides=")
+          .append(standardMethodUnderrides);
       if (!_unsetProperties.contains(Metadata_Builder.Property.BUILDER_SERIALIZABLE)) {
         result.append(", builderSerializable=").append(builderSerializable);
       }
@@ -1649,13 +2014,14 @@ abstract class Metadata_Builder {
         result.append(", hasToBuilderMethod=").append(hasToBuilderMethod);
       }
       result
-          .append(", generatedBuilderAnnotations=").append(generatedBuilderAnnotations)
-          .append(", valueTypeAnnotations=").append(valueTypeAnnotations);
+          .append(", generatedBuilderAnnotations=")
+          .append(generatedBuilderAnnotations)
+          .append(", valueTypeAnnotations=")
+          .append(valueTypeAnnotations);
       if (!_unsetProperties.contains(Metadata_Builder.Property.VALUE_TYPE_VISIBILITY)) {
         result.append(", valueTypeVisibility=").append(valueTypeVisibility);
       }
-      return result.append(", nestedClasses=").append(nestedClasses)
-          .append("}").toString();
+      return result.append(", nestedClasses=").append(nestedClasses).append("}").toString();
     }
   }
 }
