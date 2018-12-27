@@ -76,6 +76,10 @@ public enum Jsr305 implements Feature<Jsr305> {
   }
 
   private static boolean hasType(Elements elements, QualifiedName type) {
-    return elements.getTypeElement(type.toString()) != null;
+    try {
+      return elements.getTypeElement(type.toString()) != null;
+    } catch (RuntimeException e) {
+      return false;
+    }
   }
 }
