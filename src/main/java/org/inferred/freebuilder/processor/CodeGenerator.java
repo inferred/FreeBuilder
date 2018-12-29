@@ -205,21 +205,21 @@ public class CodeGenerator {
         .addLine(" * Resets the state of this builder.")
         .addLine(" */")
         .addLine("public %s clear() {", metadata.getBuilder());
-    Block body = new Block(code);
+    Block body = methodBody(code);
     List<PropertyCodeGenerator> codeGenerators =
         Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
     for (PropertyCodeGenerator codeGenerator : codeGenerators) {
       codeGenerator.addClearField(body);
     }
-    code.add(body);
     if (any(metadata.getProperties(), IS_REQUIRED)) {
       Optional<Excerpt> defaults = Declarations.freshBuilder(body, metadata);
       if (defaults.isPresent()) {
-        code.addLine("  %s.clear();", UNSET_PROPERTIES)
+        body.addLine("  %s.clear();", UNSET_PROPERTIES)
             .addLine("  %s.addAll(%s);", UNSET_PROPERTIES, UNSET_PROPERTIES.on(defaults.get()));
       }
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
