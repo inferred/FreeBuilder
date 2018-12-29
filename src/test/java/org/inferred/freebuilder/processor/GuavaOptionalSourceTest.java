@@ -1106,8 +1106,7 @@ public class GuavaOptionalSourceTest {
                 OptionalType.GUAVA,
                 STRING,
                 Optional.empty(),
-                unaryOperator(STRING),
-                false))
+                unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new OptionalProperty(
@@ -1116,8 +1115,7 @@ public class GuavaOptionalSourceTest {
                 OptionalType.GUAVA,
                 INTEGER,
                 Optional.of(INT),
-                unaryOperator(INTEGER),
-                false))
+                unaryOperator(INTEGER)))
             .build())
         .build();
   }
