@@ -79,14 +79,15 @@ public class ModelUtils {
   }
 
   public static Optional<AnnotationValue> findProperty(
-      AnnotationMirror annotation, String propertyName) {
-    for (Entry<? extends ExecutableElement, ? extends AnnotationValue> element
-        : annotation.getElementValues().entrySet()) {
-      if (element.getKey().getSimpleName().contentEquals(propertyName)) {
-        return Optional.<AnnotationValue>of(element.getValue());
-      }
-    }
-    return Optional.empty();
+      AnnotationMirror annotation,
+      String propertyName) {
+    return annotation
+        .getElementValues()
+        .entrySet()
+        .stream()
+        .filter(element -> element.getKey().getSimpleName().contentEquals(propertyName))
+        .findAny()
+        .map(Entry::getValue);
   }
 
   /** Returns {@code element} as a {@link TypeElement}, if it is one. */

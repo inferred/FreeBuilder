@@ -458,8 +458,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
     code.addLine("if (%s == null) {", property.getField().on(builder));
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  %s = %s.<%s>of();",
-              finalField, ImmutableSortedSet.class, elementType)
+      code.addLine("  %s = %s.of();",
+              finalField, ImmutableSortedSet.class)
           .addLine("} else if (%s instanceof %s) {",
               property.getField().on(builder), ImmutableSortedSet.class)
           .addLine("  %s = (%s<%s>) %s;",
