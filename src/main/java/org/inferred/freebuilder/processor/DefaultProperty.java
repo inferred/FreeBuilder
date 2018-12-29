@@ -39,6 +39,7 @@ import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import javax.lang.model.type.TypeKind;
 
@@ -247,7 +248,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addSetBuilderFromPartial(Block code, String builder) {
+  public void addSetBuilderFromPartial(Block code, Variable builder) {
     if (!hasDefault) {
       code.add("if (!%s.contains(%s.%s)) {",
           UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());

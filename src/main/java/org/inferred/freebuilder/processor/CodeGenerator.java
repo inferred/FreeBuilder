@@ -47,6 +47,7 @@ import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -204,21 +205,21 @@ public class CodeGenerator {
         .addLine(" * Resets the state of this builder.")
         .addLine(" */")
         .addLine("public %s clear() {", metadata.getBuilder());
-    Block body = new Block(code);
+    Block body = methodBody(code);
     List<PropertyCodeGenerator> codeGenerators =
         Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
     for (PropertyCodeGenerator codeGenerator : codeGenerators) {
       codeGenerator.addClearField(body);
     }
-    code.add(body);
     if (any(metadata.getProperties(), IS_REQUIRED)) {
       Optional<Excerpt> defaults = Declarations.freshBuilder(body, metadata);
       if (defaults.isPresent()) {
-        code.addLine("  %s.clear();", UNSET_PROPERTIES)
+        body.addLine("  %s.clear();", UNSET_PROPERTIES)
             .addLine("  %s.addAll(%s);", UNSET_PROPERTIES, UNSET_PROPERTIES.on(defaults.get()));
       }
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    body.addLine("  return (%s) this;", metadata.getBuilder());
+    code.add(body)
         .addLine("}");
   }
 
@@ -424,20 +425,7 @@ public class CodeGenerator {
       code.addLine("  private final %s<%s> %s;",
           EnumSet.class, metadata.getPropertyEnum(), UNSET_PROPERTIES);
     }
-    // Constructor
-    code.addLine("")
-        .addLine("  %s(%s builder) {",
-            metadata.getPartialType().getSimpleName(),
-            metadata.getGeneratedBuilder());
-    for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator()
-          .addPartialFieldAssignment(code, property.getField().on("this"), "builder");
-    }
-    if (hasRequiredProperties) {
-      code.addLine("    %s = %s.clone();",
-          UNSET_PROPERTIES.on("this"), UNSET_PROPERTIES.on("builder"));
-    }
-    code.addLine("  }");
+    addPartialConstructor(code, metadata, hasRequiredProperties);
     // Getters
     for (Property property : metadata.getProperties()) {
       code.addLine("")
@@ -535,6 +523,25 @@ public class CodeGenerator {
     code.addLine("}");
   }
 
+  private static void addPartialConstructor(
+      SourceBuilder code, Metadata metadata, boolean hasRequiredProperties) {
+    code.addLine("")
+        .addLine("  %s(%s builder) {",
+            metadata.getPartialType().getSimpleName(),
+            metadata.getGeneratedBuilder());
+    Block body = methodBody(code, "builder");
+    for (Property property : metadata.getProperties()) {
+      property.getCodeGenerator()
+          .addPartialFieldAssignment(body, property.getField().on("this"), "builder");
+    }
+    if (hasRequiredProperties) {
+      body.addLine("    %s = %s.clone();",
+          UNSET_PROPERTIES.on("this"), UNSET_PROPERTIES.on("builder"));
+    }
+    code.add(body)
+        .addLine("  }");
+  }
+
   private static void addPartialToBuilderMethod(SourceBuilder code, Metadata metadata) {
     if (!metadata.getHasToBuilderMethod()) {
       return;
@@ -551,19 +558,20 @@ public class CodeGenerator {
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public %s toBuilder() {", metadata.getBuilder());
+    Block body = methodBody(code);
+    Variable builder = new Variable("builder");
     if (metadata.isExtensible()) {
       code.addLine("    %s builder = new PartialBuilder%s();",
               metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
-      Block block = new Block(code);
       for (Property property : metadata.getProperties()) {
-        property.getCodeGenerator().addSetBuilderFromPartial(block, "builder");
+        property.getCodeGenerator().addSetBuilderFromPartial(body, builder);
       }
-      code.add(block)
-          .addLine("    return builder;");
+      body.addLine("    return %s;", builder);
     } else {
-      code.addLine("    throw new %s();", UnsupportedOperationException.class);
+      body.addLine("    throw new %s();", UnsupportedOperationException.class);
     }
-    code.addLine("  }");
+    code.add(body)
+        .addLine("  }");
   }
 
   private void writeStubSource(SourceBuilder code, Metadata metadata) {

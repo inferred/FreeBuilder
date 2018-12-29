@@ -26,11 +26,6 @@ public class Block extends Excerpt implements SourceBuilder {
   private final SourceStringBuilder declarationsBlock;
   private final SourceStringBuilder body;
 
-  public Block(SourceBuilder parent) {
-    declarationsBlock = parent.subBuilder();
-    body = parent.subBuilder();
-  }
-
   private Block(SourceBuilder parent, Scope newScope) {
     declarationsBlock = parent.subScope(newScope);
     body = parent.subScope(newScope);
