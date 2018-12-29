@@ -37,7 +37,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
@@ -81,15 +80,12 @@ public class FilerUtilsTest {
     // Due to a bug in Eclipse, we *must* call close on the object returned from openWriter().
     // Eclipse proxies a Writer but does not implement the fluent API correctly.
     // Here, we implement the fluent Writer API with the same bug:
-    Writer mockWriter = Mockito.mock(Writer.class, new Answer<Object>() {
-      @Override
-      public Object answer(InvocationOnMock invocation) throws Throwable {
-        if (Writer.class.isAssignableFrom(invocation.getMethod().getReturnType())) {
-          // Erroneously return the delegate writer (matching the Eclipse bug!)
-          return source;
-        } else {
-          return Answers.RETURNS_SMART_NULLS.get().answer(invocation);
-        }
+    Writer mockWriter = Mockito.mock(Writer.class, (Answer<?>) invocation -> {
+      if (Writer.class.isAssignableFrom(invocation.getMethod().getReturnType())) {
+        // Erroneously return the delegate writer (matching the Eclipse bug!)
+        return source;
+      } else {
+        return Answers.RETURNS_SMART_NULLS.get().answer(invocation);
       }
     });
     when(sourceFile.openWriter()).thenReturn(mockWriter);

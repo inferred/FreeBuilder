@@ -21,11 +21,11 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElem
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeVariable;
 
-import com.google.common.base.Function;
-
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.function.Consumer;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -63,17 +63,13 @@ public class GenericElementTest {
 
   @Test
   public void testBoundedGenericElement() {
-    Function<TypeElement, Void> test = new Function<TypeElement, Void>() {
-      @Override
-      public Void apply(TypeElement foobar) {
+    Consumer<TypeElement> test = foobar -> {
         assertThat(foobar.getSimpleName().toString()).isEqualTo("FooBar");
         assertThat(foobar.getTypeParameters()).hasSize(2);
         assertThat(foobar.getTypeParameters().get(0).getSimpleName().toString()).isEqualTo("T");
         assertThat(foobar.getTypeParameters().get(0).toString()).isEqualTo("T");
         assertThat(foobar.getTypeParameters().get(1).getSimpleName().toString()).isEqualTo("C");
         assertThat(foobar.getTypeParameters().get(1).toString()).isEqualTo("C");
-        return null;
-      }
     };
     TypeElement realFoobar =
         model.newType("package org.example; interface FooBar<T extends Number, C> { }");
@@ -81,20 +77,17 @@ public class GenericElementTest {
         .addTypeParameter("T", newTopLevelClass("java.lang.Number"))
         .addTypeParameter("C")
         .build();
-    test.apply(realFoobar);
-    test.apply(fakeFoobar);
+    test.accept(realFoobar);
+    test.accept(fakeFoobar);
   }
 
   @Test
   public void testGenericMirror_withTypeVariables() {
-    Function<DeclaredType, Void> test = new Function<DeclaredType, Void>() {
-      @Override public Void apply(DeclaredType foobar) {
-        assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
-        assertThat(foobar.getTypeArguments()).hasSize(2);
-        assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
-            .isEqualTo("FooBar<T, C>");
-        return null;
-      }
+    Consumer<DeclaredType> test = foobar -> {
+      assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
+      assertThat(foobar.getTypeArguments()).hasSize(2);
+      assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
+          .isEqualTo("FooBar<T, C>");
     };
     DeclaredType realFoobar = (DeclaredType)
         model.newType("package org.example; interface FooBar<T, C> { }").asType();
@@ -103,20 +96,17 @@ public class GenericElementTest {
         .addTypeParameter("C")
         .build()
         .asType();
-    test.apply(realFoobar);
-    test.apply(fakeFoobar);
+    test.accept(realFoobar);
+    test.accept(fakeFoobar);
   }
 
   @Test
   public void testGenericMirror_withBounds() {
-    Function<DeclaredType, Void> test = new Function<DeclaredType, Void>() {
-      @Override public Void apply(DeclaredType foobar) {
-        assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
-        assertThat(foobar.getTypeArguments()).hasSize(2);
-        assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
-            .isEqualTo("FooBar<T, C>");
-        return null;
-      }
+    Consumer<DeclaredType> test = foobar -> {
+      assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
+      assertThat(foobar.getTypeArguments()).hasSize(2);
+      assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
+          .isEqualTo("FooBar<T, C>");
     };
     DeclaredType realFoobar = (DeclaredType)
         model.newType("package org.example; interface FooBar<T extends Number, C> { }").asType();
@@ -125,40 +115,37 @@ public class GenericElementTest {
         .addTypeParameter("C")
         .build()
         .asType();
-    test.apply(realFoobar);
-    test.apply(fakeFoobar);
+    test.accept(realFoobar);
+    test.accept(fakeFoobar);
   }
 
   @Test
   public void testGenericMirror_withSelfReference() {
-    Function<DeclaredType, Void> test = new Function<DeclaredType, Void>() {
-      @Override public Void apply(DeclaredType foobar) {
-        // FooBar<E extends FooBar<E>>
-        TypeElement foobarElement = maybeAsTypeElement(foobar).get();
-        assertThat(foobarElement.getSimpleName().toString()).isEqualTo("FooBar");
-        assertThat(foobar.getTypeArguments()).hasSize(1);
-        assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
-            .isEqualTo("FooBar<E>");
-        // E extends FooBar<E>
-        TypeParameterElement typeParameter = foobarElement.getTypeParameters().get(0);
-        assertThat(typeParameter.getSimpleName().toString()).isEqualTo("E");
-        assertThat(typeParameter.getBounds()).hasSize(1);
-        // FooBar<E>
-        DeclaredType bound = maybeDeclared(typeParameter.getBounds().get(0)).get();
-        assertThat(bound.asElement().getSimpleName().toString()).isEqualTo("FooBar");
-        assertThat(bound.getTypeArguments()).hasSize(1);
-        // E
-        TypeVariable typeArgument = maybeVariable(bound.getTypeArguments().get(0)).get();
-        assertThat(typeArgument.asElement()).isEqualTo(typeParameter);
-        return null;
-      }
+    Consumer<DeclaredType> test = foobar -> {
+      // FooBar<E extends FooBar<E>>
+      TypeElement foobarElement = maybeAsTypeElement(foobar).get();
+      assertThat(foobarElement.getSimpleName().toString()).isEqualTo("FooBar");
+      assertThat(foobar.getTypeArguments()).hasSize(1);
+      assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
+          .isEqualTo("FooBar<E>");
+      // E extends FooBar<E>
+      TypeParameterElement typeParameter = foobarElement.getTypeParameters().get(0);
+      assertThat(typeParameter.getSimpleName().toString()).isEqualTo("E");
+      assertThat(typeParameter.getBounds()).hasSize(1);
+      // FooBar<E>
+      DeclaredType bound = maybeDeclared(typeParameter.getBounds().get(0)).get();
+      assertThat(bound.asElement().getSimpleName().toString()).isEqualTo("FooBar");
+      assertThat(bound.getTypeArguments()).hasSize(1);
+      // E
+      TypeVariable typeArgument = maybeVariable(bound.getTypeArguments().get(0)).get();
+      assertThat(typeArgument.asElement()).isEqualTo(typeParameter);
     };
     DeclaredType realFoobar = (DeclaredType) model
         .newType("package org.example; interface FooBar<E extends FooBar<E>> { }").asType();
     GenericElement.Builder fakeFoobarBuilder = new GenericElement.Builder(FOO_BAR_NAME);
     fakeFoobarBuilder.getTypeParameter("E").addBound(fakeFoobarBuilder.asType());
     GenericMirror fakeFoobar = fakeFoobarBuilder.build().asType();
-    test.apply(realFoobar);
-    test.apply(fakeFoobar);
+    test.accept(realFoobar);
+    test.accept(fakeFoobar);
   }
 }
