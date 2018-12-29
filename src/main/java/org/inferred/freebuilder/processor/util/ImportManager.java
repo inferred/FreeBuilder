@@ -68,7 +68,7 @@ class ImportManager extends AbstractTypeShortener {
     }
 
     public ImportManager build() {
-      Set<String> nonConflictingImports = new LinkedHashSet<String>();
+      Set<String> nonConflictingImports = new LinkedHashSet<>();
       for (Set<QualifiedName> importGroup : Multimaps.asMap(implicitImports).values()) {
         if (importGroup.size() == 1) {
           QualifiedName implicitImport = getOnlyElement(importGroup);
@@ -81,9 +81,9 @@ class ImportManager extends AbstractTypeShortener {
     }
   }
 
-  private final Set<String> visibleSimpleNames = new HashSet<String>();
+  private final Set<String> visibleSimpleNames = new HashSet<>();
   private final ImmutableSet<String> implicitImports;
-  private final Set<String> explicitImports = new TreeSet<String>();
+  private final Set<String> explicitImports = new TreeSet<>();
 
   private ImportManager(Iterable<String> visibleSimpleNames, Iterable<String> implicitImports) {
     addAll(this.visibleSimpleNames, visibleSimpleNames);

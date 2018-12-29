@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.intUnaryOperator;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
@@ -101,10 +102,10 @@ public class DefaultedPropertiesSourceTest {
         "   * and using the result.",
         "   *",
         "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
+        "   * @throws NullPointerException if {@code mapper} is null",
         "   */",
-        "  public Person.Builder mapAge(UnaryOperator<Integer> mapper) {",
-        "    return setAge(mapper.apply(getAge()));",
+        "  public Person.Builder mapAge(IntUnaryOperator mapper) {",
+        "    return setAge(mapper.applyAsInt(getAge()));",
         "  }",
         "",
         "  /** Returns the value that will be returned by {@link Person#getAge()}. */",
@@ -312,10 +313,10 @@ public class DefaultedPropertiesSourceTest {
         "   * and using the result.",
         "   *",
         "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
+        "   * @throws NullPointerException if {@code mapper} is null",
         "   */",
-        "  public Person.Builder mapAge(UnaryOperator<Integer> mapper) {",
-        "    return setAge(mapper.apply(getAge()));",
+        "  public Person.Builder mapAge(IntUnaryOperator mapper) {",
+        "    return setAge(mapper.applyAsInt(getAge()));",
         "  }",
         "",
         "  /** Returns the value that will be returned by {@link Person#getAge()}. */",
@@ -524,10 +525,10 @@ public class DefaultedPropertiesSourceTest {
         "   * and using the result.",
         "   *",
         "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
+        "   * @throws NullPointerException if {@code mapper} is null",
         "   */",
-        "  public Person.Builder mapAge(UnaryOperator<Integer> mapper) {",
-        "    return setAge(mapper.apply(getAge()));",
+        "  public Person.Builder mapAge(IntUnaryOperator mapper) {",
+        "    return setAge(mapper.applyAsInt(getAge()));",
         "  }",
         "",
         "  /** Returns the value that will be returned by {@link Person#getAge()}. */",
@@ -755,10 +756,10 @@ public class DefaultedPropertiesSourceTest {
         "   * using the result.",
         "   *",
         "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
+        "   * @throws NullPointerException if {@code mapper} is null",
         "   */",
-        "  public Person.Builder mapAge(UnaryOperator<Integer> mapper) {",
-        "    return age(mapper.apply(age()));",
+        "  public Person.Builder mapAge(IntUnaryOperator mapper) {",
+        "    return age(mapper.applyAsInt(age()));",
         "  }",
         "",
         "  /** Returns the value that will be returned by {@link Person#age()}. */",
@@ -957,7 +958,7 @@ public class DefaultedPropertiesSourceTest {
             .setCodeGenerator(new DefaultProperty(metadata, name, true, unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, true, unaryOperator(INTEGER)))
+            .setCodeGenerator(new DefaultProperty(metadata, age, true, intUnaryOperator(INT)))
             .build())
         .build();
   }

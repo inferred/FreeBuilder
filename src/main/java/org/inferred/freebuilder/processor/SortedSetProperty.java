@@ -462,8 +462,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
     code.addLine("if (%s == null) {", property.getField().on(builder));
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  %s = %s.<%s>of();",
-              finalField, ImmutableSortedSet.class, elementType)
+      code.addLine("  %s = %s.of();",
+              finalField, ImmutableSortedSet.class)
           .addLine("} else if (%s instanceof %s) {",
               property.getField().on(builder), ImmutableSortedSet.class)
           .addLine("  %s = (%s<%s>) %s;",
@@ -489,8 +489,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
           .addLine("          || (%s instanceof %s ",
               property.getField(), ImmutableSortedSet.class)
           .addLine("              && %s.isEmpty()", property.getField())
-          .addLine("              && Objects.equals(%s.comparator(), %s.%s().comparator())))) {",
-              property.getField(), value, property.getGetterName())
+          .addLine("              && %s.equals(%s.comparator(), %s.%s().comparator())))) {",
+              Objects.class, property.getField(), value, property.getGetterName())
           .addLine("  @%s(\"unchecked\")", SuppressWarnings.class)
           .addLine("  %1$s<%2$s> _temporary = (%1$s<%2$s>) (%1$s<?>) %3$s.%4$s();",
               ImmutableSortedSet.class,

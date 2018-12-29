@@ -15,10 +15,9 @@
  */
 package org.inferred.freebuilder;
 
-import static org.junit.Assert.assertEquals;
+import static java.util.Arrays.asList;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,23 +35,14 @@ public class StringListGwtTypeTest {
   public void testAllMethodInteractions() {
     StringListGwtType.Builder builder = new StringListGwtType.Builder();
     builder.addNames(NAME_1);
-    assertEquals(newArrayList(NAME_1), builder.build().getNames());
+    assertEquals(asList(NAME_1), builder.build().getNames());
     builder.addNames(NAME_2, NAME_3);
-    assertEquals(newArrayList(NAME_1, NAME_2, NAME_3), builder.build().getNames());
+    assertEquals(asList(NAME_1, NAME_2, NAME_3), builder.build().getNames());
     builder.clearNames();
-    assertEquals(newArrayList(), builder.build().getNames());
-    builder.addAllNames(newArrayList(NAME_2, NAME_1));
-    assertEquals(newArrayList(NAME_2, NAME_1), builder.build().getNames());
+    assertEquals(asList(), builder.build().getNames());
+    builder.addAllNames(asList(NAME_2, NAME_1));
+    assertEquals(asList(NAME_2, NAME_1), builder.build().getNames());
     builder.clear();
-    assertEquals(newArrayList(), builder.build().getNames());
-  }
-
-  @SafeVarargs
-  private static <E> List<E> newArrayList(E... items) {
-    List<E> list = new ArrayList<E>();
-    for (E item : items) {
-      list.add(item);
-    }
-    return list;
+    assertEquals(asList(), builder.build().getNames());
   }
 }

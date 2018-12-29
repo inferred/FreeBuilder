@@ -108,7 +108,7 @@ public class ParameterizedType extends Excerpt {
    * in full.
    */
   public Excerpt constructor() {
-    return Excerpts.add("new %s%s", qualifiedName, typeParametersOrDiamondOperator());
+    return Excerpts.add("new %s%s", qualifiedName, diamondOperator());
   }
 
   /**
@@ -121,7 +121,7 @@ public class ParameterizedType extends Excerpt {
   /**
    * Returns the diamond operator if this type is parameterized, or an empty excerpt otherwise.
    */
-  public Excerpt typeParametersOrDiamondOperator() {
+  public Excerpt diamondOperator() {
     return isParameterized() ? Excerpts.add("<>") : Excerpts.empty();
   }
 
@@ -154,7 +154,7 @@ public class ParameterizedType extends Excerpt {
   /**
    * Returns a source excerpt of a JavaDoc link to a no-args method on this type.
    */
-  public Excerpt javadocNoArgMethodLink(final String memberName) {
+  public Excerpt javadocNoArgMethodLink(String memberName) {
     return Excerpts.add("{@link %s#%s()}", getQualifiedName(), memberName);
   }
 

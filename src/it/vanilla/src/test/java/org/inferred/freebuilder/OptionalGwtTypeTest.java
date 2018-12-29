@@ -43,7 +43,7 @@ public class OptionalGwtTypeTest {
     builder.setNullableName(NAME_3);
     assertEquals(Optional.of(NAME_3), builder.getName());
     assertEquals(Optional.of(NAME_3), builder.build().getName());
-    builder.setName(Optional.<String>absent());
+    builder.setName(Optional.absent());
     assertEquals(Optional.absent(), builder.getName());
     assertEquals(Optional.absent(), builder.build().getName());
     builder.setNullableName(null);

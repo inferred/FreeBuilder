@@ -137,7 +137,7 @@ public class Model {
   protected void start() {
     checkState(executorService == null, "Cannot restart a Model");
     executorService = Executors.newSingleThreadExecutor();
-    requestQueue = new SynchronousQueue<GenerationRequest>();
+    requestQueue = new SynchronousQueue<>();
     CompilerRunner compilerRunner = new CompilerRunner();
     executorService.execute(compilerRunner);
     processingEnv = compilerRunner.getProcessingEnvironment();
@@ -216,7 +216,7 @@ public class Model {
   }
 
   /** Parses the supplied type definition, returning its {@link TypeElement}. */
-  public TypeElement newType(final String... code) {
+  public TypeElement newType(String... code) {
     String codeString = Arrays.stream(code).collect(joining("\n"));
     codeString = TYPE_NAME_PATTERN.matcher(codeString)
         .replaceFirst("@" + Target.class.getCanonicalName() + " $0");
@@ -235,7 +235,7 @@ public class Model {
    *     "}")
    * </pre></code></blockquote>
    */
-  public Element newElementWithMarker(final String... code) {
+  public Element newElementWithMarker(String... code) {
     String codeString = Arrays.stream(code).collect(joining("\n"));
     checkMarkerPresentExactlyOnce(codeString);
     codeString = codeString.replaceFirst(
@@ -337,7 +337,7 @@ public class Model {
     @Override
     public void run() {
       TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
-      DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+      DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
       try {
         final JavaFileObject bootstrapType = new SourceBuilder()
             .addLine("package %s;", PACKAGE)

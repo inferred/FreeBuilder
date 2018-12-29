@@ -51,7 +51,6 @@ import org.junit.runners.JUnit4;
 import java.time.temporal.Temporal;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
@@ -107,7 +106,7 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
             "[NOTE] Add \"public static class Builder extends DataType_Builder {}\" to your class "
-                + "to enable the @FreeBuilder API"));
+                + "to enable the FreeBuilder API"));
   }
 
   @Test
@@ -143,7 +142,7 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
             "[NOTE] Add \"class Builder extends DataType_Builder {}\" to your interface "
-                + "to enable the @FreeBuilder API"));
+                + "to enable the FreeBuilder API"));
   }
 
   @Test
@@ -356,7 +355,7 @@ public class AnalyserTest {
         "  public abstract int getAge();",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
 
     Property age = properties.get("age");
@@ -385,7 +384,7 @@ public class AnalyserTest {
         "  public abstract int age();",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
 
     Property age = properties.get("age");
@@ -415,7 +414,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("customURLTemplate", "top50Sites");
     assertEquals("CUSTOM_URL_TEMPLATE", properties.get("customURLTemplate").getAllCapsName());
     assertEquals("TOP50_SITES", properties.get("top50Sites").getAllCapsName());
@@ -432,7 +431,7 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals(model.typeMirror(int.class), properties.get("age").getType());
     assertEquals("Age", properties.get("age").getCapitalizedName());
@@ -451,7 +450,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("available");
     assertEquals(model.typeMirror(boolean.class), properties.get("available").getType());
     assertEquals("Available", properties.get("available").getCapitalizedName());
@@ -481,7 +480,7 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = metadata.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertEquals(DefaultProperty.class, properties.get("name").getCodeGenerator().get().getClass());
   }
 
@@ -524,7 +523,7 @@ public class AnalyserTest {
     assertThat(dataType.getProperties()).isEmpty();
     assertThat(messager.getMessagesByElement().keys()).containsExactly("getName");
     assertThat(messager.getMessagesByElement().get("getName"))
-        .containsExactly("[ERROR] Getter methods must not be void on @FreeBuilder types");
+        .containsExactly("[ERROR] Getter methods must not be void on FreeBuilder types");
   }
 
   @Test
@@ -538,7 +537,7 @@ public class AnalyserTest {
     assertThat(dataType.getProperties()).isEmpty();
     assertThat(messager.getMessagesByElement().keys()).containsExactly("isName");
     assertThat(messager.getMessagesByElement().get("isName")).containsExactly(
-        "[ERROR] Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
+        "[ERROR] Getter methods starting with 'is' must return a boolean on FreeBuilder types");
   }
 
   @Test
@@ -552,7 +551,7 @@ public class AnalyserTest {
     assertThat(dataType.getProperties()).isEmpty();
     assertThat(messager.getMessagesByElement().keys()).containsExactly("getName");
     assertThat(messager.getMessagesByElement().get("getName"))
-        .containsExactly("[ERROR] Getter methods cannot take parameters on @FreeBuilder types");
+        .containsExactly("[ERROR] Getter methods cannot take parameters on FreeBuilder types");
   }
 
   @Test
@@ -564,7 +563,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("get");
     assertEquals("Get", properties.get("get").getCapitalizedName());
     assertEquals("get", properties.get("get").getGetterName());
@@ -581,7 +580,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("getter");
     assertEquals("Getter", properties.get("getter").getCapitalizedName());
     assertEquals("getter", properties.get("getter").getGetterName());
@@ -598,7 +597,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("issue");
     assertEquals("ISSUE", properties.get("issue").getAllCapsName());
     assertEquals("Issue", properties.get("issue").getCapitalizedName());
@@ -616,7 +615,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("getürkt");
     assertEquals("GETÜRKT", properties.get("getürkt").getAllCapsName());
     assertEquals("Getürkt", properties.get("getürkt").getCapitalizedName());
@@ -634,7 +633,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("is");
     assertEquals("IS", properties.get("is").getAllCapsName());
     assertEquals("Is", properties.get("is").getCapitalizedName());
@@ -655,7 +654,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("AGE", properties.get("age").getAllCapsName());
     assertEquals("Age", properties.get("age").getCapitalizedName());
@@ -667,10 +666,10 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().keys())
         .containsExactly("getNothing", "isDoubleBarrelled");
     assertThat(messager.getMessagesByElement().get("getNothing"))
-        .containsExactly("[ERROR] Getter methods must not be void on @FreeBuilder types");
+        .containsExactly("[ERROR] Getter methods must not be void on FreeBuilder types");
     assertThat(messager.getMessagesByElement().get("isDoubleBarrelled"))
         .containsExactly("[ERROR] Getter methods starting with 'is' must return a boolean"
-            + " on @FreeBuilder types");
+            + " on FreeBuilder types");
   }
 
   @Test
@@ -686,7 +685,7 @@ public class AnalyserTest {
         "  }",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertEquals(Type.REQUIRED, properties.get("name").getCodeGenerator().get().getType());
     assertEquals(Type.REQUIRED, properties.get("age").getCodeGenerator().get().getType());
   }
@@ -705,7 +704,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
   }
 
@@ -722,7 +721,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("property");
     assertEquals("java.lang.String", properties.get("property").getType().toString());
   }
@@ -786,7 +785,7 @@ public class AnalyserTest {
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("equals", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on FreeBuilder types"));
   }
 
   @Test
@@ -806,7 +805,7 @@ public class AnalyserTest {
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on FreeBuilder types"));
   }
 
   @Test
@@ -892,7 +891,7 @@ public class AnalyserTest {
         StandardMethod.EQUALS, UnderrideLevel.FINAL));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("equals", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on FreeBuilder types"));
   }
 
   @Test
@@ -912,7 +911,7 @@ public class AnalyserTest {
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+            "[ERROR] hashCode and equals must be implemented together on FreeBuilder types"));
   }
 
   @Test
@@ -1045,7 +1044,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("PrivateType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types cannot be private"));
+            "[ERROR] FreeBuilder types cannot be private"));
   }
 
   @Test
@@ -1066,7 +1065,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("NestedType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types cannot be private, "
+            "[ERROR] FreeBuilder types cannot be private, "
                 + "but enclosing type PrivateType is inaccessible"));
   }
 
@@ -1086,7 +1085,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("InnerType", ImmutableList.of(
-            "[ERROR] Inner classes cannot be @FreeBuilder types "
+            "[ERROR] Inner classes cannot be FreeBuilder types "
                 + "(did you forget the static keyword?)"));
   }
 
@@ -1099,7 +1098,7 @@ public class AnalyserTest {
         "  public class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("name");
     assertEquals("java.lang.String", properties.get("name").getType().toString());
     assertThat(properties.get("name").getBoxedType()).isEqualTo(Optional.empty());
@@ -1109,7 +1108,7 @@ public class AnalyserTest {
     assertThat(dataType.isExtensible()).isFalse();
     assertThat(dataType.getBuilderFactory()).isEqualTo(Optional.empty());
     assertThat(messager.getMessagesByElement().asMap()).containsEntry(
-        "Builder", ImmutableList.of("[ERROR] Builder must be static on @FreeBuilder types"));
+        "Builder", ImmutableList.of("[ERROR] Builder must be static on FreeBuilder types"));
   }
 
   @Test
@@ -1131,7 +1130,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType<A, B>", dataType.getType().toString());
     assertEquals("com.example.DataType_Builder.Value<A, B>", dataType.getValueType().toString());
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
     assertThat(properties.get("age").getBoxedType()).isEqualTo(Optional.empty());
@@ -1184,7 +1183,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType<A, B>", dataType.getType().toString());
     assertEquals("com.example.DataType_Builder.Value<A, B>", dataType.getValueType().toString());
     Map<String, Property> properties = dataType.getProperties().stream()
-        .collect(toMap(GET_NAME, $ -> $));
+        .collect(toMap(Property::getName, $ -> $));
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
     assertThat(properties.get("age").getBoxedType()).isEqualTo(Optional.empty());
@@ -1325,7 +1324,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("<init>", ImmutableList.of(
-            "[ERROR] @FreeBuilder types must have a package-visible no-args constructor"));
+            "[ERROR] FreeBuilder types must have a package-visible no-args constructor"));
   }
 
   @Test
@@ -1343,7 +1342,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types must have a package-visible no-args constructor"));
+            "[ERROR] FreeBuilder types must have a package-visible no-args constructor"));
   }
 
   @Test
@@ -1359,7 +1358,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support enum types"));
+            "[ERROR] FreeBuilder does not support enum types"));
   }
 
   @Test
@@ -1374,7 +1373,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support types in unnamed packages"));
+            "[ERROR] FreeBuilder does not support types in unnamed packages"));
   }
 
   @Test
@@ -1390,7 +1389,7 @@ public class AnalyserTest {
 
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support annotation types"));
+            "[ERROR] FreeBuilder does not support annotation types"));
   }
 
   @Test
@@ -1497,7 +1496,7 @@ public class AnalyserTest {
     assertThat(messager.getMessagesByElement().asMap())
         .containsEntry("DataType", ImmutableList.of(
             "[NOTE] Add \"class Builder extends DataType_Builder {}\" to your interface "
-                + "to enable the @FreeBuilder API"));
+                + "to enable the FreeBuilder API"));
   }
 
   @Test
@@ -1584,11 +1583,4 @@ public class AnalyserTest {
   private static String asSource(Excerpt annotation) {
     return SourceStringBuilder.simple().add(annotation).toString().trim();
   }
-
-  private static final Function<Property, String> GET_NAME = new Function<Property, String>() {
-    @Override
-    public String apply(Property propery) {
-      return propery.getName();
-    }
-  };
 }

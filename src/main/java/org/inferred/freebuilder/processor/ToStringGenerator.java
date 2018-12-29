@@ -18,7 +18,7 @@ class ToStringGenerator {
   /**
    * Generates a toString method using concatenation or a StringBuilder.
    */
-  public static void addToString(SourceBuilder code, Metadata metadata, final boolean forPartial) {
+  public static void addToString(SourceBuilder code, Metadata metadata, boolean forPartial) {
     String typename = (forPartial ? "partial " : "") + metadata.getType().getSimpleName();
     Predicate<Property> isOptional = property -> {
       Type type = property.getCodeGenerator().get().getType();

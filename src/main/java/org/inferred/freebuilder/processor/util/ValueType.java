@@ -38,7 +38,7 @@ public abstract class ValueType {
 
   /** A receiver that adds all received field names and values into a list in order. */
   private static final class ReceiverIntoList implements FieldReceiver {
-    private final List<Object> list = new ArrayList<Object>();
+    private final List<Object> list = new ArrayList<>();
 
     @Override
     public void add(String name, Object value) {

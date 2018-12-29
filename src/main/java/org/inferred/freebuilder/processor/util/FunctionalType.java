@@ -9,6 +9,7 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.only;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -55,14 +56,19 @@ public class FunctionalType extends ValueType {
         type);
   }
 
+  public static FunctionalType intUnaryOperator(PrimitiveType type) {
+    Preconditions.checkArgument(type.getKind() == TypeKind.INT);
+    return new FunctionalType(
+        ParameterizedType.from(IntUnaryOperator.class),
+        "applyAsInt",
+        ImmutableList.of(type),
+        type);
+  }
+
   public static FunctionalType unboxedUnaryOperator(TypeMirror type, Types types) {
     switch (type.getKind()) {
       case INT:
-        return new FunctionalType(
-            ParameterizedType.from(IntUnaryOperator.class),
-            "applyAsInt",
-            ImmutableList.of(type),
-            type);
+        return intUnaryOperator((PrimitiveType) type);
 
       case LONG:
         return new FunctionalType(
@@ -218,7 +224,7 @@ public class FunctionalType extends ValueType {
   protected void addFields(FieldReceiver fields) {
     fields.add("functionalInterface", functionalInterface);
     fields.add("methodName", methodName);
-    List<String> parametersAsStrings = new ArrayList<String>();
+    List<String> parametersAsStrings = new ArrayList<>();
     for (TypeMirror parameter : parameters) {
       parametersAsStrings.add(parameter.toString());
     }

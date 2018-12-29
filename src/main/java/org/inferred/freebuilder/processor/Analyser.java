@@ -19,7 +19,6 @@ import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Iterables.tryFind;
 import static com.google.common.collect.Maps.newLinkedHashMap;
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
@@ -90,7 +89,7 @@ import javax.lang.model.util.Types;
 class Analyser {
 
   /**
-   * Thrown when a @FreeBuilder type cannot have a Builder type generated, for instance if
+   * Thrown when a FreeBuilder type cannot have a Builder type generated, for instance if
    * it is private.
    */
   public static class CannotGenerateCodeException extends Exception { }
@@ -201,7 +200,7 @@ class Analyser {
   /** Basic sanity-checking to ensure we can fulfil the &#64;FreeBuilder contract for this type. */
   private void verifyType(TypeElement type, PackageElement pkg) throws CannotGenerateCodeException {
     if (pkg.isUnnamed()) {
-      messager.printMessage(ERROR, "@FreeBuilder does not support types in unnamed packages", type);
+      messager.printMessage(ERROR, "FreeBuilder does not support types in unnamed packages", type);
       throw new CannotGenerateCodeException();
     }
     switch (type.getNestingKind()) {
@@ -212,13 +211,13 @@ class Analyser {
         if (!type.getModifiers().contains(Modifier.STATIC)) {
           messager.printMessage(
               ERROR,
-              "Inner classes cannot be @FreeBuilder types (did you forget the static keyword?)",
+              "Inner classes cannot be FreeBuilder types (did you forget the static keyword?)",
               type);
           throw new CannotGenerateCodeException();
         }
 
         if (type.getModifiers().contains(Modifier.PRIVATE)) {
-          messager.printMessage(ERROR, "@FreeBuilder types cannot be private", type);
+          messager.printMessage(ERROR, "FreeBuilder types cannot be private", type);
           throw new CannotGenerateCodeException();
         }
 
@@ -226,7 +225,7 @@ class Analyser {
           if (e.getModifiers().contains(Modifier.PRIVATE)) {
             messager.printMessage(
                 ERROR,
-                "@FreeBuilder types cannot be private, but enclosing type "
+                "FreeBuilder types cannot be private, but enclosing type "
                     + e.getSimpleName() + " is inaccessible",
                 type);
             throw new CannotGenerateCodeException();
@@ -236,12 +235,12 @@ class Analyser {
 
       default:
         messager.printMessage(
-            ERROR, "Only top-level or static nested types can be @FreeBuilder types", type);
+            ERROR, "Only top-level or static nested types can be FreeBuilder types", type);
         throw new CannotGenerateCodeException();
     }
     switch (type.getKind()) {
       case ANNOTATION_TYPE:
-        messager.printMessage(ERROR, "@FreeBuilder does not support annotation types", type);
+        messager.printMessage(ERROR, "FreeBuilder does not support annotation types", type);
         throw new CannotGenerateCodeException();
 
       case CLASS:
@@ -249,7 +248,7 @@ class Analyser {
         break;
 
       case ENUM:
-        messager.printMessage(ERROR, "@FreeBuilder does not support enum types", type);
+        messager.printMessage(ERROR, "FreeBuilder does not support enum types", type);
         throw new CannotGenerateCodeException();
 
       case INTERFACE:
@@ -273,7 +272,7 @@ class Analyser {
         if (constructor.getModifiers().contains(Modifier.PRIVATE)) {
           messager.printMessage(
               ERROR,
-              "@FreeBuilder types must have a package-visible no-args constructor",
+              "FreeBuilder types must have a package-visible no-args constructor",
               constructor);
           throw new CannotGenerateCodeException();
         }
@@ -281,15 +280,14 @@ class Analyser {
       }
     }
     messager.printMessage(
-        ERROR, "@FreeBuilder types must have a package-visible no-args constructor", type);
+        ERROR, "FreeBuilder types must have a package-visible no-args constructor", type);
     throw new CannotGenerateCodeException();
   }
 
   /** Find any standard methods the user has 'underridden' in their type. */
   private Map<StandardMethod, UnderrideLevel> findUnderriddenMethods(
       Iterable<ExecutableElement> methods) {
-    Map<StandardMethod, ExecutableElement> standardMethods =
-        new LinkedHashMap<StandardMethod, ExecutableElement>();
+    Map<StandardMethod, ExecutableElement> standardMethods = new LinkedHashMap<>();
     for (ExecutableElement method : methods) {
       Optional<StandardMethod> standardMethod = maybeStandardMethod(method);
       if (standardMethod.isPresent() && isUnderride(method)) {
@@ -302,7 +300,7 @@ class Analyser {
           ? standardMethods.get(StandardMethod.EQUALS)
           : standardMethods.get(StandardMethod.HASH_CODE);
       messager.printMessage(ERROR,
-          "hashCode and equals must be implemented together on @FreeBuilder types",
+          "hashCode and equals must be implemented together on FreeBuilder types",
           underriddenMethod);
     }
     ImmutableMap.Builder<StandardMethod, UnderrideLevel> result = ImmutableMap.builder();
@@ -375,23 +373,25 @@ class Analyser {
    */
   private Optional<DeclaredType> tryFindBuilder(
       final QualifiedName superclass, TypeElement valueType) {
-    TypeElement builderType =
-        tryFind(typesIn(valueType.getEnclosedElements()),
-            element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME)).orNull();
+    TypeElement builderType = typesIn(valueType.getEnclosedElements())
+        .stream()
+        .filter(element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME))
+        .findAny()
+        .orElse(null);
     if (builderType == null) {
       if (valueType.getKind() == INTERFACE) {
         messager.printMessage(
             NOTE,
             "Add \"class Builder extends "
                 + superclass.getSimpleName()
-                + " {}\" to your interface to enable the @FreeBuilder API",
+                + " {}\" to your interface to enable the FreeBuilder API",
             valueType);
       } else {
         messager.printMessage(
             NOTE,
             "Add \"public static class Builder extends "
                 + superclass.getSimpleName()
-                + " {}\" to your class to enable the @FreeBuilder API",
+                + " {}\" to your class to enable the FreeBuilder API",
             valueType);
       }
       return Optional.empty();
@@ -432,7 +432,7 @@ class Analyser {
     }
     TypeElement builderElement = ModelUtils.asElement(builder.get());
     if (!builderElement.getModifiers().contains(Modifier.STATIC)) {
-      messager.printMessage(ERROR, "Builder must be static on @FreeBuilder types", builderElement);
+      messager.printMessage(ERROR, "Builder must be static on FreeBuilder types", builderElement);
       return new Metadata.Builder().setExtensible(false);
     }
     return new Metadata.Builder()

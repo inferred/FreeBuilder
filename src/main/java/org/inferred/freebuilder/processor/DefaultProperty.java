@@ -91,7 +91,7 @@ class DefaultProperty extends PropertyCodeGenerator {
     addGetter(code, metadata);
   }
 
-  private void addSetter(SourceBuilder code, final Metadata metadata) {
+  private void addSetter(SourceBuilder code, Metadata metadata) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
@@ -125,7 +125,7 @@ class DefaultProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMapper(SourceBuilder code, final Metadata metadata) {
+  private void addMapper(SourceBuilder code, Metadata metadata) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Replaces the value to be returned by %s",
@@ -153,7 +153,7 @@ class DefaultProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, final Metadata metadata) {
+  private void addGetter(SourceBuilder code, Metadata metadata) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns the value that will be returned by %s.",

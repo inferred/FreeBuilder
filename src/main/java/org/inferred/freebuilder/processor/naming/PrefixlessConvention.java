@@ -70,7 +70,7 @@ class PrefixlessConvention implements NamingConvention {
       if (declaredOnValueType) {
         messager.printMessage(
             ERROR,
-            "Only getter methods may be declared abstract on @FreeBuilder types",
+            "Only getter methods may be declared abstract on FreeBuilder types",
             method);
       } else {
         printNoImplementationMessage(valueType, method);
@@ -84,7 +84,7 @@ class PrefixlessConvention implements NamingConvention {
     messager.printMessage(
         ERROR,
         "No implementation found for non-getter method '" + method + "'; "
-            + "cannot generate @FreeBuilder implementation",
+            + "cannot generate FreeBuilder implementation",
         valueType);
   }
 }

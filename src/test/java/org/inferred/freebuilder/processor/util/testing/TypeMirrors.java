@@ -93,7 +93,7 @@ public class TypeMirrors {
     } else if (type instanceof ParameterizedType) {
       ParameterizedType pType = (ParameterizedType) type;
       DeclaredType rawType = (DeclaredType) typeMirror(typeUtils, elementUtils, pType.getRawType());
-      List<TypeMirror> typeArgumentMirrors = new ArrayList<TypeMirror>();
+      List<TypeMirror> typeArgumentMirrors = new ArrayList<>();
       for (Type typeArgument : pType.getActualTypeArguments()) {
         typeArgumentMirrors.add(typeMirror(typeUtils, elementUtils, typeArgument));
       }
@@ -262,7 +262,7 @@ public class TypeMirrors {
     }
 
     /** Iterates through instances of the given pattern, resetting every time the string mutates. */
-    Iterable<MatchResult> instancesOf(final Pattern pattern) {
+    Iterable<MatchResult> instancesOf(Pattern pattern) {
       return new Iterable<MatchResult>() {
         @Override public Iterator<MatchResult> iterator() {
           return new AbstractIterator<MatchResult>() {

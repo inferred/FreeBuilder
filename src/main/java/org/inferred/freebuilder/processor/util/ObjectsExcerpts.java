@@ -11,7 +11,7 @@ public class ObjectsExcerpts {
   /**
    * Returns an Excerpt equivalent to {@code Objects.equals(a, b)}.
    *
-   * <p>Uses == for appropriate primitive types, as this is generally more readable.
+   * <p>Uses == for primitive types, as this avoids boxing.
    */
   public static Excerpt equals(Object a, Object b, TypeKind kind) {
     return new EqualsExcerpt(true, a, b, kind);
@@ -20,7 +20,7 @@ public class ObjectsExcerpts {
   /**
    * Returns an Excerpt equivalent to {@code !Objects.equals(a, b)}.
    *
-   * <p>Uses != for appropriate primitive types, as this is generally more readable.
+   * <p>Uses != for primitive types, as this avoids boxing.
    */
   public static Excerpt notEquals(Object a, Object b, TypeKind kind) {
     return new EqualsExcerpt(false, a, b, kind);

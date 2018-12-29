@@ -506,7 +506,7 @@ public class CodeGenerator {
         .addLine("  public %s toBuilder() {", metadata.getBuilder());
     if (metadata.isExtensible()) {
       code.addLine("    %s builder = new PartialBuilder%s();",
-              metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
+              metadata.getBuilder(), metadata.getBuilder().diamondOperator());
       Block block = new Block(code);
       for (Property property : metadata.getProperties()) {
         property.getCodeGenerator().get().addSetBuilderFromPartial(block, "builder");
@@ -529,7 +529,7 @@ public class CodeGenerator {
   }
 
   /** Returns an {@link Excerpt} of "implements/extends {@code type}". */
-  private static Excerpt extending(final Object type, final boolean isInterface) {
+  private static Excerpt extending(Object type, boolean isInterface) {
     return Excerpts.add(isInterface ? "implements %s" : "extends %s", type);
   }
 
