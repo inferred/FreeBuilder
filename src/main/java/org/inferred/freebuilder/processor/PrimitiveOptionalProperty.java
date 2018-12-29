@@ -1,28 +1,26 @@
 package org.inferred.freebuilder.processor;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Optional;
+import static org.inferred.freebuilder.processor.BuilderMethods.*;
+import static org.inferred.freebuilder.processor.Util.*;
+import static org.inferred.freebuilder.processor.util.Block.*;
+import static org.inferred.freebuilder.processor.util.ModelUtils.*;
+
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
+
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
-import java.util.OptionalLong;
-
-import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
-import static org.inferred.freebuilder.processor.BuilderMethods.getter;
-import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
-import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
-import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CaseFormat;
 
 /**
  * This property class handles the primitive optional fields, including
@@ -254,14 +252,14 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<PrimitiveOptionalProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
       if (type == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
-      OptionalType optionalType = maybeOptional(type).orNull();
+      OptionalType optionalType = maybeOptional(type).orElse(null);
       if (optionalType == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       return Optional.of(new PrimitiveOptionalProperty(
@@ -275,7 +273,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
           return Optional.of(optionalType);
         }
       }
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 }
