@@ -506,7 +506,7 @@ public class CodeGenerator {
         .addLine("  public %s toBuilder() {", metadata.getBuilder());
     if (metadata.isExtensible()) {
       code.addLine("    %s builder = new PartialBuilder%s();",
-              metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
+              metadata.getBuilder(), metadata.getBuilder().diamondOperator());
       Block block = new Block(code);
       for (Property property : metadata.getProperties()) {
         property.getCodeGenerator().get().addSetBuilderFromPartial(block, "builder");
