@@ -34,7 +34,7 @@ import java.util.Map.Entry;
 public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multimap<K, V>> {
 
   public static <K, V> MultimapSubject<K, V> assertThat(Multimap<K, V> subject) {
-    return new MultimapSubject<K, V>(THROW_ASSERTION_ERROR, subject);
+    return new MultimapSubject<>(THROW_ASSERTION_ERROR, subject);
   }
 
   /**
@@ -106,7 +106,7 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
   private class InOrderContainmentAssertion extends ContainmentAssertion<K, V> {
 
     final Iterator<Entry<K, V>> entryIterator;
-    final List<Entry<K, V>> expected = new ArrayList<Entry<K, V>>();
+    final List<Entry<K, V>> expected = new ArrayList<>();
 
     InOrderContainmentAssertion() {
       entryIterator = getSubject().entries().iterator();

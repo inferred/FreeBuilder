@@ -286,8 +286,7 @@ class Analyser {
   /** Find any standard methods the user has 'underridden' in their type. */
   private Map<StandardMethod, UnderrideLevel> findUnderriddenMethods(
       Iterable<ExecutableElement> methods) {
-    Map<StandardMethod, ExecutableElement> standardMethods =
-        new LinkedHashMap<StandardMethod, ExecutableElement>();
+    Map<StandardMethod, ExecutableElement> standardMethods = new LinkedHashMap<>();
     for (ExecutableElement method : methods) {
       Optional<StandardMethod> standardMethod = maybeStandardMethod(method);
       if (standardMethod.isPresent() && isUnderride(method)) {

@@ -224,7 +224,7 @@ public class FunctionalType extends ValueType {
   protected void addFields(FieldReceiver fields) {
     fields.add("functionalInterface", functionalInterface);
     fields.add("methodName", methodName);
-    List<String> parametersAsStrings = new ArrayList<String>();
+    List<String> parametersAsStrings = new ArrayList<>();
     for (TypeMirror parameter : parameters) {
       parametersAsStrings.add(parameter.toString());
     }

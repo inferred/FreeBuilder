@@ -93,7 +93,7 @@ public class TypeMirrors {
     } else if (type instanceof ParameterizedType) {
       ParameterizedType pType = (ParameterizedType) type;
       DeclaredType rawType = (DeclaredType) typeMirror(typeUtils, elementUtils, pType.getRawType());
-      List<TypeMirror> typeArgumentMirrors = new ArrayList<TypeMirror>();
+      List<TypeMirror> typeArgumentMirrors = new ArrayList<>();
       for (Type typeArgument : pType.getActualTypeArguments()) {
         typeArgumentMirrors.add(typeMirror(typeUtils, elementUtils, typeArgument));
       }

@@ -40,7 +40,7 @@ public class IsInvalidTypeVisitor
     extends AbstractTypeVisitor6<Boolean, Void> implements Predicate<TypeMirror> {
 
   /** Handles self-referential types like {@code Comparable<E extends Comparable<E>>}. */
-  private final Map<DeclaredType, Boolean> invalidity = new LinkedHashMap<DeclaredType, Boolean>();
+  private final Map<DeclaredType, Boolean> invalidity = new LinkedHashMap<>();
 
   /** Returns true if input is neither null nor invalid. */
   @Override
