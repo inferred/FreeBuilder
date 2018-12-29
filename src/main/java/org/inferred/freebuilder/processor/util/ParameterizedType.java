@@ -154,7 +154,7 @@ public class ParameterizedType extends Excerpt {
   /**
    * Returns a source excerpt of a JavaDoc link to a no-args method on this type.
    */
-  public Excerpt javadocNoArgMethodLink(final String memberName) {
+  public Excerpt javadocNoArgMethodLink(String memberName) {
     return Excerpts.add("{@link %s#%s()}", getQualifiedName(), memberName);
   }
 
