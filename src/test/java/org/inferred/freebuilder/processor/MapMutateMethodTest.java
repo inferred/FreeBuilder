@@ -296,7 +296,7 @@ public class MapMutateMethodTest {
     behaviorTester
         .with(mapPropertyType)
         .with(testBuilder()
-            .addLine("List<%1$s> values = new ArrayList<%1$s>();", values.type())
+            .addLine("List<%s> values = new ArrayList<>();", values.type())
             .addLine("new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
             .addLine("    .mutateItems(items -> values.add(items.get(%s)))", keys.example(0))
@@ -311,7 +311,7 @@ public class MapMutateMethodTest {
     behaviorTester
         .with(mapPropertyType)
         .with(testBuilder()
-            .addLine("List<Boolean> containsKeys = new ArrayList<Boolean>();")
+            .addLine("List<Boolean> containsKeys = new ArrayList<>();")
             .addLine("new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
             .addLine("    .mutateItems(items -> containsKeys.add(items.containsKey(%s)))",

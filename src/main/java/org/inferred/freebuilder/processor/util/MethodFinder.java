@@ -93,7 +93,7 @@ public class MethodFinder {
   private static <E extends Exception> ImmutableSet<TypeElement> getSupertypes(
       TypeElement type,
       ErrorTypeHandling<E> errorTypeHandling) throws E {
-    Set<TypeElement> supertypes = new LinkedHashSet<TypeElement>();
+    Set<TypeElement> supertypes = new LinkedHashSet<>();
     addSupertypesToSet(type, supertypes, errorTypeHandling);
     return ImmutableSet.copyOf(supertypes);
   }

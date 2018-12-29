@@ -201,7 +201,7 @@ public class SourceStringBuilderTest {
 
   private static AnnotationMirror getOnlyAnnotation(Element element) {
     // Ignore @Target, as it's added by the model framework
-    List<AnnotationMirror> annotations = new ArrayList<AnnotationMirror>();
+    List<AnnotationMirror> annotations = new ArrayList<>();
     for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
       if (!annotation.getAnnotationType().asElement().getSimpleName().contentEquals("Target")) {
         annotations.add(annotation);

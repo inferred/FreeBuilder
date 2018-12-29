@@ -51,7 +51,7 @@ public class SetPropertyTest {
 
   @SafeVarargs
   private static <E> Set<E> newHashSet(E... items) {
-    Set<E> list = new HashSet<E>();
+    Set<E> list = new HashSet<>();
     for (E item : items) {
       list.add(item);
     }

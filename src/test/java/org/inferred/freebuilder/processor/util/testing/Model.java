@@ -137,7 +137,7 @@ public class Model {
   protected void start() {
     checkState(executorService == null, "Cannot restart a Model");
     executorService = Executors.newSingleThreadExecutor();
-    requestQueue = new SynchronousQueue<GenerationRequest>();
+    requestQueue = new SynchronousQueue<>();
     CompilerRunner compilerRunner = new CompilerRunner();
     executorService.execute(compilerRunner);
     processingEnv = compilerRunner.getProcessingEnvironment();
@@ -337,7 +337,7 @@ public class Model {
     @Override
     public void run() {
       TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
-      DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+      DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
       try {
         final JavaFileObject bootstrapType = new SourceBuilder()
             .addLine("package %s;", PACKAGE)
