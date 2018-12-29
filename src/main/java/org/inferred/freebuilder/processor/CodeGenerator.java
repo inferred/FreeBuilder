@@ -425,20 +425,7 @@ public class CodeGenerator {
       code.addLine("  private final %s<%s> %s;",
           EnumSet.class, metadata.getPropertyEnum(), UNSET_PROPERTIES);
     }
-    // Constructor
-    code.addLine("")
-        .addLine("  %s(%s builder) {",
-            metadata.getPartialType().getSimpleName(),
-            metadata.getGeneratedBuilder());
-    for (Property property : metadata.getProperties()) {
-      property.getCodeGenerator()
-          .addPartialFieldAssignment(code, property.getField().on("this"), "builder");
-    }
-    if (hasRequiredProperties) {
-      code.addLine("    %s = %s.clone();",
-          UNSET_PROPERTIES.on("this"), UNSET_PROPERTIES.on("builder"));
-    }
-    code.addLine("  }");
+    addPartialConstructor(code, metadata, hasRequiredProperties);
     // Getters
     for (Property property : metadata.getProperties()) {
       code.addLine("")
@@ -534,6 +521,25 @@ public class CodeGenerator {
       addToString(code, metadata, true);
     }
     code.addLine("}");
+  }
+
+  private static void addPartialConstructor(
+      SourceBuilder code, Metadata metadata, boolean hasRequiredProperties) {
+    code.addLine("")
+        .addLine("  %s(%s builder) {",
+            metadata.getPartialType().getSimpleName(),
+            metadata.getGeneratedBuilder());
+    Block body = methodBody(code, "builder");
+    for (Property property : metadata.getProperties()) {
+      property.getCodeGenerator()
+          .addPartialFieldAssignment(body, property.getField().on("this"), "builder");
+    }
+    if (hasRequiredProperties) {
+      body.addLine("    %s = %s.clone();",
+          UNSET_PROPERTIES.on("this"), UNSET_PROPERTIES.on("builder"));
+    }
+    code.add(body)
+        .addLine("  }");
   }
 
   private static void addPartialToBuilderMethod(SourceBuilder code, Metadata metadata) {
