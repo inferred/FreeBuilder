@@ -107,6 +107,10 @@ public class QualifiedName extends ValueType {
     return simpleNames.size() == 1;
   }
 
+  public boolean isClass(Class<?> cls) {
+    return equals(QualifiedName.of(cls));
+  }
+
   /**
    * Returns the {@link QualifiedName} of a type called {@code simpleName} nested in this one.
    */
