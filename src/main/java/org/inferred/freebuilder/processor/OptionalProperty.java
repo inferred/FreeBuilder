@@ -99,8 +99,7 @@ class OptionalProperty extends PropertyCodeGenerator {
           FunctionalType mapperType,
           Property property) {
         code.add("  return %s(%s().map(mapper", setter(property), getter(property));
-        if (!mapperType.getFunctionalInterface().getQualifiedName().toString()
-            .equals(UnaryOperator.class.getName())) {
+        if (!mapperType.getFunctionalInterface().getQualifiedName().isClass(UnaryOperator.class)) {
           code.add("::%s", mapperType.getMethodName());
         }
         code.add("));%n");
