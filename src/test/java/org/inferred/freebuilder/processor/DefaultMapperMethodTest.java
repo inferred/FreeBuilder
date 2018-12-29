@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.util.testing.CompilationException;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
@@ -232,8 +233,8 @@ public class DefaultMapperMethodTest {
   }
 
   @Test
-  public void mapThrowsNpeIfMapperReturnsNullForRequiredProperty_bean() {
-    thrown.expect(NullPointerException.class);
+  public void mapThrowsCompilationExceptionIfMapperReturnsNullForRequiredProperty_bean() {
+    thrown.expect(CompilationException.class);
     behaviorTester
         .with(new Processor(features))
         .with(REQUIRED_INTEGER_BEAN_TYPE)
@@ -246,8 +247,8 @@ public class DefaultMapperMethodTest {
   }
 
   @Test
-  public void mapThrowsNpeIfMapperReturnsNullForDefaultProperty_bean() {
-    thrown.expect(NullPointerException.class);
+  public void mapThrowsCompilationExceptionIfMapperReturnsNullForDefaultProperty_bean() {
+    thrown.expect(CompilationException.class);
     behaviorTester
         .with(new Processor(features))
         .with(DEFAULT_INTEGER_BEAN_TYPE)
@@ -407,8 +408,8 @@ public class DefaultMapperMethodTest {
   }
 
   @Test
-  public void mapThrowsNpeIfMapperReturnsNullForRequiredProperty_prefixless() {
-    thrown.expect(NullPointerException.class);
+  public void mapThrowsCompilationExceptionIfMapperReturnsNullForRequiredProperty_prefixless() {
+    thrown.expect(CompilationException.class);
     behaviorTester
         .with(new Processor(features))
         .with(REQUIRED_INTEGER_PREFIXLESS_TYPE)
@@ -421,8 +422,8 @@ public class DefaultMapperMethodTest {
   }
 
   @Test
-  public void mapThrowsNpeIfMapperReturnsNullForDefaultProperty_prefixless() {
-    thrown.expect(NullPointerException.class);
+  public void mapThrowsCompilationExceptionIfMapperReturnsNullForDefaultProperty_prefixless() {
+    thrown.expect(CompilationException.class);
     behaviorTester
         .with(new Processor(features))
         .with(DEFAULT_INTEGER_PREFIXLESS_TYPE)
