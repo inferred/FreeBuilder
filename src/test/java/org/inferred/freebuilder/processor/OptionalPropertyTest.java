@@ -248,8 +248,7 @@ public class OptionalPropertyTest {
         .with(oneProperty)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.<%s>%s())",
-                convention.set("item"), optional, element.type(), empty)
+            .addLine("    .%s(%s.%s())", convention.set("item"), optional, empty)
             .addLine("    .build();")
             .addLine("assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
             .build())
@@ -486,8 +485,7 @@ public class OptionalPropertyTest {
         .with(validatedProperty)
         .with(testBuilder()
             .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s.<%s>%s());",
-                convention.set("item"), optional, element.type(), empty)
+            .addLine("    .%s(%s.%s());", convention.set("item"), optional, empty)
             .build())
         .runTest();
   }
@@ -532,8 +530,7 @@ public class OptionalPropertyTest {
             .addLine("    .addEqualityGroup(")
             .addLine("        DataType.builder().build(),")
             .addLine("        DataType.builder()")
-            .addLine("            .%s(%s.<%s>%s())",
-                convention.set("item"), optional, element.type(), empty)
+            .addLine("            .%s(%s.%s())", convention.set("item"), optional, empty)
             .addLine("            .build(),")
             .addLine("        DataType.builder()")
             .addLine("            .%s(null)", convention.set("nullableItem"))
