@@ -47,6 +47,7 @@ import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -551,19 +552,20 @@ public class CodeGenerator {
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public %s toBuilder() {", metadata.getBuilder());
+    Block body = methodBody(code);
+    Variable builder = new Variable("builder");
     if (metadata.isExtensible()) {
       code.addLine("    %s builder = new PartialBuilder%s();",
               metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
-      Block block = new Block(code);
       for (Property property : metadata.getProperties()) {
-        property.getCodeGenerator().addSetBuilderFromPartial(block, "builder");
+        property.getCodeGenerator().addSetBuilderFromPartial(body, builder);
       }
-      code.add(block)
-          .addLine("    return builder;");
+      body.addLine("    return %s;", builder);
     } else {
-      code.addLine("    throw new %s();", UnsupportedOperationException.class);
+      body.addLine("    throw new %s();", UnsupportedOperationException.class);
     }
-    code.addLine("  }");
+    code.add(body)
+        .addLine("  }");
   }
 
   private void writeStubSource(SourceBuilder code, Metadata metadata) {

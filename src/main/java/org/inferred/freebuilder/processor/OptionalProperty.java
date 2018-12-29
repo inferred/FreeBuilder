@@ -41,6 +41,7 @@ import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -382,7 +383,7 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addSetBuilderFromPartial(Block code, String builder) {
+  public void addSetBuilderFromPartial(Block code, Variable builder) {
     code.addLine("%s.%s(%s);", builder, nullableSetter(property), property.getField());
   }
 

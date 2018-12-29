@@ -406,7 +406,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addSetBuilderFromPartial(Block code, String builder) {
+  public void addSetBuilderFromPartial(Block code, Variable builder) {
     if (partialToBuilderMethod == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
       code.add("%s.%s().mergeFrom(%s.toBuilder());",
           builder, getBuilderMethod(property), property.getField());

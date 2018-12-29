@@ -1117,6 +1117,32 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testToBuilder_withPropertyCalledBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String builder();")
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}")
+            .build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .builder(\"Bob\")")
+            .addLine("    .build();")
+            .addLine("DataType.Builder copyBuilder = value.toBuilder();")
+            .addLine("copyBuilder.builder(copyBuilder.builder() + \" 2\");")
+            .addLine("DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"DataType{builder=Bob 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testSiblingNameClashes() {
     behaviorTester
         .with(new Processor(features))
