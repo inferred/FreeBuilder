@@ -33,7 +33,7 @@ public class RoundEnvironments {
    * <p>The canonical example is forgetting to import &#64;Nullable.
    */
   public static Set<? extends Element> annotatedElementsIn(
-      RoundEnvironment roundEnv, final Class<? extends Annotation> a) {
+      RoundEnvironment roundEnv, Class<? extends Annotation> a) {
     return Sets.filter(roundEnv.getElementsAnnotatedWith(a),
         element -> element.getAnnotation(a) != null);
   }

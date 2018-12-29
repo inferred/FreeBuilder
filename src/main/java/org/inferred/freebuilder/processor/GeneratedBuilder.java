@@ -551,7 +551,7 @@ class GeneratedBuilder extends GeneratedType {
   }
 
   /** Returns an {@link Excerpt} of "implements/extends {@code type}". */
-  private static Excerpt extending(final Object type, final boolean isInterface) {
+  private static Excerpt extending(Object type, boolean isInterface) {
     return Excerpts.add(isInterface ? "implements %s" : "extends %s", type);
   }
 

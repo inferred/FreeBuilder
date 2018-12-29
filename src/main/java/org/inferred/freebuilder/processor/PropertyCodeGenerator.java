@@ -151,7 +151,7 @@ public abstract class PropertyCodeGenerator {
   }
 
   @Override
-  public boolean equals(final Object obj) {
+  public boolean equals(Object obj) {
     if (obj == null || !getClass().isInstance(obj)) {
       return false;
     }

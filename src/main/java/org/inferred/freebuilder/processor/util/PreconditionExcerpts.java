@@ -46,7 +46,7 @@ public class PreconditionExcerpts {
         code.add(");\n");
       } else {
         List<Excerpt> escapedArgs = new ArrayList<Excerpt>();
-        for (final Object arg : args) {
+        for (Object arg : args) {
           escapedArgs.add(Excerpts.add("\" + %s + \"", arg));
         }
         String messageConcatenated = code.subBuilder()

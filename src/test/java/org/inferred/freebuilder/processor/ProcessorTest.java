@@ -764,7 +764,7 @@ public class ProcessorTest {
     }
   }
 
-  public static <T> T reserialize(final T object) {
+  public static <T> T reserialize(T object) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try {
       ObjectOutputStream out = new ObjectOutputStream(bytes);
