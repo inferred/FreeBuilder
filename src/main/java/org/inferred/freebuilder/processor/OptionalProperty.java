@@ -45,8 +45,6 @@ import java.util.function.UnaryOperator;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.SimpleTypeVisitor6;
 
 /**
  * {@link PropertyCodeGenerator} providing a default value (absent/empty) and convenience setter
@@ -148,11 +146,6 @@ class OptionalProperty extends PropertyCodeGenerator {
       TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
 
-      // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
-      // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
-      // type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
-      boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
-
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
           mapper(property),
@@ -166,8 +159,7 @@ class OptionalProperty extends PropertyCodeGenerator {
           optionalType,
           elementType,
           unboxedType,
-          mapperType,
-          requiresExplicitTypeParameters));
+          mapperType));
     }
 
     private static Optional<OptionalType> maybeOptional(DeclaredType type) {
@@ -184,7 +176,6 @@ class OptionalProperty extends PropertyCodeGenerator {
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;
   private final FunctionalType mapperType;
-  private final boolean requiresExplicitTypeParameters;
 
   @VisibleForTesting OptionalProperty(
       Datatype datatype,
@@ -192,14 +183,12 @@ class OptionalProperty extends PropertyCodeGenerator {
       OptionalType optional,
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
-      FunctionalType mapperType,
-      boolean requiresExplicitTypeParametersInJava7) {
+      FunctionalType mapperType) {
     super(datatype, property);
     this.optional = optional;
     this.elementType = elementType;
     this.unboxedType = unboxedType;
     this.mapperType = mapperType;
-    this.requiresExplicitTypeParameters = requiresExplicitTypeParametersInJava7;
   }
 
   @Override
@@ -351,12 +340,8 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine(" * Returns the value that will be returned by %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
-        .addLine("public %s %s() {", property.getType(), getter(property));
-    code.add("  return %s.", optional.cls);
-    if (requiresExplicitTypeParameters) {
-      code.add("<%s>", elementType);
-    }
-    code.add("%s(%s);\n", optional.ofNullable, property.getField())
+        .addLine("public %s %s() {", property.getType(), getter(property))
+        .addLine("  return %s.%s(%s);\n", optional.cls, optional.ofNullable, property.getField())
         .addLine("}");
   }
 
@@ -384,11 +369,7 @@ class OptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addReadValueFragment(SourceBuilder code, Excerpt finalField) {
-    code.add("%s.", optional.cls);
-    if (requiresExplicitTypeParameters) {
-      code.add("<%s>", elementType);
-    }
-    code.add("%s(%s)", optional.ofNullable, finalField);
+    code.add("%s.%s(%s)", optional.cls, optional.ofNullable, finalField);
   }
 
   @Override
@@ -405,26 +386,4 @@ class OptionalProperty extends PropertyCodeGenerator {
       code.addLine("%s = null;", property.getField());
     }
   }
-
-  private static final SimpleTypeVisitor6<Boolean, Void> HAS_WILDCARD =
-      new SimpleTypeVisitor6<Boolean, Void>() {
-        @Override protected Boolean defaultAction(TypeMirror e, Void p) {
-          return false;
-        }
-
-        @Override
-        public Boolean visitDeclared(DeclaredType t, Void p) {
-          for (TypeMirror typeArgument : t.getTypeArguments()) {
-            if (visit(typeArgument)) {
-              return true;
-            }
-          }
-          return false;
-        }
-
-        @Override
-        public Boolean visitWildcard(WildcardType t, Void p) {
-          return true;
-        }
-      };
 }

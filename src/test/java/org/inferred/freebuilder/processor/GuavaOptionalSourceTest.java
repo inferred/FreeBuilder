@@ -1114,15 +1114,13 @@ public class GuavaOptionalSourceTest {
             OptionalType.GUAVA,
             STRING,
             Optional.empty(),
-            unaryOperator(STRING),
-            false),
+            unaryOperator(STRING)),
         age, new OptionalProperty(
             datatype,
             age,
             OptionalType.GUAVA,
             INTEGER,
             Optional.of(INT),
-            unaryOperator(INTEGER),
-            false)));
+            unaryOperator(INTEGER))));
   }
 }
