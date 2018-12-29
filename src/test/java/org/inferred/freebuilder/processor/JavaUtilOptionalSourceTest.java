@@ -1024,15 +1024,13 @@ public class JavaUtilOptionalSourceTest {
             OptionalType.JAVA8,
             STRING,
             Optional.empty(),
-            unaryOperator(STRING),
-            false),
+            unaryOperator(STRING)),
         age, new OptionalProperty(
             datatype,
             age,
             OptionalType.JAVA8,
             INTEGER,
             Optional.of(INT),
-            unaryOperator(INTEGER),
-            false)));
+            unaryOperator(INTEGER))));
   }
 }
