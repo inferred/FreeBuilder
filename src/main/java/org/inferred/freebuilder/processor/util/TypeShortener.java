@@ -15,17 +15,14 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
-import java.util.List;
-
-import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
 /**
@@ -33,18 +30,70 @@ import javax.lang.model.util.SimpleTypeVisitor6;
  */
 interface TypeShortener {
 
+  String shorten(TypeElement type);
   String shorten(TypeMirror mirror);
   String shorten(QualifiedName type);
 
-  /** A {@link TypeShortener} that never shortens types. */
-  class NeverShorten
-      extends SimpleTypeVisitor6<String, Void>
-      implements Function<TypeMirror, String>, TypeShortener {
+  abstract class AbstractTypeShortener
+      extends SimpleTypeVisitor6<StringBuilder, StringBuilder>
+      implements TypeShortener {
+
+    protected abstract void appendShortened(StringBuilder b, TypeElement type);
+
+    @Override
+    public String shorten(TypeElement type) {
+      StringBuilder b = new StringBuilder();
+      appendShortened(b, type);
+      return b.toString();
+    }
 
     @Override
     public String shorten(TypeMirror mirror) {
-      return mirror.accept(this, null);
+      return mirror.accept(this, new StringBuilder()).toString();
     }
+
+    @Override
+    public StringBuilder visitDeclared(DeclaredType mirror, StringBuilder b) {
+      if (mirror.getEnclosingType().getKind() == TypeKind.NONE) {
+        appendShortened(b, asElement(mirror));
+      } else {
+        mirror.getEnclosingType().accept(this, b);
+        b.append('.').append(mirror.asElement().getSimpleName());
+      }
+      if (!mirror.getTypeArguments().isEmpty()) {
+        String prefix = "<";
+        for (TypeMirror typeArgument : mirror.getTypeArguments()) {
+          b.append(prefix);
+          typeArgument.accept(this, b);
+          prefix = ", ";
+        }
+        b.append(">");
+      }
+      return b;
+    }
+
+    @Override
+    public StringBuilder visitWildcard(WildcardType t, StringBuilder b) {
+      b.append("?");
+      if (t.getSuperBound() != null) {
+        b.append(" super ");
+        t.getSuperBound().accept(this, b);
+      }
+      if (t.getExtendsBound() != null) {
+        b.append(" extends ");
+        t.getExtendsBound().accept(this, b);
+      }
+      return b;
+    }
+
+    @Override
+    protected StringBuilder defaultAction(TypeMirror mirror, StringBuilder b) {
+      return b.append(mirror);
+    }
+  }
+
+  /** A {@link TypeShortener} that never shortens types. */
+  class NeverShorten extends AbstractTypeShortener {
 
     @Override
     public String shorten(QualifiedName type) {
@@ -52,78 +101,26 @@ interface TypeShortener {
     }
 
     @Override
-    public String apply(TypeMirror mirror) {
-      return mirror.accept(this, null);
-    }
-
-    @Override
-    public String visitDeclared(DeclaredType mirror, Void p) {
-      Name name = mirror.asElement().getSimpleName();
-      final String prefix;
-      if (mirror.getEnclosingType().getKind() == TypeKind.NONE) {
-        prefix = ((PackageElement) mirror.asElement().getEnclosingElement()).getQualifiedName()
-            + ".";
-      } else {
-        prefix = visit(mirror.getEnclosingType()) + ".";
-      }
-      final String suffix;
-      if (!mirror.getTypeArguments().isEmpty()) {
-        List<String> shortTypeArguments = Lists.transform(mirror.getTypeArguments(), this);
-        suffix = "<" + Joiner.on(", ").join(shortTypeArguments) + ">";
-      } else {
-        suffix = "";
-      }
-      return prefix + name + suffix;
-    }
-
-    @Override
-    protected String defaultAction(TypeMirror mirror, Void p) {
-      return mirror.toString();
+    protected void appendShortened(StringBuilder b, TypeElement type) {
+      b.append(type);
     }
   }
 
   /** A {@link TypeShortener} that always shortens types, even if that causes conflicts. */
-  class AlwaysShorten
-      extends SimpleTypeVisitor6<String, Void>
-      implements Function<TypeMirror, String>, TypeShortener {
-
-    @Override
-    public String shorten(TypeMirror mirror) {
-      return mirror.accept(this, null);
-    }
+  class AlwaysShorten extends AbstractTypeShortener {
 
     @Override
     public String shorten(QualifiedName type) {
-      return type.toString().substring(type.getPackage().length() + 1);
+      return type.getSimpleNames().stream().collect(joining("."));
     }
 
     @Override
-    public String apply(TypeMirror mirror) {
-      return mirror.accept(this, null);
-    }
-
-    @Override
-    public String visitDeclared(DeclaredType mirror, Void p) {
-      Name name = mirror.asElement().getSimpleName();
-      final String prefix;
-      if (mirror.getEnclosingType().getKind() == TypeKind.NONE) {
-        prefix = "";
-      } else {
-        prefix = visit(mirror.getEnclosingType()) + ".";
+    protected void appendShortened(StringBuilder b, TypeElement type) {
+      if (type.getNestingKind().isNested()) {
+        appendShortened(b, (TypeElement) type.getEnclosingElement());
+        b.append('.');
       }
-      final String suffix;
-      if (!mirror.getTypeArguments().isEmpty()) {
-        List<String> shortTypeArguments = Lists.transform(mirror.getTypeArguments(), this);
-        suffix = "<" + Joiner.on(", ").join(shortTypeArguments) + ">";
-      } else {
-        suffix = "";
-      }
-      return prefix + name + suffix;
-    }
-
-    @Override
-    protected String defaultAction(TypeMirror mirror, Void p) {
-      return mirror.toString();
+      b.append(type.getSimpleName());
     }
   }
 }

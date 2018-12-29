@@ -72,8 +72,7 @@ public class ObjectsExcerptsTest {
                 (i == j) ? "True" : "False",
                 i,
                 j,
-                ObjectsExcerpts.equals(
-                    "value" + i, "value" + j, valueSet.kind));
+                ObjectsExcerpts.equals("value" + i, "value" + j, valueSet.kind));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
@@ -93,8 +92,7 @@ public class ObjectsExcerptsTest {
                 (i == j) ? "True" : "False",
                 i,
                 j,
-                ObjectsExcerpts.equals(
-                    "value" + i, "value" + j, valueSet.kind));
+                ObjectsExcerpts.equals("value" + i, "value" + j, TypeKind.DECLARED));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
@@ -113,8 +111,7 @@ public class ObjectsExcerptsTest {
                 (i != j) ? "True" : "False",
                 i,
                 j,
-                ObjectsExcerpts.notEquals(
-                    "value" + i, "value" + j, valueSet.kind));
+                ObjectsExcerpts.notEquals("value" + i, "value" + j, valueSet.kind));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
@@ -134,8 +131,7 @@ public class ObjectsExcerptsTest {
                 (i != j) ? "True" : "False",
                 i,
                 j,
-                ObjectsExcerpts.notEquals(
-                    "value" + i, "value" + j, valueSet.kind));
+                ObjectsExcerpts.notEquals("value" + i, "value" + j, TypeKind.DECLARED));
       }
     }
     behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();

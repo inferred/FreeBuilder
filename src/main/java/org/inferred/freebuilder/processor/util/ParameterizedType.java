@@ -17,6 +17,7 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
@@ -24,6 +25,7 @@ import static java.util.Collections.nCopies;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 
 import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
@@ -170,25 +172,25 @@ public class ParameterizedType extends Excerpt {
 
   private final class DeclarationParameters extends Excerpt {
 
-    private final List<?> typeParameters;
+    private final List<TypeParameterElement> typeParameters;
 
     DeclarationParameters(List<?> typeParameters) {
-      this.typeParameters = typeParameters;
+      this.typeParameters =
+          FluentIterable.from(typeParameters).filter(TypeParameterElement.class).toList();
+      checkState(this.typeParameters.size() == typeParameters.size(),
+          "Not all parameters are TypeParameterElements");
     }
 
     @Override public void addTo(SourceBuilder source) {
       if (!typeParameters.isEmpty()) {
         String prefix = "<";
-        for (Object typeParameter : typeParameters) {
-          source.add("%s%s", prefix, typeParameter);
-          if (typeParameter instanceof TypeParameterElement) {
-            TypeParameterElement element = (TypeParameterElement) typeParameter;
-            if (!extendsObject(element)) {
-              String separator = " extends ";
-              for (TypeMirror bound : element.getBounds()) {
-                source.add("%s%s", separator, bound);
-                separator = " & ";
-              }
+        for (TypeParameterElement typeParameter : typeParameters) {
+          source.add("%s%s", prefix, typeParameter.getSimpleName());
+          if (!extendsObject(typeParameter)) {
+            String separator = " extends ";
+            for (TypeMirror bound : typeParameter.getBounds()) {
+              source.add("%s%s", separator, bound);
+              separator = " & ";
             }
           }
           prefix = ", ";
@@ -207,7 +209,7 @@ public class ParameterizedType extends Excerpt {
     if (element.getBounds().size() != 1) {
       return false;
     }
-    TypeElement bound = maybeAsTypeElement(getOnlyElement(element.getBounds())).orNull();
+    TypeElement bound = maybeAsTypeElement(getOnlyElement(element.getBounds())).orElse(null);
     if (bound == null) {
       return false;
     }

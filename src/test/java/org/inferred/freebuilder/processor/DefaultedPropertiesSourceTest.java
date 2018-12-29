@@ -16,10 +16,12 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
-import com.google.common.base.Joiner;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
@@ -33,7 +35,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class DefaultedPropertiesSourceTest {
@@ -42,7 +44,7 @@ public class DefaultedPropertiesSourceTest {
   public void test_noGuava() {
     Metadata metadata = createMetadata(true);
 
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -203,7 +205,7 @@ public class DefaultedPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -242,414 +244,10 @@ public class DefaultedPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
-        "      result.append(\"name=\").append(name);",
-        "      result.append(\", \");",
-        "      result.append(\"age=\").append(age);",
-        "      result.append(\"}\");",
-        "      return result.toString();",
+        "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
-        "}\n"));
-  }
-
-  /** Test the separators are correctly conditioned in the toString method for a complex example. */
-  @Test
-  public void test_noGuava_oneDefaultProperty() {
-    QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
-    QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(string)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName("getName")
-        .setName("name")
-        .setType(string)
-        .setUsingBeanConvention(true)
-        .build();
-    Property age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName("getAge")
-        .setName("age")
-        .setType(INT)
-        .setUsingBeanConvention(true)
-        .build();
-    Property shoeSize = new Property.Builder()
-        .setAllCapsName("SHOE_SIZE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
-        .setCapitalizedName("ShoeSize")
-        .setFullyCheckedCast(true)
-        .setGetterName("getShoeSize")
-        .setName("shoeSize")
-        .setType(INT)
-        .setUsingBeanConvention(true)
-        .build();
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setExtensible(true)
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name, age, shoeSize)
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
-    Metadata metadataWithCodeGenerators = metadata.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, false))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, true))
-            .build())
-        .addProperties(shoeSize.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, shoeSize, false))
-            .build())
-        .build();
-
-    assertThat(generateSource(metadataWithCodeGenerators)).isEqualTo(Joiner.on('\n').join(
-        "/** Auto-generated superclass of {@link Person.Builder}, "
-            + "derived from the API of {@link Person}. */",
-        "abstract class Person_Builder {",
-        "",
-        "  /** Creates a new builder using {@code value} as a template. */",
-        "  public static Person.Builder from(Person value) {",
-        "    return new Person.Builder().mergeFrom(value);",
-        "  }",
-        "",
-        "  private enum Property {",
-        "    NAME(\"name\"),",
-        "    SHOE_SIZE(\"shoeSize\"),",
-        "    ;",
-        "",
-        "    private final String name;",
-        "",
-        "    private Property(String name) {",
-        "      this.name = name;",
-        "    }",
-        "",
-        "    @Override",
-        "    public String toString() {",
-        "      return name;",
-        "    }",
-        "  }",
-        "",
-        "  private String name;",
-        "  private int age;",
-        "  private int shoeSize;",
-        "  private final EnumSet<Person_Builder.Property> _unsetProperties =",
-        "      EnumSet.allOf(Person_Builder.Property.class);",
-        "",
-        "  /**",
-        "   * Sets the value to be returned by {@link Person#getName()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code name} is null",
-        "   */",
-        "  public Person.Builder setName(String name) {",
-        "    this.name = Objects.requireNonNull(name);",
-        "    _unsetProperties.remove(Person_Builder.Property.NAME);",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Replaces the value to be returned by {@link Person#getName()} by applying"
-            + " {@code mapper} to it",
-        "   * and using the result.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
-        "   * @throws IllegalStateException if the field has not been set",
-        "   */",
-        "  public Person.Builder mapName(UnaryOperator<String> mapper) {",
-        "    Objects.requireNonNull(mapper);",
-        "    return setName(mapper.apply(getName()));",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns the value that will be returned by {@link Person#getName()}.",
-        "   *",
-        "   * @throws IllegalStateException if the field has not been set",
-        "   */",
-        "  public String getName() {",
-        "    if (_unsetProperties.contains(Person_Builder.Property.NAME)) {",
-        "      throw new IllegalStateException(\"name not set\");",
-        "    }",
-
-        "    return name;",
-        "  }",
-        "",
-        "  /**",
-        "   * Sets the value to be returned by {@link Person#getAge()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder setAge(int age) {",
-        "    this.age = age;",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Replaces the value to be returned by {@link Person#getAge()} by applying"
-            + " {@code mapper} to it",
-        "   * and using the result.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
-        "   */",
-        "  public Person.Builder mapAge(UnaryOperator<Integer> mapper) {",
-        "    return setAge(mapper.apply(getAge()));",
-        "  }",
-        "",
-        "  /** Returns the value that will be returned by {@link Person#getAge()}. */",
-        "  public int getAge() {",
-        "    return age;",
-        "  }",
-        "",
-        "  /**",
-        "   * Sets the value to be returned by {@link Person#getShoeSize()}.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   */",
-        "  public Person.Builder setShoeSize(int shoeSize) {",
-        "    this.shoeSize = shoeSize;",
-        "    _unsetProperties.remove(Person_Builder.Property.SHOE_SIZE);",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Replaces the value to be returned by {@link Person#getShoeSize()} by applying"
-            + " {@code mapper} to",
-        "   * it and using the result.",
-        "   *",
-        "   * @return this {@code Builder} object",
-        "   * @throws NullPointerException if {@code mapper} is null or returns null",
-        "   * @throws IllegalStateException if the field has not been set",
-        "   */",
-        "  public Person.Builder mapShoeSize(UnaryOperator<Integer> mapper) {",
-        "    Objects.requireNonNull(mapper);",
-        "    return setShoeSize(mapper.apply(getShoeSize()));",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns the value that will be returned by {@link Person#getShoeSize()}.",
-        "   *",
-        "   * @throws IllegalStateException if the field has not been set",
-        "   */",
-        "  public int getShoeSize() {",
-        "    if (_unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)) {",
-        "      throw new IllegalStateException(\"shoeSize not set\");",
-        "    }",
-        "    return shoeSize;",
-        "  }",
-        "",
-        "  /** Sets all property values using the given {@code Person} as a template. */",
-        "  public Person.Builder mergeFrom(Person value) {",
-        "    Person_Builder _defaults = new Person.Builder();",
-        "    if (_defaults._unsetProperties.contains(Person_Builder.Property.NAME)",
-        "        || !Objects.equals(value.getName(), _defaults.getName())) {",
-        "      setName(value.getName());",
-        "    }",
-        "    if (value.getAge() != _defaults.getAge()) {",
-        "      setAge(value.getAge());",
-        "    }",
-        "    if (_defaults._unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)",
-        "        || value.getShoeSize() != _defaults.getShoeSize()) {",
-        "      setShoeSize(value.getShoeSize());",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Copies values from the given {@code Builder}. "
-            + "Does not affect any properties not set on the",
-        "   * input.",
-        "   */",
-        "  public Person.Builder mergeFrom(Person.Builder template) {",
-        "    // Upcast to access private fields; otherwise, oddly, we get an access violation.",
-        "    Person_Builder base = template;",
-        "    Person_Builder _defaults = new Person.Builder();",
-        "    if (!base._unsetProperties.contains(Person_Builder.Property.NAME)",
-        "        && (_defaults._unsetProperties.contains(Person_Builder.Property.NAME)",
-        "            || !Objects.equals(template.getName(), _defaults.getName()))) {",
-        "      setName(template.getName());",
-        "    }",
-        "    if (template.getAge() != _defaults.getAge()) {",
-        "      setAge(template.getAge());",
-        "    }",
-        "    if (!base._unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)",
-        "        && (_defaults._unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)",
-        "            || template.getShoeSize() != _defaults.getShoeSize())) {",
-        "      setShoeSize(template.getShoeSize());",
-        "    }",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /** Resets the state of this builder. */",
-        "  public Person.Builder clear() {",
-        "    Person_Builder _defaults = new Person.Builder();",
-        "    name = _defaults.name;",
-        "    age = _defaults.age;",
-        "    shoeSize = _defaults.shoeSize;",
-        "    _unsetProperties.clear();",
-        "    _unsetProperties.addAll(_defaults._unsetProperties);",
-        "    return (Person.Builder) this;",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns a newly-created {@link Person} based on the contents of the {@code Builder}.",
-        "   *",
-        "   * @throws IllegalStateException if any field has not been set",
-        "   */",
-        "  public Person build() {",
-        "    if (!_unsetProperties.isEmpty()) {",
-        "      throw new IllegalStateException(\"Not set: \" + _unsetProperties);",
-        "    }",
-        "    return new Person_Builder.Value(this);",
-        "  }",
-        "",
-        "  /**",
-        "   * Returns a newly-created partial {@link Person} for use in unit tests. "
-            + "State checking will not",
-        "   * be performed. Unset properties will throw an {@link UnsupportedOperationException} "
-            + "when",
-        "   * accessed via the partial object.",
-        "   *",
-        "   * <p>Partials should only ever be used in tests. "
-            + "They permit writing robust test cases that won't",
-        "   * fail if this type gains more application-level constraints "
-            + "(e.g. new required fields) in",
-        "   * future. If you require partially complete values in production code, "
-            + "consider using a Builder.",
-        "   */",
-        "  public Person buildPartial() {",
-        "    return new Person_Builder.Partial(this);",
-        "  }",
-        "",
-        "  private static final class Value extends Person {",
-        "    private final String name;",
-        "    private final int age;",
-        "    private final int shoeSize;",
-        "",
-        "    private Value(Person_Builder builder) {",
-        "      this.name = builder.name;",
-        "      this.age = builder.age;",
-        "      this.shoeSize = builder.shoeSize;",
-        "    }",
-        "",
-        "    @Override",
-        "    public String getName() {",
-        "      return name;",
-        "    }",
-        "",
-        "    @Override",
-        "    public int getAge() {",
-        "      return age;",
-        "    }",
-        "",
-        "    @Override",
-        "    public int getShoeSize() {",
-        "      return shoeSize;",
-        "    }",
-        "",
-        "    @Override",
-        "    public boolean equals(Object obj) {",
-        "      if (!(obj instanceof Person_Builder.Value)) {",
-        "        return false;",
-        "      }",
-        "      Person_Builder.Value other = (Person_Builder.Value) obj;",
-        "      return Objects.equals(name, other.name) && age == other.age"
-            + " && shoeSize == other.shoeSize;",
-        "    }",
-        "",
-        "    @Override",
-        "    public int hashCode() {",
-        "      return Objects.hash(name, age, shoeSize);",
-        "    }",
-        "",
-        "    @Override",
-        "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \", \" "
-            + "+ \"shoeSize=\" + shoeSize + \"}\";",
-        "    }",
-        "  }",
-        "",
-        "  private static final class Partial extends Person {",
-        "    private final String name;",
-        "    private final int age;",
-        "    private final int shoeSize;",
-        "    private final EnumSet<Person_Builder.Property> _unsetProperties;",
-        "",
-        "    Partial(Person_Builder builder) {",
-        "      this.name = builder.name;",
-        "      this.age = builder.age;",
-        "      this.shoeSize = builder.shoeSize;",
-        "      this._unsetProperties = builder._unsetProperties.clone();",
-        "    }",
-        "",
-        "    @Override",
-        "    public String getName() {",
-        "      if (_unsetProperties.contains(Person_Builder.Property.NAME)) {",
-        "        throw new UnsupportedOperationException(\"name not set\");",
-        "      }",
-        "      return name;",
-        "    }",
-        "",
-        "    @Override",
-        "    public int getAge() {",
-        "      return age;",
-        "    }",
-        "",
-        "    @Override",
-        "    public int getShoeSize() {",
-        "      if (_unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)) {",
-        "        throw new UnsupportedOperationException(\"shoeSize not set\");",
-        "      }",
-        "      return shoeSize;",
-        "    }",
-        "",
-        "    @Override",
-        "    public boolean equals(Object obj) {",
-        "      if (!(obj instanceof Person_Builder.Partial)) {",
-        "        return false;",
-        "      }",
-        "      Person_Builder.Partial other = (Person_Builder.Partial) obj;",
-        "      return Objects.equals(name, other.name)",
-        "          && age == other.age",
-        "          && shoeSize == other.shoeSize",
-        "          && Objects.equals(_unsetProperties, other._unsetProperties);",
-        "    }",
-        "",
-        "    @Override",
-        "    public int hashCode() {",
-        "      return Objects.hash(name, age, shoeSize, _unsetProperties);",
-        "    }",
-        "",
-        "    @Override",
-        "    public String toString() {",
-        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
-        "      if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {",
-        "        result.append(\"name=\").append(name);",
-        "        result.append(\", \");",
-        "      }",
-        "      result.append(\"age=\").append(age);",
-        "      if (!_unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)) {",
-        "        result.append(\", \");",
-        "        result.append(\"shoeSize=\").append(shoeSize);",
-        "      }",
-        "      result.append(\"}\");",
-        "      return result.toString();",
-        "    }",
-        "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
@@ -657,7 +255,7 @@ public class DefaultedPropertiesSourceTest {
     Metadata metadata = createMetadata(true);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -666,8 +264,6 @@ public class DefaultedPropertiesSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  private String name;",
         "  private int age;",
@@ -821,7 +417,7 @@ public class DefaultedPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -860,11 +456,10 @@ public class DefaultedPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
-            + "+ \"}\";",
+        "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
@@ -872,7 +467,7 @@ public class DefaultedPropertiesSourceTest {
     Metadata metadata = createMetadata(true).toBuilder().setHasToBuilderMethod(true).build();
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -881,8 +476,6 @@ public class DefaultedPropertiesSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  private String name;",
         "  private int age;",
@@ -1041,7 +634,7 @@ public class DefaultedPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -1095,18 +688,17 @@ public class DefaultedPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
-            + "+ \"}\";",
+        "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void test_prefixless() {
     Metadata metadata = createMetadata(false);
 
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -1115,8 +707,6 @@ public class DefaultedPropertiesSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  private String name;",
         "  private int age;",
@@ -1270,7 +860,7 @@ public class DefaultedPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -1309,11 +899,10 @@ public class DefaultedPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
-            + "+ \"}\";",
+        "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -1328,21 +917,20 @@ public class DefaultedPropertiesSourceTest {
 
   private static Metadata createMetadata(boolean bean) {
     QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
-        .setBoxedType(string)
+        .setBoxedType(STRING)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName(bean ? "getName" : "name")
         .setName("name")
-        .setType(string)
+        .setType(STRING)
         .setUsingBeanConvention(bean)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
+        .setBoxedType(INTEGER)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName(bean ? "getAge" : "age")
@@ -1366,10 +954,10 @@ public class DefaultedPropertiesSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, true))
+            .setCodeGenerator(new DefaultProperty(metadata, name, true, unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, true))
+            .setCodeGenerator(new DefaultProperty(metadata, age, true, unaryOperator(INTEGER)))
             .build())
         .build();
   }

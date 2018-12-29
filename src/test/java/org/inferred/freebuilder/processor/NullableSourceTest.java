@@ -16,13 +16,15 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -34,13 +36,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.stream.Stream;
+
 @RunWith(JUnit4.class)
 public class NullableSourceTest {
 
   @Test
   public void testJ8() {
     String source = generateSource(metadata(true), GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -49,8 +53,6 @@ public class NullableSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  @Nullable private String name = null;",
         "  @Nullable private Integer age = null;",
@@ -217,11 +219,16 @@ public class NullableSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
         "",
@@ -262,20 +269,25 @@ public class NullableSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void testPrefixless() {
     String source = generateSource(metadata(false), GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -284,8 +296,6 @@ public class NullableSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  @Nullable private String name = null;",
         "  @Nullable private Integer age = null;",
@@ -452,11 +462,16 @@ public class NullableSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
         "",
@@ -497,14 +512,19 @@ public class NullableSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -514,29 +534,27 @@ public class NullableSourceTest {
   }
 
   private static Metadata metadata(boolean bean) {
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
     ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
-        .setBoxedType(string)
+        .setBoxedType(STRING)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName(bean ? "getName" : "name")
         .setName("name")
-        .setType(string)
+        .setType(STRING)
         .setUsingBeanConvention(bean)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
-        .setBoxedType(integer)
+        .setBoxedType(INTEGER)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName(bean ? "getAge" : "age")
         .setName("age")
-        .setType(integer)
+        .setType(INTEGER)
         .setUsingBeanConvention(bean)
         .build();
     Metadata metadata = new Metadata.Builder()
@@ -555,10 +573,12 @@ public class NullableSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new NullableProperty(metadata, name, ImmutableSet.of(nullable)))
+            .setCodeGenerator(new NullableProperty(
+                metadata, name, ImmutableSet.of(nullable), unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new NullableProperty(metadata, age, ImmutableSet.of(nullable)))
+            .setCodeGenerator(new NullableProperty(
+                metadata, age, ImmutableSet.of(nullable), unaryOperator(INTEGER)))
             .build())
         .build();
   }

@@ -16,9 +16,10 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.inferred.freebuilder.processor.util.TypeVariableImpl.newTypeVariable;
+import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
+import static org.inferred.freebuilder.processor.util.TypeParameterElementImpl.newTypeParameterElement;
 
-import com.google.common.base.Joiner;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
@@ -26,13 +27,14 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.TypeParameterElementImpl;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeVariable;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class GenericTypeSourceTest {
@@ -42,7 +44,7 @@ public class GenericTypeSourceTest {
     Metadata metadata = createMetadata();
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder<A, B> {",
@@ -51,8 +53,6 @@ public class GenericTypeSourceTest {
         "  public static <A, B> Person.Builder<A, B> from(Person<A, B> value) {",
         "    return new Person.Builder<A, B>().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  private enum Property {",
         "    NAME(\"name\"),",
@@ -261,7 +261,7 @@ public class GenericTypeSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -310,16 +310,19 @@ public class GenericTypeSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (!_unsetProperties.contains(Person_Builder.Property.NAME) "
-            + "? \"name=\" + name : null),",
-        "              (!_unsetProperties.contains(Person_Builder.Property.AGE) "
-            + "? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
+        "      String separator = \"\";",
+        "      if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -328,6 +331,10 @@ public class GenericTypeSourceTest {
     try {
       return new Formatter().formatSource(sourceBuilder.toString());
     } catch (FormatterException e) {
+      int no = 0;
+      for (String line : sourceBuilder.toString().split("\n")) {
+        System.err.println((++no) + ": " + line);
+      }
       throw new RuntimeException(e);
     }
   }
@@ -335,24 +342,24 @@ public class GenericTypeSourceTest {
   private static Metadata createMetadata() {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    TypeVariable typeVariableA = newTypeVariable("A");
+    TypeParameterElementImpl paramA = newTypeParameterElement("A");
+    TypeParameterElementImpl paramB = newTypeParameterElement("B");
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName("getName")
         .setName("name")
-        .setType(typeVariableA)
+        .setType(paramA.asType())
         .setUsingBeanConvention(true)
         .build();
-    TypeVariable typeVariableB = newTypeVariable("B");
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName("getAge")
         .setName("age")
-        .setType(typeVariableB)
+        .setType(paramB.asType())
         .setUsingBeanConvention(true)
         .build();
     Metadata metadata = new Metadata.Builder()
@@ -360,21 +367,23 @@ public class GenericTypeSourceTest {
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters("A", "B"))
+        .setGeneratedBuilder(generatedBuilder.withParameters(paramA, paramB))
         .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters("A", "B"))
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters(paramA, paramB))
         .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters("A", "B"))
-        .setValueType(generatedBuilder.nestedType("Value").withParameters("A", "B"))
+        .setType(person.withParameters(paramA, paramB))
+        .setValueType(generatedBuilder.nestedType("Value").withParameters(paramA, paramB))
         .build();
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, false))
+            .setCodeGenerator(new DefaultProperty(
+                metadata, name, false, unaryOperator(paramA.asType())))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, false))
+            .setCodeGenerator(new DefaultProperty(
+                metadata, age, false, unaryOperator(paramB.asType())))
             .build())
         .build();
   }

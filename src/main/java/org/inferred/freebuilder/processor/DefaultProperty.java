@@ -20,23 +20,23 @@ import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.CodeGenerator.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
-
-import com.google.common.base.Optional;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unboxedUnaryOperator;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Objects;
-import java.util.function.UnaryOperator;
+import java.util.Optional;
 
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 
 /** Default {@link PropertyCodeGenerator}, providing reference semantics for any type. */
 class DefaultProperty extends PropertyCodeGenerator {
@@ -48,16 +48,29 @@ class DefaultProperty extends PropertyCodeGenerator {
       Property property = config.getProperty();
       boolean hasDefault = config.getMethodsInvokedInBuilderConstructor()
           .contains(setter(property));
-      return Optional.of(new DefaultProperty(config.getMetadata(), property, hasDefault));
+      FunctionalType mapperType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mapper(property),
+          unboxedUnaryOperator(property.getType(), config.getTypes()),
+          config.getElements(),
+          config.getTypes());
+      return Optional.of(new DefaultProperty(
+          config.getMetadata(), property, hasDefault, mapperType));
     }
   }
 
   private final boolean hasDefault;
+  private final FunctionalType mapperType;
   private final TypeKind kind;
 
-  DefaultProperty(Metadata metadata, Property property, boolean hasDefault) {
+  DefaultProperty(
+      Metadata metadata,
+      Property property,
+      boolean hasDefault,
+      FunctionalType mapperType) {
     super(metadata, property);
     this.hasDefault = hasDefault;
+    this.mapperType = mapperType;
     this.kind = property.getType().getKind();
   }
 
@@ -120,22 +133,23 @@ class DefaultProperty extends PropertyCodeGenerator {
         .addLine(" * by applying {@code mapper} to it and using the result.")
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
-        .addLine(" * @throws NullPointerException if {@code mapper} is null"
-        + " or returns null");
+        .addLine(" * @throws NullPointerException if {@code mapper} is null");
+    if (mapperType.canReturnNull()) {
+      code.addLine(" * or returns null");
+    }
     if (!hasDefault) {
       code.addLine(" * @throws IllegalStateException if the field has not been set");
     }
-    TypeMirror typeParam = property.getBoxedType().or(property.getType());
     code.addLine(" */")
-        .add("public %s %s(%s<%s> mapper) {",
+        .add("public %s %s(%s mapper) {",
             metadata.getBuilder(),
             mapper(property),
-            UnaryOperator.class,
-            typeParam);
+            mapperType.getFunctionalInterface());
     if (!hasDefault) {
       code.addLine("  %s.requireNonNull(mapper);", Objects.class);
     }
-    code.addLine("  return %s(mapper.apply(%s()));", setter(property), getter(property))
+    code.addLine("  return %s(mapper.%s(%s()));",
+            setter(property), mapperType.getMethodName(), getter(property))
         .addLine("}");
   }
 
@@ -171,7 +185,7 @@ class DefaultProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, metadata).orElse(null);
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {
@@ -194,7 +208,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   public void addMergeFromBuilder(Block code, String builder) {
     Excerpt base =
         hasDefault ? null : Declarations.upcastToGeneratedBuilder(code, metadata, builder);
-    Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, metadata).orElse(null);
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {

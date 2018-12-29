@@ -24,12 +24,13 @@ import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -37,6 +38,7 @@ import org.inferred.freebuilder.processor.excerpt.CheckedMap;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -47,10 +49,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.Optional;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * {@link PropertyCodeGenerator} providing fluent methods for {@link Map} properties.
@@ -61,24 +66,34 @@ class MapProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<MapProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      Property property = config.getProperty();
+      DeclaredType type = maybeDeclared(property.getType()).orElse(null);
       if (type == null || !erasesToAnyOf(type, Map.class, ImmutableMap.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
       TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
       boolean overridesPutMethod = hasPutMethodOverride(
-          config, unboxedKeyType.or(keyType), unboxedValueType.or(valueType));
+          config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
+
+      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mutator(property),
+          consumer(wildcardSuperMap(keyType, valueType, config.getElements(), config.getTypes())),
+          config.getElements(),
+          config.getTypes());
+
       return Optional.of(new MapProperty(
           config.getMetadata(),
-          config.getProperty(),
+          property,
           overridesPutMethod,
           keyType,
           unboxedKeyType,
           valueType,
-          unboxedValueType));
+          unboxedValueType,
+          mutatorType));
     }
 
     private static boolean hasPutMethodOverride(
@@ -90,6 +105,15 @@ class MapProperty extends PropertyCodeGenerator {
           keyType,
           valueType);
     }
+
+    private static TypeMirror wildcardSuperMap(
+        TypeMirror keyType,
+        TypeMirror valueType,
+        Elements elements,
+        Types types) {
+      TypeElement mapType = elements.getTypeElement(Map.class.getName());
+      return types.getWildcardType(null, types.getDeclaredType(mapType, keyType, valueType));
+    }
   }
 
   private static final ParameterizedType COLLECTION =
@@ -100,6 +124,7 @@ class MapProperty extends PropertyCodeGenerator {
   private final Optional<TypeMirror> unboxedKeyType;
   private final TypeMirror valueType;
   private final Optional<TypeMirror> unboxedValueType;
+  private final FunctionalType mutatorType;
 
   MapProperty(
       Metadata metadata,
@@ -108,13 +133,15 @@ class MapProperty extends PropertyCodeGenerator {
       TypeMirror keyType,
       Optional<TypeMirror> unboxedKeyType,
       TypeMirror valueType,
-      Optional<TypeMirror> unboxedValueType) {
+      Optional<TypeMirror> unboxedValueType,
+      FunctionalType mutatorType) {
     super(metadata, property);
     this.overridesPutMethod = overridesPutMethod;
     this.keyType = keyType;
     this.unboxedKeyType = unboxedKeyType;
     this.valueType = valueType;
     this.unboxedValueType = unboxedValueType;
+    this.mutatorType = mutatorType;
   }
 
   @Override
@@ -160,8 +187,8 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s value) {",
             metadata.getBuilder(),
             putMethod(property),
-            unboxedKeyType.or(keyType),
-            unboxedValueType.or(valueType));
+            unboxedKeyType.orElse(keyType),
+            unboxedValueType.orElse(valueType));
     Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.requireNonNull(key);", Objects.class);
@@ -215,7 +242,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key) {",
             metadata.getBuilder(),
             removeMethod(property),
-            unboxedKeyType.or(keyType));
+            unboxedKeyType.orElse(keyType));
     Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.requireNonNull(key);", Objects.class);
@@ -240,21 +267,18 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<? super %s<%s, %s>> mutator) {",
+        .addLine("public %s %s(%s mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            Consumer.class,
-            Map.class,
-            keyType,
-            valueType);
+            mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
-          CheckedMap.TYPE, property.getField(), putMethod(property));
+      body.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+          mutatorType.getMethodName(), CheckedMap.TYPE, property.getField(), putMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
-          .addLine("  mutator.accept(%s);", property.getField());
+          .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)

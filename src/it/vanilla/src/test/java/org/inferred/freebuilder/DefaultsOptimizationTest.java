@@ -28,7 +28,7 @@ public class DefaultsOptimizationTest {
   }
 
   private static Set<String> fieldsOn(Class<?> cls) {
-    Set<String> generatedFields = new HashSet<>();
+    Set<String> generatedFields = new HashSet<String>();
     for (Field field : cls.getDeclaredFields()) {
       if (!Modifier.isStatic(field.getModifiers())) {
         generatedFields.add(field.getName());

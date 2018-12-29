@@ -17,7 +17,6 @@ package org.inferred.freebuilder.processor;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -31,10 +30,11 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -52,8 +52,11 @@ public abstract class PropertyCodeGenerator {
     /** Returns annotations on the property requiring code generation. */
     List<? extends AnnotationMirror> getAnnotations();
 
-    /** The user's Builder type. */
-    TypeElement getBuilder();
+    /**
+     * The user's Builder type. If generic, will be parameterized with the type variables of the
+     * value type, for simpler type comparisons.
+     */
+    DeclaredType getBuilder();
 
     /**
      * A set of methods that are definitely invoked in the builder constructor. This may have false

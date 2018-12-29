@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -36,6 +38,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -51,12 +54,11 @@ public class SetMutateMethodTest {
   @Parameters(name = "{0}<{1}>, checked={2}, {3}, {4}")
   public static Iterable<Object[]> featureSets() {
     List<SetType> sets = Arrays.asList(SetType.values());
-    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
-        .cartesianProduct(sets, elements, checked, conventions, features)
+        .cartesianProduct(sets, TYPES, checked, conventions, features)
         .stream()
         .filter(list -> list.get(0) != SetType.SORTED_SET
             || list.get(1) != ElementFactory.NON_COMPARABLES)
@@ -113,13 +115,13 @@ public class SetMutateMethodTest {
   public void before() {
     behaviorTester
         .with(new Processor(features))
-        .with(setPropertyType)
         .withPermittedPackage(NonComparable.class.getPackage());
   }
 
   @Test
   public void mutateAndAddModifiesUnderlyingProperty() {
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(1))
@@ -134,6 +136,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndSizeReturnsSize() {
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -145,6 +148,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndContainsReturnsTrueForContainedElement() {
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -157,6 +161,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndContainsReturnsFalseForNonContainedElement() {
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -169,6 +174,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndIterateFindsContainedElement() {
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.examples(2, 0, 1))
@@ -183,6 +189,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndRemoveModifiesUnderlyingProperty() {
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.examples(0, 1))
@@ -197,6 +204,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndCallRemoveOnIteratorModifiesUnderlyingProperty() {
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.examples(0, 1))
@@ -218,6 +226,7 @@ public class SetMutateMethodTest {
   @Test
   public void mutateAndClearModifiesUnderlyingProperty() {
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.examples(0, 1))
@@ -235,6 +244,7 @@ public class SetMutateMethodTest {
       thrown.expectMessage(elements.errorMessage());
     }
     behaviorTester
+        .with(setPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -246,6 +256,38 @@ public class SetMutateMethodTest {
   @Test
   public void modifyAndMutateModifiesUnderlyingProperty() {
     behaviorTester
+        .with(setPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder().addItems(%s).build();",
+                elements.examples(0, 1))
+            .addLine("DataType copy = DataType.Builder")
+            .addLine("    .from(value)")
+            .addLine("    .mutateItems(items -> items.remove(%s))", elements.example(0))
+            .addLine("    .build();")
+            .addLine("assertThat(copy.%s).containsExactly(%s);",
+                convention.get(), elements.example(1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void canUseCustomFunctionalInterface() throws IOException {
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : setPropertyType.getCharContent(true).toString().split("\n")) {
+      customMutatorType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("    public interface Mutator {")
+            .addLine("      void mutate(%s<%s> set);", set.type(), elements.type())
+            .addLine("    }")
+            .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
+            .addLine("      return super.mutateItems(mutator);")
+            .addLine("    }");
+      }
+    }
+
+    behaviorTester
+        .with(customMutatorType.build())
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().addItems(%s).build();",
                 elements.examples(0, 1))

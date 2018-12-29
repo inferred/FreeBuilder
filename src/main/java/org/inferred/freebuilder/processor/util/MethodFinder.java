@@ -13,25 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor;
+package org.inferred.freebuilder.processor.util;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
-
-import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
-import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -41,6 +43,11 @@ import javax.lang.model.util.Elements;
  */
 public class MethodFinder {
 
+  @FunctionalInterface
+  public interface ErrorTypeHandling<E extends Exception> {
+    void handleErrorType(ErrorType type) throws E;
+  }
+
   /**
    * Returns all methods, declared and inherited, on {@code type}, except those specified by
    * {@link Object}.
@@ -49,16 +56,26 @@ public class MethodFinder {
    * Additionally, if methods A and B have the same signature, but are on unrelated interfaces,
    * one will be arbitrarily picked to be returned.
    */
-  public static ImmutableSet<ExecutableElement> methodsOn(TypeElement type, Elements elements)
-      throws CannotGenerateCodeException {
+  public static <E extends Exception> ImmutableSet<ExecutableElement> methodsOn(
+      TypeElement type,
+      Elements elements,
+      ErrorTypeHandling<E> errorTypeHandling) throws E {
     TypeElement objectType = elements.getTypeElement(Object.class.getCanonicalName());
+    Map<Signature, ExecutableElement> objectMethods = Maps.uniqueIndex(
+        methodsIn(objectType.getEnclosedElements()), Signature::new);
     SetMultimap<Signature, ExecutableElement> methods = LinkedHashMultimap.create();
-    for (TypeElement supertype : getSupertypes(type)) {
+    for (TypeElement supertype : getSupertypes(type, errorTypeHandling)) {
       for (ExecutableElement method : methodsIn(supertype.getEnclosedElements())) {
+        Signature signature = new Signature(method);
         if (method.getEnclosingElement().equals(objectType)) {
           continue;  // Skip methods specified by Object.
         }
-        Signature signature = new Signature(method);
+        if (objectMethods.containsKey(signature)
+            && method.getEnclosingElement().getKind() == ElementKind.INTERFACE
+            && method.getModifiers().contains(Modifier.ABSTRACT)
+            && elements.overrides(method, objectMethods.get(signature), type)) {
+          continue;  // Skip abstract methods on interfaces redelaring Object methods.
+        }
         Iterator<ExecutableElement> iterator = methods.get(signature).iterator();
         while (iterator.hasNext()) {
           ExecutableElement otherMethod = iterator.next();
@@ -73,33 +90,38 @@ public class MethodFinder {
     return ImmutableSet.copyOf(methods.values());
   }
 
-  private static ImmutableSet<TypeElement> getSupertypes(TypeElement type)
-      throws CannotGenerateCodeException {
+  private static <E extends Exception> ImmutableSet<TypeElement> getSupertypes(
+      TypeElement type,
+      ErrorTypeHandling<E> errorTypeHandling) throws E {
     Set<TypeElement> supertypes = new LinkedHashSet<TypeElement>();
-    addSupertypesToSet(type, supertypes);
+    addSupertypesToSet(type, supertypes, errorTypeHandling);
     return ImmutableSet.copyOf(supertypes);
   }
 
-  private static void addSupertypesToSet(TypeElement type, Set<TypeElement> mutableSet)
-      throws CannotGenerateCodeException {
+  private static <E extends Exception> void addSupertypesToSet(
+      TypeElement type,
+      Set<TypeElement> mutableSet,
+      ErrorTypeHandling<E> errorTypeHandling) throws E {
     for (TypeMirror iface : type.getInterfaces()) {
-      addSupertypesToSet(asTypeElement(iface), mutableSet);
+      TypeElement typeElement = maybeTypeElement(iface, errorTypeHandling).orElse(null);
+      if (typeElement != null) {
+        addSupertypesToSet(typeElement, mutableSet, errorTypeHandling);
+      }
     }
-    if (type.getSuperclass().getKind() != TypeKind.NONE) {
-      addSupertypesToSet(asTypeElement(type.getSuperclass()), mutableSet);
+    TypeElement superclassElement =
+        maybeTypeElement(type.getSuperclass(), errorTypeHandling).orElse(null);
+    if (superclassElement != null) {
+      addSupertypesToSet(superclassElement, mutableSet, errorTypeHandling);
     }
     mutableSet.add(type);
   }
 
-  private static TypeElement asTypeElement(TypeMirror iface) throws CannotGenerateCodeException {
-    if (iface.getKind() != TypeKind.DECLARED) {
-      throw new CannotGenerateCodeException();
+  private static <E extends Exception> Optional<TypeElement> maybeTypeElement(
+      TypeMirror mirror, ErrorTypeHandling<E> errorTypeHandling) throws E {
+    if (mirror.getKind() == TypeKind.ERROR) {
+      errorTypeHandling.handleErrorType((ErrorType) mirror);
     }
-    Element element = ((DeclaredType) iface).asElement();
-    if (!(element.getKind().isClass() || element.getKind().isInterface())) {
-      throw new CannotGenerateCodeException();
-    }
-    return (TypeElement) element;
+    return ModelUtils.maybeAsTypeElement(mirror);
   }
 
   /**
@@ -107,6 +129,7 @@ public class MethodFinder {
    * {@link Elements#overrides}.
    */
   private static class Signature {
+
     final Name name;
     final int params;
 

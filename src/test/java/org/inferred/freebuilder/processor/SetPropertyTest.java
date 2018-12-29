@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES_WITH_NON_COMPARABLE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
@@ -59,11 +60,10 @@ public class SetPropertyTest {
   @Parameters(name = "{0}<{1}>, {2}, {3}")
   public static Iterable<Object[]> parameters() {
     List<SetType> sets = Arrays.asList(SetType.values());
-    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
-        .cartesianProduct(sets, elements, conventions, features)
+        .cartesianProduct(sets, TYPES_WITH_NON_COMPARABLE, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();

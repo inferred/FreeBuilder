@@ -23,21 +23,24 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.Jsr305;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import javax.lang.model.type.DeclaredType;
@@ -46,28 +49,39 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
 /**
- * {@link PropertyCodeGenerator} providing a default value (absent/empty) and convenience setter
+ * {@link PropertyCodeGenerator} providing a default value (empty/empty) and convenience setter
  * methods for Guava and Java 8 Optional properties.
  */
 class OptionalProperty extends PropertyCodeGenerator {
 
   @VisibleForTesting
   enum OptionalType {
-    GUAVA(QualifiedName.of(Optional.class), "absent", "fromNullable") {
+    GUAVA(QualifiedName.of(com.google.common.base.Optional.class), "absent", "fromNullable") {
       @Override
-      protected void applyMapper(SourceBuilder code, Metadata metadata, Property property) {
+      protected void applyMapper(
+          SourceBuilder code,
+          Metadata metadata,
+          FunctionalType mapperType,
+          Property property) {
         // Guava's transform method throws a NullPointerException if mapper returns null,
         // and it has no flatMap-equivalent. We choose to follow the Java 8 convention of
-        // turning a null into an empty (absent) optional as that is the de facto standard
-        // now.
-        code.addLine("%s.requireNonNull(mapper);", Objects.class)
-            .addLine("  %s old%s = %s();",
-                property.getType(), property.getCapitalizedName(), getter(property))
-            .addLine("  if (old%s.isPresent()) {", property.getCapitalizedName())
-            .addLine("     %s(mapper.apply(old%s.get()));",
-                nullableSetter(property), property.getCapitalizedName())
-            .addLine("  }")
-            .addLine("  return (%s) this;", metadata.getBuilder());
+        // turning a null into an empty (empty) optional as that is the de facto standard
+        // now. (If the mapper type *can* return null, of course.)
+        if (mapperType.canReturnNull()) {
+          code.addLine("%s.requireNonNull(mapper);", Objects.class)
+              .addLine("  %s old%s = %s();",
+                  property.getType(), property.getCapitalizedName(), getter(property))
+              .addLine("  if (old%s.isPresent()) {", property.getCapitalizedName())
+              .addLine("     %s(mapper.%s(old%s.get()));",
+                  nullableSetter(property),
+                  mapperType.getMethodName(),
+                  property.getCapitalizedName())
+              .addLine("  }")
+              .addLine("  return (%s) this;", metadata.getBuilder());
+        } else {
+          code.addLine("  return %s(%s().transform(mapper::%s));",
+              setter(property), getter(property), mapperType.getMethodName());
+        }
       }
 
       @Override
@@ -77,10 +91,19 @@ class OptionalProperty extends PropertyCodeGenerator {
             .addLine("}");
       }
     },
-    JAVA8(QualifiedName.of("java.util", "Optional"), "empty", "ofNullable") {
+    JAVA8(QualifiedName.of(Optional.class), "empty", "ofNullable") {
       @Override
-      protected void applyMapper(SourceBuilder code, Metadata metadata, Property property) {
-        code.addLine("  return %s(%s().map(mapper));", setter(property), getter(property));
+      protected void applyMapper(
+          SourceBuilder code,
+          Metadata metadata,
+          FunctionalType mapperType,
+          Property property) {
+        code.add("  return %s(%s().map(mapper", setter(property), getter(property));
+        if (!mapperType.getFunctionalInterface().getQualifiedName().toString()
+            .equals(UnaryOperator.class.getName())) {
+          code.add("::%s", mapperType.getMethodName());
+        }
+        code.add("));%n");
       }
 
       @Override
@@ -99,7 +122,11 @@ class OptionalProperty extends PropertyCodeGenerator {
       this.ofNullable = ofNullable;
     }
 
-    protected abstract void applyMapper(SourceBuilder code, Metadata metadata, Property property);
+    protected abstract void applyMapper(
+        SourceBuilder code,
+        Metadata metadata,
+        FunctionalType mapperType,
+        Property property);
     protected abstract void invokeIfPresent(SourceBuilder code, String value, String method);
   }
 
@@ -107,14 +134,15 @@ class OptionalProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<OptionalProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      Property property = config.getProperty();
+      DeclaredType type = maybeDeclared(property.getType()).orElse(null);
       if (type == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
-      OptionalType optionalType = maybeOptional(type).orNull();
+      OptionalType optionalType = maybeOptional(type).orElse(null);
       if (optionalType == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
@@ -125,12 +153,20 @@ class OptionalProperty extends PropertyCodeGenerator {
       // type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
       boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
 
+      FunctionalType mapperType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mapper(property),
+          unaryOperator(elementType),
+          config.getElements(),
+          config.getTypes());
+
       return Optional.of(new OptionalProperty(
           config.getMetadata(),
-          config.getProperty(),
+          property,
           optionalType,
           elementType,
           unboxedType,
+          mapperType,
           requiresExplicitTypeParameters));
     }
 
@@ -140,13 +176,14 @@ class OptionalProperty extends PropertyCodeGenerator {
           return Optional.of(optionalType);
         }
       }
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
   private final OptionalType optional;
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;
+  private final FunctionalType mapperType;
   private final boolean requiresExplicitTypeParameters;
 
   @VisibleForTesting OptionalProperty(
@@ -155,11 +192,13 @@ class OptionalProperty extends PropertyCodeGenerator {
       OptionalType optional,
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
+      FunctionalType mapperType,
       boolean requiresExplicitTypeParametersInJava7) {
     super(metadata, property);
     this.optional = optional;
     this.elementType = elementType;
     this.unboxedType = unboxedType;
+    this.mapperType = mapperType;
     this.requiresExplicitTypeParameters = requiresExplicitTypeParametersInJava7;
   }
 
@@ -208,7 +247,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s %s) {",
             metadata.getBuilder(),
             setter(property),
-            unboxedType.or(elementType),
+            unboxedType.orElse(elementType),
             property.getName());
     Block body = methodBody(code, property.getName());
     if (unboxedType.isPresent()) {
@@ -274,19 +313,20 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is present,",
             metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
-        .addLine(" * replaces it by applying {@code mapper} to it and using the result.")
-        .addLine(" *")
-        .addLine(" * <p>If the result is null, clears the value.")
-        .addLine(" *")
+        .addLine(" * replaces it by applying {@code mapper} to it and using the result.");
+    if (mapperType.canReturnNull()) {
+      code.addLine(" *")
+          .addLine(" * <p>If the result is null, clears the value.");
+    }
+    code.addLine(" *")
         .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mapper} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<%s> mapper) {",
+        .addLine("public %s %s(%s mapper) {",
             metadata.getBuilder(),
             mapper(property),
-            UnaryOperator.class,
-            elementType);
-    optional.applyMapper(code, metadata, property);
+            mapperType.getFunctionalInterface());
+    optional.applyMapper(code, metadata, mapperType, property);
     code.addLine("}");
   }
 

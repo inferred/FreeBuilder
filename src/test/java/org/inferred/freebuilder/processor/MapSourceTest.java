@@ -16,16 +16,16 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
+import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -36,7 +36,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class MapSourceTest {
@@ -46,7 +47,7 @@ public class MapSourceTest {
     Metadata metadata = createMetadata(true);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -247,14 +248,14 @@ public class MapSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void test_noGuava_j8() {
     Metadata metadata = createMetadata(true);
 
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -466,14 +467,14 @@ public class MapSourceTest {
         "        return Collections.unmodifiableMap(new LinkedHashMap<>(entries));",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void test_prefixless() {
     Metadata metadata = createMetadata(false);
 
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -674,7 +675,7 @@ public class MapSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -690,9 +691,7 @@ public class MapSourceTest {
    */
   private static Metadata createMetadata(boolean bean) {
     GenericTypeElementImpl map = newTopLevelGenericType("java.util.Map");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl mapIntString = map.newMirror(integer, string);
+    GenericTypeMirrorImpl mapIntString = map.newMirror(INTEGER, STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -725,10 +724,11 @@ public class MapSourceTest {
                 metadata,
                 name,
                 false,
-                integer,
-                Optional.<TypeMirror>of(INT),
-                string,
-                Optional.<TypeMirror>absent()))
+                INTEGER,
+                Optional.of(INT),
+                STRING,
+                Optional.empty(),
+                consumer(wildcardSuper(mapIntString))))
             .build())
         .build();
   }

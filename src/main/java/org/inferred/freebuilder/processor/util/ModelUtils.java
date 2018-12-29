@@ -17,15 +17,18 @@ package org.inferred.freebuilder.processor.util;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
@@ -43,7 +46,7 @@ public class ModelUtils {
 
   /**
    * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClass} on
-   * {@code element}, or {@link Optional#absent()} if no such annotation exists.
+   * {@code element}, or {@link Optional#empty()} if no such annotation exists.
    */
   public static Optional<AnnotationMirror> findAnnotationMirror(
       Element element, Class<? extends Annotation> annotationClass) {
@@ -52,7 +55,7 @@ public class ModelUtils {
 
   /**
    * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClass} on
-   * {@code element}, or {@link Optional#absent()} if no such annotation exists.
+   * {@code element}, or {@link Optional#empty()} if no such annotation exists.
    */
   public static Optional<AnnotationMirror> findAnnotationMirror(
       Element element, QualifiedName annotationClass) {
@@ -61,7 +64,7 @@ public class ModelUtils {
 
   /**
    * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClassName} on
-   * {@code element}, or {@link Optional#absent()} if no such annotation exists.
+   * {@code element}, or {@link Optional#empty()} if no such annotation exists.
    */
   public static Optional<AnnotationMirror> findAnnotationMirror(
       Element element, String annotationClassName) {
@@ -72,7 +75,7 @@ public class ModelUtils {
         return Optional.of(annotationMirror);
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public static Optional<AnnotationValue> findProperty(
@@ -83,7 +86,7 @@ public class ModelUtils {
         return Optional.<AnnotationValue>of(element.getValue());
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /** Returns {@code element} as a {@link TypeElement}, if it is one. */
@@ -106,7 +109,7 @@ public class ModelUtils {
     if (declaredType.isPresent()) {
       return maybeType(declaredType.get().asElement());
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -118,9 +121,9 @@ public class ModelUtils {
   /** Applies unboxing conversion to {@code mirror}, if it can be unboxed. */
   public static Optional<TypeMirror> maybeUnbox(TypeMirror mirror, Types types) {
     try {
-      return Optional.<TypeMirror>of(types.unboxedType(mirror));
+      return Optional.of(types.unboxedType(mirror));
     } catch (IllegalArgumentException e) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -133,6 +136,11 @@ public class ModelUtils {
       }
     }
     return false;
+  }
+
+  public static boolean overrides(
+      DeclaredType type, Types types, String methodName, TypeMirror... params) {
+    return overrides(asElement(type), types, methodName, params);
   }
 
   /**
@@ -167,6 +175,16 @@ public class ModelUtils {
         return false;
       }
     }, null);
+  }
+
+  public static Set<ExecutableElement> only(Modifier modifier, Set<ExecutableElement> methods) {
+    ImmutableSet.Builder<ExecutableElement> result = ImmutableSet.builder();
+    for (ExecutableElement method : methods) {
+      if (method.getModifiers().contains(modifier)) {
+        result.add(method);
+      }
+    }
+    return result.build();
   }
 
   private static boolean isPlainWildcard(TypeMirror type) {
@@ -216,7 +234,7 @@ public class ModelUtils {
 
         @Override
         protected Optional<TypeElement> defaultAction(Element e, Void p) {
-          return Optional.absent();
+          return Optional.empty();
         }
       };
 
@@ -230,7 +248,7 @@ public class ModelUtils {
 
         @Override
         protected Optional<DeclaredType> defaultAction(TypeMirror e, Void p) {
-          return Optional.absent();
+          return Optional.empty();
         }
       };
 
@@ -244,7 +262,7 @@ public class ModelUtils {
 
         @Override
         protected Optional<TypeVariable> defaultAction(TypeMirror e, Void p) {
-          return Optional.absent();
+          return Optional.empty();
         }
       };
 

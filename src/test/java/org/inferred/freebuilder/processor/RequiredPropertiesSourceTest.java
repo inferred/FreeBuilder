@@ -16,10 +16,12 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
-import com.google.common.base.Joiner;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
@@ -33,7 +35,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class RequiredPropertiesSourceTest {
@@ -42,7 +44,7 @@ public class RequiredPropertiesSourceTest {
   public void testJ8_noGuava() {
     Metadata metadata = createMetadata(true);
 
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -260,7 +262,7 @@ public class RequiredPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -316,14 +318,12 @@ public class RequiredPropertiesSourceTest {
         "        separator = \", \";",
         "      }",
         "      if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {",
-        "        result.append(separator);",
-        "        result.append(\"age=\").append(age);",
+        "        result.append(separator).append(\"age=\").append(age);",
         "      }",
-        "      result.append(\"}\");",
-        "      return result.toString();",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
@@ -331,7 +331,7 @@ public class RequiredPropertiesSourceTest {
     Metadata metadata = createMetadata(true);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -340,8 +340,6 @@ public class RequiredPropertiesSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  private enum Property {",
         "    NAME(\"name\"),",
@@ -549,7 +547,7 @@ public class RequiredPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -598,23 +596,26 @@ public class RequiredPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (!_unsetProperties.contains(Person_Builder.Property.NAME) "
-            + "? \"name=\" + name : null),",
-        "              (!_unsetProperties.contains(Person_Builder.Property.AGE) "
-            + "? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
+        "      String separator = \"\";",
+        "      if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void testPrefixless() {
     Metadata metadata = createMetadata(false);
 
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -623,8 +624,6 @@ public class RequiredPropertiesSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  private enum Property {",
         "    NAME(\"name\"),",
@@ -832,7 +831,7 @@ public class RequiredPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -881,16 +880,19 @@ public class RequiredPropertiesSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (!_unsetProperties.contains(Person_Builder.Property.NAME) "
-            + "? \"name=\" + name : null),",
-        "              (!_unsetProperties.contains(Person_Builder.Property.AGE) "
-            + "? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
+        "      String separator = \"\";",
+        "      if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -905,21 +907,20 @@ public class RequiredPropertiesSourceTest {
 
   private static Metadata createMetadata(boolean bean) {
     QualifiedName person = QualifiedName.of("com.example", "Person");
-    TypeMirror string = newTopLevelClass("java.lang.String");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
-        .setBoxedType(string)
+        .setBoxedType(STRING)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
         .setGetterName(bean ? "getName" : "name")
         .setName("name")
-        .setType(string)
+        .setType(STRING)
         .setUsingBeanConvention(bean)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
-        .setBoxedType(newTopLevelClass("java.lang.Integer"))
+        .setBoxedType(INTEGER)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
         .setGetterName(bean ? "getAge" : "age")
@@ -943,10 +944,10 @@ public class RequiredPropertiesSourceTest {
     return metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, false))
+            .setCodeGenerator(new DefaultProperty(metadata, name, false, unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, false))
+            .setCodeGenerator(new DefaultProperty(metadata, age, false, unaryOperator(INTEGER)))
             .build())
         .build();
   }

@@ -16,17 +16,17 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
+import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
@@ -36,7 +36,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class ListSourceTest {
@@ -46,7 +47,7 @@ public class ListSourceTest {
     Metadata metadata = createMetadata(true);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -55,8 +56,6 @@ public class ListSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  private List<String> name = ImmutableList.of();",
         "  private List<Integer> age = ImmutableList.of();",
@@ -382,7 +381,7 @@ public class ListSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -421,18 +420,17 @@ public class ListSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
-            + "+ \"}\";",
+        "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void test_noGuava_j8() {
     Metadata metadata = createMetadata(true);
 
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -729,7 +727,7 @@ public class ListSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -768,12 +766,7 @@ public class ListSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
-        "      result.append(\"name=\").append(name);",
-        "      result.append(\", \");",
-        "      result.append(\"age=\").append(age);",
-        "      result.append(\"}\");",
-        "      return result.toString();",
+        "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -789,14 +782,14 @@ public class ListSourceTest {
             + "Arrays.asList(elements.toArray()));",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void test_prefixless() {
     Metadata metadata = createMetadata(false);
 
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -805,8 +798,6 @@ public class ListSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  private List<String> name = ImmutableList.of();",
         "  private List<Integer> age = ImmutableList.of();",
@@ -1132,7 +1123,7 @@ public class ListSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\" + \"name=\" + name + \", \" + \"age=\" + age + \"}\";",
+        "      return \"Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
         "",
@@ -1171,11 +1162,10 @@ public class ListSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\" + COMMA_JOINER.join(\"name=\" + name, \"age=\" + age) "
-            + "+ \"}\";",
+        "      return \"partial Person{name=\" + name + \", age=\" + age + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -1190,10 +1180,8 @@ public class ListSourceTest {
    */
   private static Metadata createMetadata(boolean bean) {
     GenericTypeElementImpl list = newTopLevelGenericType("java.util.List");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    GenericTypeMirrorImpl listInteger = list.newMirror(integer);
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl listString = list.newMirror(string);
+    GenericTypeMirrorImpl listInteger = list.newMirror(INTEGER);
+    GenericTypeMirrorImpl listString = list.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -1233,11 +1221,25 @@ public class ListSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new ListProperty(
-                metadata, name, false, false, false, string, Optional.<TypeMirror>absent()))
+                metadata,
+                name,
+                false,
+                false,
+                false,
+                STRING,
+                Optional.empty(),
+                FunctionalType.consumer(wildcardSuper(listString))))
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new ListProperty(
-                metadata, age, false, false, false, integer, Optional.<TypeMirror>of(INT)))
+                metadata,
+                age,
+                false,
+                false,
+                false,
+                INTEGER,
+                Optional.of(INT),
+                FunctionalType.consumer(wildcardSuper(listInteger))))
             .build())
         .build();
   }

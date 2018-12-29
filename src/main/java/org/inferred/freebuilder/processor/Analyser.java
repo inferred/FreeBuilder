@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
 import static com.google.common.collect.Maps.newLinkedHashMap;
@@ -29,15 +28,13 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
-import static org.inferred.freebuilder.processor.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.naming.NamingConventions.determineNamingConvention;
+import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,10 +50,13 @@ import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
@@ -137,10 +137,12 @@ class Analyser {
   Metadata analyse(TypeElement type) throws CannotGenerateCodeException {
     PackageElement pkg = elements.getPackageOf(type);
     verifyType(type, pkg);
-    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements);
+    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, errorType -> {
+      throw new CannotGenerateCodeException();
+    });
     QualifiedName generatedBuilder = QualifiedName.of(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
-    Optional<TypeElement> builder = tryFindBuilder(generatedBuilder, type);
+    Optional<DeclaredType> builder = tryFindBuilder(generatedBuilder, type);
     Metadata.Builder constructionAndExtension = constructionAndExtension(builder);
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
@@ -151,7 +153,6 @@ class Analyser {
     Metadata.Builder metadataBuilder = new Metadata.Builder()
         .setType(QualifiedName.of(type).withParameters(typeParameters))
         .setInterfaceType(type.getKind().isInterface())
-        .setBuilder(parameterized(builder, typeParameters))
         .mergeFrom(constructionAndExtension)
         .setGeneratedBuilder(generatedBuilder.withParameters(typeParameters))
         .setValueType(valueType.withParameters(typeParameters))
@@ -166,6 +167,9 @@ class Analyser {
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .addAllProperties(properties.values());
+    if (builder.isPresent()) {
+      metadataBuilder.setBuilder(ParameterizedType.from(builder.get()));
+    }
     Metadata baseMetadata = metadataBuilder.build();
     metadataBuilder.mergeFrom(gwtMetadata(type, baseMetadata));
     if (builder.isPresent()) {
@@ -314,7 +318,7 @@ class Analyser {
 
   /** Find a toBuilder method, if the user has provided one. */
   private boolean hasToBuilderMethod(
-      Optional<TypeElement> builder,
+      Optional<DeclaredType> builder,
       boolean isExtensible,
       Iterable<ExecutableElement> methods) {
     if (!builder.isPresent()) {
@@ -333,20 +337,15 @@ class Analyser {
     return false;
   }
 
-  private static boolean isToBuilderMethod(TypeElement builder, ExecutableElement method) {
-      if (method.getSimpleName().contentEquals("toBuilder")
+  private boolean isToBuilderMethod(DeclaredType declaredType, ExecutableElement method) {
+      return (method.getSimpleName().contentEquals("toBuilder")
           && method.getModifiers().contains(Modifier.ABSTRACT)
-          && method.getParameters().isEmpty()) {
-        Optional<TypeElement> returnType = ModelUtils.maybeAsTypeElement(method.getReturnType());
-        if (returnType.isPresent() && returnType.get().equals(builder)) {
-          return true;
-        }
-      }
-      return false;
+          && method.getParameters().isEmpty()
+          && types.isSameType(method.getReturnType(), declaredType));
   }
 
-  private static Set<ExecutableElement> removeNonGetterMethods(
-      Optional<TypeElement> builder, Iterable<ExecutableElement> methods) {
+  private Set<ExecutableElement> removeNonGetterMethods(
+      Optional<DeclaredType> builder, Iterable<ExecutableElement> methods) {
     ImmutableSet.Builder<ExecutableElement> nonUnderriddenMethods = ImmutableSet.builder();
     for (ExecutableElement method : methods) {
       boolean isAbstract = method.getModifiers().contains(Modifier.ABSTRACT);
@@ -364,77 +363,93 @@ class Analyser {
   }
 
   /**
-   * Looks for a type called Builder, and verifies it extends the autogenerated superclass. Issues
-   * an error if the wrong type is being subclassed&mdash;a typical copy-and-paste error when
-   * renaming an existing &#64;FreeBuilder type, or using one as a template.
+   * Looks for a nested type in {@code valueType} called Builder, and verifies it extends the
+   * autogenerated {@code superclass}.
+   *
+   * <p>If the value type is generic, the builder type must match, and the returned DeclaredType
+   * will be parameterized with the type variables from the <b>value type</b>, not the builder.
+   * (This makes type checking massively easier.)
+   *
+   * <p>Issues an error if the wrong type is being subclassed&mdash;a typical copy-and-paste error
+   * when renaming an existing &#64;FreeBuilder type, or using one as a template.
    */
-  private Optional<TypeElement> tryFindBuilder(
-      final QualifiedName generatedBuilder, TypeElement type) {
-    Optional<TypeElement> userClass =
-        tryFind(typesIn(type.getEnclosedElements()), new Predicate<Element>() {
-          @Override public boolean apply(Element input) {
-            return input.getSimpleName().contentEquals(USER_BUILDER_NAME);
-          }
-        });
-    if (!userClass.isPresent()) {
-      if (type.getKind() == INTERFACE) {
+  private Optional<DeclaredType> tryFindBuilder(
+      final QualifiedName superclass, TypeElement valueType) {
+    TypeElement builderType =
+        tryFind(typesIn(valueType.getEnclosedElements()),
+            element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME)).orNull();
+    if (builderType == null) {
+      if (valueType.getKind() == INTERFACE) {
         messager.printMessage(
             NOTE,
             "Add \"class Builder extends "
-                + generatedBuilder.getSimpleName()
+                + superclass.getSimpleName()
                 + " {}\" to your interface to enable the @FreeBuilder API",
-            type);
+            valueType);
       } else {
         messager.printMessage(
             NOTE,
             "Add \"public static class Builder extends "
-                + generatedBuilder.getSimpleName()
+                + superclass.getSimpleName()
                 + " {}\" to your class to enable the @FreeBuilder API",
-            type);
+            valueType);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
 
     boolean extendsSuperclass =
-        new IsSubclassOfGeneratedTypeVisitor(generatedBuilder, type.getTypeParameters())
-            .visit(userClass.get().getSuperclass());
+        new IsSubclassOfGeneratedTypeVisitor(superclass, valueType.getTypeParameters())
+            .visit(builderType.getSuperclass());
     if (!extendsSuperclass) {
       messager.printMessage(
           ERROR,
-          "Builder extends the wrong type (should be " + generatedBuilder.getSimpleName() + ")",
-          userClass.get());
-      return Optional.absent();
+          "Builder extends the wrong type (should be " + superclass.getSimpleName() + ")",
+          builderType);
+      return Optional.empty();
     }
 
-    return userClass;
+    if (builderType.getTypeParameters().size() != valueType.getTypeParameters().size()) {
+      if (builderType.getTypeParameters().isEmpty()) {
+        messager.printMessage(ERROR, "Builder must be generic", builderType);
+      } else {
+        messager.printMessage(ERROR, "Builder has the wrong type parameters", builderType);
+      }
+      return Optional.empty();
+    }
+
+    DeclaredType declaredValueType = (DeclaredType) valueType.asType();
+    DeclaredType declaredBuilderType = types.getDeclaredType(
+        builderType, declaredValueType.getTypeArguments().toArray(new TypeMirror[0]));
+
+    return Optional.of(declaredBuilderType);
   }
 
-  private Metadata.Builder constructionAndExtension(Optional<TypeElement> builder) {
+  private Metadata.Builder constructionAndExtension(Optional<DeclaredType> builder) {
     if (!builder.isPresent()) {
       return new Metadata.Builder()
           .setExtensible(false)
           .setBuilderFactory(NO_ARGS_CONSTRUCTOR);
     }
-    if (!builder.get().getModifiers().contains(Modifier.STATIC)) {
-      messager.printMessage(ERROR, "Builder must be static on @FreeBuilder types", builder.get());
+    TypeElement builderElement = ModelUtils.asElement(builder.get());
+    if (!builderElement.getModifiers().contains(Modifier.STATIC)) {
+      messager.printMessage(ERROR, "Builder must be static on @FreeBuilder types", builderElement);
       return new Metadata.Builder().setExtensible(false);
     }
     return new Metadata.Builder()
-        .setExtensible(BuilderFactory.hasNoArgsConstructor(builder.get()))
-        .setBuilderFactory(BuilderFactory.from(builder.get()));
+        .setExtensible(BuilderFactory.hasNoArgsConstructor(builderElement))
+        .setBuilderFactory(BuilderFactory.from(builderElement));
   }
 
   private Map<ExecutableElement, Property> findProperties(
-      TypeElement type, Iterable<ExecutableElement> methods) {
+      TypeElement type, Collection<ExecutableElement> methods) {
     NamingConvention namingConvention = determineNamingConvention(type, methods, messager, types);
     Map<ExecutableElement, Property> propertiesByMethod = newLinkedHashMap();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
     for (ExecutableElement method : methods) {
-      Property.Builder propertyBuilder = namingConvention.getPropertyNames(type, method).orNull();
-      if (propertyBuilder != null) {
+      namingConvention.getPropertyNames(type, method).ifPresent(propertyBuilder -> {
         addPropertyData(propertyBuilder, type, method, jacksonSupport);
         propertiesByMethod.put(method, propertyBuilder.build());
-      }
+      });
     }
     return propertiesByMethod;
   }
@@ -442,9 +457,10 @@ class Analyser {
   private List<Property> codeGenerators(
       Map<ExecutableElement, Property> properties,
       Metadata metadata,
-      TypeElement builder) {
+      DeclaredType builder) {
     ImmutableList.Builder<Property> codeGenerators = ImmutableList.builder();
-    Set<String> methodsInvokedInBuilderConstructor = getMethodsInvokedInBuilderConstructor(builder);
+    Set<String> methodsInvokedInBuilderConstructor =
+        getMethodsInvokedInBuilderConstructor(asElement(builder));
     for (Map.Entry<ExecutableElement, Property> entry : properties.entrySet()) {
       Config config = new ConfigImpl(
           builder,
@@ -508,14 +524,14 @@ class Analyser {
 
   private class ConfigImpl implements Config {
 
-    private final TypeElement builder;
+    private final DeclaredType builder;
     private final Metadata metadata;
     private final Property property;
     private final ExecutableElement getterMethod;
     private final Set<String> methodsInvokedInBuilderConstructor;
 
     ConfigImpl(
-        TypeElement builder,
+        DeclaredType builder,
         Metadata metadata,
         Property property,
         ExecutableElement getterMethod,
@@ -528,7 +544,7 @@ class Analyser {
     }
 
     @Override
-    public TypeElement getBuilder() {
+    public DeclaredType getBuilder() {
       return builder;
     }
 
@@ -620,14 +636,17 @@ class Analyser {
     return String.format(BUILDER_SIMPLE_NAME_TEMPLATE, nameWithoutPackage.replaceAll("\\.", "_"));
   }
 
-  private boolean shouldBuilderBeSerializable(Optional<TypeElement> builder) {
+  private boolean shouldBuilderBeSerializable(Optional<DeclaredType> builder) {
     if (!builder.isPresent()) {
       // If there's no user-provided subclass, make the builder serializable.
       return true;
     }
     // If there is a user-provided subclass, only make its generated superclass serializable if
     // it is itself; otherwise, tools may complain about missing a serialVersionUID field.
-    return any(builder.get().getInterfaces(), isEqualTo(Serializable.class));
+    return asElement(builder.get())
+        .getInterfaces()
+        .stream()
+        .anyMatch(isEqualTo(Serializable.class));
   }
 
   /** Returns whether a method is one of the {@link StandardMethod}s, and if so, which. */
@@ -638,22 +657,22 @@ class Analyser {
           && method.getParameters().get(0).asType().toString().equals("java.lang.Object")) {
         return Optional.of(StandardMethod.EQUALS);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else if (methodName.equals("hashCode")) {
       if (method.getParameters().isEmpty()) {
         return Optional.of(StandardMethod.HASH_CODE);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else if (methodName.equals("toString")) {
       if (method.getParameters().isEmpty()) {
         return Optional.of(StandardMethod.TO_STRING);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -710,18 +729,6 @@ class Analyser {
 
   private Predicate<TypeMirror> isEqualTo(Class<?> cls) {
     final TypeMirror typeMirror = elements.getTypeElement(cls.getCanonicalName()).asType();
-    return new Predicate<TypeMirror>() {
-      @Override public boolean apply(TypeMirror input) {
-        return types.isSameType(input, typeMirror);
-      }
-    };
-  }
-
-  private static Optional<ParameterizedType> parameterized(
-      Optional<TypeElement> type, List<? extends TypeParameterElement> typeParameters) {
-    if (!type.isPresent()) {
-      return Optional.absent();
-    }
-    return Optional.of(QualifiedName.of(type.get()).withParameters(typeParameters));
+    return input -> types.isSameType(input, typeMirror);
   }
 }

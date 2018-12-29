@@ -18,14 +18,15 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getLast;
+import static java.util.stream.Collectors.joining;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * The qualified name of a type. Lets us pass a type to a {@link TypeShortener} without a Class or
@@ -87,7 +88,7 @@ public class QualifiedName extends ValueType {
    */
   @Override
   public String toString() {
-    return packageName + "." + Joiner.on('.').join(simpleNames);
+    return packageName + "." + simpleNames.stream().collect(joining("."));
   }
 
   public String getPackage() {
@@ -117,8 +118,21 @@ public class QualifiedName extends ValueType {
     return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
   }
 
+  public ParameterizedType withParameters(TypeMirror first, TypeMirror... rest) {
+    return new ParameterizedType(this,
+        ImmutableList.builder().add(first).add((Object[]) rest).build());
+  }
+
   public ParameterizedType withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
     return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
+  }
+
+  public ParameterizedType withParameters(
+      TypeParameterElement typeParameter, TypeParameterElement... typeParameters) {
+    return withParameters(ImmutableList.<TypeParameterElement>builder()
+        .add(typeParameter)
+        .add(typeParameters)
+        .build());
   }
 
   /**

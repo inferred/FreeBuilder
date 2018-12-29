@@ -2,6 +2,8 @@ package org.inferred.freebuilder.processor.util;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
+
 import javax.lang.model.type.TypeKind;
 
 public class ObjectsExcerpts {
@@ -40,10 +42,30 @@ public class ObjectsExcerpts {
 
     @Override
     public void addTo(SourceBuilder code) {
-      if (isComparableWithOperator(kind)) {
-        code.add("%s %s %s", a, areEqual ? "==" : "!=", b);
-      } else {
-        code.add("%s%s.equals(%s, %s)", areEqual ? "" : "!", Objects.class, a, b);
+      switch (kind) {
+        case FLOAT:
+          code.add("%1$s.floatToIntBits(%2$s) %3$s %1$s.floatToIntBits(%4$s)",
+              Float.class, a, areEqual ? "==" : "!=", b);
+          return;
+
+        case DOUBLE:
+          code.add("%1$s.doubleToLongBits(%2$s) %3$s %1$s.doubleToLongBits(%4$s)",
+              Double.class, a, areEqual ? "==" : "!=", b);
+          return;
+
+        case BOOLEAN:
+        case BYTE:
+        case SHORT:
+        case INT:
+        case LONG:
+        case CHAR:
+          code.add("%s %s %s", a, areEqual ? "==" : "!=", b);
+          return;
+
+        default:
+          Preconditions.checkState(!kind.isPrimitive(), "Unexpected primitive type " + kind);
+          code.add("%s%s.equals(%s, %s)", areEqual ? "" : "!", Objects.class, a, b);
+          return;
       }
     }
 
@@ -53,21 +75,6 @@ public class ObjectsExcerpts {
       fields.add("a", a);
       fields.add("b", b);
       fields.add("kind", kind);
-    }
-  }
-
-  private static boolean isComparableWithOperator(TypeKind kind) {
-    switch (kind) {
-      case BOOLEAN:
-      case BYTE:
-      case SHORT:
-      case INT:
-      case LONG:
-      case CHAR:
-        return true;
-
-      default:
-        return false;
     }
   }
 

@@ -15,12 +15,15 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
+import static javax.lang.model.util.ElementFilter.methodsIn;
+import static javax.lang.model.util.ElementFilter.typesIn;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -33,8 +36,12 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.Optional;
+
 import javax.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 
 /** Unit tests for {@link Analyser}. */
 @RunWith(MockitoJUnitRunner.class)
@@ -66,27 +73,36 @@ public class NullablePropertyFactoryTest {
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).isAbsent();
+    assertThat(codeGenerator).isEqualTo(Optional.empty());
   }
 
   @Test
   public void nullable() {
-    ExecutableElement getterMethod = (ExecutableElement) model.newElementWithMarker(
+    TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
-        "  ---> public abstract @" + Nullable.class.getName() + " String getName();",
+        "  public abstract @" + Nullable.class.getName() + " String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}");
+    DeclaredType builderType = (DeclaredType)
+        getOnlyElement(typesIn(dataType.getEnclosedElements())).asType();
+    ExecutableElement getterMethod = getOnlyElement(methodsIn(dataType.getEnclosedElements()));
     Property property = new Property.Builder()
         .setType(getterMethod.getReturnType())
+        .setCapitalizedName("Name")
         .buildPartial();
+    when(config.getBuilder()).thenReturn(builderType);
     when(config.getProperty()).thenReturn(property);
+    when(config.getElements()).thenReturn(model.elementUtils());
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullableProperty(
-        metadata, property, ImmutableSet.of(model.typeElement(Nullable.class))));
+    assertThat(codeGenerator.get()).isEqualTo(new NullableProperty(
+        metadata,
+        property,
+        ImmutableSet.of(model.typeElement(Nullable.class)),
+        unaryOperator(model.typeMirror(String.class))));
   }
 
   @Test
@@ -94,22 +110,31 @@ public class NullablePropertyFactoryTest {
     model.newType(
         "package foo.bar;",
         "public @interface Nullable {}");
-    ExecutableElement getterMethod = (ExecutableElement) model.newElementWithMarker(
+    TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
-        "  ---> public abstract @foo.bar.Nullable String getName();",
+        "  public abstract @foo.bar.Nullable String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}");
+    DeclaredType builderType = (DeclaredType)
+        getOnlyElement(typesIn(dataType.getEnclosedElements())).asType();
+    ExecutableElement getterMethod = getOnlyElement(methodsIn(dataType.getEnclosedElements()));
     Property property = new Property.Builder()
         .setType(getterMethod.getReturnType())
+        .setCapitalizedName("Name")
         .buildPartial();
+    when(config.getBuilder()).thenReturn(builderType);
     when(config.getProperty()).thenReturn(property);
+    when(config.getElements()).thenReturn(model.elementUtils());
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullableProperty(
-        metadata, property, ImmutableSet.of(model.typeElement("foo.bar.Nullable"))));
+    assertThat(codeGenerator.get()).isEqualTo(new NullableProperty(
+        metadata,
+        property,
+        ImmutableSet.of(model.typeElement("foo.bar.Nullable")),
+        unaryOperator(model.typeMirror(String.class))));
   }
 
   @Test
@@ -117,26 +142,36 @@ public class NullablePropertyFactoryTest {
     model.newType(
         "package foo.bar;",
         "public @interface Nullable {}");
-    ExecutableElement getterMethod = (ExecutableElement) model.newElementWithMarker(
+    TypeElement dataType = model.newType(
         "package com.example;",
         "public class DataType {",
         "  @" + Nullable.class.getName(),
         "  @foo.bar.Nullable",
-        "  ---> public abstract String getName();",
+        "  public abstract String getName();",
         "",
         "  public static class Builder extends DataType_Builder {}",
         "}");
+    DeclaredType builderType = (DeclaredType)
+        getOnlyElement(typesIn(dataType.getEnclosedElements())).asType();
+    ExecutableElement getterMethod = getOnlyElement(methodsIn(dataType.getEnclosedElements()));
     Property property = new Property.Builder()
         .setType(getterMethod.getReturnType())
+        .setCapitalizedName("Name")
         .buildPartial();
+    when(config.getBuilder()).thenReturn(builderType);
     when(config.getProperty()).thenReturn(property);
+    when(config.getElements()).thenReturn(model.elementUtils());
     doReturn(getterMethod.getAnnotationMirrors()).when(config).getAnnotations();
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).hasValue(new NullableProperty(
-        metadata, property, ImmutableSet.of(
-            model.typeElement(Nullable.class), model.typeElement("foo.bar.Nullable"))));
+    assertThat(codeGenerator.get()).isEqualTo(new NullableProperty(
+        metadata,
+        property,
+        ImmutableSet.of(
+            model.typeElement(Nullable.class),
+            model.typeElement("foo.bar.Nullable")),
+        unaryOperator(model.typeMirror(String.class))));
   }
 
   @Test
@@ -155,6 +190,6 @@ public class NullablePropertyFactoryTest {
 
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
-    assertThat(codeGenerator).isAbsent();
+    assertThat(codeGenerator).isEqualTo(Optional.empty());
   }
 }

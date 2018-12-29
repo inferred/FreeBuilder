@@ -16,19 +16,19 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.OptionalProperty.OptionalType;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
@@ -39,7 +39,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class GuavaOptionalSourceTest {
@@ -49,7 +50,7 @@ public class GuavaOptionalSourceTest {
     Metadata metadata = createMetadataWithOptionalProperties(true);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -58,8 +59,6 @@ public class GuavaOptionalSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  // Store a nullable object instead of an Optional. Escape analysis then",
         "  // allows the JVM to optimize away the Optional objects created by and",
@@ -312,11 +311,16 @@ public class GuavaOptionalSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
         "",
@@ -361,14 +365,19 @@ public class GuavaOptionalSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
@@ -376,7 +385,7 @@ public class GuavaOptionalSourceTest {
     Metadata metadata = createMetadataWithOptionalProperties(true);
 
     String source = generateSource(metadata, Jsr305.AVAILABLE, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -385,8 +394,6 @@ public class GuavaOptionalSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  // Store a nullable object instead of an Optional. Escape analysis then",
         "  // allows the JVM to optimize away the Optional objects created by and",
@@ -639,11 +646,16 @@ public class GuavaOptionalSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
         "",
@@ -688,21 +700,26 @@ public class GuavaOptionalSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void testPrefixless() {
     Metadata metadata = createMetadataWithOptionalProperties(false);
 
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -711,8 +728,6 @@ public class GuavaOptionalSourceTest {
         "  public static Person.Builder from(Person value) {",
         "    return new Person.Builder().mergeFrom(value);",
         "  }",
-        "",
-        "  private static final Joiner COMMA_JOINER = Joiner.on(\", \").skipNulls();",
         "",
         "  // Store a nullable object instead of an Optional. Escape analysis then",
         "  // allows the JVM to optimize away the Optional objects created by and",
@@ -964,11 +979,16 @@ public class GuavaOptionalSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
         "",
@@ -1013,14 +1033,19 @@ public class GuavaOptionalSourceTest {
         "",
         "    @Override",
         "    public String toString() {",
-        "      return \"partial Person{\"",
-        "          + COMMA_JOINER.join(",
-        "              (name != null ? \"name=\" + name : null), "
-            + "(age != null ? \"age=\" + age : null))",
-        "          + \"}\";",
+        "      StringBuilder result = new StringBuilder(\"partial Person{\");",
+        "      String separator = \"\";",
+        "      if (name != null) {",
+        "        result.append(\"name=\").append(name);",
+        "        separator = \", \";",
+        "      }",
+        "      if (age != null) {",
+        "        result.append(separator).append(\"age=\").append(age);",
+        "      }",
+        "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -1035,10 +1060,8 @@ public class GuavaOptionalSourceTest {
 
   private static Metadata createMetadataWithOptionalProperties(boolean bean) {
     GenericTypeElementImpl optional = newTopLevelGenericType("com.google.common.base.Optional");
-    ClassTypeImpl integer = newTopLevelClass("java.lang.Integer");
-    GenericTypeMirrorImpl optionalInteger = optional.newMirror(integer);
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl optionalString = optional.newMirror(string);
+    GenericTypeMirrorImpl optionalInteger = optional.newMirror(INTEGER);
+    GenericTypeMirrorImpl optionalString = optional.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -1078,11 +1101,23 @@ public class GuavaOptionalSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new OptionalProperty(
-                metadata, name, OptionalType.GUAVA, string, Optional.<TypeMirror>absent(), false))
+                metadata,
+                name,
+                OptionalType.GUAVA,
+                STRING,
+                Optional.empty(),
+                unaryOperator(STRING),
+                false))
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new OptionalProperty(
-                metadata, age, OptionalType.GUAVA, integer, Optional.<TypeMirror>of(INT), false))
+                metadata,
+                age,
+                OptionalType.GUAVA,
+                INTEGER,
+                Optional.of(INT),
+                unaryOperator(INTEGER),
+                false))
             .build())
         .build();
   }

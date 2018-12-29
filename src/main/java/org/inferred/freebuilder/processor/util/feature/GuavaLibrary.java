@@ -1,6 +1,5 @@
 package org.inferred.freebuilder.processor.util.feature;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Bytes;
@@ -15,6 +14,7 @@ import org.inferred.freebuilder.processor.util.Shading;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
@@ -88,11 +88,11 @@ public enum GuavaLibrary implements Feature<GuavaLibrary> {
    */
   public Optional<Class<?>> arrayUtils(TypeMirror elementType) {
     if (!elementType.getKind().isPrimitive()) {
-      return Optional.<Class<?>>of(Arrays.class);
+      return Optional.of(Arrays.class);
     } else if (isAvailable()) {
-      return Optional.<Class<?>>fromNullable(primitiveUtils(elementType));
+      return Optional.of(primitiveUtils(elementType));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

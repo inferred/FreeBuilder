@@ -24,13 +24,14 @@ import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
@@ -38,6 +39,7 @@ import org.inferred.freebuilder.processor.excerpt.CheckedSet;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -47,13 +49,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
-import java.util.function.Consumer;
 import java.util.stream.BaseStream;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * {@link PropertyCodeGenerator} providing fluent methods for {@link Set} properties.
@@ -64,22 +69,31 @@ class SetProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<SetProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
       if (type == null || !erasesToAnyOf(type, Set.class, ImmutableSet.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.or(elementType));
-      boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
+      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.orElse(elementType));
+      boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.orElse(elementType));
       boolean overridesVarargsAddMethod =
-          hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
+          hasVarargsAddMethodOverride(config, unboxedType.orElse(elementType));
+
+      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mutator(config.getProperty()),
+          consumer(wildcardSuperSet(elementType, config.getElements(), config.getTypes())),
+          config.getElements(),
+          config.getTypes());
+
       return Optional.of(new SetProperty(
           config.getMetadata(),
           config.getProperty(),
           elementType,
           unboxedType,
+          mutatorType,
           needsSafeVarargs,
           overridesAddMethod,
           overridesVarargsAddMethod));
@@ -100,12 +114,21 @@ class SetProperty extends PropertyCodeGenerator {
           addMethod(config.getProperty()),
           config.getTypes().getArrayType(elementType));
     }
+
+    private static TypeMirror wildcardSuperSet(
+        TypeMirror elementType,
+        Elements elements,
+        Types types) {
+      TypeElement setType = elements.getTypeElement(Set.class.getName());
+      return types.getWildcardType(null, types.getDeclaredType(setType, elementType));
+    }
   }
 
   private static final ParameterizedType COLLECTION =
       QualifiedName.of(Collection.class).withParameters("E");
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;
+  private final FunctionalType mutatorType;
   private final boolean needsSafeVarargs;
   private final boolean overridesAddMethod;
   private final boolean overridesVarargsAddMethod;
@@ -115,12 +138,14 @@ class SetProperty extends PropertyCodeGenerator {
       Property property,
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
+      FunctionalType mutatorType,
       boolean needsSafeVarargs,
       boolean overridesAddMethod,
       boolean overridesVarargsAddMethod) {
     super(metadata, property);
     this.elementType = elementType;
     this.unboxedType = unboxedType;
+    this.mutatorType = mutatorType;
     this.needsSafeVarargs = needsSafeVarargs;
     this.overridesAddMethod = overridesAddMethod;
     this.overridesVarargsAddMethod = overridesVarargsAddMethod;
@@ -167,7 +192,7 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element) {",
             metadata.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
     Block body = methodBody(code, "element");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
@@ -213,8 +238,8 @@ class SetProperty extends PropertyCodeGenerator {
     code.add("%s %s(%s... elements) {\n",
             metadata.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType));
-    Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
+    Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.orElse(elementType));
     if (arrayUtils.isPresent()) {
       code.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
     } else {
@@ -292,7 +317,7 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element) {",
             metadata.getBuilder(),
             removeMethod(property),
-            unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
     Block body = methodBody(code, "element");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
@@ -323,12 +348,8 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
-            metadata.getBuilder(),
-            mutator(property),
-            Consumer.class,
-            Set.class,
-            elementType);
+        .addLine("public %s %s(%s mutator) {",
+            metadata.getBuilder(), mutator(property), mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
@@ -336,12 +357,16 @@ class SetProperty extends PropertyCodeGenerator {
           .addLine("  }");
     }
     if (overridesAddMethod) {
-      body.addLine("  mutator.accept(new %s<%s>(%s, this::%s));",
-              CheckedSet.TYPE, elementType, property.getField(), addMethod(property));
+      body.addLine("  mutator.%s(new %s<%s>(%s, this::%s));",
+          mutatorType.getMethodName(),
+          CheckedSet.TYPE,
+          elementType,
+          property.getField(),
+          addMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
-          .addLine("  mutator.accept(%s);", property.getField());
+          .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)

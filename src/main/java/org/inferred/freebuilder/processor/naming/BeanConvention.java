@@ -17,13 +17,12 @@ package org.inferred.freebuilder.processor.naming;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
-import com.google.common.base.Optional;
-
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 
 import java.beans.Introspector;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,7 +74,7 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
     String prefix = getterMatcher.group(1);
     String capitalizedName = getterMatcher.group(2);
@@ -94,7 +93,7 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
     TypeMirror returnType = ModelUtils.getReturnType(valueType, method, types);
     if (returnType.getKind() == TypeKind.VOID) {
@@ -104,7 +103,7 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
     if (prefix.equals(IS_PREFIX) && (returnType.getKind() != TypeKind.BOOLEAN)) {
       if (declaredOnValueType) {
@@ -116,7 +115,7 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
     if (!method.getParameters().isEmpty()) {
       if (declaredOnValueType) {
@@ -125,11 +124,11 @@ class BeanConvention implements NamingConvention {
       } else {
         printNoImplementationMessage(valueType, method);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
     if (new IsInvalidTypeVisitor().visit(returnType)) {
       // The compiler should already have issued an error.
-      return Optional.absent();
+      return Optional.empty();
     }
 
     String camelCaseName = Introspector.decapitalize(capitalizedName);

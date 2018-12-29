@@ -16,15 +16,14 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -35,7 +34,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class SetSourceTest {
@@ -45,7 +45,7 @@ public class SetSourceTest {
     Metadata metadata = createMetadata(true);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -302,14 +302,14 @@ public class SetSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
   public void test_noGuava_j8() {
     Metadata metadata = createMetadata(true);
 
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(generateSource(metadata)).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -554,7 +554,7 @@ public class SetSourceTest {
         "        return Collections.unmodifiableSet(new LinkedHashSet<>(elements));",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   @Test
@@ -562,7 +562,7 @@ public class SetSourceTest {
     Metadata metadata = createMetadata(false);
 
     String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(source).isEqualTo(Stream.of(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -819,7 +819,7 @@ public class SetSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}\n").collect(joining("\n")));
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
@@ -834,8 +834,7 @@ public class SetSourceTest {
    */
   private static Metadata createMetadata(boolean bean) {
     GenericTypeElementImpl set = newTopLevelGenericType("java.util.Set");
-    ClassTypeImpl string = newTopLevelClass("java.lang.String");
-    GenericTypeMirrorImpl setString = set.newMirror(string);
+    GenericTypeMirrorImpl setString = set.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -865,7 +864,14 @@ public class SetSourceTest {
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new SetProperty(
-                metadata, name, string, Optional.<TypeMirror>absent(), false, false, false))
+                metadata,
+                name,
+                STRING,
+                Optional.empty(),
+                consumer(wildcardSuper(setString)),
+                false,
+                false,
+                false))
             .build())
         .build();
   }

@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.ElementFactory.STRINGS;
+import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
@@ -37,6 +38,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,12 +51,11 @@ public class ListMutateMethodTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "List<{0}>, checked={1}, {2}, {3}")
   public static Iterable<Object[]> parameters() {
-    List<ElementFactory> elements = Arrays.asList(ElementFactory.values());
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
-        .cartesianProduct(elements, checked, conventions, features)
+        .cartesianProduct(TYPES, checked, conventions, features)
         .stream()
         .map(List::toArray)
         .iterator();
@@ -455,6 +456,64 @@ public class ListMutateMethodTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
                 convention.get(), elements.examples(0, 5, 6))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void canUseCustomFunctionalInterface() throws IOException {
+    String defaultsTypeCode = listPropertyType.getCharContent(true).toString();
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : defaultsTypeCode.split("\n")) {
+      customMutatorType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("    public interface Mutator {")
+            .addLine("      void mutate(%s<%s> list);", List.class, elements.type())
+            .addLine("    }")
+            .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
+            .addLine("      return super.mutateItems(mutator);")
+            .addLine("    }");
+      }
+    }
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMutatorType.build())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.get(), elements.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void canUseCustomGenericFunctionalInterface() throws IOException {
+    String defaultsTypeCode = genericType.getCharContent(true).toString();
+    SourceBuilder customMutatorType = new SourceBuilder();
+    for (String line : defaultsTypeCode.split("\n")) {
+      customMutatorType.addLine("%s", line);
+      if (line.contains("extends DataType_Builder")) {
+        customMutatorType
+            .addLine("    public interface Mutator<T> {")
+            .addLine("      void mutate(%s<T> list);", List.class)
+            .addLine("    }")
+            .addLine("    @Override public Builder mutateItems(Mutator<T> mutator) {")
+            .addLine("      return super.mutateItems(mutator);")
+            .addLine("    }");
+      }
+    }
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMutatorType.build())
+        .with(testBuilder()
+            .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
+            .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
+                convention.get(), elements.example(0))
             .build())
         .runTest();
   }

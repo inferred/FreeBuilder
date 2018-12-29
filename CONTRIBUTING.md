@@ -18,7 +18,7 @@ frustration later on.
 ### Building and testing
 FreeBuilder is built using [Gradle](http://gradle.org/). The following commands are especially useful:
 
- * `./gradlew eclipse` — Creates two Eclipse projects, `freebuilder` and `freebuilder-test`. You will need both JDK 6 and 8 installed, as for complex reasons JDK 7/8 will not compile the freebuilder project in Eclipse, while freebuilder-test requires JDK 8 to test lambdas. Go to Preferences > Java > Installed JREs in Eclipse to configure it with the location of your JDK installations.
+ * `./gradlew eclipse` — Creates two Eclipse projects, `freebuilder` and `freebuilder-test`.
  * `./gradlew check` — Runs all unit and integration tests. These are automatically run against every PR, and will need to pass before any contribution will be accepted.
 
 ### Code reviews

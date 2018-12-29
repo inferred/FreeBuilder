@@ -25,11 +25,12 @@ import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -42,14 +43,18 @@ import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedListMultimap;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
+import java.util.Optional;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * {@link PropertyCodeGenerator} providing fluent methods for {@link ListMultimap} properties.
@@ -60,32 +65,42 @@ class ListMultimapProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<ListMultimapProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      Property property = config.getProperty();
+      DeclaredType type = maybeDeclared(property.getType()).orElse(null);
       if (type == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
       if (!erasesToAnyOf(type,
           Multimap.class,
           ImmutableMultimap.class,
           ListMultimap.class,
           ImmutableListMultimap.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
-      boolean overridesPutMethod =
-          hasPutMethodOverride(config, unboxedKeyType.or(keyType), unboxedValueType.or(valueType));
+      boolean overridesPutMethod = hasPutMethodOverride(
+          config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
+
+      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mutator(property),
+          consumer(listMultimap(keyType, valueType, config.getElements(), config.getTypes())),
+          config.getElements(),
+          config.getTypes());
+
       return Optional.of(new ListMultimapProperty(
           config.getMetadata(),
-          config.getProperty(),
+          property,
           overridesPutMethod,
           keyType,
           unboxedKeyType,
           valueType,
-          unboxedValueType));
+          unboxedValueType,
+          mutatorType));
     }
 
     private static boolean hasPutMethodOverride(
@@ -97,6 +112,15 @@ class ListMultimapProperty extends PropertyCodeGenerator {
           keyType,
           valueType);
     }
+
+    private static TypeMirror listMultimap(
+        TypeMirror keyType,
+        TypeMirror valueType,
+        Elements elements,
+        Types types) {
+      TypeElement listMultimapType = elements.getTypeElement(ListMultimap.class.getName());
+      return types.getDeclaredType(listMultimapType, keyType, valueType);
+    }
   }
 
   private final boolean overridesPutMethod;
@@ -104,6 +128,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
   private final Optional<TypeMirror> unboxedKeyType;
   private final TypeMirror valueType;
   private final Optional<TypeMirror> unboxedValueType;
+  private final FunctionalType mutatorType;
 
   ListMultimapProperty(
       Metadata metadata,
@@ -112,13 +137,15 @@ class ListMultimapProperty extends PropertyCodeGenerator {
       TypeMirror keyType,
       Optional<TypeMirror> unboxedKeyType,
       TypeMirror valueType,
-      Optional<TypeMirror> unboxedValueType) {
+      Optional<TypeMirror> unboxedValueType,
+      FunctionalType mutatorType) {
     super(metadata, property);
     this.overridesPutMethod = overridesPutMethod;
     this.keyType = keyType;
     this.unboxedKeyType = unboxedKeyType;
     this.valueType = valueType;
     this.unboxedValueType = unboxedValueType;
+    this.mutatorType = mutatorType;
   }
 
   @Override
@@ -162,8 +189,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s value) {",
             metadata.getBuilder(),
             putMethod(property),
-            unboxedKeyType.or(keyType),
-            unboxedValueType.or(valueType));
+            unboxedKeyType.orElse(keyType),
+            unboxedValueType.orElse(valueType));
     Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.checkNotNull(key);", Preconditions.class);
@@ -196,10 +223,10 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s<? extends %s> values) {",
             metadata.getBuilder(),
             putAllMethod(property),
-            unboxedKeyType.or(keyType),
+            unboxedKeyType.orElse(keyType),
             Iterable.class,
             valueType)
-        .addLine("  for (%s value : values) {", unboxedValueType.or(valueType))
+        .addLine("  for (%s value : values) {", unboxedValueType.orElse(valueType))
         .addLine("    %s(key, value);", putMethod(property))
         .addLine("  }")
         .addLine("  return (%s) this;", metadata.getBuilder())
@@ -258,8 +285,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s value) {",
             metadata.getBuilder(),
             removeMethod(property),
-            unboxedKeyType.or(keyType),
-            unboxedValueType.or(valueType));
+            unboxedKeyType.orElse(keyType),
+            unboxedValueType.orElse(valueType));
     Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.checkNotNull(key);", Preconditions.class);
@@ -288,7 +315,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key) {",
             metadata.getBuilder(),
             removeAllMethod(property),
-            unboxedKeyType.or(keyType));
+            unboxedKeyType.orElse(keyType));
     Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.checkNotNull(key);", Preconditions.class);
@@ -311,21 +338,21 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<%s<%s, %s>> mutator) {",
+        .addLine("public %s %s(%s mutator) {",
             metadata.getBuilder(),
             mutator(property),
-            Consumer.class,
-            ListMultimap.class,
-            keyType,
-            valueType);
+            mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      body.addLine("  mutator.accept(new %s<>(%s, this::%s));",
-          CheckedListMultimap.TYPE, property.getField(), putMethod(property));
+      body.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+          mutatorType.getMethodName(),
+          CheckedListMultimap.TYPE,
+          property.getField(),
+          putMethod(property));
     } else {
       body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
-          .addLine("  mutator.accept(%s);", property.getField());
+          .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
     body.addLine("  return (%s) this;", metadata.getBuilder());
     code.add(body)
