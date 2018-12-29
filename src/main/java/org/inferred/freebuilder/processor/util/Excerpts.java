@@ -44,7 +44,7 @@ public class Excerpts {
     }
   }
 
-  public static Excerpt add(final String fmt, final Object... args) {
+  public static Excerpt add(String fmt, Object... args) {
     return new AddingExcerpt(fmt, args);
   }
 
@@ -115,7 +115,7 @@ public class Excerpts {
     }
   }
 
-  public static Object join(final String separator, final Iterable<?> excerpts) {
+  public static Object join(String separator, Iterable<?> excerpts) {
     return new JoiningExcerpt(separator, excerpts);
   }
 

@@ -23,7 +23,7 @@ class ToStringGenerator {
       SourceBuilder code,
       Datatype datatype,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
-      final boolean forPartial) {
+      boolean forPartial) {
     String typename = (forPartial ? "partial " : "") + datatype.getType().getSimpleName();
     Predicate<PropertyCodeGenerator> isOptional = generator -> {
       Initially initially = generator.initialState();

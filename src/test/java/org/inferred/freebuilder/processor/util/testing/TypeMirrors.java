@@ -262,7 +262,7 @@ public class TypeMirrors {
     }
 
     /** Iterates through instances of the given pattern, resetting every time the string mutates. */
-    Iterable<MatchResult> instancesOf(final Pattern pattern) {
+    Iterable<MatchResult> instancesOf(Pattern pattern) {
       return new Iterable<MatchResult>() {
         @Override public Iterator<MatchResult> iterator() {
           return new AbstractIterator<MatchResult>() {
