@@ -39,8 +39,6 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.lang.model.element.TypeElement;
-
 /** Unit tests for {@link Analyser}. */
 @RunWith(JUnit4.class)
 public class JacksonSupportTest {
@@ -61,51 +59,46 @@ public class JacksonSupportTest {
 
   @Test
   public void noAnnotationAddedIfJsonDeserializeMissing() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
         "  int getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
   @Test
   public void jacksonAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/68
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "import " + JsonProperty.class.getName() + ";",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
         "  @JsonProperty(\"bob\") int getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"bob\")");
   }
+
   @Test
   public void jacksonXmlAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/68
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
          "import " + JacksonXmlProperty.class.getName() + ";",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
         "  @JacksonXmlProperty(localName=\"b-ob\") int getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertPropertyHasAnnotation(property,
             JacksonXmlProperty.class, "@JacksonXmlProperty(localName = \"b-ob\")");
   }
@@ -113,34 +106,30 @@ public class JacksonSupportTest {
   @Test
   public void jacksonAnnotationAddedWithImplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/90
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
         "  int getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"fooBar\")");
   }
 
   @Test
   public void jsonAnyGetterAnnotationDisablesImplicitProperty() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
         "  @" + JsonAnyGetter.class.getName(),
         "  " + Map.class.getName() + "<Integer, String> getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 

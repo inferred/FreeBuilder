@@ -94,23 +94,12 @@ public abstract class Metadata {
   /** Returns true if the type is an interface. */
   public abstract boolean isInterfaceType();
 
-  abstract Optional<ParameterizedType> getOptionalBuilder();
-
-  /**
-   * Returns true if there is a user-visible Builder subclass defined.
-   */
-  public boolean hasBuilder() {
-    return getOptionalBuilder().isPresent();
-  }
-
   /**
    * Returns the builder type that users will see.
    *
    * @throws IllegalStateException if {@link #hasBuilder} returns false.
    */
-  public ParameterizedType getBuilder() {
-    return getOptionalBuilder().get();
-  }
+  public abstract ParameterizedType getBuilder();
 
   /** Whether there is a package-visible, no-args constructor so we can subclass the Builder. */
   public abstract boolean isExtensible();
@@ -253,16 +242,6 @@ public abstract class Metadata {
     public Builder setValueTypeVisibility(Visibility visibility) {
       return super.setValueTypeVisibility(
           Visibility.mostVisible(getValueTypeVisibility(), visibility));
-    }
-
-    /** Sets the builder class that users will see, if any. */
-    public Builder setBuilder(Optional<ParameterizedType> builder) {
-      return setOptionalBuilder(builder);
-    }
-
-    /** Sets the builder class that users will see. */
-    public Builder setBuilder(ParameterizedType builder) {
-      return setOptionalBuilder(builder);
     }
 
     /**

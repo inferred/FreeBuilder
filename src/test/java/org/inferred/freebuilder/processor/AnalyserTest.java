@@ -55,6 +55,9 @@ import java.util.Map;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeVariable;
 
 /** Unit tests for {@link Analyser}. */
 @RunWith(JUnit4.class)
@@ -76,88 +79,48 @@ public class AnalyserTest {
 
   @Test
   public void emptyDataType() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    GeneratedType builder = analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
-    QualifiedName partialType = expectedBuilder.nestedType("Partial");
-    QualifiedName propertyType = expectedBuilder.nestedType("Property");
-    QualifiedName valueType = expectedBuilder.nestedType("Value");
-    Metadata expectedMetadata = new Metadata.Builder()
-        .setExtensible(false)
-        .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(true)
-        .setGeneratedBuilder(expectedBuilder.withParameters())
-        .setHasToBuilderMethod(false)
-        .setInterfaceType(false)
-        .setPartialType(partialType.withParameters())
-        .setPropertyEnum(propertyType.withParameters())
-        .setType(QualifiedName.of("com.example", "DataType").withParameters())
-        .setValueType(valueType.withParameters())
-        .addVisibleNestedTypes(partialType)
-        .addVisibleNestedTypes(propertyType)
-        .addVisibleNestedTypes(valueType)
-        .build();
-
-    assertEquals(expectedMetadata, metadata);
+    assertThat(builder).isEqualTo(new GeneratedStub(
+        QualifiedName.of("com.example", "DataType"),
+        QualifiedName.of("com.example", "DataType_Builder").withParameters()));
     messager.verifyNote("DataType", addBuilderToClassMessage("DataType_Builder"));
   }
 
   @Test
   public void emptyInterface() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    GeneratedType builder = analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
-    QualifiedName partialType = expectedBuilder.nestedType("Partial");
-    QualifiedName propertyType = expectedBuilder.nestedType("Property");
-    QualifiedName valueType = expectedBuilder.nestedType("Value");
-    Metadata expectedMetadata = new Metadata.Builder()
-        .setExtensible(false)
-        .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(true)
-        .setGeneratedBuilder(expectedBuilder.withParameters())
-        .setHasToBuilderMethod(false)
-        .setInterfaceType(true)
-        .setPartialType(partialType.withParameters())
-        .setPropertyEnum(propertyType.withParameters())
-        .setType(QualifiedName.of("com.example", "DataType").withParameters())
-        .setValueType(valueType.withParameters())
-        .addVisibleNestedTypes(partialType)
-        .addVisibleNestedTypes(propertyType)
-        .addVisibleNestedTypes(valueType)
-        .build();
-
-    assertEquals(expectedMetadata, metadata);
+    assertThat(builder).isEqualTo(new GeneratedStub(
+        QualifiedName.of("com.example", "DataType"),
+        QualifiedName.of("com.example", "DataType_Builder").withParameters()));
     messager.verifyNote("DataType", addBuilderToInterfaceMessage("DataType_Builder"));
   }
 
   @Test
   public void nestedDataType() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse((TypeElement) model.newElementWithMarker(
+    GeneratedType builder = analyser.analyse((TypeElement) model.newElementWithMarker(
         "package com.example;",
         "public class OuterClass {",
         "  ---> public static class DataType {",
         "  }",
         "}"));
-    assertEquals("com.example.OuterClass.DataType",
-        dataType.getType().getQualifiedName().toString());
-    assertEquals(QualifiedName.of("com.example", "OuterClass_DataType_Builder").withParameters(),
-        dataType.getGeneratedBuilder());
+
+    assertThat(builder).isEqualTo(new GeneratedStub(
+        QualifiedName.of("com.example", "OuterClass", "DataType"),
+        QualifiedName.of("com.example", "OuterClass_DataType_Builder").withParameters()));
     messager.verifyNote("DataType", addBuilderToClassMessage("OuterClass_DataType_Builder"));
   }
 
   @Test
   public void twiceNestedDataType() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse((TypeElement) model.newElementWithMarker(
+    GeneratedType builder = analyser.analyse((TypeElement) model.newElementWithMarker(
         "package com.example;",
         "public class OuterClass {",
         "  public static class InnerClass {",
@@ -165,67 +128,122 @@ public class AnalyserTest {
         "    }",
         "  }",
         "}"));
-    assertEquals("com.example.OuterClass.InnerClass.DataType",
-        dataType.getType().getQualifiedName().toString());
-    assertEquals(
-        QualifiedName.of("com.example", "OuterClass_InnerClass_DataType_Builder").withParameters(),
-        dataType.getGeneratedBuilder());
-    messager.verifyNote(
-        "DataType", addBuilderToClassMessage("OuterClass_InnerClass_DataType_Builder"));
+
+    assertThat(builder).isEqualTo(new GeneratedStub(
+        QualifiedName.of("com.example", "OuterClass", "InnerClass", "DataType"),
+        QualifiedName.of("com.example", "OuterClass_InnerClass_DataType_Builder")
+            .withParameters()));
+    messager.verifyNote("DataType",
+        addBuilderToClassMessage("OuterClass_InnerClass_DataType_Builder"));
   }
 
   @Test
-  public void builderSubclass() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+  public void classWithNoProperties() throws CannotGenerateCodeException {
+    GeneratedType builder = analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder { }",
         "}"));
-    assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        dataType.getGeneratedBuilder());
-    assertEquals("com.example.DataType.Builder",
-        dataType.getBuilder().getQualifiedName().toString());
-    assertThat(dataType.isExtensible()).isTrue();
-    assertThat(dataType.getBuilderFactory()).hasValue(NO_ARGS_CONSTRUCTOR);
-    assertFalse(dataType.isBuilderSerializable());
+
+    QualifiedName dataType = QualifiedName.of("com.example", "DataType");
+    QualifiedName generatedType = QualifiedName.of("com.example", "DataType_Builder");
+    assertThat(builder).isEqualTo(new CodeGenerator(
+        new Metadata.Builder()
+            .setBuilder(dataType.nestedType("Builder").withParameters())
+            .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
+            .setBuilderSerializable(false)
+            .setExtensible(true)
+            .setGeneratedBuilder(generatedType.withParameters())
+            .setHasToBuilderMethod(false)
+            .setInterfaceType(false)
+            .setPartialType(generatedType.nestedType("Partial").withParameters())
+            .setPropertyEnum(generatedType.nestedType("Property").withParameters())
+            .setType(dataType.withParameters())
+            .setValueType(generatedType.nestedType("Value").withParameters())
+            .addVisibleNestedTypes(
+                dataType.nestedType("Builder"),
+                generatedType.nestedType("Partial"),
+                generatedType.nestedType("Property"),
+                generatedType.nestedType("Value"))
+            .build()));
+  }
+
+  @Test
+  public void genericInterfaceWithNoProperties() throws CannotGenerateCodeException {
+    TypeElement typeElement = model.newType(
+        "package com.example;",
+        "public interface DataType<K, V> {",
+        "  class Builder<K, V> extends DataType_Builder<K, V> { }",
+        "}");
+    TypeParameterElement k = typeElement.getTypeParameters().get(0);
+    TypeParameterElement v = typeElement.getTypeParameters().get(1);
+    DeclaredType mirror = (DeclaredType) typeElement.asType();
+    TypeVariable kVar = (TypeVariable) mirror.getTypeArguments().get(0);
+    TypeVariable vVar = (TypeVariable) mirror.getTypeArguments().get(1);
+
+    GeneratedType builder = analyser.analyse(typeElement);
+
+    QualifiedName dataType = QualifiedName.of("com.example", "DataType");
+    QualifiedName generatedType = QualifiedName.of("com.example", "DataType_Builder");
+    assertThat(builder).isEqualTo(new CodeGenerator(
+        new Metadata.Builder()
+            .setBuilder(dataType.nestedType("Builder").withParameters(kVar, vVar))
+            .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
+            .setBuilderSerializable(false)
+            .setExtensible(true)
+            .setGeneratedBuilder(generatedType.withParameters(k, v))
+            .setHasToBuilderMethod(false)
+            .setInterfaceType(true)
+            .setPartialType(generatedType.nestedType("Partial").withParameters(k, v))
+            .setPropertyEnum(generatedType.nestedType("Property").withParameters())
+            .setType(dataType.withParameters(k, v))
+            .setValueType(generatedType.nestedType("Value").withParameters(k, v))
+            .addVisibleNestedTypes(
+                dataType.nestedType("Builder"),
+                generatedType.nestedType("Partial"),
+                generatedType.nestedType("Property"),
+                generatedType.nestedType("Value"))
+            .build()));
   }
 
   @Test
   public void serializableBuilderSubclass() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder ",
         "      extends DataType_Builder implements java.io.Serializable { }",
         "}"));
+
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        dataType.getGeneratedBuilder());
+        builder.getMetadata().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        dataType.getBuilder().getQualifiedName().toString());
-    assertTrue(dataType.isBuilderSerializable());
+        builder.getMetadata().getBuilder().getQualifiedName().toString());
+    assertTrue(builder.getMetadata().isBuilderSerializable());
   }
 
   @Test
   public void builderSubclass_publicBuilderMethod() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder { }",
         "  public static Builder builder() { return new Builder(); }",
         "}"));
+
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        dataType.getGeneratedBuilder());
+        builder.getMetadata().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        dataType.getBuilder().getQualifiedName().toString());
-    assertThat(dataType.isExtensible()).isTrue();
-    assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
-    assertFalse(dataType.isBuilderSerializable());
+        builder.getMetadata().getBuilder().getQualifiedName().toString());
+    assertThat(builder.getMetadata().isExtensible()).isTrue();
+    assertThat(builder.getMetadata().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertFalse(builder.getMetadata().isBuilderSerializable());
   }
 
   @Test
   public void builderSubclass_publicBuilderMethod_protectedConstructor()
       throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder {",
@@ -233,19 +251,20 @@ public class AnalyserTest {
         "  }",
         "  public static Builder builder() { return new Builder(); }",
         "}"));
+
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        dataType.getGeneratedBuilder());
+        builder.getMetadata().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        dataType.getBuilder().getQualifiedName().toString());
-    assertThat(dataType.isExtensible()).isTrue();
-    assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
-    assertFalse(dataType.isBuilderSerializable());
+        builder.getMetadata().getBuilder().getQualifiedName().toString());
+    assertThat(builder.getMetadata().isExtensible()).isTrue();
+    assertThat(builder.getMetadata().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertFalse(builder.getMetadata().isBuilderSerializable());
   }
 
   @Test
   public void builderSubclass_publicBuilderMethod_privateConstructor()
       throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder {",
@@ -253,54 +272,58 @@ public class AnalyserTest {
         "  }",
         "  public static Builder builder() { return new Builder(); }",
         "}"));
+
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        dataType.getGeneratedBuilder());
+        builder.getMetadata().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        dataType.getBuilder().getQualifiedName().toString());
-    assertThat(dataType.isExtensible()).isFalse();
-    assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
-    assertFalse(dataType.isBuilderSerializable());
+        builder.getMetadata().getBuilder().getQualifiedName().toString());
+    assertThat(builder.getMetadata().isExtensible()).isFalse();
+    assertThat(builder.getMetadata().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertFalse(builder.getMetadata().isBuilderSerializable());
   }
 
   @Test
   public void builderSubclass_publicNewBuilderMethod() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder { }",
         "  public static Builder newBuilder() { return new Builder(); }",
         "}"));
+
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        dataType.getGeneratedBuilder());
+        builder.getMetadata().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        dataType.getBuilder().getQualifiedName().toString());
-    assertThat(dataType.isExtensible()).isTrue();
-    assertThat(dataType.getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
-    assertFalse(dataType.isBuilderSerializable());
+        builder.getMetadata().getBuilder().getQualifiedName().toString());
+    assertThat(builder.getMetadata().isExtensible()).isTrue();
+    assertThat(builder.getMetadata().getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
+    assertFalse(builder.getMetadata().isBuilderSerializable());
   }
 
   @Test
   public void toBuilderMethod() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
         "  Builder toBuilder();",
         "  class Builder extends DataType_Builder { }",
         "}"));
-    assertTrue(dataType.getHasToBuilderMethod());
-    assertThat(dataType.getProperties()).isEmpty();
+
+    assertTrue(builder.getMetadata().getHasToBuilderMethod());
+    assertThat(builder.getMetadata().getProperties()).isEmpty();
   }
 
   @Test
   public void toBuilderMethod_genericInterface() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType<K, V> {",
         "  Builder<K, V> toBuilder();",
         "  class Builder<K, V> extends DataType_Builder<K, V> { }",
         "}"));
-    assertTrue(dataType.getHasToBuilderMethod());
-    assertThat(dataType.getProperties()).isEmpty();
+
+    assertTrue(builder.getMetadata().getHasToBuilderMethod());
+    assertThat(builder.getMetadata().getProperties()).isEmpty();
   }
 
   @Test
@@ -313,6 +336,7 @@ public class AnalyserTest {
         "    public Builder(String unused) {}",
         "  }",
         "}"));
+
     messager.verifyError(
         "toBuilder", "No accessible no-args Builder constructor available to implement toBuilder");
   }
@@ -328,20 +352,22 @@ public class AnalyserTest {
         "    private Builder() {}",
         "  }",
         "}"));
+
     messager.verifyError(
         "toBuilder", "No accessible no-args Builder constructor available to implement toBuilder");
   }
 
   @Test
   public void twoBeanGetters() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName();",
         "  public abstract int getAge();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
 
     Property age = properties.get("age");
@@ -363,14 +389,15 @@ public class AnalyserTest {
 
   @Test
   public void twoPrefixlessGetters() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String name();",
         "  public abstract int age();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
 
     Property age = properties.get("age");
@@ -392,14 +419,15 @@ public class AnalyserTest {
 
   @Test
   public void complexGetterNames() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getCustomURLTemplate();",
         "  public abstract String getTop50Sites();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("customURLTemplate", "top50Sites");
     assertEquals("CUSTOM_URL_TEMPLATE", properties.get("customURLTemplate").getAllCapsName());
     assertEquals("TOP50_SITES", properties.get("top50Sites").getAllCapsName());
@@ -407,14 +435,15 @@ public class AnalyserTest {
 
   @Test
   public void twoGetters_interface() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "interface DataType {",
         "  String getName();",
         "  int getAge();",
         "  class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals(model.typeMirror(int.class), properties.get("age").getType());
     assertEquals("Age", properties.get("age").getCapitalizedName());
@@ -426,13 +455,14 @@ public class AnalyserTest {
 
   @Test
   public void booleanGetter() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract boolean isAvailable();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("available");
     assertEquals(model.typeMirror(boolean.class), properties.get("available").getType());
     assertEquals("Available", properties.get("available").getCapitalizedName());
@@ -442,7 +472,7 @@ public class AnalyserTest {
 
   @Test
   public void finalGetter() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public final String getName() {",
@@ -450,24 +480,26 @@ public class AnalyserTest {
         "  }",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
+
+    assertThat(builder.getMetadata().getProperties()).isEmpty();
   }
 
   @Test
   public void defaultCodeGenerator() throws CannotGenerateCodeException {
-    Metadata metadata = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "interface DataType {",
         "  String getName();",
         "  class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(metadata.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertEquals(DefaultProperty.class, properties.get("name").getCodeGenerator().getClass());
   }
 
   @Test
   public void nonAbstractGetter() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public String getName() {",
@@ -475,12 +507,13 @@ public class AnalyserTest {
         "  }",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
+
+    assertThat(builder.getMetadata().getProperties()).isEmpty();
   }
 
   @Test
   public void nonAbstractMethodNamedIssue() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public boolean issue() {",
@@ -488,55 +521,60 @@ public class AnalyserTest {
         "  }",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
+
+    assertThat(builder.getMetadata().getProperties()).isEmpty();
   }
 
   @Test
   public void voidGetter() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract void getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
+
+    assertThat(builder.getMetadata().getProperties()).isEmpty();
     messager.verifyError("getName", "Getter methods must not be void on @FreeBuilder types");
   }
 
   @Test
   public void nonBooleanIsMethod() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String isName();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
+
+    assertThat(builder.getMetadata().getProperties()).isEmpty();
     messager.verifyError(
         "isName", "Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
   }
 
   @Test
   public void getterWithArgument() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName(boolean capitalized);",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).isEmpty();
+
+    assertThat(builder.getMetadata().getProperties()).isEmpty();
     messager.verifyError("getName", "Getter methods cannot take parameters on @FreeBuilder types");
   }
 
   @Test
   public void abstractMethodNamedGet() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String get();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("get");
     assertEquals("Get", properties.get("get").getCapitalizedName());
     assertEquals("get", properties.get("get").getGetterName());
@@ -545,13 +583,14 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodNamedGetter() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getter();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("getter");
     assertEquals("Getter", properties.get("getter").getCapitalizedName());
     assertEquals("getter", properties.get("getter").getGetterName());
@@ -560,13 +599,14 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodNamedIssue() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String issue();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("issue");
     assertEquals("ISSUE", properties.get("issue").getAllCapsName());
     assertEquals("Issue", properties.get("issue").getCapitalizedName());
@@ -576,13 +616,14 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodWithNonAsciiName() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getürkt();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("getürkt");
     assertEquals("GETÜRKT", properties.get("getürkt").getAllCapsName());
     assertEquals("Getürkt", properties.get("getürkt").getCapitalizedName());
@@ -592,13 +633,14 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodNamedIs() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract boolean is();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("is");
     assertEquals("IS", properties.get("is").getAllCapsName());
     assertEquals("Is", properties.get("is").getCapitalizedName());
@@ -608,7 +650,7 @@ public class AnalyserTest {
 
   @Test
   public void mixedValidAndInvalidGetters() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName();",
@@ -617,7 +659,8 @@ public class AnalyserTest {
         "  public abstract float isDoubleBarrelled();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("AGE", properties.get("age").getAllCapsName());
     assertEquals("Age", properties.get("age").getCapitalizedName());
@@ -634,7 +677,7 @@ public class AnalyserTest {
 
   @Test
   public void noDefaults() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName();",
@@ -644,7 +687,8 @@ public class AnalyserTest {
         "    }",
         "  }",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertEquals(Type.REQUIRED, properties.get("name").getCodeGenerator().getType());
     assertEquals(Type.REQUIRED, properties.get("age").getCodeGenerator().getType());
   }
@@ -657,12 +701,13 @@ public class AnalyserTest {
         "  public abstract String getName();",
         "  public abstract int getAge();",
         "}");
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType implements IDataType {",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
   }
 
@@ -673,70 +718,71 @@ public class AnalyserTest {
         "public interface IDataType<T> {",
         "  public abstract T getProperty();",
         "}");
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType implements IDataType<String> {",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("property");
     assertEquals("java.lang.String", properties.get("property").getType().toString());
   }
 
   @Test
   public void notGwtSerializable() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "@" + GwtCompatible.class.getName() + "(serializable = false)",
         "public interface DataType {",
         "  class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getGeneratedBuilderAnnotations()).hasSize(1);
-    assertThat(asSource(dataType.getGeneratedBuilderAnnotations().get(0)))
+
+    assertThat(builder.getMetadata().getGeneratedBuilderAnnotations()).hasSize(1);
+    assertThat(asSource(builder.getMetadata().getGeneratedBuilderAnnotations().get(0)))
         .isEqualTo("@GwtCompatible");
-    assertThat(dataType.getValueTypeVisibility()).isEqualTo(PRIVATE);
-    assertThat(dataType.getValueTypeAnnotations()).isEmpty();
-    assertThat(dataType.getNestedClasses()).isEmpty();
-    assertThat(dataType.getVisibleNestedTypes()).containsNoneOf(
+    assertThat(builder.getMetadata().getValueTypeVisibility()).isEqualTo(PRIVATE);
+    assertThat(builder.getMetadata().getValueTypeAnnotations()).isEmpty();
+    assertThat(builder.getMetadata().getNestedClasses()).isEmpty();
+    assertThat(builder.getMetadata().getVisibleNestedTypes()).containsNoneOf(
         QualifiedName.of("com.example", "DataType", "Value_CustomFieldSerializer"),
         QualifiedName.of("com.example", "DataType", "GwtWhitelist"));
   }
 
   @Test
   public void gwtSerializable() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "@" + GwtCompatible.class.getName() + "(serializable = true)",
         "public interface DataType {",
         "  class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getGeneratedBuilderAnnotations()).hasSize(1);
-    assertThat(asSource(dataType.getGeneratedBuilderAnnotations().get(0)))
+
+    assertThat(builder.getMetadata().getGeneratedBuilderAnnotations()).hasSize(1);
+    assertThat(asSource(builder.getMetadata().getGeneratedBuilderAnnotations().get(0)))
         .isEqualTo("@GwtCompatible");
-    assertThat(dataType.getValueTypeVisibility()).isEqualTo(PACKAGE);
-    assertThat(dataType.getValueTypeAnnotations()).hasSize(1);
-    assertThat(asSource(dataType.getValueTypeAnnotations().get(0)))
+    assertThat(builder.getMetadata().getValueTypeVisibility()).isEqualTo(PACKAGE);
+    assertThat(builder.getMetadata().getValueTypeAnnotations()).hasSize(1);
+    assertThat(asSource(builder.getMetadata().getValueTypeAnnotations().get(0)))
         .isEqualTo("@GwtCompatible(serializable = true)");
-    assertThat(dataType.getNestedClasses()).hasSize(2);
-    assertThat(dataType.getVisibleNestedTypes()).containsAllOf(
+    assertThat(builder.getMetadata().getNestedClasses()).hasSize(2);
+    assertThat(builder.getMetadata().getVisibleNestedTypes()).containsAllOf(
         QualifiedName.of("com.example", "DataType_Builder", "Value_CustomFieldSerializer"),
         QualifiedName.of("com.example", "DataType_Builder", "GwtWhitelist"));
   }
 
   @Test
   public void underriddenEquals() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public boolean equals(Object obj) {",
         "    return (obj instanceof DataType);",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE));
     messager.verifyError(
         "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
@@ -744,18 +790,16 @@ public class AnalyserTest {
 
   @Test
   public void underriddenHashCode() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public int hashCode() {",
         "    return DataType.class.hashCode();",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
     messager.verifyError(
         "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
@@ -763,7 +807,7 @@ public class AnalyserTest {
 
   @Test
   public void underriddenHashCodeAndEquals() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public int hashCode() {",
@@ -773,35 +817,31 @@ public class AnalyserTest {
         "    return (obj instanceof DataType);",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
   }
 
   @Test
   public void underriddenToString() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public String toString() {",
         "    return \"DataType{}\";",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.TO_STRING, UnderrideLevel.OVERRIDEABLE));
   }
 
   @Test
   public void underriddenTriad() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public boolean equals(Object obj) {",
@@ -814,11 +854,9 @@ public class AnalyserTest {
         "    return \"DataType{}\";",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.TO_STRING, UnderrideLevel.OVERRIDEABLE));
@@ -826,18 +864,16 @@ public class AnalyserTest {
 
   @Test
   public void finalEquals() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final boolean equals(Object obj) {",
         "    return (obj instanceof DataType);",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL));
     messager.verifyError(
         "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
@@ -845,18 +881,16 @@ public class AnalyserTest {
 
   @Test
   public void finalHashCode() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final int hashCode() {",
         "    return DataType.class.hashCode();",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
     messager.verifyError(
         "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
@@ -864,7 +898,7 @@ public class AnalyserTest {
 
   @Test
   public void finalHashCodeAndEquals() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final int hashCode() {",
@@ -874,35 +908,31 @@ public class AnalyserTest {
         "    return (obj instanceof DataType);",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL,
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
   }
 
   @Test
   public void finalToString() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final String toString() {",
         "    return \"DataType{}\";",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.TO_STRING, UnderrideLevel.FINAL));
   }
 
   @Test
   public void finalTriad() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final boolean equals(Object obj) {",
@@ -915,11 +945,9 @@ public class AnalyserTest {
         "    return \"DataType{}\";",
         "  }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL,
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL,
         StandardMethod.TO_STRING, UnderrideLevel.FINAL));
@@ -927,60 +955,52 @@ public class AnalyserTest {
 
   @Test
   public void abstractEquals() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  /** Some comment about value-based equality. */",
         "  @Override public abstract boolean equals(Object obj);",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEmpty();
   }
 
   @Test
   public void abstractHashCode() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  /** Some comment about value-based equality. */",
         "  @Override public abstract int hashCode();",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEmpty();
   }
 
   @Test
   public void abstractToString() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  /** Some comment about how this is a useful toString implementation. */",
         "  @Override public abstract String toString();",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
+    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEmpty();
   }
 
   @Test
   public void privateNestedType() {
-    TypeElement privateType = (TypeElement) model.newElementWithMarker(
-        "package com.example;",
-        "public class DataType {",
-        "  ---> private static class PrivateType {",
-        "  }",
-        "}");
-
     try {
-      analyser.analyse(privateType);
+      analyser.analyse((TypeElement) model.newElementWithMarker(
+          "package com.example;",
+          "public class DataType {",
+          "  ---> private static class PrivateType {",
+          "  }",
+          "}"));
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
@@ -989,17 +1009,15 @@ public class AnalyserTest {
 
   @Test
   public void indirectlyPrivateNestedType() {
-    TypeElement nestedType = (TypeElement) model.newElementWithMarker(
-        "package com.example;",
-        "public class DataType {",
-        "  private static class PrivateType {",
-        "    ---> static class NestedType {",
-        "    }",
-        "  }",
-        "}");
-
     try {
-      analyser.analyse(nestedType);
+      analyser.analyse((TypeElement) model.newElementWithMarker(
+          "package com.example;",
+          "public class DataType {",
+          "  private static class PrivateType {",
+          "    ---> static class NestedType {",
+          "    }",
+          "  }",
+          "}"));
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
@@ -1010,15 +1028,13 @@ public class AnalyserTest {
 
   @Test
   public void innerType() {
-    TypeElement innerType = (TypeElement) model.newElementWithMarker(
-        "package com.example;",
-        "public class DataType {",
-        "  ---> public class InnerType {",
-        "  }",
-        "}");
-
     try {
-      analyser.analyse(innerType);
+      analyser.analyse((TypeElement) model.newElementWithMarker(
+          "package com.example;",
+          "public class DataType {",
+          "  ---> public class InnerType {",
+          "  }",
+          "}"));
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
@@ -1029,43 +1045,50 @@ public class AnalyserTest {
 
   @Test
   public void nonStaticBuilder() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName();",
         "  public class Builder extends DataType_Builder {}",
         "}"));
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name");
     assertEquals("java.lang.String", properties.get("name").getType().toString());
     assertNull(properties.get("name").getBoxedType());
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
-    assertThat(dataType.isExtensible()).isFalse();
-    assertThat(dataType.getBuilderFactory()).isAbsent();
+    assertThat(builder.getMetadata().isExtensible()).isFalse();
+    assertThat(builder.getMetadata().getBuilderFactory()).isAbsent();
     messager.verifyError("Builder", "Builder must be static on @FreeBuilder types");
   }
 
   @Test
   public void genericType() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType<A, B> {",
         "  public abstract A getName();",
         "  public abstract B getAge();",
         "  public static class Builder<Q, R> extends DataType_Builder<Q, R> {}",
         "}"));
-    assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
-    assertThat(dataType.isExtensible()).isTrue();
-    assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR), dataType.getBuilderFactory());
-    assertEquals("com.example.DataType_Builder<A, B>", dataType.getGeneratedBuilder().toString());
+
+    assertEquals("com.example.DataType.Builder<A, B>",
+        builder.getMetadata().getBuilder().toString());
+    assertThat(builder.getMetadata().isExtensible()).isTrue();
+    assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR),
+        builder.getMetadata().getBuilderFactory());
+    assertEquals("com.example.DataType_Builder<A, B>",
+        builder.getMetadata().getGeneratedBuilder().toString());
     assertEquals("com.example.DataType_Builder.Partial<A, B>",
-        dataType.getPartialType().toString());
-    assertEquals("com.example.DataType_Builder.Property", dataType.getPropertyEnum().toString());
-    assertEquals("com.example.DataType<A, B>", dataType.getType().toString());
-    assertEquals("com.example.DataType_Builder.Value<A, B>", dataType.getValueType().toString());
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+        builder.getMetadata().getPartialType().toString());
+    assertEquals("com.example.DataType_Builder.Property",
+        builder.getMetadata().getPropertyEnum().toString());
+    assertEquals("com.example.DataType<A, B>", builder.getMetadata().getType().toString());
+    assertEquals("com.example.DataType_Builder.Value<A, B>",
+        builder.getMetadata().getValueType().toString());
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
     assertNull(properties.get("age").getBoxedType());
@@ -1081,7 +1104,7 @@ public class AnalyserTest {
 
   @Test
   public void genericTypeWithBounds() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType<A extends CharSequence, B extends " + Temporal.class.getName()
             + "> {",
@@ -1089,34 +1112,42 @@ public class AnalyserTest {
         "  public abstract B getAge();",
         "  public static class Builder<Q, R> extends DataType_Builder<Q, R> {}",
         "}"));
-    assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
+
+    assertEquals("com.example.DataType.Builder<A, B>",
+        builder.getMetadata().getBuilder().toString());
     assertEquals("DataType<A extends CharSequence, B extends Temporal>",
-        SourceStringBuilder.simple().add(dataType.getType().declaration()).toString());
+        SourceStringBuilder.simple().add(builder.getMetadata().getType().declaration()).toString());
   }
 
-  /** @see <a href="https://github.com/google/FreeBuilder/issues/111">Issue 111</a> */
   @Test
   public void genericType_rebuilt() throws CannotGenerateCodeException {
+    // See also https://github.com/inferred/FreeBuilder/issues/111
     model.newType(
         "package com.example;",
         "abstract class DataType_Builder<A, B> {}");
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType<A, B> {",
         "  public abstract A getName();",
         "  public abstract B getAge();",
         "  public static class Builder<A, B> extends DataType_Builder<A, B> {}",
         "}"));
-    assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
-    assertThat(dataType.isExtensible()).isTrue();
-    assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR), dataType.getBuilderFactory());
-    assertEquals("com.example.DataType_Builder<A, B>", dataType.getGeneratedBuilder().toString());
+
+    assertEquals("com.example.DataType.Builder<A, B>",
+        builder.getMetadata().getBuilder().toString());
+    assertThat(builder.getMetadata().isExtensible()).isTrue();
+    assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR),
+        builder.getMetadata().getBuilderFactory());
+    assertEquals("com.example.DataType_Builder<A, B>",
+        builder.getMetadata().getGeneratedBuilder().toString());
     assertEquals("com.example.DataType_Builder.Partial<A, B>",
-        dataType.getPartialType().toString());
-    assertEquals("com.example.DataType_Builder.Property", dataType.getPropertyEnum().toString());
-    assertEquals("com.example.DataType<A, B>", dataType.getType().toString());
-    assertEquals("com.example.DataType_Builder.Value<A, B>", dataType.getValueType().toString());
-    Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
+        builder.getMetadata().getPartialType().toString());
+    assertEquals("com.example.DataType_Builder.Property",
+        builder.getMetadata().getPropertyEnum().toString());
+    assertEquals("com.example.DataType<A, B>", builder.getMetadata().getType().toString());
+    assertEquals("com.example.DataType_Builder.Value<A, B>",
+        builder.getMetadata().getValueType().toString());
+    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
     assertNull(properties.get("age").getBoxedType());
@@ -1132,13 +1163,11 @@ public class AnalyserTest {
 
   @Test
   public void wrongBuilderSuperclass_errorType() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
         "  class Builder extends SomeOther_Builder { }",
-        "}");
-
-    analyser.analyse(dataType);
+        "}"));
 
     messager.verifyError("Builder", "Builder extends the wrong type (should be DataType_Builder)");
   }
@@ -1149,27 +1178,23 @@ public class AnalyserTest {
         "package com.example;",
         "@" + Generated.class.getCanonicalName() + "(\"FreeBuilder FTW!\")",
         "class SomeOther_Builder { }");
-    TypeElement dataType = model.newType(
+    analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
         "  class Builder extends SomeOther_Builder { }",
-        "}");
-
-    analyser.analyse(dataType);
+        "}"));
 
     messager.verifyError("Builder", "Builder extends the wrong type (should be DataType_Builder)");
   }
 
   @Test
   public void explicitPackageScopeNoArgsConstructor() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  DataType() { }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
-
-    Metadata metadata = analyser.analyse(dataType);
+        "}"));
 
     TypeElement concreteBuilder = model.typeElement("com.example.DataType.Builder");
     QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
@@ -1194,21 +1219,19 @@ public class AnalyserTest {
         .addVisibleNestedTypes(valueType)
         .build();
 
-    assertEquals(expectedMetadata, metadata);
+    assertEquals(expectedMetadata, builder.getMetadata());
   }
 
   @Test
   public void multipleConstructors() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  DataType(int i) { }",
         "  DataType() { }",
         "  DataType(String s) { }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
-
-    Metadata metadata = analyser.analyse(dataType);
+        "}"));
 
     TypeElement concreteBuilder = model.typeElement("com.example.DataType.Builder");
     QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
@@ -1233,19 +1256,17 @@ public class AnalyserTest {
         .addVisibleNestedTypes(valueType)
         .build();
 
-    assertEquals(expectedMetadata, metadata);
+    assertEquals(expectedMetadata, builder.getMetadata());
   }
 
   @Test
   public void explicitPrivateScopeNoArgsConstructor() {
-    TypeElement dataType = model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  private DataType() { }",
-        "}");
-
     try {
-      analyser.analyse(dataType);
+      analyser.analyse(model.newType(
+          "package com.example;",
+          "public class DataType {",
+          "  private DataType() { }",
+          "}"));
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
@@ -1255,14 +1276,12 @@ public class AnalyserTest {
 
   @Test
   public void noNoArgsConstructor() {
-    TypeElement dataType = model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  private DataType(int x) { }",
-        "}");
-
     try {
-      analyser.analyse(dataType);
+      analyser.analyse(model.newType(
+          "package com.example;",
+          "public class DataType {",
+          "  private DataType(int x) { }",
+          "}"));
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
@@ -1272,12 +1291,10 @@ public class AnalyserTest {
 
   @Test
   public void freeEnumBuilder() {
-    TypeElement dataType = model.newType(
-        "package com.example;",
-        "public enum DataType {}");
-
     try {
-      analyser.analyse(dataType);
+      analyser.analyse(model.newType(
+          "package com.example;",
+          "public enum DataType {}"));
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
@@ -1286,11 +1303,8 @@ public class AnalyserTest {
 
   @Test
   public void unnamedPackage() {
-    TypeElement dataType = model.newType(
-        "public class DataType {}");
-
     try {
-      analyser.analyse(dataType);
+      analyser.analyse(model.newType("public class DataType {}"));
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
@@ -1299,12 +1313,10 @@ public class AnalyserTest {
 
   @Test
   public void freeAnnotationBuilder() {
-    TypeElement dataType = model.newType(
-        "package com.example;",
-        "public @interface DataType {}");
-
     try {
-      analyser.analyse(dataType);
+      analyser.analyse(model.newType(
+          "package com.example;",
+          "public @interface DataType {}"));
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
@@ -1313,118 +1325,123 @@ public class AnalyserTest {
 
   @Test
   public void isFullyCheckedCast_nonGenericType() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getProperty();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).hasSize(1);
-    Property property = getOnlyElement(dataType.getProperties());
+
+    assertThat(builder.getMetadata().getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isTrue();
   }
 
   @Test
   public void isFullyCheckedCast_erasedType() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable getProperty();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).hasSize(1);
-    Property property = getOnlyElement(dataType.getProperties());
+
+    assertThat(builder.getMetadata().getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isTrue();
   }
 
   @Test
   public void isFullyCheckedCast_wildcardType() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<?> getProperty();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).hasSize(1);
-    Property property = getOnlyElement(dataType.getProperties());
+
+    assertThat(builder.getMetadata().getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isTrue();
   }
 
   @Test
   public void isFullyCheckedCast_genericType() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<String> getProperty();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).hasSize(1);
-    Property property = getOnlyElement(dataType.getProperties());
+
+    assertThat(builder.getMetadata().getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isFalse();
   }
 
   @Test
   public void isFullyCheckedCast_lowerBoundWildcard() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<? extends Number> getProperty();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).hasSize(1);
-    Property property = getOnlyElement(dataType.getProperties());
+
+    assertThat(builder.getMetadata().getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isFalse();
   }
 
   @Test
   public void isFullyCheckedCast_objectLowerBoundWildcard() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<? extends Object> getProperty();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).hasSize(1);
-    Property property = getOnlyElement(dataType.getProperties());
+
+    assertThat(builder.getMetadata().getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isTrue();
   }
 
   @Test
   public void isFullyCheckedCast_oneWildcard() throws CannotGenerateCodeException {
-    Metadata dataType = analyser.analyse(model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract java.util.Map<?, String> getProperty();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
-    assertThat(dataType.getProperties()).hasSize(1);
-    Property property = getOnlyElement(dataType.getProperties());
+
+    assertThat(builder.getMetadata().getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getMetadata().getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isFalse();
   }
 
   @Test
   public void typeNotNamedBuilderIgnored() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
         "  class Bulider extends DataType_Builder {}",
-        "}");
-
-    analyser.analyse(dataType);
+        "}"));
 
     messager.verifyNote("DataType", addBuilderToInterfaceMessage("DataType_Builder"));
   }
 
   @Test
   public void valueTypeNestedClassesAddedToVisibleList() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  DataType(int i) { }",
@@ -1432,11 +1449,9 @@ public class AnalyserTest {
         "  DataType(String s) { }",
         "  public static class Builder extends DataType_Builder {}",
         "  public interface Objects {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getVisibleNestedTypes()).containsExactly(
+    assertThat(builder.getMetadata().getVisibleNestedTypes()).containsExactly(
         QualifiedName.of("com.example", "DataType", "Builder"),
         QualifiedName.of("com.example", "DataType", "Objects"),
         QualifiedName.of("com.example", "DataType_Builder", "Partial"),
@@ -1452,18 +1467,16 @@ public class AnalyserTest {
         "public class SuperType {",
         "  public interface Objects {}",
         "}");
-    TypeElement dataType = model.newType(
+    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType extends SuperType {",
         "  DataType(int i) { }",
         "  DataType() { }",
         "  DataType(String s) { }",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    assertThat(metadata.getVisibleNestedTypes()).containsExactly(
+    assertThat(builder.getMetadata().getVisibleNestedTypes()).containsExactly(
         QualifiedName.of("com.example", "SuperType", "Objects"),
         QualifiedName.of("com.example", "DataType", "Builder"),
         QualifiedName.of("com.example", "DataType_Builder", "Partial"),
@@ -1474,29 +1487,27 @@ public class AnalyserTest {
   @Test
   public void missingGenericParametersOnBuilder() throws CannotGenerateCodeException {
     // See also https://github.com/inferred/FreeBuilder/issues/110
-    TypeElement dataType = model.newType(
+    GeneratedType builder = analyser.analyse(model.newType(
         "package com.example;",
         "import java.util.*;",
         "public class DataType<A> {",
         "  public static class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-    assertThat(metadata.getOptionalBuilder()).isAbsent();
+    assertThat(builder).isInstanceOf(GeneratedStub.class);
     messager.verifyError("Builder", "Builder must be generic");
   }
 
   @Test
   public void incorrectGenericParametersOnBuilder() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    GeneratedType builder = analyser.analyse(model.newType(
         "package com.example;",
         "import java.util.*;",
         "public class DataType<A> {",
         "  public static class Builder<Q, R> extends DataType_Builder<Q, R> {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-    assertThat(metadata.getOptionalBuilder()).isAbsent();
+    assertThat(builder).isInstanceOf(GeneratedStub.class);
     messager.verifyError("Builder", "Builder has the wrong type parameters");
   }
 

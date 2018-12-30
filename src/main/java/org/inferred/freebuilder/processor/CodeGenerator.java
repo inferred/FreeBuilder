@@ -46,6 +46,7 @@ import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
@@ -53,39 +54,60 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
  */
-public class CodeGenerator {
+class CodeGenerator extends GeneratedType {
 
   static final FieldAccess UNSET_PROPERTIES = new FieldAccess("_unsetProperties");
 
-  /** Write the source code for a generated builder. */
-  void writeBuilderSource(SourceBuilder code, Metadata metadata) {
-    if (!metadata.hasBuilder()) {
-      writeStubSource(code, metadata);
-      return;
-    }
+  private final Metadata metadata;
 
-    addBuilderTypeDeclaration(code, metadata);
+  CodeGenerator(Metadata metadata) {
+    this.metadata = metadata;
+  }
+
+  Metadata getMetadata() {
+    return metadata;
+  }
+
+  @Override
+  public QualifiedName getName() {
+    return metadata.getGeneratedBuilder().getQualifiedName();
+  }
+
+  @Override
+  public Set<QualifiedName> getVisibleNestedTypes() {
+    return metadata.getVisibleNestedTypes();
+  }
+
+  @Override
+  protected void addFields(FieldReceiver fields) {
+    fields.add("metadata", metadata);
+  }
+
+  @Override
+  public void addTo(SourceBuilder code) {
+    addBuilderTypeDeclaration(code);
     code.addLine(" {");
-    addStaticFromMethod(code, metadata);
+    addStaticFromMethod(code);
     if (any(metadata.getProperties(), IS_REQUIRED)) {
-      addPropertyEnum(metadata, code);
+      addPropertyEnum(code);
     }
 
-    addFieldDeclarations(code, metadata);
+    addFieldDeclarations(code);
 
-    addAccessors(metadata, code);
-    addMergeFromValueMethod(code, metadata);
-    addMergeFromBuilderMethod(code, metadata);
-    addClearMethod(code, metadata);
-    addBuildMethod(code, metadata);
-    addBuildPartialMethod(code, metadata);
+    addAccessors(code);
+    addMergeFromValueMethod(code);
+    addMergeFromBuilderMethod(code);
+    addClearMethod(code);
+    addBuildMethod(code);
+    addBuildPartialMethod(code);
 
-    addValueType(code, metadata);
-    addPartialType(code, metadata);
+    addValueType(code);
+    addPartialType(code);
     for (Function<Metadata, Excerpt> nestedClass : metadata.getNestedClasses()) {
       code.add(nestedClass.apply(metadata));
     }
@@ -93,7 +115,7 @@ public class CodeGenerator {
     code.addLine("}");
   }
 
-  private void addBuilderTypeDeclaration(SourceBuilder code, Metadata metadata) {
+  private void addBuilderTypeDeclaration(SourceBuilder code) {
     code.addLine("/**")
         .addLine(" * Auto-generated superclass of %s,", metadata.getBuilder().javadocLink())
         .addLine(" * derived from the API of %s.", metadata.getType().javadocLink())
@@ -108,7 +130,7 @@ public class CodeGenerator {
     }
   }
 
-  private static void addStaticFromMethod(SourceBuilder code, Metadata metadata) {
+  private void addStaticFromMethod(SourceBuilder code) {
     BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
     if (builderFactory == null) {
       return;
@@ -126,7 +148,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private static void addFieldDeclarations(SourceBuilder code, Metadata metadata) {
+  private void addFieldDeclarations(SourceBuilder code) {
     code.addLine("");
     for (Property property : metadata.getProperties()) {
       PropertyCodeGenerator codeGenerator = property.getCodeGenerator();
@@ -140,13 +162,13 @@ public class CodeGenerator {
     }
   }
 
-  private static void addAccessors(Metadata metadata, SourceBuilder body) {
+  private void addAccessors(SourceBuilder body) {
     for (Property property : metadata.getProperties()) {
       property.getCodeGenerator().addBuilderFieldAccessors(body);
     }
   }
 
-  private static void addBuildMethod(SourceBuilder code, Metadata metadata) {
+  private void addBuildMethod(SourceBuilder code) {
     boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
     code.addLine("")
         .addLine("/**")
@@ -166,7 +188,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private static void addMergeFromValueMethod(SourceBuilder code, Metadata metadata) {
+  private void addMergeFromValueMethod(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets all property values using the given {@code %s} as a template.",
@@ -182,7 +204,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private static void addMergeFromBuilderMethod(SourceBuilder code, Metadata metadata) {
+  private void addMergeFromBuilderMethod(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Copies values from the given {@code %s}.",
@@ -199,7 +221,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private static void addClearMethod(SourceBuilder code, Metadata metadata) {
+  private void addClearMethod(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Resets the state of this builder.")
@@ -223,7 +245,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private static void addBuildPartialMethod(SourceBuilder code, Metadata metadata) {
+  private void addBuildPartialMethod(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns a newly-created partial %s", metadata.getType().javadocLink())
@@ -256,7 +278,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private static void addPropertyEnum(Metadata metadata, SourceBuilder code) {
+  private void addPropertyEnum(SourceBuilder code) {
     code.addLine("")
         .addLine("private enum %s {", metadata.getPropertyEnum().getSimpleName());
     for (Property property : metadata.getProperties()) {
@@ -279,7 +301,7 @@ public class CodeGenerator {
         .addLine("}");
   }
 
-  private static void addValueType(SourceBuilder code, Metadata metadata) {
+  private void addValueType(SourceBuilder code) {
     code.addLine("");
     for (Excerpt annotation : metadata.getValueTypeAnnotations()) {
       code.add(annotation);
@@ -333,7 +355,7 @@ public class CodeGenerator {
     // Equals
     switch (metadata.standardMethodUnderride(StandardMethod.EQUALS)) {
       case ABSENT:
-        addValueTypeEquals(code, metadata);
+        addValueTypeEquals(code);
         break;
 
       case OVERRIDEABLE:
@@ -371,7 +393,7 @@ public class CodeGenerator {
     code.addLine("}");
   }
 
-  private static void addValueTypeEquals(SourceBuilder code, Metadata metadata) {
+  private void addValueTypeEquals(SourceBuilder code) {
     // Default implementation if no user implementation exists.
     code.addLine("")
         .addLine("  @%s", Override.class)
@@ -411,7 +433,7 @@ public class CodeGenerator {
         .addLine("  }");
   }
 
-  private static void addPartialType(SourceBuilder code, Metadata metadata) {
+  private void addPartialType(SourceBuilder code) {
     boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
     code.addLine("")
         .addLine("private static final class %s %s {",
@@ -445,7 +467,7 @@ public class CodeGenerator {
       code.add(";\n");
       code.addLine("  }");
     }
-    addPartialToBuilderMethod(code, metadata);
+    addPartialToBuilderMethod(code);
     // Equals
     if (metadata.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
       code.addLine("")
@@ -542,7 +564,7 @@ public class CodeGenerator {
         .addLine("  }");
   }
 
-  private static void addPartialToBuilderMethod(SourceBuilder code, Metadata metadata) {
+  private void addPartialToBuilderMethod(SourceBuilder code) {
     if (!metadata.getHasToBuilderMethod()) {
       return;
     }
@@ -572,15 +594,6 @@ public class CodeGenerator {
     }
     code.add(body)
         .addLine("  }");
-  }
-
-  private void writeStubSource(SourceBuilder code, Metadata metadata) {
-    code.addLine("/**")
-        .addLine(" * Placeholder. Create {@code %s.Builder} and subclass this type.",
-            metadata.getType())
-        .addLine(" */")
-        .add(Excerpts.generated(getClass()))
-        .addLine("abstract class %s {}", metadata.getGeneratedBuilder().declaration());
   }
 
   private static Nullability nullabilityOf(Property property, boolean inPartial) {

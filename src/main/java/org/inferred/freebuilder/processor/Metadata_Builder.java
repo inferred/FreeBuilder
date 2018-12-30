@@ -43,6 +43,7 @@ abstract class Metadata_Builder {
   private enum Property {
     TYPE("type"),
     INTERFACE_TYPE("interfaceType"),
+    BUILDER("builder"),
     EXTENSIBLE("extensible"),
     GENERATED_BUILDER("generatedBuilder"),
     VALUE_TYPE("valueType"),
@@ -67,10 +68,7 @@ abstract class Metadata_Builder {
 
   private ParameterizedType type;
   private boolean interfaceType;
-  // Store a nullable object instead of an Optional. Escape analysis then
-  // allows the JVM to optimize away the Optional objects created by and
-  // passed to our API.
-  private ParameterizedType optionalBuilder = null;
+  private ParameterizedType builder = null;
   private boolean extensible;
   // Store a nullable object instead of an Optional. Escape analysis then
   // allows the JVM to optimize away the Optional objects created by and
@@ -141,57 +139,26 @@ abstract class Metadata_Builder {
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata#getOptionalBuilder()}.
+   * Sets the value to be returned by {@link Metadata#getBuilder()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code optionalBuilder} is null
+   * @throws NullPointerException if {@code builder} is null
    */
-  public Metadata.Builder setOptionalBuilder(ParameterizedType optionalBuilder) {
-    this.optionalBuilder = Preconditions.checkNotNull(optionalBuilder);
+  public Metadata.Builder setBuilder(ParameterizedType builder) {
+    this.builder = Preconditions.checkNotNull(builder);
+    _unsetProperties.remove(Metadata_Builder.Property.BUILDER);
     return (Metadata.Builder) this;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata#getOptionalBuilder()}.
+   * Returns the value that will be returned by {@link Metadata#getOptionalBuilder()}.
    *
-   * @return this {@code Builder} object
+   * @throws IllegalStateException if the field has not been set
    */
-  public Metadata.Builder setOptionalBuilder(
-      Optional<? extends ParameterizedType> optionalBuilder) {
-    if (optionalBuilder.isPresent()) {
-      return setOptionalBuilder(optionalBuilder.get());
-    } else {
-      return clearOptionalBuilder();
-    }
-  }
-
-  /**
-   * Sets the value to be returned by {@link Metadata#getOptionalBuilder()}.
-   *
-   * @return this {@code Builder} object
-   */
-  public Metadata.Builder setNullableOptionalBuilder(@Nullable ParameterizedType optionalBuilder) {
-    if (optionalBuilder != null) {
-      return setOptionalBuilder(optionalBuilder);
-    } else {
-      return clearOptionalBuilder();
-    }
-  }
-
-  /**
-   * Sets the value to be returned by {@link Metadata#getOptionalBuilder()} to {@link
-   * Optional#absent() Optional.absent()}.
-   *
-   * @return this {@code Builder} object
-   */
-  public Metadata.Builder clearOptionalBuilder() {
-    this.optionalBuilder = null;
-    return (Metadata.Builder) this;
-  }
-
-  /** Returns the value that will be returned by {@link Metadata#getOptionalBuilder()}. */
-  public Optional<ParameterizedType> getOptionalBuilder() {
-    return Optional.fromNullable(optionalBuilder);
+  public ParameterizedType getBuilder() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Metadata_Builder.Property.BUILDER), "builder not set");
+    return builder;
   }
 
   /**
@@ -889,8 +856,9 @@ abstract class Metadata_Builder {
         || value.isInterfaceType() != _defaults.isInterfaceType()) {
       setInterfaceType(value.isInterfaceType());
     }
-    if (value.getOptionalBuilder().isPresent()) {
-      setOptionalBuilder(value.getOptionalBuilder().get());
+    if (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER)
+        || !value.getBuilder().equals(_defaults.getBuilder())) {
+      setBuilder(value.getBuilder());
     }
     if (_defaults._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
         || value.isExtensible() != _defaults.isExtensible()) {
@@ -967,7 +935,7 @@ abstract class Metadata_Builder {
    */
   public Metadata.Builder mergeFrom(Metadata.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
-    Metadata_Builder base = (Metadata_Builder) template;
+    Metadata_Builder base = template;
     Metadata_Builder _defaults = new Metadata.Builder();
     if (!base._unsetProperties.contains(Metadata_Builder.Property.TYPE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.TYPE)
@@ -979,8 +947,10 @@ abstract class Metadata_Builder {
             || template.isInterfaceType() != _defaults.isInterfaceType())) {
       setInterfaceType(template.isInterfaceType());
     }
-    if (template.getOptionalBuilder().isPresent()) {
-      setOptionalBuilder(template.getOptionalBuilder().get());
+    if (!base._unsetProperties.contains(Metadata_Builder.Property.BUILDER)
+        && (_defaults._unsetProperties.contains(Metadata_Builder.Property.BUILDER)
+            || !template.getBuilder().equals(_defaults.getBuilder()))) {
+      setBuilder(template.getBuilder());
     }
     if (!base._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
         && (_defaults._unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
@@ -1039,7 +1009,7 @@ abstract class Metadata_Builder {
     Metadata_Builder _defaults = new Metadata.Builder();
     type = _defaults.type;
     interfaceType = _defaults.interfaceType;
-    optionalBuilder = _defaults.optionalBuilder;
+    builder = _defaults.builder;
     extensible = _defaults.extensible;
     builderFactory = _defaults.builderFactory;
     generatedBuilder = _defaults.generatedBuilder;
@@ -1090,7 +1060,7 @@ abstract class Metadata_Builder {
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
-    private final ParameterizedType optionalBuilder;
+    private final ParameterizedType builder;
     private final boolean extensible;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
@@ -1114,7 +1084,7 @@ abstract class Metadata_Builder {
     private Value(Metadata_Builder builder) {
       this.type = builder.type;
       this.interfaceType = builder.interfaceType;
-      this.optionalBuilder = builder.optionalBuilder;
+      this.builder = builder.builder;
       this.extensible = builder.extensible;
       this.builderFactory = builder.builderFactory;
       this.generatedBuilder = builder.generatedBuilder;
@@ -1143,8 +1113,8 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public Optional<ParameterizedType> getOptionalBuilder() {
-      return Optional.fromNullable(optionalBuilder);
+    public ParameterizedType getBuilder() {
+      return builder;
     }
 
     @Override
@@ -1235,8 +1205,7 @@ abstract class Metadata_Builder {
       if (interfaceType != other.interfaceType) {
         return false;
       }
-      if (optionalBuilder != other.optionalBuilder
-          && (optionalBuilder == null || !optionalBuilder.equals(other.optionalBuilder))) {
+      if (!builder.equals(other.builder)) {
         return false;
       }
       if (extensible != other.extensible) {
@@ -1294,7 +1263,7 @@ abstract class Metadata_Builder {
           new Object[] {
             type,
             interfaceType,
-            optionalBuilder,
+            builder,
             extensible,
             builderFactory,
             generatedBuilder,
@@ -1319,7 +1288,7 @@ abstract class Metadata_Builder {
           + COMMA_JOINER.join(
               "type=" + type,
               "interfaceType=" + interfaceType,
-              (optionalBuilder != null ? "optionalBuilder=" + optionalBuilder : null),
+              "builder=" + builder,
               "extensible=" + extensible,
               (builderFactory != null ? "builderFactory=" + builderFactory : null),
               "generatedBuilder=" + generatedBuilder,
@@ -1342,10 +1311,7 @@ abstract class Metadata_Builder {
   private static final class Partial extends Metadata {
     private final ParameterizedType type;
     private final boolean interfaceType;
-    // Store a nullable object instead of an Optional. Escape analysis then
-    // allows the JVM to optimize away the Optional objects created by our
-    // getter method.
-    private final ParameterizedType optionalBuilder;
+    private final ParameterizedType builder;
     private final boolean extensible;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
@@ -1370,7 +1336,7 @@ abstract class Metadata_Builder {
     Partial(Metadata_Builder builder) {
       this.type = builder.type;
       this.interfaceType = builder.interfaceType;
-      this.optionalBuilder = builder.optionalBuilder;
+      this.builder = builder.builder;
       this.extensible = builder.extensible;
       this.builderFactory = builder.builderFactory;
       this.generatedBuilder = builder.generatedBuilder;
@@ -1406,8 +1372,11 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public Optional<ParameterizedType> getOptionalBuilder() {
-      return Optional.fromNullable(optionalBuilder);
+    public ParameterizedType getBuilder() {
+      if (_unsetProperties.contains(Metadata_Builder.Property.BUILDER)) {
+        throw new UnsupportedOperationException("builder not set");
+      }
+      return builder;
     }
 
     @Override
@@ -1522,8 +1491,7 @@ abstract class Metadata_Builder {
       if (interfaceType != other.interfaceType) {
         return false;
       }
-      if (optionalBuilder != other.optionalBuilder
-          && (optionalBuilder == null || !optionalBuilder.equals(other.optionalBuilder))) {
+      if (!builder.equals(other.builder)) {
         return false;
       }
       if (extensible != other.extensible) {
@@ -1587,7 +1555,7 @@ abstract class Metadata_Builder {
           new Object[] {
             type,
             interfaceType,
-            optionalBuilder,
+            builder,
             extensible,
             builderFactory,
             generatedBuilder,
@@ -1615,7 +1583,7 @@ abstract class Metadata_Builder {
               (!_unsetProperties.contains(Metadata_Builder.Property.INTERFACE_TYPE)
                   ? "interfaceType=" + interfaceType
                   : null),
-              (optionalBuilder != null ? "optionalBuilder=" + optionalBuilder : null),
+              (builder != null ? "optionalBuilder=" + builder : null),
               (!_unsetProperties.contains(Metadata_Builder.Property.EXTENSIBLE)
                   ? "extensible=" + extensible
                   : null),

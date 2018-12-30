@@ -64,7 +64,6 @@ public class Processor extends AbstractProcessor {
       new MapMaker().weakKeys().weakValues().concurrencyLevel(1).initialCapacity(1).makeMap();
 
   private Analyser analyser;
-  private final CodeGenerator codeGenerator = new CodeGenerator();
   private final FeatureSet features;
 
   private transient FeatureSet environmentFeatures;
@@ -114,16 +113,16 @@ public class Processor extends AbstractProcessor {
     }
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
-        Metadata metadata = analyser.analyse(type);
+        GeneratedType builder = analyser.analyse(type);
         CompilationUnitBuilder code = new CompilationUnitBuilder(
             processingEnv,
-            metadata.getGeneratedBuilder().getQualifiedName(),
-            metadata.getVisibleNestedTypes(),
+            builder.getName(),
+            builder.getVisibleNestedTypes(),
             firstNonNull(features, environmentFeatures));
-        codeGenerator.writeBuilderSource(code, metadata);
+        code.add(builder);
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),
-            metadata.getGeneratedBuilder().getQualifiedName(),
+            builder.getName(),
             type,
             code.toString());
       } catch (Analyser.CannotGenerateCodeException e) {
