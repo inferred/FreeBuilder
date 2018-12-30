@@ -64,7 +64,6 @@ public class Processor extends AbstractProcessor {
       new MapMaker().weakKeys().weakValues().concurrencyLevel(1).initialCapacity(1).makeMap();
 
   private Analyser analyser;
-  private final CodeGenerator codeGenerator = new CodeGenerator();
   private final FeatureSet features;
 
   private transient FeatureSet environmentFeatures;
@@ -120,7 +119,7 @@ public class Processor extends AbstractProcessor {
             metadata.getGeneratedBuilder().getQualifiedName(),
             metadata.getVisibleNestedTypes(),
             firstNonNull(features, environmentFeatures));
-        codeGenerator.writeBuilderSource(code, metadata);
+        new CodeGenerator(metadata).writeBuilderSource(code);
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),
             metadata.getGeneratedBuilder().getQualifiedName(),

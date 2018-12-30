@@ -994,7 +994,7 @@ public class JavaUtilOptionalSourceTest {
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
     SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
+    new CodeGenerator(metadata).writeBuilderSource(sourceBuilder);
     try {
       return new Formatter().formatSource(sourceBuilder.toString());
     } catch (FormatterException e) {

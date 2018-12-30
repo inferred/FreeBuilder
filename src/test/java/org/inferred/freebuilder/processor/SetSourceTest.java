@@ -1426,7 +1426,7 @@ public class SetSourceTest {
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
     SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
+    new CodeGenerator(metadata).writeBuilderSource(sourceBuilder);
     return CompilationUnitBuilder.formatSource(sourceBuilder.toString());
   }
 
