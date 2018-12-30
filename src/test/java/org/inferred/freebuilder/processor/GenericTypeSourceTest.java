@@ -46,7 +46,7 @@ public class GenericTypeSourceTest {
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder<A, B> {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -315,7 +315,7 @@ public class GenericTypeSourceTest {
     assertThat(source).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder<A, B> {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -854,7 +854,7 @@ public class GenericTypeSourceTest {
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
     SourceBuilder sourceBuilder = SourceStringBuilder.simple(features)
-        .add(new CodeGenerator(metadata));
+        .add(new GeneratedBuilder(metadata));
     try {
       return new Formatter().formatSource(sourceBuilder.toString());
     } catch (FormatterException e) {

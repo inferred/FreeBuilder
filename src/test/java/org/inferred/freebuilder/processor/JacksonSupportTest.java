@@ -59,7 +59,7 @@ public class JacksonSupportTest {
 
   @Test
   public void noAnnotationAddedIfJsonDeserializeMissing() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
         "  int getFooBar();",
@@ -73,7 +73,7 @@ public class JacksonSupportTest {
   @Test
   public void jacksonAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/68
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "import " + JsonProperty.class.getName() + ";",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
@@ -89,7 +89,7 @@ public class JacksonSupportTest {
   @Test
   public void jacksonXmlAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/68
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
          "import " + JacksonXmlProperty.class.getName() + ";",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
@@ -106,7 +106,7 @@ public class JacksonSupportTest {
   @Test
   public void jacksonAnnotationAddedWithImplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/90
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
@@ -120,7 +120,7 @@ public class JacksonSupportTest {
 
   @Test
   public void jsonAnyGetterAnnotationDisablesImplicitProperty() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",

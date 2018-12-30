@@ -147,7 +147,7 @@ public class AnalyserTest {
 
     QualifiedName dataType = QualifiedName.of("com.example", "DataType");
     QualifiedName generatedType = QualifiedName.of("com.example", "DataType_Builder");
-    assertThat(builder).isEqualTo(new CodeGenerator(
+    assertThat(builder).isEqualTo(new GeneratedBuilder(
         new Metadata.Builder()
             .setBuilder(dataType.nestedType("Builder").withParameters())
             .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
@@ -185,7 +185,7 @@ public class AnalyserTest {
 
     QualifiedName dataType = QualifiedName.of("com.example", "DataType");
     QualifiedName generatedType = QualifiedName.of("com.example", "DataType_Builder");
-    assertThat(builder).isEqualTo(new CodeGenerator(
+    assertThat(builder).isEqualTo(new GeneratedBuilder(
         new Metadata.Builder()
             .setBuilder(dataType.nestedType("Builder").withParameters(kVar, vVar))
             .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
@@ -208,7 +208,7 @@ public class AnalyserTest {
 
   @Test
   public void serializableBuilderSubclass() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder ",
@@ -224,7 +224,7 @@ public class AnalyserTest {
 
   @Test
   public void builderSubclass_publicBuilderMethod() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder { }",
@@ -243,7 +243,7 @@ public class AnalyserTest {
   @Test
   public void builderSubclass_publicBuilderMethod_protectedConstructor()
       throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder {",
@@ -264,7 +264,7 @@ public class AnalyserTest {
   @Test
   public void builderSubclass_publicBuilderMethod_privateConstructor()
       throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder {",
@@ -284,7 +284,7 @@ public class AnalyserTest {
 
   @Test
   public void builderSubclass_publicNewBuilderMethod() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public static class Builder extends DataType_Builder { }",
@@ -302,7 +302,7 @@ public class AnalyserTest {
 
   @Test
   public void toBuilderMethod() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
         "  Builder toBuilder();",
@@ -315,7 +315,7 @@ public class AnalyserTest {
 
   @Test
   public void toBuilderMethod_genericInterface() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType<K, V> {",
         "  Builder<K, V> toBuilder();",
@@ -359,7 +359,7 @@ public class AnalyserTest {
 
   @Test
   public void twoBeanGetters() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName();",
@@ -389,7 +389,7 @@ public class AnalyserTest {
 
   @Test
   public void twoPrefixlessGetters() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String name();",
@@ -419,7 +419,7 @@ public class AnalyserTest {
 
   @Test
   public void complexGetterNames() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getCustomURLTemplate();",
@@ -435,7 +435,7 @@ public class AnalyserTest {
 
   @Test
   public void twoGetters_interface() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "interface DataType {",
         "  String getName();",
@@ -455,7 +455,7 @@ public class AnalyserTest {
 
   @Test
   public void booleanGetter() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract boolean isAvailable();",
@@ -472,7 +472,7 @@ public class AnalyserTest {
 
   @Test
   public void finalGetter() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public final String getName() {",
@@ -486,7 +486,7 @@ public class AnalyserTest {
 
   @Test
   public void defaultCodeGenerator() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "interface DataType {",
         "  String getName();",
@@ -499,7 +499,7 @@ public class AnalyserTest {
 
   @Test
   public void nonAbstractGetter() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public String getName() {",
@@ -513,7 +513,7 @@ public class AnalyserTest {
 
   @Test
   public void nonAbstractMethodNamedIssue() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public boolean issue() {",
@@ -527,7 +527,7 @@ public class AnalyserTest {
 
   @Test
   public void voidGetter() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract void getName();",
@@ -540,7 +540,7 @@ public class AnalyserTest {
 
   @Test
   public void nonBooleanIsMethod() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String isName();",
@@ -554,7 +554,7 @@ public class AnalyserTest {
 
   @Test
   public void getterWithArgument() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName(boolean capitalized);",
@@ -567,7 +567,7 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodNamedGet() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String get();",
@@ -583,7 +583,7 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodNamedGetter() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getter();",
@@ -599,7 +599,7 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodNamedIssue() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String issue();",
@@ -616,7 +616,7 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodWithNonAsciiName() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getürkt();",
@@ -633,7 +633,7 @@ public class AnalyserTest {
 
   @Test
   public void abstractMethodNamedIs() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract boolean is();",
@@ -650,7 +650,7 @@ public class AnalyserTest {
 
   @Test
   public void mixedValidAndInvalidGetters() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName();",
@@ -677,7 +677,7 @@ public class AnalyserTest {
 
   @Test
   public void noDefaults() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName();",
@@ -701,7 +701,7 @@ public class AnalyserTest {
         "  public abstract String getName();",
         "  public abstract int getAge();",
         "}");
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType implements IDataType {",
         "  public static class Builder extends DataType_Builder {}",
@@ -718,7 +718,7 @@ public class AnalyserTest {
         "public interface IDataType<T> {",
         "  public abstract T getProperty();",
         "}");
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType implements IDataType<String> {",
         "  public static class Builder extends DataType_Builder {}",
@@ -731,7 +731,7 @@ public class AnalyserTest {
 
   @Test
   public void notGwtSerializable() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "@" + GwtCompatible.class.getName() + "(serializable = false)",
         "public interface DataType {",
@@ -751,7 +751,7 @@ public class AnalyserTest {
 
   @Test
   public void gwtSerializable() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "@" + GwtCompatible.class.getName() + "(serializable = true)",
         "public interface DataType {",
@@ -773,7 +773,7 @@ public class AnalyserTest {
 
   @Test
   public void underriddenEquals() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public boolean equals(Object obj) {",
@@ -790,7 +790,7 @@ public class AnalyserTest {
 
   @Test
   public void underriddenHashCode() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public int hashCode() {",
@@ -807,7 +807,7 @@ public class AnalyserTest {
 
   @Test
   public void underriddenHashCodeAndEquals() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public int hashCode() {",
@@ -826,7 +826,7 @@ public class AnalyserTest {
 
   @Test
   public void underriddenToString() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public String toString() {",
@@ -841,7 +841,7 @@ public class AnalyserTest {
 
   @Test
   public void underriddenTriad() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public boolean equals(Object obj) {",
@@ -864,7 +864,7 @@ public class AnalyserTest {
 
   @Test
   public void finalEquals() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final boolean equals(Object obj) {",
@@ -881,7 +881,7 @@ public class AnalyserTest {
 
   @Test
   public void finalHashCode() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final int hashCode() {",
@@ -898,7 +898,7 @@ public class AnalyserTest {
 
   @Test
   public void finalHashCodeAndEquals() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final int hashCode() {",
@@ -917,7 +917,7 @@ public class AnalyserTest {
 
   @Test
   public void finalToString() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final String toString() {",
@@ -932,7 +932,7 @@ public class AnalyserTest {
 
   @Test
   public void finalTriad() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  @Override public final boolean equals(Object obj) {",
@@ -955,7 +955,7 @@ public class AnalyserTest {
 
   @Test
   public void abstractEquals() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  /** Some comment about value-based equality. */",
@@ -968,7 +968,7 @@ public class AnalyserTest {
 
   @Test
   public void abstractHashCode() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  /** Some comment about value-based equality. */",
@@ -981,7 +981,7 @@ public class AnalyserTest {
 
   @Test
   public void abstractToString() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  /** Some comment about how this is a useful toString implementation. */",
@@ -1045,7 +1045,7 @@ public class AnalyserTest {
 
   @Test
   public void nonStaticBuilder() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getName();",
@@ -1066,7 +1066,7 @@ public class AnalyserTest {
 
   @Test
   public void genericType() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType<A, B> {",
         "  public abstract A getName();",
@@ -1104,7 +1104,7 @@ public class AnalyserTest {
 
   @Test
   public void genericTypeWithBounds() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType<A extends CharSequence, B extends " + Temporal.class.getName()
             + "> {",
@@ -1125,7 +1125,7 @@ public class AnalyserTest {
     model.newType(
         "package com.example;",
         "abstract class DataType_Builder<A, B> {}");
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType<A, B> {",
         "  public abstract A getName();",
@@ -1189,7 +1189,7 @@ public class AnalyserTest {
 
   @Test
   public void explicitPackageScopeNoArgsConstructor() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  DataType() { }",
@@ -1224,7 +1224,7 @@ public class AnalyserTest {
 
   @Test
   public void multipleConstructors() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  DataType(int i) { }",
@@ -1325,7 +1325,7 @@ public class AnalyserTest {
 
   @Test
   public void isFullyCheckedCast_nonGenericType() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract String getProperty();",
@@ -1340,7 +1340,7 @@ public class AnalyserTest {
 
   @Test
   public void isFullyCheckedCast_erasedType() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable getProperty();",
@@ -1355,7 +1355,7 @@ public class AnalyserTest {
 
   @Test
   public void isFullyCheckedCast_wildcardType() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<?> getProperty();",
@@ -1370,7 +1370,7 @@ public class AnalyserTest {
 
   @Test
   public void isFullyCheckedCast_genericType() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<String> getProperty();",
@@ -1385,7 +1385,7 @@ public class AnalyserTest {
 
   @Test
   public void isFullyCheckedCast_lowerBoundWildcard() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<? extends Number> getProperty();",
@@ -1400,7 +1400,7 @@ public class AnalyserTest {
 
   @Test
   public void isFullyCheckedCast_objectLowerBoundWildcard() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<? extends Object> getProperty();",
@@ -1415,7 +1415,7 @@ public class AnalyserTest {
 
   @Test
   public void isFullyCheckedCast_oneWildcard() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  public abstract java.util.Map<?, String> getProperty();",
@@ -1441,7 +1441,7 @@ public class AnalyserTest {
 
   @Test
   public void valueTypeNestedClassesAddedToVisibleList() throws CannotGenerateCodeException {
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
         "  DataType(int i) { }",
@@ -1467,7 +1467,7 @@ public class AnalyserTest {
         "public class SuperType {",
         "  public interface Objects {}",
         "}");
-    CodeGenerator builder = (CodeGenerator) analyser.analyse(model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType extends SuperType {",
         "  DataType(int i) { }",

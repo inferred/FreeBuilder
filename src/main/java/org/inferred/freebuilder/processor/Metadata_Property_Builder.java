@@ -22,7 +22,7 @@ import org.inferred.freebuilder.processor.util.Excerpt;
  * Auto-generated superclass of {@link Metadata.Property.Builder},
  * derived from the API of {@link Metadata.Property}.
  */
-@Generated("org.inferred.freebuilder.processor.CodeGenerator")
+@Generated("org.inferred.freebuilder.processor.Processor")
 abstract class Metadata_Property_Builder {
 
   /**

@@ -184,7 +184,7 @@ class Analyser {
     metadataBuilder
         .clearProperties()
         .addAllProperties(codeGenerators(properties, baseMetadata, builder));
-    return new CodeGenerator(metadataBuilder.build());
+    return new GeneratedBuilder(metadataBuilder.build());
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {

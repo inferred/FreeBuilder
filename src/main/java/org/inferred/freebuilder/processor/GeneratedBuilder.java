@@ -59,13 +59,13 @@ import java.util.Set;
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
  */
-class CodeGenerator extends GeneratedType {
+class GeneratedBuilder extends GeneratedType {
 
   static final FieldAccess UNSET_PROPERTIES = new FieldAccess("_unsetProperties");
 
   private final Metadata metadata;
 
-  CodeGenerator(Metadata metadata) {
+  GeneratedBuilder(Metadata metadata) {
     this.metadata = metadata;
   }
 
@@ -120,7 +120,7 @@ class CodeGenerator extends GeneratedType {
         .addLine(" * Auto-generated superclass of %s,", metadata.getBuilder().javadocLink())
         .addLine(" * derived from the API of %s.", metadata.getType().javadocLink())
         .addLine(" */")
-        .add(Excerpts.generated(getClass()));
+        .add(Excerpts.generated(Processor.class));
     for (Excerpt annotation : metadata.getGeneratedBuilderAnnotations()) {
       code.add(annotation);
     }
