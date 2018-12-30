@@ -48,11 +48,11 @@ public class NullablePropertyFactoryTest {
   @Rule public final ModelRule model = new ModelRule();
   @Mock(answer = RETURNS_SMART_NULLS) private Config config;
   private final NullableProperty.Factory factory = new NullableProperty.Factory();
-  @Mock(answer = RETURNS_SMART_NULLS) private Metadata metadata;
+  @Mock(answer = RETURNS_SMART_NULLS) private Datatype datatype;
 
   @Before
   public void setUp() {
-    when(config.getMetadata()).thenReturn(metadata);
+    when(config.getDatatype()).thenReturn(datatype);
   }
 
   @Test
@@ -97,7 +97,7 @@ public class NullablePropertyFactoryTest {
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
     assertThat(codeGenerator).hasValue(new NullableProperty(
-        metadata,
+        datatype,
         property,
         ImmutableSet.of(model.typeElement(Nullable.class)),
         unaryOperator(model.typeMirror(String.class))));
@@ -129,7 +129,7 @@ public class NullablePropertyFactoryTest {
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
     assertThat(codeGenerator).hasValue(new NullableProperty(
-        metadata,
+        datatype,
         property,
         ImmutableSet.of(model.typeElement("foo.bar.Nullable")),
         unaryOperator(model.typeMirror(String.class))));
@@ -164,7 +164,7 @@ public class NullablePropertyFactoryTest {
     Optional<NullableProperty> codeGenerator = factory.create(config);
 
     assertThat(codeGenerator).hasValue(new NullableProperty(
-        metadata,
+        datatype,
         property,
         ImmutableSet.of(
             model.typeElement(Nullable.class),

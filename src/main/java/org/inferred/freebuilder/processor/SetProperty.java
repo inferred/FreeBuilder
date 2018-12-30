@@ -90,7 +90,7 @@ class SetProperty extends PropertyCodeGenerator {
           config.getTypes());
 
       return Optional.of(new SetProperty(
-          config.getMetadata(),
+          config.getDatatype(),
           config.getProperty(),
           elementType,
           unboxedType,
@@ -135,7 +135,7 @@ class SetProperty extends PropertyCodeGenerator {
   private final boolean overridesVarargsAddMethod;
 
   SetProperty(
-      Metadata metadata,
+      Datatype datatype,
       Property property,
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
@@ -143,7 +143,7 @@ class SetProperty extends PropertyCodeGenerator {
       boolean needsSafeVarargs,
       boolean overridesAddMethod,
       boolean overridesVarargsAddMethod) {
-    super(metadata, property);
+    super(datatype, property);
     this.elementType = elementType;
     this.unboxedType = unboxedType;
     this.mutatorType = mutatorType;
@@ -165,31 +165,31 @@ class SetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addAdd(code, metadata);
-    addVarargsAdd(code, metadata);
-    addAddAllMethods(code, metadata);
-    addRemove(code, metadata);
-    addMutator(code, metadata);
-    addClear(code, metadata);
-    addGetter(code, metadata);
+    addAdd(code, datatype);
+    addVarargsAdd(code, datatype);
+    addAddAllMethods(code, datatype);
+    addRemove(code, datatype);
+    addMutator(code, datatype);
+    addClear(code, datatype);
+    addGetter(code, datatype);
   }
 
-  private void addAdd(SourceBuilder code, Metadata metadata) {
+  private void addAdd(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds {@code element} to the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * If the set already contains {@code element}, then {@code %s}",
             addMethod(property))
         .addLine(" * has no effect (only the previously added element is retained).")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" */")
         .addLine("public %s %s(%s element) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addMethod(property),
             unboxedType.or(elementType));
     Block body = methodBody(code, "element");
@@ -205,20 +205,20 @@ class SetProperty extends PropertyCodeGenerator {
       body.add(checkNotNullPreamble("element"))
           .addLine("  %s.add(%s);", property.getField(), checkNotNullInline("element"));
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addVarargsAdd(SourceBuilder code, Metadata metadata) {
+  private void addVarargsAdd(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the set to be returned from")
         .addLine(" * %s, ignoring duplicate elements",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * (only the first duplicate element is added).")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
           .addLine(" *     null element");
@@ -238,7 +238,7 @@ class SetProperty extends PropertyCodeGenerator {
       code.add("final ");
     }
     code.add("%s %s(%s... elements) {\n",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addMethod(property),
             unboxedType.or(elementType));
     Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.or(elementType));
@@ -249,37 +249,37 @@ class SetProperty extends PropertyCodeGenerator {
       code.addLine("  for (%s element : elements) {", elementType)
           .addLine("    %s(element);", addMethod(property))
           .addLine("  }")
-          .addLine("  return (%s) this;", metadata.getBuilder());
+          .addLine("  return (%s) this;", datatype.getBuilder());
     }
     code.addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code, Metadata metadata) {
+  private void addAddAllMethods(SourceBuilder code, Datatype datatype) {
     if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code, metadata);
-      addStreamAddAll(code, metadata);
+      addSpliteratorAddAll(code, datatype);
+      addStreamAddAll(code, datatype);
     }
-    addIterableAddAll(code, metadata);
+    addIterableAddAll(code, datatype);
   }
 
-  private void addSpliteratorAddAll(SourceBuilder code, Metadata metadata) {
+  private void addSpliteratorAddAll(SourceBuilder code, Datatype datatype) {
     QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
-    addJavadocForAddAll(code, metadata);
+    addJavadocForAddAll(code, datatype);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             spliterator,
             elementType)
         .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addStreamAddAll(SourceBuilder code, Metadata metadata) {
+  private void addStreamAddAll(SourceBuilder code, Datatype datatype) {
     QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
-    addJavadocForAddAll(code, metadata);
+    addJavadocForAddAll(code, datatype);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             baseStream,
             elementType)
@@ -287,47 +287,47 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addIterableAddAll(SourceBuilder code, Metadata metadata) {
-    addJavadocForAddAll(code, metadata);
+  private void addIterableAddAll(SourceBuilder code, Datatype datatype) {
+    addJavadocForAddAll(code, datatype);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             Iterable.class,
             elementType)
         .add(Excerpts.forEach(unboxedType.or(elementType), "elements", addMethod(property)))
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addJavadocForAddAll(SourceBuilder code, Metadata metadata) {
+  private void addJavadocForAddAll(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the set to be returned from")
         .addLine(" * %s, ignoring duplicate elements",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * (only the first duplicate element is added).")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
         .addLine(" *     null element")
         .addLine(" */");
   }
 
-  private void addRemove(SourceBuilder code, Metadata metadata) {
+  private void addRemove(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes {@code element} from the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * Does nothing if {@code element} is not a member of the set.")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" */")
         .addLine("public %s %s(%s element) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             removeMethod(property),
             unboxedType.or(elementType));
     Block body = methodBody(code, "element");
@@ -343,19 +343,19 @@ class SetProperty extends PropertyCodeGenerator {
       body.add(checkNotNullPreamble("element"))
           .addLine("  %s.remove(%s);", property.getField(), checkNotNullInline("element"));
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addMutator(SourceBuilder code, Metadata metadata) {
+  private void addMutator(SourceBuilder code, Datatype datatype) {
     if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the set in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
@@ -366,7 +366,7 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mutator) {",
-            metadata.getBuilder(), mutator(property), mutatorType.getFunctionalInterface());
+            datatype.getBuilder(), mutator(property), mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
@@ -386,20 +386,20 @@ class SetProperty extends PropertyCodeGenerator {
               addMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Metadata metadata) {
+  private void addClear(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Clears the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property));
+        .addLine("public %s %s() {", datatype.getBuilder(), clearMethod(property));
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
           .addLine("  %s = %s.of();", property.getField(), ImmutableSet.class)
@@ -409,15 +409,15 @@ class SetProperty extends PropertyCodeGenerator {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("}");
     }
-    code.addLine("  return (%s) this;", metadata.getBuilder())
+    code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Metadata metadata) {
+  private void addGetter(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the set that will be returned by")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * Changes to this builder will be reflected in the view.")
         .addLine(" */")
         .addLine("public %s<%s> %s() {", Set.class, elementType, getter(property));
@@ -447,7 +447,7 @@ class SetProperty extends PropertyCodeGenerator {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("if (%s instanceof %s && %s == %s.<%s>of()) {",
               value,
-              metadata.getValueType().getQualifiedName(),
+              datatype.getValueType().getQualifiedName(),
               property.getField(),
               ImmutableSet.class,
               elementType)
@@ -463,7 +463,7 @@ class SetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+    Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", addAllMethod(property), property.getField().on(base));
   }
 

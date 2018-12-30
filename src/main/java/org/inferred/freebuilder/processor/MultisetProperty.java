@@ -88,7 +88,7 @@ class MultisetProperty extends PropertyCodeGenerator {
           config.getTypes());
 
       return Optional.of(new MultisetProperty(
-          config.getMetadata(),
+          config.getDatatype(),
           config.getProperty(),
           needsSafeVarargs,
           overridesSetCountMethod,
@@ -135,7 +135,7 @@ class MultisetProperty extends PropertyCodeGenerator {
   private final FunctionalType mutatorType;
 
   MultisetProperty(
-      Metadata metadata,
+      Datatype datatype,
       Property property,
       boolean needsSafeVarargs,
       boolean overridesSetCountMethod,
@@ -143,7 +143,7 @@ class MultisetProperty extends PropertyCodeGenerator {
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
       FunctionalType mutatorType) {
-    super(metadata, property);
+    super(datatype, property);
     this.needsSafeVarargs = needsSafeVarargs;
     this.overridesSetCountMethod = overridesSetCountMethod;
     this.overridesVarargsAddMethod = overridesVarargsAddMethod;
@@ -160,43 +160,43 @@ class MultisetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addAdd(code, metadata);
-    addVarargsAdd(code, metadata);
-    addAddAllMethods(code, metadata);
-    addAddCopiesTo(code, metadata);
-    addMutate(code, metadata);
-    addClear(code, metadata);
-    addSetCountOf(code, metadata);
-    addGetter(code, metadata);
+    addAdd(code, datatype);
+    addVarargsAdd(code, datatype);
+    addAddAllMethods(code, datatype);
+    addAddCopiesTo(code, datatype);
+    addMutate(code, datatype);
+    addClear(code, datatype);
+    addSetCountOf(code, datatype);
+    addGetter(code, datatype);
   }
 
-  private void addAdd(SourceBuilder code, Metadata metadata) {
+  private void addAdd(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds {@code element} to the multiset to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" */")
         .addLine("public %s %s(%s element) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addMethod(property),
             unboxedType.or(elementType))
         .addLine("  %s(element, 1);", addCopiesMethod(property))
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addVarargsAdd(SourceBuilder code, Metadata metadata) {
+  private void addVarargsAdd(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
           .addLine(" *     null element");
@@ -216,46 +216,46 @@ class MultisetProperty extends PropertyCodeGenerator {
       code.add("final ");
     }
     code.add("%s %s(%s... elements) {\n",
-           metadata.getBuilder(),
+           datatype.getBuilder(),
             addMethod(property),
             unboxedType.or(elementType))
         .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
         .addLine("    %s(element, 1);", addCopiesMethod(property))
         .addLine("  }")
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code, Metadata metadata) {
+  private void addAddAllMethods(SourceBuilder code, Datatype datatype) {
     if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code, metadata);
-      addStreamAddAll(code, metadata);
-      addIterableAddAll(code, metadata);
+      addSpliteratorAddAll(code, datatype);
+      addStreamAddAll(code, datatype);
+      addIterableAddAll(code, datatype);
     } else {
-      addPreStreamsAddAll(code, metadata);
+      addPreStreamsAddAll(code, datatype);
     }
   }
 
-  private void addSpliteratorAddAll(SourceBuilder code, Metadata metadata) {
+  private void addSpliteratorAddAll(SourceBuilder code, Datatype datatype) {
     QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
-    addJavadocForAddAll(code, metadata);
+    addJavadocForAddAll(code, datatype);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             spliterator,
             elementType)
         .addLine("  elements.forEachRemaining(element -> {")
         .addLine("    %s(element, 1);", addCopiesMethod(property))
         .addLine("  });")
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addStreamAddAll(SourceBuilder code, Metadata metadata) {
+  private void addStreamAddAll(SourceBuilder code, Datatype datatype) {
     QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
-    addJavadocForAddAll(code, metadata);
+    addJavadocForAddAll(code, datatype);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             baseStream,
             elementType)
@@ -263,11 +263,11 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addIterableAddAll(SourceBuilder code, Metadata metadata) {
-    addJavadocForAddAll(code, metadata);
+  private void addIterableAddAll(SourceBuilder code, Datatype datatype) {
+    addJavadocForAddAll(code, datatype);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             Iterable.class,
             elementType)
@@ -275,58 +275,58 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addPreStreamsAddAll(SourceBuilder code, Metadata metadata) {
-    addJavadocForAddAll(code, metadata);
+  private void addPreStreamsAddAll(SourceBuilder code, Datatype datatype) {
+    addJavadocForAddAll(code, datatype);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             Iterable.class,
             elementType)
         .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
         .addLine("    %s(element, 1);", addCopiesMethod(property))
         .addLine("  }")
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addJavadocForAddAll(SourceBuilder code, Metadata metadata) {
+  private void addJavadocForAddAll(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
         .addLine(" *     null element")
         .addLine(" */");
   }
 
-  private void addAddCopiesTo(SourceBuilder code, Metadata metadata) {
+  private void addAddCopiesTo(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds a number of occurrences of {@code element} to the multiset to be")
         .addLine(" * returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" * @throws IllegalArgumentException if {@code occurrences} is negative")
         .addLine(" */")
         .addLine("public %s %s(%s element, int occurrences) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addCopiesMethod(property),
             unboxedType.or(elementType))
         .add(methodBody(code, "element", "occurrences")
             .addLine("  %s(element, %s.count(element) + occurrences);",
                 setCountMethod(property), property.getField())
-            .addLine("  return (%s) this;", metadata.getBuilder()))
+            .addLine("  return (%s) this;", datatype.getBuilder()))
         .addLine("}");
   }
 
-  private void addMutate(SourceBuilder code, Metadata metadata) {
+  private void addMutate(SourceBuilder code, Datatype datatype) {
     ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
     if (consumer == null) {
       return;
@@ -334,7 +334,7 @@ class MultisetProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the multiset to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the multiset in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
@@ -345,7 +345,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mutator) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
@@ -360,41 +360,41 @@ class MultisetProperty extends PropertyCodeGenerator {
               setCountMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Metadata metadata) {
+  private void addClear(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Clears the multiset to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
+        .addLine("public %s %s() {", datatype.getBuilder(), clearMethod(property))
         .addLine("  %s.clear();", property.getField())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addSetCountOf(SourceBuilder code, Metadata metadata) {
+  private void addSetCountOf(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds or removes the necessary occurrences of {@code element} to/from the")
         .addLine(" * multiset to be returned from %s, such that it attains the",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * desired count.")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" * @throws IllegalArgumentException if {@code occurrences} is negative")
         .addLine(" */")
         .addLine("public %s %s(%s element, int occurrences) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             setCountMethod(property),
             unboxedType.or(elementType));
     Block body = methodBody(code, "element", "occurrences");
@@ -402,16 +402,16 @@ class MultisetProperty extends PropertyCodeGenerator {
       code.addLine("  %s.checkNotNull(element);", Preconditions.class);
     }
     code.addLine("  %s.setCount(element, occurrences);", property.getField())
-        .addLine("  return (%s) this;", metadata.getBuilder());
+        .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Metadata metadata) {
+  private void addGetter(SourceBuilder code, Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the multiset that will be returned by")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * Changes to this builder will be reflected in the view.")
         .addLine(" */")
         .addLine("public %s<%s> %s() {", Multiset.class, elementType, getter(property))
@@ -432,7 +432,7 @@ class MultisetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+    Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", addAllMethod(property), property.getField().on(base));
   }
 

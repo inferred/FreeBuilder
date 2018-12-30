@@ -13,15 +13,15 @@ class Declarations {
    * Upcasts a Builder instance to the generated superclass, to allow access to private fields.
    *
    * @param block the {@link Block} to add the declaration to
-   * @param metadata metadata about the builder being generated
+   * @param datatype metadata about the user type the builder is being generated for
    * @param builder the Builder instance to upcast
    * @returns an Excerpt referencing the upcasted instance
    */
-  public static Excerpt upcastToGeneratedBuilder(Block block, Metadata metadata, String builder) {
+  public static Excerpt upcastToGeneratedBuilder(Block block, Datatype datatype, String builder) {
     return block.declare(
         Excerpts.add(
             "// Upcast to access private fields; otherwise, oddly, we get an access violation.%n%s",
-            metadata.getGeneratedBuilder()),
+            datatype.getGeneratedBuilder()),
         "base",
         Excerpts.add(builder));
   }
@@ -32,15 +32,15 @@ class Declarations {
    * @returns an Excerpt referencing a fresh Builder, if a no-args factory method is available to
    *     create one with
    */
-  public static Optional<Excerpt> freshBuilder(Block block, Metadata metadata) {
-    if (!metadata.getBuilderFactory().isPresent()) {
+  public static Optional<Excerpt> freshBuilder(Block block, Datatype datatype) {
+    if (!datatype.getBuilderFactory().isPresent()) {
       return Optional.absent();
     }
     Excerpt defaults = block.declare(
-        metadata.getGeneratedBuilder(),
+        datatype.getGeneratedBuilder(),
         "_defaults",
-        metadata.getBuilderFactory().get()
-            .newBuilder(metadata.getBuilder(), TypeInference.INFERRED_TYPES));
+        datatype.getBuilderFactory().get()
+            .newBuilder(datatype.getBuilder(), TypeInference.INFERRED_TYPES));
     return Optional.of(defaults);
   }
 

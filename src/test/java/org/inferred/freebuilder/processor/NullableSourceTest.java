@@ -964,7 +964,7 @@ public class NullableSourceTest {
         .setType(INTEGER)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    Metadata metadata = new Metadata.Builder()
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -977,15 +977,15 @@ public class NullableSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return new GeneratedBuilder(metadata.toBuilder()
+    return new GeneratedBuilder(datatype.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new NullableProperty(
-                metadata, name, ImmutableSet.of(nullable), unaryOperator(STRING)))
+                datatype, name, ImmutableSet.of(nullable), unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new NullableProperty(
-                metadata, age, ImmutableSet.of(nullable), unaryOperator(INTEGER)))
+                datatype, age, ImmutableSet.of(nullable), unaryOperator(INTEGER)))
             .build())
         .build());
   }

@@ -1045,7 +1045,7 @@ public class MapSourceTest {
         .setType(mapIntString)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    Metadata metadata = new Metadata.Builder()
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -1058,11 +1058,11 @@ public class MapSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return new GeneratedBuilder(metadata.toBuilder()
+    return new GeneratedBuilder(datatype.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new MapProperty(
-                metadata,
+                datatype,
                 name,
                 false,
                 INTEGER,

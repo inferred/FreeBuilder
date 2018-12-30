@@ -8,7 +8,7 @@ import org.inferred.freebuilder.processor.util.FieldAccess;
 import javax.annotation.Nullable;
 import javax.lang.model.type.TypeMirror;
 
-/** Metadata about a property of a {@link Metadata}. */
+/** Datatype about a property of a {@link Datatype}. */
 public abstract class Property {
 
   /** Returns the type of the property. */

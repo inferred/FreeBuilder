@@ -1651,7 +1651,7 @@ public class RequiredPropertiesSourceTest {
         .setType(INT)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    Metadata metadata = new Metadata.Builder()
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -1664,13 +1664,13 @@ public class RequiredPropertiesSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return new GeneratedBuilder(metadata.toBuilder()
+    return new GeneratedBuilder(datatype.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, false, unaryOperator(STRING)))
+            .setCodeGenerator(new DefaultProperty(datatype, name, false, unaryOperator(STRING)))
             .build())
         .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, false, unaryOperator(INTEGER)))
+            .setCodeGenerator(new DefaultProperty(datatype, age, false, unaryOperator(INTEGER)))
             .build())
         .build());
   }

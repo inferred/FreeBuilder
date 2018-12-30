@@ -29,9 +29,9 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 /**
- * Metadata about a &#64;{@link org.inferred.freebuilder.FreeBuilder FreeBuilder} type.
+ * Metadata about a user's datatype.
  */
-public abstract class Metadata {
+public abstract class Datatype {
 
   /** Standard Java methods that may be underridden. */
   public enum StandardMethod {
@@ -121,7 +121,7 @@ public abstract class Metadata {
   /** Returns the Property enum that may be generated. */
   public abstract ParameterizedType getPropertyEnum();
 
-  /** Returns metadata about the properties of the type. */
+  /** Returns datatype about the properties of the type. */
   public abstract ImmutableList<Property> getProperties();
 
   public UnderrideLevel standardMethodUnderride(StandardMethod standardMethod) {
@@ -147,7 +147,7 @@ public abstract class Metadata {
   public abstract Visibility getValueTypeVisibility();
 
   /** Returns a list of nested classes that should be added to the generated builder class. */
-  public abstract ImmutableList<Function<Metadata, Excerpt>> getNestedClasses();
+  public abstract ImmutableList<Function<Datatype, Excerpt>> getNestedClasses();
 
   public Builder toBuilder() {
     return new Builder().mergeFrom(this);
@@ -161,8 +161,8 @@ public abstract class Metadata {
         }
       };
 
-  /** Builder for {@link Metadata}. */
-  public static class Builder extends Metadata_Builder {
+  /** Builder for {@link Datatype}. */
+  public static class Builder extends Datatype_Builder {
 
     public Builder() {
       super.setValueTypeVisibility(Visibility.PRIVATE);
@@ -170,7 +170,7 @@ public abstract class Metadata {
     }
 
     /**
-     * Sets the value to be returned by {@link Metadata#getValueTypeVisibility()} to the most
+     * Sets the value to be returned by {@link Datatype#getValueTypeVisibility()} to the most
      * visible of the current value and {@code visibility}. Will not decrease visibility.
      *
      * @return this {@code Builder} object
@@ -183,22 +183,22 @@ public abstract class Metadata {
     }
 
     /**
-     * Returns a newly-built {@link Metadata} based on the content of the {@code Builder}.
+     * Returns a newly-built {@link Datatype} based on the content of the {@code Builder}.
      */
     @Override
-    public Metadata build() {
-      Metadata metadata = super.build();
-      QualifiedName generatedBuilder = metadata.getGeneratedBuilder().getQualifiedName();
-      checkState(metadata.getValueType().getQualifiedName().getEnclosingType()
+    public Datatype build() {
+      Datatype datatype = super.build();
+      QualifiedName generatedBuilder = datatype.getGeneratedBuilder().getQualifiedName();
+      checkState(datatype.getValueType().getQualifiedName().getEnclosingType()
               .equals(generatedBuilder),
-          "%s not a nested class of %s", metadata.getValueType(), generatedBuilder);
-      checkState(metadata.getPartialType().getQualifiedName().getEnclosingType()
+          "%s not a nested class of %s", datatype.getValueType(), generatedBuilder);
+      checkState(datatype.getPartialType().getQualifiedName().getEnclosingType()
               .equals(generatedBuilder),
-          "%s not a nested class of %s", metadata.getPartialType(), generatedBuilder);
-      checkState(metadata.getPropertyEnum().getQualifiedName().getEnclosingType()
+          "%s not a nested class of %s", datatype.getPartialType(), generatedBuilder);
+      checkState(datatype.getPropertyEnum().getQualifiedName().getEnclosingType()
               .equals(generatedBuilder),
-          "%s not a nested class of %s", metadata.getPropertyEnum(), generatedBuilder);
-      return metadata;
+          "%s not a nested class of %s", datatype.getPropertyEnum(), generatedBuilder);
+      return datatype;
     }
   }
 }

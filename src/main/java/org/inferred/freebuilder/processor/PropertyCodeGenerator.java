@@ -42,10 +42,10 @@ public abstract class PropertyCodeGenerator {
 
   /** Data available to {@link Factory} instances when creating a {@link PropertyCodeGenerator}. */
   interface Config {
-    /** Returns metadata about the builder being generated. */
-    Metadata getMetadata();
+    /** Returns datatype about the builder being generated. */
+    Datatype getDatatype();
 
-    /** Returns metadata about the property requiring code generation. */
+    /** Returns datatype about the property requiring code generation. */
     Property getProperty();
 
     /** Returns annotations on the property requiring code generation. */
@@ -82,11 +82,11 @@ public abstract class PropertyCodeGenerator {
     Optional<? extends PropertyCodeGenerator> create(Config config);
   }
 
-  protected final Metadata metadata;
+  protected final Datatype datatype;
   protected final Property property;
 
-  public PropertyCodeGenerator(Metadata metadata, Property property) {
-    this.metadata = metadata;
+  public PropertyCodeGenerator(Datatype datatype, Property property) {
+    this.datatype = datatype;
     this.property = property;
   }
 

@@ -59,7 +59,7 @@ class DefaultProperty extends PropertyCodeGenerator {
           config.getElements(),
           config.getTypes());
       return Optional.of(new DefaultProperty(
-          config.getMetadata(), property, hasDefault, mapperType));
+          config.getDatatype(), property, hasDefault, mapperType));
     }
   }
 
@@ -68,11 +68,11 @@ class DefaultProperty extends PropertyCodeGenerator {
   private final TypeKind kind;
 
   DefaultProperty(
-      Metadata metadata,
+      Datatype datatype,
       Property property,
       boolean hasDefault,
       FunctionalType mapperType) {
-    super(metadata, property);
+    super(datatype, property);
     this.hasDefault = hasDefault;
     this.mapperType = mapperType;
     this.kind = property.getType().getKind();
@@ -90,25 +90,25 @@ class DefaultProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetter(code, metadata);
-    addMapper(code, metadata);
-    addGetter(code, metadata);
+    addSetter(code, datatype);
+    addMapper(code, datatype);
+    addGetter(code, datatype);
   }
 
-  private void addSetter(SourceBuilder code, final Metadata metadata) {
+  private void addSetter(SourceBuilder code, final Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!kind.isPrimitive()) {
       code.addLine(" * @throws NullPointerException if {@code %s} is null", property.getName());
     }
     code.addLine(" */");
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s %s) {",
-        metadata.getBuilder(), setter(property), property.getType(), property.getName());
+        datatype.getBuilder(), setter(property), property.getType(), property.getName());
     Block body = methodBody(code, property.getName());
     if (kind.isPrimitive()) {
       body.addLine("  %s = %s;", property.getField(), property.getName());
@@ -118,28 +118,28 @@ class DefaultProperty extends PropertyCodeGenerator {
     }
     if (!hasDefault) {
       body.addLine("  %s.remove(%s.%s);",
-          UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
+          UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
     }
-    if ((metadata.getBuilder() == metadata.getGeneratedBuilder())) {
+    if ((datatype.getBuilder() == datatype.getGeneratedBuilder())) {
       body.addLine("  return this;");
     } else {
-      body.addLine("  return (%s) this;", metadata.getBuilder());
+      body.addLine("  return (%s) this;", datatype.getBuilder());
     }
     code.add(body)
         .addLine("}");
   }
 
-  private void addMapper(SourceBuilder code, final Metadata metadata) {
+  private void addMapper(SourceBuilder code, final Datatype datatype) {
     if (!code.feature(FUNCTION_PACKAGE).unaryOperator().isPresent()) {
       return;
     }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Replaces the value to be returned by %s",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * by applying {@code mapper} to it and using the result.")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mapper} is null");
     if (mapperType.canReturnNull()) {
       code.addLine(" * or returns null");
@@ -149,7 +149,7 @@ class DefaultProperty extends PropertyCodeGenerator {
     }
     code.addLine(" */")
         .add("public %s %s(%s mapper) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             mapper(property),
             mapperType.getFunctionalInterface());
     if (!hasDefault) {
@@ -160,11 +160,11 @@ class DefaultProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, final Metadata metadata) {
+  private void addGetter(SourceBuilder code, final Datatype datatype) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns the value that will be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()));
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()));
     if (!hasDefault) {
       code.addLine(" *")
           .addLine(" * @throws IllegalStateException if the field has not been set");
@@ -173,7 +173,7 @@ class DefaultProperty extends PropertyCodeGenerator {
         .addLine("public %s %s() {", property.getType(), getter(property));
     if (!hasDefault) {
       Excerpt propertyIsSet = Excerpts.add("!%s.contains(%s.%s)",
-              UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
+              UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
       code.add(PreconditionExcerpts.checkState(propertyIsSet, property.getName() + " not set"));
     }
     code.addLine("  return %s;", property.getField())
@@ -192,12 +192,12 @@ class DefaultProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, datatype).orNull();
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {
         code.add("%s.contains(%s.%s) || ",
-            UNSET_PROPERTIES.on(defaults), metadata.getPropertyEnum(), property.getAllCapsName());
+            UNSET_PROPERTIES.on(defaults), datatype.getPropertyEnum(), property.getAllCapsName());
       }
       code.add(ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", value, property.getGetterName()),
@@ -215,16 +215,16 @@ class DefaultProperty extends PropertyCodeGenerator {
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
     Excerpt base =
-        hasDefault ? null : Declarations.upcastToGeneratedBuilder(code, metadata, builder);
-    Excerpt defaults = Declarations.freshBuilder(code, metadata).orNull();
+        hasDefault ? null : Declarations.upcastToGeneratedBuilder(code, datatype, builder);
+    Excerpt defaults = Declarations.freshBuilder(code, datatype).orNull();
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {
         code.add("!%s.contains(%s.%s) && ",
-                UNSET_PROPERTIES.on(base), metadata.getPropertyEnum(), property.getAllCapsName())
+                UNSET_PROPERTIES.on(base), datatype.getPropertyEnum(), property.getAllCapsName())
             .add("(%s.contains(%s.%s) ||",
                 UNSET_PROPERTIES.on(defaults),
-                metadata.getPropertyEnum(),
+                datatype.getPropertyEnum(),
                 property.getAllCapsName());
       }
       code.add(ObjectsExcerpts.notEquals(
@@ -238,7 +238,7 @@ class DefaultProperty extends PropertyCodeGenerator {
       code.add(") {%n");
     } else if (!hasDefault) {
       code.addLine("if (!%s.contains(%s.%s)) {",
-          UNSET_PROPERTIES.on(base), metadata.getPropertyEnum(), property.getAllCapsName());
+          UNSET_PROPERTIES.on(base), datatype.getPropertyEnum(), property.getAllCapsName());
     }
     code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
     if (defaults != null || !hasDefault) {
@@ -250,7 +250,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   public void addSetBuilderFromPartial(Block code, Variable builder) {
     if (!hasDefault) {
       code.add("if (!%s.contains(%s.%s)) {",
-          UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
+          UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
     }
     code.addLine("  %s.%s(%s);", builder, setter(property), property.getField());
     if (!hasDefault) {
@@ -265,7 +265,7 @@ class DefaultProperty extends PropertyCodeGenerator {
 
   @Override
   public void addClearField(Block code) {
-    Optional<Excerpt> defaults = Declarations.freshBuilder(code, metadata);
+    Optional<Excerpt> defaults = Declarations.freshBuilder(code, datatype);
     // Cannot clear property without defaults
     if (defaults.isPresent()) {
       code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));

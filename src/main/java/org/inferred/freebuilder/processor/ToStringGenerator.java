@@ -21,8 +21,8 @@ class ToStringGenerator {
   /**
    * Generates a toString method using concatenation or a StringBuilder.
    */
-  public static void addToString(SourceBuilder code, Metadata metadata, final boolean forPartial) {
-    String typename = (forPartial ? "partial " : "") + metadata.getType().getSimpleName();
+  public static void addToString(SourceBuilder code, Datatype datatype, final boolean forPartial) {
+    String typename = (forPartial ? "partial " : "") + datatype.getType().getSimpleName();
     Predicate<Property> isOptional = new Predicate<Property>() {
       @Override
       public boolean apply(Property property) {
@@ -30,20 +30,20 @@ class ToStringGenerator {
         return (type == Type.OPTIONAL || (type == Type.REQUIRED && forPartial));
       }
     };
-    boolean anyOptional = any(metadata.getProperties(), isOptional);
-    boolean allOptional = all(metadata.getProperties(), isOptional)
-        && !metadata.getProperties().isEmpty();
+    boolean anyOptional = any(datatype.getProperties(), isOptional);
+    boolean allOptional = all(datatype.getProperties(), isOptional)
+        && !datatype.getProperties().isEmpty();
 
     code.addLine("")
         .addLine("@%s", Override.class)
         .addLine("public %s toString() {", String.class);
     Block body = methodBody(code);
     if (allOptional) {
-      bodyWithBuilderAndSeparator(body, metadata, typename);
+      bodyWithBuilderAndSeparator(body, datatype, typename);
     } else if (anyOptional) {
-      bodyWithBuilder(body, metadata, typename, isOptional);
+      bodyWithBuilder(body, datatype, typename, isOptional);
     } else {
-      bodyWithConcatenation(body, metadata, typename);
+      bodyWithConcatenation(body, datatype, typename);
     }
     code.add(body)
         .addLine("}");
@@ -59,11 +59,11 @@ class ToStringGenerator {
    */
   private static void bodyWithConcatenation(
       Block code,
-      Metadata metadata,
+      Datatype datatype,
       String typename) {
     code.add("  return \"%s{", typename);
     String prefix = "";
-    for (Property property : metadata.getProperties()) {
+    for (Property property : datatype.getProperties()) {
       code.add("%s%s=\" + %s + \"", prefix, property.getName(), property.getField());
       prefix = ", ";
     }
@@ -88,7 +88,7 @@ class ToStringGenerator {
    */
   private static void bodyWithBuilder(
       Block code,
-      Metadata metadata,
+      Datatype datatype,
       String typename,
       Predicate<Property> isOptional) {
     Variable result = new Variable("result");
@@ -98,9 +98,9 @@ class ToStringGenerator {
     boolean midAppends = true;
     boolean prependCommas = false;
 
-    Property lastOptionalProperty = getLast(filter(metadata.getProperties(), isOptional));
+    Property lastOptionalProperty = getLast(filter(datatype.getProperties(), isOptional));
 
-    for (Property property : metadata.getProperties()) {
+    for (Property property : datatype.getProperties()) {
       if (isOptional.apply(property)) {
         if (midStringLiteral) {
           code.add("\")");
@@ -113,7 +113,7 @@ class ToStringGenerator {
           code.add("%s != null", property.getField());
         } else {
           code.add("!%s.contains(%s.%s)",
-              UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
+              UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
         }
         code.add(") {%n    %s.append(\"", result);
         if (prependCommas) {
@@ -172,20 +172,20 @@ class ToStringGenerator {
    */
   private static void bodyWithBuilderAndSeparator(
       Block code,
-      Metadata metadata,
+      Datatype datatype,
       String typename) {
     Variable result = new Variable("result");
     Variable separator = new Variable("separator");
 
     code.addLine("  %1$s %2$s = new %1$s(\"%3$s{\");", StringBuilder.class, result, typename);
-    if (metadata.getProperties().size() > 1) {
+    if (datatype.getProperties().size() > 1) {
       // If there's a single property, we don't actually use the separator variable
       code.addLine("  %s %s = \"\";", String.class, separator);
     }
 
-    Property first = metadata.getProperties().get(0);
-    Property last = Iterables.getLast(metadata.getProperties());
-    for (Property property : metadata.getProperties()) {
+    Property first = datatype.getProperties().get(0);
+    Property last = Iterables.getLast(datatype.getProperties());
+    for (Property property : datatype.getProperties()) {
       switch (property.getCodeGenerator().getType()) {
         case HAS_DEFAULT:
           throw new RuntimeException("Internal error: unexpected default field");
@@ -196,7 +196,7 @@ class ToStringGenerator {
 
         case REQUIRED:
           code.addLine("  if (!%s.contains(%s.%s)) {",
-              UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName());
+              UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
           break;
       }
       code.add("    ").add(result);

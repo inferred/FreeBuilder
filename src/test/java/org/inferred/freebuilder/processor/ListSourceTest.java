@@ -1918,7 +1918,7 @@ public class ListSourceTest {
   }
 
   /**
-   * Returns a {@link Metadata} instance for a FreeBuilder type with two properties: name, of
+   * Returns a {@link Datatype} instance for a FreeBuilder type with two properties: name, of
    * type {@code List<String>}; and age, of type {@code List<Integer>}.
    */
   private static GeneratedBuilder builder(NamingConvention convention) {
@@ -1947,7 +1947,7 @@ public class ListSourceTest {
         .setType(listInteger)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    Metadata metadata = new Metadata.Builder()
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -1960,11 +1960,11 @@ public class ListSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return new GeneratedBuilder(metadata.toBuilder()
+    return new GeneratedBuilder(datatype.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new ListProperty(
-                metadata,
+                datatype,
                 name,
                 false,
                 false,
@@ -1975,7 +1975,7 @@ public class ListSourceTest {
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new ListProperty(
-                metadata,
+                datatype,
                 age,
                 false,
                 false,

@@ -519,10 +519,10 @@ public class ToStringGeneratorTest {
   }
 
   private static class ToStringBuilder {
-    private final Metadata.Builder builder;
+    private final Datatype.Builder builder;
 
     ToStringBuilder(String typename) {
-      builder = new Metadata.Builder()
+      builder = new Datatype.Builder()
           .setType(QualifiedName.of("com.example", typename).withParameters())
           .setPropertyEnum(
               QualifiedName.of("com.example", typename + "_Builder", "Property").withParameters());

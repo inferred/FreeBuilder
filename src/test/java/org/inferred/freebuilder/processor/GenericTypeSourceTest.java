@@ -859,7 +859,7 @@ public class GenericTypeSourceTest {
         .setType(paramB.asType())
         .setUsingBeanConvention(true)
         .build();
-    Metadata metadata = new Metadata.Builder()
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -872,15 +872,15 @@ public class GenericTypeSourceTest {
         .setType(person.withParameters(paramA, paramB))
         .setValueType(generatedBuilder.nestedType("Value").withParameters(paramA, paramB))
         .build();
-    return new GeneratedBuilder(metadata.toBuilder()
+    return new GeneratedBuilder(datatype.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new DefaultProperty(
-                metadata, name, false, unaryOperator(paramA.asType())))
+                datatype, name, false, unaryOperator(paramA.asType())))
             .build())
         .addProperties(age.toBuilder()
             .setCodeGenerator(new DefaultProperty(
-                metadata, age, false, unaryOperator(paramB.asType())))
+                datatype, age, false, unaryOperator(paramB.asType())))
             .build())
         .build());
   }
