@@ -15,7 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
 import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
@@ -26,16 +26,11 @@ import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,9 +43,7 @@ public class MapSourceTest {
 
   @Test
   public void test_guava_j6() {
-    Metadata metadata = createMetadata(BEAN);
-
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -241,15 +234,12 @@ public class MapSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_guava_j7() {
-    Metadata metadata = createMetadata(BEAN);
-
-    String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_7, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -433,14 +423,12 @@ public class MapSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_noGuava_j6() {
-    Metadata metadata = createMetadata(BEAN);
-
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -644,14 +632,12 @@ public class MapSourceTest {
         "        return Collections.unmodifiableMap(new LinkedHashMap<K, V>(entries));",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_noGuava_j7() {
-    Metadata metadata = createMetadata(BEAN);
-
-    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_7).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -846,14 +832,12 @@ public class MapSourceTest {
         "        return Collections.unmodifiableMap(new LinkedHashMap<>(entries));",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_prefixless() {
-    Metadata metadata = createMetadata(PREFIXLESS);
-
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -1044,21 +1028,10 @@ public class MapSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features)
-        .add(new GeneratedBuilder(metadata));
-    return CompilationUnitBuilder.formatSource(sourceBuilder.toString());
-  }
-
-  /**
-   * Returns a {@link Metadata} instance for a FreeBuilder type with a single property, name, of
-   * type {@code Map<Integer, String>}, and which does not override any methods.
-   * @param bean TODO
-   */
-  private static Metadata createMetadata(NamingConvention convention) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     GenericTypeElementImpl map = newTopLevelGenericType("java.util.Map");
     GenericTypeMirrorImpl mapIntString = map.newMirror(INTEGER, STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
@@ -1086,7 +1059,7 @@ public class MapSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
+    return new GeneratedBuilder(metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new MapProperty(
@@ -1099,7 +1072,6 @@ public class MapSourceTest {
                 Optional.<TypeMirror>absent(),
                 consumer(wildcardSuper(mapIntString))))
             .build())
-        .build();
+        .build());
   }
-
 }

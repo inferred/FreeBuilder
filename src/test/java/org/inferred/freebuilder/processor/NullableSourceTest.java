@@ -15,7 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
 import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
@@ -25,16 +25,11 @@ import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperat
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,8 +40,7 @@ public class NullableSourceTest {
 
   @Test
   public void testJ6() {
-    String source = generateSource(metadata(BEAN), GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -268,13 +262,12 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ7() {
-    String source = generateSource(metadata(BEAN), JAVA_7, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_7, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -478,13 +471,12 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ8() {
-    String source = generateSource(metadata(BEAN), JAVA_8, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_8, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -721,13 +713,12 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testPrefixless() {
-    String source = generateSource(metadata(PREFIXLESS), GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -947,16 +938,10 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features)
-        .add(new GeneratedBuilder(metadata));
-    return CompilationUnitBuilder.formatSource(sourceBuilder.toString());
-  }
-
-  private static Metadata metadata(NamingConvention convention) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
@@ -993,7 +978,7 @@ public class NullableSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
+    return new GeneratedBuilder(metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new NullableProperty(
@@ -1003,6 +988,6 @@ public class NullableSourceTest {
             .setCodeGenerator(new NullableProperty(
                 metadata, age, ImmutableSet.of(nullable), unaryOperator(INTEGER)))
             .build())
-        .build();
+        .build());
   }
 }

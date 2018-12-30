@@ -15,7 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
 import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
@@ -25,18 +25,12 @@ import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperat
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.OptionalProperty.OptionalType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,10 +43,7 @@ public class JavaUtilOptionalSourceTest {
 
   @Test
   public void testJ8() {
-    Metadata metadata = createMetadataWithOptionalProperties(BEAN);
-
-    String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_8, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -360,15 +351,12 @@ public class JavaUtilOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ8_noGuava() {
-    Metadata metadata = createMetadataWithOptionalProperties(BEAN);
-
-    String source = generateSource(metadata, JAVA_8);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_8).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -675,15 +663,12 @@ public class JavaUtilOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testPrefixless() {
-    Metadata metadata = createMetadataWithOptionalProperties(PREFIXLESS);
-
-    String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(PREFIXLESS)).given(JAVA_8, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -991,20 +976,10 @@ public class JavaUtilOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features)
-        .add(new GeneratedBuilder(metadata));
-    try {
-      return new Formatter().formatSource(sourceBuilder.toString());
-    } catch (FormatterException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static Metadata createMetadataWithOptionalProperties(NamingConvention convention) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     GenericTypeElementImpl optional = newTopLevelGenericType("com.google.common.base.Optional");
     GenericTypeMirrorImpl optionalInteger = optional.newMirror(INTEGER);
     GenericTypeMirrorImpl optionalString = optional.newMirror(STRING);
@@ -1043,7 +1018,7 @@ public class JavaUtilOptionalSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
+    return new GeneratedBuilder(metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new OptionalProperty(
@@ -1065,7 +1040,6 @@ public class JavaUtilOptionalSourceTest {
                 unaryOperator(INTEGER),
                 false))
             .build())
-        .build();
+        .build());
   }
-
 }

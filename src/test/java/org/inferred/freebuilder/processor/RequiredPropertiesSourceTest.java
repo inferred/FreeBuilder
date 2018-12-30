@@ -15,7 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
 import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
@@ -25,15 +25,8 @@ import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import com.google.common.base.Joiner;
-import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.FormatterException;
-
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,9 +37,7 @@ public class RequiredPropertiesSourceTest {
 
   @Test
   public void testJ6() {
-    Metadata metadata = createMetadata(BEAN);
-
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -306,15 +297,12 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ7() {
-    Metadata metadata = createMetadata(BEAN);
-
-    String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_7, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -564,14 +552,12 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ6_noGuava() {
-    Metadata metadata = createMetadata(BEAN);
-
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -836,14 +822,12 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ7_noGuava() {
-    Metadata metadata = createMetadata(BEAN);
-
-    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_7).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -1095,15 +1079,12 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ8() {
-    Metadata metadata = createMetadata(BEAN);
-
-    String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_8, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -1380,14 +1361,12 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testPrefixless() {
-    Metadata metadata = createMetadata(PREFIXLESS);
-
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
@@ -1647,20 +1626,10 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features)
-        .add(new GeneratedBuilder(metadata));
-    try {
-      return new Formatter().formatSource(sourceBuilder.toString());
-    } catch (FormatterException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static Metadata createMetadata(NamingConvention convention) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -1696,7 +1665,7 @@ public class RequiredPropertiesSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
+    return new GeneratedBuilder(metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new DefaultProperty(metadata, name, false, unaryOperator(STRING)))
@@ -1704,7 +1673,6 @@ public class RequiredPropertiesSourceTest {
         .addProperties(age.toBuilder()
             .setCodeGenerator(new DefaultProperty(metadata, age, false, unaryOperator(INTEGER)))
             .build())
-        .build();
+        .build());
   }
-
 }
