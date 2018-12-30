@@ -17,6 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
@@ -48,7 +50,7 @@ public class GuavaOptionalSourceTest {
 
   @Test
   public void testJ6() {
-    Metadata metadata = createMetadataWithOptionalProperties(true);
+    Metadata metadata = createMetadataWithOptionalProperties(BEAN);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -357,7 +359,7 @@ public class GuavaOptionalSourceTest {
 
   @Test
   public void testJ7() {
-    Metadata metadata = createMetadataWithOptionalProperties(true);
+    Metadata metadata = createMetadataWithOptionalProperties(BEAN);
 
     String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -655,7 +657,7 @@ public class GuavaOptionalSourceTest {
 
   @Test
   public void testJ8() {
-    Metadata metadata = createMetadataWithOptionalProperties(true);
+    Metadata metadata = createMetadataWithOptionalProperties(BEAN);
 
     String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -990,7 +992,7 @@ public class GuavaOptionalSourceTest {
 
   @Test
   public void testPrefixless() {
-    Metadata metadata = createMetadataWithOptionalProperties(false);
+    Metadata metadata = createMetadataWithOptionalProperties(PREFIXLESS);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -1306,7 +1308,7 @@ public class GuavaOptionalSourceTest {
     }
   }
 
-  private static Metadata createMetadataWithOptionalProperties(boolean bean) {
+  private static Metadata createMetadataWithOptionalProperties(NamingConvention convention) {
     GenericTypeElementImpl optional = newTopLevelGenericType("com.google.common.base.Optional");
     GenericTypeMirrorImpl optionalInteger = optional.newMirror(INTEGER);
     GenericTypeMirrorImpl optionalString = optional.newMirror(STRING);
@@ -1317,20 +1319,20 @@ public class GuavaOptionalSourceTest {
         .setBoxedType(optionalString)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
+        .setGetterName((convention == BEAN) ? "getName" : "name")
         .setName("name")
         .setType(optionalString)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(optionalInteger)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getAge" : "age")
+        .setGetterName((convention == BEAN) ? "getAge" : "age")
         .setName("age")
         .setType(optionalInteger)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())

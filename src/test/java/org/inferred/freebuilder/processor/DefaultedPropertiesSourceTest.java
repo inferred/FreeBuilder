@@ -16,6 +16,8 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
@@ -42,7 +44,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ6() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -242,7 +244,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ7() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -431,7 +433,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ6_noGuava() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -633,7 +635,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ8() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -845,7 +847,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ8_toBuilder() {
-    Metadata metadata = createMetadata(true).toBuilder().setHasToBuilderMethod(true).build();
+    Metadata metadata = createMetadata(BEAN).toBuilder().setHasToBuilderMethod(true).build();
 
     String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -1077,7 +1079,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testPrefixless() {
-    Metadata metadata = createMetadata(false);
+    Metadata metadata = createMetadata(PREFIXLESS);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -1285,7 +1287,7 @@ public class DefaultedPropertiesSourceTest {
     }
   }
 
-  private static Metadata createMetadata(boolean bean) {
+  private static Metadata createMetadata(NamingConvention convention) {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -1293,20 +1295,20 @@ public class DefaultedPropertiesSourceTest {
         .setBoxedType(STRING)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
+        .setGetterName((convention == BEAN) ? "getName" : "name")
         .setName("name")
         .setType(STRING)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(INTEGER)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getAge" : "age")
+        .setGetterName((convention == BEAN) ? "getAge" : "age")
         .setName("age")
         .setType(INT)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())

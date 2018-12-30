@@ -17,6 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
@@ -45,7 +47,7 @@ public class SetSourceTest {
 
   @Test
   public void test_guava_j6() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -272,7 +274,7 @@ public class SetSourceTest {
 
   @Test
   public void test_guava_j7() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -494,7 +496,7 @@ public class SetSourceTest {
 
   @Test
   public void test_guava_j8() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -759,7 +761,7 @@ public class SetSourceTest {
 
   @Test
   public void test_noGuava_j6() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -985,7 +987,7 @@ public class SetSourceTest {
 
   @Test
   public void test_noGuava_j7() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -1199,7 +1201,7 @@ public class SetSourceTest {
 
   @Test
   public void test_prefixless() {
-    Metadata metadata = createMetadata(false);
+    Metadata metadata = createMetadata(PREFIXLESS);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -1434,7 +1436,7 @@ public class SetSourceTest {
    * Returns a {@link Metadata} instance for a FreeBuilder type with a single property, name, of
    * type {@code Set<String>}, with no override on the add method.
    */
-  private static Metadata createMetadata(boolean bean) {
+  private static Metadata createMetadata(NamingConvention convention) {
     GenericTypeElementImpl set = newTopLevelGenericType("java.util.Set");
     GenericTypeMirrorImpl setString = set.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
@@ -1444,10 +1446,10 @@ public class SetSourceTest {
         .setBoxedType(setString)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
+        .setGetterName((convention == BEAN) ? "getName" : "name")
         .setName("name")
         .setType(setString)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())

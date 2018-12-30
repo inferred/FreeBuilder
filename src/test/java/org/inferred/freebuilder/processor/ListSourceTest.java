@@ -17,6 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
@@ -47,7 +49,7 @@ public class ListSourceTest {
 
   @Test
   public void test_guava_j6() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -361,7 +363,7 @@ public class ListSourceTest {
 
   @Test
   public void test_guava_j7() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -664,7 +666,7 @@ public class ListSourceTest {
 
   @Test
   public void test_guava_j8() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -1048,7 +1050,7 @@ public class ListSourceTest {
 
   @Test
   public void test_noGuava_j6() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -1343,7 +1345,7 @@ public class ListSourceTest {
 
   @Test
   public void test_noGuava_j7() {
-    Metadata metadata = createMetadata(true);
+    Metadata metadata = createMetadata(BEAN);
 
     assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -1623,7 +1625,7 @@ public class ListSourceTest {
 
   @Test
   public void test_prefixless() {
-    Metadata metadata = createMetadata(false);
+    Metadata metadata = createMetadata(PREFIXLESS);
 
     assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
         "/** Auto-generated superclass of {@link Person.Builder}, "
@@ -1945,7 +1947,7 @@ public class ListSourceTest {
    * Returns a {@link Metadata} instance for a FreeBuilder type with two properties: name, of
    * type {@code List<String>}; and age, of type {@code List<Integer>}.
    */
-  private static Metadata createMetadata(boolean bean) {
+  private static Metadata createMetadata(NamingConvention convention) {
     GenericTypeElementImpl list = newTopLevelGenericType("java.util.List");
     GenericTypeMirrorImpl listInteger = list.newMirror(INTEGER);
     GenericTypeMirrorImpl listString = list.newMirror(STRING);
@@ -1956,20 +1958,20 @@ public class ListSourceTest {
         .setBoxedType(listString)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
+        .setGetterName((convention == BEAN) ? "getName" : "name")
         .setName("name")
         .setType(listString)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(listInteger)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getAge" : "age")
+        .setGetterName((convention == BEAN) ? "getAge" : "age")
         .setName("age")
         .setType(listInteger)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
