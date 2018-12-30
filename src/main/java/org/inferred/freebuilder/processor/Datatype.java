@@ -17,7 +17,6 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -121,9 +120,6 @@ public abstract class Datatype {
   /** Returns the Property enum that may be generated. */
   public abstract ParameterizedType getPropertyEnum();
 
-  /** Returns datatype about the properties of the type. */
-  public abstract ImmutableList<Property> getProperties();
-
   public UnderrideLevel standardMethodUnderride(StandardMethod standardMethod) {
     UnderrideLevel underrideLevel = getStandardMethodUnderrides().get(standardMethod);
     return (underrideLevel == null) ? UnderrideLevel.ABSENT : underrideLevel;
@@ -147,19 +143,11 @@ public abstract class Datatype {
   public abstract Visibility getValueTypeVisibility();
 
   /** Returns a list of nested classes that should be added to the generated builder class. */
-  public abstract ImmutableList<Function<Datatype, Excerpt>> getNestedClasses();
+  public abstract ImmutableList<Excerpt> getNestedClasses();
 
   public Builder toBuilder() {
     return new Builder().mergeFrom(this);
   }
-
-  public static final Function<Property, PropertyCodeGenerator> GET_CODE_GENERATOR =
-      new Function<Property, PropertyCodeGenerator>() {
-        @Override
-        public PropertyCodeGenerator apply(Property input) {
-          return input.getCodeGenerator();
-        }
-      };
 
   /** Builder for {@link Datatype}. */
   public static class Builder extends Datatype_Builder {

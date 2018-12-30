@@ -13,6 +13,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNulls;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RunWith(JUnit4.class)
 public class ToStringGeneratorTest {
 
@@ -519,13 +522,16 @@ public class ToStringGeneratorTest {
   }
 
   private static class ToStringBuilder {
-    private final Datatype.Builder builder;
+
+    private final Datatype datatype;
+    private final List<Property> properties = new ArrayList<>();
 
     ToStringBuilder(String typename) {
-      builder = new Datatype.Builder()
+      datatype = new Datatype.Builder()
           .setType(QualifiedName.of("com.example", typename).withParameters())
           .setPropertyEnum(
-              QualifiedName.of("com.example", typename + "_Builder", "Property").withParameters());
+              QualifiedName.of("com.example", typename + "_Builder", "Property").withParameters())
+          .buildPartial();
     }
 
     ToStringBuilder withRequired(String name) {
@@ -542,20 +548,20 @@ public class ToStringGeneratorTest {
 
     String valueToString() {
       SourceBuilder code = SourceStringBuilder.simple();
-      ToStringGenerator.addToString(code, builder.buildPartial(), false);
+      ToStringGenerator.addToString(code, datatype, properties, false);
       return code.toString();
     }
 
     String partialToString() {
       SourceBuilder code = SourceStringBuilder.simple();
-      ToStringGenerator.addToString(code, builder.buildPartial(), true);
+      ToStringGenerator.addToString(code, datatype, properties, true);
       return code.toString();
     }
 
     private ToStringBuilder with(PropertyCodeGenerator.Type type, String name) {
       PropertyCodeGenerator mock = mock(PropertyCodeGenerator.class, new ReturnsSmartNulls());
       when(mock.getType()).thenReturn(type);
-      builder.addProperties(new Property.Builder()
+      properties.add(new Property.Builder()
           .setName(name)
           .setAllCapsName(name.replaceAll("([A-Z])", "_$1").toUpperCase())
           .setCodeGenerator(mock)

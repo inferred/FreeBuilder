@@ -2,7 +2,6 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -74,7 +73,6 @@ abstract class Datatype_Builder {
   private ParameterizedType partialType;
   private Set<QualifiedName> visibleNestedTypes = ImmutableSet.of();
   private ParameterizedType propertyEnum;
-  private List<org.inferred.freebuilder.processor.Property> properties = ImmutableList.of();
   private final LinkedHashMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
       standardMethodUnderrides =
           new LinkedHashMap<Datatype.StandardMethod, Datatype.UnderrideLevel>();
@@ -83,7 +81,7 @@ abstract class Datatype_Builder {
   private List<Excerpt> generatedBuilderAnnotations = ImmutableList.of();
   private List<Excerpt> valueTypeAnnotations = ImmutableList.of();
   private Datatype.Visibility valueTypeVisibility;
-  private List<Function<Datatype, Excerpt>> nestedClasses = ImmutableList.of();
+  private List<Excerpt> nestedClasses = ImmutableList.of();
   private final EnumSet<Datatype_Builder.Property> _unsetProperties =
       EnumSet.allOf(Datatype_Builder.Property.class);
 
@@ -409,80 +407,6 @@ abstract class Datatype_Builder {
   }
 
   /**
-   * Adds {@code element} to the list to be returned from {@link Datatype#getProperties()}.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code element} is null
-   */
-  public Datatype.Builder addProperties(org.inferred.freebuilder.processor.Property element) {
-    if (properties instanceof ImmutableList) {
-      properties = new ArrayList<org.inferred.freebuilder.processor.Property>(properties);
-    }
-    properties.add(Preconditions.checkNotNull(element));
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Adds each element of {@code elements} to the list to be returned from {@link
-   * Datatype#getProperties()}.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a null element
-   */
-  public Datatype.Builder addProperties(org.inferred.freebuilder.processor.Property... elements) {
-    return addAllProperties(Arrays.asList(elements));
-  }
-
-  /**
-   * Adds each element of {@code elements} to the list to be returned from {@link
-   * Datatype#getProperties()}.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a null element
-   */
-  public Datatype.Builder addAllProperties(
-      Iterable<? extends org.inferred.freebuilder.processor.Property> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
-        if (properties instanceof ImmutableList) {
-          properties = new ArrayList<org.inferred.freebuilder.processor.Property>(properties);
-        }
-        ((ArrayList<?>) properties).ensureCapacity(properties.size() + elementsSize);
-      }
-    }
-    for (org.inferred.freebuilder.processor.Property element : elements) {
-      addProperties(element);
-    }
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Clears the list to be returned from {@link Datatype#getProperties()}.
-   *
-   * @return this {@code Builder} object
-   */
-  public Datatype.Builder clearProperties() {
-    if (properties instanceof ImmutableList) {
-      properties = ImmutableList.of();
-    } else {
-      properties.clear();
-    }
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Returns an unmodifiable view of the list that will be returned by {@link
-   * Datatype#getProperties()}. Changes to this builder will be reflected in the view.
-   */
-  public List<org.inferred.freebuilder.processor.Property> getProperties() {
-    if (properties instanceof ImmutableList) {
-      properties = new ArrayList<org.inferred.freebuilder.processor.Property>(properties);
-    }
-    return Collections.unmodifiableList(properties);
-  }
-
-  /**
    * Associates {@code key} with {@code value} in the map to be returned from {@link
    * Datatype#getStandardMethodUnderrides()}. If the map previously contained a mapping for the key,
    * the old value is replaced by the specified value.
@@ -773,9 +697,9 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code element} is null
    */
-  public Datatype.Builder addNestedClasses(Function<Datatype, Excerpt> element) {
+  public Datatype.Builder addNestedClasses(Excerpt element) {
     if (nestedClasses instanceof ImmutableList) {
-      nestedClasses = new ArrayList<Function<Datatype, Excerpt>>(nestedClasses);
+      nestedClasses = new ArrayList<Excerpt>(nestedClasses);
     }
     nestedClasses.add(Preconditions.checkNotNull(element));
     return (Datatype.Builder) this;
@@ -788,7 +712,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Datatype.Builder addNestedClasses(Function<Datatype, Excerpt>... elements) {
+  public Datatype.Builder addNestedClasses(Excerpt... elements) {
     return addAllNestedClasses(Arrays.asList(elements));
   }
 
@@ -799,18 +723,17 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Datatype.Builder addAllNestedClasses(
-      Iterable<? extends Function<Datatype, Excerpt>> elements) {
+  public Datatype.Builder addAllNestedClasses(Iterable<? extends Excerpt> elements) {
     if (elements instanceof Collection) {
       int elementsSize = ((Collection<?>) elements).size();
       if (elementsSize != 0) {
         if (nestedClasses instanceof ImmutableList) {
-          nestedClasses = new ArrayList<Function<Datatype, Excerpt>>(nestedClasses);
+          nestedClasses = new ArrayList<Excerpt>(nestedClasses);
         }
         ((ArrayList<?>) nestedClasses).ensureCapacity(nestedClasses.size() + elementsSize);
       }
     }
-    for (Function<Datatype, Excerpt> element : elements) {
+    for (Excerpt element : elements) {
       addNestedClasses(element);
     }
     return (Datatype.Builder) this;
@@ -834,9 +757,9 @@ abstract class Datatype_Builder {
    * Returns an unmodifiable view of the list that will be returned by {@link
    * Datatype#getNestedClasses()}. Changes to this builder will be reflected in the view.
    */
-  public List<Function<Datatype, Excerpt>> getNestedClasses() {
+  public List<Excerpt> getNestedClasses() {
     if (nestedClasses instanceof ImmutableList) {
-      nestedClasses = new ArrayList<Function<Datatype, Excerpt>>(nestedClasses);
+      nestedClasses = new ArrayList<Excerpt>(nestedClasses);
     }
     return Collections.unmodifiableList(nestedClasses);
   }
@@ -885,12 +808,6 @@ abstract class Datatype_Builder {
         || !value.getPropertyEnum().equals(_defaults.getPropertyEnum())) {
       setPropertyEnum(value.getPropertyEnum());
     }
-    if (value instanceof Datatype_Builder.Value
-        && properties == ImmutableList.<org.inferred.freebuilder.processor.Property>of()) {
-      properties = ImmutableList.copyOf(value.getProperties());
-    } else {
-      addAllProperties(value.getProperties());
-    }
     putAllStandardMethodUnderrides(value.getStandardMethodUnderrides());
     if (_defaults._unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)
         || value.isBuilderSerializable() != _defaults.isBuilderSerializable()) {
@@ -916,8 +833,7 @@ abstract class Datatype_Builder {
         || !value.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility())) {
       setValueTypeVisibility(value.getValueTypeVisibility());
     }
-    if (value instanceof Datatype_Builder.Value
-        && nestedClasses == ImmutableList.<Function<Datatype, Excerpt>>of()) {
+    if (value instanceof Datatype_Builder.Value && nestedClasses == ImmutableList.<Excerpt>of()) {
       nestedClasses = ImmutableList.copyOf(value.getNestedClasses());
     } else {
       addAllNestedClasses(value.getNestedClasses());
@@ -977,7 +893,6 @@ abstract class Datatype_Builder {
             || !template.getPropertyEnum().equals(_defaults.getPropertyEnum()))) {
       setPropertyEnum(template.getPropertyEnum());
     }
-    addAllProperties(base.properties);
     putAllStandardMethodUnderrides(base.standardMethodUnderrides);
     if (!base._unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)
         && (_defaults._unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)
@@ -1013,7 +928,6 @@ abstract class Datatype_Builder {
     partialType = _defaults.partialType;
     clearVisibleNestedTypes();
     propertyEnum = _defaults.propertyEnum;
-    clearProperties();
     standardMethodUnderrides.clear();
     builderSerializable = _defaults.builderSerializable;
     hasToBuilderMethod = _defaults.hasToBuilderMethod;
@@ -1064,7 +978,6 @@ abstract class Datatype_Builder {
     private final ParameterizedType partialType;
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final ParameterizedType propertyEnum;
-    private final ImmutableList<org.inferred.freebuilder.processor.Property> properties;
     private final ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1072,7 +985,7 @@ abstract class Datatype_Builder {
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Datatype.Visibility valueTypeVisibility;
-    private final ImmutableList<Function<Datatype, Excerpt>> nestedClasses;
+    private final ImmutableList<Excerpt> nestedClasses;
 
     private Value(Datatype_Builder builder) {
       this.type = builder.type;
@@ -1085,7 +998,6 @@ abstract class Datatype_Builder {
       this.partialType = builder.partialType;
       this.visibleNestedTypes = ImmutableSet.copyOf(builder.visibleNestedTypes);
       this.propertyEnum = builder.propertyEnum;
-      this.properties = ImmutableList.copyOf(builder.properties);
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
       this.hasToBuilderMethod = builder.hasToBuilderMethod;
@@ -1146,11 +1058,6 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ImmutableList<org.inferred.freebuilder.processor.Property> getProperties() {
-      return properties;
-    }
-
-    @Override
     public ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
         getStandardMethodUnderrides() {
       return standardMethodUnderrides;
@@ -1182,7 +1089,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ImmutableList<Function<Datatype, Excerpt>> getNestedClasses() {
+    public ImmutableList<Excerpt> getNestedClasses() {
       return nestedClasses;
     }
 
@@ -1223,9 +1130,6 @@ abstract class Datatype_Builder {
       if (!propertyEnum.equals(other.propertyEnum)) {
         return false;
       }
-      if (!properties.equals(other.properties)) {
-        return false;
-      }
       if (!standardMethodUnderrides.equals(other.standardMethodUnderrides)) {
         return false;
       }
@@ -1264,7 +1168,6 @@ abstract class Datatype_Builder {
             partialType,
             visibleNestedTypes,
             propertyEnum,
-            properties,
             standardMethodUnderrides,
             builderSerializable,
             hasToBuilderMethod,
@@ -1300,8 +1203,6 @@ abstract class Datatype_Builder {
           .append(visibleNestedTypes)
           .append(", propertyEnum=")
           .append(propertyEnum)
-          .append(", properties=")
-          .append(properties)
           .append(", standardMethodUnderrides=")
           .append(standardMethodUnderrides)
           .append(", builderSerializable=")
@@ -1335,7 +1236,6 @@ abstract class Datatype_Builder {
     private final ParameterizedType partialType;
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final ParameterizedType propertyEnum;
-    private final ImmutableList<org.inferred.freebuilder.processor.Property> properties;
     private final ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1343,7 +1243,7 @@ abstract class Datatype_Builder {
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Datatype.Visibility valueTypeVisibility;
-    private final ImmutableList<Function<Datatype, Excerpt>> nestedClasses;
+    private final ImmutableList<Excerpt> nestedClasses;
     private final EnumSet<Datatype_Builder.Property> _unsetProperties;
 
     Partial(Datatype_Builder builder) {
@@ -1357,7 +1257,6 @@ abstract class Datatype_Builder {
       this.partialType = builder.partialType;
       this.visibleNestedTypes = ImmutableSet.copyOf(builder.visibleNestedTypes);
       this.propertyEnum = builder.propertyEnum;
-      this.properties = ImmutableList.copyOf(builder.properties);
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
       this.hasToBuilderMethod = builder.hasToBuilderMethod;
@@ -1443,11 +1342,6 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ImmutableList<org.inferred.freebuilder.processor.Property> getProperties() {
-      return properties;
-    }
-
-    @Override
     public ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
         getStandardMethodUnderrides() {
       return standardMethodUnderrides;
@@ -1488,7 +1382,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ImmutableList<Function<Datatype, Excerpt>> getNestedClasses() {
+    public ImmutableList<Excerpt> getNestedClasses() {
       return nestedClasses;
     }
 
@@ -1533,9 +1427,6 @@ abstract class Datatype_Builder {
           && (propertyEnum == null || !propertyEnum.equals(other.propertyEnum))) {
         return false;
       }
-      if (!properties.equals(other.properties)) {
-        return false;
-      }
       if (!standardMethodUnderrides.equals(other.standardMethodUnderrides)) {
         return false;
       }
@@ -1576,7 +1467,6 @@ abstract class Datatype_Builder {
             partialType,
             visibleNestedTypes,
             propertyEnum,
-            properties,
             standardMethodUnderrides,
             builderSerializable,
             hasToBuilderMethod,
@@ -1619,11 +1509,7 @@ abstract class Datatype_Builder {
       if (!_unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM)) {
         result.append(", propertyEnum=").append(propertyEnum);
       }
-      result
-          .append(", properties=")
-          .append(properties)
-          .append(", standardMethodUnderrides=")
-          .append(standardMethodUnderrides);
+      result.append(", standardMethodUnderrides=").append(standardMethodUnderrides);
       if (!_unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)) {
         result.append(", builderSerializable=").append(builderSerializable);
       }

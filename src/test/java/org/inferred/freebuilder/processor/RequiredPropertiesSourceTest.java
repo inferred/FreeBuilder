@@ -25,6 +25,8 @@ import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
+import com.google.common.collect.ImmutableList;
+
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
@@ -1631,6 +1633,19 @@ public class RequiredPropertiesSourceTest {
   private static GeneratedBuilder builder(NamingConvention convention) {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+
+    Datatype datatype = new Datatype.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters())
+        .setExtensible(true)
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters())
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters())
+        .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .build();
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(STRING)
@@ -1651,27 +1666,15 @@ public class RequiredPropertiesSourceTest {
         .setType(INT)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    Datatype datatype = new Datatype.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setExtensible(true)
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name, age)
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
-    return new GeneratedBuilder(datatype.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(datatype, name, false, unaryOperator(STRING)))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(datatype, age, false, unaryOperator(INTEGER)))
-            .build())
-        .build());
+
+    return new GeneratedBuilder(
+        datatype,
+        ImmutableList.of(
+            name.toBuilder()
+                .setCodeGenerator(new DefaultProperty(datatype, name, false, unaryOperator(STRING)))
+                .build(),
+            age.toBuilder()
+                .setCodeGenerator(new DefaultProperty(datatype, age, false, unaryOperator(INTEGER)))
+                .build()));
   }
 }

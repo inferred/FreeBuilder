@@ -26,6 +26,7 @@ import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.OptionalProperty.OptionalType;
@@ -34,8 +35,6 @@ import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import javax.lang.model.type.TypeMirror;
 
 @RunWith(JUnit4.class)
 public class JavaUtilOptionalSourceTest {
@@ -984,6 +983,19 @@ public class JavaUtilOptionalSourceTest {
     GenericTypeMirrorImpl optionalString = optional.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+
+    Datatype datatype = new Datatype.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters())
+        .setExtensible(true)
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters())
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters())
+        .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .build();
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(optionalString)
@@ -1004,41 +1016,29 @@ public class JavaUtilOptionalSourceTest {
         .setType(optionalInteger)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    Datatype datatype = new Datatype.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setExtensible(true)
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name, age)
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
-    return new GeneratedBuilder(datatype.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new OptionalProperty(
-                datatype,
-                name,
-                OptionalType.JAVA8,
-                STRING,
-                Optional.<TypeMirror>absent(),
-                unaryOperator(STRING),
-                false))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new OptionalProperty(
-                datatype,
-                age,
-                OptionalType.JAVA8,
-                INTEGER,
-                Optional.<TypeMirror>of(INT),
-                unaryOperator(INTEGER),
-                false))
-            .build())
-        .build());
+
+    return new GeneratedBuilder(
+        datatype,
+        ImmutableList.of(
+            name.toBuilder()
+                .setCodeGenerator(new OptionalProperty(
+                    datatype,
+                    name,
+                    OptionalType.JAVA8,
+                    STRING,
+                    Optional.absent(),
+                    unaryOperator(STRING),
+                    false))
+                .build(),
+            age.toBuilder()
+                .setCodeGenerator(new OptionalProperty(
+                    datatype,
+                    age,
+                    OptionalType.JAVA8,
+                    INTEGER,
+                    Optional.of(INT),
+                    unaryOperator(INTEGER),
+                    false))
+                .build()));
   }
 }

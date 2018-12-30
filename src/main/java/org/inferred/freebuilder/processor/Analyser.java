@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
-import static com.google.common.collect.Maps.newLinkedHashMap;
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
@@ -158,8 +157,6 @@ class Analyser {
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
-    Map<ExecutableElement, Property> properties =
-        findProperties(type, removeNonGetterMethods(builder, methods));
     Datatype.Builder datatypeBuilder = new Datatype.Builder()
         .setType(QualifiedName.of(type).withParameters(typeParameters))
         .setInterfaceType(type.getKind().isInterface())
@@ -176,14 +173,12 @@ class Analyser {
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
-        .addAllProperties(properties.values())
         .setBuilder(ParameterizedType.from(builder));
     Datatype baseDatatype = datatypeBuilder.build();
-    datatypeBuilder.mergeFrom(gwtMetadata(type, baseDatatype));
-    datatypeBuilder
-        .clearProperties()
-        .addAllProperties(codeGenerators(properties, baseDatatype, builder));
-    return new GeneratedBuilder(datatypeBuilder.build());
+    List<Property> properties =
+        findProperties(type, baseDatatype, builder, removeNonGetterMethods(builder, methods));
+    datatypeBuilder.mergeFrom(gwtMetadata(type, baseDatatype, properties));
+    return new GeneratedBuilder(datatypeBuilder.build(), properties);
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {
@@ -441,41 +436,32 @@ class Analyser {
         .setBuilderFactory(BuilderFactory.from(builderElement));
   }
 
-  private Map<ExecutableElement, Property> findProperties(
-      TypeElement type, Iterable<ExecutableElement> methods) {
+  private List<Property> findProperties(
+      TypeElement type,
+      Datatype datatype,
+      DeclaredType builder,
+      Iterable<ExecutableElement> methods) {
     NamingConvention namingConvention = determineNamingConvention(type, methods, messager, types);
-    Map<ExecutableElement, Property> propertiesByMethod = newLinkedHashMap();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
+    Set<String> methodsInvokedInBuilderConstructor =
+        getMethodsInvokedInBuilderConstructor(asElement(builder));
+
+    ImmutableList.Builder<Property> properties = ImmutableList.builder();
     for (ExecutableElement method : methods) {
       Property.Builder propertyBuilder = namingConvention.getPropertyNames(type, method).orNull();
       if (propertyBuilder != null) {
         addPropertyData(propertyBuilder, type, method, jacksonSupport);
-        propertiesByMethod.put(method, propertyBuilder.build());
+        Config config = new ConfigImpl(
+            builder,
+            datatype,
+            propertyBuilder.build(),
+            method,
+            methodsInvokedInBuilderConstructor);
+        propertyBuilder.setCodeGenerator(createCodeGenerator(config));
+        properties.add(propertyBuilder.build());
       }
     }
-    return propertiesByMethod;
-  }
-
-  private List<Property> codeGenerators(
-      Map<ExecutableElement, Property> properties,
-      Datatype datatype,
-      DeclaredType builder) {
-    ImmutableList.Builder<Property> codeGenerators = ImmutableList.builder();
-    Set<String> methodsInvokedInBuilderConstructor =
-        getMethodsInvokedInBuilderConstructor(asElement(builder));
-    for (Map.Entry<ExecutableElement, Property> entry : properties.entrySet()) {
-      Config config = new ConfigImpl(
-          builder,
-          datatype,
-          entry.getValue(),
-          entry.getKey(),
-          methodsInvokedInBuilderConstructor);
-      codeGenerators.add(new Property.Builder()
-          .mergeFrom(entry.getValue())
-          .setCodeGenerator(createCodeGenerator(config))
-          .build());
-    }
-    return codeGenerators.build();
+    return properties.build();
   }
 
   private Set<String> getMethodsInvokedInBuilderConstructor(TypeElement builder) {

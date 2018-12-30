@@ -16,12 +16,18 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
+import java.util.List;
+
 class ToStringGenerator {
 
   /**
    * Generates a toString method using concatenation or a StringBuilder.
    */
-  public static void addToString(SourceBuilder code, Datatype datatype, final boolean forPartial) {
+  public static void addToString(
+      SourceBuilder code,
+      Datatype datatype,
+      List<Property> properties,
+      final boolean forPartial) {
     String typename = (forPartial ? "partial " : "") + datatype.getType().getSimpleName();
     Predicate<Property> isOptional = new Predicate<Property>() {
       @Override
@@ -30,20 +36,19 @@ class ToStringGenerator {
         return (type == Type.OPTIONAL || (type == Type.REQUIRED && forPartial));
       }
     };
-    boolean anyOptional = any(datatype.getProperties(), isOptional);
-    boolean allOptional = all(datatype.getProperties(), isOptional)
-        && !datatype.getProperties().isEmpty();
+    boolean anyOptional = any(properties, isOptional);
+    boolean allOptional = all(properties, isOptional) && !properties.isEmpty();
 
     code.addLine("")
         .addLine("@%s", Override.class)
         .addLine("public %s toString() {", String.class);
     Block body = methodBody(code);
     if (allOptional) {
-      bodyWithBuilderAndSeparator(body, datatype, typename);
+      bodyWithBuilderAndSeparator(body, datatype, properties, typename);
     } else if (anyOptional) {
-      bodyWithBuilder(body, datatype, typename, isOptional);
+      bodyWithBuilder(body, datatype, properties, typename, isOptional);
     } else {
-      bodyWithConcatenation(body, datatype, typename);
+      bodyWithConcatenation(body, properties, typename);
     }
     code.add(body)
         .addLine("}");
@@ -59,11 +64,11 @@ class ToStringGenerator {
    */
   private static void bodyWithConcatenation(
       Block code,
-      Datatype datatype,
+      List<Property> properties,
       String typename) {
     code.add("  return \"%s{", typename);
     String prefix = "";
-    for (Property property : datatype.getProperties()) {
+    for (Property property : properties) {
       code.add("%s%s=\" + %s + \"", prefix, property.getName(), property.getField());
       prefix = ", ";
     }
@@ -89,6 +94,7 @@ class ToStringGenerator {
   private static void bodyWithBuilder(
       Block code,
       Datatype datatype,
+      List<Property> properties,
       String typename,
       Predicate<Property> isOptional) {
     Variable result = new Variable("result");
@@ -98,9 +104,9 @@ class ToStringGenerator {
     boolean midAppends = true;
     boolean prependCommas = false;
 
-    Property lastOptionalProperty = getLast(filter(datatype.getProperties(), isOptional));
+    Property lastOptionalProperty = getLast(filter(properties, isOptional));
 
-    for (Property property : datatype.getProperties()) {
+    for (Property property : properties) {
       if (isOptional.apply(property)) {
         if (midStringLiteral) {
           code.add("\")");
@@ -173,19 +179,20 @@ class ToStringGenerator {
   private static void bodyWithBuilderAndSeparator(
       Block code,
       Datatype datatype,
+      List<Property> properties,
       String typename) {
     Variable result = new Variable("result");
     Variable separator = new Variable("separator");
 
     code.addLine("  %1$s %2$s = new %1$s(\"%3$s{\");", StringBuilder.class, result, typename);
-    if (datatype.getProperties().size() > 1) {
+    if (properties.size() > 1) {
       // If there's a single property, we don't actually use the separator variable
       code.addLine("  %s %s = \"\";", String.class, separator);
     }
 
-    Property first = datatype.getProperties().get(0);
-    Property last = Iterables.getLast(datatype.getProperties());
-    for (Property property : datatype.getProperties()) {
+    Property first = properties.get(0);
+    Property last = Iterables.getLast(properties);
+    for (Property property : properties) {
       switch (property.getCodeGenerator().getType()) {
         case HAS_DEFAULT:
           throw new RuntimeException("Internal error: unexpected default field");

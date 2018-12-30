@@ -4,7 +4,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationM
 import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
 
 import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.Datatype.Visibility;
@@ -14,6 +13,8 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
+
+import java.util.List;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -30,7 +31,10 @@ class GwtSupport {
   private static final QualifiedName SERIALIZATION_STREAM_WRITER =
       QualifiedName.of("com.google.gwt.user.client.rpc", "SerializationStreamWriter");
 
-  public static Datatype.Builder gwtMetadata(TypeElement type, Datatype datatype) {
+  public static Datatype.Builder gwtMetadata(
+      TypeElement type,
+      Datatype datatype,
+      List<Property> properties) {
     Datatype.Builder extraMetadata = new Datatype.Builder();
     Optional<AnnotationMirror> annotation = findAnnotationMirror(type, GwtCompatible.class);
     if (annotation.isPresent()) {
@@ -42,8 +46,8 @@ class GwtSupport {
         extraMetadata.setValueTypeVisibility(Visibility.PACKAGE);
         extraMetadata.addValueTypeAnnotations(Excerpts.add(
             "@%s(serializable = true)%n", GwtCompatible.class));
-        extraMetadata.addNestedClasses(new CustomValueSerializer());
-        extraMetadata.addNestedClasses(new GwtWhitelist());
+        extraMetadata.addNestedClasses(new CustomValueSerializer(datatype, properties));
+        extraMetadata.addNestedClasses(new GwtWhitelist(datatype, properties));
         QualifiedName builderName = datatype.getGeneratedBuilder().getQualifiedName();
         extraMetadata.addVisibleNestedTypes(
             builderName.nestedType("Value_CustomFieldSerializer"),
@@ -53,18 +57,14 @@ class GwtSupport {
     return extraMetadata;
   }
 
-  private static final class CustomValueSerializer implements Function<Datatype, Excerpt> {
-    @Override
-    public Excerpt apply(final Datatype datatype) {
-      return new CustomValueSerializerExcerpt(datatype);
-    }
-  }
+  private static final class CustomValueSerializer extends Excerpt {
 
-  private static final class CustomValueSerializerExcerpt extends Excerpt {
     private final Datatype datatype;
+    private final List<Property> properties;
 
-    private CustomValueSerializerExcerpt(Datatype datatype) {
+    private CustomValueSerializer(Datatype datatype, List<Property> properties) {
       this.datatype = datatype;
+      this.properties = properties;
     }
 
     @Override
@@ -119,7 +119,7 @@ class GwtSupport {
       Block body = Block.methodBody(code, "reader");
       Excerpt builder = body.declare(
           datatype.getBuilder(), "builder", Excerpts.add("new %s()", datatype.getBuilder()));
-      for (Property property : datatype.getProperties()) {
+      for (Property property : properties) {
         TypeMirrorExcerpt propertyType = new TypeMirrorExcerpt(property.getType());
         if (property.getType().getKind().isPrimitive()) {
           Excerpt value = body.declare(
@@ -168,7 +168,7 @@ class GwtSupport {
           .addLine("  public void serializeInstance(%s writer, %s instance)",
               SERIALIZATION_STREAM_WRITER, datatype.getValueType())
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
-      for (Property property : datatype.getProperties()) {
+      for (Property property : properties) {
         if (property.getType().getKind().isPrimitive()) {
           code.add("    writer.write%s(", withInitialCapital(property.getType()));
         } else if (String.class.getName().equals(property.getType().toString())) {
@@ -185,21 +185,18 @@ class GwtSupport {
     @Override
     protected void addFields(FieldReceiver fields) {
       fields.add("datatype", datatype);
+      fields.add("properties", properties);
     }
   }
 
-  private static final class GwtWhitelist implements Function<Datatype, Excerpt> {
-    @Override
-    public Excerpt apply(final Datatype datatype) {
-      return new GwtWhitelistExcerpt(datatype);
-    }
-  }
+  private static final class GwtWhitelist extends Excerpt {
 
-  private static final class GwtWhitelistExcerpt extends Excerpt {
     private final Datatype datatype;
+    private final List<Property> properties;
 
-    private GwtWhitelistExcerpt(Datatype datatype) {
+    private GwtWhitelist(Datatype datatype, List<Property> properties) {
       this.datatype = datatype;
+      this.properties = properties;
     }
 
     @Override
@@ -212,14 +209,14 @@ class GwtSupport {
               datatype.isInterfaceType() ? "implements " : "extends ",
               datatype.getType())
           .addLine("");
-      for (Property property : datatype.getProperties()) {
+      for (Property property : properties) {
         code.addLine("  %s %s;", property.getType(), property.getField());
       }
       code.addLine("")
           .addLine("  private GwtWhitelist() {")
           .addLine("    throw new %s();", UnsupportedOperationException.class)
           .addLine("   }");
-      for (Property property : datatype.getProperties()) {
+      for (Property property : properties) {
         code.addLine("")
             .addLine("  @%s", Override.class)
             .addLine("  public %s %s() {", property.getType(), property.getGetterName())
@@ -232,6 +229,7 @@ class GwtSupport {
     @Override
     protected void addFields(FieldReceiver fields) {
       fields.add("datatype", datatype);
+      fields.add("properties", properties);
     }
   }
 

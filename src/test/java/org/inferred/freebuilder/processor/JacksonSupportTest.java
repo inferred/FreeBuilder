@@ -65,7 +65,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getDatatype().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
@@ -81,7 +81,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getDatatype().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"bob\")");
   }
 
@@ -97,7 +97,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getDatatype().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertPropertyHasAnnotation(property,
             JacksonXmlProperty.class, "@JacksonXmlProperty(localName = \"b-ob\")");
   }
@@ -113,7 +113,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getDatatype().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"fooBar\")");
   }
 
@@ -128,7 +128,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getDatatype().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
