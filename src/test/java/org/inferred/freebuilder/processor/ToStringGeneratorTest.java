@@ -19,14 +19,14 @@ public class ToStringGeneratorTest {
 
   @Test
   public void noProperties() {
-    Metadata metadata = datatype("Person").build();
+    ToStringBuilder builder = builderFor("Person");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"partial Person{}\";\n"
@@ -35,14 +35,14 @@ public class ToStringGeneratorTest {
 
   @Test
   public void defaultProperty() {
-    Metadata metadata = datatype("Person").withDefault("name").build();
+    ToStringBuilder builder = builderFor("Person").withDefault("name");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"partial Person{name=\" + name + \"}\";\n"
@@ -51,14 +51,14 @@ public class ToStringGeneratorTest {
 
   @Test
   public void requiredProperty() {
-    Metadata metadata = datatype("Person").withRequired("name").build();
+    ToStringBuilder builder = builderFor("Person").withRequired("name");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -71,9 +71,9 @@ public class ToStringGeneratorTest {
 
   @Test
   public void optionalProperty() {
-    Metadata metadata = datatype("Person").withOptional("name").build();
+    ToStringBuilder builder = builderFor("Person").withOptional("name");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"Person{\");\n"
@@ -82,7 +82,7 @@ public class ToStringGeneratorTest {
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -95,14 +95,14 @@ public class ToStringGeneratorTest {
 
   @Test
   public void twoDefaults() {
-    Metadata metadata = datatype("Person").withDefault("name").withDefault("age").build();
+    ToStringBuilder builder = builderFor("Person").withDefault("name").withDefault("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"partial Person{name=\" + name + \", age=\" + age + \"}\";\n"
@@ -111,14 +111,14 @@ public class ToStringGeneratorTest {
 
   @Test
   public void twoRequired() {
-    Metadata metadata = datatype("Person").withRequired("name").withRequired("age").build();
+    ToStringBuilder builder = builderFor("Person").withRequired("name").withRequired("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -136,9 +136,9 @@ public class ToStringGeneratorTest {
 
   @Test
   public void twoOptional() {
-    Metadata metadata = datatype("Person").withOptional("name").withOptional("age").build();
+    ToStringBuilder builder = builderFor("Person").withOptional("name").withOptional("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"Person{\");\n"
@@ -152,7 +152,7 @@ public class ToStringGeneratorTest {
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -170,14 +170,14 @@ public class ToStringGeneratorTest {
 
   @Test
   public void defaultThenRequired() {
-    Metadata metadata = datatype("Person").withDefault("name").withRequired("age").build();
+    ToStringBuilder builder = builderFor("Person").withDefault("name").withRequired("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(name);\n"
@@ -190,14 +190,14 @@ public class ToStringGeneratorTest {
 
   @Test
   public void requiredThenDefault() {
-    Metadata metadata = datatype("Person").withRequired("name").withDefault("age").build();
+    ToStringBuilder builder = builderFor("Person").withRequired("name").withDefault("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -210,9 +210,9 @@ public class ToStringGeneratorTest {
 
   @Test
   public void defaultThenOptional() {
-    Metadata metadata = datatype("Person").withDefault("name").withOptional("age").build();
+    ToStringBuilder builder = builderFor("Person").withDefault("name").withOptional("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"Person{name=\").append(name);\n"
@@ -221,7 +221,7 @@ public class ToStringGeneratorTest {
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(name);\n"
@@ -234,9 +234,9 @@ public class ToStringGeneratorTest {
 
   @Test
   public void optionalThenDefault() {
-    Metadata metadata = datatype("Person").withOptional("name").withDefault("age").build();
+    ToStringBuilder builder = builderFor("Person").withOptional("name").withDefault("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"Person{\");\n"
@@ -245,7 +245,7 @@ public class ToStringGeneratorTest {
         + "  }\n"
         + "  return result.append(\"age=\").append(age).append(\"}\").toString();\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -258,9 +258,9 @@ public class ToStringGeneratorTest {
 
   @Test
   public void requiredThenOptional() {
-    Metadata metadata = datatype("Person").withRequired("name").withOptional("age").build();
+    ToStringBuilder builder = builderFor("Person").withRequired("name").withOptional("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"Person{name=\").append(name);\n"
@@ -269,7 +269,7 @@ public class ToStringGeneratorTest {
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -287,9 +287,9 @@ public class ToStringGeneratorTest {
 
   @Test
   public void optionalThenRequired() {
-    Metadata metadata = datatype("Person").withOptional("name").withRequired("age").build();
+    ToStringBuilder builder = builderFor("Person").withOptional("name").withRequired("age");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"Person{\");\n"
@@ -298,7 +298,7 @@ public class ToStringGeneratorTest {
         + "  }\n"
         + "  return result.append(\"age=\").append(age).append(\"}\").toString();\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -316,19 +316,18 @@ public class ToStringGeneratorTest {
 
   @Test
   public void threeDefaults() {
-    Metadata metadata = datatype("Person")
+    ToStringBuilder builder = builderFor("Person")
         .withDefault("name")
         .withDefault("age")
-        .withDefault("shoeSize")
-        .build();
+        .withDefault("shoeSize");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \", shoeSize=\" + shoeSize"
             + " + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"partial Person{name=\" + name + \", age=\" + age + \", shoeSize=\" + shoeSize"
@@ -338,19 +337,18 @@ public class ToStringGeneratorTest {
 
   @Test
   public void threeRequired() {
-    Metadata metadata = datatype("Person")
+    ToStringBuilder builder = builderFor("Person")
         .withRequired("name")
         .withRequired("age")
-        .withRequired("shoeSize")
-        .build();
+        .withRequired("shoeSize");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \", shoeSize=\" + shoeSize"
             + " + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -372,13 +370,12 @@ public class ToStringGeneratorTest {
 
   @Test
   public void threeOptional() {
-    Metadata metadata = datatype("Person")
+    ToStringBuilder builder = builderFor("Person")
         .withOptional("name")
         .withOptional("age")
-        .withOptional("shoeSize")
-        .build();
+        .withOptional("shoeSize");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"Person{\");\n"
@@ -396,7 +393,7 @@ public class ToStringGeneratorTest {
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -418,19 +415,18 @@ public class ToStringGeneratorTest {
 
   @Test
   public void requiredDefaultRequired() {
-    Metadata metadata = datatype("Person")
+    ToStringBuilder builder = builderFor("Person")
         .withRequired("name")
         .withDefault("age")
-        .withRequired("shoeSize")
-        .build();
+        .withRequired("shoeSize");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \","
             + " shoeSize=\" + shoeSize + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -447,19 +443,18 @@ public class ToStringGeneratorTest {
 
   @Test
   public void defaultDefaultRequired() {
-    Metadata metadata = datatype("Person")
+    ToStringBuilder builder = builderFor("Person")
         .withDefault("name")
         .withDefault("age")
-        .withRequired("shoeSize")
-        .build();
+        .withRequired("shoeSize");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \","
             + " shoeSize=\" + shoeSize + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(name)"
@@ -473,19 +468,18 @@ public class ToStringGeneratorTest {
 
   @Test
   public void defaultRequiredDefault() {
-    Metadata metadata = datatype("Person")
+    ToStringBuilder builder = builderFor("Person")
         .withDefault("name")
         .withRequired("age")
-        .withDefault("shoeSize")
-        .build();
+        .withDefault("shoeSize");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \","
             + " shoeSize=\" + shoeSize + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(name);\n"
@@ -498,19 +492,18 @@ public class ToStringGeneratorTest {
 
   @Test
   public void requiredDefaultDefault() {
-    Metadata metadata = datatype("Person")
+    ToStringBuilder builder = builderFor("Person")
         .withRequired("name")
         .withDefault("age")
-        .withDefault("shoeSize")
-        .build();
+        .withDefault("shoeSize");
 
-    assertThat(valueToString(metadata)).isEqualTo("\n"
+    assertThat(builder.valueToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  return \"Person{name=\" + name + \", age=\" + age + \","
             + " shoeSize=\" + shoeSize + \"}\";\n"
         + "}\n");
-    assertThat(partialToString(metadata)).isEqualTo("\n"
+    assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
@@ -522,45 +515,45 @@ public class ToStringGeneratorTest {
         + "}\n");
   }
 
-  private static String valueToString(Metadata metadata) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple();
-    ToStringGenerator.addToString(sourceBuilder, metadata, false);
-    return sourceBuilder.toString();
+  private static ToStringBuilder builderFor(String typename) {
+    return new ToStringBuilder(typename);
   }
 
-  private static String partialToString(Metadata metadata) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple();
-    ToStringGenerator.addToString(sourceBuilder, metadata, true);
-    return sourceBuilder.toString();
-  }
-
-  private static PartialMetadataBuilder datatype(String typename) {
-    return new PartialMetadataBuilder(typename);
-  }
-
-  private static class PartialMetadataBuilder {
+  private static class ToStringBuilder {
     private final Metadata.Builder builder;
 
-    PartialMetadataBuilder(String typename) {
+    ToStringBuilder(String typename) {
       builder = new Metadata.Builder()
           .setType(QualifiedName.of("com.example", typename).withParameters())
           .setPropertyEnum(
               QualifiedName.of("com.example", typename + "_Builder", "Property").withParameters());
     }
 
-    PartialMetadataBuilder withRequired(String name) {
+    ToStringBuilder withRequired(String name) {
       return with(Type.REQUIRED, name);
     }
 
-    PartialMetadataBuilder withOptional(String name) {
+    ToStringBuilder withOptional(String name) {
       return with(Type.OPTIONAL, name);
     }
 
-    PartialMetadataBuilder withDefault(String name) {
+    ToStringBuilder withDefault(String name) {
       return with(Type.HAS_DEFAULT, name);
     }
 
-    private PartialMetadataBuilder with(PropertyCodeGenerator.Type type, String name) {
+    String valueToString() {
+      SourceBuilder code = SourceStringBuilder.simple();
+      ToStringGenerator.addToString(code, builder.buildPartial(), false);
+      return code.toString();
+    }
+
+    String partialToString() {
+      SourceBuilder code = SourceStringBuilder.simple();
+      ToStringGenerator.addToString(code, builder.buildPartial(), true);
+      return code.toString();
+    }
+
+    private ToStringBuilder with(PropertyCodeGenerator.Type type, String name) {
       PropertyCodeGenerator mock = mock(PropertyCodeGenerator.class, new ReturnsSmartNulls());
       when(mock.getType()).thenReturn(type);
       builder.addProperties(new Property.Builder()
@@ -569,10 +562,6 @@ public class ToStringGeneratorTest {
           .setCodeGenerator(mock)
           .buildPartial());
       return this;
-    }
-
-    Metadata build() {
-      return builder.buildPartial();
     }
   }
 }
