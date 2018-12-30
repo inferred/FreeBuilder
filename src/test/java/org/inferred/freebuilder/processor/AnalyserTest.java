@@ -35,7 +35,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;

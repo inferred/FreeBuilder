@@ -19,7 +19,7 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 
 import com.google.common.base.Optional;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Property;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 

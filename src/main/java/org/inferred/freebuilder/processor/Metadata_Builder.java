@@ -74,7 +74,7 @@ abstract class Metadata_Builder {
   private ParameterizedType partialType;
   private Set<QualifiedName> visibleNestedTypes = ImmutableSet.of();
   private ParameterizedType propertyEnum;
-  private List<Metadata.Property> properties = ImmutableList.of();
+  private List<org.inferred.freebuilder.processor.Property> properties = ImmutableList.of();
   private final LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
       standardMethodUnderrides =
           new LinkedHashMap<Metadata.StandardMethod, Metadata.UnderrideLevel>();
@@ -414,9 +414,9 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code element} is null
    */
-  public Metadata.Builder addProperties(Metadata.Property element) {
+  public Metadata.Builder addProperties(org.inferred.freebuilder.processor.Property element) {
     if (properties instanceof ImmutableList) {
-      properties = new ArrayList<Metadata.Property>(properties);
+      properties = new ArrayList<org.inferred.freebuilder.processor.Property>(properties);
     }
     properties.add(Preconditions.checkNotNull(element));
     return (Metadata.Builder) this;
@@ -429,7 +429,7 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Metadata.Builder addProperties(Metadata.Property... elements) {
+  public Metadata.Builder addProperties(org.inferred.freebuilder.processor.Property... elements) {
     return addAllProperties(Arrays.asList(elements));
   }
 
@@ -440,17 +440,18 @@ abstract class Metadata_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Metadata.Builder addAllProperties(Iterable<? extends Metadata.Property> elements) {
+  public Metadata.Builder addAllProperties(
+      Iterable<? extends org.inferred.freebuilder.processor.Property> elements) {
     if (elements instanceof Collection) {
       int elementsSize = ((Collection<?>) elements).size();
       if (elementsSize != 0) {
         if (properties instanceof ImmutableList) {
-          properties = new ArrayList<Metadata.Property>(properties);
+          properties = new ArrayList<org.inferred.freebuilder.processor.Property>(properties);
         }
         ((ArrayList<?>) properties).ensureCapacity(properties.size() + elementsSize);
       }
     }
-    for (Metadata.Property element : elements) {
+    for (org.inferred.freebuilder.processor.Property element : elements) {
       addProperties(element);
     }
     return (Metadata.Builder) this;
@@ -474,9 +475,9 @@ abstract class Metadata_Builder {
    * Returns an unmodifiable view of the list that will be returned by {@link
    * Metadata#getProperties()}. Changes to this builder will be reflected in the view.
    */
-  public List<Metadata.Property> getProperties() {
+  public List<org.inferred.freebuilder.processor.Property> getProperties() {
     if (properties instanceof ImmutableList) {
-      properties = new ArrayList<Metadata.Property>(properties);
+      properties = new ArrayList<org.inferred.freebuilder.processor.Property>(properties);
     }
     return Collections.unmodifiableList(properties);
   }
@@ -885,7 +886,7 @@ abstract class Metadata_Builder {
       setPropertyEnum(value.getPropertyEnum());
     }
     if (value instanceof Metadata_Builder.Value
-        && properties == ImmutableList.<Metadata.Property>of()) {
+        && properties == ImmutableList.<org.inferred.freebuilder.processor.Property>of()) {
       properties = ImmutableList.copyOf(value.getProperties());
     } else {
       addAllProperties(value.getProperties());
@@ -1063,7 +1064,7 @@ abstract class Metadata_Builder {
     private final ParameterizedType partialType;
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final ParameterizedType propertyEnum;
-    private final ImmutableList<Metadata.Property> properties;
+    private final ImmutableList<org.inferred.freebuilder.processor.Property> properties;
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1145,7 +1146,7 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public ImmutableList<Metadata.Property> getProperties() {
+    public ImmutableList<org.inferred.freebuilder.processor.Property> getProperties() {
       return properties;
     }
 
@@ -1334,7 +1335,7 @@ abstract class Metadata_Builder {
     private final ParameterizedType partialType;
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final ParameterizedType propertyEnum;
-    private final ImmutableList<Metadata.Property> properties;
+    private final ImmutableList<org.inferred.freebuilder.processor.Property> properties;
     private final ImmutableMap<Metadata.StandardMethod, Metadata.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1442,7 +1443,7 @@ abstract class Metadata_Builder {
     }
 
     @Override
-    public ImmutableList<Metadata.Property> getProperties() {
+    public ImmutableList<org.inferred.freebuilder.processor.Property> getProperties() {
       return properties;
     }
 

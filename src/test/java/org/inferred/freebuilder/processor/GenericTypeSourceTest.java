@@ -21,7 +21,6 @@ import static org.inferred.freebuilder.processor.util.TypeParameterElementImpl.n
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.TypeParameterElementImpl;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;

@@ -36,7 +36,6 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamon
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;

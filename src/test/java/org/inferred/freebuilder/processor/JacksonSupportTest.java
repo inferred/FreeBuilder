@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.inferred.freebuilder.processor.util.testing.MessagerRule;

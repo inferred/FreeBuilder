@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;

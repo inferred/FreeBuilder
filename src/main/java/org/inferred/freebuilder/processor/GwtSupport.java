@@ -7,7 +7,6 @@ import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.Visibility;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;

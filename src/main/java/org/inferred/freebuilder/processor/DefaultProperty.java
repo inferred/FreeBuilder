@@ -30,7 +30,6 @@ import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FU
 
 import com.google.common.base.Optional;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;

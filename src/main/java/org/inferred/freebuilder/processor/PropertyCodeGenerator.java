@@ -21,7 +21,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
@@ -47,7 +46,7 @@ public abstract class PropertyCodeGenerator {
     Metadata getMetadata();
 
     /** Returns metadata about the property requiring code generation. */
-    Metadata.Property getProperty();
+    Property getProperty();
 
     /** Returns annotations on the property requiring code generation. */
     List<? extends AnnotationMirror> getAnnotations();

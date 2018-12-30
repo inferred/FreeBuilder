@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.Metadata.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Block;

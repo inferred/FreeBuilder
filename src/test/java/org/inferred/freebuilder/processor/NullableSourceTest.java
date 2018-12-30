@@ -27,7 +27,6 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8
 
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;

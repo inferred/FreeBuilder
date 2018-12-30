@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;

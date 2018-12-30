@@ -40,7 +40,6 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamon
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedSet;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;

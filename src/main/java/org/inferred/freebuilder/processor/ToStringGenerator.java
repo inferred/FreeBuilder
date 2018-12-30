@@ -11,7 +11,6 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.SourceBuilder;

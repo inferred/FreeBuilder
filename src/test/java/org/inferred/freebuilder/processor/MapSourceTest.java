@@ -29,7 +29,6 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
