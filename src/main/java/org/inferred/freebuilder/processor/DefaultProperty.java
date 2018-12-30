@@ -19,7 +19,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.CodeGenerator.UNSET_PROPERTIES;
+import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;

@@ -5,7 +5,7 @@ import static com.google.common.collect.Iterables.all;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.getLast;
-import static org.inferred.freebuilder.processor.CodeGenerator.UNSET_PROPERTIES;
+import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 
 import com.google.common.base.Predicate;

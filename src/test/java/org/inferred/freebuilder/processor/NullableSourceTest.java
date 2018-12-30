@@ -15,7 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
@@ -23,16 +25,11 @@ import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperat
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,11 +40,10 @@ public class NullableSourceTest {
 
   @Test
   public void testJ6() {
-    String source = generateSource(metadata(true), GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -266,16 +262,15 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ7() {
-    String source = generateSource(metadata(true), JAVA_7, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_7, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -476,13 +471,12 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testJ8() {
-    String source = generateSource(metadata(true), JAVA_8, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_8, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -719,16 +713,15 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void testPrefixless() {
-    String source = generateSource(metadata(false), GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -945,16 +938,10 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features)
-        .add(new CodeGenerator(metadata));
-    return CompilationUnitBuilder.formatSource(sourceBuilder.toString());
-  }
-
-  private static Metadata metadata(boolean bean) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
@@ -963,20 +950,20 @@ public class NullableSourceTest {
         .setBoxedType(STRING)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
+        .setGetterName((convention == BEAN) ? "getName" : "name")
         .setName("name")
         .setType(STRING)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
         .setBoxedType(INTEGER)
         .setCapitalizedName("Age")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getAge" : "age")
+        .setGetterName((convention == BEAN) ? "getAge" : "age")
         .setName("age")
         .setType(INTEGER)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
@@ -991,7 +978,7 @@ public class NullableSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
+    return new GeneratedBuilder(metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new NullableProperty(
@@ -1001,6 +988,6 @@ public class NullableSourceTest {
             .setCodeGenerator(new NullableProperty(
                 metadata, age, ImmutableSet.of(nullable), unaryOperator(INTEGER)))
             .build())
-        .build();
+        .build());
   }
 }

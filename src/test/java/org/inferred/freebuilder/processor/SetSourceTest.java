@@ -15,24 +15,21 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,12 +42,10 @@ public class SetSourceTest {
 
   @Test
   public void test_guava_j6() {
-    Metadata metadata = createMetadata(true);
-
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -267,18 +262,15 @@ public class SetSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_guava_j7() {
-    Metadata metadata = createMetadata(true);
-
-    String source = generateSource(metadata, JAVA_7, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_7, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -489,15 +481,12 @@ public class SetSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_guava_j8() {
-    Metadata metadata = createMetadata(true);
-
-    String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_8, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -754,17 +743,15 @@ public class SetSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_noGuava_j6() {
-    Metadata metadata = createMetadata(true);
-
-    assertThat(generateSource(metadata)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -980,17 +967,15 @@ public class SetSourceTest {
         "        return Collections.unmodifiableSet(new LinkedHashSet<E>(elements));",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_noGuava_j7() {
-    Metadata metadata = createMetadata(true);
-
-    assertThat(generateSource(metadata, JAVA_7)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(BEAN)).given(JAVA_7).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -1194,17 +1179,15 @@ public class SetSourceTest {
         "        return Collections.unmodifiableSet(new LinkedHashSet<>(elements));",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
   @Test
   public void test_prefixless() {
-    Metadata metadata = createMetadata(false);
-
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Joiner.on('\n').join(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
-        "@Generated(\"org.inferred.freebuilder.processor.CodeGenerator\")",
+        "@Generated(\"org.inferred.freebuilder.processor.Processor\")",
         "abstract class Person_Builder {",
         "",
         "  /** Creates a new builder using {@code value} as a template. */",
@@ -1421,20 +1404,10 @@ public class SetSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}\n"));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features)
-        .add(new CodeGenerator(metadata));
-    return CompilationUnitBuilder.formatSource(sourceBuilder.toString());
-  }
-
-  /**
-   * Returns a {@link Metadata} instance for a FreeBuilder type with a single property, name, of
-   * type {@code Set<String>}, with no override on the add method.
-   */
-  private static Metadata createMetadata(boolean bean) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     GenericTypeElementImpl set = newTopLevelGenericType("java.util.Set");
     GenericTypeMirrorImpl setString = set.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
@@ -1444,10 +1417,10 @@ public class SetSourceTest {
         .setBoxedType(setString)
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
+        .setGetterName((convention == BEAN) ? "getName" : "name")
         .setName("name")
         .setType(setString)
-        .setUsingBeanConvention(bean)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
     Metadata metadata = new Metadata.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
@@ -1462,7 +1435,7 @@ public class SetSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
+    return new GeneratedBuilder(metadata.toBuilder()
         .clearProperties()
         .addProperties(name.toBuilder()
             .setCodeGenerator(new SetProperty(
@@ -1475,7 +1448,6 @@ public class SetSourceTest {
                 false,
                 false))
             .build())
-        .build();
+        .build());
   }
-
 }

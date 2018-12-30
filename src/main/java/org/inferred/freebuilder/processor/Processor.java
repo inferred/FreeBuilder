@@ -49,8 +49,7 @@ import javax.tools.Diagnostic.Kind;
  * Processor for the &#64;{@link FreeBuilder} annotation.
  *
  * <p>Processing is split into analysis (owned by the {@link Analyser}) and code generation (owned
- * by the {@link CodeGenerator}), communicating through the metadata object ({@link Metadata}), for
- * testability.
+ * by the {@link GeneratedBuilder}), for testability.
  */
 @AutoService(javax.annotation.processing.Processor.class)
 public class Processor extends AbstractProcessor {
