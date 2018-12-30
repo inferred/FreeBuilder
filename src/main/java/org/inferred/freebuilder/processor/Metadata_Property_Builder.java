@@ -2,7 +2,6 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -14,25 +13,19 @@ import java.util.List;
 import javax.annotation.Generated;
 import javax.annotation.Nullable;
 import javax.lang.model.type.TypeMirror;
-import org.inferred.freebuilder.processor.Metadata;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator;
 import org.inferred.freebuilder.processor.util.Excerpt;
 
 /**
- * Auto-generated superclass of {@link Metadata.Property.Builder},
- * derived from the API of {@link Metadata.Property}.
+ * Auto-generated superclass of {@link Metadata.Property.Builder}, derived from the API of {@link
+ * Metadata.Property}.
  */
 @Generated("org.inferred.freebuilder.processor.Processor")
 abstract class Metadata_Property_Builder {
 
-  /**
-   * Creates a new builder using {@code value} as a template.
-   */
+  /** Creates a new builder using {@code value} as a template. */
   public static Metadata.Property.Builder from(Metadata.Property value) {
     return new Metadata.Property.Builder().mergeFrom(value);
   }
-
-  private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
   private enum Property {
     TYPE("type"),
@@ -65,7 +58,7 @@ abstract class Metadata_Property_Builder {
   private String getterName;
   @Nullable private PropertyCodeGenerator codeGenerator = null;
   private boolean fullyCheckedCast;
-  private final ArrayList<Excerpt> accessorAnnotations = new ArrayList<Excerpt>();
+  private List<Excerpt> accessorAnnotations = ImmutableList.of();
   private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties =
       EnumSet.allOf(Metadata_Property_Builder.Property.class);
 
@@ -102,9 +95,7 @@ abstract class Metadata_Property_Builder {
     return (Metadata.Property.Builder) this;
   }
 
-  /**
-   * Returns the value that will be returned by {@link Metadata.Property#getBoxedType()}.
-   */
+  /** Returns the value that will be returned by {@link Metadata.Property#getBoxedType()}. */
   @Nullable
   public TypeMirror getBoxedType() {
     return boxedType;
@@ -238,9 +229,7 @@ abstract class Metadata_Property_Builder {
     return (Metadata.Property.Builder) this;
   }
 
-  /**
-   * Returns the value that will be returned by {@link Metadata.Property#getCodeGenerator()}.
-   */
+  /** Returns the value that will be returned by {@link Metadata.Property#getCodeGenerator()}. */
   @Nullable
   public PropertyCodeGenerator getCodeGenerator() {
     return codeGenerator;
@@ -270,44 +259,48 @@ abstract class Metadata_Property_Builder {
   }
 
   /**
-   * Adds {@code element} to the list to be returned from {@link Metadata.Property#getAccessorAnnotations()}.
+   * Adds {@code element} to the list to be returned from {@link
+   * Metadata.Property#getAccessorAnnotations()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code element} is null
    */
   public Metadata.Property.Builder addAccessorAnnotations(Excerpt element) {
-    this.accessorAnnotations.add(Preconditions.checkNotNull(element));
+    if (accessorAnnotations instanceof ImmutableList) {
+      accessorAnnotations = new ArrayList<Excerpt>(accessorAnnotations);
+    }
+    accessorAnnotations.add(Preconditions.checkNotNull(element));
     return (Metadata.Property.Builder) this;
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata.Property#getAccessorAnnotations()}.
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata.Property#getAccessorAnnotations()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Property.Builder addAccessorAnnotations(Excerpt... elements) {
-    accessorAnnotations.ensureCapacity(accessorAnnotations.size() + elements.length);
-    for (Excerpt element : elements) {
-      addAccessorAnnotations(element);
-    }
-    return (Metadata.Property.Builder) this;
+    return addAllAccessorAnnotations(Arrays.asList(elements));
   }
 
   /**
-   * Adds each element of {@code elements} to the list to be returned from
-   * {@link Metadata.Property#getAccessorAnnotations()}.
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Metadata.Property#getAccessorAnnotations()}.
    *
    * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a
-   *     null element
+   * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public Metadata.Property.Builder addAllAccessorAnnotations(Iterable<? extends Excerpt> elements) {
     if (elements instanceof Collection) {
-      accessorAnnotations.ensureCapacity(
-          accessorAnnotations.size() + ((Collection<?>) elements).size());
+      int elementsSize = ((Collection<?>) elements).size();
+      if (elementsSize != 0) {
+        if (accessorAnnotations instanceof ImmutableList) {
+          accessorAnnotations = new ArrayList<Excerpt>(accessorAnnotations);
+        }
+        ((ArrayList<?>) accessorAnnotations)
+            .ensureCapacity(accessorAnnotations.size() + elementsSize);
+      }
     }
     for (Excerpt element : elements) {
       addAccessorAnnotations(element);
@@ -321,29 +314,38 @@ abstract class Metadata_Property_Builder {
    * @return this {@code Builder} object
    */
   public Metadata.Property.Builder clearAccessorAnnotations() {
-    this.accessorAnnotations.clear();
+    if (accessorAnnotations instanceof ImmutableList) {
+      accessorAnnotations = ImmutableList.of();
+    } else {
+      accessorAnnotations.clear();
+    }
     return (Metadata.Property.Builder) this;
   }
 
   /**
-   * Returns an unmodifiable view of the list that will be returned by
-   * {@link Metadata.Property#getAccessorAnnotations()}.
-   * Changes to this builder will be reflected in the view.
+   * Returns an unmodifiable view of the list that will be returned by {@link
+   * Metadata.Property#getAccessorAnnotations()}. Changes to this builder will be reflected in the
+   * view.
    */
   public List<Excerpt> getAccessorAnnotations() {
+    if (accessorAnnotations instanceof ImmutableList) {
+      accessorAnnotations = new ArrayList<Excerpt>(accessorAnnotations);
+    }
     return Collections.unmodifiableList(accessorAnnotations);
   }
 
-  /**
-   * Sets all property values using the given {@code Metadata.Property} as a template.
-   */
+  /** Sets all property values using the given {@code Metadata.Property} as a template. */
   public Metadata.Property.Builder mergeFrom(Metadata.Property value) {
     Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
     if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
         || !value.getType().equals(_defaults.getType())) {
       setType(value.getType());
     }
-    setBoxedType(value.getBoxedType());
+    if (value.getBoxedType() != _defaults.getBoxedType()
+        && (value.getBoxedType() == null
+            || !value.getBoxedType().equals(_defaults.getBoxedType()))) {
+      setBoxedType(value.getBoxedType());
+    }
     if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
         || !value.getName().equals(_defaults.getName())) {
       setName(value.getName());
@@ -365,29 +367,42 @@ abstract class Metadata_Property_Builder {
         || !value.getGetterName().equals(_defaults.getGetterName())) {
       setGetterName(value.getGetterName());
     }
-    setCodeGenerator(value.getCodeGenerator());
+    if (value.getCodeGenerator() != _defaults.getCodeGenerator()
+        && (value.getCodeGenerator() == null
+            || !value.getCodeGenerator().equals(_defaults.getCodeGenerator()))) {
+      setCodeGenerator(value.getCodeGenerator());
+    }
     if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
         || value.isFullyCheckedCast() != _defaults.isFullyCheckedCast()) {
       setFullyCheckedCast(value.isFullyCheckedCast());
     }
-    addAllAccessorAnnotations(value.getAccessorAnnotations());
+    if (value instanceof Metadata_Property_Builder.Value
+        && accessorAnnotations == ImmutableList.<Excerpt>of()) {
+      accessorAnnotations = ImmutableList.copyOf(value.getAccessorAnnotations());
+    } else {
+      addAllAccessorAnnotations(value.getAccessorAnnotations());
+    }
     return (Metadata.Property.Builder) this;
   }
 
   /**
-   * Copies values from the given {@code Builder}.
-   * Does not affect any properties not set on the input.
+   * Copies values from the given {@code Builder}. Does not affect any properties not set on the
+   * input.
    */
   public Metadata.Property.Builder mergeFrom(Metadata.Property.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
-    Metadata_Property_Builder base = (Metadata_Property_Builder) template;
+    Metadata_Property_Builder base = template;
     Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
     if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
         && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
             || !template.getType().equals(_defaults.getType()))) {
       setType(template.getType());
     }
-    setBoxedType(template.getBoxedType());
+    if (template.getBoxedType() != _defaults.getBoxedType()
+        && (template.getBoxedType() == null
+            || !template.getBoxedType().equals(_defaults.getBoxedType()))) {
+      setBoxedType(template.getBoxedType());
+    }
     if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
         && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
             || !template.getName().equals(_defaults.getName()))) {
@@ -414,20 +429,22 @@ abstract class Metadata_Property_Builder {
             || !template.getGetterName().equals(_defaults.getGetterName()))) {
       setGetterName(template.getGetterName());
     }
-    setCodeGenerator(template.getCodeGenerator());
+    if (template.getCodeGenerator() != _defaults.getCodeGenerator()
+        && (template.getCodeGenerator() == null
+            || !template.getCodeGenerator().equals(_defaults.getCodeGenerator()))) {
+      setCodeGenerator(template.getCodeGenerator());
+    }
     if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
         && (_defaults._unsetProperties.contains(
                 Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
             || template.isFullyCheckedCast() != _defaults.isFullyCheckedCast())) {
       setFullyCheckedCast(template.isFullyCheckedCast());
     }
-    addAllAccessorAnnotations(((Metadata_Property_Builder) template).accessorAnnotations);
+    addAllAccessorAnnotations(base.accessorAnnotations);
     return (Metadata.Property.Builder) this;
   }
 
-  /**
-   * Resets the state of this builder.
-   */
+  /** Resets the state of this builder. */
   public Metadata.Property.Builder clear() {
     Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
     type = _defaults.type;
@@ -439,7 +456,7 @@ abstract class Metadata_Property_Builder {
     getterName = _defaults.getterName;
     codeGenerator = _defaults.codeGenerator;
     fullyCheckedCast = _defaults.fullyCheckedCast;
-    accessorAnnotations.clear();
+    clearAccessorAnnotations();
     _unsetProperties.clear();
     _unsetProperties.addAll(_defaults._unsetProperties);
     return (Metadata.Property.Builder) this;
@@ -456,13 +473,13 @@ abstract class Metadata_Property_Builder {
   }
 
   /**
-   * Returns a newly-created partial {@link Metadata.Property}
-   * based on the contents of the {@code Builder}.
-   * State checking will not be performed.
-   * Unset properties will throw an {@link UnsupportedOperationException}
+   * Returns a newly-created partial {@link Metadata.Property} for use in unit tests. State checking
+   * will not be performed. Unset properties will throw an {@link UnsupportedOperationException}
    * when accessed via the partial object.
    *
-   * <p>Partials should only ever be used in tests.
+   * <p>Partials should only ever be used in tests. They permit writing robust test cases that won't
+   * fail if this type gains more application-level constraints (e.g. new required fields) in
+   * future. If you require partially complete values in production code, consider using a Builder.
    */
   @VisibleForTesting()
   public Metadata.Property buildPartial() {
@@ -606,19 +623,31 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public String toString() {
-      return "Property{"
-          + COMMA_JOINER.join(
-              "type=" + type,
-              (boxedType != null ? "boxedType=" + boxedType : null),
-              "name=" + name,
-              "capitalizedName=" + capitalizedName,
-              "allCapsName=" + allCapsName,
-              "usingBeanConvention=" + usingBeanConvention,
-              "getterName=" + getterName,
-              (codeGenerator != null ? "codeGenerator=" + codeGenerator : null),
-              "fullyCheckedCast=" + fullyCheckedCast,
-              "accessorAnnotations=" + accessorAnnotations)
-          + "}";
+      StringBuilder result = new StringBuilder("Property{type=").append(type);
+      if (boxedType != null) {
+        result.append(", boxedType=").append(boxedType);
+      }
+      result
+          .append(", name=")
+          .append(name)
+          .append(", capitalizedName=")
+          .append(capitalizedName)
+          .append(", allCapsName=")
+          .append(allCapsName)
+          .append(", usingBeanConvention=")
+          .append(usingBeanConvention)
+          .append(", getterName=")
+          .append(getterName);
+      if (codeGenerator != null) {
+        result.append(", codeGenerator=").append(codeGenerator);
+      }
+      return result
+          .append(", fullyCheckedCast=")
+          .append(fullyCheckedCast)
+          .append(", accessorAnnotations=")
+          .append(accessorAnnotations)
+          .append("}")
+          .toString();
     }
   }
 
@@ -786,33 +815,39 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public String toString() {
-      return "partial Property{"
-          + COMMA_JOINER.join(
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
-                  ? "type=" + type
-                  : null),
-              (boxedType != null ? "boxedType=" + boxedType : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
-                  ? "name=" + name
-                  : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
-                  ? "capitalizedName=" + capitalizedName
-                  : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
-                  ? "allCapsName=" + allCapsName
-                  : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
-                  ? "usingBeanConvention=" + usingBeanConvention
-                  : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
-                  ? "getterName=" + getterName
-                  : null),
-              (codeGenerator != null ? "codeGenerator=" + codeGenerator : null),
-              (!_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
-                  ? "fullyCheckedCast=" + fullyCheckedCast
-                  : null),
-              "accessorAnnotations=" + accessorAnnotations)
-          + "}";
+      StringBuilder result = new StringBuilder("partial Property{");
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)) {
+        result.append("type=").append(type).append(", ");
+      }
+      if (boxedType != null) {
+        result.append("boxedType=").append(boxedType).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.NAME)) {
+        result.append("name=").append(name).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)) {
+        result.append("capitalizedName=").append(capitalizedName).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)) {
+        result.append("allCapsName=").append(allCapsName).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)) {
+        result.append("usingBeanConvention=").append(usingBeanConvention).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)) {
+        result.append("getterName=").append(getterName).append(", ");
+      }
+      if (codeGenerator != null) {
+        result.append("codeGenerator=").append(codeGenerator).append(", ");
+      }
+      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)) {
+        result.append("fullyCheckedCast=").append(fullyCheckedCast).append(", ");
+      }
+      return result
+          .append("accessorAnnotations=")
+          .append(accessorAnnotations)
+          .append("}")
+          .toString();
     }
   }
 }
