@@ -26,6 +26,7 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
@@ -38,6 +39,8 @@ import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Set;
 
 @RunWith(JUnit4.class)
 public class DefaultedPropertiesSourceTest {
@@ -847,7 +850,7 @@ public class DefaultedPropertiesSourceTest {
 
   @Test
   public void testJ8_toBuilder() {
-    Metadata metadata = createMetadata(BEAN).toBuilder().setHasToBuilderMethod(true).build();
+    Metadata metadata = createMetadata(BEAN, Option.WITH_TO_BUILDER_METHOD);
 
     String source = generateSource(metadata, JAVA_8, GuavaLibrary.AVAILABLE);
     assertThat(source).isEqualTo(Joiner.on('\n').join(
@@ -1287,7 +1290,12 @@ public class DefaultedPropertiesSourceTest {
     }
   }
 
-  private static Metadata createMetadata(NamingConvention convention) {
+  private enum Option {
+    WITH_TO_BUILDER_METHOD;
+  }
+
+  private static Metadata createMetadata(NamingConvention convention, Option... options) {
+    Set<Option> optionSet = ImmutableSet.copyOf(options);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     Property name = new Property.Builder()
@@ -1316,6 +1324,7 @@ public class DefaultedPropertiesSourceTest {
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
         .setGeneratedBuilder(generatedBuilder.withParameters())
+        .setHasToBuilderMethod(optionSet.contains(Option.WITH_TO_BUILDER_METHOD))
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
         .addProperties(name, age)
