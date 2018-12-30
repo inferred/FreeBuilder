@@ -27,7 +27,6 @@ import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
-import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
 import static org.inferred.freebuilder.processor.naming.NamingConventions.determineNamingConvention;
 import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
@@ -145,15 +144,21 @@ class Analyser {
   GeneratedType analyse(TypeElement type) throws CannotGenerateCodeException {
     PackageElement pkg = elements.getPackageOf(type);
     verifyType(type, pkg);
-    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, CANNOT_GENERATE_ON_ERROR);
     QualifiedName generatedBuilder = QualifiedName.of(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
-    Optional<DeclaredType> builder = tryFindBuilder(generatedBuilder, type);
+    List<? extends TypeParameterElement> typeParameters = type.getTypeParameters();
+    DeclaredType builder = tryFindBuilder(generatedBuilder, type).orNull();
+    if (builder == null) {
+      return new GeneratedStub(
+        QualifiedName.of(type),
+        generatedBuilder.withParameters(typeParameters));
+    }
+
+    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, CANNOT_GENERATE_ON_ERROR);
     Metadata.Builder constructionAndExtension = constructionAndExtension(builder);
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
-    List<? extends TypeParameterElement> typeParameters = type.getTypeParameters();
     Map<ExecutableElement, Property> properties =
         findProperties(type, removeNonGetterMethods(builder, methods));
     Metadata.Builder metadataBuilder = new Metadata.Builder()
@@ -172,17 +177,13 @@ class Analyser {
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
-        .addAllProperties(properties.values());
-    if (builder.isPresent()) {
-      metadataBuilder.setBuilder(ParameterizedType.from(builder.get()));
-    }
+        .addAllProperties(properties.values())
+        .setBuilder(ParameterizedType.from(builder));
     Metadata baseMetadata = metadataBuilder.build();
     metadataBuilder.mergeFrom(gwtMetadata(type, baseMetadata));
-    if (builder.isPresent()) {
-      metadataBuilder
-          .clearProperties()
-          .addAllProperties(codeGenerators(properties, baseMetadata, builder.get()));
-    }
+    metadataBuilder
+        .clearProperties()
+        .addAllProperties(codeGenerators(properties, baseMetadata, builder));
     return new CodeGenerator(metadataBuilder.build());
   }
 
@@ -324,14 +325,11 @@ class Analyser {
 
   /** Find a toBuilder method, if the user has provided one. */
   private boolean hasToBuilderMethod(
-      Optional<DeclaredType> builder,
+      DeclaredType builder,
       boolean isExtensible,
       Iterable<ExecutableElement> methods) {
-    if (!builder.isPresent()) {
-      return false;
-    }
     for (ExecutableElement method : methods) {
-      if (isToBuilderMethod(builder.get(), method)) {
+      if (isToBuilderMethod(builder, method)) {
         if (!isExtensible) {
           messager.printMessage(ERROR,
               "No accessible no-args Builder constructor available to implement toBuilder",
@@ -351,12 +349,12 @@ class Analyser {
   }
 
   private Set<ExecutableElement> removeNonGetterMethods(
-      Optional<DeclaredType> builder, Iterable<ExecutableElement> methods) {
+      DeclaredType builder, Iterable<ExecutableElement> methods) {
     ImmutableSet.Builder<ExecutableElement> nonUnderriddenMethods = ImmutableSet.builder();
     for (ExecutableElement method : methods) {
       boolean isAbstract = method.getModifiers().contains(Modifier.ABSTRACT);
       boolean isStandardMethod = maybeStandardMethod(method).isPresent();
-      boolean isToBuilderMethod = builder.isPresent() && isToBuilderMethod(builder.get(), method);
+      boolean isToBuilderMethod = isToBuilderMethod(builder, method);
       if (isAbstract && !isStandardMethod && !isToBuilderMethod) {
         nonUnderriddenMethods.add(method);
       }
@@ -433,13 +431,8 @@ class Analyser {
     return Optional.of(declaredBuilderType);
   }
 
-  private Metadata.Builder constructionAndExtension(Optional<DeclaredType> builder) {
-    if (!builder.isPresent()) {
-      return new Metadata.Builder()
-          .setExtensible(false)
-          .setBuilderFactory(NO_ARGS_CONSTRUCTOR);
-    }
-    TypeElement builderElement = ModelUtils.asElement(builder.get());
+  private Metadata.Builder constructionAndExtension(DeclaredType builder) {
+    TypeElement builderElement = ModelUtils.asElement(builder);
     if (!builderElement.getModifiers().contains(Modifier.STATIC)) {
       messager.printMessage(ERROR, "Builder must be static on @FreeBuilder types", builderElement);
       return new Metadata.Builder().setExtensible(false);
@@ -646,14 +639,10 @@ class Analyser {
     return String.format(BUILDER_SIMPLE_NAME_TEMPLATE, nameWithoutPackage.replaceAll("\\.", "_"));
   }
 
-  private boolean shouldBuilderBeSerializable(Optional<DeclaredType> builder) {
-    if (!builder.isPresent()) {
-      // If there's no user-provided subclass, make the builder serializable.
-      return true;
-    }
+  private boolean shouldBuilderBeSerializable(DeclaredType builder) {
     // If there is a user-provided subclass, only make its generated superclass serializable if
     // it is itself; otherwise, tools may complain about missing a serialVersionUID field.
-    return any(asElement(builder.get()).getInterfaces(), isEqualTo(Serializable.class));
+    return any(asElement(builder).getInterfaces(), isEqualTo(Serializable.class));
   }
 
   /** Returns whether a method is one of the {@link StandardMethod}s, and if so, which. */

@@ -90,11 +90,6 @@ class CodeGenerator extends GeneratedType {
 
   @Override
   public void addTo(SourceBuilder code) {
-    if (!metadata.hasBuilder()) {
-      writeStubSource(code, metadata);
-      return;
-    }
-
     addBuilderTypeDeclaration(code);
     code.addLine(" {");
     addStaticFromMethod(code);
@@ -599,15 +594,6 @@ class CodeGenerator extends GeneratedType {
     }
     code.add(body)
         .addLine("  }");
-  }
-
-  private void writeStubSource(SourceBuilder code, Metadata metadata) {
-    code.addLine("/**")
-        .addLine(" * Placeholder. Create {@code %s.Builder} and subclass this type.",
-            metadata.getType())
-        .addLine(" */")
-        .add(Excerpts.generated(getClass()))
-        .addLine("abstract class %s {}", metadata.getGeneratedBuilder().declaration());
   }
 
   private static Nullability nullabilityOf(Property property, boolean inPartial) {
