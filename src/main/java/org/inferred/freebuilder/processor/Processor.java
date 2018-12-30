@@ -119,7 +119,7 @@ public class Processor extends AbstractProcessor {
             metadata.getGeneratedBuilder().getQualifiedName(),
             metadata.getVisibleNestedTypes(),
             firstNonNull(features, environmentFeatures));
-        new CodeGenerator(metadata).writeBuilderSource(code);
+        code.add(new CodeGenerator(metadata));
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),
             metadata.getGeneratedBuilder().getQualifiedName(),

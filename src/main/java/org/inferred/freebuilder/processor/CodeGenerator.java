@@ -57,7 +57,7 @@ import java.util.List;
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
  */
-class CodeGenerator {
+class CodeGenerator extends Excerpt {
 
   static final FieldAccess UNSET_PROPERTIES = new FieldAccess("_unsetProperties");
 
@@ -67,8 +67,13 @@ class CodeGenerator {
     this.metadata = metadata;
   }
 
-  /** Write the source code for a generated builder. */
-  void writeBuilderSource(SourceBuilder code) {
+  @Override
+  protected void addFields(FieldReceiver fields) {
+    throw new UnsupportedOperationException("TODO");
+  }
+
+  @Override
+  public void addTo(SourceBuilder code) {
     if (!metadata.hasBuilder()) {
       writeStubSource(code, metadata);
       return;

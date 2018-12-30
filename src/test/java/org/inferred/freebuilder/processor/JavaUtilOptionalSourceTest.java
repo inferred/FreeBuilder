@@ -993,8 +993,8 @@ public class JavaUtilOptionalSourceTest {
   }
 
   private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
-    new CodeGenerator(metadata).writeBuilderSource(sourceBuilder);
+    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features)
+        .add(new CodeGenerator(metadata));
     try {
       return new Formatter().formatSource(sourceBuilder.toString());
     } catch (FormatterException e) {
