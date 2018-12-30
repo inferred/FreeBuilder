@@ -31,7 +31,7 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
     return FeatureSets.ALL;
   }
 
-  private static final JavaFileObject twoOptionalPropertiesType(Class<?> type) {
+  private static JavaFileObject twoOptionalPropertiesType(Class<?> type) {
     return new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
@@ -47,7 +47,7 @@ public abstract class PrimitiveOptionalBeanPropertyTest {
       .build();
   }
 
-  private static final JavaFileObject optionalPropertyType(Class<?> type) {
+  private static JavaFileObject optionalPropertyType(Class<?> type) {
     return new SourceBuilder()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)

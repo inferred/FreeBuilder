@@ -15,35 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.common.collect.ImmutableList;
-import com.google.common.testing.EqualsTester;
-import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
-import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
-import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
-import org.inferred.freebuilder.processor.util.testing.TestBuilder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
-import org.junit.runners.Parameterized.UseParametersRunnerFactory;
-
-import javax.swing.text.html.Option;
-import javax.tools.JavaFileObject;
-import java.util.Arrays;
-import java.util.List;
-import java.util.OptionalDouble;
 import java.util.OptionalInt;
-import java.util.OptionalLong;
 
 /**
  * Behavioral tests for {@link java.util.OptionalInt} properties.
