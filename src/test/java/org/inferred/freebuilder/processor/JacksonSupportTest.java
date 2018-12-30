@@ -22,11 +22,12 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.testing.FakeMessager;
+import org.inferred.freebuilder.processor.util.testing.MessagerRule;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,6 +35,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Optional;
 
@@ -44,7 +46,7 @@ import javax.lang.model.element.TypeElement;
 public class JacksonSupportTest {
 
   @Rule public final ModelRule model = new ModelRule();
-  private final FakeMessager messager = new FakeMessager();
+  @Rule public final MessagerRule messager = new MessagerRule();
 
   private Analyser analyser;
 
@@ -142,8 +144,8 @@ public class JacksonSupportTest {
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
-  private void assertPropertyHasAnnotation(Property property, Class annotationClass,
-                                           String annotationString) {
+  private static void assertPropertyHasAnnotation(
+      Property property, Class<? extends Annotation> annotationClass, String annotationString) {
     Optional<Excerpt> annotationExcerpt = property.getAccessorAnnotations()
             .stream()
             .filter(excerpt -> excerpt.toString().contains(annotationClass.getCanonicalName()))
