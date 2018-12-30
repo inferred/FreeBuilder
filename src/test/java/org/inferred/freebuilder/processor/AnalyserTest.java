@@ -32,7 +32,6 @@ import static org.junit.Assert.fail;
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
@@ -43,7 +42,7 @@ import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.testing.FakeMessager;
+import org.inferred.freebuilder.processor.util.testing.MessagerRule;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,7 +61,7 @@ import javax.lang.model.element.TypeElement;
 public class AnalyserTest {
 
   @Rule public final ModelRule model = new ModelRule();
-  private final FakeMessager messager = new FakeMessager();
+  @Rule public final MessagerRule messager = new MessagerRule();
 
   private Analyser analyser;
 
@@ -105,10 +104,7 @@ public class AnalyserTest {
         .build();
 
     assertEquals(expectedMetadata, metadata);
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("DataType", ImmutableList.of(
-            "[NOTE] Add \"public static class Builder extends DataType_Builder {}\" to your class "
-                + "to enable the @FreeBuilder API"));
+    messager.verifyNote("DataType", addBuilderToClassMessage("DataType_Builder"));
   }
 
   @Test
@@ -141,10 +137,7 @@ public class AnalyserTest {
         .build();
 
     assertEquals(expectedMetadata, metadata);
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("DataType", ImmutableList.of(
-            "[NOTE] Add \"class Builder extends DataType_Builder {}\" to your interface "
-                + "to enable the @FreeBuilder API"));
+    messager.verifyNote("DataType", addBuilderToInterfaceMessage("DataType_Builder"));
   }
 
   @Test
@@ -159,6 +152,7 @@ public class AnalyserTest {
         dataType.getType().getQualifiedName().toString());
     assertEquals(QualifiedName.of("com.example", "OuterClass_DataType_Builder").withParameters(),
         dataType.getGeneratedBuilder());
+    messager.verifyNote("DataType", addBuilderToClassMessage("OuterClass_DataType_Builder"));
   }
 
   @Test
@@ -176,6 +170,8 @@ public class AnalyserTest {
     assertEquals(
         QualifiedName.of("com.example", "OuterClass_InnerClass_DataType_Builder").withParameters(),
         dataType.getGeneratedBuilder());
+    messager.verifyNote(
+        "DataType", addBuilderToClassMessage("OuterClass_InnerClass_DataType_Builder"));
   }
 
   @Test
@@ -192,7 +188,6 @@ public class AnalyserTest {
     assertThat(dataType.isExtensible()).isTrue();
     assertThat(dataType.getBuilderFactory()).hasValue(NO_ARGS_CONSTRUCTOR);
     assertFalse(dataType.isBuilderSerializable());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -208,7 +203,6 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         dataType.getBuilder().getQualifiedName().toString());
     assertTrue(dataType.isBuilderSerializable());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -226,7 +220,6 @@ public class AnalyserTest {
     assertThat(dataType.isExtensible()).isTrue();
     assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -247,7 +240,6 @@ public class AnalyserTest {
     assertThat(dataType.isExtensible()).isTrue();
     assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -268,7 +260,6 @@ public class AnalyserTest {
     assertThat(dataType.isExtensible()).isFalse();
     assertThat(dataType.getBuilderFactory()).hasValue(BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -286,7 +277,6 @@ public class AnalyserTest {
     assertThat(dataType.isExtensible()).isTrue();
     assertThat(dataType.getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
     assertFalse(dataType.isBuilderSerializable());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -299,7 +289,6 @@ public class AnalyserTest {
         "}"));
     assertTrue(dataType.getHasToBuilderMethod());
     assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -312,7 +301,6 @@ public class AnalyserTest {
         "}"));
     assertTrue(dataType.getHasToBuilderMethod());
     assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -325,10 +313,8 @@ public class AnalyserTest {
         "    public Builder(String unused) {}",
         "  }",
         "}"));
-    assertThat(messager.getMessagesByElement().keySet()).containsExactly("toBuilder");
-    assertThat(messager.getMessagesByElement().get("toBuilder"))
-        .containsExactly("[ERROR] No accessible no-args Builder constructor available to "
-            + "implement toBuilder");
+    messager.verifyError(
+        "toBuilder", "No accessible no-args Builder constructor available to implement toBuilder");
   }
 
   @Test
@@ -342,10 +328,8 @@ public class AnalyserTest {
         "    private Builder() {}",
         "  }",
         "}"));
-    assertThat(messager.getMessagesByElement().keySet()).containsExactly("toBuilder");
-    assertThat(messager.getMessagesByElement().get("toBuilder"))
-        .containsExactly("[ERROR] No accessible no-args Builder constructor available to "
-            + "implement toBuilder");
+    messager.verifyError(
+        "toBuilder", "No accessible no-args Builder constructor available to implement toBuilder");
   }
 
   @Test
@@ -355,6 +339,7 @@ public class AnalyserTest {
         "public class DataType {",
         "  public abstract String getName();",
         "  public abstract int getAge();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
@@ -383,6 +368,7 @@ public class AnalyserTest {
         "public class DataType {",
         "  public abstract String name();",
         "  public abstract int age();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     Map<String, Property> properties = uniqueIndex(dataType.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
@@ -417,7 +403,6 @@ public class AnalyserTest {
     assertThat(properties.keySet()).containsExactly("customURLTemplate", "top50Sites");
     assertEquals("CUSTOM_URL_TEMPLATE", properties.get("customURLTemplate").getAllCapsName());
     assertEquals("TOP50_SITES", properties.get("top50Sites").getAllCapsName());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -437,9 +422,9 @@ public class AnalyserTest {
     assertEquals("java.lang.String", properties.get("name").getType().toString());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
+  @Test
   public void booleanGetter() throws CannotGenerateCodeException {
     Metadata dataType = analyser.analyse(model.newType(
         "package com.example;",
@@ -453,7 +438,6 @@ public class AnalyserTest {
     assertEquals("Available", properties.get("available").getCapitalizedName());
     assertEquals("isAvailable", properties.get("available").getGetterName());
     assertEquals("AVAILABLE", properties.get("available").getAllCapsName());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -464,6 +448,7 @@ public class AnalyserTest {
         "  public final String getName() {",
         "    return null;",
         "  }",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).isEmpty();
   }
@@ -491,7 +476,6 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -505,7 +489,6 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -517,9 +500,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("getName");
-    assertThat(messager.getMessagesByElement().get("getName"))
-        .containsExactly("[ERROR] Getter methods must not be void on @FreeBuilder types");
+    messager.verifyError("getName", "Getter methods must not be void on @FreeBuilder types");
   }
 
   @Test
@@ -531,9 +512,8 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("isName");
-    assertThat(messager.getMessagesByElement().get("isName")).containsExactly(
-        "[ERROR] Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
+    messager.verifyError(
+        "isName", "Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
   }
 
   @Test
@@ -545,9 +525,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).isEmpty();
-    assertThat(messager.getMessagesByElement().keys()).containsExactly("getName");
-    assertThat(messager.getMessagesByElement().get("getName"))
-        .containsExactly("[ERROR] Getter methods cannot take parameters on @FreeBuilder types");
+    messager.verifyError("getName", "Getter methods cannot take parameters on @FreeBuilder types");
   }
 
   @Test
@@ -563,7 +541,6 @@ public class AnalyserTest {
     assertEquals("Get", properties.get("get").getCapitalizedName());
     assertEquals("get", properties.get("get").getGetterName());
     assertEquals("GET", properties.get("get").getAllCapsName());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -579,7 +556,6 @@ public class AnalyserTest {
     assertEquals("Getter", properties.get("getter").getCapitalizedName());
     assertEquals("getter", properties.get("getter").getGetterName());
     assertEquals("GETTER", properties.get("getter").getAllCapsName());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -596,7 +572,6 @@ public class AnalyserTest {
     assertEquals("Issue", properties.get("issue").getCapitalizedName());
     assertEquals("issue", properties.get("issue").getGetterName());
     assertEquals("java.lang.String", properties.get("issue").getType().toString());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -613,7 +588,6 @@ public class AnalyserTest {
     assertEquals("Getürkt", properties.get("getürkt").getCapitalizedName());
     assertEquals("getürkt", properties.get("getürkt").getGetterName());
     assertEquals("java.lang.String", properties.get("getürkt").getType().toString());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -630,7 +604,6 @@ public class AnalyserTest {
     assertEquals("Is", properties.get("is").getCapitalizedName());
     assertEquals("is", properties.get("is").getGetterName());
     assertEquals("boolean", properties.get("is").getType().toString());
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -653,13 +626,10 @@ public class AnalyserTest {
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
-    assertThat(messager.getMessagesByElement().keys())
-        .containsExactly("getNothing", "isDoubleBarrelled");
-    assertThat(messager.getMessagesByElement().get("getNothing"))
-        .containsExactly("[ERROR] Getter methods must not be void on @FreeBuilder types");
-    assertThat(messager.getMessagesByElement().get("isDoubleBarrelled"))
-        .containsExactly("[ERROR] Getter methods starting with 'is' must return a boolean"
-            + " on @FreeBuilder types");
+    messager.verifyError("getNothing", "Getter methods must not be void on @FreeBuilder types");
+    messager.verifyError(
+        "isDoubleBarrelled",
+        "Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
   }
 
   @Test
@@ -730,7 +700,6 @@ public class AnalyserTest {
     assertThat(dataType.getVisibleNestedTypes()).containsNoneOf(
         QualifiedName.of("com.example", "DataType", "Value_CustomFieldSerializer"),
         QualifiedName.of("com.example", "DataType", "GwtWhitelist"));
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -752,7 +721,6 @@ public class AnalyserTest {
     assertThat(dataType.getVisibleNestedTypes()).containsAllOf(
         QualifiedName.of("com.example", "DataType_Builder", "Value_CustomFieldSerializer"),
         QualifiedName.of("com.example", "DataType_Builder", "GwtWhitelist"));
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -770,9 +738,8 @@ public class AnalyserTest {
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE));
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("equals", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+    messager.verifyError(
+        "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
   }
 
   @Test
@@ -790,9 +757,8 @@ public class AnalyserTest {
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+    messager.verifyError(
+        "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
   }
 
   @Test
@@ -814,7 +780,6 @@ public class AnalyserTest {
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -832,7 +797,6 @@ public class AnalyserTest {
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.TO_STRING, UnderrideLevel.OVERRIDEABLE));
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -858,7 +822,6 @@ public class AnalyserTest {
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.TO_STRING, UnderrideLevel.OVERRIDEABLE));
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -876,9 +839,8 @@ public class AnalyserTest {
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL));
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("equals", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+    messager.verifyError(
+        "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
   }
 
   @Test
@@ -896,9 +858,8 @@ public class AnalyserTest {
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("hashCode", ImmutableList.of(
-            "[ERROR] hashCode and equals must be implemented together on @FreeBuilder types"));
+    messager.verifyError(
+        "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
   }
 
   @Test
@@ -920,7 +881,6 @@ public class AnalyserTest {
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL,
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -938,7 +898,6 @@ public class AnalyserTest {
 
     assertThat(metadata.getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.TO_STRING, UnderrideLevel.FINAL));
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -964,7 +923,6 @@ public class AnalyserTest {
         StandardMethod.EQUALS, UnderrideLevel.FINAL,
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL,
         StandardMethod.TO_STRING, UnderrideLevel.FINAL));
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -980,7 +938,6 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -996,7 +953,6 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -1012,7 +968,6 @@ public class AnalyserTest {
     Metadata metadata = analyser.analyse(dataType);
 
     assertThat(metadata.getStandardMethodUnderrides()).isEmpty();
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
   }
 
   @Test
@@ -1029,9 +984,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("PrivateType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types cannot be private"));
+    messager.verifyError("PrivateType", "@FreeBuilder types cannot be private");
   }
 
   @Test
@@ -1050,10 +1003,9 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("NestedType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types cannot be private, "
-                + "but enclosing type PrivateType is inaccessible"));
+    messager.verifyError(
+        "NestedType",
+        "@FreeBuilder types cannot be private, but enclosing type PrivateType is inaccessible");
   }
 
   @Test
@@ -1070,10 +1022,9 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("InnerType", ImmutableList.of(
-            "[ERROR] Inner classes cannot be @FreeBuilder types "
-                + "(did you forget the static keyword?)"));
+    messager.verifyError(
+        "InnerType",
+        "Inner classes cannot be @FreeBuilder types (did you forget the static keyword?)");
   }
 
   @Test
@@ -1093,8 +1044,7 @@ public class AnalyserTest {
     assertEquals("getName", properties.get("name").getGetterName());
     assertThat(dataType.isExtensible()).isFalse();
     assertThat(dataType.getBuilderFactory()).isAbsent();
-    assertThat(messager.getMessagesByElement().asMap()).containsEntry(
-        "Builder", ImmutableList.of("[ERROR] Builder must be static on @FreeBuilder types"));
+    messager.verifyError("Builder", "Builder must be static on @FreeBuilder types");
   }
 
   @Test
@@ -1157,7 +1107,6 @@ public class AnalyserTest {
         "  public abstract B getAge();",
         "  public static class Builder<A, B> extends DataType_Builder<A, B> {}",
         "}"));
-    assertThat(messager.getMessagesByElement().asMap()).isEmpty();
     assertEquals("com.example.DataType.Builder<A, B>", dataType.getBuilder().toString());
     assertThat(dataType.isExtensible()).isTrue();
     assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR), dataType.getBuilderFactory());
@@ -1191,9 +1140,7 @@ public class AnalyserTest {
 
     analyser.analyse(dataType);
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("Builder", ImmutableList.of(
-            "[ERROR] Builder extends the wrong type (should be DataType_Builder)"));
+    messager.verifyError("Builder", "Builder extends the wrong type (should be DataType_Builder)");
   }
 
   @Test
@@ -1210,9 +1157,7 @@ public class AnalyserTest {
 
     analyser.analyse(dataType);
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("Builder", ImmutableList.of(
-            "[ERROR] Builder extends the wrong type (should be DataType_Builder)"));
+    messager.verifyError("Builder", "Builder extends the wrong type (should be DataType_Builder)");
   }
 
   @Test
@@ -1250,7 +1195,6 @@ public class AnalyserTest {
         .build();
 
     assertEquals(expectedMetadata, metadata);
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -1290,7 +1234,6 @@ public class AnalyserTest {
         .build();
 
     assertEquals(expectedMetadata, metadata);
-    assertThat(messager.getMessagesByElement().keys()).isEmpty();
   }
 
   @Test
@@ -1306,9 +1249,8 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("<init>", ImmutableList.of(
-            "[ERROR] @FreeBuilder types must have a package-visible no-args constructor"));
+    messager.verifyError(
+        "<init>", "@FreeBuilder types must have a package-visible no-args constructor");
   }
 
   @Test
@@ -1324,9 +1266,8 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder types must have a package-visible no-args constructor"));
+    messager.verifyError(
+        "DataType", "@FreeBuilder types must have a package-visible no-args constructor");
   }
 
   @Test
@@ -1340,9 +1281,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support enum types"));
+    messager.verifyError("DataType", "@FreeBuilder does not support enum types");
   }
 
   @Test
@@ -1355,9 +1294,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support types in unnamed packages"));
+    messager.verifyError("DataType", "@FreeBuilder does not support types in unnamed packages");
   }
 
   @Test
@@ -1371,9 +1308,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("DataType", ImmutableList.of(
-            "[ERROR] @FreeBuilder does not support annotation types"));
+    messager.verifyError("DataType", "@FreeBuilder does not support annotation types");
   }
 
   @Test
@@ -1382,6 +1317,7 @@ public class AnalyserTest {
         "package com.example;",
         "public class DataType {",
         "  public abstract String getProperty();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).hasSize(1);
     Property property = getOnlyElement(dataType.getProperties());
@@ -1395,6 +1331,7 @@ public class AnalyserTest {
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable getProperty();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).hasSize(1);
     Property property = getOnlyElement(dataType.getProperties());
@@ -1408,6 +1345,7 @@ public class AnalyserTest {
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<?> getProperty();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).hasSize(1);
     Property property = getOnlyElement(dataType.getProperties());
@@ -1421,6 +1359,7 @@ public class AnalyserTest {
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<String> getProperty();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).hasSize(1);
     Property property = getOnlyElement(dataType.getProperties());
@@ -1434,6 +1373,7 @@ public class AnalyserTest {
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<? extends Number> getProperty();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).hasSize(1);
     Property property = getOnlyElement(dataType.getProperties());
@@ -1447,6 +1387,7 @@ public class AnalyserTest {
         "package com.example;",
         "public class DataType {",
         "  public abstract Iterable<? extends Object> getProperty();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).hasSize(1);
     Property property = getOnlyElement(dataType.getProperties());
@@ -1460,6 +1401,7 @@ public class AnalyserTest {
         "package com.example;",
         "public class DataType {",
         "  public abstract java.util.Map<?, String> getProperty();",
+        "  public static class Builder extends DataType_Builder {}",
         "}"));
     assertThat(dataType.getProperties()).hasSize(1);
     Property property = getOnlyElement(dataType.getProperties());
@@ -1477,10 +1419,7 @@ public class AnalyserTest {
 
     analyser.analyse(dataType);
 
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("DataType", ImmutableList.of(
-            "[NOTE] Add \"class Builder extends DataType_Builder {}\" to your interface "
-                + "to enable the @FreeBuilder API"));
+    messager.verifyNote("DataType", addBuilderToInterfaceMessage("DataType_Builder"));
   }
 
   @Test
@@ -1544,8 +1483,7 @@ public class AnalyserTest {
 
     Metadata metadata = analyser.analyse(dataType);
     assertThat(metadata.getOptionalBuilder()).isAbsent();
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("Builder", ImmutableList.of("[ERROR] Builder must be generic"));
+    messager.verifyError("Builder", "Builder must be generic");
   }
 
   @Test
@@ -1559,9 +1497,19 @@ public class AnalyserTest {
 
     Metadata metadata = analyser.analyse(dataType);
     assertThat(metadata.getOptionalBuilder()).isAbsent();
-    assertThat(messager.getMessagesByElement().asMap())
-        .containsEntry("Builder", ImmutableList.of(
-            "[ERROR] Builder has the wrong type parameters"));
+    messager.verifyError("Builder", "Builder has the wrong type parameters");
+  }
+
+  private static String addBuilderToClassMessage(String builder) {
+    return "Add \"public static class Builder extends "
+        + builder
+        + " {}\" to your class to enable the @FreeBuilder API";
+  }
+
+  private static String addBuilderToInterfaceMessage(String builder) {
+    return "Add \"class Builder extends "
+        + builder
+        + " {}\" to your interface to enable the @FreeBuilder API";
   }
 
   private static String asSource(Excerpt annotation) {
