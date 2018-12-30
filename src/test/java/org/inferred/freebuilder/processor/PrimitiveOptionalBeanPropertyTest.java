@@ -1,11 +1,9 @@
 package org.inferred.freebuilder.processor;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.common.collect.ImmutableList;
-import com.google.common.testing.EqualsTester;
+import java.util.List;
+
+import javax.tools.JavaFileObject;
+
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -18,9 +16,11 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.tools.JavaFileObject;
-import java.util.List;
-import java.util.OptionalInt;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.common.testing.EqualsTester;
 
 @RunWith(Parameterized.class)
 @Parameterized.UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
