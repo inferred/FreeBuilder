@@ -79,11 +79,11 @@ import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.lang.model.util.Types;
 
 /**
- * Analyses a {@link org.inferred.freebuilder.FreeBuilder FreeBuilder}
- * type, returning metadata about it in a format amenable to code generation.
+ * Analyses a {@link org.inferred.freebuilder.FreeBuilder FreeBuilder} metadata type, returning
+ * a {@link GeneratedType} for a Builder superclass derived from its API.
  *
  * <p>Any deviations from the FreeBuilder spec in the user's class will result in errors being
- * issued, but unless code generation is totally impossible, metadata will still be returned.
+ * issued, but unless code generation is totally impossible, a type will still be returned.
  * This allows the user to extend an existing type without worrying that a mistake will cause
  * compiler errors in all dependent code&mdash;which would make it very hard to find the real
  * error.
@@ -138,11 +138,11 @@ class Analyser {
   }
 
   /**
-   * Returns a {@link Metadata} metadata object for {@code type}.
+   * Returns a Builder {@link GeneratedType} for {@code type}.
    *
    * @throws CannotGenerateCodeException if code cannot be generated, e.g. if the type is private
    */
-  Metadata analyse(TypeElement type) throws CannotGenerateCodeException {
+  GeneratedType analyse(TypeElement type) throws CannotGenerateCodeException {
     PackageElement pkg = elements.getPackageOf(type);
     verifyType(type, pkg);
     ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, CANNOT_GENERATE_ON_ERROR);
@@ -183,7 +183,7 @@ class Analyser {
           .clearProperties()
           .addAllProperties(codeGenerators(properties, baseMetadata, builder.get()));
     }
-    return metadataBuilder.build();
+    return new CodeGenerator(metadataBuilder.build());
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {

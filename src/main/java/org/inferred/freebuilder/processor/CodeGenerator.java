@@ -46,6 +46,7 @@ import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
+import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
@@ -53,23 +54,38 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
  */
-class CodeGenerator extends Excerpt {
+class CodeGenerator extends GeneratedType {
 
   static final FieldAccess UNSET_PROPERTIES = new FieldAccess("_unsetProperties");
 
   private final Metadata metadata;
 
-  public CodeGenerator(Metadata metadata) {
+  CodeGenerator(Metadata metadata) {
     this.metadata = metadata;
+  }
+
+  Metadata getMetadata() {
+    return metadata;
+  }
+
+  @Override
+  public QualifiedName getName() {
+    return metadata.getGeneratedBuilder().getQualifiedName();
+  }
+
+  @Override
+  public Set<QualifiedName> getVisibleNestedTypes() {
+    return metadata.getVisibleNestedTypes();
   }
 
   @Override
   protected void addFields(FieldReceiver fields) {
-    throw new UnsupportedOperationException("TODO");
+    fields.add("metadata", metadata);
   }
 
   @Override
