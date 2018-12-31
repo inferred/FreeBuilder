@@ -31,7 +31,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 /**
- * Datatype about a functional interface.
+ * Metadata about a functional interface.
  */
 public class FunctionalType extends ValueType {
 
