@@ -10,6 +10,7 @@ import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.junit.ComparisonFailure;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,7 +42,7 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
     try {
       String formattedSource = new Formatter().formatSource(rawSource);
       if (!formattedSource.equals(expected)) {
-        failWithCustomSubject("is equal to", expected, formattedSource);
+        throw new ComparisonFailure("Generated code incorrect", expected, formattedSource);
       }
     } catch (FormatterException e) {
       int no = 0;
