@@ -157,15 +157,15 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addPut(code, datatype);
-    addPutAll(code, datatype);
-    addRemove(code, datatype);
-    addMutate(code, datatype);
-    addClear(code, datatype);
-    addGetter(code, datatype);
+    addPut(code);
+    addPutAll(code);
+    addRemove(code);
+    addMutate(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addPut(SourceBuilder code, Datatype datatype) {
+  private void addPut(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Associates {@code key} with {@code value} in the map to be returned from")
@@ -204,7 +204,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addPutAll(SourceBuilder code, Datatype datatype) {
+  private void addPutAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Copies all of the mappings from {@code map} to the map to be returned from")
@@ -229,7 +229,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addRemove(SourceBuilder code, Datatype datatype) {
+  private void addRemove(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes the mapping for {@code key} from the map to be returned from")
@@ -255,7 +255,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMutate(SourceBuilder code, Datatype datatype) {
+  private void addMutate(SourceBuilder code) {
     if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
@@ -290,7 +290,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Datatype datatype) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes all of the mappings from the map to be returned from ")
@@ -304,7 +304,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Datatype datatype) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the map that will be returned by")

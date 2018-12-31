@@ -163,17 +163,17 @@ class SortedSetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetComparator(code, datatype);
-    addAdd(code, datatype);
-    addVarargsAdd(code, datatype);
-    addAddAllMethods(code, datatype);
-    addRemove(code, datatype);
-    addMutator(code, datatype);
-    addClear(code, datatype);
-    addGetter(code, datatype);
+    addSetComparator(code);
+    addAdd(code);
+    addVarargsAdd(code);
+    addAddAllMethods(code);
+    addRemove(code);
+    addMutator(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addSetComparator(SourceBuilder code, Datatype datatype) {
+  private void addSetComparator(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the comparator of the set to be returned from %s.",
@@ -218,7 +218,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addAdd(SourceBuilder code, Datatype datatype) {
+  private void addAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds {@code element} to the set to be returned from %s.",
@@ -263,7 +263,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
     code.addLine("  }");
   }
 
-  private void addVarargsAdd(SourceBuilder code, Datatype datatype) {
+  private void addVarargsAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the set to be returned from")
@@ -307,17 +307,17 @@ class SortedSetProperty extends PropertyCodeGenerator {
     code.addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code, Datatype datatype) {
+  private void addAddAllMethods(SourceBuilder code) {
     if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code, datatype);
-      addStreamAddAll(code, datatype);
+      addSpliteratorAddAll(code);
+      addStreamAddAll(code);
     }
-    addIterableAddAll(code, datatype);
+    addIterableAddAll(code);
   }
 
-  private void addSpliteratorAddAll(SourceBuilder code, Datatype datatype) {
+  private void addSpliteratorAddAll(SourceBuilder code) {
     QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
-    addJavadocForAddAll(code, datatype);
+    addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
@@ -328,9 +328,9 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addStreamAddAll(SourceBuilder code, Datatype datatype) {
+  private void addStreamAddAll(SourceBuilder code) {
     QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
-    addJavadocForAddAll(code, datatype);
+    addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
@@ -340,8 +340,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addIterableAddAll(SourceBuilder code, Datatype datatype) {
-    addJavadocForAddAll(code, datatype);
+  private void addIterableAddAll(SourceBuilder code) {
+    addJavadocForAddAll(code);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
@@ -353,7 +353,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addJavadocForAddAll(SourceBuilder code, Datatype datatype) {
+  private void addJavadocForAddAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the set to be returned from")
@@ -367,7 +367,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine(" */");
   }
 
-  private void addRemove(SourceBuilder code, Datatype datatype) {
+  private void addRemove(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes {@code element} from the set to be returned from %s.",
@@ -396,7 +396,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMutator(SourceBuilder code, Datatype datatype) {
+  private void addMutator(SourceBuilder code) {
     ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
     if (consumer == null) {
       return;
@@ -437,7 +437,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Datatype datatype) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Clears the set to be returned from %s.",
@@ -465,7 +465,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Datatype datatype) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the set that will be returned by")

@@ -160,17 +160,17 @@ class MultisetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addAdd(code, datatype);
-    addVarargsAdd(code, datatype);
-    addAddAllMethods(code, datatype);
-    addAddCopiesTo(code, datatype);
-    addMutate(code, datatype);
-    addClear(code, datatype);
-    addSetCountOf(code, datatype);
-    addGetter(code, datatype);
+    addAdd(code);
+    addVarargsAdd(code);
+    addAddAllMethods(code);
+    addAddCopiesTo(code);
+    addMutate(code);
+    addClear(code);
+    addSetCountOf(code);
+    addGetter(code);
   }
 
-  private void addAdd(SourceBuilder code, Datatype datatype) {
+  private void addAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds {@code element} to the multiset to be returned from %s.",
@@ -190,7 +190,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addVarargsAdd(SourceBuilder code, Datatype datatype) {
+  private void addVarargsAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
@@ -226,19 +226,19 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code, Datatype datatype) {
+  private void addAddAllMethods(SourceBuilder code) {
     if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code, datatype);
-      addStreamAddAll(code, datatype);
-      addIterableAddAll(code, datatype);
+      addSpliteratorAddAll(code);
+      addStreamAddAll(code);
+      addIterableAddAll(code);
     } else {
-      addPreStreamsAddAll(code, datatype);
+      addPreStreamsAddAll(code);
     }
   }
 
-  private void addSpliteratorAddAll(SourceBuilder code, Datatype datatype) {
+  private void addSpliteratorAddAll(SourceBuilder code) {
     QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
-    addJavadocForAddAll(code, datatype);
+    addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
@@ -251,9 +251,9 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addStreamAddAll(SourceBuilder code, Datatype datatype) {
+  private void addStreamAddAll(SourceBuilder code) {
     QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
-    addJavadocForAddAll(code, datatype);
+    addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
@@ -263,8 +263,8 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addIterableAddAll(SourceBuilder code, Datatype datatype) {
-    addJavadocForAddAll(code, datatype);
+  private void addIterableAddAll(SourceBuilder code) {
+    addJavadocForAddAll(code);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
@@ -275,8 +275,8 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addPreStreamsAddAll(SourceBuilder code, Datatype datatype) {
-    addJavadocForAddAll(code, datatype);
+  private void addPreStreamsAddAll(SourceBuilder code) {
+    addJavadocForAddAll(code);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
@@ -290,7 +290,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addJavadocForAddAll(SourceBuilder code, Datatype datatype) {
+  private void addJavadocForAddAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the multiset to be returned from")
@@ -302,7 +302,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine(" */");
   }
 
-  private void addAddCopiesTo(SourceBuilder code, Datatype datatype) {
+  private void addAddCopiesTo(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds a number of occurrences of {@code element} to the multiset to be")
@@ -326,7 +326,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMutate(SourceBuilder code, Datatype datatype) {
+  private void addMutate(SourceBuilder code) {
     ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
     if (consumer == null) {
       return;
@@ -365,7 +365,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Datatype datatype) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Clears the multiset to be returned from %s.",
@@ -379,7 +379,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addSetCountOf(SourceBuilder code, Datatype datatype) {
+  private void addSetCountOf(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds or removes the necessary occurrences of {@code element} to/from the")
@@ -407,7 +407,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Datatype datatype) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the multiset that will be returned by")

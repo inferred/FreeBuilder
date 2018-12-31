@@ -107,12 +107,12 @@ class NullableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetter(code, datatype);
-    addMapper(code, datatype);
-    addGetter(code, datatype);
+    addSetter(code);
+    addMapper(code);
+    addGetter(code);
   }
 
-  private void addSetter(SourceBuilder code, final Datatype datatype) {
+  private void addSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
@@ -130,7 +130,7 @@ class NullableProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMapper(SourceBuilder code, final Datatype datatype) {
+  private void addMapper(SourceBuilder code) {
     if (!code.feature(FUNCTION_PACKAGE).unaryOperator().isPresent()) {
       return;
     }
@@ -158,7 +158,7 @@ class NullableProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, final Datatype datatype) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns the value that will be returned by %s.",

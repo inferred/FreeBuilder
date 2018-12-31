@@ -156,17 +156,17 @@ class ListMultimapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addPut(code, datatype);
-    addSingleKeyPutAll(code, datatype);
-    addMultimapPutAll(code, datatype);
-    addRemove(code, datatype);
-    addRemoveAll(code, datatype);
-    addMutate(code, datatype);
-    addClear(code, datatype);
-    addGetter(code, datatype);
+    addPut(code);
+    addSingleKeyPutAll(code);
+    addMultimapPutAll(code);
+    addRemove(code);
+    addRemoveAll(code);
+    addMutate(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addPut(SourceBuilder code, Datatype datatype) {
+  private void addPut(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
@@ -204,7 +204,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addSingleKeyPutAll(SourceBuilder code, Datatype datatype) {
+  private void addSingleKeyPutAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds a collection of {@code values} with the same {@code key} to the")
@@ -233,7 +233,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMultimapPutAll(SourceBuilder code, Datatype datatype) {
+  private void addMultimapPutAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each entry of {@code multimap} to the multimap to be returned from")
@@ -259,7 +259,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addRemove(SourceBuilder code, Datatype datatype) {
+  private void addRemove(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes a single key-value pair with the key {@code key} and the value"
@@ -300,7 +300,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addRemoveAll(SourceBuilder code, Datatype datatype) {
+  private void addRemoveAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes all values associated with the key {@code key} from the multimap to")
@@ -326,7 +326,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMutate(SourceBuilder code, Datatype datatype) {
+  private void addMutate(SourceBuilder code) {
     if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
@@ -362,7 +362,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Datatype datatype) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes all of the mappings from the multimap to be returned from")
@@ -376,7 +376,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Datatype datatype) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the multimap that will be returned by")

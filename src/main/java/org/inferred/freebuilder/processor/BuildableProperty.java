@@ -217,13 +217,13 @@ class BuildableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetter(code, datatype);
-    addSetterTakingBuilder(code, datatype);
-    addMutate(code, datatype);
-    addGetter(code, datatype);
+    addSetter(code);
+    addSetterTakingBuilder(code);
+    addMutate(code);
+    addGetter(code);
   }
 
-  private void addSetter(SourceBuilder code, Datatype datatype) {
+  private void addSetter(SourceBuilder code) {
     Variable builder = new Variable("builder");
     code.addLine("")
         .addLine("/**")
@@ -255,7 +255,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addSetterTakingBuilder(SourceBuilder code, Datatype datatype) {
+  private void addSetterTakingBuilder(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
@@ -272,7 +272,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMutate(SourceBuilder code, Datatype datatype) {
+  private void addMutate(SourceBuilder code) {
     if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
@@ -298,7 +298,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Datatype datatype) {
+  private void addGetter(SourceBuilder code) {
     Variable builder = new Variable("builder");
     Variable value = new Variable("value");
     code.addLine("")

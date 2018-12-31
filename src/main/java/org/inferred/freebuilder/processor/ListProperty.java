@@ -177,15 +177,15 @@ class ListProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addAdd(code, datatype);
-    addVarargsAdd(code, datatype);
-    addAddAllMethods(code, datatype);
-    addMutate(code, datatype);
-    addClear(code, datatype);
-    addGetter(code, datatype);
+    addAdd(code);
+    addVarargsAdd(code);
+    addAddAllMethods(code);
+    addMutate(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addAdd(SourceBuilder code, Datatype datatype) {
+  private void addAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds {@code element} to the list to be returned from %s.",
@@ -218,7 +218,7 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addVarargsAdd(SourceBuilder code, Datatype datatype) {
+  private void addVarargsAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the list to be returned from")
@@ -263,18 +263,18 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code, Datatype datatype) {
+  private void addAddAllMethods(SourceBuilder code) {
     if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code, datatype);
-      addStreamAddAll(code, datatype);
-      addIterableAddAll(code, datatype);
+      addSpliteratorAddAll(code);
+      addStreamAddAll(code);
+      addIterableAddAll(code);
     } else {
-      addPreStreamsAddAll(code, datatype);
+      addPreStreamsAddAll(code);
     }
   }
 
-  private void addPreStreamsAddAll(SourceBuilder code, Datatype datatype) {
-    addJavadocForAddAll(code, datatype);
+  private void addPreStreamsAddAll(SourceBuilder code) {
+    addJavadocForAddAll(code);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
         datatype.getBuilder(),
@@ -305,9 +305,9 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addSpliteratorAddAll(SourceBuilder code, Datatype datatype) {
+  private void addSpliteratorAddAll(SourceBuilder code) {
     QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
-    addJavadocForAddAll(code, datatype);
+    addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
@@ -335,8 +335,8 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addIterableAddAll(SourceBuilder code, Datatype datatype) {
-    addJavadocForAddAll(code, datatype);
+  private void addIterableAddAll(SourceBuilder code) {
+    addJavadocForAddAll(code);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
@@ -347,9 +347,9 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addStreamAddAll(SourceBuilder code, Datatype datatype) {
+  private void addStreamAddAll(SourceBuilder code) {
     QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
-    addJavadocForAddAll(code, datatype);
+    addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
@@ -359,7 +359,7 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addJavadocForAddAll(SourceBuilder code, Datatype datatype) {
+  private void addJavadocForAddAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the list to be returned from")
@@ -371,7 +371,7 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine(" */");
   }
 
-  private void addMutate(SourceBuilder code, Datatype datatype) {
+  private void addMutate(SourceBuilder code) {
     if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
@@ -414,7 +414,7 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Datatype datatype) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Clears the list to be returned from %s.",
@@ -436,7 +436,7 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Datatype datatype) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the list that will be returned by")

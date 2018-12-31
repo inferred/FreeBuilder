@@ -224,15 +224,15 @@ class OptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetter(code, datatype);
-    addOptionalSetter(code, datatype);
-    addNullableSetter(code, datatype);
-    addMapper(code, datatype);
-    addClear(code, datatype);
-    addGetter(code, datatype);
+    addSetter(code);
+    addOptionalSetter(code);
+    addNullableSetter(code);
+    addMapper(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addSetter(SourceBuilder code, Datatype datatype) {
+  private void addSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
@@ -261,7 +261,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addOptionalSetter(SourceBuilder code, Datatype datatype) {
+  private void addOptionalSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
@@ -285,7 +285,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addNullableSetter(SourceBuilder code, Datatype datatype) {
+  private void addNullableSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
@@ -308,7 +308,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMapper(SourceBuilder code, Datatype datatype) {
+  private void addMapper(SourceBuilder code) {
     ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
     if (unaryOperator == null) {
       return;
@@ -334,7 +334,7 @@ class OptionalProperty extends PropertyCodeGenerator {
     code.addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Datatype datatype) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s",
@@ -349,7 +349,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Datatype datatype) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns the value that will be returned by %s.",
