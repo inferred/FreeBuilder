@@ -35,7 +35,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
@@ -173,7 +172,7 @@ class BuildableProperty extends PropertyCodeGenerator {
           config.getTypes());
 
       return Optional.of(new BuildableProperty(
-          config.getMetadata(),
+          config.getDatatype(),
           config.getProperty(),
           ParameterizedType.from(builder.get()),
           builderFactory.get(),
@@ -191,14 +190,14 @@ class BuildableProperty extends PropertyCodeGenerator {
   private final Excerpt suppressUnchecked;
 
   private BuildableProperty(
-      Metadata metadata,
+      Datatype datatype,
       Property property,
       ParameterizedType builderType,
       BuilderFactory builderFactory,
       FunctionalType mutatorType,
       MergeBuilderMethod mergeFromBuilderMethod,
       PartialToBuilderMethod partialToBuilderMethod) {
-    super(metadata, property);
+    super(datatype, property);
     this.builderType = builderType;
     this.builderFactory = builderFactory;
     this.mutatorType = mutatorType;
@@ -218,25 +217,25 @@ class BuildableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetter(code, metadata);
-    addSetterTakingBuilder(code, metadata);
-    addMutate(code, metadata);
-    addGetter(code, metadata);
+    addSetter(code);
+    addSetterTakingBuilder(code);
+    addMutate(code);
+    addGetter(code);
   }
 
-  private void addSetter(SourceBuilder code, Metadata metadata) {
+  private void addSetter(SourceBuilder code) {
     Variable builder = new Variable("builder");
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code %s} is null", property.getName())
         .addLine(" */");
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s %s) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             setter(property),
             property.getType(),
             property.getName());
@@ -251,29 +250,29 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("    %s.clear();", builder)
         .addLine("    %s.mergeFrom(%s);", builder, property.getName())
         .addLine("  }")
-        .addLine("  return (%s) this;", metadata.getBuilder());
+        .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addSetterTakingBuilder(SourceBuilder code, Metadata metadata) {
+  private void addSetterTakingBuilder(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code builder} is null")
         .addLine(" */")
         .addLine("public %s %s(%s builder) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             setter(property),
             builderType)
         .addLine("  return %s(builder.build());", setter(property))
         .addLine("}");
   }
 
-  private void addMutate(SourceBuilder code, Metadata metadata) {
+  private void addMutate(SourceBuilder code) {
     if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
@@ -281,31 +280,31 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the builder for the value that will be")
         .addLine(" * returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the builder in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored.")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mutator) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface())
         .add(methodBody(code, "mutator")
             .addLine("  mutator.%s(%s());", mutatorType.getMethodName(), getBuilderMethod(property))
-            .addLine("  return (%s) this;", metadata.getBuilder()))
+            .addLine("  return (%s) this;", datatype.getBuilder()))
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Metadata metadata) {
+  private void addGetter(SourceBuilder code) {
     Variable builder = new Variable("builder");
     Variable value = new Variable("value");
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns a builder for the value that will be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
         .addLine("public %s %s() {", builderType, getBuilderMethod(property));
     Block body = methodBody(code)
@@ -381,7 +380,7 @@ class BuildableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+    Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     Variable fieldValue = new Variable(property.getName() + "Value");
     code.addLine("if (%s == null) {", property.getField().on(base))
         .addLine("  // Nothing to merge")

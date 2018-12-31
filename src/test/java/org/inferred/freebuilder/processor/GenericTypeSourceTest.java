@@ -21,7 +21,8 @@ import static org.inferred.freebuilder.processor.util.TypeParameterElementImpl.n
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
+import com.google.common.collect.ImmutableList;
+
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.TypeParameterElementImpl;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
@@ -842,6 +843,19 @@ public class GenericTypeSourceTest {
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     TypeParameterElementImpl paramA = newTypeParameterElement("A");
     TypeParameterElementImpl paramB = newTypeParameterElement("B");
+
+    Datatype datatype = new Datatype.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
+        .setExtensible(true)
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters(paramA, paramB))
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters(paramA, paramB))
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters(paramA, paramB))
+        .setValueType(generatedBuilder.nestedType("Value").withParameters(paramA, paramB))
+        .build();
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setCapitalizedName("Name")
@@ -860,29 +874,17 @@ public class GenericTypeSourceTest {
         .setType(paramB.asType())
         .setUsingBeanConvention(true)
         .build();
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
-        .setExtensible(true)
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters(paramA, paramB))
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters(paramA, paramB))
-        .addProperties(name, age)
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters(paramA, paramB))
-        .setValueType(generatedBuilder.nestedType("Value").withParameters(paramA, paramB))
-        .build();
-    return new GeneratedBuilder(metadata.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(
-                metadata, name, false, unaryOperator(paramA.asType())))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(
-                metadata, age, false, unaryOperator(paramB.asType())))
-            .build())
-        .build());
+
+    return new GeneratedBuilder(
+        datatype,
+        ImmutableList.of(
+            name.toBuilder()
+                .setCodeGenerator(new DefaultProperty(
+                    datatype, name, false, unaryOperator(paramA.asType())))
+                .build(),
+            age.toBuilder()
+                .setCodeGenerator(new DefaultProperty(
+                    datatype, age, false, unaryOperator(paramB.asType())))
+                .build()));
   }
 }

@@ -17,9 +17,8 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.collect.Iterables.any;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
-import static org.inferred.freebuilder.processor.Metadata.GET_CODE_GENERATOR;
-import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.ABSENT;
-import static org.inferred.freebuilder.processor.Metadata.UnderrideLevel.FINAL;
+import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.ABSENT;
+import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.ToStringGenerator.addToString;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.LazyName.addLazyDefinitions;
@@ -29,15 +28,12 @@ import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.Metadata.StandardMethod;
+import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -63,29 +59,36 @@ class GeneratedBuilder extends GeneratedType {
 
   static final FieldAccess UNSET_PROPERTIES = new FieldAccess("_unsetProperties");
 
-  private final Metadata metadata;
+  private final Datatype datatype;
+  private final List<Property> properties;
 
-  GeneratedBuilder(Metadata metadata) {
-    this.metadata = metadata;
+  GeneratedBuilder(Datatype datatype, List<Property> properties) {
+    this.datatype = datatype;
+    this.properties = properties;
   }
 
-  Metadata getMetadata() {
-    return metadata;
+  Datatype getDatatype() {
+    return datatype;
+  }
+
+  public List<Property> getProperties() {
+    return properties;
   }
 
   @Override
   public QualifiedName getName() {
-    return metadata.getGeneratedBuilder().getQualifiedName();
+    return datatype.getGeneratedBuilder().getQualifiedName();
   }
 
   @Override
   public Set<QualifiedName> getVisibleNestedTypes() {
-    return metadata.getVisibleNestedTypes();
+    return datatype.getVisibleNestedTypes();
   }
 
   @Override
   protected void addFields(FieldReceiver fields) {
-    fields.add("metadata", metadata);
+    fields.add("datatype", datatype);
+    fields.add("properties", properties);
   }
 
   @Override
@@ -93,7 +96,7 @@ class GeneratedBuilder extends GeneratedType {
     addBuilderTypeDeclaration(code);
     code.addLine(" {");
     addStaticFromMethod(code);
-    if (any(metadata.getProperties(), IS_REQUIRED)) {
+    if (any(properties, IS_REQUIRED)) {
       addPropertyEnum(code);
     }
 
@@ -108,8 +111,8 @@ class GeneratedBuilder extends GeneratedType {
 
     addValueType(code);
     addPartialType(code);
-    for (Function<Metadata, Excerpt> nestedClass : metadata.getNestedClasses()) {
-      code.add(nestedClass.apply(metadata));
+    for (Excerpt nestedClass : datatype.getNestedClasses()) {
+      code.add(nestedClass);
     }
     addLazyDefinitions(code);
     code.addLine("}");
@@ -117,21 +120,21 @@ class GeneratedBuilder extends GeneratedType {
 
   private void addBuilderTypeDeclaration(SourceBuilder code) {
     code.addLine("/**")
-        .addLine(" * Auto-generated superclass of %s,", metadata.getBuilder().javadocLink())
-        .addLine(" * derived from the API of %s.", metadata.getType().javadocLink())
+        .addLine(" * Auto-generated superclass of %s,", datatype.getBuilder().javadocLink())
+        .addLine(" * derived from the API of %s.", datatype.getType().javadocLink())
         .addLine(" */")
         .add(Excerpts.generated(Processor.class));
-    for (Excerpt annotation : metadata.getGeneratedBuilderAnnotations()) {
+    for (Excerpt annotation : datatype.getGeneratedBuilderAnnotations()) {
       code.add(annotation);
     }
-    code.add("abstract class %s", metadata.getGeneratedBuilder().declaration());
-    if (metadata.isBuilderSerializable()) {
+    code.add("abstract class %s", datatype.getGeneratedBuilder().declaration());
+    if (datatype.isBuilderSerializable()) {
       code.add(" implements %s", Serializable.class);
     }
   }
 
   private void addStaticFromMethod(SourceBuilder code) {
-    BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+    BuilderFactory builderFactory = datatype.getBuilderFactory().orNull();
     if (builderFactory == null) {
       return;
     }
@@ -140,51 +143,51 @@ class GeneratedBuilder extends GeneratedType {
         .addLine(" * Creates a new builder using {@code value} as a template.")
         .addLine(" */")
         .addLine("public static %s %s from(%s value) {",
-            metadata.getType().declarationParameters(),
-            metadata.getBuilder(),
-            metadata.getType())
+            datatype.getType().declarationParameters(),
+            datatype.getBuilder(),
+            datatype.getType())
         .addLine("  return %s.mergeFrom(value);",
-            builderFactory.newBuilder(metadata.getBuilder(), EXPLICIT_TYPES))
+            builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES))
         .addLine("}");
   }
 
   private void addFieldDeclarations(SourceBuilder code) {
     code.addLine("");
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       PropertyCodeGenerator codeGenerator = property.getCodeGenerator();
       codeGenerator.addBuilderFieldDeclaration(code);
     }
     // Unset properties
-    if (any(metadata.getProperties(), IS_REQUIRED)) {
+    if (any(properties, IS_REQUIRED)) {
       code.addLine("private final %s<%s> %s =",
-              EnumSet.class, metadata.getPropertyEnum(), UNSET_PROPERTIES)
-          .addLine("    %s.allOf(%s.class);", EnumSet.class, metadata.getPropertyEnum());
+              EnumSet.class, datatype.getPropertyEnum(), UNSET_PROPERTIES)
+          .addLine("    %s.allOf(%s.class);", EnumSet.class, datatype.getPropertyEnum());
     }
   }
 
   private void addAccessors(SourceBuilder body) {
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       property.getCodeGenerator().addBuilderFieldAccessors(body);
     }
   }
 
   private void addBuildMethod(SourceBuilder code) {
-    boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
+    boolean hasRequiredProperties = any(properties, IS_REQUIRED);
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns a newly-created %s based on the contents of the {@code %s}.",
-            metadata.getType().javadocLink(), metadata.getBuilder().getSimpleName());
+            datatype.getType().javadocLink(), datatype.getBuilder().getSimpleName());
     if (hasRequiredProperties) {
       code.addLine(" *")
           .addLine(" * @throws IllegalStateException if any field has not been set");
     }
     code.addLine(" */")
-        .addLine("public %s build() {", metadata.getType());
+        .addLine("public %s build() {", datatype.getType());
     if (hasRequiredProperties) {
       code.add(PreconditionExcerpts.checkState(
           Excerpts.add("%s.isEmpty()", UNSET_PROPERTIES), "Not set: %s", UNSET_PROPERTIES));
     }
-    code.addLine("  return %s(this);", metadata.getValueType().constructor())
+    code.addLine("  return %s(this);", datatype.getValueType().constructor())
         .addLine("}");
   }
 
@@ -192,14 +195,14 @@ class GeneratedBuilder extends GeneratedType {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets all property values using the given {@code %s} as a template.",
-            metadata.getType().getQualifiedName())
+            datatype.getType().getQualifiedName())
         .addLine(" */")
-        .addLine("public %s mergeFrom(%s value) {", metadata.getBuilder(), metadata.getType());
+        .addLine("public %s mergeFrom(%s value) {", datatype.getBuilder(), datatype.getType());
     Block body = methodBody(code, "value");
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       property.getCodeGenerator().addMergeFromValue(body, "value");
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
@@ -208,15 +211,15 @@ class GeneratedBuilder extends GeneratedType {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Copies values from the given {@code %s}.",
-            metadata.getBuilder().getSimpleName())
+            datatype.getBuilder().getSimpleName())
         .addLine(" * Does not affect any properties not set on the input.")
         .addLine(" */")
-        .addLine("public %1$s mergeFrom(%1$s template) {", metadata.getBuilder());
+        .addLine("public %1$s mergeFrom(%1$s template) {", datatype.getBuilder());
     Block body = methodBody(code, "template");
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       property.getCodeGenerator().addMergeFromBuilder(body, "template");
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
@@ -226,21 +229,19 @@ class GeneratedBuilder extends GeneratedType {
         .addLine("/**")
         .addLine(" * Resets the state of this builder.")
         .addLine(" */")
-        .addLine("public %s clear() {", metadata.getBuilder());
+        .addLine("public %s clear() {", datatype.getBuilder());
     Block body = methodBody(code);
-    List<PropertyCodeGenerator> codeGenerators =
-        Lists.transform(metadata.getProperties(), GET_CODE_GENERATOR);
-    for (PropertyCodeGenerator codeGenerator : codeGenerators) {
-      codeGenerator.addClearField(body);
+    for (Property property : properties) {
+      property.getCodeGenerator().addClearField(body);
     }
-    if (any(metadata.getProperties(), IS_REQUIRED)) {
-      Optional<Excerpt> defaults = Declarations.freshBuilder(body, metadata);
+    if (any(properties, IS_REQUIRED)) {
+      Optional<Excerpt> defaults = Declarations.freshBuilder(body, datatype);
       if (defaults.isPresent()) {
         body.addLine("  %s.clear();", UNSET_PROPERTIES)
             .addLine("  %s.addAll(%s);", UNSET_PROPERTIES, UNSET_PROPERTIES.on(defaults.get()));
       }
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
@@ -248,20 +249,20 @@ class GeneratedBuilder extends GeneratedType {
   private void addBuildPartialMethod(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Returns a newly-created partial %s", metadata.getType().javadocLink())
+        .addLine(" * Returns a newly-created partial %s", datatype.getType().javadocLink())
         .addLine(" * for use in unit tests. State checking will not be performed.");
-    if (any(metadata.getProperties(), IS_REQUIRED)) {
+    if (any(properties, IS_REQUIRED)) {
       code.addLine(" * Unset properties will throw an {@link %s}",
               UnsupportedOperationException.class)
           .addLine(" * when accessed via the partial object.");
     }
-    if (metadata.getHasToBuilderMethod()
-        && metadata.getBuilderFactory() == Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR)) {
+    if (datatype.getHasToBuilderMethod()
+        && datatype.getBuilderFactory() == Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR)) {
       code.addLine(" *")
           .addLine(" * <p>The builder returned by a partial's {@link %s#toBuilder() toBuilder}",
-              metadata.getType())
+              datatype.getType())
           .addLine(" * method overrides {@link %s#build() build()} to return another partial.",
-              metadata.getBuilder())
+              datatype.getBuilder())
           .addLine(" * This allows for robust tests of modify-rebuild code.");
     }
     code.addLine(" *")
@@ -273,15 +274,15 @@ class GeneratedBuilder extends GeneratedType {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("@%s()", VisibleForTesting.class);
     }
-    code.addLine("public %s buildPartial() {", metadata.getType())
-        .addLine("  return %s(this);", metadata.getPartialType().constructor())
+    code.addLine("public %s buildPartial() {", datatype.getType())
+        .addLine("  return %s(this);", datatype.getPartialType().constructor())
         .addLine("}");
   }
 
   private void addPropertyEnum(SourceBuilder code) {
     code.addLine("")
-        .addLine("private enum %s {", metadata.getPropertyEnum().getSimpleName());
-    for (Property property : metadata.getProperties()) {
+        .addLine("private enum %s {", datatype.getPropertyEnum().getSimpleName());
+    for (Property property : properties) {
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("  %s(\"%s\"),", property.getAllCapsName(), property.getName());
       }
@@ -291,7 +292,7 @@ class GeneratedBuilder extends GeneratedType {
         .addLine("  private final %s name;", String.class)
         .addLine("")
         .addLine("  private %s(%s name) {",
-            metadata.getPropertyEnum().getSimpleName(), String.class)
+            datatype.getPropertyEnum().getSimpleName(), String.class)
         .addLine("    this.name = name;")
         .addLine("  }")
         .addLine("")
@@ -303,31 +304,31 @@ class GeneratedBuilder extends GeneratedType {
 
   private void addValueType(SourceBuilder code) {
     code.addLine("");
-    for (Excerpt annotation : metadata.getValueTypeAnnotations()) {
+    for (Excerpt annotation : datatype.getValueTypeAnnotations()) {
       code.add(annotation);
     }
     code.addLine("%s static final class %s %s {",
-        metadata.getValueTypeVisibility(),
-        metadata.getValueType().declaration(),
-        extending(metadata.getType(), metadata.isInterfaceType()));
+        datatype.getValueTypeVisibility(),
+        datatype.getValueType().declaration(),
+        extending(datatype.getType(), datatype.isInterfaceType()));
     // Fields
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       property.getCodeGenerator().addValueFieldDeclaration(code, property.getField());
     }
     // Constructor
     code.addLine("")
         .addLine("  private %s(%s builder) {",
-            metadata.getValueType().getSimpleName(),
-            metadata.getGeneratedBuilder());
+            datatype.getValueType().getSimpleName(),
+            datatype.getGeneratedBuilder());
     Block body = methodBody(code, "builder");
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       property.getCodeGenerator()
           .addFinalFieldAssignment(body, property.getField().on("this"), "builder");
     }
     code.add(body)
         .addLine("  }");
     // Getters
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       code.addLine("")
           .addLine("  @%s", Override.class);
       property.getCodeGenerator().addAccessorAnnotations(code);
@@ -339,21 +340,21 @@ class GeneratedBuilder extends GeneratedType {
       code.addLine("  }");
     }
     // toBuilder
-    if (metadata.getHasToBuilderMethod()) {
+    if (datatype.getHasToBuilderMethod()) {
       code.addLine("")
           .addLine("  @%s", Override.class)
-          .addLine("  public %s toBuilder() {", metadata.getBuilder());
-      BuilderFactory builderFactory = metadata.getBuilderFactory().orNull();
+          .addLine("  public %s toBuilder() {", datatype.getBuilder());
+      BuilderFactory builderFactory = datatype.getBuilderFactory().orNull();
       if (builderFactory != null) {
         code.addLine("    return %s.mergeFrom(this);",
-                builderFactory.newBuilder(metadata.getBuilder(), EXPLICIT_TYPES));
+                builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES));
       } else {
         code.addLine("    throw new %s();", UnsupportedOperationException.class);
       }
       code.addLine("  }");
     }
     // Equals
-    switch (metadata.standardMethodUnderride(StandardMethod.EQUALS)) {
+    switch (datatype.standardMethodUnderride(StandardMethod.EQUALS)) {
       case ABSENT:
         addValueTypeEquals(code);
         break;
@@ -364,7 +365,7 @@ class GeneratedBuilder extends GeneratedType {
             .addLine("  @%s", Override.class)
             .addLine("  public boolean equals(Object obj) {")
             .addLine("    return (!(obj instanceof %s) && super.equals(obj));",
-                metadata.getPartialType().getQualifiedName())
+                datatype.getPartialType().getQualifiedName())
             .addLine("  }");
         break;
 
@@ -373,22 +374,22 @@ class GeneratedBuilder extends GeneratedType {
         break;
     }
     // Hash code
-    if (metadata.standardMethodUnderride(StandardMethod.HASH_CODE) == ABSENT) {
-      FieldAccessList properties = getFields(metadata.getProperties());
+    if (datatype.standardMethodUnderride(StandardMethod.HASH_CODE) == ABSENT) {
+      FieldAccessList fields = getFields(properties);
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public int hashCode() {");
       if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
         code.addLine("    return %s.hash(%s);",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), properties);
+            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), fields);
       } else {
-        code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, properties);
+        code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, fields);
       }
       code.addLine("  }");
     }
     // toString
-    if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
-      addToString(code, metadata, false);
+    if (datatype.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
+      addToString(code, datatype, properties, false);
     }
     code.addLine("}");
   }
@@ -399,15 +400,15 @@ class GeneratedBuilder extends GeneratedType {
         .addLine("  @%s", Override.class)
         .addLine("  public boolean equals(Object obj) {");
     Block body = methodBody(code, "obj");
-    body.addLine("    if (!(obj instanceof %s)) {", metadata.getValueType().getQualifiedName())
+    body.addLine("    if (!(obj instanceof %s)) {", datatype.getValueType().getQualifiedName())
         .addLine("      return false;")
         .addLine("    }")
-        .addLine("    %1$s other = (%1$s) obj;", metadata.getValueType().withWildcards());
-    if (metadata.getProperties().isEmpty()) {
+        .addLine("    %1$s other = (%1$s) obj;", datatype.getValueType().withWildcards());
+    if (properties.isEmpty()) {
       body.addLine("    return true;");
     } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
       String prefix = "    return ";
-      for (Property property : metadata.getProperties()) {
+      for (Property property : properties) {
         body.add(prefix);
         body.add(ObjectsExcerpts.equals(
             property.getField(),
@@ -418,7 +419,7 @@ class GeneratedBuilder extends GeneratedType {
       }
       body.add(";\n");
     } else {
-      for (Property property : metadata.getProperties()) {
+      for (Property property : properties) {
         body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
                 property.getField(),
                 property.getField().on("other"),
@@ -434,22 +435,22 @@ class GeneratedBuilder extends GeneratedType {
   }
 
   private void addPartialType(SourceBuilder code) {
-    boolean hasRequiredProperties = any(metadata.getProperties(), IS_REQUIRED);
+    boolean hasRequiredProperties = any(properties, IS_REQUIRED);
     code.addLine("")
         .addLine("private static final class %s %s {",
-            metadata.getPartialType().declaration(),
-            extending(metadata.getType(), metadata.isInterfaceType()));
+            datatype.getPartialType().declaration(),
+            extending(datatype.getType(), datatype.isInterfaceType()));
     // Fields
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       property.getCodeGenerator().addValueFieldDeclaration(code, property.getField());
     }
     if (hasRequiredProperties) {
       code.addLine("  private final %s<%s> %s;",
-          EnumSet.class, metadata.getPropertyEnum(), UNSET_PROPERTIES);
+          EnumSet.class, datatype.getPropertyEnum(), UNSET_PROPERTIES);
     }
-    addPartialConstructor(code, metadata, hasRequiredProperties);
+    addPartialConstructor(code, hasRequiredProperties);
     // Getters
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       code.addLine("")
           .addLine("  @%s", Override.class);
       property.getCodeGenerator().addAccessorAnnotations(code);
@@ -457,7 +458,7 @@ class GeneratedBuilder extends GeneratedType {
       code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
       if (property.getCodeGenerator().getType() == Type.REQUIRED) {
         code.addLine("    if (%s.contains(%s.%s)) {",
-                UNSET_PROPERTIES, metadata.getPropertyEnum(), property.getAllCapsName())
+                UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName())
             .addLine("      throw new %s(\"%s not set\");",
                 UnsupportedOperationException.class, property.getName())
             .addLine("    }");
@@ -469,20 +470,20 @@ class GeneratedBuilder extends GeneratedType {
     }
     addPartialToBuilderMethod(code);
     // Equals
-    if (metadata.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
+    if (datatype.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public boolean equals(Object obj) {");
       Block body = methodBody(code, "obj");
-      body.addLine("    if (!(obj instanceof %s)) {", metadata.getPartialType().getQualifiedName())
+      body.addLine("    if (!(obj instanceof %s)) {", datatype.getPartialType().getQualifiedName())
           .addLine("      return false;")
           .addLine("    }")
-          .addLine("    %1$s other = (%1$s) obj;", metadata.getPartialType().withWildcards());
-      if (metadata.getProperties().isEmpty()) {
+          .addLine("    %1$s other = (%1$s) obj;", datatype.getPartialType().withWildcards());
+      if (properties.isEmpty()) {
         body.addLine("    return true;");
       } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
         String prefix = "    return ";
-        for (Property property : metadata.getProperties()) {
+        for (Property property : properties) {
           body.add(prefix);
           body.add(ObjectsExcerpts.equals(
               property.getField(),
@@ -500,7 +501,7 @@ class GeneratedBuilder extends GeneratedType {
         }
         body.add(";\n");
       } else {
-        for (Property property : metadata.getProperties()) {
+        for (Property property : properties) {
           body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
                   property.getField(),
                   property.getField().on("other"),
@@ -520,39 +521,38 @@ class GeneratedBuilder extends GeneratedType {
           .addLine("  }");
     }
     // Hash code
-    if (metadata.standardMethodUnderride(StandardMethod.HASH_CODE) != FINAL) {
+    if (datatype.standardMethodUnderride(StandardMethod.HASH_CODE) != FINAL) {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public int hashCode() {");
 
-      FieldAccessList properties = getFields(metadata.getProperties());
+      FieldAccessList fields = getFields(properties);
       if (hasRequiredProperties) {
-        properties = properties.plus(UNSET_PROPERTIES);
+        fields = fields.plus(UNSET_PROPERTIES);
       }
 
       if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
         code.addLine("    return %s.hash(%s);",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), properties);
+            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), fields);
       } else {
-        code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, properties);
+        code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, fields);
       }
       code.addLine("  }");
     }
     // toString
-    if (metadata.standardMethodUnderride(StandardMethod.TO_STRING) != FINAL) {
-      addToString(code, metadata, true);
+    if (datatype.standardMethodUnderride(StandardMethod.TO_STRING) != FINAL) {
+      addToString(code, datatype, properties, true);
     }
     code.addLine("}");
   }
 
-  private static void addPartialConstructor(
-      SourceBuilder code, Metadata metadata, boolean hasRequiredProperties) {
+  private void addPartialConstructor(SourceBuilder code, boolean hasRequiredProperties) {
     code.addLine("")
         .addLine("  %s(%s builder) {",
-            metadata.getPartialType().getSimpleName(),
-            metadata.getGeneratedBuilder());
+            datatype.getPartialType().getSimpleName(),
+            datatype.getGeneratedBuilder());
     Block body = methodBody(code, "builder");
-    for (Property property : metadata.getProperties()) {
+    for (Property property : properties) {
       property.getCodeGenerator()
           .addPartialFieldAssignment(body, property.getField().on("this"), "builder");
     }
@@ -565,27 +565,27 @@ class GeneratedBuilder extends GeneratedType {
   }
 
   private void addPartialToBuilderMethod(SourceBuilder code) {
-    if (!metadata.getHasToBuilderMethod()) {
+    if (!datatype.getHasToBuilderMethod()) {
       return;
     }
-    if (metadata.isExtensible()) {
+    if (datatype.isExtensible()) {
       code.addLine("")
           .addLine("  private static class PartialBuilder%s extends %s {",
-              metadata.getType().declarationParameters(), metadata.getBuilder())
-          .addLine("    @Override public %s build() {", metadata.getType())
+              datatype.getType().declarationParameters(), datatype.getBuilder())
+          .addLine("    @Override public %s build() {", datatype.getType())
           .addLine("      return buildPartial();")
           .addLine("    }")
           .addLine("  }");
     }
     code.addLine("")
         .addLine("  @%s", Override.class)
-        .addLine("  public %s toBuilder() {", metadata.getBuilder());
+        .addLine("  public %s toBuilder() {", datatype.getBuilder());
     Block body = methodBody(code);
     Variable builder = new Variable("builder");
-    if (metadata.isExtensible()) {
+    if (datatype.isExtensible()) {
       code.addLine("    %s builder = new PartialBuilder%s();",
-              metadata.getBuilder(), metadata.getBuilder().typeParametersOrDiamondOperator());
-      for (Property property : metadata.getProperties()) {
+              datatype.getBuilder(), datatype.getBuilder().typeParametersOrDiamondOperator());
+      for (Property property : properties) {
         property.getCodeGenerator().addSetBuilderFromPartial(body, builder);
       }
       body.addLine("    return %s;", builder);

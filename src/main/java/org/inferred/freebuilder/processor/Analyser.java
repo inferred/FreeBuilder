@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
-import static com.google.common.collect.Maps.newLinkedHashMap;
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
@@ -42,9 +41,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.Metadata.StandardMethod;
-import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
+import org.inferred.freebuilder.processor.Datatype.StandardMethod;
+import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
 import org.inferred.freebuilder.processor.util.MethodFinder.ErrorTypeHandling;
@@ -78,7 +76,7 @@ import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.lang.model.util.Types;
 
 /**
- * Analyses a {@link org.inferred.freebuilder.FreeBuilder FreeBuilder} metadata type, returning
+ * Analyses a {@link org.inferred.freebuilder.FreeBuilder FreeBuilder} datatype type, returning
  * a {@link GeneratedType} for a Builder superclass derived from its API.
  *
  * <p>Any deviations from the FreeBuilder spec in the user's class will result in errors being
@@ -155,13 +153,11 @@ class Analyser {
     }
 
     ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, CANNOT_GENERATE_ON_ERROR);
-    Metadata.Builder constructionAndExtension = constructionAndExtension(builder);
+    Datatype.Builder constructionAndExtension = constructionAndExtension(builder);
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
-    Map<ExecutableElement, Property> properties =
-        findProperties(type, removeNonGetterMethods(builder, methods));
-    Metadata.Builder metadataBuilder = new Metadata.Builder()
+    Datatype.Builder datatypeBuilder = new Datatype.Builder()
         .setType(QualifiedName.of(type).withParameters(typeParameters))
         .setInterfaceType(type.getKind().isInterface())
         .mergeFrom(constructionAndExtension)
@@ -177,14 +173,12 @@ class Analyser {
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
-        .addAllProperties(properties.values())
         .setBuilder(ParameterizedType.from(builder));
-    Metadata baseMetadata = metadataBuilder.build();
-    metadataBuilder.mergeFrom(gwtMetadata(type, baseMetadata));
-    metadataBuilder
-        .clearProperties()
-        .addAllProperties(codeGenerators(properties, baseMetadata, builder));
-    return new GeneratedBuilder(metadataBuilder.build());
+    Datatype baseDatatype = datatypeBuilder.build();
+    List<Property> properties =
+        findProperties(type, baseDatatype, builder, removeNonGetterMethods(builder, methods));
+    datatypeBuilder.mergeFrom(gwtMetadata(type, baseDatatype, properties));
+    return new GeneratedBuilder(datatypeBuilder.build(), properties);
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {
@@ -431,52 +425,43 @@ class Analyser {
     return Optional.of(declaredBuilderType);
   }
 
-  private Metadata.Builder constructionAndExtension(DeclaredType builder) {
+  private Datatype.Builder constructionAndExtension(DeclaredType builder) {
     TypeElement builderElement = ModelUtils.asElement(builder);
     if (!builderElement.getModifiers().contains(Modifier.STATIC)) {
       messager.printMessage(ERROR, "Builder must be static on @FreeBuilder types", builderElement);
-      return new Metadata.Builder().setExtensible(false);
+      return new Datatype.Builder().setExtensible(false);
     }
-    return new Metadata.Builder()
+    return new Datatype.Builder()
         .setExtensible(BuilderFactory.hasNoArgsConstructor(builderElement))
         .setBuilderFactory(BuilderFactory.from(builderElement));
   }
 
-  private Map<ExecutableElement, Property> findProperties(
-      TypeElement type, Iterable<ExecutableElement> methods) {
+  private List<Property> findProperties(
+      TypeElement type,
+      Datatype datatype,
+      DeclaredType builder,
+      Iterable<ExecutableElement> methods) {
     NamingConvention namingConvention = determineNamingConvention(type, methods, messager, types);
-    Map<ExecutableElement, Property> propertiesByMethod = newLinkedHashMap();
     Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
+    Set<String> methodsInvokedInBuilderConstructor =
+        getMethodsInvokedInBuilderConstructor(asElement(builder));
+
+    ImmutableList.Builder<Property> properties = ImmutableList.builder();
     for (ExecutableElement method : methods) {
       Property.Builder propertyBuilder = namingConvention.getPropertyNames(type, method).orNull();
       if (propertyBuilder != null) {
         addPropertyData(propertyBuilder, type, method, jacksonSupport);
-        propertiesByMethod.put(method, propertyBuilder.build());
+        Config config = new ConfigImpl(
+            builder,
+            datatype,
+            propertyBuilder.build(),
+            method,
+            methodsInvokedInBuilderConstructor);
+        propertyBuilder.setCodeGenerator(createCodeGenerator(config));
+        properties.add(propertyBuilder.build());
       }
     }
-    return propertiesByMethod;
-  }
-
-  private List<Property> codeGenerators(
-      Map<ExecutableElement, Property> properties,
-      Metadata metadata,
-      DeclaredType builder) {
-    ImmutableList.Builder<Property> codeGenerators = ImmutableList.builder();
-    Set<String> methodsInvokedInBuilderConstructor =
-        getMethodsInvokedInBuilderConstructor(asElement(builder));
-    for (Map.Entry<ExecutableElement, Property> entry : properties.entrySet()) {
-      Config config = new ConfigImpl(
-          builder,
-          metadata,
-          entry.getValue(),
-          entry.getKey(),
-          methodsInvokedInBuilderConstructor);
-      codeGenerators.add(new Property.Builder()
-          .mergeFrom(entry.getValue())
-          .setCodeGenerator(createCodeGenerator(config))
-          .build());
-    }
-    return codeGenerators.build();
+    return properties.build();
   }
 
   private Set<String> getMethodsInvokedInBuilderConstructor(TypeElement builder) {
@@ -528,19 +513,19 @@ class Analyser {
   private class ConfigImpl implements Config {
 
     private final DeclaredType builder;
-    private final Metadata metadata;
+    private final Datatype datatype;
     private final Property property;
     private final ExecutableElement getterMethod;
     private final Set<String> methodsInvokedInBuilderConstructor;
 
     ConfigImpl(
         DeclaredType builder,
-        Metadata metadata,
+        Datatype datatype,
         Property property,
         ExecutableElement getterMethod,
         Set<String> methodsInvokedInBuilderConstructor) {
       this.builder = builder;
-      this.metadata = metadata;
+      this.datatype = datatype;
       this.property = property;
       this.getterMethod = getterMethod;
       this.methodsInvokedInBuilderConstructor = methodsInvokedInBuilderConstructor;
@@ -552,8 +537,8 @@ class Analyser {
     }
 
     @Override
-    public Metadata getMetadata() {
-      return metadata;
+    public Datatype getDatatype() {
+      return datatype;
     }
 
     @Override

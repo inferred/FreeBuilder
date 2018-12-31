@@ -36,7 +36,6 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamon
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -88,7 +87,7 @@ class MapProperty extends PropertyCodeGenerator {
           config.getTypes());
 
       return Optional.of(new MapProperty(
-          config.getMetadata(),
+          config.getDatatype(),
           property,
           overridesPutMethod,
           keyType,
@@ -129,7 +128,7 @@ class MapProperty extends PropertyCodeGenerator {
   private final FunctionalType mutatorType;
 
   MapProperty(
-      Metadata metadata,
+      Datatype datatype,
       Property property,
       boolean overridesPutMethod,
       TypeMirror keyType,
@@ -137,7 +136,7 @@ class MapProperty extends PropertyCodeGenerator {
       TypeMirror valueType,
       Optional<TypeMirror> unboxedValueType,
       FunctionalType mutatorType) {
-    super(metadata, property);
+    super(datatype, property);
     this.overridesPutMethod = overridesPutMethod;
     this.keyType = keyType;
     this.unboxedKeyType = unboxedKeyType;
@@ -158,23 +157,23 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addPut(code, metadata);
-    addPutAll(code, metadata);
-    addRemove(code, metadata);
-    addMutate(code, metadata);
-    addClear(code, metadata);
-    addGetter(code, metadata);
+    addPut(code);
+    addPutAll(code);
+    addRemove(code);
+    addMutate(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addPut(SourceBuilder code, Metadata metadata) {
+  private void addPut(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Associates {@code key} with {@code value} in the map to be returned from")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * If the map previously contained a mapping for the key,")
         .addLine(" * the old value is replaced by the specified value.")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
       code.add(" * @throws NullPointerException if ");
       if (unboxedKeyType.isPresent()) {
@@ -188,7 +187,7 @@ class MapProperty extends PropertyCodeGenerator {
     }
     code.addLine(" */")
         .addLine("public %s %s(%s key, %s value) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             putMethod(property),
             unboxedKeyType.or(keyType),
             unboxedValueType.or(valueType));
@@ -200,24 +199,24 @@ class MapProperty extends PropertyCodeGenerator {
       body.add(PreconditionExcerpts.checkNotNull("value"));
     }
     body.addLine("  %s.put(key, value);", property.getField())
-        .addLine("  return (%s) this;", metadata.getBuilder());
+        .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addPutAll(SourceBuilder code, Metadata metadata) {
+  private void addPutAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Copies all of the mappings from {@code map} to the map to be returned from")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code map} is null or contains a")
         .addLine(" *     null key or value")
         .addLine(" */");
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s, ? extends %s> map) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             putAllMethod(property),
             Map.class,
             keyType,
@@ -226,24 +225,24 @@ class MapProperty extends PropertyCodeGenerator {
             Map.Entry.class, keyType, valueType)
         .addLine("    %s(entry.getKey(), entry.getValue());", putMethod(property))
         .addLine("  }")
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addRemove(SourceBuilder code, Metadata metadata) {
+  private void addRemove(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes the mapping for {@code key} from the map to be returned from")
         .addLine(" * %s, if one is present.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedKeyType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code key} is null");
     }
     code.addLine(" */")
         .addLine("public %s %s(%s key) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             removeMethod(property),
             unboxedKeyType.or(keyType));
     Block body = methodBody(code, "key");
@@ -251,19 +250,19 @@ class MapProperty extends PropertyCodeGenerator {
       body.add(PreconditionExcerpts.checkNotNull("key"));
     }
     body.addLine("  %s.remove(key);", property.getField())
-        .addLine("  return (%s) this;", metadata.getBuilder());
+        .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addMutate(SourceBuilder code, Metadata metadata) {
+  private void addMutate(SourceBuilder code) {
     if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
       return;
     }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Invokes {@code mutator} with the map to be returned from")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the map in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
@@ -274,7 +273,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mutator) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
@@ -286,30 +285,30 @@ class MapProperty extends PropertyCodeGenerator {
               putMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Metadata metadata) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes all of the mappings from the map to be returned from ")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
+        .addLine("public %s %s() {", datatype.getBuilder(), clearMethod(property))
         .addLine("  %s.clear();", property.getField())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Metadata metadata) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the map that will be returned by")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * Changes to this builder will be reflected in the view.")
         .addLine(" */")
         .addLine("public %s<%s, %s> %s() {", Map.class, keyType, valueType, getter(property))
@@ -335,7 +334,7 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+    Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", putAllMethod(property), property.getField().on(base));
   }
 

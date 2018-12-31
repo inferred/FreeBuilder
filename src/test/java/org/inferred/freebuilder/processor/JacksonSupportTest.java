@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.inferred.freebuilder.processor.util.testing.MessagerRule;
@@ -66,7 +65,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
@@ -82,7 +81,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"bob\")");
   }
 
@@ -98,7 +97,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertPropertyHasAnnotation(property,
             JacksonXmlProperty.class, "@JacksonXmlProperty(localName = \"b-ob\")");
   }
@@ -114,7 +113,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"fooBar\")");
   }
 
@@ -129,7 +128,7 @@ public class JacksonSupportTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    Property property = getOnlyElement(builder.getProperties());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 

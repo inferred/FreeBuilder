@@ -32,7 +32,6 @@ import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FU
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
@@ -60,7 +59,7 @@ class OptionalProperty extends PropertyCodeGenerator {
       @Override
       protected void applyMapper(
           SourceBuilder code,
-          Metadata metadata,
+          Datatype datatype,
           FunctionalType mapperType,
           Property property) {
         // Guava's transform method throws a NullPointerException if mapper returns null,
@@ -77,7 +76,7 @@ class OptionalProperty extends PropertyCodeGenerator {
                   mapperType.getMethodName(),
                   property.getCapitalizedName())
               .addLine("  }")
-              .addLine("  return (%s) this;", metadata.getBuilder());
+              .addLine("  return (%s) this;", datatype.getBuilder());
         } else {
           code.addLine("  return %s(%s().transform(mapper::%s));",
               setter(property), getter(property), mapperType.getMethodName());
@@ -95,7 +94,7 @@ class OptionalProperty extends PropertyCodeGenerator {
       @Override
       protected void applyMapper(
           SourceBuilder code,
-          Metadata metadata,
+          Datatype datatype,
           FunctionalType mapperType,
           Property property) {
         code.add("  return %s(%s().map(mapper", setter(property), getter(property));
@@ -124,7 +123,7 @@ class OptionalProperty extends PropertyCodeGenerator {
 
     protected abstract void applyMapper(
         SourceBuilder code,
-        Metadata metadata,
+        Datatype datatype,
         FunctionalType mapperType,
         Property property);
     protected abstract void invokeIfPresent(SourceBuilder code, String value, String method);
@@ -161,7 +160,7 @@ class OptionalProperty extends PropertyCodeGenerator {
           config.getTypes());
 
       return Optional.of(new OptionalProperty(
-          config.getMetadata(),
+          config.getDatatype(),
           property,
           optionalType,
           elementType,
@@ -187,14 +186,14 @@ class OptionalProperty extends PropertyCodeGenerator {
   private final boolean requiresExplicitTypeParameters;
 
   @VisibleForTesting OptionalProperty(
-      Metadata metadata,
+      Datatype datatype,
       Property property,
       OptionalType optional,
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
       FunctionalType mapperType,
       boolean requiresExplicitTypeParametersInJava7) {
-    super(metadata, property);
+    super(datatype, property);
     this.optional = optional;
     this.elementType = elementType;
     this.unboxedType = unboxedType;
@@ -225,27 +224,27 @@ class OptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetter(code, metadata);
-    addOptionalSetter(code, metadata);
-    addNullableSetter(code, metadata);
-    addMapper(code, metadata);
-    addClear(code, metadata);
-    addGetter(code, metadata);
+    addSetter(code);
+    addOptionalSetter(code);
+    addNullableSetter(code);
+    addMapper(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addSetter(SourceBuilder code, Metadata metadata) {
+  private void addSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code %s} is null", property.getName());
     }
     code.addLine(" */")
         .addLine("public %s %s(%s %s) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             setter(property),
             unboxedType.or(elementType),
             property.getName());
@@ -257,22 +256,22 @@ class OptionalProperty extends PropertyCodeGenerator {
           .addLine("  %s = %s;",
               property.getField(), PreconditionExcerpts.checkNotNullInline(property.getName()));
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addOptionalSetter(SourceBuilder code, Metadata metadata) {
+  private void addOptionalSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */");
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> %s) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             setter(property),
             optional.cls,
             elementType,
@@ -286,16 +285,16 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addNullableSetter(SourceBuilder code, Metadata metadata) {
+  private void addNullableSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
         .addLine("public %s %s(@%s %s %s) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             nullableSetter(property),
             javax.annotation.Nullable.class,
             elementType,
@@ -309,7 +308,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMapper(SourceBuilder code, Metadata metadata) {
+  private void addMapper(SourceBuilder code) {
     ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
     if (unaryOperator == null) {
       return;
@@ -317,44 +316,44 @@ class OptionalProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is present,",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * replaces it by applying {@code mapper} to it and using the result.");
     if (mapperType.canReturnNull()) {
       code.addLine(" *")
           .addLine(" * <p>If the result is null, clears the value.");
     }
     code.addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mapper} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mapper) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             mapper(property),
             mapperType.getFunctionalInterface());
-    optional.applyMapper(code, metadata, mapperType, property);
+    optional.applyMapper(code, datatype, mapperType, property);
     code.addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Metadata metadata) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * to {@link %1$s#%2$s() Optional.%2$s()}.", optional.cls, optional.empty)
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property))
+        .addLine("public %s %s() {", datatype.getBuilder(), clearMethod(property))
         .addLine("  %s = null;", property.getField())
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Metadata metadata) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns the value that will be returned by %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
         .addLine("public %s %s() {", property.getType(), getter(property));
     code.add("  return %s.", optional.cls);
@@ -403,7 +402,7 @@ class OptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addClearField(Block code) {
-    Optional<Excerpt> defaults = Declarations.freshBuilder(code, metadata);
+    Optional<Excerpt> defaults = Declarations.freshBuilder(code, datatype);
     if (defaults.isPresent()) {
       code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
     } else {

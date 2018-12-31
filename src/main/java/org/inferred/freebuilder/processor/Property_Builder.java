@@ -16,15 +16,16 @@ import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.util.Excerpt;
 
 /**
- * Auto-generated superclass of {@link Metadata.Property.Builder}, derived from the API of {@link
- * Metadata.Property}.
+ * Auto-generated superclass of {@link org.inferred.freebuilder.processor.Property.Builder}, derived
+ * from the API of {@link org.inferred.freebuilder.processor.Property}.
  */
 @Generated("org.inferred.freebuilder.processor.Processor")
-abstract class Metadata_Property_Builder {
+abstract class Property_Builder {
 
   /** Creates a new builder using {@code value} as a template. */
-  public static Metadata.Property.Builder from(Metadata.Property value) {
-    return new Metadata.Property.Builder().mergeFrom(value);
+  public static org.inferred.freebuilder.processor.Property.Builder from(
+      org.inferred.freebuilder.processor.Property value) {
+    return new org.inferred.freebuilder.processor.Property.Builder().mergeFrom(value);
   }
 
   private enum Property {
@@ -59,239 +60,265 @@ abstract class Metadata_Property_Builder {
   @Nullable private PropertyCodeGenerator codeGenerator = null;
   private boolean fullyCheckedCast;
   private List<Excerpt> accessorAnnotations = ImmutableList.of();
-  private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties =
-      EnumSet.allOf(Metadata_Property_Builder.Property.class);
+  private final EnumSet<Property_Builder.Property> _unsetProperties =
+      EnumSet.allOf(Property_Builder.Property.class);
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#getType()}.
+   * Sets the value to be returned by {@link org.inferred.freebuilder.processor.Property#getType()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code type} is null
    */
-  public Metadata.Property.Builder setType(TypeMirror type) {
+  public org.inferred.freebuilder.processor.Property.Builder setType(TypeMirror type) {
     this.type = Preconditions.checkNotNull(type);
-    _unsetProperties.remove(Metadata_Property_Builder.Property.TYPE);
-    return (Metadata.Property.Builder) this;
+    _unsetProperties.remove(Property_Builder.Property.TYPE);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata.Property#getType()}.
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getType()}.
    *
    * @throws IllegalStateException if the field has not been set
    */
   public TypeMirror getType() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE), "type not set");
+        !_unsetProperties.contains(Property_Builder.Property.TYPE), "type not set");
     return type;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#getBoxedType()}.
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getBoxedType()}.
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Property.Builder setBoxedType(@Nullable TypeMirror boxedType) {
+  public org.inferred.freebuilder.processor.Property.Builder setBoxedType(
+      @Nullable TypeMirror boxedType) {
     this.boxedType = boxedType;
-    return (Metadata.Property.Builder) this;
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
-  /** Returns the value that will be returned by {@link Metadata.Property#getBoxedType()}. */
+  /**
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getBoxedType()}.
+   */
   @Nullable
   public TypeMirror getBoxedType() {
     return boxedType;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#getName()}.
+   * Sets the value to be returned by {@link org.inferred.freebuilder.processor.Property#getName()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code name} is null
    */
-  public Metadata.Property.Builder setName(String name) {
+  public org.inferred.freebuilder.processor.Property.Builder setName(String name) {
     this.name = Preconditions.checkNotNull(name);
-    _unsetProperties.remove(Metadata_Property_Builder.Property.NAME);
-    return (Metadata.Property.Builder) this;
+    _unsetProperties.remove(Property_Builder.Property.NAME);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata.Property#getName()}.
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getName()}.
    *
    * @throws IllegalStateException if the field has not been set
    */
   public String getName() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.NAME), "name not set");
+        !_unsetProperties.contains(Property_Builder.Property.NAME), "name not set");
     return name;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#getCapitalizedName()}.
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getCapitalizedName()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code capitalizedName} is null
    */
-  public Metadata.Property.Builder setCapitalizedName(String capitalizedName) {
+  public org.inferred.freebuilder.processor.Property.Builder setCapitalizedName(
+      String capitalizedName) {
     this.capitalizedName = Preconditions.checkNotNull(capitalizedName);
-    _unsetProperties.remove(Metadata_Property_Builder.Property.CAPITALIZED_NAME);
-    return (Metadata.Property.Builder) this;
+    _unsetProperties.remove(Property_Builder.Property.CAPITALIZED_NAME);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata.Property#getCapitalizedName()}.
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getCapitalizedName()}.
    *
    * @throws IllegalStateException if the field has not been set
    */
   public String getCapitalizedName() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME),
+        !_unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME),
         "capitalizedName not set");
     return capitalizedName;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#getAllCapsName()}.
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getAllCapsName()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code allCapsName} is null
    */
-  public Metadata.Property.Builder setAllCapsName(String allCapsName) {
+  public org.inferred.freebuilder.processor.Property.Builder setAllCapsName(String allCapsName) {
     this.allCapsName = Preconditions.checkNotNull(allCapsName);
-    _unsetProperties.remove(Metadata_Property_Builder.Property.ALL_CAPS_NAME);
-    return (Metadata.Property.Builder) this;
+    _unsetProperties.remove(Property_Builder.Property.ALL_CAPS_NAME);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata.Property#getAllCapsName()}.
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getAllCapsName()}.
    *
    * @throws IllegalStateException if the field has not been set
    */
   public String getAllCapsName() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME),
-        "allCapsName not set");
+        !_unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME), "allCapsName not set");
     return allCapsName;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#isUsingBeanConvention()}.
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#isUsingBeanConvention()}.
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Property.Builder setUsingBeanConvention(boolean usingBeanConvention) {
+  public org.inferred.freebuilder.processor.Property.Builder setUsingBeanConvention(
+      boolean usingBeanConvention) {
     this.usingBeanConvention = usingBeanConvention;
-    _unsetProperties.remove(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION);
-    return (Metadata.Property.Builder) this;
+    _unsetProperties.remove(Property_Builder.Property.USING_BEAN_CONVENTION);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata.Property#isUsingBeanConvention()}.
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#isUsingBeanConvention()}.
    *
    * @throws IllegalStateException if the field has not been set
    */
   public boolean isUsingBeanConvention() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION),
+        !_unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION),
         "usingBeanConvention not set");
     return usingBeanConvention;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#getGetterName()}.
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getGetterName()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code getterName} is null
    */
-  public Metadata.Property.Builder setGetterName(String getterName) {
+  public org.inferred.freebuilder.processor.Property.Builder setGetterName(String getterName) {
     this.getterName = Preconditions.checkNotNull(getterName);
-    _unsetProperties.remove(Metadata_Property_Builder.Property.GETTER_NAME);
-    return (Metadata.Property.Builder) this;
+    _unsetProperties.remove(Property_Builder.Property.GETTER_NAME);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata.Property#getGetterName()}.
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getGetterName()}.
    *
    * @throws IllegalStateException if the field has not been set
    */
   public String getGetterName() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME),
-        "getterName not set");
+        !_unsetProperties.contains(Property_Builder.Property.GETTER_NAME), "getterName not set");
     return getterName;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#getCodeGenerator()}.
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getCodeGenerator()}.
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Property.Builder setCodeGenerator(@Nullable PropertyCodeGenerator codeGenerator) {
+  public org.inferred.freebuilder.processor.Property.Builder setCodeGenerator(
+      @Nullable PropertyCodeGenerator codeGenerator) {
     this.codeGenerator = codeGenerator;
-    return (Metadata.Property.Builder) this;
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
-  /** Returns the value that will be returned by {@link Metadata.Property#getCodeGenerator()}. */
+  /**
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getCodeGenerator()}.
+   */
   @Nullable
   public PropertyCodeGenerator getCodeGenerator() {
     return codeGenerator;
   }
 
   /**
-   * Sets the value to be returned by {@link Metadata.Property#isFullyCheckedCast()}.
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#isFullyCheckedCast()}.
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Property.Builder setFullyCheckedCast(boolean fullyCheckedCast) {
+  public org.inferred.freebuilder.processor.Property.Builder setFullyCheckedCast(
+      boolean fullyCheckedCast) {
     this.fullyCheckedCast = fullyCheckedCast;
-    _unsetProperties.remove(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST);
-    return (Metadata.Property.Builder) this;
+    _unsetProperties.remove(Property_Builder.Property.FULLY_CHECKED_CAST);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Returns the value that will be returned by {@link Metadata.Property#isFullyCheckedCast()}.
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.Property#isFullyCheckedCast()}.
    *
    * @throws IllegalStateException if the field has not been set
    */
   public boolean isFullyCheckedCast() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST),
+        !_unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST),
         "fullyCheckedCast not set");
     return fullyCheckedCast;
   }
 
   /**
    * Adds {@code element} to the list to be returned from {@link
-   * Metadata.Property#getAccessorAnnotations()}.
+   * org.inferred.freebuilder.processor.Property#getAccessorAnnotations()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code element} is null
    */
-  public Metadata.Property.Builder addAccessorAnnotations(Excerpt element) {
+  public org.inferred.freebuilder.processor.Property.Builder addAccessorAnnotations(
+      Excerpt element) {
     if (accessorAnnotations instanceof ImmutableList) {
       accessorAnnotations = new ArrayList<Excerpt>(accessorAnnotations);
     }
     accessorAnnotations.add(Preconditions.checkNotNull(element));
-    return (Metadata.Property.Builder) this;
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
    * Adds each element of {@code elements} to the list to be returned from {@link
-   * Metadata.Property#getAccessorAnnotations()}.
+   * org.inferred.freebuilder.processor.Property#getAccessorAnnotations()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Metadata.Property.Builder addAccessorAnnotations(Excerpt... elements) {
+  public org.inferred.freebuilder.processor.Property.Builder addAccessorAnnotations(
+      Excerpt... elements) {
     return addAllAccessorAnnotations(Arrays.asList(elements));
   }
 
   /**
    * Adds each element of {@code elements} to the list to be returned from {@link
-   * Metadata.Property#getAccessorAnnotations()}.
+   * org.inferred.freebuilder.processor.Property#getAccessorAnnotations()}.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Metadata.Property.Builder addAllAccessorAnnotations(Iterable<? extends Excerpt> elements) {
+  public org.inferred.freebuilder.processor.Property.Builder addAllAccessorAnnotations(
+      Iterable<? extends Excerpt> elements) {
     if (elements instanceof Collection) {
       int elementsSize = ((Collection<?>) elements).size();
       if (elementsSize != 0) {
@@ -305,27 +332,28 @@ abstract class Metadata_Property_Builder {
     for (Excerpt element : elements) {
       addAccessorAnnotations(element);
     }
-    return (Metadata.Property.Builder) this;
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Clears the list to be returned from {@link Metadata.Property#getAccessorAnnotations()}.
+   * Clears the list to be returned from {@link
+   * org.inferred.freebuilder.processor.Property#getAccessorAnnotations()}.
    *
    * @return this {@code Builder} object
    */
-  public Metadata.Property.Builder clearAccessorAnnotations() {
+  public org.inferred.freebuilder.processor.Property.Builder clearAccessorAnnotations() {
     if (accessorAnnotations instanceof ImmutableList) {
       accessorAnnotations = ImmutableList.of();
     } else {
       accessorAnnotations.clear();
     }
-    return (Metadata.Property.Builder) this;
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
    * Returns an unmodifiable view of the list that will be returned by {@link
-   * Metadata.Property#getAccessorAnnotations()}. Changes to this builder will be reflected in the
-   * view.
+   * org.inferred.freebuilder.processor.Property#getAccessorAnnotations()}. Changes to this builder
+   * will be reflected in the view.
    */
   public List<Excerpt> getAccessorAnnotations() {
     if (accessorAnnotations instanceof ImmutableList) {
@@ -334,10 +362,14 @@ abstract class Metadata_Property_Builder {
     return Collections.unmodifiableList(accessorAnnotations);
   }
 
-  /** Sets all property values using the given {@code Metadata.Property} as a template. */
-  public Metadata.Property.Builder mergeFrom(Metadata.Property value) {
-    Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
-    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
+  /**
+   * Sets all property values using the given {@code org.inferred.freebuilder.processor.Property} as
+   * a template.
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mergeFrom(
+      org.inferred.freebuilder.processor.Property value) {
+    Property_Builder _defaults = new org.inferred.freebuilder.processor.Property.Builder();
+    if (_defaults._unsetProperties.contains(Property_Builder.Property.TYPE)
         || !value.getType().equals(_defaults.getType())) {
       setType(value.getType());
     }
@@ -346,24 +378,23 @@ abstract class Metadata_Property_Builder {
             || !value.getBoxedType().equals(_defaults.getBoxedType()))) {
       setBoxedType(value.getBoxedType());
     }
-    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
+    if (_defaults._unsetProperties.contains(Property_Builder.Property.NAME)
         || !value.getName().equals(_defaults.getName())) {
       setName(value.getName());
     }
-    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
+    if (_defaults._unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)
         || !value.getCapitalizedName().equals(_defaults.getCapitalizedName())) {
       setCapitalizedName(value.getCapitalizedName());
     }
-    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
+    if (_defaults._unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)
         || !value.getAllCapsName().equals(_defaults.getAllCapsName())) {
       setAllCapsName(value.getAllCapsName());
     }
-    if (_defaults._unsetProperties.contains(
-            Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
+    if (_defaults._unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)
         || value.isUsingBeanConvention() != _defaults.isUsingBeanConvention()) {
       setUsingBeanConvention(value.isUsingBeanConvention());
     }
-    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
+    if (_defaults._unsetProperties.contains(Property_Builder.Property.GETTER_NAME)
         || !value.getGetterName().equals(_defaults.getGetterName())) {
       setGetterName(value.getGetterName());
     }
@@ -372,29 +403,30 @@ abstract class Metadata_Property_Builder {
             || !value.getCodeGenerator().equals(_defaults.getCodeGenerator()))) {
       setCodeGenerator(value.getCodeGenerator());
     }
-    if (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
+    if (_defaults._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
         || value.isFullyCheckedCast() != _defaults.isFullyCheckedCast()) {
       setFullyCheckedCast(value.isFullyCheckedCast());
     }
-    if (value instanceof Metadata_Property_Builder.Value
+    if (value instanceof Property_Builder.Value
         && accessorAnnotations == ImmutableList.<Excerpt>of()) {
       accessorAnnotations = ImmutableList.copyOf(value.getAccessorAnnotations());
     } else {
       addAllAccessorAnnotations(value.getAccessorAnnotations());
     }
-    return (Metadata.Property.Builder) this;
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
    * Copies values from the given {@code Builder}. Does not affect any properties not set on the
    * input.
    */
-  public Metadata.Property.Builder mergeFrom(Metadata.Property.Builder template) {
+  public org.inferred.freebuilder.processor.Property.Builder mergeFrom(
+      org.inferred.freebuilder.processor.Property.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
-    Metadata_Property_Builder base = template;
-    Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
-    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
-        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)
+    Property_Builder base = template;
+    Property_Builder _defaults = new org.inferred.freebuilder.processor.Property.Builder();
+    if (!base._unsetProperties.contains(Property_Builder.Property.TYPE)
+        && (_defaults._unsetProperties.contains(Property_Builder.Property.TYPE)
             || !template.getType().equals(_defaults.getType()))) {
       setType(template.getType());
     }
@@ -403,29 +435,28 @@ abstract class Metadata_Property_Builder {
             || !template.getBoxedType().equals(_defaults.getBoxedType()))) {
       setBoxedType(template.getBoxedType());
     }
-    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
-        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.NAME)
+    if (!base._unsetProperties.contains(Property_Builder.Property.NAME)
+        && (_defaults._unsetProperties.contains(Property_Builder.Property.NAME)
             || !template.getName().equals(_defaults.getName()))) {
       setName(template.getName());
     }
-    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
-        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)
+    if (!base._unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)
+        && (_defaults._unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)
             || !template.getCapitalizedName().equals(_defaults.getCapitalizedName()))) {
       setCapitalizedName(template.getCapitalizedName());
     }
-    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
-        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)
+    if (!base._unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)
+        && (_defaults._unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)
             || !template.getAllCapsName().equals(_defaults.getAllCapsName()))) {
       setAllCapsName(template.getAllCapsName());
     }
-    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
-        && (_defaults._unsetProperties.contains(
-                Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)
+    if (!base._unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)
+        && (_defaults._unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)
             || template.isUsingBeanConvention() != _defaults.isUsingBeanConvention())) {
       setUsingBeanConvention(template.isUsingBeanConvention());
     }
-    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
-        && (_defaults._unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)
+    if (!base._unsetProperties.contains(Property_Builder.Property.GETTER_NAME)
+        && (_defaults._unsetProperties.contains(Property_Builder.Property.GETTER_NAME)
             || !template.getGetterName().equals(_defaults.getGetterName()))) {
       setGetterName(template.getGetterName());
     }
@@ -434,19 +465,18 @@ abstract class Metadata_Property_Builder {
             || !template.getCodeGenerator().equals(_defaults.getCodeGenerator()))) {
       setCodeGenerator(template.getCodeGenerator());
     }
-    if (!base._unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
-        && (_defaults._unsetProperties.contains(
-                Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)
+    if (!base._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
+        && (_defaults._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
             || template.isFullyCheckedCast() != _defaults.isFullyCheckedCast())) {
       setFullyCheckedCast(template.isFullyCheckedCast());
     }
     addAllAccessorAnnotations(base.accessorAnnotations);
-    return (Metadata.Property.Builder) this;
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /** Resets the state of this builder. */
-  public Metadata.Property.Builder clear() {
-    Metadata_Property_Builder _defaults = new Metadata.Property.Builder();
+  public org.inferred.freebuilder.processor.Property.Builder clear() {
+    Property_Builder _defaults = new org.inferred.freebuilder.processor.Property.Builder();
     type = _defaults.type;
     boxedType = _defaults.boxedType;
     name = _defaults.name;
@@ -459,34 +489,35 @@ abstract class Metadata_Property_Builder {
     clearAccessorAnnotations();
     _unsetProperties.clear();
     _unsetProperties.addAll(_defaults._unsetProperties);
-    return (Metadata.Property.Builder) this;
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
   /**
-   * Returns a newly-created {@link Metadata.Property} based on the contents of the {@code Builder}.
+   * Returns a newly-created {@link org.inferred.freebuilder.processor.Property} based on the
+   * contents of the {@code Builder}.
    *
    * @throws IllegalStateException if any field has not been set
    */
-  public Metadata.Property build() {
+  public org.inferred.freebuilder.processor.Property build() {
     Preconditions.checkState(_unsetProperties.isEmpty(), "Not set: %s", _unsetProperties);
-    return new Metadata_Property_Builder.Value(this);
+    return new Property_Builder.Value(this);
   }
 
   /**
-   * Returns a newly-created partial {@link Metadata.Property} for use in unit tests. State checking
-   * will not be performed. Unset properties will throw an {@link UnsupportedOperationException}
-   * when accessed via the partial object.
+   * Returns a newly-created partial {@link org.inferred.freebuilder.processor.Property} for use in
+   * unit tests. State checking will not be performed. Unset properties will throw an {@link
+   * UnsupportedOperationException} when accessed via the partial object.
    *
    * <p>Partials should only ever be used in tests. They permit writing robust test cases that won't
    * fail if this type gains more application-level constraints (e.g. new required fields) in
    * future. If you require partially complete values in production code, consider using a Builder.
    */
   @VisibleForTesting()
-  public Metadata.Property buildPartial() {
-    return new Metadata_Property_Builder.Partial(this);
+  public org.inferred.freebuilder.processor.Property buildPartial() {
+    return new Property_Builder.Partial(this);
   }
 
-  private static final class Value extends Metadata.Property {
+  private static final class Value extends org.inferred.freebuilder.processor.Property {
     private final TypeMirror type;
     @Nullable private final TypeMirror boxedType;
     private final String name;
@@ -498,7 +529,7 @@ abstract class Metadata_Property_Builder {
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
 
-    private Value(Metadata_Property_Builder builder) {
+    private Value(Property_Builder builder) {
       this.type = builder.type;
       this.boxedType = builder.boxedType;
       this.name = builder.name;
@@ -565,10 +596,10 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof Metadata_Property_Builder.Value)) {
+      if (!(obj instanceof Property_Builder.Value)) {
         return false;
       }
-      Metadata_Property_Builder.Value other = (Metadata_Property_Builder.Value) obj;
+      Property_Builder.Value other = (Property_Builder.Value) obj;
       if (!type.equals(other.type)) {
         return false;
       }
@@ -651,7 +682,7 @@ abstract class Metadata_Property_Builder {
     }
   }
 
-  private static final class Partial extends Metadata.Property {
+  private static final class Partial extends org.inferred.freebuilder.processor.Property {
     private final TypeMirror type;
     @Nullable private final TypeMirror boxedType;
     private final String name;
@@ -662,9 +693,9 @@ abstract class Metadata_Property_Builder {
     @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
-    private final EnumSet<Metadata_Property_Builder.Property> _unsetProperties;
+    private final EnumSet<Property_Builder.Property> _unsetProperties;
 
-    Partial(Metadata_Property_Builder builder) {
+    Partial(Property_Builder builder) {
       this.type = builder.type;
       this.boxedType = builder.boxedType;
       this.name = builder.name;
@@ -680,7 +711,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public TypeMirror getType() {
-      if (_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)) {
+      if (_unsetProperties.contains(Property_Builder.Property.TYPE)) {
         throw new UnsupportedOperationException("type not set");
       }
       return type;
@@ -694,7 +725,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public String getName() {
-      if (_unsetProperties.contains(Metadata_Property_Builder.Property.NAME)) {
+      if (_unsetProperties.contains(Property_Builder.Property.NAME)) {
         throw new UnsupportedOperationException("name not set");
       }
       return name;
@@ -702,7 +733,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public String getCapitalizedName() {
-      if (_unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)) {
+      if (_unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)) {
         throw new UnsupportedOperationException("capitalizedName not set");
       }
       return capitalizedName;
@@ -710,7 +741,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public String getAllCapsName() {
-      if (_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)) {
+      if (_unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)) {
         throw new UnsupportedOperationException("allCapsName not set");
       }
       return allCapsName;
@@ -718,7 +749,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public boolean isUsingBeanConvention() {
-      if (_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)) {
+      if (_unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)) {
         throw new UnsupportedOperationException("usingBeanConvention not set");
       }
       return usingBeanConvention;
@@ -726,7 +757,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public String getGetterName() {
-      if (_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)) {
+      if (_unsetProperties.contains(Property_Builder.Property.GETTER_NAME)) {
         throw new UnsupportedOperationException("getterName not set");
       }
       return getterName;
@@ -740,7 +771,7 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public boolean isFullyCheckedCast() {
-      if (_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)) {
+      if (_unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)) {
         throw new UnsupportedOperationException("fullyCheckedCast not set");
       }
       return fullyCheckedCast;
@@ -753,10 +784,10 @@ abstract class Metadata_Property_Builder {
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof Metadata_Property_Builder.Partial)) {
+      if (!(obj instanceof Property_Builder.Partial)) {
         return false;
       }
-      Metadata_Property_Builder.Partial other = (Metadata_Property_Builder.Partial) obj;
+      Property_Builder.Partial other = (Property_Builder.Partial) obj;
       if (type != other.type && (type == null || !type.equals(other.type))) {
         return false;
       }
@@ -816,31 +847,31 @@ abstract class Metadata_Property_Builder {
     @Override
     public String toString() {
       StringBuilder result = new StringBuilder("partial Property{");
-      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.TYPE)) {
+      if (!_unsetProperties.contains(Property_Builder.Property.TYPE)) {
         result.append("type=").append(type).append(", ");
       }
       if (boxedType != null) {
         result.append("boxedType=").append(boxedType).append(", ");
       }
-      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.NAME)) {
+      if (!_unsetProperties.contains(Property_Builder.Property.NAME)) {
         result.append("name=").append(name).append(", ");
       }
-      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.CAPITALIZED_NAME)) {
+      if (!_unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)) {
         result.append("capitalizedName=").append(capitalizedName).append(", ");
       }
-      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.ALL_CAPS_NAME)) {
+      if (!_unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)) {
         result.append("allCapsName=").append(allCapsName).append(", ");
       }
-      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.USING_BEAN_CONVENTION)) {
+      if (!_unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)) {
         result.append("usingBeanConvention=").append(usingBeanConvention).append(", ");
       }
-      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.GETTER_NAME)) {
+      if (!_unsetProperties.contains(Property_Builder.Property.GETTER_NAME)) {
         result.append("getterName=").append(getterName).append(", ");
       }
       if (codeGenerator != null) {
         result.append("codeGenerator=").append(codeGenerator).append(", ");
       }
-      if (!_unsetProperties.contains(Metadata_Property_Builder.Property.FULLY_CHECKED_CAST)) {
+      if (!_unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)) {
         result.append("fullyCheckedCast=").append(fullyCheckedCast).append(", ");
       }
       return result

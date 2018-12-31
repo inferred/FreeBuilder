@@ -17,25 +17,20 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
-import javax.annotation.Nullable;
-import javax.lang.model.type.TypeMirror;
-
 /**
- * Metadata about a &#64;{@link org.inferred.freebuilder.FreeBuilder FreeBuilder} type.
+ * Metadata about a user's datatype.
  */
-public abstract class Metadata {
+public abstract class Datatype {
 
   /** Standard Java methods that may be underridden. */
   public enum StandardMethod {
@@ -125,9 +120,6 @@ public abstract class Metadata {
   /** Returns the Property enum that may be generated. */
   public abstract ParameterizedType getPropertyEnum();
 
-  /** Returns metadata about the properties of the type. */
-  public abstract ImmutableList<Property> getProperties();
-
   public UnderrideLevel standardMethodUnderride(StandardMethod standardMethod) {
     UnderrideLevel underrideLevel = getStandardMethodUnderrides().get(standardMethod);
     return (underrideLevel == null) ? UnderrideLevel.ABSENT : underrideLevel;
@@ -151,80 +143,14 @@ public abstract class Metadata {
   public abstract Visibility getValueTypeVisibility();
 
   /** Returns a list of nested classes that should be added to the generated builder class. */
-  public abstract ImmutableList<Function<Metadata, Excerpt>> getNestedClasses();
+  public abstract ImmutableList<Excerpt> getNestedClasses();
 
   public Builder toBuilder() {
     return new Builder().mergeFrom(this);
   }
 
-  /** Metadata about a property of a {@link Metadata}. */
-  public abstract static class Property {
-
-    /** Returns the type of the property. */
-    public abstract TypeMirror getType();
-
-    /** Returns the boxed form of {@link #getType()}, or null if type is not primitive. */
-    @Nullable public abstract TypeMirror getBoxedType();
-
-    /** Returns the name of the property, e.g. myProperty. */
-    public abstract String getName();
-
-    /** Returns the field name that stores the property, e.g. myProperty. */
-    public FieldAccess getField() {
-      return new FieldAccess(getName());
-    }
-
-    /** Returns the capitalized name of the property, e.g. MyProperty. */
-    public abstract String getCapitalizedName();
-
-    /** Returns the name of the property in all-caps with underscores, e.g. MY_PROPERTY. */
-    public abstract String getAllCapsName();
-
-    /** Returns true if getters start with "get"; setters should follow suit with "set". */
-    public abstract boolean isUsingBeanConvention();
-
-    /** Returns the name of the getter for the property, e.g. getMyProperty, or isSomethingTrue. */
-    public abstract String getGetterName();
-
-    /**
-     * Returns the code generator to use for this property, or null if no generator has been picked
-     * (i.e. when passed to {@link PropertyCodeGenerator.Factory#create}.
-     */
-    @Nullable public abstract PropertyCodeGenerator getCodeGenerator();
-
-    /**
-     * Returns true if a cast to this property type is guaranteed to be fully checked at runtime.
-     * This is true for any type that is non-generic, raw, or parameterized with unbounded
-     * wildcards, such as {@code Integer}, {@code List} or {@code Map<?, ?>}.
-     */
-    public abstract boolean isFullyCheckedCast();
-
-    /**
-     * Returns a list of annotations that should be applied to the accessor methods of this
-     * property; that is, the getter method, and a single setter method that will accept the result
-     * of the getter method as its argument. For a list, for example, that would be getX() and
-     * addAllX().
-     */
-    public abstract ImmutableList<Excerpt> getAccessorAnnotations();
-
-    public Builder toBuilder() {
-      return new Builder().mergeFrom(this);
-    }
-
-    /** Builder for {@link Property}. */
-    public static class Builder extends Metadata_Property_Builder {}
-  }
-
-  public static final Function<Property, PropertyCodeGenerator> GET_CODE_GENERATOR =
-      new Function<Property, PropertyCodeGenerator>() {
-        @Override
-        public PropertyCodeGenerator apply(Property input) {
-          return input.getCodeGenerator();
-        }
-      };
-
-  /** Builder for {@link Metadata}. */
-  public static class Builder extends Metadata_Builder {
+  /** Builder for {@link Datatype}. */
+  public static class Builder extends Datatype_Builder {
 
     public Builder() {
       super.setValueTypeVisibility(Visibility.PRIVATE);
@@ -232,7 +158,7 @@ public abstract class Metadata {
     }
 
     /**
-     * Sets the value to be returned by {@link Metadata#getValueTypeVisibility()} to the most
+     * Sets the value to be returned by {@link Datatype#getValueTypeVisibility()} to the most
      * visible of the current value and {@code visibility}. Will not decrease visibility.
      *
      * @return this {@code Builder} object
@@ -245,22 +171,22 @@ public abstract class Metadata {
     }
 
     /**
-     * Returns a newly-built {@link Metadata} based on the content of the {@code Builder}.
+     * Returns a newly-built {@link Datatype} based on the content of the {@code Builder}.
      */
     @Override
-    public Metadata build() {
-      Metadata metadata = super.build();
-      QualifiedName generatedBuilder = metadata.getGeneratedBuilder().getQualifiedName();
-      checkState(metadata.getValueType().getQualifiedName().getEnclosingType()
+    public Datatype build() {
+      Datatype datatype = super.build();
+      QualifiedName generatedBuilder = datatype.getGeneratedBuilder().getQualifiedName();
+      checkState(datatype.getValueType().getQualifiedName().getEnclosingType()
               .equals(generatedBuilder),
-          "%s not a nested class of %s", metadata.getValueType(), generatedBuilder);
-      checkState(metadata.getPartialType().getQualifiedName().getEnclosingType()
+          "%s not a nested class of %s", datatype.getValueType(), generatedBuilder);
+      checkState(datatype.getPartialType().getQualifiedName().getEnclosingType()
               .equals(generatedBuilder),
-          "%s not a nested class of %s", metadata.getPartialType(), generatedBuilder);
-      checkState(metadata.getPropertyEnum().getQualifiedName().getEnclosingType()
+          "%s not a nested class of %s", datatype.getPartialType(), generatedBuilder);
+      checkState(datatype.getPropertyEnum().getQualifiedName().getEnclosingType()
               .equals(generatedBuilder),
-          "%s not a nested class of %s", metadata.getPropertyEnum(), generatedBuilder);
-      return metadata;
+          "%s not a nested class of %s", datatype.getPropertyEnum(), generatedBuilder);
+      return datatype;
     }
   }
 }

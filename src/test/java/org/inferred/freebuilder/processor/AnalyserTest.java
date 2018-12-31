@@ -21,8 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.inferred.freebuilder.processor.BuilderFactory.BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NEW_BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
-import static org.inferred.freebuilder.processor.Metadata.Visibility.PACKAGE;
-import static org.inferred.freebuilder.processor.Metadata.Visibility.PRIVATE;
+import static org.inferred.freebuilder.processor.Datatype.Visibility.PACKAGE;
+import static org.inferred.freebuilder.processor.Datatype.Visibility.PRIVATE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -32,12 +32,12 @@ import static org.junit.Assert.fail;
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.Metadata.StandardMethod;
-import org.inferred.freebuilder.processor.Metadata.UnderrideLevel;
+import org.inferred.freebuilder.processor.Datatype.StandardMethod;
+import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -148,7 +148,7 @@ public class AnalyserTest {
     QualifiedName dataType = QualifiedName.of("com.example", "DataType");
     QualifiedName generatedType = QualifiedName.of("com.example", "DataType_Builder");
     assertThat(builder).isEqualTo(new GeneratedBuilder(
-        new Metadata.Builder()
+        new Datatype.Builder()
             .setBuilder(dataType.nestedType("Builder").withParameters())
             .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
             .setBuilderSerializable(false)
@@ -165,7 +165,8 @@ public class AnalyserTest {
                 generatedType.nestedType("Partial"),
                 generatedType.nestedType("Property"),
                 generatedType.nestedType("Value"))
-            .build()));
+            .build(),
+        ImmutableList.of()));
   }
 
   @Test
@@ -186,7 +187,7 @@ public class AnalyserTest {
     QualifiedName dataType = QualifiedName.of("com.example", "DataType");
     QualifiedName generatedType = QualifiedName.of("com.example", "DataType_Builder");
     assertThat(builder).isEqualTo(new GeneratedBuilder(
-        new Metadata.Builder()
+        new Datatype.Builder()
             .setBuilder(dataType.nestedType("Builder").withParameters(kVar, vVar))
             .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
             .setBuilderSerializable(false)
@@ -203,7 +204,8 @@ public class AnalyserTest {
                 generatedType.nestedType("Partial"),
                 generatedType.nestedType("Property"),
                 generatedType.nestedType("Value"))
-            .build()));
+            .build(),
+        ImmutableList.of()));
   }
 
   @Test
@@ -216,10 +218,10 @@ public class AnalyserTest {
         "}"));
 
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        builder.getMetadata().getGeneratedBuilder());
+        builder.getDatatype().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        builder.getMetadata().getBuilder().getQualifiedName().toString());
-    assertTrue(builder.getMetadata().isBuilderSerializable());
+        builder.getDatatype().getBuilder().getQualifiedName().toString());
+    assertTrue(builder.getDatatype().isBuilderSerializable());
   }
 
   @Test
@@ -232,12 +234,12 @@ public class AnalyserTest {
         "}"));
 
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        builder.getMetadata().getGeneratedBuilder());
+        builder.getDatatype().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        builder.getMetadata().getBuilder().getQualifiedName().toString());
-    assertThat(builder.getMetadata().isExtensible()).isTrue();
-    assertThat(builder.getMetadata().getBuilderFactory()).hasValue(BUILDER_METHOD);
-    assertFalse(builder.getMetadata().isBuilderSerializable());
+        builder.getDatatype().getBuilder().getQualifiedName().toString());
+    assertThat(builder.getDatatype().isExtensible()).isTrue();
+    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
   @Test
@@ -253,12 +255,12 @@ public class AnalyserTest {
         "}"));
 
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        builder.getMetadata().getGeneratedBuilder());
+        builder.getDatatype().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        builder.getMetadata().getBuilder().getQualifiedName().toString());
-    assertThat(builder.getMetadata().isExtensible()).isTrue();
-    assertThat(builder.getMetadata().getBuilderFactory()).hasValue(BUILDER_METHOD);
-    assertFalse(builder.getMetadata().isBuilderSerializable());
+        builder.getDatatype().getBuilder().getQualifiedName().toString());
+    assertThat(builder.getDatatype().isExtensible()).isTrue();
+    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
   @Test
@@ -274,12 +276,12 @@ public class AnalyserTest {
         "}"));
 
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        builder.getMetadata().getGeneratedBuilder());
+        builder.getDatatype().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        builder.getMetadata().getBuilder().getQualifiedName().toString());
-    assertThat(builder.getMetadata().isExtensible()).isFalse();
-    assertThat(builder.getMetadata().getBuilderFactory()).hasValue(BUILDER_METHOD);
-    assertFalse(builder.getMetadata().isBuilderSerializable());
+        builder.getDatatype().getBuilder().getQualifiedName().toString());
+    assertThat(builder.getDatatype().isExtensible()).isFalse();
+    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
   @Test
@@ -292,12 +294,12 @@ public class AnalyserTest {
         "}"));
 
     assertEquals(QualifiedName.of("com.example", "DataType_Builder").withParameters(),
-        builder.getMetadata().getGeneratedBuilder());
+        builder.getDatatype().getGeneratedBuilder());
     assertEquals("com.example.DataType.Builder",
-        builder.getMetadata().getBuilder().getQualifiedName().toString());
-    assertThat(builder.getMetadata().isExtensible()).isTrue();
-    assertThat(builder.getMetadata().getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
-    assertFalse(builder.getMetadata().isBuilderSerializable());
+        builder.getDatatype().getBuilder().getQualifiedName().toString());
+    assertThat(builder.getDatatype().isExtensible()).isTrue();
+    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
+    assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
   @Test
@@ -309,8 +311,8 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder { }",
         "}"));
 
-    assertTrue(builder.getMetadata().getHasToBuilderMethod());
-    assertThat(builder.getMetadata().getProperties()).isEmpty();
+    assertTrue(builder.getDatatype().getHasToBuilderMethod());
+    assertThat(builder.getProperties()).isEmpty();
   }
 
   @Test
@@ -322,8 +324,8 @@ public class AnalyserTest {
         "  class Builder<K, V> extends DataType_Builder<K, V> { }",
         "}"));
 
-    assertTrue(builder.getMetadata().getHasToBuilderMethod());
-    assertThat(builder.getMetadata().getProperties()).isEmpty();
+    assertTrue(builder.getDatatype().getHasToBuilderMethod());
+    assertThat(builder.getProperties()).isEmpty();
   }
 
   @Test
@@ -367,7 +369,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
 
     Property age = properties.get("age");
@@ -397,7 +399,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
 
     Property age = properties.get("age");
@@ -427,7 +429,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("customURLTemplate", "top50Sites");
     assertEquals("CUSTOM_URL_TEMPLATE", properties.get("customURLTemplate").getAllCapsName());
     assertEquals("TOP50_SITES", properties.get("top50Sites").getAllCapsName());
@@ -443,7 +445,7 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals(model.typeMirror(int.class), properties.get("age").getType());
     assertEquals("Age", properties.get("age").getCapitalizedName());
@@ -462,7 +464,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("available");
     assertEquals(model.typeMirror(boolean.class), properties.get("available").getType());
     assertEquals("Available", properties.get("available").getCapitalizedName());
@@ -481,7 +483,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).isEmpty();
+    assertThat(builder.getProperties()).isEmpty();
   }
 
   @Test
@@ -493,7 +495,7 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertEquals(DefaultProperty.class, properties.get("name").getCodeGenerator().getClass());
   }
 
@@ -508,7 +510,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).isEmpty();
+    assertThat(builder.getProperties()).isEmpty();
   }
 
   @Test
@@ -522,7 +524,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).isEmpty();
+    assertThat(builder.getProperties()).isEmpty();
   }
 
   @Test
@@ -534,7 +536,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).isEmpty();
+    assertThat(builder.getProperties()).isEmpty();
     messager.verifyError("getName", "Getter methods must not be void on @FreeBuilder types");
   }
 
@@ -547,7 +549,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).isEmpty();
+    assertThat(builder.getProperties()).isEmpty();
     messager.verifyError(
         "isName", "Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
   }
@@ -561,7 +563,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).isEmpty();
+    assertThat(builder.getProperties()).isEmpty();
     messager.verifyError("getName", "Getter methods cannot take parameters on @FreeBuilder types");
   }
 
@@ -574,7 +576,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("get");
     assertEquals("Get", properties.get("get").getCapitalizedName());
     assertEquals("get", properties.get("get").getGetterName());
@@ -590,7 +592,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("getter");
     assertEquals("Getter", properties.get("getter").getCapitalizedName());
     assertEquals("getter", properties.get("getter").getGetterName());
@@ -606,7 +608,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("issue");
     assertEquals("ISSUE", properties.get("issue").getAllCapsName());
     assertEquals("Issue", properties.get("issue").getCapitalizedName());
@@ -623,7 +625,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("getürkt");
     assertEquals("GETÜRKT", properties.get("getürkt").getAllCapsName());
     assertEquals("Getürkt", properties.get("getürkt").getCapitalizedName());
@@ -640,7 +642,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("is");
     assertEquals("IS", properties.get("is").getAllCapsName());
     assertEquals("Is", properties.get("is").getCapitalizedName());
@@ -660,7 +662,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("AGE", properties.get("age").getAllCapsName());
     assertEquals("Age", properties.get("age").getCapitalizedName());
@@ -688,7 +690,7 @@ public class AnalyserTest {
         "  }",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertEquals(Type.REQUIRED, properties.get("name").getCodeGenerator().getType());
     assertEquals(Type.REQUIRED, properties.get("age").getCodeGenerator().getType());
   }
@@ -707,7 +709,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
   }
 
@@ -724,7 +726,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("property");
     assertEquals("java.lang.String", properties.get("property").getType().toString());
   }
@@ -738,13 +740,13 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getGeneratedBuilderAnnotations()).hasSize(1);
-    assertThat(asSource(builder.getMetadata().getGeneratedBuilderAnnotations().get(0)))
+    assertThat(builder.getDatatype().getGeneratedBuilderAnnotations()).hasSize(1);
+    assertThat(asSource(builder.getDatatype().getGeneratedBuilderAnnotations().get(0)))
         .isEqualTo("@GwtCompatible");
-    assertThat(builder.getMetadata().getValueTypeVisibility()).isEqualTo(PRIVATE);
-    assertThat(builder.getMetadata().getValueTypeAnnotations()).isEmpty();
-    assertThat(builder.getMetadata().getNestedClasses()).isEmpty();
-    assertThat(builder.getMetadata().getVisibleNestedTypes()).containsNoneOf(
+    assertThat(builder.getDatatype().getValueTypeVisibility()).isEqualTo(PRIVATE);
+    assertThat(builder.getDatatype().getValueTypeAnnotations()).isEmpty();
+    assertThat(builder.getDatatype().getNestedClasses()).isEmpty();
+    assertThat(builder.getDatatype().getVisibleNestedTypes()).containsNoneOf(
         QualifiedName.of("com.example", "DataType", "Value_CustomFieldSerializer"),
         QualifiedName.of("com.example", "DataType", "GwtWhitelist"));
   }
@@ -758,15 +760,15 @@ public class AnalyserTest {
         "  class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getGeneratedBuilderAnnotations()).hasSize(1);
-    assertThat(asSource(builder.getMetadata().getGeneratedBuilderAnnotations().get(0)))
+    assertThat(builder.getDatatype().getGeneratedBuilderAnnotations()).hasSize(1);
+    assertThat(asSource(builder.getDatatype().getGeneratedBuilderAnnotations().get(0)))
         .isEqualTo("@GwtCompatible");
-    assertThat(builder.getMetadata().getValueTypeVisibility()).isEqualTo(PACKAGE);
-    assertThat(builder.getMetadata().getValueTypeAnnotations()).hasSize(1);
-    assertThat(asSource(builder.getMetadata().getValueTypeAnnotations().get(0)))
+    assertThat(builder.getDatatype().getValueTypeVisibility()).isEqualTo(PACKAGE);
+    assertThat(builder.getDatatype().getValueTypeAnnotations()).hasSize(1);
+    assertThat(asSource(builder.getDatatype().getValueTypeAnnotations().get(0)))
         .isEqualTo("@GwtCompatible(serializable = true)");
-    assertThat(builder.getMetadata().getNestedClasses()).hasSize(2);
-    assertThat(builder.getMetadata().getVisibleNestedTypes()).containsAllOf(
+    assertThat(builder.getDatatype().getNestedClasses()).hasSize(2);
+    assertThat(builder.getDatatype().getVisibleNestedTypes()).containsAllOf(
         QualifiedName.of("com.example", "DataType_Builder", "Value_CustomFieldSerializer"),
         QualifiedName.of("com.example", "DataType_Builder", "GwtWhitelist"));
   }
@@ -782,7 +784,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE));
     messager.verifyError(
         "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
@@ -799,7 +801,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
     messager.verifyError(
         "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
@@ -819,7 +821,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
   }
@@ -835,7 +837,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.TO_STRING, UnderrideLevel.OVERRIDEABLE));
   }
 
@@ -856,7 +858,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE,
         StandardMethod.TO_STRING, UnderrideLevel.OVERRIDEABLE));
@@ -873,7 +875,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL));
     messager.verifyError(
         "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
@@ -890,7 +892,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
     messager.verifyError(
         "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
@@ -910,7 +912,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL,
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
   }
@@ -926,7 +928,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.TO_STRING, UnderrideLevel.FINAL));
   }
 
@@ -947,7 +949,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL,
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL,
         StandardMethod.TO_STRING, UnderrideLevel.FINAL));
@@ -963,7 +965,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEmpty();
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEmpty();
   }
 
   @Test
@@ -976,7 +978,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEmpty();
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEmpty();
   }
 
   @Test
@@ -989,7 +991,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getStandardMethodUnderrides()).isEmpty();
+    assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEmpty();
   }
 
   @Test
@@ -1052,15 +1054,15 @@ public class AnalyserTest {
         "  public class Builder extends DataType_Builder {}",
         "}"));
 
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name");
     assertEquals("java.lang.String", properties.get("name").getType().toString());
     assertNull(properties.get("name").getBoxedType());
     assertEquals("NAME", properties.get("name").getAllCapsName());
     assertEquals("Name", properties.get("name").getCapitalizedName());
     assertEquals("getName", properties.get("name").getGetterName());
-    assertThat(builder.getMetadata().isExtensible()).isFalse();
-    assertThat(builder.getMetadata().getBuilderFactory()).isAbsent();
+    assertThat(builder.getDatatype().isExtensible()).isFalse();
+    assertThat(builder.getDatatype().getBuilderFactory()).isAbsent();
     messager.verifyError("Builder", "Builder must be static on @FreeBuilder types");
   }
 
@@ -1075,20 +1077,20 @@ public class AnalyserTest {
         "}"));
 
     assertEquals("com.example.DataType.Builder<A, B>",
-        builder.getMetadata().getBuilder().toString());
-    assertThat(builder.getMetadata().isExtensible()).isTrue();
+        builder.getDatatype().getBuilder().toString());
+    assertThat(builder.getDatatype().isExtensible()).isTrue();
     assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR),
-        builder.getMetadata().getBuilderFactory());
+        builder.getDatatype().getBuilderFactory());
     assertEquals("com.example.DataType_Builder<A, B>",
-        builder.getMetadata().getGeneratedBuilder().toString());
+        builder.getDatatype().getGeneratedBuilder().toString());
     assertEquals("com.example.DataType_Builder.Partial<A, B>",
-        builder.getMetadata().getPartialType().toString());
+        builder.getDatatype().getPartialType().toString());
     assertEquals("com.example.DataType_Builder.Property",
-        builder.getMetadata().getPropertyEnum().toString());
-    assertEquals("com.example.DataType<A, B>", builder.getMetadata().getType().toString());
+        builder.getDatatype().getPropertyEnum().toString());
+    assertEquals("com.example.DataType<A, B>", builder.getDatatype().getType().toString());
     assertEquals("com.example.DataType_Builder.Value<A, B>",
-        builder.getMetadata().getValueType().toString());
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+        builder.getDatatype().getValueType().toString());
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
     assertNull(properties.get("age").getBoxedType());
@@ -1114,9 +1116,9 @@ public class AnalyserTest {
         "}"));
 
     assertEquals("com.example.DataType.Builder<A, B>",
-        builder.getMetadata().getBuilder().toString());
+        builder.getDatatype().getBuilder().toString());
     assertEquals("DataType<A extends CharSequence, B extends Temporal>",
-        SourceStringBuilder.simple().add(builder.getMetadata().getType().declaration()).toString());
+        SourceStringBuilder.simple().add(builder.getDatatype().getType().declaration()).toString());
   }
 
   @Test
@@ -1134,20 +1136,20 @@ public class AnalyserTest {
         "}"));
 
     assertEquals("com.example.DataType.Builder<A, B>",
-        builder.getMetadata().getBuilder().toString());
-    assertThat(builder.getMetadata().isExtensible()).isTrue();
+        builder.getDatatype().getBuilder().toString());
+    assertThat(builder.getDatatype().isExtensible()).isTrue();
     assertEquals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR),
-        builder.getMetadata().getBuilderFactory());
+        builder.getDatatype().getBuilderFactory());
     assertEquals("com.example.DataType_Builder<A, B>",
-        builder.getMetadata().getGeneratedBuilder().toString());
+        builder.getDatatype().getGeneratedBuilder().toString());
     assertEquals("com.example.DataType_Builder.Partial<A, B>",
-        builder.getMetadata().getPartialType().toString());
+        builder.getDatatype().getPartialType().toString());
     assertEquals("com.example.DataType_Builder.Property",
-        builder.getMetadata().getPropertyEnum().toString());
-    assertEquals("com.example.DataType<A, B>", builder.getMetadata().getType().toString());
+        builder.getDatatype().getPropertyEnum().toString());
+    assertEquals("com.example.DataType<A, B>", builder.getDatatype().getType().toString());
     assertEquals("com.example.DataType_Builder.Value<A, B>",
-        builder.getMetadata().getValueType().toString());
-    Map<String, Property> properties = uniqueIndex(builder.getMetadata().getProperties(), GET_NAME);
+        builder.getDatatype().getValueType().toString());
+    Map<String, Property> properties = uniqueIndex(builder.getProperties(), GET_NAME);
     assertThat(properties.keySet()).containsExactly("name", "age");
     assertEquals("B", properties.get("age").getType().toString());
     assertNull(properties.get("age").getBoxedType());
@@ -1201,7 +1203,7 @@ public class AnalyserTest {
     QualifiedName partialType = expectedBuilder.nestedType("Partial");
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
     QualifiedName valueType = expectedBuilder.nestedType("Value");
-    Metadata expectedMetadata = new Metadata.Builder()
+    Datatype expectedDatatype = new Datatype.Builder()
         .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
@@ -1219,7 +1221,7 @@ public class AnalyserTest {
         .addVisibleNestedTypes(valueType)
         .build();
 
-    assertEquals(expectedMetadata, builder.getMetadata());
+    assertEquals(expectedDatatype, builder.getDatatype());
   }
 
   @Test
@@ -1238,7 +1240,7 @@ public class AnalyserTest {
     QualifiedName partialType = expectedBuilder.nestedType("Partial");
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
     QualifiedName valueType = expectedBuilder.nestedType("Value");
-    Metadata expectedMetadata = new Metadata.Builder()
+    Datatype expectedDatatype = new Datatype.Builder()
         .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
@@ -1256,7 +1258,7 @@ public class AnalyserTest {
         .addVisibleNestedTypes(valueType)
         .build();
 
-    assertEquals(expectedMetadata, builder.getMetadata());
+    assertEquals(expectedDatatype, builder.getDatatype());
   }
 
   @Test
@@ -1332,8 +1334,8 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).hasSize(1);
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    assertThat(builder.getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isTrue();
   }
@@ -1347,8 +1349,8 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).hasSize(1);
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    assertThat(builder.getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isTrue();
   }
@@ -1362,8 +1364,8 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).hasSize(1);
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    assertThat(builder.getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isTrue();
   }
@@ -1377,8 +1379,8 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).hasSize(1);
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    assertThat(builder.getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isFalse();
   }
@@ -1392,8 +1394,8 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).hasSize(1);
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    assertThat(builder.getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isFalse();
   }
@@ -1407,8 +1409,8 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).hasSize(1);
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    assertThat(builder.getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isTrue();
   }
@@ -1422,8 +1424,8 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getProperties()).hasSize(1);
-    Property property = getOnlyElement(builder.getMetadata().getProperties());
+    assertThat(builder.getProperties()).hasSize(1);
+    Property property = getOnlyElement(builder.getProperties());
     assertEquals("property", property.getName());
     assertThat(property.isFullyCheckedCast()).isFalse();
   }
@@ -1451,7 +1453,7 @@ public class AnalyserTest {
         "  public interface Objects {}",
         "}"));
 
-    assertThat(builder.getMetadata().getVisibleNestedTypes()).containsExactly(
+    assertThat(builder.getDatatype().getVisibleNestedTypes()).containsExactly(
         QualifiedName.of("com.example", "DataType", "Builder"),
         QualifiedName.of("com.example", "DataType", "Objects"),
         QualifiedName.of("com.example", "DataType_Builder", "Partial"),
@@ -1476,7 +1478,7 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    assertThat(builder.getMetadata().getVisibleNestedTypes()).containsExactly(
+    assertThat(builder.getDatatype().getVisibleNestedTypes()).containsExactly(
         QualifiedName.of("com.example", "SuperType", "Objects"),
         QualifiedName.of("com.example", "DataType", "Builder"),
         QualifiedName.of("com.example", "DataType_Builder", "Partial"),

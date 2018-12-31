@@ -27,9 +27,9 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
@@ -1919,7 +1919,7 @@ public class ListSourceTest {
   }
 
   /**
-   * Returns a {@link Metadata} instance for a FreeBuilder type with two properties: name, of
+   * Returns a {@link Datatype} instance for a FreeBuilder type with two properties: name, of
    * type {@code List<String>}; and age, of type {@code List<Integer>}.
    */
   private static GeneratedBuilder builder(NamingConvention convention) {
@@ -1928,6 +1928,18 @@ public class ListSourceTest {
     GenericTypeMirrorImpl listString = list.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+    Datatype datatype = new Datatype.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters())
+        .setExtensible(true)
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters())
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters())
+        .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .build();
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setBoxedType(listString)
@@ -1948,43 +1960,30 @@ public class ListSourceTest {
         .setType(listInteger)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters())
-        .setExtensible(true)
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters())
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name, age)
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters())
-        .setValueType(generatedBuilder.nestedType("Value").withParameters())
-        .build();
-    return new GeneratedBuilder(metadata.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new ListProperty(
-                metadata,
-                name,
-                false,
-                false,
-                false,
-                STRING,
-                Optional.<TypeMirror>absent(),
-                FunctionalType.consumer(wildcardSuper(listString))))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new ListProperty(
-                metadata,
-                age,
-                false,
-                false,
-                false,
-                INTEGER,
-                Optional.<TypeMirror>of(INT),
-                FunctionalType.consumer(wildcardSuper(listInteger))))
-            .build())
-        .build());
+    return new GeneratedBuilder(
+        datatype,
+        ImmutableList.of(
+            name.toBuilder()
+                .setCodeGenerator(new ListProperty(
+                    datatype,
+                    name,
+                    false,
+                    false,
+                    false,
+                    STRING,
+                    Optional.<TypeMirror>absent(),
+                    FunctionalType.consumer(wildcardSuper(listString))))
+                .build(),
+            age.toBuilder()
+                .setCodeGenerator(new ListProperty(
+                    datatype,
+                    age,
+                    false,
+                    false,
+                    false,
+                    INTEGER,
+                    Optional.<TypeMirror>of(INT),
+                    FunctionalType.consumer(wildcardSuper(listInteger))))
+                .build()));
   }
 }

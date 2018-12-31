@@ -20,7 +20,7 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 
 import com.google.common.base.Optional;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Property;
 
 import java.util.Set;
 
