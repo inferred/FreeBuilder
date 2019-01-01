@@ -14,7 +14,8 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -34,7 +35,7 @@ class GwtSupport {
   public static Datatype.Builder gwtMetadata(
       TypeElement type,
       Datatype datatype,
-      List<Property> properties) {
+      Map<Property, PropertyCodeGenerator> generatorsByProperty) {
     Datatype.Builder extraMetadata = new Datatype.Builder();
     Optional<AnnotationMirror> annotation = findAnnotationMirror(type, GwtCompatible.class);
     if (annotation.isPresent()) {
@@ -46,8 +47,8 @@ class GwtSupport {
         extraMetadata.setValueTypeVisibility(Visibility.PACKAGE);
         extraMetadata.addValueTypeAnnotations(Excerpts.add(
             "@%s(serializable = true)%n", GwtCompatible.class));
-        extraMetadata.addNestedClasses(new CustomValueSerializer(datatype, properties));
-        extraMetadata.addNestedClasses(new GwtWhitelist(datatype, properties));
+        extraMetadata.addNestedClasses(new CustomValueSerializer(datatype, generatorsByProperty));
+        extraMetadata.addNestedClasses(new GwtWhitelist(datatype, generatorsByProperty.keySet()));
         QualifiedName builderName = datatype.getGeneratedBuilder().getQualifiedName();
         extraMetadata.addVisibleNestedTypes(
             builderName.nestedType("Value_CustomFieldSerializer"),
@@ -60,11 +61,13 @@ class GwtSupport {
   private static final class CustomValueSerializer extends Excerpt {
 
     private final Datatype datatype;
-    private final List<Property> properties;
+    private final Map<Property, PropertyCodeGenerator> generatorsByProperty;
 
-    private CustomValueSerializer(Datatype datatype, List<Property> properties) {
+    private CustomValueSerializer(
+        Datatype datatype,
+        Map<Property, PropertyCodeGenerator> generatorsByProperty) {
       this.datatype = datatype;
-      this.properties = properties;
+      this.generatorsByProperty = generatorsByProperty;
     }
 
     @Override
@@ -119,22 +122,20 @@ class GwtSupport {
       Block body = Block.methodBody(code, "reader");
       Excerpt builder = body.declare(
           datatype.getBuilder(), "builder", Excerpts.add("new %s()", datatype.getBuilder()));
-      for (Property property : properties) {
+      for (Property property : generatorsByProperty.keySet()) {
         TypeMirrorExcerpt propertyType = new TypeMirrorExcerpt(property.getType());
         if (property.getType().getKind().isPrimitive()) {
           Excerpt value = body.declare(
               propertyType,
               property.getName(),
               Excerpts.add("reader.read%s()", withInitialCapital(property.getType())));
-          property.getCodeGenerator()
-              .addSetFromResult(body, builder, value);
+          generatorsByProperty.get(property).addSetFromResult(body, builder, value);
         } else if (String.class.getName().equals(property.getType().toString())) {
           Excerpt value = body.declare(
               propertyType,
               property.getName(),
               Excerpts.add("reader.readString()"));
-          property.getCodeGenerator()
-              .addSetFromResult(body, builder, value);
+          generatorsByProperty.get(property).addSetFromResult(body, builder, value);
         } else {
           body.addLine("    try {");
           Block tryBlock = body.innerBlock();
@@ -148,8 +149,7 @@ class GwtSupport {
               typeAndPreamble,
               property.getName(),
               Excerpts.add("(%s) reader.readObject()", propertyType));
-          property.getCodeGenerator()
-              .addSetFromResult(tryBlock, builder, value);
+          generatorsByProperty.get(property).addSetFromResult(tryBlock, builder, value);
           body.add(tryBlock)
               .addLine("    } catch (%s e) {", ClassCastException.class)
               .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
@@ -168,7 +168,7 @@ class GwtSupport {
           .addLine("  public void serializeInstance(%s writer, %s instance)",
               SERIALIZATION_STREAM_WRITER, datatype.getValueType())
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
-      for (Property property : properties) {
+      for (Property property : generatorsByProperty.keySet()) {
         if (property.getType().getKind().isPrimitive()) {
           code.add("    writer.write%s(", withInitialCapital(property.getType()));
         } else if (String.class.getName().equals(property.getType().toString())) {
@@ -176,7 +176,8 @@ class GwtSupport {
         } else {
           code.add("    writer.writeObject(");
         }
-        property.getCodeGenerator().addReadValueFragment(code, property.getField().on("instance"));
+        generatorsByProperty.get(property)
+            .addReadValueFragment(code, property.getField().on("instance"));
         code.add(");\n");
       }
       code.addLine("  }");
@@ -185,16 +186,16 @@ class GwtSupport {
     @Override
     protected void addFields(FieldReceiver fields) {
       fields.add("datatype", datatype);
-      fields.add("properties", properties);
+      fields.add("generatorsByProperty", generatorsByProperty);
     }
   }
 
   private static final class GwtWhitelist extends Excerpt {
 
     private final Datatype datatype;
-    private final List<Property> properties;
+    private final Collection<Property> properties;
 
-    private GwtWhitelist(Datatype datatype, List<Property> properties) {
+    private GwtWhitelist(Datatype datatype, Collection<Property> properties) {
       this.datatype = datatype;
       this.properties = properties;
     }
@@ -229,7 +230,7 @@ class GwtSupport {
     @Override
     protected void addFields(FieldReceiver fields) {
       fields.add("datatype", datatype);
-      fields.add("properties", properties);
+      fields.add("generatorsByProperty", properties);
     }
   }
 

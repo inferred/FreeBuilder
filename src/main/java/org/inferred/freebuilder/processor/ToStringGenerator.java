@@ -16,7 +16,8 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
 
 class ToStringGenerator {
 
@@ -26,29 +27,30 @@ class ToStringGenerator {
   public static void addToString(
       SourceBuilder code,
       Datatype datatype,
-      List<Property> properties,
+      Map<Property, PropertyCodeGenerator> generatorsByProperty,
       final boolean forPartial) {
     String typename = (forPartial ? "partial " : "") + datatype.getType().getSimpleName();
-    Predicate<Property> isOptional = new Predicate<Property>() {
+    Predicate<PropertyCodeGenerator> isOptional = new Predicate<PropertyCodeGenerator>() {
       @Override
-      public boolean apply(Property property) {
-        Type type = property.getCodeGenerator().getType();
+      public boolean apply(PropertyCodeGenerator generator) {
+        Type type = generator.getType();
         return (type == Type.OPTIONAL || (type == Type.REQUIRED && forPartial));
       }
     };
-    boolean anyOptional = any(properties, isOptional);
-    boolean allOptional = all(properties, isOptional) && !properties.isEmpty();
+    boolean anyOptional = any(generatorsByProperty.values(), isOptional);
+    boolean allOptional = all(generatorsByProperty.values(), isOptional)
+        && !generatorsByProperty.isEmpty();
 
     code.addLine("")
         .addLine("@%s", Override.class)
         .addLine("public %s toString() {", String.class);
     Block body = methodBody(code);
     if (allOptional) {
-      bodyWithBuilderAndSeparator(body, datatype, properties, typename);
+      bodyWithBuilderAndSeparator(body, datatype, generatorsByProperty, typename);
     } else if (anyOptional) {
-      bodyWithBuilder(body, datatype, properties, typename, isOptional);
+      bodyWithBuilder(body, datatype, generatorsByProperty, typename, isOptional);
     } else {
-      bodyWithConcatenation(body, properties, typename);
+      bodyWithConcatenation(body, generatorsByProperty.keySet(), typename);
     }
     code.add(body)
         .addLine("}");
@@ -64,7 +66,7 @@ class ToStringGenerator {
    */
   private static void bodyWithConcatenation(
       Block code,
-      List<Property> properties,
+      Collection<Property> properties,
       String typename) {
     code.add("  return \"%s{", typename);
     String prefix = "";
@@ -94,9 +96,9 @@ class ToStringGenerator {
   private static void bodyWithBuilder(
       Block code,
       Datatype datatype,
-      List<Property> properties,
+      Map<Property, PropertyCodeGenerator> generatorsByProperty,
       String typename,
-      Predicate<Property> isOptional) {
+      Predicate<PropertyCodeGenerator> isOptional) {
     Variable result = new Variable("result");
 
     code.add("  %1$s %2$s = new %1$s(\"%3$s{", StringBuilder.class, result, typename);
@@ -104,10 +106,12 @@ class ToStringGenerator {
     boolean midAppends = true;
     boolean prependCommas = false;
 
-    Property lastOptionalProperty = getLast(filter(properties, isOptional));
+    PropertyCodeGenerator lastOptionalGenerator =
+        getLast(filter(generatorsByProperty.values(), isOptional));
 
-    for (Property property : properties) {
-      if (isOptional.apply(property)) {
+    for (Property property : generatorsByProperty.keySet()) {
+      PropertyCodeGenerator generator = generatorsByProperty.get(property);
+      if (isOptional.apply(generator)) {
         if (midStringLiteral) {
           code.add("\")");
         }
@@ -115,7 +119,7 @@ class ToStringGenerator {
           code.add(";%n  ");
         }
         code.add("if (");
-        if (property.getCodeGenerator().getType() == Type.OPTIONAL) {
+        if (generator.getType() == Type.OPTIONAL) {
           code.add("%s != null", property.getField());
         } else {
           code.add("!%s.contains(%s.%s)",
@@ -130,7 +134,7 @@ class ToStringGenerator {
           code.add(".append(\", \")");
         }
         code.add(";%n  }%n  ");
-        if (property.equals(lastOptionalProperty)) {
+        if (generator.equals(lastOptionalGenerator)) {
           code.add("return %s.append(\"", result);
           midStringLiteral = true;
           midAppends = true;
@@ -179,21 +183,22 @@ class ToStringGenerator {
   private static void bodyWithBuilderAndSeparator(
       Block code,
       Datatype datatype,
-      List<Property> properties,
+      Map<Property, PropertyCodeGenerator> generatorsByProperty,
       String typename) {
     Variable result = new Variable("result");
     Variable separator = new Variable("separator");
 
     code.addLine("  %1$s %2$s = new %1$s(\"%3$s{\");", StringBuilder.class, result, typename);
-    if (properties.size() > 1) {
+    if (generatorsByProperty.size() > 1) {
       // If there's a single property, we don't actually use the separator variable
       code.addLine("  %s %s = \"\";", String.class, separator);
     }
 
-    Property first = properties.get(0);
-    Property last = Iterables.getLast(properties);
-    for (Property property : properties) {
-      switch (property.getCodeGenerator().getType()) {
+    Property first = generatorsByProperty.keySet().iterator().next();
+    Property last = Iterables.getLast(generatorsByProperty.keySet());
+    for (Property property : generatorsByProperty.keySet()) {
+      PropertyCodeGenerator generator = generatorsByProperty.get(property);
+      switch (generator.getType()) {
         case HAS_DEFAULT:
           throw new RuntimeException("Internal error: unexpected default field");
 

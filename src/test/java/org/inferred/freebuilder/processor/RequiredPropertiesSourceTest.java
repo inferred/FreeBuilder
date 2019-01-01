@@ -25,7 +25,7 @@ import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
@@ -1667,14 +1667,8 @@ public class RequiredPropertiesSourceTest {
         .setUsingBeanConvention(convention == BEAN)
         .build();
 
-    return new GeneratedBuilder(
-        datatype,
-        ImmutableList.of(
-            name.toBuilder()
-                .setCodeGenerator(new DefaultProperty(datatype, name, false, unaryOperator(STRING)))
-                .build(),
-            age.toBuilder()
-                .setCodeGenerator(new DefaultProperty(datatype, age, false, unaryOperator(INTEGER)))
-                .build()));
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new DefaultProperty(datatype, name, false, unaryOperator(STRING)),
+        age, new DefaultProperty(datatype, age, false, unaryOperator(INTEGER))));
   }
 }

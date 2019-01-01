@@ -57,7 +57,6 @@ abstract class Property_Builder {
   private String allCapsName;
   private boolean usingBeanConvention;
   private String getterName;
-  @Nullable private PropertyCodeGenerator codeGenerator = null;
   private boolean fullyCheckedCast;
   private List<Excerpt> accessorAnnotations = ImmutableList.of();
   private final EnumSet<Property_Builder.Property> _unsetProperties =
@@ -237,27 +236,6 @@ abstract class Property_Builder {
 
   /**
    * Sets the value to be returned by {@link
-   * org.inferred.freebuilder.processor.Property#getCodeGenerator()}.
-   *
-   * @return this {@code Builder} object
-   */
-  public org.inferred.freebuilder.processor.Property.Builder setCodeGenerator(
-      @Nullable PropertyCodeGenerator codeGenerator) {
-    this.codeGenerator = codeGenerator;
-    return (org.inferred.freebuilder.processor.Property.Builder) this;
-  }
-
-  /**
-   * Returns the value that will be returned by {@link
-   * org.inferred.freebuilder.processor.Property#getCodeGenerator()}.
-   */
-  @Nullable
-  public PropertyCodeGenerator getCodeGenerator() {
-    return codeGenerator;
-  }
-
-  /**
-   * Sets the value to be returned by {@link
    * org.inferred.freebuilder.processor.Property#isFullyCheckedCast()}.
    *
    * @return this {@code Builder} object
@@ -398,11 +376,6 @@ abstract class Property_Builder {
         || !value.getGetterName().equals(_defaults.getGetterName())) {
       setGetterName(value.getGetterName());
     }
-    if (value.getCodeGenerator() != _defaults.getCodeGenerator()
-        && (value.getCodeGenerator() == null
-            || !value.getCodeGenerator().equals(_defaults.getCodeGenerator()))) {
-      setCodeGenerator(value.getCodeGenerator());
-    }
     if (_defaults._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
         || value.isFullyCheckedCast() != _defaults.isFullyCheckedCast()) {
       setFullyCheckedCast(value.isFullyCheckedCast());
@@ -460,11 +433,6 @@ abstract class Property_Builder {
             || !template.getGetterName().equals(_defaults.getGetterName()))) {
       setGetterName(template.getGetterName());
     }
-    if (template.getCodeGenerator() != _defaults.getCodeGenerator()
-        && (template.getCodeGenerator() == null
-            || !template.getCodeGenerator().equals(_defaults.getCodeGenerator()))) {
-      setCodeGenerator(template.getCodeGenerator());
-    }
     if (!base._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
         && (_defaults._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
             || template.isFullyCheckedCast() != _defaults.isFullyCheckedCast())) {
@@ -484,7 +452,6 @@ abstract class Property_Builder {
     allCapsName = _defaults.allCapsName;
     usingBeanConvention = _defaults.usingBeanConvention;
     getterName = _defaults.getterName;
-    codeGenerator = _defaults.codeGenerator;
     fullyCheckedCast = _defaults.fullyCheckedCast;
     clearAccessorAnnotations();
     _unsetProperties.clear();
@@ -525,7 +492,6 @@ abstract class Property_Builder {
     private final String allCapsName;
     private final boolean usingBeanConvention;
     private final String getterName;
-    @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
 
@@ -537,7 +503,6 @@ abstract class Property_Builder {
       this.allCapsName = builder.allCapsName;
       this.usingBeanConvention = builder.usingBeanConvention;
       this.getterName = builder.getterName;
-      this.codeGenerator = builder.codeGenerator;
       this.fullyCheckedCast = builder.fullyCheckedCast;
       this.accessorAnnotations = ImmutableList.copyOf(builder.accessorAnnotations);
     }
@@ -579,12 +544,6 @@ abstract class Property_Builder {
     }
 
     @Override
-    @Nullable
-    public PropertyCodeGenerator getCodeGenerator() {
-      return codeGenerator;
-    }
-
-    @Override
     public boolean isFullyCheckedCast() {
       return fullyCheckedCast;
     }
@@ -622,10 +581,6 @@ abstract class Property_Builder {
       if (!getterName.equals(other.getterName)) {
         return false;
       }
-      if (codeGenerator != other.codeGenerator
-          && (codeGenerator == null || !codeGenerator.equals(other.codeGenerator))) {
-        return false;
-      }
       if (fullyCheckedCast != other.fullyCheckedCast) {
         return false;
       }
@@ -646,7 +601,6 @@ abstract class Property_Builder {
             allCapsName,
             usingBeanConvention,
             getterName,
-            codeGenerator,
             fullyCheckedCast,
             accessorAnnotations
           });
@@ -658,7 +612,7 @@ abstract class Property_Builder {
       if (boxedType != null) {
         result.append(", boxedType=").append(boxedType);
       }
-      result
+      return result
           .append(", name=")
           .append(name)
           .append(", capitalizedName=")
@@ -668,11 +622,7 @@ abstract class Property_Builder {
           .append(", usingBeanConvention=")
           .append(usingBeanConvention)
           .append(", getterName=")
-          .append(getterName);
-      if (codeGenerator != null) {
-        result.append(", codeGenerator=").append(codeGenerator);
-      }
-      return result
+          .append(getterName)
           .append(", fullyCheckedCast=")
           .append(fullyCheckedCast)
           .append(", accessorAnnotations=")
@@ -690,7 +640,6 @@ abstract class Property_Builder {
     private final String allCapsName;
     private final boolean usingBeanConvention;
     private final String getterName;
-    @Nullable private final PropertyCodeGenerator codeGenerator;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
     private final EnumSet<Property_Builder.Property> _unsetProperties;
@@ -703,7 +652,6 @@ abstract class Property_Builder {
       this.allCapsName = builder.allCapsName;
       this.usingBeanConvention = builder.usingBeanConvention;
       this.getterName = builder.getterName;
-      this.codeGenerator = builder.codeGenerator;
       this.fullyCheckedCast = builder.fullyCheckedCast;
       this.accessorAnnotations = ImmutableList.copyOf(builder.accessorAnnotations);
       this._unsetProperties = builder._unsetProperties.clone();
@@ -764,12 +712,6 @@ abstract class Property_Builder {
     }
 
     @Override
-    @Nullable
-    public PropertyCodeGenerator getCodeGenerator() {
-      return codeGenerator;
-    }
-
-    @Override
     public boolean isFullyCheckedCast() {
       if (_unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)) {
         throw new UnsupportedOperationException("fullyCheckedCast not set");
@@ -813,10 +755,6 @@ abstract class Property_Builder {
           && (getterName == null || !getterName.equals(other.getterName))) {
         return false;
       }
-      if (codeGenerator != other.codeGenerator
-          && (codeGenerator == null || !codeGenerator.equals(other.codeGenerator))) {
-        return false;
-      }
       if (fullyCheckedCast != other.fullyCheckedCast) {
         return false;
       }
@@ -837,7 +775,6 @@ abstract class Property_Builder {
             allCapsName,
             usingBeanConvention,
             getterName,
-            codeGenerator,
             fullyCheckedCast,
             accessorAnnotations,
             _unsetProperties
@@ -867,9 +804,6 @@ abstract class Property_Builder {
       }
       if (!_unsetProperties.contains(Property_Builder.Property.GETTER_NAME)) {
         result.append("getterName=").append(getterName).append(", ");
-      }
-      if (codeGenerator != null) {
-        result.append("codeGenerator=").append(codeGenerator).append(", ");
       }
       if (!_unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)) {
         result.append("fullyCheckedCast=").append(fullyCheckedCast).append(", ");

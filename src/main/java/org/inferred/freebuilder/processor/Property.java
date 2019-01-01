@@ -38,12 +38,6 @@ public abstract class Property {
   public abstract String getGetterName();
 
   /**
-   * Returns the code generator to use for this property, or null if no generator has been picked
-   * (i.e. when passed to {@link PropertyCodeGenerator.Factory#create}.
-   */
-  @Nullable public abstract PropertyCodeGenerator getCodeGenerator();
-
-  /**
    * Returns true if a cast to this property type is guaranteed to be fully checked at runtime.
    * This is true for any type that is non-generic, raw, or parameterized with unbounded
    * wildcards, such as {@code Integer}, {@code List} or {@code Map<?, ?>}.

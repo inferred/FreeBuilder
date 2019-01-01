@@ -13,8 +13,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNulls;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RunWith(JUnit4.class)
 public class ToStringGeneratorTest {
@@ -524,7 +524,7 @@ public class ToStringGeneratorTest {
   private static class ToStringBuilder {
 
     private final Datatype datatype;
-    private final List<Property> properties = new ArrayList<>();
+    private final Map<Property, PropertyCodeGenerator> generatorsByProperty = new LinkedHashMap<>();
 
     ToStringBuilder(String typename) {
       datatype = new Datatype.Builder()
@@ -548,24 +548,24 @@ public class ToStringGeneratorTest {
 
     String valueToString() {
       SourceBuilder code = SourceStringBuilder.simple();
-      ToStringGenerator.addToString(code, datatype, properties, false);
+      ToStringGenerator.addToString(code, datatype, generatorsByProperty, false);
       return code.toString();
     }
 
     String partialToString() {
       SourceBuilder code = SourceStringBuilder.simple();
-      ToStringGenerator.addToString(code, datatype, properties, true);
+      ToStringGenerator.addToString(code, datatype, generatorsByProperty, true);
       return code.toString();
     }
 
     private ToStringBuilder with(PropertyCodeGenerator.Type type, String name) {
-      PropertyCodeGenerator mock = mock(PropertyCodeGenerator.class, new ReturnsSmartNulls());
-      when(mock.getType()).thenReturn(type);
-      properties.add(new Property.Builder()
+      Property property = new Property.Builder()
           .setName(name)
           .setAllCapsName(name.replaceAll("([A-Z])", "_$1").toUpperCase())
-          .setCodeGenerator(mock)
-          .buildPartial());
+          .buildPartial();
+      PropertyCodeGenerator generator = mock(PropertyCodeGenerator.class, new ReturnsSmartNulls());
+      when(generator.getType()).thenReturn(type);
+      generatorsByProperty.put(property, generator);
       return this;
     }
   }

@@ -27,7 +27,7 @@ import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardS
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -35,8 +35,6 @@ import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import javax.lang.model.type.TypeMirror;
 
 @RunWith(JUnit4.class)
 public class MapSourceTest {
@@ -1060,19 +1058,15 @@ public class MapSourceTest {
         .setUsingBeanConvention(convention == BEAN)
         .build();
 
-    return new GeneratedBuilder(
-        datatype,
-        ImmutableList.of(
-            name.toBuilder()
-                .setCodeGenerator(new MapProperty(
-                    datatype,
-                    name,
-                    false,
-                    INTEGER,
-                    Optional.<TypeMirror>of(INT),
-                    STRING,
-                    Optional.<TypeMirror>absent(),
-                    consumer(wildcardSuper(mapIntString))))
-                .build()));
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new MapProperty(
+                datatype,
+                name,
+                false,
+                INTEGER,
+                Optional.of(INT),
+                STRING,
+                Optional.absent(),
+                consumer(wildcardSuper(mapIntString)))));
   }
 }
