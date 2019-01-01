@@ -27,7 +27,7 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.OptionalProperty.OptionalType;
@@ -1320,28 +1320,22 @@ public class GuavaOptionalSourceTest {
         .setUsingBeanConvention(convention == BEAN)
         .build();
 
-    return new GeneratedBuilder(
-        datatype,
-        ImmutableList.of(
-            name.toBuilder()
-                .setCodeGenerator(new OptionalProperty(
-                    datatype,
-                    name,
-                    OptionalType.GUAVA,
-                    STRING,
-                    Optional.absent(),
-                    unaryOperator(STRING),
-                    false))
-                .build(),
-            age.toBuilder()
-                .setCodeGenerator(new OptionalProperty(
-                    datatype,
-                    age,
-                    OptionalType.GUAVA,
-                    INTEGER,
-                    Optional.of(INT),
-                    unaryOperator(INTEGER),
-                    false))
-                .build()));
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new OptionalProperty(
+            datatype,
+            name,
+            OptionalType.GUAVA,
+            STRING,
+            Optional.absent(),
+            unaryOperator(STRING),
+            false),
+        age, new OptionalProperty(
+            datatype,
+            age,
+            OptionalType.GUAVA,
+            INTEGER,
+            Optional.of(INT),
+            unaryOperator(INTEGER),
+            false)));
   }
 }

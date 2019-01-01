@@ -21,7 +21,7 @@ import static org.inferred.freebuilder.processor.util.TypeParameterElementImpl.n
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.TypeParameterElementImpl;
@@ -875,16 +875,8 @@ public class GenericTypeSourceTest {
         .setUsingBeanConvention(true)
         .build();
 
-    return new GeneratedBuilder(
-        datatype,
-        ImmutableList.of(
-            name.toBuilder()
-                .setCodeGenerator(new DefaultProperty(
-                    datatype, name, false, unaryOperator(paramA.asType())))
-                .build(),
-            age.toBuilder()
-                .setCodeGenerator(new DefaultProperty(
-                    datatype, age, false, unaryOperator(paramB.asType())))
-                .build()));
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new DefaultProperty(datatype, name, false, unaryOperator(paramA.asType())),
+        age, new DefaultProperty(datatype, age, false, unaryOperator(paramB.asType()))));
   }
 }

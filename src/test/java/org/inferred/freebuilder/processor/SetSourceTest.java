@@ -26,7 +26,7 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -1435,19 +1435,16 @@ public class SetSourceTest {
         .setType(setString)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    return new GeneratedBuilder(
-        datatype,
-        ImmutableList.of(
-            name.toBuilder()
-                .setCodeGenerator(new SetProperty(
-                    datatype,
-                    name,
-                    STRING,
-                    Optional.<TypeMirror>absent(),
-                    consumer(wildcardSuper(setString)),
-                    false,
-                    false,
-                    false))
-                .build()));
+
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new SetProperty(
+            datatype,
+            name,
+            STRING,
+            Optional.<TypeMirror>absent(),
+            consumer(wildcardSuper(setString)),
+            false,
+            false,
+            false)));
   }
 }

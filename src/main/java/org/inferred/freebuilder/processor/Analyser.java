@@ -175,10 +175,10 @@ class Analyser {
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .setBuilder(ParameterizedType.from(builder));
     Datatype baseDatatype = datatypeBuilder.build();
-    List<Property> properties =
-        findProperties(type, baseDatatype, builder, removeNonGetterMethods(builder, methods));
-    datatypeBuilder.mergeFrom(gwtMetadata(type, baseDatatype, properties));
-    return new GeneratedBuilder(datatypeBuilder.build(), properties);
+    Map<Property, PropertyCodeGenerator> generatorsByProperty = pickPropertyGenerators(
+        type, baseDatatype, builder, removeNonGetterMethods(builder, methods));
+    datatypeBuilder.mergeFrom(gwtMetadata(type, baseDatatype, generatorsByProperty));
+    return new GeneratedBuilder(datatypeBuilder.build(), generatorsByProperty);
   }
 
   private static Set<QualifiedName> visibleTypesIn(TypeElement type) {
@@ -436,7 +436,7 @@ class Analyser {
         .setBuilderFactory(BuilderFactory.from(builderElement));
   }
 
-  private List<Property> findProperties(
+  private Map<Property, PropertyCodeGenerator> pickPropertyGenerators(
       TypeElement type,
       Datatype datatype,
       DeclaredType builder,
@@ -446,22 +446,23 @@ class Analyser {
     Set<String> methodsInvokedInBuilderConstructor =
         getMethodsInvokedInBuilderConstructor(asElement(builder));
 
-    ImmutableList.Builder<Property> properties = ImmutableList.builder();
+    ImmutableMap.Builder<Property, PropertyCodeGenerator> generatorsByProperty =
+        ImmutableMap.builder();
     for (ExecutableElement method : methods) {
       Property.Builder propertyBuilder = namingConvention.getPropertyNames(type, method).orNull();
       if (propertyBuilder != null) {
         addPropertyData(propertyBuilder, type, method, jacksonSupport);
+        Property property = propertyBuilder.build();
         Config config = new ConfigImpl(
             builder,
             datatype,
-            propertyBuilder.build(),
+            property,
             method,
             methodsInvokedInBuilderConstructor);
-        propertyBuilder.setCodeGenerator(createCodeGenerator(config));
-        properties.add(propertyBuilder.build());
+        generatorsByProperty.put(property, createCodeGenerator(config));
       }
     }
-    return properties.build();
+    return generatorsByProperty.build();
   }
 
   private Set<String> getMethodsInvokedInBuilderConstructor(TypeElement builder) {

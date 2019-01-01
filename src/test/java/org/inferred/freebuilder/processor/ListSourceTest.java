@@ -27,7 +27,7 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -36,8 +36,6 @@ import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import javax.lang.model.type.TypeMirror;
 
 @RunWith(JUnit4.class)
 public class ListSourceTest {
@@ -1928,6 +1926,7 @@ public class ListSourceTest {
     GenericTypeMirrorImpl listString = list.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
+
     Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setExtensible(true)
@@ -1960,30 +1959,25 @@ public class ListSourceTest {
         .setType(listInteger)
         .setUsingBeanConvention(convention == BEAN)
         .build();
-    return new GeneratedBuilder(
-        datatype,
-        ImmutableList.of(
-            name.toBuilder()
-                .setCodeGenerator(new ListProperty(
-                    datatype,
-                    name,
-                    false,
-                    false,
-                    false,
-                    STRING,
-                    Optional.<TypeMirror>absent(),
-                    FunctionalType.consumer(wildcardSuper(listString))))
-                .build(),
-            age.toBuilder()
-                .setCodeGenerator(new ListProperty(
-                    datatype,
-                    age,
-                    false,
-                    false,
-                    false,
-                    INTEGER,
-                    Optional.<TypeMirror>of(INT),
-                    FunctionalType.consumer(wildcardSuper(listInteger))))
-                .build()));
+
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new ListProperty(
+            datatype,
+            name,
+            false,
+            false,
+            false,
+            STRING,
+            Optional.absent(),
+            FunctionalType.consumer(wildcardSuper(listString))),
+        age, new ListProperty(
+            datatype,
+            age,
+            false,
+            false,
+            false,
+            INTEGER,
+            Optional.of(INT),
+            FunctionalType.consumer(wildcardSuper(listInteger)))));
   }
 }

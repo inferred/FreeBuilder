@@ -25,7 +25,7 @@ import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperat
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_8;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
@@ -979,16 +979,10 @@ public class NullableSourceTest {
         .setUsingBeanConvention(convention == BEAN)
         .build();
 
-    return new GeneratedBuilder(
-        datatype,
-        ImmutableList.of(
-            name.toBuilder()
-                .setCodeGenerator(new NullableProperty(
-                    datatype, name, ImmutableSet.of(nullable), unaryOperator(STRING)))
-                .build(),
-            age.toBuilder()
-                .setCodeGenerator(new NullableProperty(
-                    datatype, age, ImmutableSet.of(nullable), unaryOperator(INTEGER)))
-                .build()));
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new NullableProperty(
+                datatype, name, ImmutableSet.of(nullable), unaryOperator(STRING)),
+        age, new NullableProperty(
+                datatype, age, ImmutableSet.of(nullable), unaryOperator(INTEGER))));
   }
 }
