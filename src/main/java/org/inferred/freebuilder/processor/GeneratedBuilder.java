@@ -257,7 +257,7 @@ class GeneratedBuilder extends GeneratedType {
           .addLine(" * when accessed via the partial object.");
     }
     if (datatype.getHasToBuilderMethod()
-        && datatype.getBuilderFactory() == Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR)) {
+        && datatype.getBuilderFactory().equals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR))) {
       code.addLine(" *")
           .addLine(" * <p>The builder returned by a partial's {@link %s#toBuilder() toBuilder}",
               datatype.getType())

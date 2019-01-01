@@ -950,6 +950,12 @@ public class DefaultedPropertiesSourceTest {
             + "State checking will not",
         "   * be performed.",
         "   *",
+        "   * <p>The builder returned by a partial's {@link Person#toBuilder() toBuilder} method "
+            + "overrides",
+        "   * {@link Person.Builder#build() build()} to return another partial. This allows for "
+            + "robust tests",
+        "   * of modify-rebuild code.",
+        "   *",
         "   * <p>Partials should only ever be used in tests. "
             + "They permit writing robust test cases that won't",
         "   * fail if this type gains more application-level constraints "
