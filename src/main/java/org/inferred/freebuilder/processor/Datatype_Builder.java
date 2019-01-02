@@ -2,7 +2,6 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -17,13 +16,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.BaseStream;
 import javax.annotation.Generated;
-import org.inferred.freebuilder.processor.BuilderFactory;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -189,6 +188,7 @@ abstract class Datatype_Builder {
   /**
    * Returns the value that will be returned by {@link Datatype#getBuilder()}.
    *
+   * @throws IllegalStateException if the field has not been set
    */
   public ParameterizedType getBuilder() {
     Preconditions.checkState(
@@ -278,17 +278,12 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code mapper} is null
    */
   public Datatype.Builder mapBuilderFactory(UnaryOperator<BuilderFactory> mapper) {
-    Objects.requireNonNull(mapper);
-    Optional<BuilderFactory> oldBuilderFactory = getBuilderFactory();
-    if (oldBuilderFactory.isPresent()) {
-      setNullableBuilderFactory(mapper.apply(oldBuilderFactory.get()));
-    }
-    return (Datatype.Builder) this;
+    return setBuilderFactory(getBuilderFactory().map(mapper));
   }
 
   /**
    * Sets the value to be returned by {@link Datatype#getBuilderFactory()} to {@link
-   * Optional#absent() Optional.absent()}.
+   * Optional#empty() Optional.empty()}.
    *
    * @return this {@code Builder} object
    */
@@ -299,7 +294,7 @@ abstract class Datatype_Builder {
 
   /** Returns the value that will be returned by {@link Datatype#getBuilderFactory()}. */
   public Optional<BuilderFactory> getBuilderFactory() {
-    return Optional.fromNullable(builderFactory);
+    return Optional.ofNullable(builderFactory);
   }
 
   /**
@@ -1131,9 +1126,7 @@ abstract class Datatype_Builder {
         || value.isExtensible() != _defaults.isExtensible()) {
       setExtensible(value.isExtensible());
     }
-    if (value.getBuilderFactory().isPresent()) {
-      setBuilderFactory(value.getBuilderFactory().get());
-    }
+    value.getBuilderFactory().ifPresent(this::setBuilderFactory);
     if (_defaults._unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)
         || !Objects.equals(value.getGeneratedBuilder(), _defaults.getGeneratedBuilder())) {
       setGeneratedBuilder(value.getGeneratedBuilder());
@@ -1217,9 +1210,7 @@ abstract class Datatype_Builder {
             || template.isExtensible() != _defaults.isExtensible())) {
       setExtensible(template.isExtensible());
     }
-    if (template.getBuilderFactory().isPresent()) {
-      setBuilderFactory(template.getBuilderFactory().get());
-    }
+    template.getBuilderFactory().ifPresent(this::setBuilderFactory);
     if (!base._unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)
         && (_defaults._unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)
             || !Objects.equals(template.getGeneratedBuilder(), _defaults.getGeneratedBuilder()))) {
@@ -1378,7 +1369,7 @@ abstract class Datatype_Builder {
 
     @Override
     public Optional<BuilderFactory> getBuilderFactory() {
-      return Optional.fromNullable(builderFactory);
+      return Optional.ofNullable(builderFactory);
     }
 
     @Override
@@ -1612,7 +1603,7 @@ abstract class Datatype_Builder {
 
     @Override
     public Optional<BuilderFactory> getBuilderFactory() {
-      return Optional.fromNullable(builderFactory);
+      return Optional.ofNullable(builderFactory);
     }
 
     @Override

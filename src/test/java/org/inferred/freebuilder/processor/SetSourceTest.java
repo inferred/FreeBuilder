@@ -23,7 +23,6 @@ import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
@@ -33,7 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import javax.lang.model.type.TypeMirror;
+import java.util.Optional;
 
 @RunWith(JUnit4.class)
 public class SetSourceTest {
@@ -846,7 +845,7 @@ public class SetSourceTest {
             datatype,
             name,
             STRING,
-            Optional.<TypeMirror>absent(),
+            Optional.empty(),
             consumer(wildcardSuper(setString)),
             false,
             false,

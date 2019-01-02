@@ -209,7 +209,7 @@ public class ParameterizedType extends Excerpt {
     if (element.getBounds().size() != 1) {
       return false;
     }
-    TypeElement bound = maybeAsTypeElement(getOnlyElement(element.getBounds())).orNull();
+    TypeElement bound = maybeAsTypeElement(getOnlyElement(element.getBounds())).orElse(null);
     if (bound == null) {
       return false;
     }

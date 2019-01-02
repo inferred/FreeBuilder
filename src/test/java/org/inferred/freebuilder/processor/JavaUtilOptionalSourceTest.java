@@ -24,7 +24,6 @@ import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
@@ -34,6 +33,8 @@ import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Optional;
 
 @RunWith(JUnit4.class)
 public class JavaUtilOptionalSourceTest {
@@ -1022,7 +1023,7 @@ public class JavaUtilOptionalSourceTest {
             name,
             OptionalType.JAVA8,
             STRING,
-            Optional.absent(),
+            Optional.empty(),
             unaryOperator(STRING),
             false),
         age, new OptionalProperty(

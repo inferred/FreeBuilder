@@ -15,9 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-
-import com.google.common.base.Joiner;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -112,7 +111,7 @@ interface TypeShortener {
 
     @Override
     public String shorten(QualifiedName type) {
-      return Joiner.on('.').join(type.getSimpleNames());
+      return type.getSimpleNames().stream().collect(joining("."));
     }
 
     @Override

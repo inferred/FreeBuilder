@@ -1,11 +1,11 @@
 package org.inferred.freebuilder.processor;
 
-import com.google.common.base.Optional;
-
 import org.inferred.freebuilder.processor.BuilderFactory.TypeInference;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
+
+import java.util.Optional;
 
 class Declarations {
 
@@ -34,7 +34,7 @@ class Declarations {
    */
   public static Optional<Excerpt> freshBuilder(Block block, Datatype datatype) {
     if (!datatype.getBuilderFactory().isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     Excerpt defaults = block.declare(
         datatype.getGeneratedBuilder(),
