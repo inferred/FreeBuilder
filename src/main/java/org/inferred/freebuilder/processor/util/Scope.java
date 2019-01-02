@@ -15,12 +15,12 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.Maps.newLinkedHashMap;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,7 +34,7 @@ public abstract class Scope {
     Level level();
   }
 
-  private final Map<Element<?>, Object> elements = newLinkedHashMap();
+  private final Map<Element<?>, Object> elements = new LinkedHashMap<>();
   private final Scope parent;
   private final Level level;
 
@@ -73,8 +73,8 @@ public abstract class Scope {
   }
 
   public <T> T putIfAbsent(Element<T> element, T value) {
-    checkNotNull(element);
-    checkNotNull(value);
+    requireNonNull(element);
+    requireNonNull(value);
     if (level == element.level()) {
       @SuppressWarnings("unchecked")
       T existingValue = (T) elements.get(element);

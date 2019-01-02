@@ -15,12 +15,11 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Maps.newLinkedHashMap;
-
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -33,7 +32,7 @@ import java.util.Set;
 class ImportManager {
 
   /** Imported types, indexed by simple name. */
-  private final Map<String, QualifiedName> imports = newLinkedHashMap();
+  private final Map<String, QualifiedName> imports = new LinkedHashMap<>();
 
   /**
    * Returns a sorted set of the qualified name of all imported types.
@@ -71,7 +70,7 @@ class ImportManager {
     String[] simpleNames = shortenedType.split("\\.");
     QualifiedName result = imports.get(simpleNames[0]);
     if (result == null) {
-      return Optional.absent();
+      return Optional.empty();
     }
     for (int i = 1; i < simpleNames.length; i++) {
       result = result.nestedType(simpleNames[i]);

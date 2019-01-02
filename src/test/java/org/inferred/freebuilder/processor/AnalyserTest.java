@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.inferred.freebuilder.processor.BuilderFactory.BUILDER_METHOD;
@@ -29,8 +28,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import static java.util.stream.Collectors.toMap;
+
 import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
@@ -50,6 +50,7 @@ import org.junit.runners.JUnit4;
 
 import java.time.temporal.Temporal;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
@@ -234,7 +235,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         builder.getDatatype().getBuilder().getQualifiedName().toString());
     assertThat(builder.getDatatype().isExtensible()).isTrue();
-    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(builder.getDatatype().getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
@@ -255,7 +256,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         builder.getDatatype().getBuilder().getQualifiedName().toString());
     assertThat(builder.getDatatype().isExtensible()).isTrue();
-    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(builder.getDatatype().getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
@@ -276,7 +277,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         builder.getDatatype().getBuilder().getQualifiedName().toString());
     assertThat(builder.getDatatype().isExtensible()).isFalse();
-    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(builder.getDatatype().getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
@@ -294,7 +295,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         builder.getDatatype().getBuilder().getQualifiedName().toString());
     assertThat(builder.getDatatype().isExtensible()).isTrue();
-    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
+    assertThat(builder.getDatatype().getBuilderFactory().get()).isEqualTo(NEW_BUILDER_METHOD);
     assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
@@ -1067,7 +1068,7 @@ public class AnalyserTest {
     Map<String, Property> properties = propertiesByName(builder);
     assertThat(properties.keySet()).containsExactly("name");
     assertThat(builder.getDatatype().isExtensible()).isFalse();
-    assertThat(builder.getDatatype().getBuilderFactory()).isAbsent();
+    assertThat(builder.getDatatype().getBuilderFactory()).isEqualTo(Optional.empty());
     messager.verifyError("Builder", "Builder must be static on @FreeBuilder types");
   }
 
@@ -1484,23 +1485,18 @@ public class AnalyserTest {
     return SourceStringBuilder.simple().add(annotation).toString().trim();
   }
 
-  private static ImmutableMap<String, Property> propertiesByName(GeneratedBuilder builder) {
-    return uniqueIndex(builder.getGeneratorsByProperty().keySet(), GET_NAME);
+  private static Map<String, Property> propertiesByName(GeneratedBuilder builder) {
+    return builder.getGeneratorsByProperty()
+        .keySet()
+        .stream()
+        .collect(toMap(Property::getName, $ -> $));
   }
 
-  private static ImmutableMap<String, PropertyCodeGenerator> generatorsByName(
-      GeneratedBuilder builder) {
+  private static Map<String, PropertyCodeGenerator> generatorsByName(GeneratedBuilder builder) {
     ImmutableMap.Builder<String, PropertyCodeGenerator> result = ImmutableMap.builder();
-    for (Property property : builder.getGeneratorsByProperty().keySet()) {
-      result.put(property.getName(), builder.getGeneratorsByProperty().get(property));
-    }
+    builder.getGeneratorsByProperty().forEach((property, generator) -> {
+      result.put(property.getName(), generator);
+    });
     return result.build();
   }
-
-  private static final Function<Property, String> GET_NAME = new Function<Property, String>() {
-    @Override
-    public String apply(Property propery) {
-      return propery.getName();
-    }
-  };
 }

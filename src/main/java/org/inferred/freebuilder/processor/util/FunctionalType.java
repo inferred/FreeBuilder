@@ -11,13 +11,13 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.only;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
@@ -119,7 +119,7 @@ public class FunctionalType extends ValueType {
       }
       ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
       TypeMirror parameter = getOnlyElement(methodType.getParameterTypes());
-      FunctionalType functionalType = maybeFunctionalType(parameter, elements, types).orNull();
+      FunctionalType functionalType = maybeFunctionalType(parameter, elements, types).orElse(null);
       if (functionalType == null || !isAssignable(functionalType, prototype, types)) {
         continue;
       }
@@ -132,11 +132,8 @@ public class FunctionalType extends ValueType {
       TypeMirror type,
       Elements elements,
       Types types) {
-    DeclaredType declaredType = maybeDeclared(type).orNull();
-    if (declaredType == null) {
-      return Optional.absent();
-    }
-    return maybeFunctionalType(declaredType, elements, types);
+    return maybeDeclared(type)
+        .flatMap(declaredType -> maybeFunctionalType(declaredType, elements, types));
   }
 
   public static Optional<FunctionalType> maybeFunctionalType(
@@ -145,12 +142,12 @@ public class FunctionalType extends ValueType {
       Types types) {
     TypeElement typeElement = asElement(type);
     if (!typeElement.getKind().isInterface()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     Set<ExecutableElement> abstractMethods =
         only(ABSTRACT, methodsOn(typeElement, elements, errorType -> { }));
     if (abstractMethods.size() != 1) {
-      return Optional.absent();
+      return Optional.empty();
     }
     ExecutableElement method = getOnlyElement(abstractMethods);
     ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);

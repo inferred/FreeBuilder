@@ -1,9 +1,9 @@
 package org.inferred.freebuilder.processor.util.feature;
 
-import com.google.common.base.Optional;
-
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+
+import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.util.Elements;
@@ -58,6 +58,6 @@ public enum JavaxPackage implements Feature<JavaxPackage> {
   }
 
   private <T> Optional<T> ifAvailable(T value) {
-    return (this == AVAILABLE) ? Optional.of(value) : Optional.absent();
+    return (this == AVAILABLE) ? Optional.of(value) : Optional.empty();
   }
 }

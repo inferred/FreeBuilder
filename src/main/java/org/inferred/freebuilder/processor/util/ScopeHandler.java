@@ -1,17 +1,17 @@
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Iterables.getOnlyElement;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.Modifier;
@@ -43,11 +43,12 @@ class ScopeHandler {
   private final Elements elements;
 
   /** Type ↦ visibility in parent scope */
-  private final Map<QualifiedName, Visibility> typeVisibility = newHashMap();
+  private final Map<QualifiedName, Visibility> typeVisibility = new HashMap<>();
   /** Scope ↦ simple name ↦ type */
-  private final Map<QualifiedName, SetMultimap<String, QualifiedName>> visibleTypes = newHashMap();
+  private final Map<QualifiedName, SetMultimap<String, QualifiedName>> visibleTypes =
+      new HashMap<>();
   /** Qualified name as string ↦ qualified name */
-  private final Map<String, QualifiedName> generatedTypes = newHashMap();
+  private final Map<String, QualifiedName> generatedTypes = new HashMap<>();
 
   ScopeHandler(Elements elements) {
     this.elements = elements;
@@ -93,7 +94,7 @@ class ScopeHandler {
     } else if (!pkg.equals(UNIVERSALLY_VISIBLE_PACKAGE)) {
       return typeInScope(UNIVERSALLY_VISIBLE_PACKAGE, simpleName);
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -108,10 +109,10 @@ class ScopeHandler {
         }
 
       case 1:
-        return Optional.of(Iterables.getOnlyElement(possibleTypes));
+        return Optional.of(getOnlyElement(possibleTypes));
 
       default:
-        return Optional.absent();
+        return Optional.empty();
     }
   }
 
@@ -147,7 +148,7 @@ class ScopeHandler {
     if (scopeElement != null) {
       return Optional.of(QualifiedName.of(scopeElement));
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private boolean isTopLevelType(String pkg, String simpleName) {

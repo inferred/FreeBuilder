@@ -23,8 +23,6 @@ import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUC
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.INFERRED_TYPES;
 
-import com.google.common.base.Optional;
-
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.GenericElement;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -36,6 +34,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Optional;
 
 import javax.lang.model.element.TypeElement;
 
@@ -56,7 +56,7 @@ public class BuilderFactoryTest {
         "  ---> class Builder {}",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(factory.get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
   }
 
   @Test
@@ -68,7 +68,7 @@ public class BuilderFactoryTest {
         "}");
 
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -81,7 +81,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(factory.get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
   }
 
   @Test
@@ -94,7 +94,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -107,7 +107,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -122,7 +122,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(BUILDER_METHOD);
   }
 
   @Test
@@ -139,7 +139,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(BUILDER_METHOD);
   }
 
   @Test
@@ -156,7 +156,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(BUILDER_METHOD);
   }
 
   @Test
@@ -173,7 +173,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(factory.get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
   }
 
   @Test
@@ -190,7 +190,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -207,7 +207,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -224,7 +224,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -239,7 +239,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NEW_BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(NEW_BUILDER_METHOD);
   }
 
   @Test
@@ -256,7 +256,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NEW_BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(NEW_BUILDER_METHOD);
   }
 
   @Test
@@ -273,7 +273,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NEW_BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(NEW_BUILDER_METHOD);
   }
 
   @Test
@@ -290,7 +290,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(factory.get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
   }
 
   @Test
@@ -307,7 +307,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -324,7 +324,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -341,7 +341,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test

@@ -32,7 +32,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVararg
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.excerpt.CheckedSet;
@@ -48,6 +47,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.stream.BaseStream;
@@ -67,17 +67,17 @@ class SetProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<SetProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
       if (type == null || !erasesToAnyOf(type, Set.class, ImmutableSet.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.or(elementType));
-      boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.or(elementType));
+      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.orElse(elementType));
+      boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.orElse(elementType));
       boolean overridesVarargsAddMethod =
-          hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
+          hasVarargsAddMethodOverride(config, unboxedType.orElse(elementType));
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -188,7 +188,7 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element) {",
             datatype.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
     Block body = methodBody(code, "element");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)
@@ -234,8 +234,8 @@ class SetProperty extends PropertyCodeGenerator {
     code.add("%s %s(%s... elements) {\n",
             datatype.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType));
-    Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
+    Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.orElse(elementType));
     if (arrayUtils.isPresent()) {
       code.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
     } else {
@@ -313,7 +313,7 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element) {",
             datatype.getBuilder(),
             removeMethod(property),
-            unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
     Block body = methodBody(code, "element");
     if (body.feature(GUAVA).isAvailable()) {
       body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSet.class)

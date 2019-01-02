@@ -17,11 +17,11 @@ package org.inferred.freebuilder.processor.util;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -46,7 +46,7 @@ public class ModelUtils {
 
   /**
    * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClass} on
-   * {@code element}, or {@link Optional#absent()} if no such annotation exists.
+   * {@code element}, or {@link Optional#empty()} if no such annotation exists.
    */
   public static Optional<AnnotationMirror> findAnnotationMirror(
       Element element, Class<? extends Annotation> annotationClass) {
@@ -55,7 +55,7 @@ public class ModelUtils {
 
   /**
    * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClass} on
-   * {@code element}, or {@link Optional#absent()} if no such annotation exists.
+   * {@code element}, or {@link Optional#empty()} if no such annotation exists.
    */
   public static Optional<AnnotationMirror> findAnnotationMirror(
       Element element, QualifiedName annotationClass) {
@@ -64,7 +64,7 @@ public class ModelUtils {
 
   /**
    * Returns an {@link AnnotationMirror} for the annotation of type {@code annotationClassName} on
-   * {@code element}, or {@link Optional#absent()} if no such annotation exists.
+   * {@code element}, or {@link Optional#empty()} if no such annotation exists.
    */
   public static Optional<AnnotationMirror> findAnnotationMirror(
       Element element, String annotationClassName) {
@@ -75,7 +75,7 @@ public class ModelUtils {
         return Optional.of(annotationMirror);
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public static Optional<AnnotationValue> findProperty(
@@ -86,7 +86,7 @@ public class ModelUtils {
         return Optional.<AnnotationValue>of(element.getValue());
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /** Returns {@code element} as a {@link TypeElement}, if it is one. */
@@ -109,7 +109,7 @@ public class ModelUtils {
     if (declaredType.isPresent()) {
       return maybeType(declaredType.get().asElement());
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -123,7 +123,7 @@ public class ModelUtils {
     try {
       return Optional.of(types.unboxedType(mirror));
     } catch (IllegalArgumentException e) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -234,7 +234,7 @@ public class ModelUtils {
 
         @Override
         protected Optional<TypeElement> defaultAction(Element e, Void p) {
-          return Optional.absent();
+          return Optional.empty();
         }
       };
 
@@ -248,7 +248,7 @@ public class ModelUtils {
 
         @Override
         protected Optional<DeclaredType> defaultAction(TypeMirror e, Void p) {
-          return Optional.absent();
+          return Optional.empty();
         }
       };
 
@@ -262,7 +262,7 @@ public class ModelUtils {
 
         @Override
         protected Optional<TypeVariable> defaultAction(TypeMirror e, Void p) {
-          return Optional.absent();
+          return Optional.empty();
         }
       };
 

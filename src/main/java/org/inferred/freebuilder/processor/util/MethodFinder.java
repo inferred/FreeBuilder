@@ -17,7 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
@@ -26,6 +25,7 @@ import com.google.common.collect.SetMultimap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.ElementKind;
@@ -103,13 +103,13 @@ public class MethodFinder {
       Set<TypeElement> mutableSet,
       ErrorTypeHandling<E> errorTypeHandling) throws E {
     for (TypeMirror iface : type.getInterfaces()) {
-      TypeElement typeElement = maybeTypeElement(iface, errorTypeHandling).orNull();
+      TypeElement typeElement = maybeTypeElement(iface, errorTypeHandling).orElse(null);
       if (typeElement != null) {
         addSupertypesToSet(typeElement, mutableSet, errorTypeHandling);
       }
     }
     TypeElement superclassElement =
-        maybeTypeElement(type.getSuperclass(), errorTypeHandling).orNull();
+        maybeTypeElement(type.getSuperclass(), errorTypeHandling).orElse(null);
     if (superclassElement != null) {
       addSupertypesToSet(superclassElement, mutableSet, errorTypeHandling);
     }

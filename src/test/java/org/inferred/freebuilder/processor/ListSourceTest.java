@@ -24,7 +24,6 @@ import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
@@ -34,6 +33,8 @@ import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Optional;
 
 @RunWith(JUnit4.class)
 public class ListSourceTest {
@@ -1261,7 +1262,7 @@ public class ListSourceTest {
             false,
             false,
             STRING,
-            Optional.absent(),
+            Optional.empty(),
             FunctionalType.consumer(wildcardSuper(listString))),
         age, new ListProperty(
             datatype,

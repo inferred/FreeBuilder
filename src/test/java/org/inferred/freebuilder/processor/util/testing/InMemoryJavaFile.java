@@ -15,7 +15,7 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
-import com.google.common.base.Joiner;
+import static java.util.stream.Collectors.joining;
 
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
@@ -64,7 +64,7 @@ public class InMemoryJavaFile extends InMemoryFile implements JavaFileObject {
     if (!qualifiedName.getPackage().isEmpty()) {
       name.append(qualifiedName.getPackage().replace('.', '/')).append('/');
     }
-    Joiner.on('$').appendTo(name, qualifiedName.getSimpleNames());
+    name.append(qualifiedName.getSimpleNames().stream().collect(joining("$")));
     name.append(kind.extension);
     return name.toString();
   }

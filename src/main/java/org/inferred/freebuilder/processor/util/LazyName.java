@@ -15,12 +15,11 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Maps.newTreeMap;
-
 import org.inferred.freebuilder.processor.util.Scope.Level;
 
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class LazyName extends Excerpt implements Scope.Element<LazyName.Declaration> {
 
@@ -28,7 +27,7 @@ public class LazyName extends Excerpt implements Scope.Element<LazyName.Declarat
    * Finds all lazily-declared classes and methods and adds their definitions to the source.
    */
   public static void addLazyDefinitions(SourceBuilder code) {
-    SortedMap<Declaration, SourceStringBuilder> definitions = newTreeMap();
+    SortedMap<Declaration, SourceStringBuilder> definitions = new TreeMap<>();
 
     // Definitions may lazily declare new names; ensure we add them all
     Set<Declaration> declarations = code.scope().keysOfType(Declaration.class);

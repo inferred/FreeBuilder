@@ -23,7 +23,6 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Block;
@@ -36,6 +35,7 @@ import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -52,7 +52,7 @@ class NullableProperty extends PropertyCodeGenerator {
       boolean isPrimitive = property.getType().getKind().isPrimitive();
       Set<TypeElement> nullableAnnotations = nullablesIn(config.getAnnotations());
       if (isPrimitive || nullableAnnotations.isEmpty()) {
-        return Optional.absent();
+        return Optional.empty();
       }
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -177,7 +177,7 @@ class NullableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    Excerpt defaults = Declarations.freshBuilder(code, datatype).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", value, property.getGetterName()),
@@ -192,7 +192,7 @@ class NullableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    Excerpt defaults = Declarations.freshBuilder(code, datatype).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", builder, getter(property)),

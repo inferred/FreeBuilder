@@ -24,6 +24,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Optional;
+
 @RunWith(JUnit4.class)
 public class ImportManagerTest {
 
@@ -45,10 +47,10 @@ public class ImportManagerTest {
     QualifiedName list2 = QualifiedName.of("java.awt", "List");
 
     ImportManager manager = new ImportManager();
-    assertThat(manager.lookup("List")).isAbsent();
+    assertThat(manager.lookup("List")).isEqualTo(Optional.empty());
     manager.add(list1);
-    assertThat(manager.lookup("List")).hasValue(list1);
+    assertThat(manager.lookup("List")).isEqualTo(Optional.of(list1));
     manager.add(list2);
-    assertThat(manager.lookup("List")).hasValue(list1);
+    assertThat(manager.lookup("List")).isEqualTo(Optional.of(list1));
   }
 }

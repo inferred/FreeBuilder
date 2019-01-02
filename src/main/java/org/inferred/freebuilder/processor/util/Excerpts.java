@@ -71,10 +71,9 @@ public class Excerpts {
 
     @Override
     public void addTo(SourceBuilder code) {
-      QualifiedName generated = code.feature(JavaxPackage.JAVAX).generated().orNull();
-      if (generated != null) {
+      code.feature(JavaxPackage.JAVAX).generated().ifPresent(generated -> {
         code.addLine("@%s(\"%s\")", generated, generator.getName());
-      }
+      });
     }
 
     @Override

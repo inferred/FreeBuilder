@@ -31,7 +31,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
@@ -48,6 +47,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -65,16 +65,16 @@ class MapProperty extends PropertyCodeGenerator {
     @Override
     public Optional<MapProperty> create(Config config) {
       Property property = config.getProperty();
-      DeclaredType type = maybeDeclared(property.getType()).orNull();
+      DeclaredType type = maybeDeclared(property.getType()).orElse(null);
       if (type == null || !erasesToAnyOf(type, Map.class, ImmutableMap.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
       TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
       boolean overridesPutMethod = hasPutMethodOverride(
-          config, unboxedKeyType.or(keyType), unboxedValueType.or(valueType));
+          config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -182,8 +182,8 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s value) {",
             datatype.getBuilder(),
             putMethod(property),
-            unboxedKeyType.or(keyType),
-            unboxedValueType.or(valueType));
+            unboxedKeyType.orElse(keyType),
+            unboxedValueType.orElse(valueType));
     Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.requireNonNull(key);", Objects.class);
@@ -237,7 +237,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key) {",
             datatype.getBuilder(),
             removeMethod(property),
-            unboxedKeyType.or(keyType));
+            unboxedKeyType.orElse(keyType));
     Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
       body.addLine("  %s.requireNonNull(key);", Objects.class);

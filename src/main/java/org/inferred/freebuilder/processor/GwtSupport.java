@@ -4,7 +4,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationM
 import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
 
 import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.Datatype.Visibility;
 import org.inferred.freebuilder.processor.util.Block;
@@ -16,6 +15,7 @@ import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;

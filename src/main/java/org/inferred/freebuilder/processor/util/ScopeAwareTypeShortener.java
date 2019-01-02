@@ -1,13 +1,11 @@
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Sets.newHashSet;
-
-import com.google.common.base.Optional;
-
 import org.inferred.freebuilder.processor.util.ScopeHandler.ScopeState;
 import org.inferred.freebuilder.processor.util.ScopeHandler.Visibility;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 class ScopeAwareTypeShortener implements TypeShortener {
@@ -62,9 +60,9 @@ class ScopeAwareTypeShortener implements TypeShortener {
     String[] simpleNames = shortenedType.split("\\.");
     QualifiedName result;
     if (scope != null) {
-      result = handler.typeInScope(scope, simpleNames[0]).orNull();
+      result = handler.typeInScope(scope, simpleNames[0]).orElse(null);
     } else {
-      result = handler.typeInScope(pkg, simpleNames[0]).orNull();
+      result = handler.typeInScope(pkg, simpleNames[0]).orElse(null);
     }
     if (result != null) {
       for (int i = 1; i < simpleNames.length; i++) {
@@ -72,7 +70,7 @@ class ScopeAwareTypeShortener implements TypeShortener {
       }
       return Optional.of(result);
     }
-    result = importManager.lookup(shortenedType).orNull();
+    result = importManager.lookup(shortenedType).orElse(null);
     if (result != null) {
       return Optional.of(result);
     }
@@ -83,9 +81,9 @@ class ScopeAwareTypeShortener implements TypeShortener {
     QualifiedName newScope = (scope == null)
         ? QualifiedName.of(pkg, simpleName)
         : scope.nestedType(simpleName);
-    Set<QualifiedName> qualifiedSupertypes = newHashSet();
+    Set<QualifiedName> qualifiedSupertypes = new HashSet<>();
     for (String supertype : supertypes) {
-      QualifiedName qualifiedSupertype = lookup(supertype).orNull();
+      QualifiedName qualifiedSupertype = lookup(supertype).orElse(null);
       if (qualifiedSupertype != null) {
         qualifiedSupertypes.add(qualifiedSupertype);
       }
