@@ -166,7 +166,7 @@ afterEvaluate {
     publications = ['JarPublication']
     publish = true
     pkg {
-      name = project.pom.project.artifactId
+      name = project.pom.project.groupId + ':' + project.pom.project.artifactId
       repo = 'maven'
       userOrg = System.env.BINTRAY_ORG ?: System.env.BINTRAY_USER
       vcsUrl = project.pom.scm.connection.replaceAll('^scm:[^:]*:', '')
