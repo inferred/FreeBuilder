@@ -49,8 +49,7 @@ import javax.tools.Diagnostic.Kind;
  * Processor for the &#64;{@link FreeBuilder} annotation.
  *
  * <p>Processing is split into analysis (owned by the {@link Analyser}) and code generation (owned
- * by the {@link CodeGenerator}), communicating through the metadata object ({@link Metadata}), for
- * testability.
+ * by the {@link GeneratedBuilder}), for testability.
  */
 @AutoService(javax.annotation.processing.Processor.class)
 public class Processor extends AbstractProcessor {
@@ -64,7 +63,6 @@ public class Processor extends AbstractProcessor {
       new MapMaker().weakKeys().weakValues().concurrencyLevel(1).initialCapacity(1).makeMap();
 
   private Analyser analyser;
-  private final CodeGenerator codeGenerator = new CodeGenerator();
   private final FeatureSet features;
 
   private transient FeatureSet environmentFeatures;
@@ -114,16 +112,16 @@ public class Processor extends AbstractProcessor {
     }
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
-        Metadata metadata = analyser.analyse(type);
+        GeneratedType builder = analyser.analyse(type);
         CompilationUnitBuilder code = new CompilationUnitBuilder(
             processingEnv,
-            metadata.getGeneratedBuilder().getQualifiedName(),
-            metadata.getVisibleNestedTypes(),
+            builder.getName(),
+            builder.getVisibleNestedTypes(),
             firstNonNull(features, environmentFeatures));
-        codeGenerator.writeBuilderSource(code, metadata);
+        code.add(builder);
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),
-            metadata.getGeneratedBuilder().getQualifiedName(),
+            builder.getName(),
             type,
             code.toString());
       } catch (Analyser.CannotGenerateCodeException e) {

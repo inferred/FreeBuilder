@@ -35,7 +35,6 @@ import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA
 
 import com.google.common.collect.ImmutableSortedSet;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.excerpt.CheckedNavigableSet;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -92,7 +91,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
           config.getTypes());
 
       return Optional.of(new SortedSetProperty(
-          config.getMetadata(),
+          config.getDatatype(),
           config.getProperty(),
           elementType,
           unboxedType,
@@ -137,7 +136,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
   private final boolean overridesVarargsAddMethod;
 
   SortedSetProperty(
-      Metadata metadata,
+      Datatype datatype,
       Property property,
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
@@ -145,7 +144,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
       boolean needsSafeVarargs,
       boolean overridesAddMethod,
       boolean overridesVarargsAddMethod) {
-    super(metadata, property);
+    super(datatype, property);
     this.elementType = elementType;
     this.unboxedType = unboxedType;
     this.mutatorType = mutatorType;
@@ -161,23 +160,23 @@ class SortedSetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetComparator(code, metadata);
-    addAdd(code, metadata);
-    addVarargsAdd(code, metadata);
-    addSpliteratorAddAll(code, metadata);
-    addStreamAddAll(code, metadata);
-    addIterableAddAll(code, metadata);
-    addRemove(code, metadata);
-    addMutator(code, metadata);
-    addClear(code, metadata);
-    addGetter(code, metadata);
+    addSetComparator(code);
+    addAdd(code);
+    addVarargsAdd(code);
+    addSpliteratorAddAll(code);
+    addStreamAddAll(code);
+    addIterableAddAll(code);
+    addRemove(code);
+    addMutator(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addSetComparator(SourceBuilder code, Metadata metadata) {
+  private void addSetComparator(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the comparator of the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * Pass in {@code null} to use the {@linkplain Comparable natural ordering}")
         .addLine(" * of the elements.")
@@ -187,13 +186,13 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine(" * (Note that this immutability is an implementation detail that may change in")
         .addLine(" * future; it should not be relied on for correctness.)")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws IllegalStateException if the set has been accessed at all,")
         .addLine(" *     whether by adding an element, setting the comparator, or calling")
         .addLine(" *     {@link #%s()}.", getter(property));
     code.addLine(" */")
         .addLine("protected %s %s(%s<? super %s> comparator) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             setComparatorMethod(property),
             Comparator.class,
             elementType);
@@ -212,27 +211,27 @@ class SortedSetProperty extends PropertyCodeGenerator {
     } else {
       body.addLine("  %s = new %s<>(comparator);", property.getField(), TreeSet.class);
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addAdd(SourceBuilder code, Metadata metadata) {
+  private void addAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds {@code element} to the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * If the set already contains {@code element}, then {@code %s}",
             addMethod(property))
         .addLine(" * has no effect (only the previously added element is retained).")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" */")
         .addLine("public %s %s(%s element) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addMethod(property),
             unboxedType.orElse(elementType));
     Block body = methodBody(code, "element");
@@ -242,7 +241,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
     } else {
       body.addLine("  %s.add(%s.requireNonNull(element));", property.getField(), Objects.class);
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
@@ -259,15 +258,15 @@ class SortedSetProperty extends PropertyCodeGenerator {
     code.addLine("  }");
   }
 
-  private void addVarargsAdd(SourceBuilder code, Metadata metadata) {
+  private void addVarargsAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the set to be returned from")
         .addLine(" * %s, ignoring duplicate elements",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * (only the first duplicate element is added).")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
           .addLine(" *     null element");
@@ -286,7 +285,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
       code.add("final ");
     }
     code.add("%s %s(%s... elements) {\n",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addMethod(property),
             unboxedType.orElse(elementType));
     Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.orElse(elementType));
@@ -297,27 +296,27 @@ class SortedSetProperty extends PropertyCodeGenerator {
       code.addLine("  for (%s element : elements) {", elementType)
           .addLine("    %s(element);", addMethod(property))
           .addLine("  }")
-          .addLine("  return (%s) this;", metadata.getBuilder());
+          .addLine("  return (%s) this;", datatype.getBuilder());
     }
     code.addLine("}");
   }
 
-  private void addSpliteratorAddAll(SourceBuilder code, Metadata metadata) {
-    addJavadocForAddAll(code, metadata);
+  private void addSpliteratorAddAll(SourceBuilder code) {
+    addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             Spliterator.class,
             elementType)
         .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addStreamAddAll(SourceBuilder code, Metadata metadata) {
-    addJavadocForAddAll(code, metadata);
+  private void addStreamAddAll(SourceBuilder code) {
+    addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             BaseStream.class,
             elementType)
@@ -325,47 +324,47 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addIterableAddAll(SourceBuilder code, Metadata metadata) {
-    addJavadocForAddAll(code, metadata);
+  private void addIterableAddAll(SourceBuilder code) {
+    addJavadocForAddAll(code);
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             addAllMethod(property),
             Iterable.class,
             elementType)
         .addLine("  elements.forEach(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addJavadocForAddAll(SourceBuilder code, Metadata metadata) {
+  private void addJavadocForAddAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds each element of {@code elements} to the set to be returned from")
         .addLine(" * %s, ignoring duplicate elements",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * (only the first duplicate element is added).")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
         .addLine(" *     null element")
         .addLine(" */");
   }
 
-  private void addRemove(SourceBuilder code, Metadata metadata) {
+  private void addRemove(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes {@code element} from the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * Does nothing if {@code element} is not a member of the set.")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" */")
         .addLine("public %s %s(%s element) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             removeMethod(property),
             unboxedType.orElse(elementType));
     Block body = methodBody(code, "mutator");
@@ -375,16 +374,16 @@ class SortedSetProperty extends PropertyCodeGenerator {
     } else {
       body.addLine("  %s.remove(%s.requireNonNull(element));", property.getField(), Objects.class);
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addMutator(SourceBuilder code, Metadata metadata) {
+  private void addMutator(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the set in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
@@ -395,7 +394,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mutator) {",
-            metadata.getBuilder(),
+            datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface());
     Block body = methodBody(code, "mutator");
@@ -412,20 +411,20 @@ class SortedSetProperty extends PropertyCodeGenerator {
               addMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Metadata metadata) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Clears the set to be returned from %s.",
-            metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property));
+        .addLine("public %s %s() {", datatype.getBuilder(), clearMethod(property));
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableSortedSet.class)
           .addLine("    if (%s.isEmpty()) {", property.getField())
@@ -441,15 +440,15 @@ class SortedSetProperty extends PropertyCodeGenerator {
     code.addLine("  if (%s != null) {", property.getField())
         .addLine("    %s.clear();", property.getField())
         .addLine("  }")
-        .addLine("  return (%s) this;", metadata.getBuilder())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Metadata metadata) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable view of the set that will be returned by")
-        .addLine(" * %s.", metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * Changes to this builder will be reflected in the view.")
         .addLine(" */")
         .addLine("public %s<%s> %s() {", SortedSet.class, elementType, getter(property));
@@ -484,7 +483,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
   @Override
   public void addMergeFromValue(Block code, String value) {
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("if (%s instanceof %s", value, metadata.getValueType().getQualifiedName())
+      code.addLine("if (%s instanceof %s", value, datatype.getValueType().getQualifiedName())
           .addLine("      && (%s == null", property.getField())
           .addLine("          || (%s instanceof %s ",
               property.getField(), ImmutableSortedSet.class)
@@ -508,7 +507,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    Excerpt base = Declarations.upcastToGeneratedBuilder(code, metadata, builder);
+    Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("if (%s != null) {", property.getField().on(base))
         .addLine("  %s(%s);", addAllMethod(property), property.getField().on(base))
         .addLine("}");

@@ -15,37 +15,29 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
-import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.intUnaryOperator;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
-import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.FormatterException;
+import com.google.common.collect.ImmutableMap;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class RequiredPropertiesSourceTest {
 
   @Test
   public void testJ8_noGuava() {
-    Metadata metadata = createMetadata(true);
-
-    assertThat(generateSource(metadata)).isEqualTo(Stream.of(
+    assertThat(builder(BEAN)).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -324,15 +316,12 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
   @Test
   public void testJ8_guava() {
-    Metadata metadata = createMetadata(true);
-
-    String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Stream.of(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -609,14 +598,12 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
   @Test
   public void testPrefixless() {
-    Metadata metadata = createMetadata(false);
-
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Stream.of(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -893,43 +880,14 @@ public class RequiredPropertiesSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-    try {
-      return new Formatter().formatSource(sourceBuilder.toString());
-    } catch (FormatterException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static Metadata createMetadata(boolean bean) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(STRING)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
-        .setName("name")
-        .setType(STRING)
-        .setUsingBeanConvention(bean)
-        .build();
-    Property age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(INTEGER)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getAge" : "age")
-        .setName("age")
-        .setType(INT)
-        .setUsingBeanConvention(bean)
-        .build();
-    Metadata metadata = new Metadata.Builder()
+
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -937,20 +895,33 @@ public class RequiredPropertiesSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, name, false, unaryOperator(STRING)))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(metadata, age, false, intUnaryOperator(INT)))
-            .build())
+    Property name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setBoxedType(STRING)
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName((convention == BEAN) ? "getName" : "name")
+        .setName("name")
+        .setType(STRING)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
-  }
+    Property age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setBoxedType(INTEGER)
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName((convention == BEAN) ? "getAge" : "age")
+        .setName("age")
+        .setType(INT)
+        .setUsingBeanConvention(convention == BEAN)
+        .build();
 
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new DefaultProperty(datatype, name, false, unaryOperator(STRING)),
+        age, new DefaultProperty(datatype, age, false, intUnaryOperator(INT))));
+  }
 }

@@ -22,11 +22,11 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.testing.FakeMessager;
+import org.inferred.freebuilder.processor.util.testing.MessagerRule;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,17 +34,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Optional;
-
-import javax.lang.model.element.TypeElement;
 
 /** Unit tests for {@link Analyser}. */
 @RunWith(JUnit4.class)
 public class JacksonSupportTest {
 
   @Rule public final ModelRule model = new ModelRule();
-  private final FakeMessager messager = new FakeMessager();
+  @Rule public final MessagerRule messager = new MessagerRule();
 
   private Analyser analyser;
 
@@ -59,51 +58,46 @@ public class JacksonSupportTest {
 
   @Test
   public void noAnnotationAddedIfJsonDeserializeMissing() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public interface DataType {",
         "  int getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
   @Test
   public void jacksonAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/68
-    TypeElement dataType = model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "import " + JsonProperty.class.getName() + ";",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
         "  @JsonProperty(\"bob\") int getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"bob\")");
   }
+
   @Test
   public void jacksonXmlAnnotationAddedWithExplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/68
-    TypeElement dataType = model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
          "import " + JacksonXmlProperty.class.getName() + ";",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
         "  @JacksonXmlProperty(localName=\"b-ob\") int getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
     assertPropertyHasAnnotation(property,
             JacksonXmlProperty.class, "@JacksonXmlProperty(localName = \"b-ob\")");
   }
@@ -111,39 +105,35 @@ public class JacksonSupportTest {
   @Test
   public void jacksonAnnotationAddedWithImplicitName() throws CannotGenerateCodeException {
     // See also https://github.com/google/FreeBuilder/issues/90
-    TypeElement dataType = model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
         "  int getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
     assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"fooBar\")");
   }
 
   @Test
   public void jsonAnyGetterAnnotationDisablesImplicitProperty() throws CannotGenerateCodeException {
-    TypeElement dataType = model.newType(
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
         "public interface DataType {",
         "  @" + JsonAnyGetter.class.getName(),
         "  " + Map.class.getName() + "<Integer, String> getFooBar();",
         "  class Builder extends DataType_Builder {}",
-        "}");
+        "}"));
 
-    Metadata metadata = analyser.analyse(dataType);
-
-    Property property = getOnlyElement(metadata.getProperties());
+    Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
   }
 
-  private void assertPropertyHasAnnotation(Property property, Class annotationClass,
-                                           String annotationString) {
+  private static void assertPropertyHasAnnotation(
+      Property property, Class<? extends Annotation> annotationClass, String annotationString) {
     Optional<Excerpt> annotationExcerpt = property.getAccessorAnnotations()
             .stream()
             .filter(excerpt -> excerpt.toString().contains(annotationClass.getCanonicalName()))

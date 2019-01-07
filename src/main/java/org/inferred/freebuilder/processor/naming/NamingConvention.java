@@ -15,7 +15,7 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Property;
 
 import java.util.Optional;
 

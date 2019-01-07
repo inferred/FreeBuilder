@@ -20,12 +20,11 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -43,11 +42,11 @@ public abstract class PropertyCodeGenerator {
 
   /** Data available to {@link Factory} instances when creating a {@link PropertyCodeGenerator}. */
   interface Config {
-    /** Returns metadata about the builder being generated. */
-    Metadata getMetadata();
+    /** Returns datatype about the builder being generated. */
+    Datatype getDatatype();
 
-    /** Returns metadata about the property requiring code generation. */
-    Metadata.Property getProperty();
+    /** Returns datatype about the property requiring code generation. */
+    Property getProperty();
 
     /** Returns annotations on the property requiring code generation. */
     List<? extends AnnotationMirror> getAnnotations();
@@ -83,11 +82,11 @@ public abstract class PropertyCodeGenerator {
     Optional<? extends PropertyCodeGenerator> create(Config config);
   }
 
-  protected final Metadata metadata;
+  protected final Datatype datatype;
   protected final Property property;
 
-  public PropertyCodeGenerator(Metadata metadata, Property property) {
-    this.metadata = metadata;
+  public PropertyCodeGenerator(Datatype datatype, Property property) {
+    this.datatype = datatype;
     this.property = property;
   }
 
@@ -127,8 +126,8 @@ public abstract class PropertyCodeGenerator {
   public abstract void addMergeFromBuilder(Block code, String builder);
 
   /** Sets the property on a builder from within a partial value's toBuilder() method. */
-  public void addSetBuilderFromPartial(Block code, String builder) {
-    addSetFromResult(code, Excerpts.add(builder), property.getField());
+  public void addSetBuilderFromPartial(Block code, Variable builder) {
+    addSetFromResult(code, builder, property.getField());
   }
 
   /** Adds method annotations for the value type getter method. */

@@ -4,7 +4,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationM
 
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 

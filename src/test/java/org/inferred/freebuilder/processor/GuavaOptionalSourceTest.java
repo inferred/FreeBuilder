@@ -15,24 +15,20 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
-import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.GenericTypeElementImpl.newTopLevelGenericType;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
-import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.FormatterException;
+import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.GenericTypeElementImpl.GenericTypeMirrorImpl;
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.OptionalProperty.OptionalType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.inferred.freebuilder.processor.util.feature.Jsr305;
 import org.junit.Test;
@@ -40,17 +36,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class GuavaOptionalSourceTest {
 
   @Test
   public void testJ8() {
-    Metadata metadata = createMetadataWithOptionalProperties(true);
-
-    String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Stream.of(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -377,15 +369,12 @@ public class GuavaOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
   @Test
   public void testJsr305() {
-    Metadata metadata = createMetadataWithOptionalProperties(true);
-
-    String source = generateSource(metadata, Jsr305.AVAILABLE, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Stream.of(
+    assertThat(builder(BEAN)).given(Jsr305.AVAILABLE, GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -712,14 +701,12 @@ public class GuavaOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
   @Test
   public void testPrefixless() {
-    Metadata metadata = createMetadataWithOptionalProperties(false);
-
-    assertThat(generateSource(metadata, GuavaLibrary.AVAILABLE)).isEqualTo(Stream.of(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -1045,46 +1032,17 @@ public class GuavaOptionalSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-    try {
-      return new Formatter().formatSource(sourceBuilder.toString());
-    } catch (FormatterException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static Metadata createMetadataWithOptionalProperties(boolean bean) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     GenericTypeElementImpl optional = newTopLevelGenericType("com.google.common.base.Optional");
     GenericTypeMirrorImpl optionalInteger = optional.newMirror(INTEGER);
     GenericTypeMirrorImpl optionalString = optional.newMirror(STRING);
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(optionalString)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
-        .setName("name")
-        .setType(optionalString)
-        .setUsingBeanConvention(bean)
-        .build();
-    Property age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(optionalInteger)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getAge" : "age")
-        .setName("age")
-        .setType(optionalInteger)
-        .setUsingBeanConvention(bean)
-        .build();
-    Metadata metadata = new Metadata.Builder()
+
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -1092,32 +1050,45 @@ public class GuavaOptionalSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new OptionalProperty(
-                metadata,
-                name,
-                OptionalType.GUAVA,
-                STRING,
-                Optional.empty(),
-                unaryOperator(STRING)))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new OptionalProperty(
-                metadata,
-                age,
-                OptionalType.GUAVA,
-                INTEGER,
-                Optional.of(INT),
-                unaryOperator(INTEGER)))
-            .build())
+    Property name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setBoxedType(optionalString)
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName((convention == BEAN) ? "getName" : "name")
+        .setName("name")
+        .setType(optionalString)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
-  }
+    Property age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setBoxedType(optionalInteger)
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName((convention == BEAN) ? "getAge" : "age")
+        .setName("age")
+        .setType(optionalInteger)
+        .setUsingBeanConvention(convention == BEAN)
+        .build();
 
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new OptionalProperty(
+            datatype,
+            name,
+            OptionalType.GUAVA,
+            STRING,
+            Optional.empty(),
+            unaryOperator(STRING)),
+        age, new OptionalProperty(
+            datatype,
+            age,
+            OptionalType.GUAVA,
+            INTEGER,
+            Optional.of(INT),
+            unaryOperator(INTEGER))));
+  }
 }

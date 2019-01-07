@@ -15,36 +15,25 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
-import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.TypeParameterElementImpl.newTypeParameterElement;
 
-import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.FormatterException;
+import com.google.common.collect.ImmutableMap;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.inferred.freebuilder.processor.util.TypeParameterElementImpl;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class GenericTypeSourceTest {
 
   @Test
   public void testJ8() {
-    Metadata metadata = createMetadata();
-
-    String source = generateSource(metadata, GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Stream.of(
+    assertThat(builder()).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder<A, B> {",
@@ -322,28 +311,27 @@ public class GenericTypeSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-    try {
-      return new Formatter().formatSource(sourceBuilder.toString());
-    } catch (FormatterException e) {
-      int no = 0;
-      for (String line : sourceBuilder.toString().split("\n")) {
-        System.err.println((++no) + ": " + line);
-      }
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static Metadata createMetadata() {
+  private static GeneratedBuilder builder() {
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
     TypeParameterElementImpl paramA = newTypeParameterElement("A");
     TypeParameterElementImpl paramB = newTypeParameterElement("B");
+
+    Datatype datatype = new Datatype.Builder()
+        .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
+        .setExtensible(true)
+        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
+        .setBuilderSerializable(false)
+        .setGeneratedBuilder(generatedBuilder.withParameters(paramA, paramB))
+        .setInterfaceType(false)
+        .setPartialType(generatedBuilder.nestedType("Partial").withParameters(paramA, paramB))
+        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
+        .setType(person.withParameters(paramA, paramB))
+        .setValueType(generatedBuilder.nestedType("Value").withParameters(paramA, paramB))
+        .build();
     Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setCapitalizedName("Name")
@@ -362,30 +350,9 @@ public class GenericTypeSourceTest {
         .setType(paramB.asType())
         .setUsingBeanConvention(true)
         .build();
-    Metadata metadata = new Metadata.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
-        .setExtensible(true)
-        .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
-        .setBuilderSerializable(false)
-        .setGeneratedBuilder(generatedBuilder.withParameters(paramA, paramB))
-        .setInterfaceType(false)
-        .setPartialType(generatedBuilder.nestedType("Partial").withParameters(paramA, paramB))
-        .addProperties(name, age)
-        .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
-        .setType(person.withParameters(paramA, paramB))
-        .setValueType(generatedBuilder.nestedType("Value").withParameters(paramA, paramB))
-        .build();
-    return metadata.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new DefaultProperty(
-                metadata, name, false, unaryOperator(paramA.asType())))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new DefaultProperty(
-                metadata, age, false, unaryOperator(paramB.asType())))
-            .build())
-        .build();
-  }
 
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new DefaultProperty(datatype, name, false, unaryOperator(paramA.asType())),
+        age, new DefaultProperty(datatype, age, false, unaryOperator(paramB.asType()))));
+  }
 }

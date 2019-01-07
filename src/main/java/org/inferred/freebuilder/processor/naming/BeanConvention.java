@@ -17,7 +17,7 @@ package org.inferred.freebuilder.processor.naming;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Property;
 import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 

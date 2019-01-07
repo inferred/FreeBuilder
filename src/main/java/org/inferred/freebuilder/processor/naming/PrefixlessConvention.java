@@ -18,7 +18,7 @@ package org.inferred.freebuilder.processor.naming;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
+import org.inferred.freebuilder.processor.Property;
 
 import java.util.Optional;
 import java.util.Set;

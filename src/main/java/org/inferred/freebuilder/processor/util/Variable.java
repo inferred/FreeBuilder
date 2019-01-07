@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import org.inferred.freebuilder.processor.util.Scope.Level;
 
 public class Variable extends Excerpt implements Scope.Element<VariableName> {
@@ -47,6 +49,7 @@ public class Variable extends Excerpt implements Scope.Element<VariableName> {
       name = new VariableName(pickName(code));
       code.scope().putIfAbsent(name, name);
       code.scope().putIfAbsent(this, name);
+      checkState(code.scope().get(this) != null, "Variable used outside of method body");
     }
     code.add("%s", name.name());
   }

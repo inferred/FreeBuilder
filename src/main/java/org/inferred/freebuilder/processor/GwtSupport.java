@@ -5,8 +5,7 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
 
 import com.google.common.annotations.GwtCompatible;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
-import org.inferred.freebuilder.processor.Metadata.Visibility;
+import org.inferred.freebuilder.processor.Datatype.Visibility;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
@@ -14,6 +13,8 @@ import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -31,8 +32,11 @@ class GwtSupport {
   private static final QualifiedName SERIALIZATION_STREAM_WRITER =
       QualifiedName.of("com.google.gwt.user.client.rpc", "SerializationStreamWriter");
 
-  public static Metadata.Builder gwtMetadata(TypeElement type, Metadata metadata) {
-    Metadata.Builder extraMetadata = new Metadata.Builder();
+  public static Datatype.Builder gwtMetadata(
+      TypeElement type,
+      Datatype datatype,
+      Map<Property, PropertyCodeGenerator> generatorsByProperty) {
+    Datatype.Builder extraMetadata = new Datatype.Builder();
     Optional<AnnotationMirror> annotation = findAnnotationMirror(type, GwtCompatible.class);
     if (annotation.isPresent()) {
       extraMetadata.addGeneratedBuilderAnnotations(Excerpts.add("@%s%n", GwtCompatible.class));
@@ -43,9 +47,9 @@ class GwtSupport {
         extraMetadata.setValueTypeVisibility(Visibility.PACKAGE);
         extraMetadata.addValueTypeAnnotations(Excerpts.add(
             "@%s(serializable = true)%n", GwtCompatible.class));
-        extraMetadata.addNestedClasses(CustomValueSerializerExcerpt::new);
-        extraMetadata.addNestedClasses(GwtWhitelistExcerpt::new);
-        QualifiedName builderName = metadata.getGeneratedBuilder().getQualifiedName();
+        extraMetadata.addNestedClasses(new CustomValueSerializer(datatype, generatorsByProperty));
+        extraMetadata.addNestedClasses(new GwtWhitelist(datatype, generatorsByProperty.keySet()));
+        QualifiedName builderName = datatype.getGeneratedBuilder().getQualifiedName();
         extraMetadata.addVisibleNestedTypes(
             builderName.nestedType("Value_CustomFieldSerializer"),
             builderName.nestedType("GwtWhitelist"));
@@ -54,26 +58,31 @@ class GwtSupport {
     return extraMetadata;
   }
 
-  private static final class CustomValueSerializerExcerpt extends Excerpt {
-    private final Metadata metadata;
+  private static final class CustomValueSerializer extends Excerpt {
 
-    private CustomValueSerializerExcerpt(Metadata metadata) {
-      this.metadata = metadata;
+    private final Datatype datatype;
+    private final Map<Property, PropertyCodeGenerator> generatorsByProperty;
+
+    private CustomValueSerializer(
+        Datatype datatype,
+        Map<Property, PropertyCodeGenerator> generatorsByProperty) {
+      this.datatype = datatype;
+      this.generatorsByProperty = generatorsByProperty;
     }
 
     @Override
     public void addTo(SourceBuilder code) {
       code.addLine("")
           .addLine("@%s", GwtCompatible.class);
-      if (metadata.getType().isParameterized()) {
+      if (datatype.getType().isParameterized()) {
         code.addLine("@%s(\"unchecked\")", SuppressWarnings.class);
       }
       code.addLine("public static class Value_CustomFieldSerializer")
-          .addLine("    extends %s<%s> {", CUSTOM_FIELD_SERIALIZER, metadata.getValueType())
+          .addLine("    extends %s<%s> {", CUSTOM_FIELD_SERIALIZER, datatype.getValueType())
           .addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public void deserializeInstance(%s reader, %s instance) { }",
-              SERIALIZATION_STREAM_READER, metadata.getValueType())
+              SERIALIZATION_STREAM_READER, datatype.getValueType())
           .addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public boolean hasCustomInstantiateInstance() {")
@@ -86,18 +95,18 @@ class GwtSupport {
               + " new Value_CustomFieldSerializer();")
           .addLine("")
           .addLine("  public static void deserialize(%s reader, %s instance) {",
-              SERIALIZATION_STREAM_READER, metadata.getValueType())
+              SERIALIZATION_STREAM_READER, datatype.getValueType())
           .addLine("    INSTANCE.deserializeInstance(reader, instance);")
           .addLine("  }")
           .addLine("")
           .addLine("  public static %s instantiate(%s reader)",
-              metadata.getValueType(), SERIALIZATION_STREAM_READER)
+              datatype.getValueType(), SERIALIZATION_STREAM_READER)
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION)
           .addLine("    return INSTANCE.instantiateInstance(reader);")
           .addLine("  }")
           .addLine("")
           .addLine("  public static void serialize(%s writer, %s instance)",
-              SERIALIZATION_STREAM_WRITER, metadata.getValueType())
+              SERIALIZATION_STREAM_WRITER, datatype.getValueType())
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION)
           .addLine("    INSTANCE.serializeInstance(writer, instance);")
           .addLine("  }")
@@ -108,27 +117,25 @@ class GwtSupport {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public %s instantiateInstance(%s reader)",
-              metadata.getValueType(), SERIALIZATION_STREAM_READER)
+              datatype.getValueType(), SERIALIZATION_STREAM_READER)
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
       Block body = Block.methodBody(code, "reader");
       Excerpt builder = body.declare(
-          metadata.getBuilder(), "builder", Excerpts.add("new %s()", metadata.getBuilder()));
-      for (Property property : metadata.getProperties()) {
+          datatype.getBuilder(), "builder", Excerpts.add("new %s()", datatype.getBuilder()));
+      for (Property property : generatorsByProperty.keySet()) {
         TypeMirrorExcerpt propertyType = new TypeMirrorExcerpt(property.getType());
         if (property.getType().getKind().isPrimitive()) {
           Excerpt value = body.declare(
               propertyType,
               property.getName(),
               Excerpts.add("reader.read%s()", withInitialCapital(property.getType())));
-          property.getCodeGenerator().get()
-              .addSetFromResult(body, builder, value);
+          generatorsByProperty.get(property).addSetFromResult(body, builder, value);
         } else if (String.class.getName().equals(property.getType().toString())) {
           Excerpt value = body.declare(
               propertyType,
               property.getName(),
               Excerpts.add("reader.readString()"));
-          property.getCodeGenerator().get()
-              .addSetFromResult(body, builder, value);
+          generatorsByProperty.get(property).addSetFromResult(body, builder, value);
         } else {
           body.addLine("    try {");
           Block tryBlock = body.innerBlock();
@@ -142,8 +149,7 @@ class GwtSupport {
               typeAndPreamble,
               property.getName(),
               Excerpts.add("(%s) reader.readObject()", propertyType));
-          property.getCodeGenerator().get()
-              .addSetFromResult(tryBlock, builder, value);
+          generatorsByProperty.get(property).addSetFromResult(tryBlock, builder, value);
           body.add(tryBlock)
               .addLine("    } catch (%s e) {", ClassCastException.class)
               .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
@@ -151,7 +157,7 @@ class GwtSupport {
               .addLine("    }");
         }
       }
-      body.addLine("    return (%s) %s.build();", metadata.getValueType(), builder);
+      body.addLine("    return (%s) %s.build();", datatype.getValueType(), builder);
       code.add(body)
           .addLine("  }");
     }
@@ -160,9 +166,9 @@ class GwtSupport {
       code.addLine("")
           .addLine("  @%s", Override.class)
           .addLine("  public void serializeInstance(%s writer, %s instance)",
-              SERIALIZATION_STREAM_WRITER, metadata.getValueType())
+              SERIALIZATION_STREAM_WRITER, datatype.getValueType())
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
-      for (Property property : metadata.getProperties()) {
+      for (Property property : generatorsByProperty.keySet()) {
         if (property.getType().getKind().isPrimitive()) {
           code.add("    writer.write%s(", withInitialCapital(property.getType()));
         } else if (String.class.getName().equals(property.getType().toString())) {
@@ -170,7 +176,7 @@ class GwtSupport {
         } else {
           code.add("    writer.writeObject(");
         }
-        property.getCodeGenerator().get()
+        generatorsByProperty.get(property)
             .addReadValueFragment(code, property.getField().on("instance"));
         code.add(");\n");
       }
@@ -179,15 +185,19 @@ class GwtSupport {
 
     @Override
     protected void addFields(FieldReceiver fields) {
-      fields.add("metadata", metadata);
+      fields.add("datatype", datatype);
+      fields.add("generatorsByProperty", generatorsByProperty);
     }
   }
 
-  private static final class GwtWhitelistExcerpt extends Excerpt {
-    private final Metadata metadata;
+  private static final class GwtWhitelist extends Excerpt {
 
-    private GwtWhitelistExcerpt(Metadata metadata) {
-      this.metadata = metadata;
+    private final Datatype datatype;
+    private final Collection<Property> properties;
+
+    private GwtWhitelist(Datatype datatype, Collection<Property> properties) {
+      this.datatype = datatype;
+      this.properties = properties;
     }
 
     @Override
@@ -196,18 +206,18 @@ class GwtSupport {
           .addLine("/** This class exists solely to ensure GWT whitelists all required types. */")
           .addLine("@%s(serializable = true)", GwtCompatible.class)
           .addLine("static final class GwtWhitelist%s %s %s {",
-              metadata.getType().declarationParameters(),
-              metadata.isInterfaceType() ? "implements " : "extends ",
-              metadata.getType())
+              datatype.getType().declarationParameters(),
+              datatype.isInterfaceType() ? "implements " : "extends ",
+              datatype.getType())
           .addLine("");
-      for (Property property : metadata.getProperties()) {
+      for (Property property : properties) {
         code.addLine("  %s %s;", property.getType(), property.getField());
       }
       code.addLine("")
           .addLine("  private GwtWhitelist() {")
           .addLine("    throw new %s();", UnsupportedOperationException.class)
           .addLine("   }");
-      for (Property property : metadata.getProperties()) {
+      for (Property property : properties) {
         code.addLine("")
             .addLine("  @%s", Override.class)
             .addLine("  public %s %s() {", property.getType(), property.getGetterName())
@@ -219,7 +229,8 @@ class GwtSupport {
 
     @Override
     protected void addFields(FieldReceiver fields) {
-      fields.add("metadata", metadata);
+      fields.add("datatype", datatype);
+      fields.add("generatorsByProperty", properties);
     }
   }
 

@@ -15,36 +15,30 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.truth.Truth.assertThat;
-import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
+import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
+import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.Metadata.Property;
 import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.stream.Stream;
 
 @RunWith(JUnit4.class)
 public class NullableSourceTest {
 
   @Test
   public void testJ8() {
-    String source = generateSource(metadata(true), GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Stream.of(
+    assertThat(builder(BEAN)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -281,13 +275,12 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
   @Test
   public void testPrefixless() {
-    String source = generateSource(metadata(false), GuavaLibrary.AVAILABLE);
-    assertThat(source).isEqualTo(Stream.of(
+    assertThat(builder(PREFIXLESS)).given(GuavaLibrary.AVAILABLE).generates(
         "/** Auto-generated superclass of {@link Person.Builder}, "
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
@@ -524,40 +517,15 @@ public class NullableSourceTest {
         "      return result.append(\"}\").toString();",
         "    }",
         "  }",
-        "}\n").collect(joining("\n")));
+        "}");
   }
 
-  private static String generateSource(Metadata metadata, Feature<?>... features) {
-    SourceBuilder sourceBuilder = SourceStringBuilder.simple(features);
-    new CodeGenerator().writeBuilderSource(sourceBuilder, metadata);
-    return CompilationUnitBuilder.formatSource(sourceBuilder.toString());
-  }
-
-  private static Metadata metadata(boolean bean) {
+  private static GeneratedBuilder builder(NamingConvention convention) {
     ClassElementImpl nullable = newTopLevelClass("javax.annotation.Nullable").asElement();
     QualifiedName person = QualifiedName.of("com.example", "Person");
     QualifiedName generatedBuilder = QualifiedName.of("com.example", "Person_Builder");
-    Property name = new Property.Builder()
-        .setAllCapsName("NAME")
-        .setBoxedType(STRING)
-        .setCapitalizedName("Name")
-        .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getName" : "name")
-        .setName("name")
-        .setType(STRING)
-        .setUsingBeanConvention(bean)
-        .build();
-    Property age = new Property.Builder()
-        .setAllCapsName("AGE")
-        .setBoxedType(INTEGER)
-        .setCapitalizedName("Age")
-        .setFullyCheckedCast(true)
-        .setGetterName(bean ? "getAge" : "age")
-        .setName("age")
-        .setType(INTEGER)
-        .setUsingBeanConvention(bean)
-        .build();
-    Metadata metadata = new Metadata.Builder()
+
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(person.nestedType("Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
@@ -565,21 +533,35 @@ public class NullableSourceTest {
         .setGeneratedBuilder(generatedBuilder.withParameters())
         .setInterfaceType(false)
         .setPartialType(generatedBuilder.nestedType("Partial").withParameters())
-        .addProperties(name, age)
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .build();
-    return metadata.toBuilder()
-        .clearProperties()
-        .addProperties(name.toBuilder()
-            .setCodeGenerator(new NullableProperty(
-                metadata, name, ImmutableSet.of(nullable), unaryOperator(STRING)))
-            .build())
-        .addProperties(age.toBuilder()
-            .setCodeGenerator(new NullableProperty(
-                metadata, age, ImmutableSet.of(nullable), unaryOperator(INTEGER)))
-            .build())
+    Property name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setBoxedType(STRING)
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName((convention == BEAN) ? "getName" : "name")
+        .setName("name")
+        .setType(STRING)
+        .setUsingBeanConvention(convention == BEAN)
         .build();
+    Property age = new Property.Builder()
+        .setAllCapsName("AGE")
+        .setBoxedType(INTEGER)
+        .setCapitalizedName("Age")
+        .setFullyCheckedCast(true)
+        .setGetterName((convention == BEAN) ? "getAge" : "age")
+        .setName("age")
+        .setType(INTEGER)
+        .setUsingBeanConvention(convention == BEAN)
+        .build();
+
+    return new GeneratedBuilder(datatype, ImmutableMap.of(
+        name, new NullableProperty(
+                datatype, name, ImmutableSet.of(nullable), unaryOperator(STRING)),
+        age, new NullableProperty(
+                datatype, age, ImmutableSet.of(nullable), unaryOperator(INTEGER))));
   }
 }
