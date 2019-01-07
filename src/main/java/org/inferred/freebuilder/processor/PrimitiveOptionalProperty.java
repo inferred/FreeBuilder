@@ -22,6 +22,7 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
@@ -33,14 +34,14 @@ import com.google.common.base.CaseFormat;
 public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   private final OptionalType optional;
   private final TypeMirror elementType;
-  private final Metadata.Property flag;
+  private final Property flag;
 
   @VisibleForTesting
-  PrimitiveOptionalProperty(Metadata metadata, Metadata.Property property) {
-    super(metadata, property);
+  PrimitiveOptionalProperty(Datatype datatype, Property property) {
+    super(datatype, property);
     this.elementType = property.getType();
     this.optional = OptionalType.lookup(this.elementType);
-    this.flag = Metadata.Property.Builder.from(property).setName(property.getName() + "Valid")
+    this.flag = Property.Builder.from(property).setName(property.getName() + "Valid")
                                          .build();
   }
 
@@ -62,45 +63,45 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldAccessors(SourceBuilder code) {
-    addSetter(code, metadata);
-    addOptionalSetter(code, metadata);
-    addMapper(code, metadata);
-    addClear(code, metadata);
-    addGetter(code, metadata);
+    addSetter(code);
+    addOptionalSetter(code);
+    addMapper(code);
+    addClear(code);
+    addGetter(code);
   }
 
-  private void addSetter(SourceBuilder code, Metadata metadata) {
+  private void addSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
-                 metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+                 datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName());
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     code.addLine(" */")
         .addLine("public %s %s(%s %s) {",
-                 metadata.getBuilder(),
+                 datatype.getBuilder(),
                  setter(property),
                  optional.primitiveType,
                  property.getName());
     Block body = methodBody(code, property.getName(), flag.getName());
     body.addLine("  %s = %s;", property.getField(), property.getName());
     body.addLine("  %s = true;", flag.getField());
-    body.addLine("  return (%s) this;", metadata.getBuilder());
+    body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addOptionalSetter(SourceBuilder code, Metadata metadata) {
+  private void addOptionalSetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s.",
-                 metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+                 datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */");
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s %s) {",
-                 metadata.getBuilder(),
+                 datatype.getBuilder(),
                  setter(property),
                  optional.cls,
                  property.getName())
@@ -114,50 +115,50 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMapper(SourceBuilder code, Metadata metadata) {
+  private void addMapper(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is present,",
-                 metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+                 datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * replaces it by applying {@code mapper} to it and using the result.")
         .addLine(" *")
         .addLine(" * <p>If the result is null, clears the value.")
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mapper} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mapper) {",
-                 metadata.getBuilder(),
+                 datatype.getBuilder(),
                  mapper(property),
                  optional.unaryType)
         .addLine("  %s().ifPresent(value -> %s(mapper.%s(value)));", getter(property),
                  setter(property), optional.unaryMethod)
-        .addLine("  return (%s) this;", metadata.getBuilder());
+        .addLine("  return (%s) this;", datatype.getBuilder());
     code.addLine("}");
   }
 
-  private void addClear(SourceBuilder code, Metadata metadata) {
+  private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Sets the value to be returned by %s",
-                 metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+                 datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * to {@link %1$s#empty() %2$s}.", optional.cls, optional.empty)
         .addLine(" *")
-        .addLine(" * @return this {@code %s} object", metadata.getBuilder().getSimpleName())
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s() {", metadata.getBuilder(), clearMethod(property));
+        .addLine("public %s %s() {", datatype.getBuilder(), clearMethod(property));
     Block body = methodBody(code, property.getName(), flag.getName());
     body.addLine("  %s = false;", flag.getField())
-        .addLine("  return (%s) this;", metadata.getBuilder());
+        .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
         .addLine("}");
   }
 
-  private void addGetter(SourceBuilder code, Metadata metadata) {
+  private void addGetter(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns the value that will be returned by %s.",
-                 metadata.getType().javadocNoArgMethodLink(property.getGetterName()))
+                 datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
         .addLine("public %s %s() {", property.getType(), getter(property));
     code.add("return %s ? %s.of(%s) : %s;\n", flag.getField(), optional.cls,
@@ -184,7 +185,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addSetBuilderFromPartial(Block code, String builder) {
+  public void addSetBuilderFromPartial(Block code, Variable builder) {
     code.addLine("%s.%s(%s);", builder, nullableSetter(property), property.getField());
   }
 
@@ -201,7 +202,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addClearField(Block code) {
-    Optional<Excerpt> defaults = Declarations.freshBuilder(code, metadata);
+    Optional<Excerpt> defaults = Declarations.freshBuilder(code, datatype);
     if (defaults.isPresent()) {
       code.addLine("%s(%s.%s());", setter(property), defaults.get(), getter(property));
     } else {
@@ -267,7 +268,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
       }
 
       return Optional.of(new PrimitiveOptionalProperty(
-        config.getMetadata(),
+        config.getDatatype(),
         config.getProperty()));
     }
 
