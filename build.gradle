@@ -34,14 +34,7 @@ compileTestJava {
 
 dependencies {
   compile commonsLang3
-  compile(googleJavaFormat) {
-    // Exclude transitive dependencies that don't affect the formatter
-    exclude module: 'jcommander'
-    exclude module: 'org.eclipse.equinox.app'
-    exclude module: 'org.eclipse.core.filesystem'
-    exclude module: 'org.eclipse.text'
-    exclude module: 'org.eclipse.equinox.registry'
-  }
+  compile googleJavaFormat
   compile guava
   compile jsr305
   compileOnly autoService
@@ -122,26 +115,32 @@ shadowJar {
   ['com.google', 'org.apache', 'org.openjdk', 'org.osgi'].each {
     relocate it, "org.inferred.freebuilder.shaded.$it"
   }
+  include '*.jar'
 
-  // Exclude common META-INF detritus
-  exclude 'META-INF/*.txt'
-  exclude 'META-INF/maven/**'
+  // Include critical META-INF files
+  include 'META-INF/MANIFEST.MF'
+  include 'META-INF/services/javax.annotation.processing.Processor'
 
-  // Exclude all of jsr305 except Nullable, Nonnull and meta.When
-  exclude 'javax/annotation/C*'
-  exclude 'javax/annotation/D*'
-  exclude 'javax/annotation/M*'
-  exclude 'javax/annotation/Nonnegative*'
-  exclude 'javax/annotation/O*'
-  exclude 'javax/annotation/P*'
-  exclude 'javax/annotation/R*'
-  exclude 'javax/annotation/S*'
-  exclude 'javax/annotation/T*'
-  exclude 'javax/annotation/U*'
-  exclude 'javax/annotation/W*'
-  exclude 'javax/annotation/concurrent/*'
-  exclude 'javax/annotation/meta/E*'
-  exclude 'javax/annotation/meta/T*'
+  // Include FreeBuilder
+  include 'org/inferred/freebuilder/**'
+
+  // Include Guava
+  include 'com/google/common/**'
+
+  // Include Google's Java formatter
+  include 'com/google/googlejavaformat/**'
+  include 'org/openjdk/**'
+  exclude 'org/openjdk/tools/javadoc/**'
+
+  // Include StringEscapeUtils from Apache Commons' lang3
+  // (Used to correctly quote Java string literals)
+  include 'org/apache/commons/lang3/StringEscapeUtils.class'
+  include 'org/apache/commons/lang3/text/translate/CharSequenceTranslator.class'
+
+  // Include jsr305's Nullable and dependencies
+  include 'javax/annotation/Nonnull*'
+  include 'javax/annotation/Nullable.*'
+  include 'javax/annotation/meta/When.*'
 }
 tasks.shadowJar.shouldRunAfter tasks.test
 
