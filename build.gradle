@@ -34,14 +34,7 @@ compileTestJava {
 
 dependencies {
   compile commonsLang3
-  compile(googleJavaFormat) {
-    // Exclude transitive dependencies that don't affect the formatter
-    exclude module: 'jcommander'
-    exclude module: 'org.eclipse.equinox.app'
-    exclude module: 'org.eclipse.core.filesystem'
-    exclude module: 'org.eclipse.text'
-    exclude module: 'org.eclipse.equinox.registry'
-  }
+  compile googleJavaFormat
   compile guava
   compile jsr305
   compileOnly autoService
