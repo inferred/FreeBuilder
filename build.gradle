@@ -14,7 +14,7 @@ plugins {
   id 'java-library'
   id 'maven-publish'
   id 'com.github.johnrengelman.shadow' version '4.0.3'
-  id 'com.jfrog.bintray' version '1.7.3'
+  id 'com.jfrog.bintray' version '1.8.4'
 }
 
 apply from: "gradle/publication.gradle"
