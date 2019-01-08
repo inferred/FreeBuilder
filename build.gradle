@@ -130,9 +130,12 @@ shadowJar {
   // Include Google's Java formatter
   include 'com/google/googlejavaformat/**'
   include 'org/openjdk/**'
+  exclude 'org/openjdk/tools/javadoc/**'
 
-  // Include Apache Commons' lang3
-  include 'org/apache/commons/lang3/**'
+  // Include StringEscapeUtils from Apache Commons' lang3
+  // (Used to correctly quote Java string literals)
+  include 'org/apache/commons/lang3/StringEscapeUtils.class'
+  include 'org/apache/commons/lang3/text/translate/CharSequenceTranslator.class'
 
   // Include jsr305's Nullable and dependencies
   include 'javax/annotation/Nonnull*'
