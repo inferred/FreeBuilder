@@ -43,7 +43,6 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
-import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
 
@@ -116,9 +115,6 @@ class MapProperty extends PropertyCodeGenerator {
       return types.getWildcardType(null, types.getDeclaredType(mapType, keyType, valueType));
     }
   }
-
-  private static final Type COLLECTION =
-      QualifiedName.of(Collection.class).withParameters("E");
 
   private final boolean overridesPutMethod;
   private final TypeMirror keyType;
@@ -267,7 +263,7 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine(" * <p>This method mutates the map in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
         .addLine(" * not to call pure functions, like %s.",
-            COLLECTION.javadocNoArgMethodLink("stream"))
+            Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")

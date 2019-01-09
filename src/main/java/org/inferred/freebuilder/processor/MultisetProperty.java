@@ -125,8 +125,6 @@ class MultisetProperty extends PropertyCodeGenerator {
     }
   }
 
-  private static final Type COLLECTION =
-      QualifiedName.of(Collection.class).withParameters("E");
   private final boolean needsSafeVarargs;
   private final boolean overridesSetCountMethod;
   private final boolean overridesVarargsAddMethod;
@@ -338,7 +336,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine(" * <p>This method mutates the multiset in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
         .addLine(" * not to call pure functions, like %s.",
-            COLLECTION.javadocNoArgMethodLink("stream"))
+            Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")

@@ -125,8 +125,6 @@ class SetProperty extends PropertyCodeGenerator {
     }
   }
 
-  private static final Type COLLECTION =
-      QualifiedName.of(Collection.class).withParameters("E");
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;
   private final FunctionalType mutatorType;
@@ -360,7 +358,7 @@ class SetProperty extends PropertyCodeGenerator {
         .addLine(" * <p>This method mutates the set in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
         .addLine(" * not to call pure functions, like %s.",
-            COLLECTION.javadocNoArgMethodLink("stream"))
+            Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
