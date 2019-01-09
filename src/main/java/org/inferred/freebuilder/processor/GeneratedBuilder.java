@@ -584,7 +584,7 @@ class GeneratedBuilder extends GeneratedType {
     Variable builder = new Variable("builder");
     if (datatype.isExtensible()) {
       code.addLine("    %s builder = new PartialBuilder%s();",
-              datatype.getBuilder(), datatype.getBuilder().typeParametersOrDiamondOperator());
+              datatype.getBuilder(), datatype.getBuilder().diamondOperator());
       for (PropertyCodeGenerator codeGenerator : generatorsByProperty.values()) {
         codeGenerator.addSetBuilderFromPartial(body, builder);
       }
