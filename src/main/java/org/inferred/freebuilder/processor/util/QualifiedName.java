@@ -116,20 +116,13 @@ public class QualifiedName extends ValueType {
     return new QualifiedName(packageName, concat(simpleNames, ImmutableList.of(simpleName)));
   }
 
-  public TypeClass withParameters() {
-    return new TypeClass(this, ImmutableList.<TypeParameterElement>of());
+  public TypeClass withParameters(TypeParameterElement... parameters) {
+    return new TypeClass(this, ImmutableList.copyOf(parameters));
   }
 
   public Type withParameters(TypeMirror first, TypeMirror... rest) {
     return new TypeImpl(
         this, ImmutableList.<TypeMirror>builder().add(first).add(rest).build());
-  }
-
-  public TypeClass withParameters(
-      TypeParameterElement first,
-      TypeParameterElement... rest) {
-    return new TypeClass(
-        this, ImmutableList.<TypeParameterElement>builder().add(first).add(rest).build());
   }
 
   public TypeClass withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
