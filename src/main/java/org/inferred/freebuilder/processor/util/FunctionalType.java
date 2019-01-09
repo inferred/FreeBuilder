@@ -36,9 +36,11 @@ import javax.lang.model.util.Types;
 public class FunctionalType extends ValueType {
 
   private static final String FUNCTION_PACKAGE = "java.util.function";
-  private static final QualifiedName CONSUMER =
-      QualifiedName.of(FUNCTION_PACKAGE, "Consumer");
 
+  public static final QualifiedName CONSUMER =
+      QualifiedName.of(FUNCTION_PACKAGE, "Consumer");
+  public static final QualifiedName BI_CONSUMER =
+      QualifiedName.of(FUNCTION_PACKAGE, "BiConsumer");
   public static final QualifiedName UNARY_OPERATOR =
       QualifiedName.of(FUNCTION_PACKAGE, "UnaryOperator");
 

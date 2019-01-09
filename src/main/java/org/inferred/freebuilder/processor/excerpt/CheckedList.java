@@ -1,11 +1,10 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+import static org.inferred.freebuilder.processor.util.FunctionalType.CONSUMER;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.LazyName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.AbstractList;
 import java.util.List;
@@ -23,7 +22,6 @@ public class CheckedList extends Excerpt {
 
   @Override
   public void addTo(SourceBuilder code) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().get();
     code.addLine("")
         .addLine("/**")
         .addLine(" * A list implementation that delegates to a provided add method to perform")
@@ -33,9 +31,9 @@ public class CheckedList extends Excerpt {
             TYPE, AbstractList.class, RandomAccess.class)
         .addLine("")
         .addLine("  private final %s<E> list;", List.class)
-        .addLine("  private final %s<E> add;", consumer.getQualifiedName())
+        .addLine("  private final %s<E> add;", CONSUMER)
         .addLine("")
-        .addLine("  %s(%s<E> list, %s<E> add) {", TYPE, List.class, consumer.getQualifiedName())
+        .addLine("  %s(%s<E> list, %s<E> add) {", TYPE, List.class, CONSUMER)
         .addLine("    this.list = list;")
         .addLine("    this.add = add;")
         .addLine("  }")

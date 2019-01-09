@@ -1,15 +1,14 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+import static org.inferred.freebuilder.processor.util.FunctionalType.BI_CONSUMER;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ForwardingMultiset;
 import com.google.common.collect.Multiset;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.LazyName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
 
@@ -27,7 +26,6 @@ public class CheckedMultiset extends Excerpt {
 
   @Override
   public void addTo(SourceBuilder code) {
-    ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().get();
     code.addLine("")
         .addLine("/**")
         .addLine(" * A multiset implementation that delegates to a provided setCount method")
@@ -36,10 +34,10 @@ public class CheckedMultiset extends Excerpt {
         .addLine("private static class %s<E> extends %s<E> {", TYPE, ForwardingMultiset.class)
         .addLine("")
         .addLine("  private final %s<E> multiset;", Multiset.class)
-        .addLine("  private final %s<E, Integer> setCount;", biConsumer.getQualifiedName())
+        .addLine("  private final %s<E, Integer> setCount;", BI_CONSUMER)
         .addLine("")
         .addLine("  %s(%s<E> multiset, %s<E, Integer> setCount) {",
-            TYPE, Multiset.class, biConsumer.getQualifiedName())
+            TYPE, Multiset.class, BI_CONSUMER)
         .addLine("    this.multiset = multiset;")
         .addLine("    this.setCount = setCount;")
         .addLine("  }")
