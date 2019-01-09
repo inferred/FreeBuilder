@@ -15,15 +15,16 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.transform;
-import static java.util.Arrays.asList;
-import static java.util.Collections.nCopies;
+
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.nCopies;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -78,16 +79,6 @@ public class ParameterizedType extends Excerpt {
   @Override
   public void addTo(SourceBuilder source) {
     source.add("%s%s", qualifiedName, typeParameters());
-  }
-
-  /**
-   * Returns a new {@link ParameterizedType} of the same length as this type, filled with
-   * {@code parameters}.
-   */
-  public ParameterizedType withParameters(TypeMirror... parameters) {
-    checkArgument(typeParameters.size() == parameters.length,
-        "Need %s parameters for %s but got %s", typeParameters.size(), this, parameters.length);
-    return new ParameterizedType(qualifiedName, ImmutableList.copyOf(parameters));
   }
 
   /**
