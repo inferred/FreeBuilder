@@ -18,15 +18,14 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.collect.Iterables.transform;
 
+import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -34,22 +33,21 @@ import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.util.List;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleElementVisitor6;
-import javax.lang.model.util.SimpleTypeVisitor6;
 
 public class ParameterizedType extends Excerpt {
 
   public static ParameterizedType from(TypeElement typeElement) {
-    return new ParameterisedTypeForElementVisitor().visitType(typeElement, null);
+    return new ParameterizedType(QualifiedName.of(typeElement), typeElement.getTypeParameters());
   }
 
   public static ParameterizedType from(DeclaredType declaredType) {
-    return new ParameterisedTypeForMirrorVisitor().visitDeclared(declaredType, null);
+    return new ParameterizedType(
+        QualifiedName.of(asElement(declaredType)),
+        declaredType.getTypeArguments());
   }
 
   public static ParameterizedType from(Class<?> cls) {
@@ -61,7 +59,7 @@ public class ParameterizedType extends Excerpt {
 
   ParameterizedType(QualifiedName qualifiedName, List<?> typeParameters) {
     this.qualifiedName = checkNotNull(qualifiedName);
-    this.typeParameters = checkNotNull(typeParameters);
+    this.typeParameters = ImmutableList.copyOf(typeParameters);
   }
 
   public String getSimpleName() {
@@ -209,47 +207,5 @@ public class ParameterizedType extends Excerpt {
       return false;
     }
     return bound.getQualifiedName().contentEquals(Object.class.getName());
-  }
-
-  private static final class ParameterisedTypeForElementVisitor
-      extends SimpleElementVisitor6<Object, Void> implements Function<Element, Object> {
-
-    @Override
-    public Object apply(Element e) {
-      return this.visit(e, null);
-    }
-
-    @Override
-    public ParameterizedType visitType(TypeElement e, Void p) {
-      return new ParameterizedType(
-          QualifiedName.of(e),
-          ImmutableList.copyOf(transform(e.getTypeParameters(), this)));
-    }
-
-    @Override
-    protected Object defaultAction(Element e, Void p) {
-      return e;
-    }
-  }
-
-  private static final class ParameterisedTypeForMirrorVisitor
-      extends SimpleTypeVisitor6<Object, Void> implements Function<TypeMirror, Object> {
-
-    @Override
-    public Object apply(TypeMirror t) {
-      return this.visit(t);
-    }
-
-    @Override
-    public ParameterizedType visitDeclared(DeclaredType t, Void p) {
-      return new ParameterizedType(
-          QualifiedName.of((TypeElement) t.asElement()),
-          ImmutableList.copyOf(transform(t.getTypeArguments(), this)));
-    }
-
-    @Override
-    protected Object defaultAction(TypeMirror e, Void p) {
-      return e;
-    }
   }
 }
