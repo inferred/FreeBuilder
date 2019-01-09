@@ -62,76 +62,46 @@ public class ParameterizedType extends Excerpt {
     this.typeParameters = ImmutableList.copyOf(typeParameters);
   }
 
+  /** Returns the simple name of the type class. */
   public String getSimpleName() {
     return qualifiedName.getSimpleName();
   }
 
+  /** Returns the qualified name of the type class. */
   public QualifiedName getQualifiedName() {
     return qualifiedName;
   }
 
+  /** Returns true if the type class is generic. */
   public boolean isParameterized() {
     return !typeParameters.isEmpty();
-  }
-
-  @Override
-  public void addTo(SourceBuilder source) {
-    source.add("%s%s", qualifiedName, typeParameters());
-  }
-
-  /**
-   * Returns a new {@link ParameterizedType} of the same length as this type, filled with wildcards
-   * ("?").
-   */
-  public ParameterizedType withWildcards() {
-    if (typeParameters.isEmpty()) {
-      return this;
-    }
-    return new ParameterizedType(qualifiedName, nCopies(typeParameters.size(), "?"));
   }
 
   /**
    * Returns a source excerpt suitable for constructing an instance of this type, including "new"
    * keyword but excluding brackets.
    *
-   * <p>In Java 7+, we can use the diamond operator. Otherwise, we write out the type parameters
-   * in full.
+   * <p>At {@link SourceLevel#JAVA_7} and above, we can use the diamond operator. Otherwise, we
+   * write out the type parameters in full.
    */
   public Excerpt constructor() {
     return Excerpts.add("new %s%s", qualifiedName, typeParametersOrDiamondOperator());
   }
 
   /**
-   * Returns a source excerpt suitable for declaring this type, i.e. {@code SimpleName<...>}
+   * Returns a source excerpt suitable for declaring this type.
+   *
+   * <p>e.g. {@code MyType<N extends Number, C extends Consumer<N>>}
    */
   public Excerpt declaration() {
     return Excerpts.add("%s%s", qualifiedName.getSimpleName(), declarationParameters());
   }
 
   /**
-   * Returns a source excerpt of the type parameters of this type, including angle brackets, unless
-   * the diamond operator is available, in which case only the angle brackets will be emitted.
-   */
-  public Excerpt typeParametersOrDiamondOperator() {
-    return isParameterized()
-        ? diamondOperator(Excerpts.join(", ", typeParameters))
-        : Excerpts.empty();
-  }
-
-  /**
-   * Returns a source excerpt of the type parameters of this type, including angle brackets.
-   */
-  public Excerpt typeParameters() {
-    if (typeParameters.isEmpty()) {
-      return Excerpts.empty();
-    } else {
-      return Excerpts.add("<%s>", Excerpts.join(", ", typeParameters));
-    }
-  }
-
-  /**
    * Returns a source excerpt of the type parameters of this type, including bounds and angle
    * brackets.
+   *
+   * <p>e.g. {@code <N extends Number, C extends Consumer<N>>}
    */
   public Excerpt declarationParameters() {
     return new DeclarationParameters(typeParameters);
@@ -151,10 +121,53 @@ public class ParameterizedType extends Excerpt {
     return Excerpts.add("{@link %s#%s()}", getQualifiedName(), memberName);
   }
 
+  /**
+   * Returns a source excerpt of the type parameters of this type, including angle brackets.
+   * Always an empty string if the type class is not generic.
+   *
+   * <p>e.g. {@code <N, C>}
+   */
+  public Excerpt typeParameters() {
+    if (typeParameters.isEmpty()) {
+      return Excerpts.empty();
+    } else {
+      return Excerpts.add("<%s>", Excerpts.join(", ", typeParameters));
+    }
+  }
+
+  /**
+   * Returns a source excerpt equivalent to the diamond operator for this type.
+   *
+   * <p>Always an empty string if the type class is not generic. Matches {@link #typeParameters()}
+   * for {@link SourceLevel#JAVA_6}.
+   */
+  public Excerpt typeParametersOrDiamondOperator() {
+    return isParameterized()
+        ? diamondOperator(Excerpts.join(", ", typeParameters))
+        : Excerpts.empty();
+  }
+
+  /**
+   * Returns a new type of the same class, parameterized with wildcards ("?").
+   *
+   * <p>If the type class is not generic, the returned object will be equal to this one.
+   */
+  public ParameterizedType withWildcards() {
+    if (typeParameters.isEmpty()) {
+      return this;
+    }
+    return new ParameterizedType(qualifiedName, nCopies(typeParameters.size(), "?"));
+  }
+
   @Override
   public String toString() {
     // Only used when debugging, so an empty feature set is fine.
     return SourceStringBuilder.compilable(new StaticFeatureSet()).add(this).toString();
+  }
+
+  @Override
+  public void addTo(SourceBuilder source) {
+    source.add("%s%s", qualifiedName, typeParameters());
   }
 
   @Override
