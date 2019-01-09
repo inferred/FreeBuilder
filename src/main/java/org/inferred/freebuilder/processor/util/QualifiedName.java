@@ -114,24 +114,29 @@ public class QualifiedName extends ValueType {
     return new QualifiedName(packageName, concat(simpleNames, ImmutableList.of(simpleName)));
   }
 
-  public ParameterizedType withParameters(String... typeParameters) {
-    return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
+  public ParameterizedType withParameters() {
+    return new ParameterizedType(this, ImmutableList.of());
+  }
+
+  public ParameterizedType withParameters(String first, String... rest) {
+    return new ParameterizedType(
+        this, ImmutableList.<String>builder().add(first).add(rest).build());
   }
 
   public ParameterizedType withParameters(TypeMirror first, TypeMirror... rest) {
-    return new ParameterizedType(this, ImmutableList.builder().add(first).add(rest).build());
+    return new ParameterizedType(
+        this, ImmutableList.<TypeMirror>builder().add(first).add(rest).build());
+  }
+
+  public ParameterizedType withParameters(
+      TypeParameterElement first,
+      TypeParameterElement... rest) {
+    return new ParameterizedType(
+        this, ImmutableList.<TypeParameterElement>builder().add(first).add(rest).build());
   }
 
   public ParameterizedType withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
     return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
-  }
-
-  public ParameterizedType withParameters(
-      TypeParameterElement typeParameter, TypeParameterElement... typeParameters) {
-    return withParameters(ImmutableList.<TypeParameterElement>builder()
-        .add(typeParameter)
-        .add(typeParameters)
-        .build());
   }
 
   /**
