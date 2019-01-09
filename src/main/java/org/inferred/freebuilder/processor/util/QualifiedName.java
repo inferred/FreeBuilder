@@ -23,6 +23,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import org.inferred.freebuilder.processor.util.Type.TypeImpl;
+
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -114,24 +116,17 @@ public class QualifiedName extends ValueType {
     return new QualifiedName(packageName, concat(simpleNames, ImmutableList.of(simpleName)));
   }
 
-  public ParameterizedType withParameters(String... typeParameters) {
-    return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
+  public TypeClass withParameters(TypeParameterElement... parameters) {
+    return new TypeClass(this, ImmutableList.copyOf(parameters));
   }
 
-  public ParameterizedType withParameters(TypeMirror first, TypeMirror... rest) {
-    return new ParameterizedType(this, ImmutableList.builder().add(first).add(rest).build());
+  public Type withParameters(TypeMirror first, TypeMirror... rest) {
+    return new TypeImpl(
+        this, ImmutableList.<TypeMirror>builder().add(first).add(rest).build());
   }
 
-  public ParameterizedType withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
-    return new ParameterizedType(this, ImmutableList.copyOf(typeParameters));
-  }
-
-  public ParameterizedType withParameters(
-      TypeParameterElement typeParameter, TypeParameterElement... typeParameters) {
-    return withParameters(ImmutableList.<TypeParameterElement>builder()
-        .add(typeParameter)
-        .add(typeParameters)
-        .build());
+  public TypeClass withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
+    return new TypeClass(this, ImmutableList.copyOf(typeParameters));
   }
 
   /**

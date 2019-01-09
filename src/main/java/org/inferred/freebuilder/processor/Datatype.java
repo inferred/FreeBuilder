@@ -23,9 +23,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.TypeClass;
 
 /**
  * Metadata about a user's datatype.
@@ -84,7 +85,7 @@ public abstract class Datatype {
   }
 
   /** Returns the type itself. */
-  public abstract ParameterizedType getType();
+  public abstract TypeClass getType();
 
   /** Returns true if the type is an interface. */
   public abstract boolean isInterfaceType();
@@ -94,7 +95,7 @@ public abstract class Datatype {
    *
    * @throws IllegalStateException if {@link #hasBuilder} returns false.
    */
-  public abstract ParameterizedType getBuilder();
+  public abstract Type getBuilder();
 
   /** Whether there is a package-visible, no-args constructor so we can subclass the Builder. */
   public abstract boolean isExtensible();
@@ -103,13 +104,13 @@ public abstract class Datatype {
   public abstract Optional<BuilderFactory> getBuilderFactory();
 
   /** Returns the builder class that should be generated. */
-  public abstract ParameterizedType getGeneratedBuilder();
+  public abstract TypeClass getGeneratedBuilder();
 
   /** Returns the value class that should be generated. */
-  public abstract ParameterizedType getValueType();
+  public abstract TypeClass getValueType();
 
   /** Returns the partial value class that should be generated. */
-  public abstract ParameterizedType getPartialType();
+  public abstract TypeClass getPartialType();
 
   /**
    * Returns a set of nested types that will be visible in the generated class, either because they
@@ -118,7 +119,7 @@ public abstract class Datatype {
   public abstract ImmutableSet<QualifiedName> getVisibleNestedTypes();
 
   /** Returns the Property enum that may be generated. */
-  public abstract ParameterizedType getPropertyEnum();
+  public abstract TypeClass getPropertyEnum();
 
   public UnderrideLevel standardMethodUnderride(StandardMethod standardMethod) {
     UnderrideLevel underrideLevel = getStandardMethodUnderrides().get(standardMethod);

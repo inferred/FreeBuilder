@@ -47,8 +47,8 @@ import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
 import org.inferred.freebuilder.processor.util.MethodFinder.ErrorTypeHandling;
 import org.inferred.freebuilder.processor.util.ModelUtils;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.Type;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
@@ -173,7 +173,7 @@ class Analyser {
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
-        .setBuilder(ParameterizedType.from(builder));
+        .setBuilder(Type.from(builder));
     Datatype baseDatatype = datatypeBuilder.build();
     Map<Property, PropertyCodeGenerator> generatorsByProperty = pickPropertyGenerators(
         type, baseDatatype, builder, removeNonGetterMethods(builder, methods));

@@ -20,8 +20,9 @@ import java.util.Set;
 import javax.annotation.Generated;
 import javax.annotation.Nullable;
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.TypeClass;
 
 /**
  * Auto-generated superclass of {@link Datatype.Builder}, derived from the API of {@link Datatype}.
@@ -60,19 +61,19 @@ abstract class Datatype_Builder {
     }
   }
 
-  private ParameterizedType type;
+  private TypeClass type;
   private boolean interfaceType;
-  private ParameterizedType builder;
+  private Type builder;
   private boolean extensible;
   // Store a nullable object instead of an Optional. Escape analysis then
   // allows the JVM to optimize away the Optional objects created by and
   // passed to our API.
   private BuilderFactory builderFactory = null;
-  private ParameterizedType generatedBuilder;
-  private ParameterizedType valueType;
-  private ParameterizedType partialType;
+  private TypeClass generatedBuilder;
+  private TypeClass valueType;
+  private TypeClass partialType;
   private Set<QualifiedName> visibleNestedTypes = ImmutableSet.of();
-  private ParameterizedType propertyEnum;
+  private TypeClass propertyEnum;
   private final LinkedHashMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
       standardMethodUnderrides =
           new LinkedHashMap<Datatype.StandardMethod, Datatype.UnderrideLevel>();
@@ -91,7 +92,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code type} is null
    */
-  public Datatype.Builder setType(ParameterizedType type) {
+  public Datatype.Builder setType(TypeClass type) {
     this.type = Preconditions.checkNotNull(type);
     _unsetProperties.remove(Datatype_Builder.Property.TYPE);
     return (Datatype.Builder) this;
@@ -102,7 +103,7 @@ abstract class Datatype_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public ParameterizedType getType() {
+  public TypeClass getType() {
     Preconditions.checkState(
         !_unsetProperties.contains(Datatype_Builder.Property.TYPE), "type not set");
     return type;
@@ -137,7 +138,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code builder} is null
    */
-  public Datatype.Builder setBuilder(ParameterizedType builder) {
+  public Datatype.Builder setBuilder(Type builder) {
     this.builder = Preconditions.checkNotNull(builder);
     _unsetProperties.remove(Datatype_Builder.Property.BUILDER);
     return (Datatype.Builder) this;
@@ -148,7 +149,7 @@ abstract class Datatype_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public ParameterizedType getBuilder() {
+  public Type getBuilder() {
     Preconditions.checkState(
         !_unsetProperties.contains(Datatype_Builder.Property.BUILDER), "builder not set");
     return builder;
@@ -235,7 +236,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code generatedBuilder} is null
    */
-  public Datatype.Builder setGeneratedBuilder(ParameterizedType generatedBuilder) {
+  public Datatype.Builder setGeneratedBuilder(TypeClass generatedBuilder) {
     this.generatedBuilder = Preconditions.checkNotNull(generatedBuilder);
     _unsetProperties.remove(Datatype_Builder.Property.GENERATED_BUILDER);
     return (Datatype.Builder) this;
@@ -246,7 +247,7 @@ abstract class Datatype_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public ParameterizedType getGeneratedBuilder() {
+  public TypeClass getGeneratedBuilder() {
     Preconditions.checkState(
         !_unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER),
         "generatedBuilder not set");
@@ -259,7 +260,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code valueType} is null
    */
-  public Datatype.Builder setValueType(ParameterizedType valueType) {
+  public Datatype.Builder setValueType(TypeClass valueType) {
     this.valueType = Preconditions.checkNotNull(valueType);
     _unsetProperties.remove(Datatype_Builder.Property.VALUE_TYPE);
     return (Datatype.Builder) this;
@@ -270,7 +271,7 @@ abstract class Datatype_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public ParameterizedType getValueType() {
+  public TypeClass getValueType() {
     Preconditions.checkState(
         !_unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE), "valueType not set");
     return valueType;
@@ -282,7 +283,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code partialType} is null
    */
-  public Datatype.Builder setPartialType(ParameterizedType partialType) {
+  public Datatype.Builder setPartialType(TypeClass partialType) {
     this.partialType = Preconditions.checkNotNull(partialType);
     _unsetProperties.remove(Datatype_Builder.Property.PARTIAL_TYPE);
     return (Datatype.Builder) this;
@@ -293,7 +294,7 @@ abstract class Datatype_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public ParameterizedType getPartialType() {
+  public TypeClass getPartialType() {
     Preconditions.checkState(
         !_unsetProperties.contains(Datatype_Builder.Property.PARTIAL_TYPE), "partialType not set");
     return partialType;
@@ -388,7 +389,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code propertyEnum} is null
    */
-  public Datatype.Builder setPropertyEnum(ParameterizedType propertyEnum) {
+  public Datatype.Builder setPropertyEnum(TypeClass propertyEnum) {
     this.propertyEnum = Preconditions.checkNotNull(propertyEnum);
     _unsetProperties.remove(Datatype_Builder.Property.PROPERTY_ENUM);
     return (Datatype.Builder) this;
@@ -399,7 +400,7 @@ abstract class Datatype_Builder {
    *
    * @throws IllegalStateException if the field has not been set
    */
-  public ParameterizedType getPropertyEnum() {
+  public TypeClass getPropertyEnum() {
     Preconditions.checkState(
         !_unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM),
         "propertyEnum not set");
@@ -965,19 +966,19 @@ abstract class Datatype_Builder {
   }
 
   private static final class Value extends Datatype {
-    private final ParameterizedType type;
+    private final TypeClass type;
     private final boolean interfaceType;
-    private final ParameterizedType builder;
+    private final Type builder;
     private final boolean extensible;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
     private final BuilderFactory builderFactory;
-    private final ParameterizedType generatedBuilder;
-    private final ParameterizedType valueType;
-    private final ParameterizedType partialType;
+    private final TypeClass generatedBuilder;
+    private final TypeClass valueType;
+    private final TypeClass partialType;
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
-    private final ParameterizedType propertyEnum;
+    private final TypeClass propertyEnum;
     private final ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1008,7 +1009,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getType() {
+    public TypeClass getType() {
       return type;
     }
 
@@ -1018,7 +1019,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getBuilder() {
+    public Type getBuilder() {
       return builder;
     }
 
@@ -1033,17 +1034,17 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getGeneratedBuilder() {
+    public TypeClass getGeneratedBuilder() {
       return generatedBuilder;
     }
 
     @Override
-    public ParameterizedType getValueType() {
+    public TypeClass getValueType() {
       return valueType;
     }
 
     @Override
-    public ParameterizedType getPartialType() {
+    public TypeClass getPartialType() {
       return partialType;
     }
 
@@ -1053,7 +1054,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getPropertyEnum() {
+    public TypeClass getPropertyEnum() {
       return propertyEnum;
     }
 
@@ -1223,19 +1224,19 @@ abstract class Datatype_Builder {
   }
 
   private static final class Partial extends Datatype {
-    private final ParameterizedType type;
+    private final TypeClass type;
     private final boolean interfaceType;
-    private final ParameterizedType builder;
+    private final Type builder;
     private final boolean extensible;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
     private final BuilderFactory builderFactory;
-    private final ParameterizedType generatedBuilder;
-    private final ParameterizedType valueType;
-    private final ParameterizedType partialType;
+    private final TypeClass generatedBuilder;
+    private final TypeClass valueType;
+    private final TypeClass partialType;
     private final ImmutableSet<QualifiedName> visibleNestedTypes;
-    private final ParameterizedType propertyEnum;
+    private final TypeClass propertyEnum;
     private final ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
         standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1268,7 +1269,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getType() {
+    public TypeClass getType() {
       if (_unsetProperties.contains(Datatype_Builder.Property.TYPE)) {
         throw new UnsupportedOperationException("type not set");
       }
@@ -1284,7 +1285,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getBuilder() {
+    public Type getBuilder() {
       if (_unsetProperties.contains(Datatype_Builder.Property.BUILDER)) {
         throw new UnsupportedOperationException("builder not set");
       }
@@ -1305,7 +1306,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getGeneratedBuilder() {
+    public TypeClass getGeneratedBuilder() {
       if (_unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)) {
         throw new UnsupportedOperationException("generatedBuilder not set");
       }
@@ -1313,7 +1314,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getValueType() {
+    public TypeClass getValueType() {
       if (_unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE)) {
         throw new UnsupportedOperationException("valueType not set");
       }
@@ -1321,7 +1322,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getPartialType() {
+    public TypeClass getPartialType() {
       if (_unsetProperties.contains(Datatype_Builder.Property.PARTIAL_TYPE)) {
         throw new UnsupportedOperationException("partialType not set");
       }
@@ -1334,7 +1335,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ParameterizedType getPropertyEnum() {
+    public TypeClass getPropertyEnum() {
       if (_unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM)) {
         throw new UnsupportedOperationException("propertyEnum not set");
       }

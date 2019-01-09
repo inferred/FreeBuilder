@@ -46,9 +46,9 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Type;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -128,9 +128,6 @@ class ListProperty extends PropertyCodeGenerator {
       return types.getWildcardType(null, types.getDeclaredType(listType, elementType));
     }
   }
-
-  private static final ParameterizedType COLLECTION =
-      QualifiedName.of(Collection.class).withParameters("E");
 
   private final boolean needsSafeVarargs;
   private final boolean overridesAddMethod;
@@ -383,7 +380,7 @@ class ListProperty extends PropertyCodeGenerator {
         .addLine(" * <p>This method mutates the list in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
         .addLine(" * not to call pure functions, like %s.",
-            COLLECTION.javadocNoArgMethodLink("stream"))
+            Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")

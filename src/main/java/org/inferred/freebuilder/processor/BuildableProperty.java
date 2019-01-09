@@ -40,9 +40,10 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ModelUtils;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.TypeClass;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.List;
@@ -174,7 +175,7 @@ class BuildableProperty extends PropertyCodeGenerator {
       return Optional.of(new BuildableProperty(
           config.getDatatype(),
           config.getProperty(),
-          ParameterizedType.from(builder.get()),
+          TypeClass.from(builder.get()),
           builderFactory.get(),
           mutatorType,
           mergeFromBuilderMethod,
@@ -182,7 +183,7 @@ class BuildableProperty extends PropertyCodeGenerator {
     }
   }
 
-  private final ParameterizedType builderType;
+  private final Type builderType;
   private final BuilderFactory builderFactory;
   private final FunctionalType mutatorType;
   private final MergeBuilderMethod mergeFromBuilderMethod;
@@ -192,7 +193,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   private BuildableProperty(
       Datatype datatype,
       Property property,
-      ParameterizedType builderType,
+      Type builderType,
       BuilderFactory builderFactory,
       FunctionalType mutatorType,
       MergeBuilderMethod mergeFromBuilderMethod,

@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
+import org.inferred.freebuilder.processor.util.Type;
 
 import java.util.Set;
 
@@ -37,9 +37,7 @@ public enum BuilderFactory {
 
   /** A new Builder can be made by calling the class' no-args constructor. */
   NO_ARGS_CONSTRUCTOR {
-    @Override public Excerpt newBuilder(
-        final ParameterizedType builderType,
-        final TypeInference typeInference) {
+    @Override public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
       if (typeInference == TypeInference.INFERRED_TYPES) {
         return Excerpts.add("%s()", builderType.constructor());
       } else {
@@ -50,9 +48,7 @@ public enum BuilderFactory {
 
   /** The enclosing class provides a static builder() factory method. */
   BUILDER_METHOD {
-    @Override public Excerpt newBuilder(
-        final ParameterizedType builderType,
-        final TypeInference typeInference) {
+    @Override public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
       if (typeInference == TypeInference.INFERRED_TYPES) {
         return Excerpts.add("%s.builder()", builderType.getQualifiedName().getEnclosingType());
       } else {
@@ -64,9 +60,7 @@ public enum BuilderFactory {
 
   /** The enclosing class provides a static newBuilder() factory method. */
   NEW_BUILDER_METHOD {
-    @Override public Excerpt newBuilder(
-        final ParameterizedType builderType,
-        final TypeInference typeInference) {
+    @Override public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
       if (typeInference == TypeInference.INFERRED_TYPES) {
         return Excerpts.add("%s.newBuilder()", builderType.getQualifiedName().getEnclosingType());
       } else {
@@ -112,7 +106,7 @@ public enum BuilderFactory {
   }
 
   /** Returns an excerpt calling the Builder factory method. */
-  public abstract Excerpt newBuilder(ParameterizedType builderType, TypeInference typeInference);
+  public abstract Excerpt newBuilder(Type builderType, TypeInference typeInference);
 
   private static boolean typeIsAbstract(TypeElement type) {
     return type.getModifiers().contains(Modifier.ABSTRACT);

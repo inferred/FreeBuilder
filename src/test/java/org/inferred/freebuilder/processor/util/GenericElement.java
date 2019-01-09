@@ -15,8 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 
 import com.google.common.collect.ImmutableList;
@@ -67,8 +67,6 @@ public abstract class GenericElement implements TypeElement {
     private AtomicReference<GenericElement> element;
 
     public Builder(QualifiedName qualifiedName) {
-      checkArgument(qualifiedName.isTopLevel(),
-          "GenericElement currently only supports creating top-level classes");
       this.qualifiedName = qualifiedName;
     }
 
@@ -188,7 +186,7 @@ public abstract class GenericElement implements TypeElement {
 
   @Override
   public NestingKind getNestingKind() {
-    return NestingKind.TOP_LEVEL;
+    return qualifiedName.isTopLevel() ? NestingKind.TOP_LEVEL : NestingKind.MEMBER;
   }
 
   @Override
@@ -217,8 +215,12 @@ public abstract class GenericElement implements TypeElement {
   }
 
   @Override
-  public PackageElementImpl getEnclosingElement() {
-    return PackageElementImpl.create(qualifiedName.getPackage());
+  public Element getEnclosingElement() {
+    if (!qualifiedName.isTopLevel()) {
+      return newTopLevelClass(qualifiedName.getEnclosingType().toString()).asElement();
+    } else {
+      return PackageElementImpl.create(qualifiedName.getPackage());
+    }
   }
 
 }
