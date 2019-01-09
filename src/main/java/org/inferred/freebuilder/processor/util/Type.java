@@ -39,43 +39,35 @@ import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 
-public class Type extends Excerpt {
+public abstract class Type extends Excerpt {
 
   public static Type from(TypeElement typeElement) {
-    return new Type(QualifiedName.of(typeElement), typeElement.getTypeParameters());
+    return new TypeImpl(QualifiedName.of(typeElement), typeElement.getTypeParameters());
   }
 
   public static Type from(DeclaredType declaredType) {
-    return new Type(
+    return new TypeImpl(
         QualifiedName.of(asElement(declaredType)),
         declaredType.getTypeArguments());
   }
 
   public static Type from(Class<?> cls) {
-    return new Type(QualifiedName.of(cls), asList(cls.getTypeParameters()));
-  }
-
-  private final QualifiedName qualifiedName;
-  private final List<?> typeParameters;
-
-  Type(QualifiedName qualifiedName, List<?> typeParameters) {
-    this.qualifiedName = checkNotNull(qualifiedName);
-    this.typeParameters = ImmutableList.copyOf(typeParameters);
-  }
-
-  /** Returns the simple name of the type class. */
-  public String getSimpleName() {
-    return qualifiedName.getSimpleName();
+    return new TypeImpl(QualifiedName.of(cls), asList(cls.getTypeParameters()));
   }
 
   /** Returns the qualified name of the type class. */
-  public QualifiedName getQualifiedName() {
-    return qualifiedName;
+  public abstract QualifiedName getQualifiedName();
+
+  protected abstract List<?> getTypeParameters();
+
+  /** Returns the simple name of the type class. */
+  public String getSimpleName() {
+    return getQualifiedName().getSimpleName();
   }
 
   /** Returns true if the type class is generic. */
   public boolean isParameterized() {
-    return !typeParameters.isEmpty();
+    return !getTypeParameters().isEmpty();
   }
 
   /**
@@ -86,7 +78,7 @@ public class Type extends Excerpt {
    * write out the type parameters in full.
    */
   public Excerpt constructor() {
-    return Excerpts.add("new %s%s", qualifiedName, typeParametersOrDiamondOperator());
+    return Excerpts.add("new %s%s", getQualifiedName(), typeParametersOrDiamondOperator());
   }
 
   /**
@@ -95,7 +87,7 @@ public class Type extends Excerpt {
    * <p>e.g. {@code MyType<N extends Number, C extends Consumer<N>>}
    */
   public Excerpt declaration() {
-    return Excerpts.add("%s%s", qualifiedName.getSimpleName(), declarationParameters());
+    return Excerpts.add("%s%s", getSimpleName(), declarationParameters());
   }
 
   /**
@@ -105,7 +97,7 @@ public class Type extends Excerpt {
    * <p>e.g. {@code <N extends Number, C extends Consumer<N>>}
    */
   public Excerpt declarationParameters() {
-    return new DeclarationParameters(typeParameters);
+    return new DeclarationParameters(getTypeParameters());
   }
 
   /**
@@ -129,10 +121,10 @@ public class Type extends Excerpt {
    * <p>e.g. {@code <N, C>}
    */
   public Excerpt typeParameters() {
-    if (typeParameters.isEmpty()) {
+    if (getTypeParameters().isEmpty()) {
       return Excerpts.empty();
     } else {
-      return Excerpts.add("<%s>", Excerpts.join(", ", typeParameters));
+      return Excerpts.add("<%s>", Excerpts.join(", ", getTypeParameters()));
     }
   }
 
@@ -144,7 +136,7 @@ public class Type extends Excerpt {
    */
   public Excerpt typeParametersOrDiamondOperator() {
     return isParameterized()
-        ? diamondOperator(Excerpts.join(", ", typeParameters))
+        ? diamondOperator(Excerpts.join(", ", getTypeParameters()))
         : Excerpts.empty();
   }
 
@@ -154,10 +146,10 @@ public class Type extends Excerpt {
    * <p>If the type class is not generic, the returned object will be equal to this one.
    */
   public Type withWildcards() {
-    if (typeParameters.isEmpty()) {
+    if (getTypeParameters().isEmpty()) {
       return this;
     }
-    return new Type(qualifiedName, nCopies(typeParameters.size(), "?"));
+    return new TypeImpl(getQualifiedName(), nCopies(getTypeParameters().size(), "?"));
   }
 
   @Override
@@ -168,13 +160,7 @@ public class Type extends Excerpt {
 
   @Override
   public void addTo(SourceBuilder source) {
-    source.add("%s%s", qualifiedName, typeParameters());
-  }
-
-  @Override
-  protected void addFields(FieldReceiver fields) {
-    fields.add("qualifiedName", qualifiedName);
-    fields.add("typeParameters", typeParameters);
+    source.add("%s%s", getQualifiedName(), typeParameters());
   }
 
   private final class DeclarationParameters extends Excerpt {
@@ -221,5 +207,31 @@ public class Type extends Excerpt {
       return false;
     }
     return bound.getQualifiedName().contentEquals(Object.class.getName());
+  }
+
+  static class TypeImpl extends Type {
+    private final QualifiedName qualifiedName;
+    private final List<?> typeParameters;
+
+    TypeImpl(QualifiedName qualifiedName, List<?> typeParameters) {
+      this.qualifiedName = checkNotNull(qualifiedName);
+      this.typeParameters = ImmutableList.copyOf(typeParameters);
+    }
+
+    @Override
+    public QualifiedName getQualifiedName() {
+      return qualifiedName;
+    }
+
+    @Override
+    protected List<?> getTypeParameters() {
+      return typeParameters;
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("qualifiedName", qualifiedName);
+      fields.add("typeParameters", typeParameters);
+    }
   }
 }

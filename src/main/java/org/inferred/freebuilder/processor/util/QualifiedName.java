@@ -23,6 +23,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import org.inferred.freebuilder.processor.util.Type.TypeImpl;
+
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -115,28 +117,28 @@ public class QualifiedName extends ValueType {
   }
 
   public Type withParameters() {
-    return new Type(this, ImmutableList.of());
+    return new TypeImpl(this, ImmutableList.of());
   }
 
   public Type withParameters(String first, String... rest) {
-    return new Type(
+    return new TypeImpl(
         this, ImmutableList.<String>builder().add(first).add(rest).build());
   }
 
   public Type withParameters(TypeMirror first, TypeMirror... rest) {
-    return new Type(
+    return new TypeImpl(
         this, ImmutableList.<TypeMirror>builder().add(first).add(rest).build());
   }
 
   public Type withParameters(
       TypeParameterElement first,
       TypeParameterElement... rest) {
-    return new Type(
+    return new TypeImpl(
         this, ImmutableList.<TypeParameterElement>builder().add(first).add(rest).build());
   }
 
   public Type withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
-    return new Type(this, ImmutableList.copyOf(typeParameters));
+    return new TypeImpl(this, ImmutableList.copyOf(typeParameters));
   }
 
   /**
