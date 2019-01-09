@@ -120,11 +120,6 @@ public class QualifiedName extends ValueType {
     return new TypeClass(this, ImmutableList.<TypeParameterElement>of());
   }
 
-  public Type withParameters(String first, String... rest) {
-    return new TypeImpl(
-        this, ImmutableList.<String>builder().add(first).add(rest).build());
-  }
-
   public Type withParameters(TypeMirror first, TypeMirror... rest) {
     return new TypeImpl(
         this, ImmutableList.<TypeMirror>builder().add(first).add(rest).build());
