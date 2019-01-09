@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
@@ -81,7 +80,7 @@ public abstract class Type extends Excerpt {
    * write out the type parameters in full.
    */
   public Excerpt constructor() {
-    return Excerpts.add("new %s%s", getQualifiedName(), typeParametersOrDiamondOperator());
+    return Excerpts.add("new %s%s", getQualifiedName(), diamondOperator());
   }
 
   /**
@@ -118,9 +117,9 @@ public abstract class Type extends Excerpt {
    * <p>Always an empty string if the type class is not generic. Matches {@link #typeParameters()}
    * for {@link SourceLevel#JAVA_6}.
    */
-  public Excerpt typeParametersOrDiamondOperator() {
+  public Excerpt diamondOperator() {
     return isParameterized()
-        ? diamondOperator(Excerpts.join(", ", getTypeParameters()))
+        ? SourceLevel.diamondOperator(Excerpts.join(", ", getTypeParameters()))
         : Excerpts.empty();
   }
 
