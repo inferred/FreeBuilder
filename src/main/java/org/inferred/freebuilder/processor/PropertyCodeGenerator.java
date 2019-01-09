@@ -90,12 +90,12 @@ public abstract class PropertyCodeGenerator {
     this.property = property;
   }
 
-  /** Property type. */
-  public enum Type { REQUIRED, OPTIONAL, HAS_DEFAULT }
+  /** General behaviour type for a fresh or reset property. */
+  public enum Initially { REQUIRED, OPTIONAL, HAS_DEFAULT }
 
   /** Returns whether the property is required, optional, or has a default. */
-  public Type getType() {
-    return Type.HAS_DEFAULT;
+  public Initially initialState() {
+    return Initially.HAS_DEFAULT;
   }
 
   /** Add the field declaration for the property to the value's source code. */

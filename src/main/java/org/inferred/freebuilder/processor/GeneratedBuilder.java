@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
@@ -283,7 +283,7 @@ class GeneratedBuilder extends GeneratedType {
     code.addLine("")
         .addLine("private enum %s {", datatype.getPropertyEnum().getSimpleName());
     for (Property property : generatorsByProperty.keySet()) {
-      if (generatorsByProperty.get(property).getType() == Type.REQUIRED) {
+      if (generatorsByProperty.get(property).initialState() == Initially.REQUIRED) {
         code.addLine("  %s(\"%s\"),", property.getAllCapsName(), property.getName());
       }
     }
@@ -456,7 +456,7 @@ class GeneratedBuilder extends GeneratedType {
       generatorsByProperty.get(property).addAccessorAnnotations(code);
       generatorsByProperty.get(property).addGetterAnnotations(code);
       code.addLine("  public %s %s() {", property.getType(), property.getGetterName());
-      if (generatorsByProperty.get(property).getType() == Type.REQUIRED) {
+      if (generatorsByProperty.get(property).initialState() == Initially.REQUIRED) {
         code.addLine("    if (%s.contains(%s.%s)) {",
                 UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName())
             .addLine("      throw new %s(\"%s not set\");",
@@ -597,7 +597,7 @@ class GeneratedBuilder extends GeneratedType {
   }
 
   private static Nullability nullabilityOf(PropertyCodeGenerator generator, boolean inPartial) {
-    switch (generator.getType()) {
+    switch (generator.initialState()) {
       case HAS_DEFAULT:
         return NOT_NULLABLE;
 
@@ -607,7 +607,7 @@ class GeneratedBuilder extends GeneratedType {
       case REQUIRED:
         return inPartial ? NULLABLE : NOT_NULLABLE;
     }
-    throw new IllegalStateException("Unexpected property type " + generator.getType());
+    throw new IllegalStateException("Unexpected initial state " + generator.initialState());
   }
 
   /** Returns an {@link Excerpt} of "implements/extends {@code type}". */
@@ -655,7 +655,7 @@ class GeneratedBuilder extends GeneratedType {
   private static final Predicate<PropertyCodeGenerator> IS_REQUIRED =
       new Predicate<PropertyCodeGenerator>() {
         @Override public boolean apply(PropertyCodeGenerator generator) {
-          return generator.getType() == Type.REQUIRED;
+          return generator.initialState() == Initially.REQUIRED;
         }
       };
 }

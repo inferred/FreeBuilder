@@ -11,7 +11,7 @@ import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
@@ -33,8 +33,8 @@ class ToStringGenerator {
     Predicate<PropertyCodeGenerator> isOptional = new Predicate<PropertyCodeGenerator>() {
       @Override
       public boolean apply(PropertyCodeGenerator generator) {
-        Type type = generator.getType();
-        return (type == Type.OPTIONAL || (type == Type.REQUIRED && forPartial));
+        Initially initially = generator.initialState();
+        return (initially == Initially.OPTIONAL || (initially == Initially.REQUIRED && forPartial));
       }
     };
     boolean anyOptional = any(generatorsByProperty.values(), isOptional);
@@ -119,7 +119,7 @@ class ToStringGenerator {
           code.add(";%n  ");
         }
         code.add("if (");
-        if (generator.getType() == Type.OPTIONAL) {
+        if (generator.initialState() == Initially.OPTIONAL) {
           code.add("%s != null", property.getField());
         } else {
           code.add("!%s.contains(%s.%s)",
@@ -198,7 +198,7 @@ class ToStringGenerator {
     Property last = Iterables.getLast(generatorsByProperty.keySet());
     for (Property property : generatorsByProperty.keySet()) {
       PropertyCodeGenerator generator = generatorsByProperty.get(property);
-      switch (generator.getType()) {
+      switch (generator.initialState()) {
         case HAS_DEFAULT:
           throw new RuntimeException("Internal error: unexpected default field");
 
