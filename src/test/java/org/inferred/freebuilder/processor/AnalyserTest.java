@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableMap;
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
@@ -702,8 +702,8 @@ public class AnalyserTest {
         "}"));
 
     Map<String, PropertyCodeGenerator> generators = generatorsByName(builder);
-    assertEquals(Type.REQUIRED, generators.get("name").getType());
-    assertEquals(Type.REQUIRED, generators.get("age").getType());
+    assertEquals(Initially.REQUIRED, generators.get("name").initialState());
+    assertEquals(Initially.REQUIRED, generators.get("age").initialState());
   }
 
   @Test

@@ -79,8 +79,8 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public Type getType() {
-    return hasDefault ? Type.HAS_DEFAULT : Type.REQUIRED;
+  public Initially initialState() {
+    return hasDefault ? Initially.HAS_DEFAULT : Initially.REQUIRED;
   }
 
   @Override

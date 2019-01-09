@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Type;
+import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
@@ -535,15 +535,15 @@ public class ToStringGeneratorTest {
     }
 
     ToStringBuilder withRequired(String name) {
-      return with(Type.REQUIRED, name);
+      return with(Initially.REQUIRED, name);
     }
 
     ToStringBuilder withOptional(String name) {
-      return with(Type.OPTIONAL, name);
+      return with(Initially.OPTIONAL, name);
     }
 
     ToStringBuilder withDefault(String name) {
-      return with(Type.HAS_DEFAULT, name);
+      return with(Initially.HAS_DEFAULT, name);
     }
 
     String valueToString() {
@@ -558,13 +558,13 @@ public class ToStringGeneratorTest {
       return code.toString();
     }
 
-    private ToStringBuilder with(PropertyCodeGenerator.Type type, String name) {
+    private ToStringBuilder with(PropertyCodeGenerator.Initially initially, String name) {
       Property property = new Property.Builder()
           .setName(name)
           .setAllCapsName(name.replaceAll("([A-Z])", "_$1").toUpperCase())
           .buildPartial();
       PropertyCodeGenerator generator = mock(PropertyCodeGenerator.class, new ReturnsSmartNulls());
-      when(generator.getType()).thenReturn(type);
+      when(generator.initialState()).thenReturn(initially);
       generatorsByProperty.put(property, generator);
       return this;
     }

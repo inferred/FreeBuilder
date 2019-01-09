@@ -202,8 +202,8 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public Type getType() {
-    return Type.OPTIONAL;
+  public Initially initialState() {
+    return Initially.OPTIONAL;
   }
 
   @Override

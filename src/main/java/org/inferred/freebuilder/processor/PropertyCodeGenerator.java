@@ -90,12 +90,39 @@ public abstract class PropertyCodeGenerator {
     this.property = property;
   }
 
-  /** Property type. */
-  public enum Type { REQUIRED, OPTIONAL, HAS_DEFAULT }
+  /** General behaviour type for a fresh or reset property. */
+  public enum Initially {
+
+    /**
+     * The property must have a value set before build can be called.
+     *
+     * <p>This may simply mean we have not detected the property being set in the builder's
+     * constructor. The property's field may be null in the builder or on a partial, but will never
+     * be null on a value instance.
+     */
+    REQUIRED,
+
+    /**
+     * The property need not be set.
+     *
+     * <p>This may mean the user chose an explicit Optional type (e.g. Java 8's Optional), or it
+     * may mean a Nullable annotation has been spotted. The property's field may be null.
+     */
+    OPTIONAL,
+
+    /**
+     * The property is known to have a default value.
+     *
+     * <p>This may be because we detected the property being set in the builder's constructor,
+     * or because the type itself has a reasonable default (e.g. an empty collection). The
+     * property's field will never be null.
+     */
+    HAS_DEFAULT
+  }
 
   /** Returns whether the property is required, optional, or has a default. */
-  public Type getType() {
-    return Type.HAS_DEFAULT;
+  public Initially initialState() {
+    return Initially.HAS_DEFAULT;
   }
 
   /** Add the field declaration for the property to the value's source code. */
