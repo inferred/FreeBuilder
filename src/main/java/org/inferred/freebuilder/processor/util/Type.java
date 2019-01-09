@@ -16,17 +16,13 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.getOnlyElement;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
 
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.feature.SourceLevel;
@@ -34,21 +30,28 @@ import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.util.List;
 
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 
+/**
+ * Representation of a parameterized class or interface type.
+ *
+ * <p>Similar to {@link DeclaredType}, with a code-generation and test-friendly focus.
+ */
 public abstract class Type extends Excerpt {
 
-  public static Type from(TypeElement typeElement) {
-    return new TypeImpl(QualifiedName.of(typeElement), typeElement.getTypeParameters());
-  }
-
   public static Type from(DeclaredType declaredType) {
-    return new TypeImpl(
-        QualifiedName.of(asElement(declaredType)),
-        declaredType.getTypeArguments());
+    if (declaredType.getTypeArguments().isEmpty()) {
+      // Make testing easier by not introducing a distinction between Type and TypeClass for
+      // non-generic types.
+      return new TypeClass(
+          QualifiedName.of(asElement(declaredType)),
+          ImmutableList.<TypeParameterElement>of());
+    } else {
+      return new TypeImpl(
+          QualifiedName.of(asElement(declaredType)),
+          declaredType.getTypeArguments());
+    }
   }
 
   public static Type from(Class<?> cls) {
@@ -79,25 +82,6 @@ public abstract class Type extends Excerpt {
    */
   public Excerpt constructor() {
     return Excerpts.add("new %s%s", getQualifiedName(), typeParametersOrDiamondOperator());
-  }
-
-  /**
-   * Returns a source excerpt suitable for declaring this type.
-   *
-   * <p>e.g. {@code MyType<N extends Number, C extends Consumer<N>>}
-   */
-  public Excerpt declaration() {
-    return Excerpts.add("%s%s", getSimpleName(), declarationParameters());
-  }
-
-  /**
-   * Returns a source excerpt of the type parameters of this type, including bounds and angle
-   * brackets.
-   *
-   * <p>e.g. {@code <N extends Number, C extends Consumer<N>>}
-   */
-  public Excerpt declarationParameters() {
-    return new DeclarationParameters(getTypeParameters());
   }
 
   /**
@@ -153,60 +137,8 @@ public abstract class Type extends Excerpt {
   }
 
   @Override
-  public String toString() {
-    // Only used when debugging, so an empty feature set is fine.
-    return SourceStringBuilder.compilable(new StaticFeatureSet()).add(this).toString();
-  }
-
-  @Override
   public void addTo(SourceBuilder source) {
     source.add("%s%s", getQualifiedName(), typeParameters());
-  }
-
-  private final class DeclarationParameters extends Excerpt {
-
-    private final List<TypeParameterElement> typeParameters;
-
-    DeclarationParameters(List<?> typeParameters) {
-      this.typeParameters =
-          FluentIterable.from(typeParameters).filter(TypeParameterElement.class).toList();
-      checkState(this.typeParameters.size() == typeParameters.size(),
-          "Not all parameters are TypeParameterElements");
-    }
-
-    @Override public void addTo(SourceBuilder source) {
-      if (!typeParameters.isEmpty()) {
-        String prefix = "<";
-        for (TypeParameterElement typeParameter : typeParameters) {
-          source.add("%s%s", prefix, typeParameter.getSimpleName());
-          if (!extendsObject(typeParameter)) {
-            String separator = " extends ";
-            for (TypeMirror bound : typeParameter.getBounds()) {
-              source.add("%s%s", separator, bound);
-              separator = " & ";
-            }
-          }
-          prefix = ", ";
-        }
-        source.add(">");
-      }
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("typeParameters", typeParameters);
-    }
-  }
-
-  private static boolean extendsObject(TypeParameterElement element) {
-    if (element.getBounds().size() != 1) {
-      return false;
-    }
-    TypeElement bound = maybeAsTypeElement(getOnlyElement(element.getBounds())).orNull();
-    if (bound == null) {
-      return false;
-    }
-    return bound.getQualifiedName().contentEquals(Object.class.getName());
   }
 
   static class TypeImpl extends Type {
@@ -232,6 +164,12 @@ public abstract class Type extends Excerpt {
     protected void addFields(FieldReceiver fields) {
       fields.add("qualifiedName", qualifiedName);
       fields.add("typeParameters", typeParameters);
+    }
+
+    @Override
+    public String toString() {
+      // Only used when debugging, so an empty feature set is fine.
+      return SourceStringBuilder.compilable(new StaticFeatureSet()).add(this).toString();
     }
   }
 }

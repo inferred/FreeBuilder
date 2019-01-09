@@ -15,24 +15,27 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedClass;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
 import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.junit.Test;
 
-public class ParameterizedTypeTest {
+public class TypeClassTest {
 
   private static final QualifiedName MY_TYPE_NAME = QualifiedName.of("com.example", "MyType");
-  private static final ClassTypeImpl MY_TYPE = newTopLevelClass("com.example.MyType");
-  private static final ClassTypeImpl MY_NESTED_TYPE =
-      ClassTypeImpl.newNestedClass(MY_TYPE.asElement(), "MyNestedType");
+  private static final ClassElementImpl MY_TYPE =
+      newTopLevelClass("com.example.MyType").asElement();
+  private static final ClassElementImpl MY_NESTED_TYPE =
+      newNestedClass(MY_TYPE, "MyNestedType").asElement();
 
   @Test
-  public void testFromDeclaredType_simpleType() {
-    Type type = Type.from(MY_TYPE);
+  public void testFromTypeElement_simpleType() {
+    TypeClass type = TypeClass.from(MY_TYPE);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertFalse(type.isParameterized());
     assertEquals("MyType", prettyPrint(type, SourceLevel.JAVA_7));
@@ -45,8 +48,8 @@ public class ParameterizedTypeTest {
   }
 
   @Test
-  public void testFromDeclaredType_nestedType() {
-    Type type = Type.from(MY_NESTED_TYPE);
+  public void testFromTypeElement_nestedType() {
+    TypeClass type = TypeClass.from(MY_NESTED_TYPE);
     assertEquals(QualifiedName.of("com.example", "MyType", "MyNestedType"),
         type.getQualifiedName());
     assertFalse(type.isParameterized());
@@ -61,9 +64,9 @@ public class ParameterizedTypeTest {
   }
 
   @Test
-  public void testFromDeclaredType_genericType() {
+  public void testFromTypeElement_genericType() {
     GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME).addTypeParameter("V").build();
-    Type type = Type.from(myType);
+    TypeClass type = TypeClass.from(myType);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertTrue(type.isParameterized());
     assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_7));
@@ -76,11 +79,11 @@ public class ParameterizedTypeTest {
   }
 
   @Test
-  public void testFromDeclaredType_parameterWithSingleBound() {
+  public void testFromTypeElement_parameterWithSingleBound() {
     GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME)
         .addTypeParameter("V", newTopLevelClass("java.lang.Number"))
         .build();
-    Type type = Type.from(myType);
+    TypeClass type = TypeClass.from(myType);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertTrue(type.isParameterized());
     assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_7));
@@ -93,14 +96,14 @@ public class ParameterizedTypeTest {
   }
 
   @Test
-  public void testFromDeclaredType_parameterWithMultipleBounds() {
+  public void testFromTypeElement_parameterWithMultipleBounds() {
     GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME)
         .addTypeParameter("V",
             newTopLevelClass("java.lang.Number"),
             newTopLevelClass("java.lang.Comparable"),
             newTopLevelClass("java.util.Formattable"))
         .build();
-    Type type = Type.from(myType);
+    TypeClass type = TypeClass.from(myType);
     assertEquals("MyType<V extends Number & Comparable & Formattable>",
         prettyPrint(type.declaration(), SourceLevel.JAVA_7));
   }
@@ -108,5 +111,4 @@ public class ParameterizedTypeTest {
   private static String prettyPrint(Excerpt type, SourceLevel sourceLevel) {
     return SourceStringBuilder.simple(sourceLevel).add(type).toString();
   }
-
 }

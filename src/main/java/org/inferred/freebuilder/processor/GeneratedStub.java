@@ -5,16 +5,16 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.TypeClass;
 
 import java.util.Set;
 
 class GeneratedStub extends GeneratedType {
 
   private final QualifiedName datatype;
-  private final Type stub;
+  private final TypeClass stub;
 
-  GeneratedStub(QualifiedName datatype, Type stub) {
+  GeneratedStub(QualifiedName datatype, TypeClass stub) {
     this.datatype = datatype;
     this.stub = stub;
   }

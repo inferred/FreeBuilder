@@ -43,6 +43,7 @@ import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.TypeClass;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.List;
@@ -174,7 +175,7 @@ class BuildableProperty extends PropertyCodeGenerator {
       return Optional.of(new BuildableProperty(
           config.getDatatype(),
           config.getProperty(),
-          Type.from(builder.get()),
+          TypeClass.from(builder.get()),
           builderFactory.get(),
           mutatorType,
           mergeFromBuilderMethod,
