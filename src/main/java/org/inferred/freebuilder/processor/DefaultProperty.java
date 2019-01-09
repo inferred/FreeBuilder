@@ -130,7 +130,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).unaryOperator().isPresent()) {
+    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
       return;
     }
     code.addLine("")

@@ -349,7 +349,7 @@ class SetProperty extends PropertyCodeGenerator {
   }
 
   private void addMutator(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
+    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
       return;
     }
     code.addLine("")

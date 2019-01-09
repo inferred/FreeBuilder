@@ -397,8 +397,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
   }
 
   private void addMutator(SourceBuilder code) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
+    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
       return;
     }
     code.addLine("")

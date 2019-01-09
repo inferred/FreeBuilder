@@ -2,10 +2,6 @@ package org.inferred.freebuilder.processor.util.feature;
 
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
-import com.google.common.base.Optional;
-
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -41,46 +37,18 @@ public enum FunctionPackage implements Feature<FunctionPackage> {
         }
       };
 
-  private static final ParameterizedType CONSUMER =
-      QualifiedName.of("java.util.function", "Consumer").withParameters("T");
-  private static final ParameterizedType BI_CONSUMER =
-      QualifiedName.of("java.util.function", "BiConsumer").withParameters("T", "U");
-  private static final ParameterizedType UNARY_OPERATOR =
-      QualifiedName.of("java.util.function", "UnaryOperator").withParameters("T");
-
   private final String humanReadableFormat;
 
   FunctionPackage(String humanReadableFormat) {
     this.humanReadableFormat = humanReadableFormat;
   }
 
-  /**
-   * Parameterized type for {@code java.util.function.Consumer<T>}, if available.
-   */
-  public Optional<ParameterizedType> consumer() {
-    return ifAvailable(CONSUMER);
-  }
-
-  /**
-   * Parameterized type for {@code java.util.function.BiConsumer<T>}, if available.
-   */
-  public Optional<ParameterizedType> biConsumer() {
-    return ifAvailable(BI_CONSUMER);
-  }
-
-  /**
-   * Parameterized type for {@code java.util.function.UnaryOperator<T>}, if available.
-   */
-  public Optional<ParameterizedType> unaryOperator() {
-    return ifAvailable(UNARY_OPERATOR);
+  public boolean isAvailable() {
+    return (this == AVAILABLE);
   }
 
   @Override
   public String toString() {
     return humanReadableFormat;
-  }
-
-  private <T> Optional<T> ifAvailable(T value) {
-    return (this == AVAILABLE) ? Optional.of(value) : Optional.<T>absent();
   }
 }

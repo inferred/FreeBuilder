@@ -36,7 +36,6 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -309,8 +308,7 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code) {
-    ParameterizedType unaryOperator = code.feature(FUNCTION_PACKAGE).unaryOperator().orNull();
-    if (unaryOperator == null) {
+    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
       return;
     }
     code.addLine("")

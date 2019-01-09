@@ -1,6 +1,6 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
+import static org.inferred.freebuilder.processor.util.FunctionalType.BI_CONSUMER;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ForwardingListMultimap;
@@ -10,9 +10,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.LazyName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.Collection;
 import java.util.List;
@@ -33,7 +32,6 @@ public class CheckedListMultimap extends Excerpt {
 
   @Override
   public void addTo(SourceBuilder code) {
-    ParameterizedType biConsumer = code.feature(FUNCTION_PACKAGE).biConsumer().get();
     code.addLine("")
         .addLine("/**")
         .addLine(" * A multimap implementation that delegates to a provided put method")
@@ -43,10 +41,9 @@ public class CheckedListMultimap extends Excerpt {
             TYPE, ForwardingListMultimap.class)
         .addLine("")
         .addLine("  private final %s<K, V> multimap;", ListMultimap.class)
-        .addLine("  private final %s<K, V> put;", biConsumer.getQualifiedName())
+        .addLine("  private final %s<K, V> put;", BI_CONSUMER)
         .addLine("")
-        .addLine("  %s(%s<K, V> multimap, %s<K, V> put) {",
-            TYPE, ListMultimap.class, biConsumer.getQualifiedName())
+        .addLine("  %s(%s<K, V> multimap, %s<K, V> put) {", TYPE, ListMultimap.class, BI_CONSUMER)
         .addLine("    this.multimap = multimap;")
         .addLine("    this.put = put;")
         .addLine("  }")

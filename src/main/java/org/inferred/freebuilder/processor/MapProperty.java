@@ -256,7 +256,7 @@ class MapProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).consumer().isPresent()) {
+    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
       return;
     }
     code.addLine("")

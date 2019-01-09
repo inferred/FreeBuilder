@@ -1352,7 +1352,7 @@ public class BuildablePropertyTest {
   }
 
   private void assumeLambdas() {
-    assumeTrue("Environment has lambdas", features.get(FUNCTION_PACKAGE).consumer().isPresent());
+    assumeTrue("Environment has lambdas", features.get(FUNCTION_PACKAGE).isAvailable());
   }
 
   private void assumeHasToBuilder() {

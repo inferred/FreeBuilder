@@ -327,8 +327,7 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code) {
-    ParameterizedType consumer = code.feature(FUNCTION_PACKAGE).consumer().orNull();
-    if (consumer == null) {
+    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
       return;
     }
     code.addLine("")
