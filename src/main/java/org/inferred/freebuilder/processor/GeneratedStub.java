@@ -3,18 +3,18 @@ package org.inferred.freebuilder.processor;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Type;
 
 import java.util.Set;
 
 class GeneratedStub extends GeneratedType {
 
   private final QualifiedName datatype;
-  private final ParameterizedType stub;
+  private final Type stub;
 
-  GeneratedStub(QualifiedName datatype, ParameterizedType stub) {
+  GeneratedStub(QualifiedName datatype, Type stub) {
     this.datatype = datatype;
     this.stub = stub;
   }

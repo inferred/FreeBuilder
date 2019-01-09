@@ -27,9 +27,9 @@ import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7
 import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.Type;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -341,7 +341,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_noArgsConstructor_inferredTypes_j6() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(fooBuilder, INFERRED_TYPES);
     String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
@@ -350,7 +350,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_noArgsConstructor_explicitTypes_j6() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(fooBuilder, EXPLICIT_TYPES);
     String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
@@ -359,7 +359,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_noArgsConstructor_inferredTypes_j7() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(fooBuilder, INFERRED_TYPES);
     String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
@@ -368,7 +368,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_noArgsConstructor_explicitTypes_j7() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(fooBuilder, EXPLICIT_TYPES);
     String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
@@ -377,7 +377,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_builderMethod_inferredTypes_j6() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(fooBuilder, INFERRED_TYPES);
     String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
@@ -386,7 +386,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_builderMethod_explicitTypes_j6() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(fooBuilder, EXPLICIT_TYPES);
     String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
@@ -395,7 +395,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_builderMethod_inferredTypes_j7() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(fooBuilder, INFERRED_TYPES);
     String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
@@ -404,7 +404,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_builderMethod_explicitTypes_j7() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(fooBuilder, EXPLICIT_TYPES);
     String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
@@ -413,7 +413,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_newBuilderMethod_inferredTypes_j6() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(fooBuilder, INFERRED_TYPES);
     String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
@@ -422,7 +422,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_newBuilderMethod_explicitTypes_j6() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(fooBuilder, EXPLICIT_TYPES);
     String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
@@ -431,7 +431,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_newBuilderMethod_inferredTypes_j7() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(fooBuilder, INFERRED_TYPES);
     String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
@@ -440,7 +440,7 @@ public class BuilderFactoryTest {
 
   @Test
   public void testNewBuilderForGenericType_newBuilderMethod_explicitTypes_j7() {
-    ParameterizedType fooBuilder =
+    Type fooBuilder =
         QualifiedName.of("com.example", "Foo", "Builder").withParameters("E");
     Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(fooBuilder, EXPLICIT_TYPES);
     String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();

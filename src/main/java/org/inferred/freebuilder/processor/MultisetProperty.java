@@ -45,9 +45,9 @@ import org.inferred.freebuilder.processor.excerpt.CheckedMultiset;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Type;
 
 import java.util.Collection;
 
@@ -125,7 +125,7 @@ class MultisetProperty extends PropertyCodeGenerator {
     }
   }
 
-  private static final ParameterizedType COLLECTION =
+  private static final Type COLLECTION =
       QualifiedName.of(Collection.class).withParameters("E");
   private final boolean needsSafeVarargs;
   private final boolean overridesSetCountMethod;

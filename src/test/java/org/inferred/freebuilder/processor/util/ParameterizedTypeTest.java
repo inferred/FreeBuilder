@@ -32,7 +32,7 @@ public class ParameterizedTypeTest {
 
   @Test
   public void testFromDeclaredType_simpleType() {
-    ParameterizedType type = ParameterizedType.from(MY_TYPE);
+    Type type = Type.from(MY_TYPE);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertFalse(type.isParameterized());
     assertEquals("MyType", prettyPrint(type, SourceLevel.JAVA_7));
@@ -46,7 +46,7 @@ public class ParameterizedTypeTest {
 
   @Test
   public void testFromDeclaredType_nestedType() {
-    ParameterizedType type = ParameterizedType.from(MY_NESTED_TYPE);
+    Type type = Type.from(MY_NESTED_TYPE);
     assertEquals(QualifiedName.of("com.example", "MyType", "MyNestedType"),
         type.getQualifiedName());
     assertFalse(type.isParameterized());
@@ -63,7 +63,7 @@ public class ParameterizedTypeTest {
   @Test
   public void testFromDeclaredType_genericType() {
     GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME).addTypeParameter("V").build();
-    ParameterizedType type = ParameterizedType.from(myType);
+    Type type = Type.from(myType);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertTrue(type.isParameterized());
     assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_7));
@@ -80,7 +80,7 @@ public class ParameterizedTypeTest {
     GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME)
         .addTypeParameter("V", newTopLevelClass("java.lang.Number"))
         .build();
-    ParameterizedType type = ParameterizedType.from(myType);
+    Type type = Type.from(myType);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertTrue(type.isParameterized());
     assertEquals("MyType<V>", prettyPrint(type, SourceLevel.JAVA_7));
@@ -100,7 +100,7 @@ public class ParameterizedTypeTest {
             newTopLevelClass("java.lang.Comparable"),
             newTopLevelClass("java.util.Formattable"))
         .build();
-    ParameterizedType type = ParameterizedType.from(myType);
+    Type type = Type.from(myType);
     assertEquals("MyType<V extends Number & Comparable & Formattable>",
         prettyPrint(type.declaration(), SourceLevel.JAVA_7));
   }

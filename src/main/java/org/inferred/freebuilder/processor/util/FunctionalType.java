@@ -124,7 +124,7 @@ public class FunctionalType extends ValueType {
     ExecutableElement method = getOnlyElement(abstractMethods);
     ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
     return Optional.of(new FunctionalType(
-        ParameterizedType.from(type),
+        Type.from(type),
         method.getSimpleName().toString(),
         methodType.getParameterTypes(),
         methodType.getReturnType()));
@@ -159,13 +159,13 @@ public class FunctionalType extends ValueType {
     return type == null || type.getKind() == TypeKind.VOID;
   }
 
-  private final ParameterizedType functionalInterface;
+  private final Type functionalInterface;
   private final String methodName;
   private final List<TypeMirror> parameters;
   private final TypeMirror returnType;
 
   private FunctionalType(
-      ParameterizedType functionalInterface,
+      Type functionalInterface,
       String methodName,
       Collection<? extends TypeMirror> parameters,
       TypeMirror returnType) {
@@ -175,7 +175,7 @@ public class FunctionalType extends ValueType {
     this.returnType = returnType;
   }
 
-  public ParameterizedType getFunctionalInterface() {
+  public Type getFunctionalInterface() {
     return functionalInterface;
   }
 

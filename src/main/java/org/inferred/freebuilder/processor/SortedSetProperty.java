@@ -47,10 +47,10 @@ import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.ParameterizedType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.Type;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -129,7 +129,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
     }
   }
 
-  private static final ParameterizedType COLLECTION =
+  private static final Type COLLECTION =
       QualifiedName.of(Collection.class).withParameters("E");
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;

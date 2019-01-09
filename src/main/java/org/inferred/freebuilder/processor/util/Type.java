@@ -29,6 +29,7 @@ import static java.util.Collections.nCopies;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
+import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.util.List;
@@ -38,26 +39,26 @@ import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 
-public class ParameterizedType extends Excerpt {
+public class Type extends Excerpt {
 
-  public static ParameterizedType from(TypeElement typeElement) {
-    return new ParameterizedType(QualifiedName.of(typeElement), typeElement.getTypeParameters());
+  public static Type from(TypeElement typeElement) {
+    return new Type(QualifiedName.of(typeElement), typeElement.getTypeParameters());
   }
 
-  public static ParameterizedType from(DeclaredType declaredType) {
-    return new ParameterizedType(
+  public static Type from(DeclaredType declaredType) {
+    return new Type(
         QualifiedName.of(asElement(declaredType)),
         declaredType.getTypeArguments());
   }
 
-  public static ParameterizedType from(Class<?> cls) {
-    return new ParameterizedType(QualifiedName.of(cls), asList(cls.getTypeParameters()));
+  public static Type from(Class<?> cls) {
+    return new Type(QualifiedName.of(cls), asList(cls.getTypeParameters()));
   }
 
   private final QualifiedName qualifiedName;
   private final List<?> typeParameters;
 
-  ParameterizedType(QualifiedName qualifiedName, List<?> typeParameters) {
+  Type(QualifiedName qualifiedName, List<?> typeParameters) {
     this.qualifiedName = checkNotNull(qualifiedName);
     this.typeParameters = ImmutableList.copyOf(typeParameters);
   }
@@ -152,11 +153,11 @@ public class ParameterizedType extends Excerpt {
    *
    * <p>If the type class is not generic, the returned object will be equal to this one.
    */
-  public ParameterizedType withWildcards() {
+  public Type withWildcards() {
     if (typeParameters.isEmpty()) {
       return this;
     }
-    return new ParameterizedType(qualifiedName, nCopies(typeParameters.size(), "?"));
+    return new Type(qualifiedName, nCopies(typeParameters.size(), "?"));
   }
 
   @Override
