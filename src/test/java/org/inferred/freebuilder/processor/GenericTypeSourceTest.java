@@ -845,7 +845,7 @@ public class GenericTypeSourceTest {
     TypeParameterElementImpl paramB = newTypeParameterElement("B");
 
     Datatype datatype = new Datatype.Builder()
-        .setBuilder(person.nestedType("Builder").withParameters("A", "B"))
+        .setBuilder(person.nestedType("Builder").withParameters(paramA.asType(), paramB.asType()))
         .setExtensible(true)
         .setBuilderFactory(BuilderFactory.NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
