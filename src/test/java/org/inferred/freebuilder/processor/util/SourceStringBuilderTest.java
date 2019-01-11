@@ -59,7 +59,7 @@ public class SourceStringBuilderTest {
   public void testAddLine() {
     builder
         .addLine("public class Bar {")
-        .addLine("  // %s %d", "Foo", 100)
+        .addLine("  // %s %s", "Foo", 100)
         .addLine("}");
     assertEquals(
          "public class Bar {\n"
@@ -175,6 +175,12 @@ public class SourceStringBuilderTest {
   public void testAddLine_excerpt() {
     builder.addLine("%s = null;", Excerpts.add("%s %s", "Foo", "bar"));
     assertThat(builder.toString()).isEqualTo("Foo bar = null;\n");
+  }
+
+  @Test
+  public void testAddLine_numberedParams() {
+    builder.addLine("%1$s<%2$s> foo = new %1$s<>();", ArrayList.class, String.class);
+    assertThat(builder.toString()).isEqualTo("ArrayList<String> foo = new ArrayList<>();\n");
   }
 
   @Test

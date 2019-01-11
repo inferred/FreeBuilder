@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
+
 import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
@@ -24,17 +25,25 @@ import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
+import java.util.MissingFormatArgumentException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.SimpleElementVisitor6;
 
 /**
  * A {@link SourceBuilder} that writes to a {@link StringBuilder}.
  */
 public class SourceStringBuilder implements SourceBuilder {
+
+  private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+  private static final Pattern TEMPLATE_PARAM = Pattern.compile("%([%ns]|([1-9]\\d*)\\$s)");
 
   private final TypeShortener shortener;
   private final StringBuilder destination = new StringBuilder();
@@ -71,18 +80,40 @@ public class SourceStringBuilder implements SourceBuilder {
   }
 
   @Override
-  public SourceStringBuilder add(String fmt, Object... args) {
-    Object[] substituteArgs = new Object[args.length];
-    for (int i = 0; i < args.length; i++) {
-      substituteArgs[i] = substitute(args[i]);
+  public SourceStringBuilder add(String template, Object... params) {
+    int offset = 0;
+    int nextParam = 0;
+    Matcher matcher = TEMPLATE_PARAM.matcher(template);
+    while (matcher.find()) {
+      append(template.subSequence(offset, matcher.start()));
+      if (matcher.group(1).contentEquals("%")) {
+        append("%");
+      } else if (matcher.group(1).contentEquals("n")) {
+        append(LINE_SEPARATOR);
+      } else if (matcher.group(1).contentEquals("s")) {
+        if (nextParam >= params.length) {
+          throw new MissingFormatArgumentException(matcher.group(0));
+        }
+        add(params[nextParam++]);
+      } else {
+        int index = Integer.parseInt(matcher.group(2)) - 1;
+        if (index >= params.length) {
+          throw new MissingFormatArgumentException(matcher.group(0));
+        }
+        add(params[index]);
+      }
+      offset = matcher.end();
     }
-    destination.append(String.format(fmt, substituteArgs));
+    append(template.subSequence(offset, template.length()));
+
     return this;
   }
 
   @Override
   public SourceStringBuilder addLine(String fmt, Object... args) {
-    return add(fmt + "\n", args);
+    add(fmt, args);
+    append(LINE_SEPARATOR);
+    return this;
   }
 
   @Override
@@ -111,40 +142,57 @@ public class SourceStringBuilder implements SourceBuilder {
     return destination.toString();
   }
 
-  private Object substitute(Object arg) {
+  private void append(CharSequence chars) {
+    destination.append(chars);
+  }
+
+  private void add(Object arg) {
     if (arg instanceof Excerpt) {
-      SourceBuilder excerptBuilder = subBuilder();
-      ((Excerpt) arg).addTo(excerptBuilder);
-      return excerptBuilder.toString();
+      ((Excerpt) arg).addTo(this);
     } else if (arg instanceof Package) {
-      return ((Package) arg).getName();
+      append(((Package) arg).getName());
     } else if (arg instanceof Element) {
-      ElementKind kind = ((Element) arg).getKind();
-      if (kind == ElementKind.PACKAGE) {
-        return ((PackageElement) arg).getQualifiedName();
-      } else if (kind.isClass() || kind.isInterface()) {
-        return shortener.shorten(QualifiedName.of((TypeElement) arg));
-      } else {
-        return arg;
-      }
+      ADD_ELEMENT.visit((Element) arg, this);
     } else if (arg instanceof Class<?>) {
-      return shortener.shorten(QualifiedName.of((Class<?>) arg));
+      append(shortener.shorten(QualifiedName.of((Class<?>) arg)));
     } else if (arg instanceof TypeMirror) {
       TypeMirror mirror = (TypeMirror) arg;
       checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
-      return shortener.shorten(mirror);
+      append(shortener.shorten(mirror));
     } else if (arg instanceof QualifiedName) {
-      return shortener.shorten((QualifiedName) arg);
+      append(shortener.shorten((QualifiedName) arg));
     } else if (arg instanceof AnnotationMirror) {
-      SourceBuilder excerptBuilder = subBuilder();
-      addSource(excerptBuilder, (AnnotationMirror) arg);
-      return excerptBuilder.toString();
+      addSource(this, (AnnotationMirror) arg);
+    } else if (arg instanceof CharSequence) {
+      append((CharSequence) arg);
     } else {
-      return arg;
+      append(arg.toString());
     }
   }
 
-  private static boolean isLegalType(TypeMirror mirror) {
+  static boolean isLegalType(TypeMirror mirror) {
     return !(new IsInvalidTypeVisitor().visit(mirror));
   }
+
+  private static final ElementVisitor<Void, SourceStringBuilder> ADD_ELEMENT =
+      new SimpleElementVisitor6<Void, SourceStringBuilder>() {
+
+        @Override
+        public Void visitPackage(PackageElement e, SourceStringBuilder p) {
+          p.append(e.getQualifiedName());
+          return null;
+        }
+
+        @Override
+        public Void visitType(TypeElement e, SourceStringBuilder p) {
+          p.append(p.shortener.shorten(QualifiedName.of(e)));
+          return null;
+        }
+
+        @Override
+        protected Void defaultAction(Element e, SourceStringBuilder p) {
+          p.append(e.toString());
+          return null;
+        }
+      };
 }
