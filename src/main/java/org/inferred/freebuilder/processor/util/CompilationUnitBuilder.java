@@ -19,9 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.googlejavaformat.java.Formatter;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.feature.FeatureType;
 
 import java.util.Collection;
 
@@ -31,11 +29,11 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 
 /** {@code SourceBuilder} which also handles package declaration and imports. */
-public class CompilationUnitBuilder implements SourceBuilder {
+public class CompilationUnitBuilder extends AbstractSourceBuilder<CompilationUnitBuilder> {
 
   private final ImportManager importManager;
-  private final SourceBuilder source;
   private final QualifiedName classToWrite;
+  private final StringBuilder source = new StringBuilder();
 
   /**
    * Returns a {@link CompilationUnitBuilder} for {@code classToWrite} using {@code features}. The
@@ -47,6 +45,7 @@ public class CompilationUnitBuilder implements SourceBuilder {
       QualifiedName classToWrite,
       Collection<QualifiedName> nestedClasses,
       FeatureSet features) {
+    super(features, new FileScope());
     this.classToWrite = classToWrite;
     // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
     // written first, but aren't known yet.
@@ -60,45 +59,22 @@ public class CompilationUnitBuilder implements SourceBuilder {
       importManagerBuilder.addImplicitImport(nestedClass);
     }
     importManager = importManagerBuilder.build();
-    source = new SourceStringBuilder(importManager, features, new FileScope());
   }
 
   @Override
-  public CompilationUnitBuilder add(String fmt, Object... args) {
-    source.add(fmt, args);
+  protected TypeShortener getShortener() {
+    return importManager;
+  }
+
+  @Override
+  public Appendable append(char c) {
+    source.append(c);
     return this;
   }
 
   @Override
-  public SourceBuilder add(Excerpt excerpt) {
-    source.add(excerpt);
+  protected CompilationUnitBuilder getThis() {
     return this;
-  }
-
-  @Override
-  public CompilationUnitBuilder addLine(String fmt, Object... args) {
-    source.addLine(fmt, args);
-    return this;
-  }
-
-  @Override
-  public SourceStringBuilder subBuilder() {
-    return source.subBuilder();
-  }
-
-  @Override
-  public SourceStringBuilder subScope(Scope newScope) {
-    return source.subScope(newScope);
-  }
-
-  @Override
-  public <T extends Feature<T>> T feature(FeatureType<T> feature) {
-    return source.feature(feature);
-  }
-
-  @Override
-  public Scope scope() {
-    return source.scope();
   }
 
   @Override
