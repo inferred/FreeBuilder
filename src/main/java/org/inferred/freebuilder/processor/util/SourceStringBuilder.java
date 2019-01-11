@@ -25,6 +25,7 @@ import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
+import java.io.IOException;
 import java.util.MissingFormatArgumentException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,7 +41,7 @@ import javax.lang.model.util.SimpleElementVisitor6;
 /**
  * A {@link SourceBuilder} that writes to a {@link StringBuilder}.
  */
-public class SourceStringBuilder implements SourceBuilder {
+public class SourceStringBuilder implements SourceBuilder, Appendable {
 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
   private static final Pattern TEMPLATE_PARAM = Pattern.compile("%([%ns]|([1-9]\\d*)\\$s)");
@@ -142,31 +143,50 @@ public class SourceStringBuilder implements SourceBuilder {
     return destination.toString();
   }
 
-  private void append(CharSequence chars) {
-    destination.append(chars);
+  @Override
+  public SourceStringBuilder append(char c) {
+    destination.append(c);
+    return this;
+  }
+
+  @Override
+  public Appendable append(CharSequence csq) {
+    return append(csq, 0, csq.length());
+  }
+
+  @Override
+  public SourceStringBuilder append(CharSequence csq, int start, int end) {
+    for (int i = start; i < end; i++) {
+      append(csq.charAt(i));
+    }
+    return this;
   }
 
   private void add(Object arg) {
-    if (arg instanceof Excerpt) {
-      ((Excerpt) arg).addTo(this);
-    } else if (arg instanceof Package) {
-      append(((Package) arg).getName());
-    } else if (arg instanceof Element) {
-      ADD_ELEMENT.visit((Element) arg, this);
-    } else if (arg instanceof Class<?>) {
-      append(shortener.shorten(QualifiedName.of((Class<?>) arg)));
-    } else if (arg instanceof TypeMirror) {
-      TypeMirror mirror = (TypeMirror) arg;
-      checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
-      append(shortener.shorten(mirror));
-    } else if (arg instanceof QualifiedName) {
-      append(shortener.shorten((QualifiedName) arg));
-    } else if (arg instanceof AnnotationMirror) {
-      addSource(this, (AnnotationMirror) arg);
-    } else if (arg instanceof CharSequence) {
-      append((CharSequence) arg);
-    } else {
-      append(arg.toString());
+    try {
+      if (arg instanceof Excerpt) {
+        ((Excerpt) arg).addTo(this);
+      } else if (arg instanceof Package) {
+        append(((Package) arg).getName());
+      } else if (arg instanceof Element) {
+        ADD_ELEMENT.visit((Element) arg, this);
+      } else if (arg instanceof Class<?>) {
+        shortener.appendShortened(this, QualifiedName.of((Class<?>) arg));
+      } else if (arg instanceof TypeMirror) {
+        TypeMirror mirror = (TypeMirror) arg;
+        checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
+        shortener.appendShortened(this, mirror);
+      } else if (arg instanceof QualifiedName) {
+        shortener.appendShortened(this, (QualifiedName) arg);
+      } else if (arg instanceof AnnotationMirror) {
+        addSource(this, (AnnotationMirror) arg);
+      } else if (arg instanceof CharSequence) {
+        append((CharSequence) arg);
+      } else {
+        append(arg.toString());
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -178,14 +198,14 @@ public class SourceStringBuilder implements SourceBuilder {
       new SimpleElementVisitor6<Void, SourceStringBuilder>() {
 
         @Override
-        public Void visitPackage(PackageElement e, SourceStringBuilder p) {
-          p.append(e.getQualifiedName());
+        public Void visitPackage(PackageElement pkg, SourceStringBuilder p) {
+          p.append(pkg.getQualifiedName());
           return null;
         }
 
         @Override
-        public Void visitType(TypeElement e, SourceStringBuilder p) {
-          p.append(p.shortener.shorten(QualifiedName.of(e)));
+        public Void visitType(TypeElement type, SourceStringBuilder p) {
+          p.add(QualifiedName.of(type));
           return null;
         }
 

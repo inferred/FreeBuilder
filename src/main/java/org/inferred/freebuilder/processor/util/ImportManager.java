@@ -26,6 +26,7 @@ import com.google.common.collect.SetMultimap;
 
 import org.inferred.freebuilder.processor.util.TypeShortener.AbstractTypeShortener;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -95,31 +96,30 @@ class ImportManager extends AbstractTypeShortener {
   }
 
   @Override
-  public String shorten(QualifiedName type) {
-    StringBuilder b = new StringBuilder();
-    appendPackageForTopLevelClass(b, type.getPackage(), type.getSimpleNames().get(0));
+  public void appendShortened(Appendable a, QualifiedName type) throws IOException {
+    appendPackageForTopLevelClass(a, type.getPackage(), type.getSimpleNames().get(0));
     String prefix = "";
     for (String simpleName : type.getSimpleNames()) {
-      b.append(prefix).append(simpleName);
+      a.append(prefix).append(simpleName);
       prefix = ".";
     }
-    return b.toString();
   }
 
   @Override
-  protected void appendShortened(StringBuilder b, TypeElement type) {
+  public void appendShortened(Appendable a, TypeElement type) throws IOException {
     if (type.getNestingKind().isNested()) {
-      appendShortened(b, (TypeElement) type.getEnclosingElement());
-      b.append('.');
+      appendShortened(a, (TypeElement) type.getEnclosingElement());
+      a.append('.');
     } else {
       PackageElement pkg = (PackageElement) type.getEnclosingElement();
       Name name = type.getSimpleName();
-      appendPackageForTopLevelClass(b, pkg.getQualifiedName().toString(), name);
+      appendPackageForTopLevelClass(a, pkg.getQualifiedName().toString(), name);
     }
-    b.append(type.getSimpleName());
+    a.append(type.getSimpleName());
   }
 
-  private void appendPackageForTopLevelClass(StringBuilder b, String pkg, CharSequence name) {
+  private void appendPackageForTopLevelClass(Appendable a, String pkg, CharSequence name)
+      throws IOException {
     if (pkg.startsWith(PACKAGE_PREFIX)) {
       pkg = pkg.substring(PACKAGE_PREFIX.length());
     }
@@ -128,7 +128,7 @@ class ImportManager extends AbstractTypeShortener {
     if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {
       // Append nothing
     } else if (visibleSimpleNames.contains(name.toString())) {
-      b.append(pkg).append(".");
+      a.append(pkg).append(".");
     } else if (pkg.equals(JAVA_LANG_PACKAGE)) {
       // Append nothing
     } else {
