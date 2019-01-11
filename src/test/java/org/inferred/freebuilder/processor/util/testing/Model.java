@@ -395,7 +395,6 @@ public class Model {
 
       @Override
       public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        processingEnvFuture.set(processingEnv);
         // Some Java compilers may return spurious extra elements; hence the apparently redundant
         // Sets.filter call, just to be sure.
         Set<? extends Element> elements = Sets.filter(
@@ -410,6 +409,7 @@ public class Model {
           return false;
         }
         if (element != null) {
+          processingEnvFuture.set(processingEnv);
           elementFuture.set(element);
           String code = fetchCodeForNextRequest();
           if (code != null) {
