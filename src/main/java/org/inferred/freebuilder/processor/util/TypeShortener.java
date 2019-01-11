@@ -19,6 +19,11 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
 import java.io.IOException;
 
+import javax.annotation.Nullable;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -31,6 +36,7 @@ import javax.lang.model.util.SimpleTypeVisitor6;
  */
 interface TypeShortener {
 
+  TypeShortener inScope(QualifiedName scope);
   void appendShortened(Appendable a, TypeElement type) throws IOException;
   void appendShortened(Appendable a, TypeMirror mirror) throws IOException;
   void appendShortened(Appendable a, QualifiedName type) throws IOException;
@@ -47,6 +53,15 @@ interface TypeShortener {
       @Override
       public synchronized IOException getCause() {
         return (IOException) super.getCause();
+      }
+    }
+
+    @Override
+    public TypeShortener inScope(@Nullable QualifiedName scope) {
+      if (scope != null) {
+        return new ScopedShortener(this, scope);
+      } else {
+        return this;
       }
     }
 
@@ -109,6 +124,59 @@ interface TypeShortener {
       } catch (IOException e) {
         throw new IOExceptionWrapper(e);
       }
+    }
+  }
+
+  class ScopedShortener extends AbstractTypeShortener {
+
+    private final TypeShortener delegate;
+    private final QualifiedName scope;
+
+    ScopedShortener(TypeShortener delegate, QualifiedName scope) {
+      this.delegate = delegate;
+      this.scope = scope;
+    }
+
+    @Override
+    public TypeShortener inScope(QualifiedName scope) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void appendShortened(Appendable a, QualifiedName type) throws IOException {
+      if (type.isTopLevel()) {
+        if (scope.isInScope(type)) {
+          a.append(type.getSimpleName());
+          return;
+        }
+      } else {
+        if (scope.isInScope(type.getEnclosingType())) {
+          a.append(type.getSimpleName());
+          return;
+        }
+      }
+      delegate.appendShortened(a, type);
+    }
+
+    @Override
+    public void appendShortened(Appendable a, TypeElement type) throws IOException {
+      if (type.getModifiers().contains(Modifier.STATIC)) {
+        Element parent = type.getEnclosingElement();
+        if (parent.getKind() == ElementKind.PACKAGE) {
+          PackageElement pkg = (PackageElement) parent;
+          if (scope.getPackage().contentEquals(pkg.getQualifiedName())) {
+            a.append(type.getSimpleName());
+            return;
+          }
+        } else {
+          QualifiedName parentName = QualifiedName.of((TypeElement) parent);
+          if (scope.isInScope(parentName)) {
+            a.append(type.getSimpleName());
+            return;
+          }
+        }
+      }
+      delegate.appendShortened(a, type);
     }
   }
 

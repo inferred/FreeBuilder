@@ -83,8 +83,7 @@ abstract class Datatype_Builder {
   private List<Excerpt> valueTypeAnnotations = ImmutableList.of();
   private Datatype.Visibility valueTypeVisibility;
   private List<Excerpt> nestedClasses = ImmutableList.of();
-  private final EnumSet<Datatype_Builder.Property> _unsetProperties =
-      EnumSet.allOf(Datatype_Builder.Property.class);
+  private final EnumSet<Property> _unsetProperties = EnumSet.allOf(Property.class);
 
   /**
    * Sets the value to be returned by {@link Datatype#getType()}.
@@ -94,7 +93,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setType(TypeClass type) {
     this.type = Preconditions.checkNotNull(type);
-    _unsetProperties.remove(Datatype_Builder.Property.TYPE);
+    _unsetProperties.remove(Property.TYPE);
     return (Datatype.Builder) this;
   }
 
@@ -104,8 +103,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public TypeClass getType() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.TYPE), "type not set");
+    Preconditions.checkState(!_unsetProperties.contains(Property.TYPE), "type not set");
     return type;
   }
 
@@ -116,7 +114,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setInterfaceType(boolean interfaceType) {
     this.interfaceType = interfaceType;
-    _unsetProperties.remove(Datatype_Builder.Property.INTERFACE_TYPE);
+    _unsetProperties.remove(Property.INTERFACE_TYPE);
     return (Datatype.Builder) this;
   }
 
@@ -127,8 +125,7 @@ abstract class Datatype_Builder {
    */
   public boolean isInterfaceType() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.INTERFACE_TYPE),
-        "interfaceType not set");
+        !_unsetProperties.contains(Property.INTERFACE_TYPE), "interfaceType not set");
     return interfaceType;
   }
 
@@ -140,7 +137,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setBuilder(Type builder) {
     this.builder = Preconditions.checkNotNull(builder);
-    _unsetProperties.remove(Datatype_Builder.Property.BUILDER);
+    _unsetProperties.remove(Property.BUILDER);
     return (Datatype.Builder) this;
   }
 
@@ -150,8 +147,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public Type getBuilder() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.BUILDER), "builder not set");
+    Preconditions.checkState(!_unsetProperties.contains(Property.BUILDER), "builder not set");
     return builder;
   }
 
@@ -162,7 +158,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setExtensible(boolean extensible) {
     this.extensible = extensible;
-    _unsetProperties.remove(Datatype_Builder.Property.EXTENSIBLE);
+    _unsetProperties.remove(Property.EXTENSIBLE);
     return (Datatype.Builder) this;
   }
 
@@ -172,8 +168,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public boolean isExtensible() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.EXTENSIBLE), "extensible not set");
+    Preconditions.checkState(!_unsetProperties.contains(Property.EXTENSIBLE), "extensible not set");
     return extensible;
   }
 
@@ -238,7 +233,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setGeneratedBuilder(TypeClass generatedBuilder) {
     this.generatedBuilder = Preconditions.checkNotNull(generatedBuilder);
-    _unsetProperties.remove(Datatype_Builder.Property.GENERATED_BUILDER);
+    _unsetProperties.remove(Property.GENERATED_BUILDER);
     return (Datatype.Builder) this;
   }
 
@@ -249,8 +244,7 @@ abstract class Datatype_Builder {
    */
   public TypeClass getGeneratedBuilder() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER),
-        "generatedBuilder not set");
+        !_unsetProperties.contains(Property.GENERATED_BUILDER), "generatedBuilder not set");
     return generatedBuilder;
   }
 
@@ -262,7 +256,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setValueType(TypeClass valueType) {
     this.valueType = Preconditions.checkNotNull(valueType);
-    _unsetProperties.remove(Datatype_Builder.Property.VALUE_TYPE);
+    _unsetProperties.remove(Property.VALUE_TYPE);
     return (Datatype.Builder) this;
   }
 
@@ -272,8 +266,7 @@ abstract class Datatype_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public TypeClass getValueType() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE), "valueType not set");
+    Preconditions.checkState(!_unsetProperties.contains(Property.VALUE_TYPE), "valueType not set");
     return valueType;
   }
 
@@ -285,7 +278,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setPartialType(TypeClass partialType) {
     this.partialType = Preconditions.checkNotNull(partialType);
-    _unsetProperties.remove(Datatype_Builder.Property.PARTIAL_TYPE);
+    _unsetProperties.remove(Property.PARTIAL_TYPE);
     return (Datatype.Builder) this;
   }
 
@@ -296,7 +289,7 @@ abstract class Datatype_Builder {
    */
   public TypeClass getPartialType() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.PARTIAL_TYPE), "partialType not set");
+        !_unsetProperties.contains(Property.PARTIAL_TYPE), "partialType not set");
     return partialType;
   }
 
@@ -391,7 +384,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setPropertyEnum(TypeClass propertyEnum) {
     this.propertyEnum = Preconditions.checkNotNull(propertyEnum);
-    _unsetProperties.remove(Datatype_Builder.Property.PROPERTY_ENUM);
+    _unsetProperties.remove(Property.PROPERTY_ENUM);
     return (Datatype.Builder) this;
   }
 
@@ -402,8 +395,7 @@ abstract class Datatype_Builder {
    */
   public TypeClass getPropertyEnum() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM),
-        "propertyEnum not set");
+        !_unsetProperties.contains(Property.PROPERTY_ENUM), "propertyEnum not set");
     return propertyEnum;
   }
 
@@ -478,7 +470,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setBuilderSerializable(boolean builderSerializable) {
     this.builderSerializable = builderSerializable;
-    _unsetProperties.remove(Datatype_Builder.Property.BUILDER_SERIALIZABLE);
+    _unsetProperties.remove(Property.BUILDER_SERIALIZABLE);
     return (Datatype.Builder) this;
   }
 
@@ -489,8 +481,7 @@ abstract class Datatype_Builder {
    */
   public boolean isBuilderSerializable() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE),
-        "builderSerializable not set");
+        !_unsetProperties.contains(Property.BUILDER_SERIALIZABLE), "builderSerializable not set");
     return builderSerializable;
   }
 
@@ -501,7 +492,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setHasToBuilderMethod(boolean hasToBuilderMethod) {
     this.hasToBuilderMethod = hasToBuilderMethod;
-    _unsetProperties.remove(Datatype_Builder.Property.HAS_TO_BUILDER_METHOD);
+    _unsetProperties.remove(Property.HAS_TO_BUILDER_METHOD);
     return (Datatype.Builder) this;
   }
 
@@ -512,8 +503,7 @@ abstract class Datatype_Builder {
    */
   public boolean getHasToBuilderMethod() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.HAS_TO_BUILDER_METHOD),
-        "hasToBuilderMethod not set");
+        !_unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD), "hasToBuilderMethod not set");
     return hasToBuilderMethod;
   }
 
@@ -676,7 +666,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder setValueTypeVisibility(Datatype.Visibility valueTypeVisibility) {
     this.valueTypeVisibility = Preconditions.checkNotNull(valueTypeVisibility);
-    _unsetProperties.remove(Datatype_Builder.Property.VALUE_TYPE_VISIBILITY);
+    _unsetProperties.remove(Property.VALUE_TYPE_VISIBILITY);
     return (Datatype.Builder) this;
   }
 
@@ -687,8 +677,7 @@ abstract class Datatype_Builder {
    */
   public Datatype.Visibility getValueTypeVisibility() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE_VISIBILITY),
-        "valueTypeVisibility not set");
+        !_unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY), "valueTypeVisibility not set");
     return valueTypeVisibility;
   }
 
@@ -768,73 +757,70 @@ abstract class Datatype_Builder {
   /** Sets all property values using the given {@code Datatype} as a template. */
   public Datatype.Builder mergeFrom(Datatype value) {
     Datatype_Builder _defaults = new Datatype.Builder();
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.TYPE)
+    if (_defaults._unsetProperties.contains(Property.TYPE)
         || !value.getType().equals(_defaults.getType())) {
       setType(value.getType());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.INTERFACE_TYPE)
+    if (_defaults._unsetProperties.contains(Property.INTERFACE_TYPE)
         || value.isInterfaceType() != _defaults.isInterfaceType()) {
       setInterfaceType(value.isInterfaceType());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.BUILDER)
+    if (_defaults._unsetProperties.contains(Property.BUILDER)
         || !value.getBuilder().equals(_defaults.getBuilder())) {
       setBuilder(value.getBuilder());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.EXTENSIBLE)
+    if (_defaults._unsetProperties.contains(Property.EXTENSIBLE)
         || value.isExtensible() != _defaults.isExtensible()) {
       setExtensible(value.isExtensible());
     }
     if (value.getBuilderFactory().isPresent()) {
       setBuilderFactory(value.getBuilderFactory().get());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)
+    if (_defaults._unsetProperties.contains(Property.GENERATED_BUILDER)
         || !value.getGeneratedBuilder().equals(_defaults.getGeneratedBuilder())) {
       setGeneratedBuilder(value.getGeneratedBuilder());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE)
+    if (_defaults._unsetProperties.contains(Property.VALUE_TYPE)
         || !value.getValueType().equals(_defaults.getValueType())) {
       setValueType(value.getValueType());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.PARTIAL_TYPE)
+    if (_defaults._unsetProperties.contains(Property.PARTIAL_TYPE)
         || !value.getPartialType().equals(_defaults.getPartialType())) {
       setPartialType(value.getPartialType());
     }
-    if (value instanceof Datatype_Builder.Value
-        && visibleNestedTypes == ImmutableSet.<QualifiedName>of()) {
+    if (value instanceof Value && visibleNestedTypes == ImmutableSet.<QualifiedName>of()) {
       visibleNestedTypes = ImmutableSet.copyOf(value.getVisibleNestedTypes());
     } else {
       addAllVisibleNestedTypes(value.getVisibleNestedTypes());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM)
+    if (_defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
         || !value.getPropertyEnum().equals(_defaults.getPropertyEnum())) {
       setPropertyEnum(value.getPropertyEnum());
     }
     putAllStandardMethodUnderrides(value.getStandardMethodUnderrides());
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)
+    if (_defaults._unsetProperties.contains(Property.BUILDER_SERIALIZABLE)
         || value.isBuilderSerializable() != _defaults.isBuilderSerializable()) {
       setBuilderSerializable(value.isBuilderSerializable());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.HAS_TO_BUILDER_METHOD)
+    if (_defaults._unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)
         || value.getHasToBuilderMethod() != _defaults.getHasToBuilderMethod()) {
       setHasToBuilderMethod(value.getHasToBuilderMethod());
     }
-    if (value instanceof Datatype_Builder.Value
-        && generatedBuilderAnnotations == ImmutableList.<Excerpt>of()) {
+    if (value instanceof Value && generatedBuilderAnnotations == ImmutableList.<Excerpt>of()) {
       generatedBuilderAnnotations = ImmutableList.copyOf(value.getGeneratedBuilderAnnotations());
     } else {
       addAllGeneratedBuilderAnnotations(value.getGeneratedBuilderAnnotations());
     }
-    if (value instanceof Datatype_Builder.Value
-        && valueTypeAnnotations == ImmutableList.<Excerpt>of()) {
+    if (value instanceof Value && valueTypeAnnotations == ImmutableList.<Excerpt>of()) {
       valueTypeAnnotations = ImmutableList.copyOf(value.getValueTypeAnnotations());
     } else {
       addAllValueTypeAnnotations(value.getValueTypeAnnotations());
     }
-    if (_defaults._unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE_VISIBILITY)
+    if (_defaults._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
         || !value.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility())) {
       setValueTypeVisibility(value.getValueTypeVisibility());
     }
-    if (value instanceof Datatype_Builder.Value && nestedClasses == ImmutableList.<Excerpt>of()) {
+    if (value instanceof Value && nestedClasses == ImmutableList.<Excerpt>of()) {
       nestedClasses = ImmutableList.copyOf(value.getNestedClasses());
     } else {
       addAllNestedClasses(value.getNestedClasses());
@@ -850,65 +836,65 @@ abstract class Datatype_Builder {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
     Datatype_Builder base = template;
     Datatype_Builder _defaults = new Datatype.Builder();
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.TYPE)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.TYPE)
+    if (!base._unsetProperties.contains(Property.TYPE)
+        && (_defaults._unsetProperties.contains(Property.TYPE)
             || !template.getType().equals(_defaults.getType()))) {
       setType(template.getType());
     }
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.INTERFACE_TYPE)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.INTERFACE_TYPE)
+    if (!base._unsetProperties.contains(Property.INTERFACE_TYPE)
+        && (_defaults._unsetProperties.contains(Property.INTERFACE_TYPE)
             || template.isInterfaceType() != _defaults.isInterfaceType())) {
       setInterfaceType(template.isInterfaceType());
     }
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.BUILDER)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.BUILDER)
+    if (!base._unsetProperties.contains(Property.BUILDER)
+        && (_defaults._unsetProperties.contains(Property.BUILDER)
             || !template.getBuilder().equals(_defaults.getBuilder()))) {
       setBuilder(template.getBuilder());
     }
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.EXTENSIBLE)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.EXTENSIBLE)
+    if (!base._unsetProperties.contains(Property.EXTENSIBLE)
+        && (_defaults._unsetProperties.contains(Property.EXTENSIBLE)
             || template.isExtensible() != _defaults.isExtensible())) {
       setExtensible(template.isExtensible());
     }
     if (template.getBuilderFactory().isPresent()) {
       setBuilderFactory(template.getBuilderFactory().get());
     }
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)
+    if (!base._unsetProperties.contains(Property.GENERATED_BUILDER)
+        && (_defaults._unsetProperties.contains(Property.GENERATED_BUILDER)
             || !template.getGeneratedBuilder().equals(_defaults.getGeneratedBuilder()))) {
       setGeneratedBuilder(template.getGeneratedBuilder());
     }
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE)
+    if (!base._unsetProperties.contains(Property.VALUE_TYPE)
+        && (_defaults._unsetProperties.contains(Property.VALUE_TYPE)
             || !template.getValueType().equals(_defaults.getValueType()))) {
       setValueType(template.getValueType());
     }
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.PARTIAL_TYPE)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.PARTIAL_TYPE)
+    if (!base._unsetProperties.contains(Property.PARTIAL_TYPE)
+        && (_defaults._unsetProperties.contains(Property.PARTIAL_TYPE)
             || !template.getPartialType().equals(_defaults.getPartialType()))) {
       setPartialType(template.getPartialType());
     }
     addAllVisibleNestedTypes(base.visibleNestedTypes);
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM)
+    if (!base._unsetProperties.contains(Property.PROPERTY_ENUM)
+        && (_defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
             || !template.getPropertyEnum().equals(_defaults.getPropertyEnum()))) {
       setPropertyEnum(template.getPropertyEnum());
     }
     putAllStandardMethodUnderrides(base.standardMethodUnderrides);
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)
+    if (!base._unsetProperties.contains(Property.BUILDER_SERIALIZABLE)
+        && (_defaults._unsetProperties.contains(Property.BUILDER_SERIALIZABLE)
             || template.isBuilderSerializable() != _defaults.isBuilderSerializable())) {
       setBuilderSerializable(template.isBuilderSerializable());
     }
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.HAS_TO_BUILDER_METHOD)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.HAS_TO_BUILDER_METHOD)
+    if (!base._unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)
+        && (_defaults._unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)
             || template.getHasToBuilderMethod() != _defaults.getHasToBuilderMethod())) {
       setHasToBuilderMethod(template.getHasToBuilderMethod());
     }
     addAllGeneratedBuilderAnnotations(base.generatedBuilderAnnotations);
     addAllValueTypeAnnotations(base.valueTypeAnnotations);
-    if (!base._unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE_VISIBILITY)
-        && (_defaults._unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE_VISIBILITY)
+    if (!base._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
+        && (_defaults._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
             || !template.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility()))) {
       setValueTypeVisibility(template.getValueTypeVisibility());
     }
@@ -948,7 +934,7 @@ abstract class Datatype_Builder {
    */
   public Datatype build() {
     Preconditions.checkState(_unsetProperties.isEmpty(), "Not set: %s", _unsetProperties);
-    return new Datatype_Builder.Value(this);
+    return new Value(this);
   }
 
   /**
@@ -962,7 +948,7 @@ abstract class Datatype_Builder {
    */
   @VisibleForTesting()
   public Datatype buildPartial() {
-    return new Datatype_Builder.Partial(this);
+    return new Partial(this);
   }
 
   private static final class Value extends Datatype {
@@ -1096,10 +1082,10 @@ abstract class Datatype_Builder {
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof Datatype_Builder.Value)) {
+      if (!(obj instanceof Value)) {
         return false;
       }
-      Datatype_Builder.Value other = (Datatype_Builder.Value) obj;
+      Value other = (Value) obj;
       if (!type.equals(other.type)) {
         return false;
       }
@@ -1245,7 +1231,7 @@ abstract class Datatype_Builder {
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Datatype.Visibility valueTypeVisibility;
     private final ImmutableList<Excerpt> nestedClasses;
-    private final EnumSet<Datatype_Builder.Property> _unsetProperties;
+    private final EnumSet<Property> _unsetProperties;
 
     Partial(Datatype_Builder builder) {
       this.type = builder.type;
@@ -1270,7 +1256,7 @@ abstract class Datatype_Builder {
 
     @Override
     public TypeClass getType() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.TYPE)) {
+      if (_unsetProperties.contains(Property.TYPE)) {
         throw new UnsupportedOperationException("type not set");
       }
       return type;
@@ -1278,7 +1264,7 @@ abstract class Datatype_Builder {
 
     @Override
     public boolean isInterfaceType() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.INTERFACE_TYPE)) {
+      if (_unsetProperties.contains(Property.INTERFACE_TYPE)) {
         throw new UnsupportedOperationException("interfaceType not set");
       }
       return interfaceType;
@@ -1286,7 +1272,7 @@ abstract class Datatype_Builder {
 
     @Override
     public Type getBuilder() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.BUILDER)) {
+      if (_unsetProperties.contains(Property.BUILDER)) {
         throw new UnsupportedOperationException("builder not set");
       }
       return builder;
@@ -1294,7 +1280,7 @@ abstract class Datatype_Builder {
 
     @Override
     public boolean isExtensible() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.EXTENSIBLE)) {
+      if (_unsetProperties.contains(Property.EXTENSIBLE)) {
         throw new UnsupportedOperationException("extensible not set");
       }
       return extensible;
@@ -1307,7 +1293,7 @@ abstract class Datatype_Builder {
 
     @Override
     public TypeClass getGeneratedBuilder() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)) {
+      if (_unsetProperties.contains(Property.GENERATED_BUILDER)) {
         throw new UnsupportedOperationException("generatedBuilder not set");
       }
       return generatedBuilder;
@@ -1315,7 +1301,7 @@ abstract class Datatype_Builder {
 
     @Override
     public TypeClass getValueType() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE)) {
+      if (_unsetProperties.contains(Property.VALUE_TYPE)) {
         throw new UnsupportedOperationException("valueType not set");
       }
       return valueType;
@@ -1323,7 +1309,7 @@ abstract class Datatype_Builder {
 
     @Override
     public TypeClass getPartialType() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.PARTIAL_TYPE)) {
+      if (_unsetProperties.contains(Property.PARTIAL_TYPE)) {
         throw new UnsupportedOperationException("partialType not set");
       }
       return partialType;
@@ -1336,7 +1322,7 @@ abstract class Datatype_Builder {
 
     @Override
     public TypeClass getPropertyEnum() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM)) {
+      if (_unsetProperties.contains(Property.PROPERTY_ENUM)) {
         throw new UnsupportedOperationException("propertyEnum not set");
       }
       return propertyEnum;
@@ -1350,7 +1336,7 @@ abstract class Datatype_Builder {
 
     @Override
     public boolean isBuilderSerializable() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)) {
+      if (_unsetProperties.contains(Property.BUILDER_SERIALIZABLE)) {
         throw new UnsupportedOperationException("builderSerializable not set");
       }
       return builderSerializable;
@@ -1358,7 +1344,7 @@ abstract class Datatype_Builder {
 
     @Override
     public boolean getHasToBuilderMethod() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.HAS_TO_BUILDER_METHOD)) {
+      if (_unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)) {
         throw new UnsupportedOperationException("hasToBuilderMethod not set");
       }
       return hasToBuilderMethod;
@@ -1376,7 +1362,7 @@ abstract class Datatype_Builder {
 
     @Override
     public Datatype.Visibility getValueTypeVisibility() {
-      if (_unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE_VISIBILITY)) {
+      if (_unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)) {
         throw new UnsupportedOperationException("valueTypeVisibility not set");
       }
       return valueTypeVisibility;
@@ -1389,10 +1375,10 @@ abstract class Datatype_Builder {
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof Datatype_Builder.Partial)) {
+      if (!(obj instanceof Partial)) {
         return false;
       }
-      Datatype_Builder.Partial other = (Datatype_Builder.Partial) obj;
+      Partial other = (Partial) obj;
       if (type != other.type && (type == null || !type.equals(other.type))) {
         return false;
       }
@@ -1482,39 +1468,39 @@ abstract class Datatype_Builder {
     @Override
     public String toString() {
       StringBuilder result = new StringBuilder("partial Datatype{");
-      if (!_unsetProperties.contains(Datatype_Builder.Property.TYPE)) {
+      if (!_unsetProperties.contains(Property.TYPE)) {
         result.append("type=").append(type).append(", ");
       }
-      if (!_unsetProperties.contains(Datatype_Builder.Property.INTERFACE_TYPE)) {
+      if (!_unsetProperties.contains(Property.INTERFACE_TYPE)) {
         result.append("interfaceType=").append(interfaceType).append(", ");
       }
-      if (!_unsetProperties.contains(Datatype_Builder.Property.BUILDER)) {
+      if (!_unsetProperties.contains(Property.BUILDER)) {
         result.append("builder=").append(builder).append(", ");
       }
-      if (!_unsetProperties.contains(Datatype_Builder.Property.EXTENSIBLE)) {
+      if (!_unsetProperties.contains(Property.EXTENSIBLE)) {
         result.append("extensible=").append(extensible).append(", ");
       }
       if (builderFactory != null) {
         result.append("builderFactory=").append(builderFactory).append(", ");
       }
-      if (!_unsetProperties.contains(Datatype_Builder.Property.GENERATED_BUILDER)) {
+      if (!_unsetProperties.contains(Property.GENERATED_BUILDER)) {
         result.append("generatedBuilder=").append(generatedBuilder).append(", ");
       }
-      if (!_unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE)) {
+      if (!_unsetProperties.contains(Property.VALUE_TYPE)) {
         result.append("valueType=").append(valueType).append(", ");
       }
-      if (!_unsetProperties.contains(Datatype_Builder.Property.PARTIAL_TYPE)) {
+      if (!_unsetProperties.contains(Property.PARTIAL_TYPE)) {
         result.append("partialType=").append(partialType).append(", ");
       }
       result.append("visibleNestedTypes=").append(visibleNestedTypes);
-      if (!_unsetProperties.contains(Datatype_Builder.Property.PROPERTY_ENUM)) {
+      if (!_unsetProperties.contains(Property.PROPERTY_ENUM)) {
         result.append(", propertyEnum=").append(propertyEnum);
       }
       result.append(", standardMethodUnderrides=").append(standardMethodUnderrides);
-      if (!_unsetProperties.contains(Datatype_Builder.Property.BUILDER_SERIALIZABLE)) {
+      if (!_unsetProperties.contains(Property.BUILDER_SERIALIZABLE)) {
         result.append(", builderSerializable=").append(builderSerializable);
       }
-      if (!_unsetProperties.contains(Datatype_Builder.Property.HAS_TO_BUILDER_METHOD)) {
+      if (!_unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)) {
         result.append(", hasToBuilderMethod=").append(hasToBuilderMethod);
       }
       result
@@ -1522,7 +1508,7 @@ abstract class Datatype_Builder {
           .append(generatedBuilderAnnotations)
           .append(", valueTypeAnnotations=")
           .append(valueTypeAnnotations);
-      if (!_unsetProperties.contains(Datatype_Builder.Property.VALUE_TYPE_VISIBILITY)) {
+      if (!_unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)) {
         result.append(", valueTypeVisibility=").append(valueTypeVisibility);
       }
       return result.append(", nestedClasses=").append(nestedClasses).append("}").toString();

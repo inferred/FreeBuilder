@@ -15,13 +15,17 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.googlejavaformat.java.Formatter;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
@@ -29,11 +33,15 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 
 /** {@code SourceBuilder} which also handles package declaration and imports. */
-public class CompilationUnitBuilder extends AbstractSourceBuilder<CompilationUnitBuilder> {
+public class CompilationUnitBuilder
+    extends AbstractSourceBuilder<CompilationUnitBuilder>
+    implements SourceParser.EventHandler {
 
   private final ImportManager importManager;
   private final QualifiedName classToWrite;
   private final StringBuilder source = new StringBuilder();
+  private final Deque<QualifiedName> scopes = new ArrayDeque<QualifiedName>();
+  private final SourceParser parser = new SourceParser(this);
 
   /**
    * Returns a {@link CompilationUnitBuilder} for {@code classToWrite} using {@code features}. The
@@ -62,13 +70,35 @@ public class CompilationUnitBuilder extends AbstractSourceBuilder<CompilationUni
   }
 
   @Override
+  public void onTypeBlockStart(String keyword, String simpleName) {
+    if (scopes.isEmpty()) {
+      checkState(classToWrite.getSimpleName().equals(simpleName), "Unexpected type " + simpleName);
+      scopes.add(classToWrite);
+    } else {
+      scopes.add(scopes.getLast().nestedType(simpleName));
+    }
+  }
+
+  @Override
+  public void onOtherBlockStart() {
+    scopes.addLast(scopes.peekLast());
+  }
+
+  @Override
+  public void onBlockEnd() {
+    checkState(!scopes.isEmpty(), "Unexpected close brace");
+    scopes.removeLast();
+  }
+
+  @Override
   protected TypeShortener getShortener() {
-    return importManager;
+    return importManager.inScope(scopes.peekLast());
   }
 
   @Override
   public Appendable append(char c) {
     source.append(c);
+    parser.parse(c);
     return this;
   }
 

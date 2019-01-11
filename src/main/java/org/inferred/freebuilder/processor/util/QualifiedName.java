@@ -109,6 +109,12 @@ public class QualifiedName extends ValueType {
     return simpleNames.size() == 1;
   }
 
+  public boolean isInScope(QualifiedName type) {
+    return packageName.equals(type.packageName)
+        && simpleNames.size() >= type.simpleNames.size()
+        && simpleNames.subList(0, type.simpleNames.size()).equals(type.simpleNames);
+  }
+
   /**
    * Returns the {@link QualifiedName} of a type called {@code simpleName} nested in this one.
    */
