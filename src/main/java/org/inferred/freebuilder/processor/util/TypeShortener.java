@@ -17,7 +17,7 @@ package org.inferred.freebuilder.processor.util;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
-import com.google.common.base.Joiner;
+import java.io.IOException;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -31,65 +31,84 @@ import javax.lang.model.util.SimpleTypeVisitor6;
  */
 interface TypeShortener {
 
-  String shorten(TypeElement type);
-  String shorten(TypeMirror mirror);
-  String shorten(QualifiedName type);
+  void appendShortened(Appendable a, TypeElement type) throws IOException;
+  void appendShortened(Appendable a, TypeMirror mirror) throws IOException;
+  void appendShortened(Appendable a, QualifiedName type) throws IOException;
 
   abstract class AbstractTypeShortener
-      extends SimpleTypeVisitor6<StringBuilder, StringBuilder>
+      extends SimpleTypeVisitor6<Void, Appendable>
       implements TypeShortener {
 
-    protected abstract void appendShortened(StringBuilder b, TypeElement type);
-
-    @Override
-    public String shorten(TypeElement type) {
-      StringBuilder b = new StringBuilder();
-      appendShortened(b, type);
-      return b.toString();
-    }
-
-    @Override
-    public String shorten(TypeMirror mirror) {
-      return mirror.accept(this, new StringBuilder()).toString();
-    }
-
-    @Override
-    public StringBuilder visitDeclared(DeclaredType mirror, StringBuilder b) {
-      if (mirror.getEnclosingType().getKind() == TypeKind.NONE) {
-        appendShortened(b, asElement(mirror));
-      } else {
-        mirror.getEnclosingType().accept(this, b);
-        b.append('.').append(mirror.asElement().getSimpleName());
+    private static class IOExceptionWrapper extends RuntimeException {
+      IOExceptionWrapper(IOException cause) {
+        super(cause);
       }
-      if (!mirror.getTypeArguments().isEmpty()) {
-        String prefix = "<";
-        for (TypeMirror typeArgument : mirror.getTypeArguments()) {
-          b.append(prefix);
-          typeArgument.accept(this, b);
-          prefix = ", ";
+
+      @Override
+      public synchronized IOException getCause() {
+        return (IOException) super.getCause();
+      }
+    }
+
+    @Override
+    public void appendShortened(Appendable a, TypeMirror mirror) throws IOException {
+      try {
+        mirror.accept(this, a);
+      } catch (IOExceptionWrapper e) {
+        throw e.getCause();
+      }
+    }
+
+    @Override
+    public Void visitDeclared(DeclaredType mirror, Appendable a) {
+      try {
+        if (mirror.getEnclosingType().getKind() == TypeKind.NONE) {
+          appendShortened(a, asElement(mirror));
+        } else {
+          mirror.getEnclosingType().accept(this, a);
+          a.append('.').append(mirror.asElement().getSimpleName());
         }
-        b.append(">");
+        if (!mirror.getTypeArguments().isEmpty()) {
+          String prefix = "<";
+          for (TypeMirror typeArgument : mirror.getTypeArguments()) {
+            a.append(prefix);
+            typeArgument.accept(this, a);
+            prefix = ", ";
+          }
+          a.append(">");
+        }
+        return null;
+      } catch (IOException e) {
+        throw new IOExceptionWrapper(e);
       }
-      return b;
     }
 
     @Override
-    public StringBuilder visitWildcard(WildcardType t, StringBuilder b) {
-      b.append("?");
-      if (t.getSuperBound() != null) {
-        b.append(" super ");
-        t.getSuperBound().accept(this, b);
+    public Void visitWildcard(WildcardType t, Appendable a) {
+      try {
+        a.append("?");
+        if (t.getSuperBound() != null) {
+          a.append(" super ");
+          t.getSuperBound().accept(this, a);
+        }
+        if (t.getExtendsBound() != null) {
+          a.append(" extends ");
+          t.getExtendsBound().accept(this, a);
+        }
+        return null;
+      } catch (IOException e) {
+        throw new IOExceptionWrapper(e);
       }
-      if (t.getExtendsBound() != null) {
-        b.append(" extends ");
-        t.getExtendsBound().accept(this, b);
-      }
-      return b;
     }
 
     @Override
-    protected StringBuilder defaultAction(TypeMirror mirror, StringBuilder b) {
-      return b.append(mirror);
+    protected Void defaultAction(TypeMirror mirror, Appendable a) {
+      try {
+        a.append(mirror.toString());
+        return null;
+      } catch (IOException e) {
+        throw new IOExceptionWrapper(e);
+      }
     }
   }
 
@@ -97,13 +116,18 @@ interface TypeShortener {
   class NeverShorten extends AbstractTypeShortener {
 
     @Override
-    public String shorten(QualifiedName type) {
-      return type.toString();
+    public void appendShortened(Appendable a, QualifiedName type) throws IOException {
+      a.append(type.getPackage());
+      String separator = (type.getPackage().isEmpty()) ? "" : ".";
+      for (String simpleName : type.getSimpleNames()) {
+        a.append(separator).append(simpleName);
+        separator = ".";
+      }
     }
 
     @Override
-    protected void appendShortened(StringBuilder b, TypeElement type) {
-      b.append(type);
+    public void appendShortened(Appendable a, TypeElement type) throws IOException {
+      a.append(type.toString());
     }
   }
 
@@ -111,17 +135,21 @@ interface TypeShortener {
   class AlwaysShorten extends AbstractTypeShortener {
 
     @Override
-    public String shorten(QualifiedName type) {
-      return Joiner.on('.').join(type.getSimpleNames());
+    public void appendShortened(Appendable a, QualifiedName type) throws IOException {
+      String separator = "";
+      for (String simpleName : type.getSimpleNames()) {
+        a.append(separator).append(simpleName);
+        separator = ".";
+      }
     }
 
     @Override
-    protected void appendShortened(StringBuilder b, TypeElement type) {
+    public void appendShortened(Appendable a, TypeElement type) throws IOException {
       if (type.getNestingKind().isNested()) {
-        appendShortened(b, (TypeElement) type.getEnclosingElement());
-        b.append('.');
+        appendShortened(a, (TypeElement) type.getEnclosingElement());
+        a.append('.');
       }
-      b.append(type.getSimpleName());
+      a.append(type.getSimpleName());
     }
   }
 }
