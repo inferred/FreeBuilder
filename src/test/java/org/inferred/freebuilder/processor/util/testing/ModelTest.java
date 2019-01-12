@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util.testing;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -41,6 +42,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 
 /** Tests for {@link Model}. */
 @RunWith(JUnit4.class)
@@ -70,6 +72,17 @@ public class ModelTest {
   @Test
   public void environment() {
     assertSame(model.elementUtils(), model.environment().getElementUtils());
+  }
+
+  @Test
+  public void stressTestElementUtils() {
+    for (int i = 0; i < 50; i++) {
+      Model newModel = Model.create();
+      Elements elementUtils = newModel.elementUtils();
+      TypeElement stringType = elementUtils.getTypeElement("java.lang.String");
+      assertNotNull("String type element was null on iteration #" + (i + 1), stringType);
+      newModel.destroy();
+    }
   }
 
   @Test
