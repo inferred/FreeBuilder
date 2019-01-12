@@ -15,13 +15,11 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Iterables.addAll;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 import org.inferred.freebuilder.processor.util.TypeShortener.AbstractTypeShortener;
@@ -29,13 +27,9 @@ import org.inferred.freebuilder.processor.util.TypeShortener.AbstractTypeShorten
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
 
 /**
  * Manages the imports for a source file, and produces short type references by adding extra
@@ -69,30 +63,85 @@ class ImportManager extends AbstractTypeShortener {
     }
 
     public ImportManager build() {
-      Set<String> nonConflictingImports = new LinkedHashSet<String>();
-      for (Set<QualifiedName> importGroup : Multimaps.asMap(implicitImports).values()) {
-        if (importGroup.size() == 1) {
-          QualifiedName implicitImport = getOnlyElement(importGroup);
-          if (implicitImport.isTopLevel()) {
-            nonConflictingImports.add(implicitImport.toString());
+      return new ImportManager(implicitImports);
+    }
+  }
+
+  private static class ScopedShortener extends AbstractTypeShortener {
+
+    private final ImportManager delegate;
+    private final QualifiedName scope;
+
+    ScopedShortener(ImportManager delegate, QualifiedName scope) {
+      this.delegate = delegate;
+      this.scope = scope;
+    }
+
+    @Override
+    public TypeShortener inScope(QualifiedName scope) {
+      throw new UnsupportedOperationException();
+    }
+
+    private static int firstMismatchingElement(List<?> a, List<?> b) {
+      int i = 0;
+      while (i < a.size() && i < b.size() && a.get(i).equals(b.get(i))) {
+        i++;
+      }
+      return i;
+    }
+
+    @Override
+    public void appendShortened(Appendable a, QualifiedName type) throws IOException {
+      if (type.getPackage().equals(scope.getPackage())) {
+        int mismatch = firstMismatchingElement(scope.getSimpleNames(), type.getSimpleNames());
+        for (int i = Math.min(mismatch, type.getSimpleNames().size() - 1); i >= 0; i--) {
+          if (!conflictsWithImplicitImport(type, i)) {
+            a.append(type.getSimpleNames().get(i));
+            for (int j = i + 1; j < type.getSimpleNames().size(); ++j) {
+              a.append('.').append(type.getSimpleNames().get(j));
+            }
+            return;
           }
         }
       }
-      return new ImportManager(implicitImports.keySet(), nonConflictingImports);
+      delegate.appendShortened(a, type);
+    }
+
+    private boolean conflictsWithImplicitImport(QualifiedName type, int enclosingTypeIndex) {
+      Set<QualifiedName> conflicts = delegate.implicitImports.get(
+          type.getSimpleNames().get(enclosingTypeIndex));
+      switch (conflicts.size()) {
+        case 0:
+          return false;
+
+        case 1:
+          QualifiedName conflict = Iterables.getOnlyElement(conflicts);
+          int firstMismatchingElement = firstMismatchingElement(
+              conflict.getSimpleNames(), type.getSimpleNames());
+          return (firstMismatchingElement < conflict.getSimpleNames().size());
+
+        default:
+          return true;
+      }
     }
   }
 
   private final Set<String> visibleSimpleNames = new HashSet<String>();
-  private final ImmutableSet<String> implicitImports;
+  private final ImmutableSetMultimap<String, QualifiedName> implicitImports;
   private final Set<String> explicitImports = new TreeSet<String>();
 
-  private ImportManager(Iterable<String> visibleSimpleNames, Iterable<String> implicitImports) {
-    addAll(this.visibleSimpleNames, visibleSimpleNames);
-    this.implicitImports = ImmutableSet.copyOf(implicitImports);
+  private ImportManager(SetMultimap<String, QualifiedName> implicitImports) {
+    this.implicitImports = ImmutableSetMultimap.copyOf(implicitImports);
+    visibleSimpleNames.addAll(implicitImports.keySet());
   }
 
   public Set<String> getClassImports() {
     return Collections.unmodifiableSet(explicitImports);
+  }
+
+  @Override
+  public TypeShortener inScope(QualifiedName scope) {
+    return (scope == null) ? this : new ScopedShortener(this, scope);
   }
 
   @Override
@@ -105,19 +154,6 @@ class ImportManager extends AbstractTypeShortener {
     }
   }
 
-  @Override
-  public void appendShortened(Appendable a, TypeElement type) throws IOException {
-    if (type.getNestingKind().isNested()) {
-      appendShortened(a, (TypeElement) type.getEnclosingElement());
-      a.append('.');
-    } else {
-      PackageElement pkg = (PackageElement) type.getEnclosingElement();
-      Name name = type.getSimpleName();
-      appendPackageForTopLevelClass(a, pkg.getQualifiedName().toString(), name);
-    }
-    a.append(type.getSimpleName());
-  }
-
   private void appendPackageForTopLevelClass(Appendable a, String pkg, CharSequence name)
       throws IOException {
     if (pkg.startsWith(PACKAGE_PREFIX)) {
@@ -125,7 +161,7 @@ class ImportManager extends AbstractTypeShortener {
     }
     pkg = unshadedName(pkg);
     String qualifiedName = pkg + "." + name;
-    if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {
+    if (explicitImports.contains(qualifiedName)) {
       // Append nothing
     } else if (visibleSimpleNames.contains(name.toString())) {
       a.append(pkg).append(".");

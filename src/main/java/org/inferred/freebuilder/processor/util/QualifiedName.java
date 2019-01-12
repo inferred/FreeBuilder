@@ -22,9 +22,15 @@ import static com.google.common.collect.Iterables.getLast;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.processor.util.Type.TypeImpl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -65,12 +71,25 @@ public class QualifiedName extends ValueType {
    * Returns a {@link QualifiedName} for {@code type}.
    */
   public static QualifiedName of(TypeElement type) {
-    if (type.getNestingKind().isNested()) {
-      QualifiedName enclosingElement = QualifiedName.of((TypeElement) type.getEnclosingElement());
-      return enclosingElement.nestedType(type.getSimpleName().toString());
-    } else {
-      PackageElement pkg = (PackageElement) type.getEnclosingElement();
-      return QualifiedName.of(pkg.getQualifiedName().toString(), type.getSimpleName().toString());
+    switch (type.getNestingKind()) {
+      case TOP_LEVEL:
+        PackageElement pkg = (PackageElement) type.getEnclosingElement();
+        return QualifiedName.of(pkg.getQualifiedName().toString(), type.getSimpleName().toString());
+
+      case MEMBER:
+        List<String> reversedNames = new ArrayList<String>();
+        reversedNames.add(type.getSimpleName().toString());
+        Element parent = type.getEnclosingElement();
+        while (parent.getKind() != ElementKind.PACKAGE) {
+          reversedNames.add(parent.getSimpleName().toString());
+          parent = parent.getEnclosingElement();
+        }
+        return new QualifiedName(
+            ((PackageElement) parent).getQualifiedName().toString(),
+            Lists.reverse(reversedNames));
+
+      default:
+        throw new IllegalArgumentException("Cannot determine qualified name of " + type);
     }
   }
 
@@ -107,12 +126,6 @@ public class QualifiedName extends ValueType {
 
   public boolean isTopLevel() {
     return simpleNames.size() == 1;
-  }
-
-  public boolean isInScope(QualifiedName type) {
-    return packageName.equals(type.packageName)
-        && simpleNames.size() >= type.simpleNames.size()
-        && simpleNames.subList(0, type.simpleNames.size()).equals(type.simpleNames);
   }
 
   /**

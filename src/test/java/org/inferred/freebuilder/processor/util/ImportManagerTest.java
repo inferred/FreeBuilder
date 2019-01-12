@@ -60,6 +60,53 @@ public class ImportManagerTest {
   }
 
   @Test
+  public void testQualifiedNameShortening_withScope_shortensTopLevelScopedType() {
+    QualifiedName scopedType = QualifiedName.of("com.example", "MyType");
+    ImportManager manager = new ImportManager.Builder().build();
+    TypeShortener scopedShortener = manager.inScope(scopedType);
+    assertEquals("MyType", shorten(scopedShortener, scopedType));
+    assertThat(manager.getClassImports()).isEmpty();
+  }
+
+  @Test
+  public void testQualifiedNameShortening_withScopeAndConflicts_doesntShortenTopLevelScopedType() {
+    QualifiedName scopedType = QualifiedName.of("com.example", "MyType");
+    QualifiedName conflictingType = QualifiedName.of("org.example", "Thing", "MyType");
+    ImportManager manager = new ImportManager.Builder()
+        .addImplicitImport(conflictingType)
+        .build();
+    TypeShortener scopedShortener = manager.inScope(scopedType);
+    assertEquals("com.example.MyType", shorten(scopedShortener, scopedType));
+    assertThat(manager.getClassImports()).isEmpty();
+  }
+
+  @Test
+  public void testQualifiedNameShortening_withScopeAndConflicts_partiallyShortensNestedScopeType() {
+    QualifiedName scopedType = QualifiedName.of("com.example", "Foo", "MyType");
+    QualifiedName conflictingType = QualifiedName.of("org.example", "Thing", "MyType");
+    ImportManager manager = new ImportManager.Builder()
+        .addImplicitImport(scopedType)
+        .addImplicitImport(scopedType.getEnclosingType())
+        .addImplicitImport(conflictingType)
+        .build();
+    TypeShortener scopedShortener = manager.inScope(scopedType);
+    assertEquals("Foo.MyType", shorten(scopedShortener, scopedType));
+    assertThat(manager.getClassImports()).isEmpty();
+  }
+
+  @Test
+  public void testQualifiedNameShortening_withScopeAndConflicts_importsConflictingTypeParent() {
+    QualifiedName scopedType = QualifiedName.of("com.example", "MyType");
+    QualifiedName conflictingType = QualifiedName.of("org.example", "Thing", "MyType");
+    ImportManager manager = new ImportManager.Builder()
+        .addImplicitImport(conflictingType)
+        .build();
+    TypeShortener scopedShortener = manager.inScope(scopedType);
+    assertEquals("Thing.MyType", shorten(scopedShortener, conflictingType));
+    assertThat(manager.getClassImports()).containsExactly("org.example.Thing");
+  }
+
+  @Test
   public void testTypeMirrorShortening() {
     ImportManager manager = new ImportManager.Builder().build();
     assertEquals("String", shorten(manager, STRING));
@@ -88,9 +135,57 @@ public class ImportManagerTest {
     assertEquals("java.awt.List.Sucks",
         shorten(manager, newNestedClass(awtListType.asElement(), "Sucks")));
     assertEquals("Map", shorten(manager, newTopLevelClass("java.util.Map")));
-    assertEquals("List", shorten(manager, listType.asType()));
-    assertEquals("List.String", shorten(manager, stringType.asType()));
+    assertEquals("org.example.List", shorten(manager, listType.asType()));
+    assertEquals("org.example.List.String", shorten(manager, stringType.asType()));
     assertThat(manager.getClassImports()).containsExactly("java.util.Map");
+  }
+
+  @Test
+  public void testTypeMirrorShortening_withScope_shortensTopLevelScopedType() {
+    ImportManager manager = new ImportManager.Builder().build();
+    TypeShortener scopedShortener = manager.inScope(QualifiedName.of("com.example", "MyType"));
+    assertEquals("MyType", shorten(scopedShortener, newTopLevelClass("com.example.MyType")));
+    assertThat(manager.getClassImports()).isEmpty();
+  }
+
+  @Test
+  public void testTypeMirrorShortening_withScopeAndConflicts_doesntShortenTopLevelScopedType() {
+    ClassTypeImpl scopedType = newTopLevelClass("com.example.MyType");
+    ClassTypeImpl conflictingType =
+        newNestedClass(newTopLevelClass("org.example.Thing").asElement(), "MyType");
+    ImportManager manager = new ImportManager.Builder()
+        .addImplicitImport(QualifiedName.of(conflictingType.asElement()))
+        .build();
+    TypeShortener scopedShortener = manager.inScope(QualifiedName.of(scopedType.asElement()));
+    assertEquals("com.example.MyType", shorten(scopedShortener, scopedType));
+    assertThat(manager.getClassImports()).isEmpty();
+  }
+
+  @Test
+  public void testTypeMirrorShortening_withScopeAndConflicts_partiallyShortensNestedScopeType() {
+    ClassTypeImpl scopedType =
+        newNestedClass(newTopLevelClass("com.example.Foo").asElement(), "MyType");
+    ClassTypeImpl conflictingType =
+        newNestedClass(newTopLevelClass("org.example.Thing").asElement(), "MyType");
+    ImportManager manager = new ImportManager.Builder()
+        .addImplicitImport(QualifiedName.of(conflictingType.asElement()))
+        .build();
+    TypeShortener scopedShortener = manager.inScope(QualifiedName.of(scopedType.asElement()));
+    assertEquals("Foo.MyType", shorten(scopedShortener, scopedType));
+    assertThat(manager.getClassImports()).isEmpty();
+  }
+
+  @Test
+  public void testTypeMirrorShortening_withScopeAndConflicts_importsConflictingTypeParent() {
+    ClassTypeImpl scopedType = newTopLevelClass("com.example.MyType");
+    ClassTypeImpl conflictingType =
+        newNestedClass(newTopLevelClass("org.example.Thing").asElement(), "MyType");
+    ImportManager manager = new ImportManager.Builder()
+        .addImplicitImport(QualifiedName.of(conflictingType.asElement()))
+        .build();
+    TypeShortener scopedShortener = manager.inScope(QualifiedName.of(scopedType.asElement()));
+    assertEquals("Thing.MyType", shorten(scopedShortener, conflictingType));
+    assertThat(manager.getClassImports()).containsExactly("org.example.Thing");
   }
 
   @Test
@@ -185,5 +280,7 @@ public class ImportManagerTest {
 
   private static class OuterClass<T> {
     private class InnerClass { }
+
+    @SuppressWarnings("unused") T aThing;
   }
 }

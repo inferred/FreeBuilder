@@ -25,7 +25,8 @@ import org.inferred.freebuilder.processor.util.Type;
 import org.inferred.freebuilder.processor.util.TypeClass;
 
 /**
- * Auto-generated superclass of {@link Datatype.Builder}, derived from the API of {@link Datatype}.
+ * Auto-generated superclass of {@link org.inferred.freebuilder.processor.Datatype.Builder}, derived
+ * from the API of {@link org.inferred.freebuilder.processor.Datatype}.
  */
 @Generated("org.inferred.freebuilder.processor.Processor")
 abstract class Datatype_Builder {

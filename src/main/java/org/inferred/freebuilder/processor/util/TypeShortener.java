@@ -19,11 +19,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
 import java.io.IOException;
 
-import javax.annotation.Nullable;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -57,12 +52,8 @@ interface TypeShortener {
     }
 
     @Override
-    public TypeShortener inScope(@Nullable QualifiedName scope) {
-      if (scope != null) {
-        return new ScopedShortener(this, scope);
-      } else {
-        return this;
-      }
+    public void appendShortened(Appendable a, TypeElement type) throws IOException {
+      appendShortened(a, QualifiedName.of(type));
     }
 
     @Override
@@ -127,61 +118,13 @@ interface TypeShortener {
     }
   }
 
-  class ScopedShortener extends AbstractTypeShortener {
-
-    private final TypeShortener delegate;
-    private final QualifiedName scope;
-
-    ScopedShortener(TypeShortener delegate, QualifiedName scope) {
-      this.delegate = delegate;
-      this.scope = scope;
-    }
+  /** A {@link TypeShortener} that never shortens types. */
+  class NeverShorten extends AbstractTypeShortener {
 
     @Override
     public TypeShortener inScope(QualifiedName scope) {
-      throw new UnsupportedOperationException();
+      return this;
     }
-
-    @Override
-    public void appendShortened(Appendable a, QualifiedName type) throws IOException {
-      if (type.isTopLevel()) {
-        if (scope.isInScope(type)) {
-          a.append(type.getSimpleName());
-          return;
-        }
-      } else {
-        if (scope.isInScope(type.getEnclosingType())) {
-          a.append(type.getSimpleName());
-          return;
-        }
-      }
-      delegate.appendShortened(a, type);
-    }
-
-    @Override
-    public void appendShortened(Appendable a, TypeElement type) throws IOException {
-      if (type.getModifiers().contains(Modifier.STATIC)) {
-        Element parent = type.getEnclosingElement();
-        if (parent.getKind() == ElementKind.PACKAGE) {
-          PackageElement pkg = (PackageElement) parent;
-          if (scope.getPackage().contentEquals(pkg.getQualifiedName())) {
-            a.append(type.getSimpleName());
-            return;
-          }
-        } else {
-          QualifiedName parentName = QualifiedName.of((TypeElement) parent);
-          if (scope.isInScope(parentName)) {
-            a.append(type.getSimpleName());
-            return;
-          }
-        }
-      }
-      delegate.appendShortened(a, type);
-    }
-  }
-
-  /** A {@link TypeShortener} that never shortens types. */
-  class NeverShorten extends AbstractTypeShortener {
 
     @Override
     public void appendShortened(Appendable a, QualifiedName type) throws IOException {
@@ -192,15 +135,15 @@ interface TypeShortener {
         separator = ".";
       }
     }
-
-    @Override
-    public void appendShortened(Appendable a, TypeElement type) throws IOException {
-      a.append(type.toString());
-    }
   }
 
   /** A {@link TypeShortener} that always shortens types, even if that causes conflicts. */
   class AlwaysShorten extends AbstractTypeShortener {
+
+    @Override
+    public TypeShortener inScope(QualifiedName scope) {
+      return this;
+    }
 
     @Override
     public void appendShortened(Appendable a, QualifiedName type) throws IOException {
@@ -209,15 +152,6 @@ interface TypeShortener {
         a.append(separator).append(simpleName);
         separator = ".";
       }
-    }
-
-    @Override
-    public void appendShortened(Appendable a, TypeElement type) throws IOException {
-      if (type.getNestingKind().isNested()) {
-        appendShortened(a, (TypeElement) type.getEnclosingElement());
-        a.append('.');
-      }
-      a.append(type.getSimpleName());
     }
   }
 }
