@@ -654,7 +654,8 @@ task eclipseTestClasspath(type: GenerateEclipseClasspath, constructorArgs: [ecli
     classpath.containers = containers
   }
   classpath.plusConfigurations += [
-    configurations.testCompileClasspath
+    configurations.testCompileClasspath,
+    configurations.testRuntimeClasspath
   ]
   classpath.defaultOutputDir = project.file('.test/bin')
   dependsOn sourceSets.main.output.dirs
