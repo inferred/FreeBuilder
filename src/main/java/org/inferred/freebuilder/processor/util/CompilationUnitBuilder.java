@@ -92,7 +92,12 @@ public class CompilationUnitBuilder
 
   @Override
   protected TypeShortener getShortener() {
-    return importManager.inScope(scopes.peekLast());
+    QualifiedName scope = scopes.peekLast();
+    if (scope == null) {
+      return importManager.inCompilationUnit(classToWrite.getPackage());
+    } else {
+      return importManager.inScope(scope);
+    }
   }
 
   @Override

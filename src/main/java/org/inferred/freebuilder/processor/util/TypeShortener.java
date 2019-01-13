@@ -31,7 +31,6 @@ import javax.lang.model.util.SimpleTypeVisitor6;
  */
 interface TypeShortener {
 
-  TypeShortener inScope(QualifiedName scope);
   void appendShortened(Appendable a, TypeElement type) throws IOException;
   void appendShortened(Appendable a, TypeMirror mirror) throws IOException;
   void appendShortened(Appendable a, QualifiedName type) throws IOException;
@@ -122,11 +121,6 @@ interface TypeShortener {
   class NeverShorten extends AbstractTypeShortener {
 
     @Override
-    public TypeShortener inScope(QualifiedName scope) {
-      return this;
-    }
-
-    @Override
     public void appendShortened(Appendable a, QualifiedName type) throws IOException {
       a.append(type.getPackage());
       String separator = (type.getPackage().isEmpty()) ? "" : ".";
@@ -139,11 +133,6 @@ interface TypeShortener {
 
   /** A {@link TypeShortener} that always shortens types, even if that causes conflicts. */
   class AlwaysShorten extends AbstractTypeShortener {
-
-    @Override
-    public TypeShortener inScope(QualifiedName scope) {
-      return this;
-    }
 
     @Override
     public void appendShortened(Appendable a, QualifiedName type) throws IOException {

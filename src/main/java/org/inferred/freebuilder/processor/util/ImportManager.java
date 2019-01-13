@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 
 import com.google.common.collect.ImmutableSetMultimap;
@@ -67,19 +69,38 @@ class ImportManager extends AbstractTypeShortener {
     }
   }
 
+  private static class PackageShortener extends AbstractTypeShortener {
+
+    private final ImportManager delegate;
+    private final String pkg;
+
+    PackageShortener(ImportManager delegate, String pkg) {
+      this.delegate = delegate;
+      this.pkg = pkg;
+    }
+
+    @Override
+    public void appendShortened(Appendable a, QualifiedName type) throws IOException {
+      if (type.getPackage().equals(pkg)) {
+        String separator = "";
+        for (String simpleName : type.getSimpleNames()) {
+          a.append(separator).append(simpleName);
+          separator = ".";
+        }
+      } else {
+        delegate.appendShortened(a, type);
+      }
+    }
+  }
+
   private static class ScopedShortener extends AbstractTypeShortener {
 
     private final ImportManager delegate;
     private final QualifiedName scope;
 
     ScopedShortener(ImportManager delegate, QualifiedName scope) {
-      this.delegate = delegate;
-      this.scope = scope;
-    }
-
-    @Override
-    public TypeShortener inScope(QualifiedName scope) {
-      throw new UnsupportedOperationException();
+      this.delegate = checkNotNull(delegate);
+      this.scope = checkNotNull(scope);
     }
 
     private static int firstMismatchingElement(List<?> a, List<?> b) {
@@ -139,9 +160,12 @@ class ImportManager extends AbstractTypeShortener {
     return Collections.unmodifiableSet(explicitImports);
   }
 
-  @Override
+  public TypeShortener inCompilationUnit(String pkg) {
+    return new PackageShortener(this, pkg);
+  }
+
   public TypeShortener inScope(QualifiedName scope) {
-    return (scope == null) ? this : new ScopedShortener(this, scope);
+    return new ScopedShortener(this, scope);
   }
 
   @Override
