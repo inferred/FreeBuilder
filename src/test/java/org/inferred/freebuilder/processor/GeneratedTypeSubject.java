@@ -1,6 +1,7 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.THROW_ASSERTION_ERROR;
+
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.truth.FailureStrategy;
@@ -8,13 +9,18 @@ import com.google.common.truth.Subject;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.junit.ComparisonFailure;
+import org.mockito.Mockito;
+import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.annotation.processing.ProcessingEnvironment;
 
 class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> {
 
@@ -35,8 +41,12 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
 
   public void generates(String... code) {
     String expected = Arrays.stream(code).collect(joining("\n", "", "\n"));
-    String rawSource = SourceStringBuilder
-        .simple(environmentFeatures.toArray(new Feature<?>[0]))
+    CompilationUnitBuilder compilationUnitBuilder = new CompilationUnitBuilder(
+            Mockito.mock(ProcessingEnvironment.class, new ReturnsDeepStubs()),
+            getSubject().getName(),
+            getSubject().getVisibleNestedTypes(),
+            new StaticFeatureSet(environmentFeatures.toArray(new Feature<?>[0])));
+    String rawSource = compilationUnitBuilder
         .add(getSubject())
         .toString();
     try {
