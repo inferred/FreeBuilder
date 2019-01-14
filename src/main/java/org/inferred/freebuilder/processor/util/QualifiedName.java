@@ -132,6 +132,12 @@ public class QualifiedName extends ValueType {
     return simpleNames.size() == 1;
   }
 
+  public boolean isNestedIn(QualifiedName other) {
+    return packageName.equals(other.packageName)
+        && (simpleNames.size() > other.simpleNames.size())
+        && simpleNames.subList(0, other.simpleNames.size()).equals(other.simpleNames);
+  }
+
   /**
    * Returns the {@link QualifiedName} of a type called {@code simpleName} nested in this one.
    */

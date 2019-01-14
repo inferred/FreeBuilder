@@ -3,15 +3,36 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.newLinkedHashMap;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A Block contains a preamble of lazily-added declarations followed by a body.
  */
 public class Block extends Excerpt implements SourceBuilder {
+
+  /**
+   * Returns a source builder that will not illegal shorten hidden types.
+   *
+   * @param parent the enclosing source builder
+   * @param type the type this is the body of
+   * @param supertypes all supertypes of {@code type}
+   */
+  public static SourceBuilder typeBody(
+      SourceBuilder parent,
+      TypeClass type,
+      Type... supertypes) {
+    ImmutableSet.Builder<QualifiedName> supertypeNames = ImmutableSet.builder();
+    for (Type supertype : supertypes) {
+      supertypeNames.add(supertype.getQualifiedName());
+    }
+    return parent.nestedType(type.getQualifiedName(), supertypeNames.build());
+  }
 
   public static Block methodBody(SourceBuilder parent, String... paramNames) {
     Scope methodScope = new Scope.MethodScope(parent.scope());
@@ -109,6 +130,11 @@ public class Block extends Excerpt implements SourceBuilder {
   @Override
   public SourceStringBuilder subBuilder() {
     return body.subBuilder();
+  }
+
+  @Override
+  public SourceStringBuilder nestedType(QualifiedName type, Set<QualifiedName> supertypes) {
+    throw new UnsupportedOperationException("Cannot declare a named type inside a method block");
   }
 
   @Override

@@ -118,6 +118,11 @@ class ImportManager extends AbstractTypeShortener {
     a.append(type.getSimpleName());
   }
 
+  @Override
+  public TypeShortener inScope(QualifiedName type, Set<QualifiedName> supertypes) {
+    return this;
+  }
+
   private void appendPackageForTopLevelClass(Appendable a, String pkg, CharSequence name)
       throws IOException {
     if (pkg.startsWith(PACKAGE_PREFIX)) {

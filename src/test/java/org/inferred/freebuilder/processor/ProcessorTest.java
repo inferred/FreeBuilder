@@ -1285,6 +1285,38 @@ public class ProcessorTest {
         .withNoWarnings();
   }
 
+  @Test
+  public void testNestedClassHidingPropertyClass() {
+    // A contrived example of how horribly messed up scopes can make things.
+    // In this, datatype B extends interface A, which defines a nested type X.
+    // There is also a top-level type called X that B uses for one of its properties.
+    // If we generate code without paying attention to inherited scopes, we may try to
+    // import and refer to the top-level class X, not realising the nested A.X will hide it
+    // in our value type implementations.
+    behaviorTester
+        .with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example.p;")
+            .addLine("public interface A {")
+            .addLine("  interface X { }")
+            .addLine("}")
+            .build())
+        .with(new SourceBuilder()
+            .addLine("package com.example.q;")
+            .addLine("public interface X { }")
+            .build())
+        .with(new SourceBuilder()
+            .addLine("package com.example.r;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface B extends com.example.p.A {")
+            .addLine("  com.example.q.X bar();")
+            .addLine("  class Builder extends B_Builder {}")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
   private static TestBuilder testBuilder() {
     return new TestBuilder()
         .addImport("com.example.DataType");
