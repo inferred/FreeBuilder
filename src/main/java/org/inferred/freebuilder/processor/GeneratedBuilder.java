@@ -16,11 +16,13 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.collect.Iterables.any;
+
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.ToStringGenerator.addToString;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
+import static org.inferred.freebuilder.processor.util.Block.typeBody;
 import static org.inferred.freebuilder.processor.util.LazyName.addLazyDefinitions;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
 import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
@@ -311,21 +313,22 @@ class GeneratedBuilder extends GeneratedType {
         datatype.getValueTypeVisibility(),
         datatype.getValueType().declaration(),
         extending(datatype.getType(), datatype.isInterfaceType()));
+    SourceBuilder body = typeBody(code, datatype.getValueType(), datatype.getType());
     for (Property property : generatorsByProperty.keySet()) {
-      generatorsByProperty.get(property).addValueFieldDeclaration(code, property.getField());
+      generatorsByProperty.get(property).addValueFieldDeclaration(body, property.getField());
     }
-    addValueTypeConstructor(code);
-    addValueTypeGetters(code);
+    addValueTypeConstructor(body);
+    addValueTypeGetters(body);
     if (datatype.getHasToBuilderMethod()) {
-      addValueTypeToBuilder(code);
+      addValueTypeToBuilder(body);
     }
     switch (datatype.standardMethodUnderride(StandardMethod.EQUALS)) {
       case ABSENT:
-        addValueTypeEquals(code);
+        addValueTypeEquals(body);
         break;
 
       case OVERRIDEABLE:
-        addValueTypeEqualsOverride(code);
+        addValueTypeEqualsOverride(body);
         break;
 
       case FINAL:
@@ -334,13 +337,14 @@ class GeneratedBuilder extends GeneratedType {
     }
     // Hash code
     if (datatype.standardMethodUnderride(StandardMethod.HASH_CODE) == ABSENT) {
-      addValueTypeHashCode(code);
+      addValueTypeHashCode(body);
     }
     // toString
     if (datatype.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
-      addToString(code, datatype, generatorsByProperty, false);
+      addToString(body, datatype, generatorsByProperty, false);
     }
-    code.addLine("}");
+    code.add(body.toString())
+        .addLine("}");
   }
 
   private void addValueTypeConstructor(SourceBuilder code) {
@@ -454,20 +458,22 @@ class GeneratedBuilder extends GeneratedType {
         .addLine("private static final class %s %s {",
             datatype.getPartialType().declaration(),
             extending(datatype.getType(), datatype.isInterfaceType()));
-    addPartialFields(code);
-    addPartialConstructor(code);
-    addPartialGetters(code);
-    addPartialToBuilderMethod(code);
+    SourceBuilder body = typeBody(code, datatype.getPartialType(), datatype.getType());
+    addPartialFields(body);
+    addPartialConstructor(body);
+    addPartialGetters(body);
+    addPartialToBuilderMethod(body);
     if (datatype.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
-      addPartialEquals(code);
+      addPartialEquals(body);
     }
     if (datatype.standardMethodUnderride(StandardMethod.HASH_CODE) != FINAL) {
-      addPartialHashCode(code);
+      addPartialHashCode(body);
     }
     if (datatype.standardMethodUnderride(StandardMethod.TO_STRING) != FINAL) {
-      addToString(code, datatype, generatorsByProperty, true);
+      addToString(body, datatype, generatorsByProperty, true);
     }
-    code.addLine("}");
+    code.add(body.toString())
+        .addLine("}");
   }
 
   private void addPartialFields(SourceBuilder code) {

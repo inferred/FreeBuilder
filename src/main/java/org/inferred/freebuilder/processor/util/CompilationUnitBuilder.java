@@ -24,6 +24,7 @@ import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
 
 import java.util.Collection;
+import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
@@ -45,22 +46,28 @@ public class CompilationUnitBuilder implements SourceBuilder {
   public CompilationUnitBuilder(
       ProcessingEnvironment env,
       QualifiedName classToWrite,
-      Collection<QualifiedName> nestedClasses,
+      Collection<QualifiedName> implicitImports,
       FeatureSet features) {
     this.classToWrite = classToWrite;
     // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
     // written first, but aren't known yet.
     ImportManager.Builder importManagerBuilder = new ImportManager.Builder();
+    ScopeHandler scopeHandler = new ScopeHandler(env.getElementUtils());
     importManagerBuilder.addImplicitImport(classToWrite);
+    scopeHandler.predeclareGeneratedType(classToWrite);
     PackageElement pkg = env.getElementUtils().getPackageElement(classToWrite.getPackage());
     for (TypeElement sibling : ElementFilter.typesIn(pkg.getEnclosedElements())) {
       importManagerBuilder.addImplicitImport(QualifiedName.of(sibling));
     }
-    for (QualifiedName nestedClass : nestedClasses) {
-      importManagerBuilder.addImplicitImport(nestedClass);
+    for (QualifiedName implicitImport : implicitImports) {
+      importManagerBuilder.addImplicitImport(implicitImport);
+      if (implicitImport.isNestedIn(classToWrite)) {
+        scopeHandler.predeclareGeneratedType(implicitImport);
+      }
     }
     importManager = importManagerBuilder.build();
-    source = new SourceStringBuilder(importManager, features, new FileScope());
+    TypeShortener typeShortener = new ScopeAwareTypeShortener(importManager, scopeHandler);
+    source = new SourceStringBuilder(typeShortener, features, new FileScope());
   }
 
   @Override
@@ -84,6 +91,11 @@ public class CompilationUnitBuilder implements SourceBuilder {
   @Override
   public SourceStringBuilder subBuilder() {
     return source.subBuilder();
+  }
+
+  @Override
+  public SourceStringBuilder nestedType(QualifiedName type, Set<QualifiedName> supertypes) {
+    return source.nestedType(type, supertypes);
   }
 
   @Override

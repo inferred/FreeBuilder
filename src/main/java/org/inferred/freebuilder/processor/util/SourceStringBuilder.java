@@ -27,6 +27,7 @@ import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.io.IOException;
 import java.util.MissingFormatArgumentException;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,6 +121,11 @@ public class SourceStringBuilder implements SourceBuilder, Appendable {
   @Override
   public SourceStringBuilder subBuilder() {
     return new SourceStringBuilder(shortener, features, scope);
+  }
+
+  @Override
+  public SourceStringBuilder nestedType(QualifiedName type, Set<QualifiedName> supertypes) {
+    return new SourceStringBuilder(shortener.inScope(type, supertypes), features, scope);
   }
 
   @Override

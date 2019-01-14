@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
 import java.io.IOException;
+import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -34,6 +35,8 @@ interface TypeShortener {
   void appendShortened(Appendable a, TypeElement type) throws IOException;
   void appendShortened(Appendable a, TypeMirror mirror) throws IOException;
   void appendShortened(Appendable a, QualifiedName type) throws IOException;
+
+  TypeShortener inScope(QualifiedName type, Set<QualifiedName> supertypes);
 
   abstract class AbstractTypeShortener
       extends SimpleTypeVisitor6<Void, Appendable>
@@ -129,6 +132,11 @@ interface TypeShortener {
     public void appendShortened(Appendable a, TypeElement type) throws IOException {
       a.append(type.toString());
     }
+
+    @Override
+    public NeverShorten inScope(QualifiedName type, Set<QualifiedName> supertypes) {
+      return this;
+    }
   }
 
   /** A {@link TypeShortener} that always shortens types, even if that causes conflicts. */
@@ -150,6 +158,11 @@ interface TypeShortener {
         a.append('.');
       }
       a.append(type.getSimpleName());
+    }
+
+    @Override
+    public AlwaysShorten inScope(QualifiedName type, Set<QualifiedName> supertypes) {
+      return this;
     }
   }
 }

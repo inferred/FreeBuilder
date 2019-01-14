@@ -19,6 +19,8 @@ import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 
+import java.util.Set;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -73,6 +75,13 @@ public interface SourceBuilder {
    * will be included in the imports for this builder (and its parents).
    */
   SourceStringBuilder subBuilder();
+
+  /**
+   * Returns a {@code SourceStringBuilder} with the same configuration as this builder, but with
+   * the {@code TypeShortener} using scoping rules for {@code type}. Any types added to the
+   * sub-builder will be included in the imports for this builder (and its parents).
+   */
+  SourceStringBuilder nestedType(QualifiedName type, Set<QualifiedName> supertypes);
 
   /**
    * Returns a {@code SourceStringBuilder} with the same configuration as this builder, but with
