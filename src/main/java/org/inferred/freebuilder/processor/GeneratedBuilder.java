@@ -311,11 +311,39 @@ class GeneratedBuilder extends GeneratedType {
         datatype.getValueTypeVisibility(),
         datatype.getValueType().declaration(),
         extending(datatype.getType(), datatype.isInterfaceType()));
-    // Fields
     for (Property property : generatorsByProperty.keySet()) {
       generatorsByProperty.get(property).addValueFieldDeclaration(code, property.getField());
     }
-    // Constructor
+    addValueTypeConstructor(code);
+    addValueTypeGetters(code);
+    if (datatype.getHasToBuilderMethod()) {
+      addValueTypeToBuilder(code);
+    }
+    switch (datatype.standardMethodUnderride(StandardMethod.EQUALS)) {
+      case ABSENT:
+        addValueTypeEquals(code);
+        break;
+
+      case OVERRIDEABLE:
+        addValueTypeEqualsOverride(code);
+        break;
+
+      case FINAL:
+        // Cannot override if a final user implementation exists.
+        break;
+    }
+    // Hash code
+    if (datatype.standardMethodUnderride(StandardMethod.HASH_CODE) == ABSENT) {
+      addValueTypeHashCode(code);
+    }
+    // toString
+    if (datatype.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
+      addToString(code, datatype, generatorsByProperty, false);
+    }
+    code.addLine("}");
+  }
+
+  private void addValueTypeConstructor(SourceBuilder code) {
     code.addLine("")
         .addLine("  private %s(%s builder) {",
             datatype.getValueType().getSimpleName(),
@@ -327,7 +355,9 @@ class GeneratedBuilder extends GeneratedType {
     }
     code.add(body)
         .addLine("  }");
-    // Getters
+  }
+
+  private void addValueTypeGetters(SourceBuilder code) {
     for (Property property : generatorsByProperty.keySet()) {
       code.addLine("")
           .addLine("  @%s", Override.class);
@@ -339,59 +369,20 @@ class GeneratedBuilder extends GeneratedType {
       code.add(";\n");
       code.addLine("  }");
     }
-    // toBuilder
-    if (datatype.getHasToBuilderMethod()) {
-      code.addLine("")
-          .addLine("  @%s", Override.class)
-          .addLine("  public %s toBuilder() {", datatype.getBuilder());
-      BuilderFactory builderFactory = datatype.getBuilderFactory().orNull();
-      if (builderFactory != null) {
-        code.addLine("    return %s.mergeFrom(this);",
-                builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES));
-      } else {
-        code.addLine("    throw new %s();", UnsupportedOperationException.class);
-      }
-      code.addLine("  }");
-    }
-    // Equals
-    switch (datatype.standardMethodUnderride(StandardMethod.EQUALS)) {
-      case ABSENT:
-        addValueTypeEquals(code);
-        break;
+  }
 
-      case OVERRIDEABLE:
-        // Partial-respecting override if a non-final user implementation exists.
-        code.addLine("")
-            .addLine("  @%s", Override.class)
-            .addLine("  public boolean equals(Object obj) {")
-            .addLine("    return (!(obj instanceof %s) && super.equals(obj));",
-                datatype.getPartialType().getQualifiedName())
-            .addLine("  }");
-        break;
-
-      case FINAL:
-        // Cannot override if a final user implementation exists.
-        break;
+  private void addValueTypeToBuilder(SourceBuilder code) {
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public %s toBuilder() {", datatype.getBuilder());
+    BuilderFactory builderFactory = datatype.getBuilderFactory().orNull();
+    if (builderFactory != null) {
+      code.addLine("    return %s.mergeFrom(this);",
+              builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES));
+    } else {
+      code.addLine("    throw new %s();", UnsupportedOperationException.class);
     }
-    // Hash code
-    if (datatype.standardMethodUnderride(StandardMethod.HASH_CODE) == ABSENT) {
-      FieldAccessList fields = getFields(generatorsByProperty.keySet());
-      code.addLine("")
-          .addLine("  @%s", Override.class)
-          .addLine("  public int hashCode() {");
-      if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-        code.addLine("    return %s.hash(%s);",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), fields);
-      } else {
-        code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, fields);
-      }
-      code.addLine("  }");
-    }
-    // toString
-    if (datatype.standardMethodUnderride(StandardMethod.TO_STRING) == ABSENT) {
-      addToString(code, datatype, generatorsByProperty, false);
-    }
-    code.addLine("}");
+    code.addLine("  }");
   }
 
   private void addValueTypeEquals(SourceBuilder code) {
@@ -434,22 +425,80 @@ class GeneratedBuilder extends GeneratedType {
         .addLine("  }");
   }
 
+  private void addValueTypeEqualsOverride(SourceBuilder code) {
+    // Partial-respecting override if a non-final user implementation exists.
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public boolean equals(Object obj) {")
+        .addLine("    return (!(obj instanceof %s) && super.equals(obj));",
+            datatype.getPartialType().getQualifiedName())
+        .addLine("  }");
+  }
+
+  private void addValueTypeHashCode(SourceBuilder code) {
+    FieldAccessList fields = getFields(generatorsByProperty.keySet());
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public int hashCode() {");
+    if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+      code.addLine("    return %s.hash(%s);",
+          code.feature(SOURCE_LEVEL).javaUtilObjects().get(), fields);
+    } else {
+      code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, fields);
+    }
+    code.addLine("  }");
+  }
+
   private void addPartialType(SourceBuilder code) {
-    boolean hasRequiredProperties = any(generatorsByProperty.values(), IS_REQUIRED);
     code.addLine("")
         .addLine("private static final class %s %s {",
             datatype.getPartialType().declaration(),
             extending(datatype.getType(), datatype.isInterfaceType()));
-    // Fields
+    addPartialFields(code);
+    addPartialConstructor(code);
+    addPartialGetters(code);
+    addPartialToBuilderMethod(code);
+    if (datatype.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
+      addPartialEquals(code);
+    }
+    if (datatype.standardMethodUnderride(StandardMethod.HASH_CODE) != FINAL) {
+      addPartialHashCode(code);
+    }
+    if (datatype.standardMethodUnderride(StandardMethod.TO_STRING) != FINAL) {
+      addToString(code, datatype, generatorsByProperty, true);
+    }
+    code.addLine("}");
+  }
+
+  private void addPartialFields(SourceBuilder code) {
     for (Property property : generatorsByProperty.keySet()) {
       generatorsByProperty.get(property).addValueFieldDeclaration(code, property.getField());
     }
-    if (hasRequiredProperties) {
+    if (any(generatorsByProperty.values(), IS_REQUIRED)) {
       code.addLine("  private final %s<%s> %s;",
           EnumSet.class, datatype.getPropertyEnum(), UNSET_PROPERTIES);
     }
-    addPartialConstructor(code, hasRequiredProperties);
-    // Getters
+  }
+
+  private void addPartialConstructor(SourceBuilder code) {
+    code.addLine("")
+        .addLine("  %s(%s builder) {",
+            datatype.getPartialType().getSimpleName(),
+            datatype.getGeneratedBuilder());
+    Block body = methodBody(code, "builder");
+    for (Property property : generatorsByProperty.keySet()) {
+      generatorsByProperty.get(property)
+          .addPartialFieldAssignment(body, property.getField().on("this"), "builder");
+    }
+    if (any(generatorsByProperty.values(), IS_REQUIRED)) {
+      body.addLine("    %s = %s.clone();",
+          UNSET_PROPERTIES.on("this"), UNSET_PROPERTIES.on("builder"));
+    }
+    code.add(body)
+        .addLine("  }");
+  }
+
+  private void addPartialGetters(SourceBuilder code) {
     for (Property property : generatorsByProperty.keySet()) {
       code.addLine("")
           .addLine("  @%s", Override.class);
@@ -468,100 +517,6 @@ class GeneratedBuilder extends GeneratedType {
       code.add(";\n");
       code.addLine("  }");
     }
-    addPartialToBuilderMethod(code);
-    // Equals
-    if (datatype.standardMethodUnderride(StandardMethod.EQUALS) != FINAL) {
-      code.addLine("")
-          .addLine("  @%s", Override.class)
-          .addLine("  public boolean equals(Object obj) {");
-      Block body = methodBody(code, "obj");
-      body.addLine("    if (!(obj instanceof %s)) {", datatype.getPartialType().getQualifiedName())
-          .addLine("      return false;")
-          .addLine("    }")
-          .addLine("    %1$s other = (%1$s) obj;", datatype.getPartialType().withWildcards());
-      if (generatorsByProperty.isEmpty()) {
-        body.addLine("    return true;");
-      } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-        String prefix = "    return ";
-        for (Property property : generatorsByProperty.keySet()) {
-          body.add(prefix);
-          body.add(ObjectsExcerpts.equals(
-              property.getField(),
-              property.getField().on("other"),
-              property.getType().getKind(),
-              nullabilityOf(generatorsByProperty.get(property), true)));
-          prefix = "\n        && ";
-        }
-        if (hasRequiredProperties) {
-          body.add(prefix);
-          body.add("%s.equals(%s, %s)",
-              body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
-              UNSET_PROPERTIES,
-              UNSET_PROPERTIES.on("other"));
-        }
-        body.add(";\n");
-      } else {
-        for (Property property : generatorsByProperty.keySet()) {
-          body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
-                  property.getField(),
-                  property.getField().on("other"),
-                  property.getType().getKind(),
-                  nullabilityOf(generatorsByProperty.get(property), true)))
-              .addLine("      return false;")
-              .addLine("    }");
-        }
-        if (hasRequiredProperties) {
-          body.addLine("    return %s.equals(%s);",
-              UNSET_PROPERTIES, UNSET_PROPERTIES.on("other"));
-        } else {
-          body.addLine("    return true;");
-        }
-      }
-      code.add(body)
-          .addLine("  }");
-    }
-    // Hash code
-    if (datatype.standardMethodUnderride(StandardMethod.HASH_CODE) != FINAL) {
-      code.addLine("")
-          .addLine("  @%s", Override.class)
-          .addLine("  public int hashCode() {");
-
-      FieldAccessList fields = getFields(generatorsByProperty.keySet());
-      if (hasRequiredProperties) {
-        fields = fields.plus(UNSET_PROPERTIES);
-      }
-
-      if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
-        code.addLine("    return %s.hash(%s);",
-            code.feature(SOURCE_LEVEL).javaUtilObjects().get(), fields);
-      } else {
-        code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, fields);
-      }
-      code.addLine("  }");
-    }
-    // toString
-    if (datatype.standardMethodUnderride(StandardMethod.TO_STRING) != FINAL) {
-      addToString(code, datatype, generatorsByProperty, true);
-    }
-    code.addLine("}");
-  }
-
-  private void addPartialConstructor(SourceBuilder code, boolean hasRequiredProperties) {
-    code.addLine("")
-        .addLine("  %s(%s builder) {",
-            datatype.getPartialType().getSimpleName(),
-            datatype.getGeneratedBuilder());
-    Block body = methodBody(code, "builder");
-    for (Property property : generatorsByProperty.keySet()) {
-      generatorsByProperty.get(property)
-          .addPartialFieldAssignment(body, property.getField().on("this"), "builder");
-    }
-    if (hasRequiredProperties) {
-      body.addLine("    %s = %s.clone();",
-          UNSET_PROPERTIES.on("this"), UNSET_PROPERTIES.on("builder"));
-    }
-    code.add(body)
-        .addLine("  }");
   }
 
   private void addPartialToBuilderMethod(SourceBuilder code) {
@@ -594,6 +549,77 @@ class GeneratedBuilder extends GeneratedType {
     }
     code.add(body)
         .addLine("  }");
+  }
+
+  private void addPartialEquals(SourceBuilder code) {
+    boolean hasRequiredProperties = any(generatorsByProperty.values(), IS_REQUIRED);
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public boolean equals(Object obj) {");
+    Block body = methodBody(code, "obj");
+    body.addLine("    if (!(obj instanceof %s)) {", datatype.getPartialType().getQualifiedName())
+        .addLine("      return false;")
+        .addLine("    }")
+        .addLine("    %1$s other = (%1$s) obj;", datatype.getPartialType().withWildcards());
+    if (generatorsByProperty.isEmpty()) {
+      body.addLine("    return true;");
+    } else if (body.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+      String prefix = "    return ";
+      for (Property property : generatorsByProperty.keySet()) {
+        body.add(prefix);
+        body.add(ObjectsExcerpts.equals(
+            property.getField(),
+            property.getField().on("other"),
+            property.getType().getKind(),
+            nullabilityOf(generatorsByProperty.get(property), true)));
+        prefix = "\n        && ";
+      }
+      if (hasRequiredProperties) {
+        body.add(prefix);
+        body.add("%s.equals(%s, %s)",
+            body.feature(SOURCE_LEVEL).javaUtilObjects().get(),
+            UNSET_PROPERTIES,
+            UNSET_PROPERTIES.on("other"));
+      }
+      body.add(";\n");
+    } else {
+      for (Property property : generatorsByProperty.keySet()) {
+        body.addLine("    if (%s) {", ObjectsExcerpts.notEquals(
+                property.getField(),
+                property.getField().on("other"),
+                property.getType().getKind(),
+                nullabilityOf(generatorsByProperty.get(property), true)))
+            .addLine("      return false;")
+            .addLine("    }");
+      }
+      if (hasRequiredProperties) {
+        body.addLine("    return %s.equals(%s);",
+            UNSET_PROPERTIES, UNSET_PROPERTIES.on("other"));
+      } else {
+        body.addLine("    return true;");
+      }
+    }
+    code.add(body)
+        .addLine("  }");
+  }
+
+  private void addPartialHashCode(SourceBuilder code) {
+    code.addLine("")
+        .addLine("  @%s", Override.class)
+        .addLine("  public int hashCode() {");
+
+    FieldAccessList fields = getFields(generatorsByProperty.keySet());
+    if (any(generatorsByProperty.values(), IS_REQUIRED)) {
+      fields = fields.plus(UNSET_PROPERTIES);
+    }
+
+    if (code.feature(SOURCE_LEVEL).javaUtilObjects().isPresent()) {
+      code.addLine("    return %s.hash(%s);",
+          code.feature(SOURCE_LEVEL).javaUtilObjects().get(), fields);
+    } else {
+      code.addLine("    return %s.hashCode(new Object[] { %s });", Arrays.class, fields);
+    }
+    code.addLine("  }");
   }
 
   private static Nullability nullabilityOf(PropertyCodeGenerator generator, boolean inPartial) {
