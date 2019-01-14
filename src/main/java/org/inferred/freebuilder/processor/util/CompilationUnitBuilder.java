@@ -19,12 +19,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.googlejavaformat.java.Formatter;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.feature.FeatureType;
 
 import java.util.Collection;
-import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
@@ -32,11 +29,12 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 
 /** {@code SourceBuilder} which also handles package declaration and imports. */
-public class CompilationUnitBuilder implements SourceBuilder {
+public class CompilationUnitBuilder extends AbstractSourceBuilder<CompilationUnitBuilder> {
 
   private final ImportManager importManager;
-  private final SourceBuilder source;
   private final QualifiedName classToWrite;
+  private final ScopeHandler scopeHandler;
+  private final StringBuilder source = new StringBuilder();
 
   /**
    * Returns a {@link CompilationUnitBuilder} for {@code classToWrite} using {@code features}. The
@@ -48,11 +46,12 @@ public class CompilationUnitBuilder implements SourceBuilder {
       QualifiedName classToWrite,
       Collection<QualifiedName> implicitImports,
       FeatureSet features) {
+    super(features, new FileScope());
     this.classToWrite = classToWrite;
     // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
     // written first, but aren't known yet.
     ImportManager.Builder importManagerBuilder = new ImportManager.Builder();
-    ScopeHandler scopeHandler = new ScopeHandler(env.getElementUtils());
+    scopeHandler = new ScopeHandler(env.getElementUtils());
     importManagerBuilder.addImplicitImport(classToWrite);
     scopeHandler.predeclareGeneratedType(classToWrite);
     PackageElement pkg = env.getElementUtils().getPackageElement(classToWrite.getPackage());
@@ -66,51 +65,22 @@ public class CompilationUnitBuilder implements SourceBuilder {
       }
     }
     importManager = importManagerBuilder.build();
-    TypeShortener typeShortener = new ScopeAwareTypeShortener(importManager, scopeHandler);
-    source = new SourceStringBuilder(typeShortener, features, new FileScope());
   }
 
   @Override
-  public CompilationUnitBuilder add(String fmt, Object... args) {
-    source.add(fmt, args);
+  protected CompilationUnitBuilder getThis() {
     return this;
   }
 
   @Override
-  public SourceBuilder add(Excerpt excerpt) {
-    source.add(excerpt);
+  public CompilationUnitBuilder append(char c) {
+    source.append(c);
     return this;
   }
 
   @Override
-  public CompilationUnitBuilder addLine(String fmt, Object... args) {
-    source.addLine(fmt, args);
-    return this;
-  }
-
-  @Override
-  public SourceStringBuilder subBuilder() {
-    return source.subBuilder();
-  }
-
-  @Override
-  public SourceStringBuilder nestedType(QualifiedName type, Set<QualifiedName> supertypes) {
-    return source.nestedType(type, supertypes);
-  }
-
-  @Override
-  public SourceStringBuilder subScope(Scope newScope) {
-    return source.subScope(newScope);
-  }
-
-  @Override
-  public <T extends Feature<T>> T feature(FeatureType<T> feature) {
-    return source.feature(feature);
-  }
-
-  @Override
-  public Scope scope() {
-    return source.scope();
+  protected TypeShortener getShortener() {
+    return new ScopeAwareTypeShortener(importManager, scopeHandler);
   }
 
   @Override
