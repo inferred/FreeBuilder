@@ -16,8 +16,7 @@ import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.util.Excerpt;
 
 /**
- * Auto-generated superclass of {@link org.inferred.freebuilder.processor.Property.Builder}, derived
- * from the API of {@link org.inferred.freebuilder.processor.Property}.
+ * Auto-generated superclass of {@link Property.Builder}, derived from the API of {@link Property}.
  */
 @Generated("org.inferred.freebuilder.processor.Processor")
 abstract class Property_Builder {
@@ -59,8 +58,7 @@ abstract class Property_Builder {
   private String getterName;
   private boolean fullyCheckedCast;
   private List<Excerpt> accessorAnnotations = ImmutableList.of();
-  private final EnumSet<Property_Builder.Property> _unsetProperties =
-      EnumSet.allOf(Property_Builder.Property.class);
+  private final EnumSet<Property> _unsetProperties = EnumSet.allOf(Property.class);
 
   /**
    * Sets the value to be returned by {@link org.inferred.freebuilder.processor.Property#getType()}.
@@ -70,7 +68,7 @@ abstract class Property_Builder {
    */
   public org.inferred.freebuilder.processor.Property.Builder setType(TypeMirror type) {
     this.type = Preconditions.checkNotNull(type);
-    _unsetProperties.remove(Property_Builder.Property.TYPE);
+    _unsetProperties.remove(Property.TYPE);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -81,8 +79,7 @@ abstract class Property_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public TypeMirror getType() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Property_Builder.Property.TYPE), "type not set");
+    Preconditions.checkState(!_unsetProperties.contains(Property.TYPE), "type not set");
     return type;
   }
 
@@ -115,7 +112,7 @@ abstract class Property_Builder {
    */
   public org.inferred.freebuilder.processor.Property.Builder setName(String name) {
     this.name = Preconditions.checkNotNull(name);
-    _unsetProperties.remove(Property_Builder.Property.NAME);
+    _unsetProperties.remove(Property.NAME);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -126,8 +123,7 @@ abstract class Property_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public String getName() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Property_Builder.Property.NAME), "name not set");
+    Preconditions.checkState(!_unsetProperties.contains(Property.NAME), "name not set");
     return name;
   }
 
@@ -141,7 +137,7 @@ abstract class Property_Builder {
   public org.inferred.freebuilder.processor.Property.Builder setCapitalizedName(
       String capitalizedName) {
     this.capitalizedName = Preconditions.checkNotNull(capitalizedName);
-    _unsetProperties.remove(Property_Builder.Property.CAPITALIZED_NAME);
+    _unsetProperties.remove(Property.CAPITALIZED_NAME);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -153,8 +149,7 @@ abstract class Property_Builder {
    */
   public String getCapitalizedName() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME),
-        "capitalizedName not set");
+        !_unsetProperties.contains(Property.CAPITALIZED_NAME), "capitalizedName not set");
     return capitalizedName;
   }
 
@@ -167,7 +162,7 @@ abstract class Property_Builder {
    */
   public org.inferred.freebuilder.processor.Property.Builder setAllCapsName(String allCapsName) {
     this.allCapsName = Preconditions.checkNotNull(allCapsName);
-    _unsetProperties.remove(Property_Builder.Property.ALL_CAPS_NAME);
+    _unsetProperties.remove(Property.ALL_CAPS_NAME);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -179,7 +174,7 @@ abstract class Property_Builder {
    */
   public String getAllCapsName() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME), "allCapsName not set");
+        !_unsetProperties.contains(Property.ALL_CAPS_NAME), "allCapsName not set");
     return allCapsName;
   }
 
@@ -192,7 +187,7 @@ abstract class Property_Builder {
   public org.inferred.freebuilder.processor.Property.Builder setUsingBeanConvention(
       boolean usingBeanConvention) {
     this.usingBeanConvention = usingBeanConvention;
-    _unsetProperties.remove(Property_Builder.Property.USING_BEAN_CONVENTION);
+    _unsetProperties.remove(Property.USING_BEAN_CONVENTION);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -204,8 +199,7 @@ abstract class Property_Builder {
    */
   public boolean isUsingBeanConvention() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION),
-        "usingBeanConvention not set");
+        !_unsetProperties.contains(Property.USING_BEAN_CONVENTION), "usingBeanConvention not set");
     return usingBeanConvention;
   }
 
@@ -218,7 +212,7 @@ abstract class Property_Builder {
    */
   public org.inferred.freebuilder.processor.Property.Builder setGetterName(String getterName) {
     this.getterName = Preconditions.checkNotNull(getterName);
-    _unsetProperties.remove(Property_Builder.Property.GETTER_NAME);
+    _unsetProperties.remove(Property.GETTER_NAME);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -230,7 +224,7 @@ abstract class Property_Builder {
    */
   public String getGetterName() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Property_Builder.Property.GETTER_NAME), "getterName not set");
+        !_unsetProperties.contains(Property.GETTER_NAME), "getterName not set");
     return getterName;
   }
 
@@ -243,7 +237,7 @@ abstract class Property_Builder {
   public org.inferred.freebuilder.processor.Property.Builder setFullyCheckedCast(
       boolean fullyCheckedCast) {
     this.fullyCheckedCast = fullyCheckedCast;
-    _unsetProperties.remove(Property_Builder.Property.FULLY_CHECKED_CAST);
+    _unsetProperties.remove(Property.FULLY_CHECKED_CAST);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -255,8 +249,7 @@ abstract class Property_Builder {
    */
   public boolean isFullyCheckedCast() {
     Preconditions.checkState(
-        !_unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST),
-        "fullyCheckedCast not set");
+        !_unsetProperties.contains(Property.FULLY_CHECKED_CAST), "fullyCheckedCast not set");
     return fullyCheckedCast;
   }
 
@@ -347,7 +340,7 @@ abstract class Property_Builder {
   public org.inferred.freebuilder.processor.Property.Builder mergeFrom(
       org.inferred.freebuilder.processor.Property value) {
     Property_Builder _defaults = new org.inferred.freebuilder.processor.Property.Builder();
-    if (_defaults._unsetProperties.contains(Property_Builder.Property.TYPE)
+    if (_defaults._unsetProperties.contains(Property.TYPE)
         || !value.getType().equals(_defaults.getType())) {
       setType(value.getType());
     }
@@ -356,32 +349,31 @@ abstract class Property_Builder {
             || !value.getBoxedType().equals(_defaults.getBoxedType()))) {
       setBoxedType(value.getBoxedType());
     }
-    if (_defaults._unsetProperties.contains(Property_Builder.Property.NAME)
+    if (_defaults._unsetProperties.contains(Property.NAME)
         || !value.getName().equals(_defaults.getName())) {
       setName(value.getName());
     }
-    if (_defaults._unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)
+    if (_defaults._unsetProperties.contains(Property.CAPITALIZED_NAME)
         || !value.getCapitalizedName().equals(_defaults.getCapitalizedName())) {
       setCapitalizedName(value.getCapitalizedName());
     }
-    if (_defaults._unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)
+    if (_defaults._unsetProperties.contains(Property.ALL_CAPS_NAME)
         || !value.getAllCapsName().equals(_defaults.getAllCapsName())) {
       setAllCapsName(value.getAllCapsName());
     }
-    if (_defaults._unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)
+    if (_defaults._unsetProperties.contains(Property.USING_BEAN_CONVENTION)
         || value.isUsingBeanConvention() != _defaults.isUsingBeanConvention()) {
       setUsingBeanConvention(value.isUsingBeanConvention());
     }
-    if (_defaults._unsetProperties.contains(Property_Builder.Property.GETTER_NAME)
+    if (_defaults._unsetProperties.contains(Property.GETTER_NAME)
         || !value.getGetterName().equals(_defaults.getGetterName())) {
       setGetterName(value.getGetterName());
     }
-    if (_defaults._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
+    if (_defaults._unsetProperties.contains(Property.FULLY_CHECKED_CAST)
         || value.isFullyCheckedCast() != _defaults.isFullyCheckedCast()) {
       setFullyCheckedCast(value.isFullyCheckedCast());
     }
-    if (value instanceof Property_Builder.Value
-        && accessorAnnotations == ImmutableList.<Excerpt>of()) {
+    if (value instanceof Value && accessorAnnotations == ImmutableList.<Excerpt>of()) {
       accessorAnnotations = ImmutableList.copyOf(value.getAccessorAnnotations());
     } else {
       addAllAccessorAnnotations(value.getAccessorAnnotations());
@@ -398,8 +390,8 @@ abstract class Property_Builder {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
     Property_Builder base = template;
     Property_Builder _defaults = new org.inferred.freebuilder.processor.Property.Builder();
-    if (!base._unsetProperties.contains(Property_Builder.Property.TYPE)
-        && (_defaults._unsetProperties.contains(Property_Builder.Property.TYPE)
+    if (!base._unsetProperties.contains(Property.TYPE)
+        && (_defaults._unsetProperties.contains(Property.TYPE)
             || !template.getType().equals(_defaults.getType()))) {
       setType(template.getType());
     }
@@ -408,33 +400,33 @@ abstract class Property_Builder {
             || !template.getBoxedType().equals(_defaults.getBoxedType()))) {
       setBoxedType(template.getBoxedType());
     }
-    if (!base._unsetProperties.contains(Property_Builder.Property.NAME)
-        && (_defaults._unsetProperties.contains(Property_Builder.Property.NAME)
+    if (!base._unsetProperties.contains(Property.NAME)
+        && (_defaults._unsetProperties.contains(Property.NAME)
             || !template.getName().equals(_defaults.getName()))) {
       setName(template.getName());
     }
-    if (!base._unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)
-        && (_defaults._unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)
+    if (!base._unsetProperties.contains(Property.CAPITALIZED_NAME)
+        && (_defaults._unsetProperties.contains(Property.CAPITALIZED_NAME)
             || !template.getCapitalizedName().equals(_defaults.getCapitalizedName()))) {
       setCapitalizedName(template.getCapitalizedName());
     }
-    if (!base._unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)
-        && (_defaults._unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)
+    if (!base._unsetProperties.contains(Property.ALL_CAPS_NAME)
+        && (_defaults._unsetProperties.contains(Property.ALL_CAPS_NAME)
             || !template.getAllCapsName().equals(_defaults.getAllCapsName()))) {
       setAllCapsName(template.getAllCapsName());
     }
-    if (!base._unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)
-        && (_defaults._unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)
+    if (!base._unsetProperties.contains(Property.USING_BEAN_CONVENTION)
+        && (_defaults._unsetProperties.contains(Property.USING_BEAN_CONVENTION)
             || template.isUsingBeanConvention() != _defaults.isUsingBeanConvention())) {
       setUsingBeanConvention(template.isUsingBeanConvention());
     }
-    if (!base._unsetProperties.contains(Property_Builder.Property.GETTER_NAME)
-        && (_defaults._unsetProperties.contains(Property_Builder.Property.GETTER_NAME)
+    if (!base._unsetProperties.contains(Property.GETTER_NAME)
+        && (_defaults._unsetProperties.contains(Property.GETTER_NAME)
             || !template.getGetterName().equals(_defaults.getGetterName()))) {
       setGetterName(template.getGetterName());
     }
-    if (!base._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
-        && (_defaults._unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)
+    if (!base._unsetProperties.contains(Property.FULLY_CHECKED_CAST)
+        && (_defaults._unsetProperties.contains(Property.FULLY_CHECKED_CAST)
             || template.isFullyCheckedCast() != _defaults.isFullyCheckedCast())) {
       setFullyCheckedCast(template.isFullyCheckedCast());
     }
@@ -467,7 +459,7 @@ abstract class Property_Builder {
    */
   public org.inferred.freebuilder.processor.Property build() {
     Preconditions.checkState(_unsetProperties.isEmpty(), "Not set: %s", _unsetProperties);
-    return new Property_Builder.Value(this);
+    return new Value(this);
   }
 
   /**
@@ -481,7 +473,7 @@ abstract class Property_Builder {
    */
   @VisibleForTesting()
   public org.inferred.freebuilder.processor.Property buildPartial() {
-    return new Property_Builder.Partial(this);
+    return new Partial(this);
   }
 
   private static final class Value extends org.inferred.freebuilder.processor.Property {
@@ -555,10 +547,10 @@ abstract class Property_Builder {
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof Property_Builder.Value)) {
+      if (!(obj instanceof Value)) {
         return false;
       }
-      Property_Builder.Value other = (Property_Builder.Value) obj;
+      Value other = (Value) obj;
       if (!type.equals(other.type)) {
         return false;
       }
@@ -642,7 +634,7 @@ abstract class Property_Builder {
     private final String getterName;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
-    private final EnumSet<Property_Builder.Property> _unsetProperties;
+    private final EnumSet<Property> _unsetProperties;
 
     Partial(Property_Builder builder) {
       this.type = builder.type;
@@ -659,7 +651,7 @@ abstract class Property_Builder {
 
     @Override
     public TypeMirror getType() {
-      if (_unsetProperties.contains(Property_Builder.Property.TYPE)) {
+      if (_unsetProperties.contains(Property.TYPE)) {
         throw new UnsupportedOperationException("type not set");
       }
       return type;
@@ -673,7 +665,7 @@ abstract class Property_Builder {
 
     @Override
     public String getName() {
-      if (_unsetProperties.contains(Property_Builder.Property.NAME)) {
+      if (_unsetProperties.contains(Property.NAME)) {
         throw new UnsupportedOperationException("name not set");
       }
       return name;
@@ -681,7 +673,7 @@ abstract class Property_Builder {
 
     @Override
     public String getCapitalizedName() {
-      if (_unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)) {
+      if (_unsetProperties.contains(Property.CAPITALIZED_NAME)) {
         throw new UnsupportedOperationException("capitalizedName not set");
       }
       return capitalizedName;
@@ -689,7 +681,7 @@ abstract class Property_Builder {
 
     @Override
     public String getAllCapsName() {
-      if (_unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)) {
+      if (_unsetProperties.contains(Property.ALL_CAPS_NAME)) {
         throw new UnsupportedOperationException("allCapsName not set");
       }
       return allCapsName;
@@ -697,7 +689,7 @@ abstract class Property_Builder {
 
     @Override
     public boolean isUsingBeanConvention() {
-      if (_unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)) {
+      if (_unsetProperties.contains(Property.USING_BEAN_CONVENTION)) {
         throw new UnsupportedOperationException("usingBeanConvention not set");
       }
       return usingBeanConvention;
@@ -705,7 +697,7 @@ abstract class Property_Builder {
 
     @Override
     public String getGetterName() {
-      if (_unsetProperties.contains(Property_Builder.Property.GETTER_NAME)) {
+      if (_unsetProperties.contains(Property.GETTER_NAME)) {
         throw new UnsupportedOperationException("getterName not set");
       }
       return getterName;
@@ -713,7 +705,7 @@ abstract class Property_Builder {
 
     @Override
     public boolean isFullyCheckedCast() {
-      if (_unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)) {
+      if (_unsetProperties.contains(Property.FULLY_CHECKED_CAST)) {
         throw new UnsupportedOperationException("fullyCheckedCast not set");
       }
       return fullyCheckedCast;
@@ -726,10 +718,10 @@ abstract class Property_Builder {
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof Property_Builder.Partial)) {
+      if (!(obj instanceof Partial)) {
         return false;
       }
-      Property_Builder.Partial other = (Property_Builder.Partial) obj;
+      Partial other = (Partial) obj;
       if (type != other.type && (type == null || !type.equals(other.type))) {
         return false;
       }
@@ -784,28 +776,28 @@ abstract class Property_Builder {
     @Override
     public String toString() {
       StringBuilder result = new StringBuilder("partial Property{");
-      if (!_unsetProperties.contains(Property_Builder.Property.TYPE)) {
+      if (!_unsetProperties.contains(Property.TYPE)) {
         result.append("type=").append(type).append(", ");
       }
       if (boxedType != null) {
         result.append("boxedType=").append(boxedType).append(", ");
       }
-      if (!_unsetProperties.contains(Property_Builder.Property.NAME)) {
+      if (!_unsetProperties.contains(Property.NAME)) {
         result.append("name=").append(name).append(", ");
       }
-      if (!_unsetProperties.contains(Property_Builder.Property.CAPITALIZED_NAME)) {
+      if (!_unsetProperties.contains(Property.CAPITALIZED_NAME)) {
         result.append("capitalizedName=").append(capitalizedName).append(", ");
       }
-      if (!_unsetProperties.contains(Property_Builder.Property.ALL_CAPS_NAME)) {
+      if (!_unsetProperties.contains(Property.ALL_CAPS_NAME)) {
         result.append("allCapsName=").append(allCapsName).append(", ");
       }
-      if (!_unsetProperties.contains(Property_Builder.Property.USING_BEAN_CONVENTION)) {
+      if (!_unsetProperties.contains(Property.USING_BEAN_CONVENTION)) {
         result.append("usingBeanConvention=").append(usingBeanConvention).append(", ");
       }
-      if (!_unsetProperties.contains(Property_Builder.Property.GETTER_NAME)) {
+      if (!_unsetProperties.contains(Property.GETTER_NAME)) {
         result.append("getterName=").append(getterName).append(", ");
       }
-      if (!_unsetProperties.contains(Property_Builder.Property.FULLY_CHECKED_CAST)) {
+      if (!_unsetProperties.contains(Property.FULLY_CHECKED_CAST)) {
         result.append("fullyCheckedCast=").append(fullyCheckedCast).append(", ");
       }
       return result
