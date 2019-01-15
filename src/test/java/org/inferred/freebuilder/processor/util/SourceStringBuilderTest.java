@@ -17,12 +17,13 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
-import static javax.lang.model.util.ElementFilter.fieldsIn;
+
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableList;
+import static javax.lang.model.util.ElementFilter.fieldsIn;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
+import org.inferred.freebuilder.processor.util.TypeShortener.AlwaysShorten;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Rule;
@@ -33,7 +34,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -46,7 +46,9 @@ public class SourceStringBuilderTest {
 
   @Rule public final ModelRule model = new ModelRule();
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  private final ImportManager shortener = new ImportManager.Builder().build();
+  private final TypeShortener shortener = (a, type) -> {
+    a.append("{{").append(type.getSimpleName()).append("}}");
+  };
   private final SourceBuilder builder =
       new SourceStringBuilder(shortener, new StaticFeatureSet(), new FileScope());
 
@@ -56,7 +58,7 @@ public class SourceStringBuilderTest {
   }
 
   @Test
-  public void testAddLine() {
+  public void testAddLine_simpleParams() {
     builder
         .addLine("public class Bar {")
         .addLine("  // %s %s", "Foo", 100)
@@ -69,92 +71,48 @@ public class SourceStringBuilderTest {
   }
 
   @Test
-  public void testAddLine_typeInJavaLangPackage() {
-    builder.addLine("// This should be short: %s", String.class);
-    assertThat(builder.toString()).isEqualTo("// This should be short: String\n");
+  public void testAddLine_classParam() {
+    builder.addLine("// This should be passed to the shortener: %s", String.class);
+    assertThat(builder.toString())
+        .isEqualTo("// This should be passed to the shortener: {{String}}\n");
   }
 
   @Test
-  public void testAddLine_primitiveType() {
-    builder.addLine("// This should be short: %s", int.class);
-    assertThat(builder.toString()).isEqualTo("// This should be short: int\n");
+  public void testAddLine_primitiveClassParam() {
+    builder.addLine("// This should be passed to the shortener: %s", int.class);
+    assertThat(builder.toString())
+        .isEqualTo("// This should be passed to the shortener: {{int}}\n");
   }
 
   @Test
-  public void testAddLine_typeInDifferentPackage() {
-    builder.addLine("// This should be imported: %s", AtomicLong.class);
-    assertThat(shortener.getClassImports())
-        .containsExactly("java.util.concurrent.atomic.AtomicLong");
-    assertThat(builder.toString()).isEqualTo("// This should be imported: AtomicLong\n");
+  public void testAddLine_typeMirrorParam() {
+    builder.addLine("// This should be passed to the shortener: %s",
+        model.typeMirror(String.class));
+    assertThat(builder.toString())
+        .isEqualTo("// This should be passed to the shortener: {{String}}\n");
   }
 
   @Test
-  public void testAddLine_nestedTypeInDifferentPackage() {
-    builder.addLine("// This should be imported: %s", ImmutableList.Builder.class);
-    assertThat(shortener.getClassImports())
-        .containsExactly("com.google.common.collect.ImmutableList");
-    assertThat(builder.toString()).isEqualTo("// This should be imported: ImmutableList.Builder\n");
-  }
-
-  @Test
-  public void testAddLine_typesWithSameName() {
-    builder
-        .addLine("// This should be imported: %s", java.util.List.class)
-        .addLine("// This should be explicit: %s", java.awt.List.class);
-    assertThat(shortener.getClassImports())
-        .containsExactly("java.util.List");
-    assertThat(builder.toString()).doesNotContain("import java.awt.List;\n");
-    assertThat(builder.toString()).isEqualTo(
-        "// This should be imported: List\n// This should be explicit: java.awt.List\n");
-  }
-
-  @Test
-  public void testAddLine_typeMirrorInJavaLangPackage() {
-    builder.addLine("// This should be short: %s", model.typeMirror(String.class));
-    assertThat(builder.toString()).isEqualTo("// This should be short: String\n");
-  }
-
-  @Test
-  public void testAddLine_typeMirrorInDifferentPackage() {
-    builder.addLine("// This should be imported: %s", model.typeMirror(AtomicLong.class));
-    assertThat(shortener.getClassImports())
-        .containsExactly("java.util.concurrent.atomic.AtomicLong");
-    assertThat(builder.toString()).isEqualTo("// This should be imported: AtomicLong\n");
-  }
-
-  @Test
-  public void testAddLine_genericTypeMirror() {
-    builder.addLine("// This should be imported: %s",
+  public void testAddLine_genericTypeMirrorParam() {
+    builder.addLine("// The shortener should be invoked twice: %s",
         model.typeMirror("java.util.List<java.lang.String>"));
-    assertThat(shortener.getClassImports())
-        .containsExactly("java.util.List");
-    assertThat(builder.toString()).isEqualTo("// This should be imported: List<String>\n");
+    assertThat(builder.toString())
+        .isEqualTo("// The shortener should be invoked twice: {{List}}<{{String}}>\n");
   }
 
   @Test
-  public void testAddLine_typeElementInJavaLangPackage() {
-    builder.addLine("// This should be short: %s",
-        model.typeUtils().asElement(model.typeMirror(String.class)));
-    assertThat(builder.toString()).isEqualTo("// This should be short: String\n");
+  public void testAddLine_typeElementParam() {
+    builder.addLine("// This should be passed to the shortener: %s",
+        model.typeElement(String.class));
+    assertThat(builder.toString())
+        .isEqualTo("// This should be passed to the shortener: {{String}}\n");
   }
 
   @Test
-  public void testAddLine_typeElementInDifferentPackage() {
-    builder.addLine("// This should be imported: %s",
-        model.typeUtils().asElement(model.typeMirror(AtomicLong.class)));
-    assertThat(shortener.getClassImports())
-        .containsExactly("java.util.concurrent.atomic.AtomicLong");
-    assertThat(builder.toString()).isEqualTo("// This should be imported: AtomicLong\n");
-  }
-
-  @Test
-  public void testAddLine_genericTypeElement() {
-    builder.addLine("// This should be imported: %s",
-        model.typeUtils().asElement(model.typeMirror("java.util.List<java.lang.String>")));
-    assertThat(shortener.getClassImports())
-        .containsExactly("java.util.List");
-    // Turning a parameterized type mirror into an element loses the type parameters.
-    assertThat(builder.toString()).isEqualTo("// This should be imported: List\n");
+  public void testAddLine_genericTypeElementParam() {
+    builder.addLine("// This should be passed to the shortener: %s", model.typeElement(List.class));
+    assertThat(builder.toString())
+        .isEqualTo("// This should be passed to the shortener: {{List}}\n");
   }
 
   @Test
@@ -180,7 +138,8 @@ public class SourceStringBuilderTest {
   @Test
   public void testAddLine_numberedParams() {
     builder.addLine("%1$s<%2$s> foo = new %1$s<>();", ArrayList.class, String.class);
-    assertThat(builder.toString()).isEqualTo("ArrayList<String> foo = new ArrayList<>();\n");
+    assertThat(builder.toString())
+        .isEqualTo("{{ArrayList}}<{{String}}> foo = new {{ArrayList}}<>();\n");
   }
 
   @Test
@@ -233,8 +192,11 @@ public class SourceStringBuilderTest {
     TypeElement annotatedType = model.newType(
         "package com.example; " + annotationUsage + " class MyType { }");
     AnnotationMirror annotation = getOnlyAnnotation(annotatedType);
-    builder.addLine("%s", annotation);
-    assertThat(builder.toString()).isEqualTo(annotationUsage + "\n");
+    String code = new SourceStringBuilder(
+            new AlwaysShorten(), new StaticFeatureSet(), new FileScope())
+        .addLine("%s", annotation)
+        .toString();
+    assertThat(code).isEqualTo(annotationUsage + "\n");
   }
 
   private static AnnotationMirror getOnlyAnnotation(Element element) {
