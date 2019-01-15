@@ -30,9 +30,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.ElementFilter;
 
 /** {@code SourceBuilder} which also handles package declaration and imports. */
 public class CompilationUnitBuilder
@@ -60,21 +57,14 @@ public class CompilationUnitBuilder
     this.classToWrite = classToWrite;
     // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
     // written first, but aren't known yet.
-    ImportManager.Builder importManagerBuilder = new ImportManager.Builder();
     scopeHandler = new ScopeHandler(env.getElementUtils());
-    importManagerBuilder.addImplicitImport(classToWrite);
     scopeHandler.predeclareGeneratedType(classToWrite);
-    PackageElement pkg = env.getElementUtils().getPackageElement(classToWrite.getPackage());
-    for (TypeElement sibling : ElementFilter.typesIn(pkg.getEnclosedElements())) {
-      importManagerBuilder.addImplicitImport(QualifiedName.of(sibling));
-    }
     for (QualifiedName implicitImport : implicitImports) {
-      importManagerBuilder.addImplicitImport(implicitImport);
       if (implicitImport.isNestedIn(classToWrite)) {
         scopeHandler.predeclareGeneratedType(implicitImport);
       }
     }
-    importManager = importManagerBuilder.build();
+    importManager = new ImportManager();
     parser = new SourceParser(this);
     typeShorteners.add(new ScopeAwareTypeShortener(
         importManager, scopeHandler, classToWrite.getPackage()));
