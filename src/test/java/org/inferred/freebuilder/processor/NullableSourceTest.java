@@ -995,7 +995,6 @@ public class NullableSourceTest {
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
         .addVisibleNestedTypes(
-            generatedBuilder,
             generatedBuilder.nestedType("Partial"),
             generatedBuilder.nestedType("Property"),
             generatedBuilder.nestedType("Value"))

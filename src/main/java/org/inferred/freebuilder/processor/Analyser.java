@@ -21,18 +21,18 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
-import static javax.lang.model.element.ElementKind.INTERFACE;
-import static javax.lang.model.util.ElementFilter.constructorsIn;
-import static javax.lang.model.util.ElementFilter.typesIn;
-import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.NOTE;
+
 import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
 import static org.inferred.freebuilder.processor.naming.NamingConventions.determineNamingConvention;
 import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeType;
+
+import static javax.lang.model.element.ElementKind.INTERFACE;
+import static javax.lang.model.util.ElementFilter.constructorsIn;
+import static javax.lang.model.util.ElementFilter.typesIn;
+import static javax.tools.Diagnostic.Kind.ERROR;
+import static javax.tools.Diagnostic.Kind.NOTE;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -168,7 +168,6 @@ class Analyser {
         .addVisibleNestedTypes(valueType)
         .addVisibleNestedTypes(partialType)
         .addVisibleNestedTypes(propertyType)
-        .addAllVisibleNestedTypes(visibleTypesIn(type))  // Because we inherit from type
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
@@ -179,24 +178,6 @@ class Analyser {
         type, baseDatatype, builder, removeNonGetterMethods(builder, methods));
     datatypeBuilder.mergeFrom(gwtMetadata(type, baseDatatype, generatorsByProperty));
     return new GeneratedBuilder(datatypeBuilder.build(), generatorsByProperty);
-  }
-
-  private static Set<QualifiedName> visibleTypesIn(TypeElement type) {
-    ImmutableSet.Builder<QualifiedName> visibleTypes = ImmutableSet.builder();
-    for (TypeElement nestedType : typesIn(type.getEnclosedElements())) {
-      visibleTypes.add(QualifiedName.of(nestedType));
-    }
-    visibleTypes.addAll(visibleTypesIn(maybeType(type.getEnclosingElement())));
-    visibleTypes.addAll(visibleTypesIn(maybeAsTypeElement(type.getSuperclass())));
-    return visibleTypes.build();
-  }
-
-  private static Set<QualifiedName> visibleTypesIn(Optional<TypeElement> type) {
-    if (!type.isPresent()) {
-      return ImmutableSet.of();
-    } else {
-      return visibleTypesIn(type.get());
-    }
   }
 
   /** Basic sanity-checking to ensure we can fulfil the &#64;FreeBuilder contract for this type. */

@@ -60,9 +60,7 @@ public class CompilationUnitBuilder
     scopeHandler = new ScopeHandler(env.getElementUtils());
     scopeHandler.predeclareGeneratedType(classToWrite);
     for (QualifiedName implicitImport : implicitImports) {
-      if (implicitImport.isNestedIn(classToWrite)) {
-        scopeHandler.predeclareGeneratedType(implicitImport);
-      }
+      scopeHandler.predeclareGeneratedType(implicitImport);
     }
     importManager = new ImportManager();
     parser = new SourceParser(this);
