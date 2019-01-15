@@ -2,6 +2,7 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.THROW_ASSERTION_ERROR;
 
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedClass;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -16,7 +17,6 @@ import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
-import org.inferred.freebuilder.processor.util.NoTypes;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
@@ -33,7 +33,6 @@ import java.util.function.Predicate;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeVisitor;
 
 class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> {
 
@@ -76,22 +75,44 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
     }
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private static ProcessingEnvironment mockEnvironment(
       QualifiedName generatedType,
       Set<QualifiedName> visibleTypes) {
     ProcessingEnvironment env = Mockito.mock(ProcessingEnvironment.class, new ReturnsDeepStubs());
-    when(env.getElementUtils().getTypeElement(any()).getSuperclass().accept(any(), any()))
-        .thenAnswer(invocation -> {
-          TypeVisitor visitor = invocation.getArgumentAt(0, TypeVisitor.class);
-          Object param = invocation.getArgumentAt(1, Object.class);
-          return visitor.visitNoType(NoTypes.NONE, param);
-        });
+    when(env.getElementUtils().getTypeElement(any())).thenAnswer(invocation -> {
+      CharSequence name = invocation.getArgumentAt(0, CharSequence.class);
+      return mockTypeElement(name, generatedType, visibleTypes);
+    });
     when(env.getElementUtils().getPackageElement(any())).thenAnswer(invocation -> {
       CharSequence pkg = invocation.getArgumentAt(0, CharSequence.class);
       return mockPackageElement(pkg, generatedType, visibleTypes);
     });
     return env;
+  }
+
+  private static TypeElement mockTypeElement(
+      CharSequence name,
+      QualifiedName generatedType,
+      Set<QualifiedName> visibleTypes) {
+    for (QualifiedName visibleType : visibleTypes) {
+      if (visibleType.toString().contentEquals(name)) {
+        if (visibleType.equals(generatedType) || visibleType.isNestedIn(generatedType)) {
+          return null;
+        } else {
+          return classType(visibleType);
+        }
+      }
+    }
+    return null;
+  }
+
+  private static TypeElement classType(QualifiedName visibleType) {
+    if (visibleType.isTopLevel()) {
+      return newTopLevelClass(visibleType.toString()).asElement();
+    } else {
+      TypeElement parent = classType(visibleType.enclosingType());
+      return newNestedClass(parent, visibleType.getSimpleName()).asElement();
+    }
   }
 
   private static PackageElement mockPackageElement(

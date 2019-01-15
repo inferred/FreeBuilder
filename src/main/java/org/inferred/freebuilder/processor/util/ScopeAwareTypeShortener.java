@@ -12,20 +12,20 @@ import java.util.Set;
 
 class ScopeAwareTypeShortener implements TypeShortener {
 
-  private final ImportManager delegate;
+  private final ImportManager importManager;
   private final String pkg;
   private final QualifiedName scope;
   private final ScopeHandler handler;
 
-  ScopeAwareTypeShortener(ImportManager delegate, ScopeHandler handler, String pkg) {
-    this.delegate = delegate;
+  ScopeAwareTypeShortener(ImportManager importManager, ScopeHandler handler, String pkg) {
+    this.importManager = importManager;
     this.pkg = pkg;
     this.scope = null;
     this.handler = handler;
   }
 
-  ScopeAwareTypeShortener(ImportManager delegate, QualifiedName scope, ScopeHandler handler) {
-    this.delegate = delegate;
+  ScopeAwareTypeShortener(ImportManager importManager, QualifiedName scope, ScopeHandler handler) {
+    this.importManager = importManager;
     this.pkg = scope.getPackage();
     this.scope = scope;
     this.handler = handler;
@@ -33,29 +33,32 @@ class ScopeAwareTypeShortener implements TypeShortener {
 
   @Override
   public void appendShortened(Appendable a, QualifiedName type) throws IOException {
-    if (scope == null) {
-      delegate.appendShortened(a, type);
-      return;
-    }
-    ScopeState scopeState = handler.visibilityIn(scope, type);
-    if (scopeState == ScopeState.IMPORTABLE) {
-      delegate.appendShortened(a, type);
-    } else if (type.isTopLevel() && scopeState == ScopeState.IN_SCOPE) {
-      delegate.appendShortened(a, type);
-    } else {
-      if (type.isTopLevel()) {
-        a.append(type.getPackage());
-      } else {
+    switch (visibilityInScope(type)) {
+      case IN_SCOPE:
+        break;
+
+      case IMPORTABLE:
+        if (type.isTopLevel()) {
+          importManager.appendShortened(a, type);
+          return;
+        }
         appendShortened(a, type.getEnclosingType());
-      }
-      a.append('.').append(type.getSimpleName());
+        a.append('.');
+        break;
+
+      case HIDDEN:
+        if (type.isTopLevel()) {
+          a.append(type.getPackage());
+        } else {
+          appendShortened(a, type.getEnclosingType());
+        }
+        a.append('.');
+        break;
     }
+    a.append(type.getSimpleName());
   }
 
   public Optional<QualifiedName> lookup(String shortenedType) {
-    if (scope == null) {
-      return delegate.lookup(shortenedType);
-    }
     String[] simpleNames = shortenedType.split("\\.");
     QualifiedName result;
     if (scope != null) {
@@ -69,7 +72,7 @@ class ScopeAwareTypeShortener implements TypeShortener {
       }
       return Optional.of(result);
     }
-    result = delegate.lookup(shortenedType).orNull();
+    result = importManager.lookup(shortenedType).orNull();
     if (result != null) {
       return Optional.of(result);
     }
@@ -88,6 +91,14 @@ class ScopeAwareTypeShortener implements TypeShortener {
       }
     }
     handler.declareGeneratedType(Visibility.UNKNOWN, newScope, qualifiedSupertypes);
-    return new ScopeAwareTypeShortener(delegate, newScope, handler);
+    return new ScopeAwareTypeShortener(importManager, newScope, handler);
+  }
+
+  private ScopeState visibilityInScope(QualifiedName type) {
+    if (scope != null) {
+      return handler.visibilityIn(scope, type);
+    } else {
+      return handler.visibilityIn(pkg, type);
+    }
   }
 }
