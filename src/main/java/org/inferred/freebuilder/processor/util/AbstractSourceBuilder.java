@@ -10,7 +10,6 @@ import org.inferred.freebuilder.processor.util.feature.FeatureType;
 
 import java.io.IOException;
 import java.util.MissingFormatArgumentException;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -93,11 +92,6 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
   @Override
   public SourceStringBuilder subBuilder() {
     return new SourceStringBuilder(getShortener(), features, scope);
-  }
-
-  @Override
-  public SourceStringBuilder nestedType(QualifiedName type, Set<QualifiedName> supertypes) {
-    return new SourceStringBuilder(getShortener().inScope(type, supertypes), features, scope);
   }
 
   @Override

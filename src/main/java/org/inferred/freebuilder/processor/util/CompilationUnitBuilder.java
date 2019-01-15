@@ -15,6 +15,10 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.getLast;
+import static com.google.common.collect.Lists.newArrayList;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.googlejavaformat.java.Formatter;
 
@@ -22,6 +26,8 @@ import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
@@ -29,11 +35,15 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 
 /** {@code SourceBuilder} which also handles package declaration and imports. */
-public class CompilationUnitBuilder extends AbstractSourceBuilder<CompilationUnitBuilder> {
+public class CompilationUnitBuilder
+    extends AbstractSourceBuilder<CompilationUnitBuilder>
+    implements SourceParser.EventHandler {
 
   private final ImportManager importManager;
   private final QualifiedName classToWrite;
   private final ScopeHandler scopeHandler;
+  private final SourceParser parser;
+  private final List<ScopeAwareTypeShortener> typeShorteners = newArrayList();
   private final StringBuilder source = new StringBuilder();
 
   /**
@@ -65,6 +75,26 @@ public class CompilationUnitBuilder extends AbstractSourceBuilder<CompilationUni
       }
     }
     importManager = importManagerBuilder.build();
+    parser = new SourceParser(this);
+    typeShorteners.add(new ScopeAwareTypeShortener(
+        importManager, scopeHandler, classToWrite.getPackage()));
+  }
+
+  @Override
+  public void onTypeBlockStart(String keyword, String simpleName, Set<String> supertypes) {
+    ScopeAwareTypeShortener typeShortener = getLast(typeShorteners).inScope(simpleName, supertypes);
+    typeShorteners.add(typeShortener);
+  }
+
+  @Override
+  public void onOtherBlockStart() {
+    typeShorteners.add(getLast(typeShorteners));
+  }
+
+  @Override
+  public void onBlockEnd() {
+    typeShorteners.remove(typeShorteners.size() - 1);
+    checkState(!typeShorteners.isEmpty(), "Unexpected '}'");
   }
 
   @Override
@@ -75,12 +105,13 @@ public class CompilationUnitBuilder extends AbstractSourceBuilder<CompilationUni
   @Override
   public CompilationUnitBuilder append(char c) {
     source.append(c);
+    parser.parse(c);
     return this;
   }
 
   @Override
   protected TypeShortener getShortener() {
-    return new ScopeAwareTypeShortener(importManager, scopeHandler);
+    return getLast(typeShorteners);
   }
 
   @Override

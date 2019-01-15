@@ -5,8 +5,10 @@ import static com.google.common.collect.Sets.newHashSet;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 
 import java.util.Collection;
@@ -46,6 +48,8 @@ class ScopeHandler {
   private final Map<String, Set<String>> topLevelTypes = newHashMap();
   /** Scope ↦ simple name ↦ type */
   private final Map<QualifiedName, SetMultimap<String, QualifiedName>> visibleTypes = newHashMap();
+  /** Qualified name as string ↦ qualified name */
+  private final Map<String, QualifiedName> generatedTypes = newHashMap();
 
   ScopeHandler(Elements elements) {
     this.elements = elements;
@@ -81,6 +85,32 @@ class ScopeHandler {
     }
   }
 
+  Optional<QualifiedName> typeInScope(String pkg, String simpleName) {
+    if (typesInPackage(pkg).contains(simpleName)) {
+      return Optional.of(QualifiedName.of(pkg, simpleName));
+    } else {
+      return Optional.absent();
+    }
+  }
+
+  Optional<QualifiedName> typeInScope(QualifiedName scope, String simpleName) {
+    Set<QualifiedName> possibleTypes = typesInScope(scope).get(simpleName);
+    switch (possibleTypes.size()) {
+      case 0:
+        if (scope.isTopLevel()) {
+          return typeInScope(scope.getPackage(), simpleName);
+        } else {
+          return typeInScope(scope.getEnclosingType(), simpleName);
+        }
+
+      case 1:
+        return Optional.of(Iterables.getOnlyElement(possibleTypes));
+
+      default:
+        return Optional.absent();
+    }
+  }
+
   void predeclareGeneratedType(QualifiedName generatedType) {
     declareGeneratedType(Visibility.UNKNOWN, generatedType, ImmutableSet.<QualifiedName>of());
   }
@@ -89,6 +119,7 @@ class ScopeHandler {
       Visibility visibility,
       QualifiedName generatedType,
       Set<QualifiedName> supertypes) {
+    generatedTypes.put(generatedType.toString(), generatedType);
     typeVisibility.put(generatedType, visibility);
     if (generatedType.isTopLevel()) {
       typesInPackage(generatedType.getPackage()).add(generatedType.getSimpleName());
@@ -104,6 +135,17 @@ class ScopeHandler {
         }
       }
     }
+  }
+
+  Optional<QualifiedName> lookup(String typename) {
+    if (generatedTypes.containsKey(typename)) {
+      return Optional.of(generatedTypes.get(typename));
+    }
+    TypeElement scopeElement = elements.getTypeElement(typename);
+    if (scopeElement != null) {
+      return Optional.of(QualifiedName.of(scopeElement));
+    }
+    return Optional.absent();
   }
 
   private static <K1, K2, V> SetMultimap<K2, V> get(Map<K1, SetMultimap<K2, V>> map, K1 key) {
