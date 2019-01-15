@@ -17,11 +17,8 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedClass;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 
-import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -32,8 +29,8 @@ import java.io.IOException;
 public class ImportManagerTest {
 
   @Test
-  public void testNoConflicts() {
-    ImportManager manager = new ImportManager.Builder().build();
+  public void testImports() {
+    ImportManager manager = new ImportManager();
     assertEquals("String", shorten(manager, QualifiedName.of("java.lang", "String")));
     assertEquals("List", shorten(manager, QualifiedName.of("java.util", "List")));
     assertEquals("java.awt.List", shorten(manager, QualifiedName.of("java.awt", "List")));
@@ -41,21 +38,6 @@ public class ImportManagerTest {
     assertEquals("Map.Entry", shorten(manager, QualifiedName.of("java.util", "Map", "Entry")));
     assertThat(manager.getClassImports())
         .containsExactly("java.util.List", "java.util.Map").inOrder();
-  }
-
-  @Test
-  public void testConflicts() {
-    ClassElementImpl listType = newTopLevelClass("org.example.List").asElement();
-    ClassElementImpl stringType = newNestedClass(listType, "String").asElement();
-    ImportManager manager = new ImportManager.Builder()
-        .addImplicitImport(QualifiedName.of(listType))
-        .addImplicitImport(QualifiedName.of(stringType))
-        .build();
-    assertEquals("java.lang.String", shorten(manager, QualifiedName.of("java.lang", "String")));
-    assertEquals("java.util.List", shorten(manager, QualifiedName.of("java.util", "List")));
-    assertEquals("java.awt.List", shorten(manager, QualifiedName.of("java.awt", "List")));
-    assertEquals("Map", shorten(manager, QualifiedName.of("java.util", "Map")));
-    assertThat(manager.getClassImports()).containsExactly("java.util.Map");
   }
 
   private static String shorten(ImportManager shortener, QualifiedName type) {

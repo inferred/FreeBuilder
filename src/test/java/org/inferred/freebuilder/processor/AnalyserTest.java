@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.inferred.freebuilder.processor.BuilderFactory.BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NEW_BUILDER_METHOD;
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
@@ -158,7 +159,6 @@ public class AnalyserTest {
             .setType(dataType.withParameters())
             .setValueType(generatedType.nestedType("Value").withParameters())
             .addVisibleNestedTypes(
-                dataType.nestedType("Builder"),
                 generatedType.nestedType("Partial"),
                 generatedType.nestedType("Property"),
                 generatedType.nestedType("Value"))
@@ -197,7 +197,6 @@ public class AnalyserTest {
             .setType(dataType.withParameters(k, v))
             .setValueType(generatedType.nestedType("Value").withParameters(k, v))
             .addVisibleNestedTypes(
-                dataType.nestedType("Builder"),
                 generatedType.nestedType("Partial"),
                 generatedType.nestedType("Property"),
                 generatedType.nestedType("Value"))
@@ -1104,7 +1103,6 @@ public class AnalyserTest {
         .setType(dataType.withParameters(a, b))
         .setValueType(generatedType.nestedType("Value").withParameters(a, b))
         .addVisibleNestedTypes(
-            dataType.nestedType("Builder"),
             generatedType.nestedType("Partial"),
             generatedType.nestedType("Property"),
             generatedType.nestedType("Value"))
@@ -1202,7 +1200,6 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    TypeElement concreteBuilder = model.typeElement("com.example.DataType.Builder");
     QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
     QualifiedName partialType = expectedBuilder.nestedType("Partial");
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
@@ -1219,10 +1216,10 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType.withParameters())
         .setType(QualifiedName.of("com.example", "DataType").withParameters())
         .setValueType(valueType.withParameters())
-        .addVisibleNestedTypes(QualifiedName.of(concreteBuilder))
-        .addVisibleNestedTypes(partialType)
-        .addVisibleNestedTypes(propertyType)
-        .addVisibleNestedTypes(valueType)
+        .addVisibleNestedTypes(
+            partialType,
+            propertyType,
+            valueType)
         .build();
 
     assertEquals(expectedDatatype, builder.getDatatype());
@@ -1239,7 +1236,6 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    TypeElement concreteBuilder = model.typeElement("com.example.DataType.Builder");
     QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
     QualifiedName partialType = expectedBuilder.nestedType("Partial");
     QualifiedName propertyType = expectedBuilder.nestedType("Property");
@@ -1256,10 +1252,10 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType.withParameters())
         .setType(QualifiedName.of("com.example", "DataType").withParameters())
         .setValueType(valueType.withParameters())
-        .addVisibleNestedTypes(QualifiedName.of(concreteBuilder))
-        .addVisibleNestedTypes(partialType)
-        .addVisibleNestedTypes(propertyType)
-        .addVisibleNestedTypes(valueType)
+        .addVisibleNestedTypes(
+            partialType,
+            propertyType,
+            valueType)
         .build();
 
     assertEquals(expectedDatatype, builder.getDatatype());
@@ -1443,51 +1439,6 @@ public class AnalyserTest {
         "}"));
 
     messager.verifyNote("DataType", addBuilderToInterfaceMessage("DataType_Builder"));
-  }
-
-  @Test
-  public void valueTypeNestedClassesAddedToVisibleList() throws CannotGenerateCodeException {
-    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
-        "package com.example;",
-        "public class DataType {",
-        "  DataType(int i) { }",
-        "  DataType() { }",
-        "  DataType(String s) { }",
-        "  public static class Builder extends DataType_Builder {}",
-        "  public interface Objects {}",
-        "}"));
-
-    assertThat(builder.getDatatype().getVisibleNestedTypes()).containsExactly(
-        QualifiedName.of("com.example", "DataType", "Builder"),
-        QualifiedName.of("com.example", "DataType", "Objects"),
-        QualifiedName.of("com.example", "DataType_Builder", "Partial"),
-        QualifiedName.of("com.example", "DataType_Builder", "Property"),
-        QualifiedName.of("com.example", "DataType_Builder", "Value"));
-  }
-
-  @Test
-  public void valueTypeSuperclassesNestedClassesAddedToVisibleList()
-      throws CannotGenerateCodeException {
-    model.newType(
-        "package com.example;",
-        "public class SuperType {",
-        "  public interface Objects {}",
-        "}");
-    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
-        "package com.example;",
-        "public class DataType extends SuperType {",
-        "  DataType(int i) { }",
-        "  DataType() { }",
-        "  DataType(String s) { }",
-        "  public static class Builder extends DataType_Builder {}",
-        "}"));
-
-    assertThat(builder.getDatatype().getVisibleNestedTypes()).containsExactly(
-        QualifiedName.of("com.example", "SuperType", "Objects"),
-        QualifiedName.of("com.example", "DataType", "Builder"),
-        QualifiedName.of("com.example", "DataType_Builder", "Partial"),
-        QualifiedName.of("com.example", "DataType_Builder", "Property"),
-        QualifiedName.of("com.example", "DataType_Builder", "Value"));
   }
 
   @Test

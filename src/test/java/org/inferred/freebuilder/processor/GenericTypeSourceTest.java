@@ -880,7 +880,6 @@ public class GenericTypeSourceTest {
         .setType(person.withParameters(paramA, paramB))
         .setValueType(generatedBuilder.nestedType("Value").withParameters(paramA, paramB))
         .addVisibleNestedTypes(
-            generatedBuilder,
             generatedBuilder.nestedType("Partial"),
             generatedBuilder.nestedType("Property"),
             generatedBuilder.nestedType("Value"))

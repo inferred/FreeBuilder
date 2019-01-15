@@ -22,13 +22,10 @@ import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -44,49 +41,9 @@ class ImportManager {
   private static final String JAVA_LANG_PACKAGE = "java.lang";
   private static final String PACKAGE_PREFIX = "package ";
 
-  /**
-   * Builder of {@link ImportManager} instances.
-   */
-  public static class Builder {
-
-    /**
-     * Simple names of implicitly imported types, mapped to qualified name if that type is safe to
-     * use, null otherwise.
-     */
-    private final SetMultimap<String, QualifiedName> implicitImports = LinkedHashMultimap.create();
-
-    /**
-     * Adds a type which is implicitly imported into the current compilation unit.
-     */
-    public Builder addImplicitImport(QualifiedName type) {
-      implicitImports.put(type.getSimpleName(), type);
-      return this;
-    }
-
-    public ImportManager build() {
-      Set<String> nonConflictingImports = new LinkedHashSet<String>();
-      for (Set<QualifiedName> importGroup : Multimaps.asMap(implicitImports).values()) {
-        if (importGroup.size() == 1) {
-          QualifiedName implicitImport = getOnlyElement(importGroup);
-          if (implicitImport.isTopLevel()) {
-            nonConflictingImports.add(implicitImport.toString());
-          }
-        }
-      }
-      return new ImportManager(implicitImports, nonConflictingImports);
-    }
-  }
-
-  private final SetMultimap<String, QualifiedName> visibleSimpleNames;
-  private final ImmutableSet<String> implicitImports;
+  private final SetMultimap<String, QualifiedName> visibleSimpleNames = HashMultimap.create();
+  private final ImmutableSet<String> implicitImports = ImmutableSet.of();
   private final Set<String> explicitImports = new TreeSet<String>();
-
-  private ImportManager(
-      SetMultimap<String, QualifiedName> visibleSimpleNames,
-      Iterable<String> implicitImports) {
-    this.visibleSimpleNames = HashMultimap.create(visibleSimpleNames);
-    this.implicitImports = ImmutableSet.copyOf(implicitImports);
-  }
 
   public Set<String> getClassImports() {
     return Collections.unmodifiableSet(explicitImports);
