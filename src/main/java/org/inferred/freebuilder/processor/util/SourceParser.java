@@ -2,6 +2,8 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import static javax.lang.model.SourceVersion.isIdentifier;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -22,8 +24,8 @@ class SourceParser {
   }
 
   private static final Pattern TYPE = Pattern.compile(
-      "\\b(class|interface|enum|@interface)\\s*(\\w+)");
-  private static final Pattern IDENTIFIER = Pattern.compile("\\S+");
+      "\\b(class|interface|enum|@interface)\\s+([^\\s<>]+)");
+  private static final Pattern IDENTIFIER = Pattern.compile("[^\\s.,]+(\\s*\\.\\s*[^\\s.,]+)*");
 
   private enum State {
     CODE,
@@ -163,7 +165,15 @@ class SourceParser {
     Set<String> types = new HashSet<String>();
     Matcher rawTypeMatcher = IDENTIFIER.matcher(withoutTypeParams(chars));
     while (rawTypeMatcher.find()) {
-      types.add(rawTypeMatcher.group());
+      String[] identifierParts = rawTypeMatcher.group().split("\\.");
+      StringBuilder identifier = new StringBuilder();
+      String separator = "";
+      for (String part : identifierParts) {
+        checkState(isIdentifier(part.trim()), "Invalid identifier %s", rawTypeMatcher.group());
+        identifier.append(separator).append(part.trim());
+        separator = ".";
+      }
+      types.add(identifier.toString());
     }
     types.remove("extends");
     types.remove("implements");
