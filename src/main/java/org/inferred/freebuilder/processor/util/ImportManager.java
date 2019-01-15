@@ -39,7 +39,7 @@ import java.util.TreeSet;
  * <p>To ensure we never import common names like 'Builder', nested classes are never directly
  * imported. This is necessarily less readable when types are used as namespaces, e.g. in proto2.
  */
-class ImportManager implements TypeShortener {
+class ImportManager {
 
   private static final String JAVA_LANG_PACKAGE = "java.lang";
   private static final String PACKAGE_PREFIX = "package ";
@@ -92,7 +92,6 @@ class ImportManager implements TypeShortener {
     return Collections.unmodifiableSet(explicitImports);
   }
 
-  @Override
   public void appendShortened(Appendable a, QualifiedName type) throws IOException {
     appendPackageForTopLevelClass(a, type.getPackage(), type.getSimpleNames().get(0));
     String prefix = "";
