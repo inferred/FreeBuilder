@@ -17,8 +17,9 @@ package org.inferred.freebuilder.processor.util;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
+import com.google.common.base.Optional;
+
 import java.io.IOException;
-import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -36,7 +37,7 @@ interface TypeShortener {
   void appendShortened(Appendable a, TypeMirror mirror) throws IOException;
   void appendShortened(Appendable a, QualifiedName type) throws IOException;
 
-  TypeShortener inScope(QualifiedName type, Set<QualifiedName> supertypes);
+  Optional<QualifiedName> lookup(String shortenedType);
 
   abstract class AbstractTypeShortener
       extends SimpleTypeVisitor6<Void, Appendable>
@@ -134,8 +135,8 @@ interface TypeShortener {
     }
 
     @Override
-    public NeverShorten inScope(QualifiedName type, Set<QualifiedName> supertypes) {
-      return this;
+    public Optional<QualifiedName> lookup(String shortenedType) {
+      throw new UnsupportedOperationException();
     }
   }
 
@@ -161,8 +162,8 @@ interface TypeShortener {
     }
 
     @Override
-    public AlwaysShorten inScope(QualifiedName type, Set<QualifiedName> supertypes) {
-      return this;
+    public Optional<QualifiedName> lookup(String shortenedType) {
+      throw new UnsupportedOperationException();
     }
   }
 }

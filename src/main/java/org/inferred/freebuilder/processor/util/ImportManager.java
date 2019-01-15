@@ -15,10 +15,12 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Iterables.addAll;
 import static com.google.common.collect.Iterables.getOnlyElement;
+
 import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimaps;
@@ -28,7 +30,6 @@ import org.inferred.freebuilder.processor.util.TypeShortener.AbstractTypeShorten
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -78,16 +79,18 @@ class ImportManager extends AbstractTypeShortener {
           }
         }
       }
-      return new ImportManager(implicitImports.keySet(), nonConflictingImports);
+      return new ImportManager(implicitImports, nonConflictingImports);
     }
   }
 
-  private final Set<String> visibleSimpleNames = new HashSet<String>();
+  private final SetMultimap<String, QualifiedName> visibleSimpleNames;
   private final ImmutableSet<String> implicitImports;
   private final Set<String> explicitImports = new TreeSet<String>();
 
-  private ImportManager(Iterable<String> visibleSimpleNames, Iterable<String> implicitImports) {
-    addAll(this.visibleSimpleNames, visibleSimpleNames);
+  private ImportManager(
+      SetMultimap<String, QualifiedName> visibleSimpleNames,
+      Iterable<String> implicitImports) {
+    this.visibleSimpleNames = HashMultimap.create(visibleSimpleNames);
     this.implicitImports = ImmutableSet.copyOf(implicitImports);
   }
 
@@ -119,8 +122,17 @@ class ImportManager extends AbstractTypeShortener {
   }
 
   @Override
-  public TypeShortener inScope(QualifiedName type, Set<QualifiedName> supertypes) {
-    return this;
+  public Optional<QualifiedName> lookup(String shortenedType) {
+    String[] simpleNames = shortenedType.split("\\.");
+    Set<QualifiedName> possibilities = visibleSimpleNames.get(simpleNames[0]);
+    if (possibilities.size() != 1) {
+      return Optional.absent();
+    }
+    QualifiedName result = getOnlyElement(possibilities);
+    for (int i = 1; i < simpleNames.length; i++) {
+      result = result.nestedType(simpleNames[i]);
+    }
+    return Optional.of(result);
   }
 
   private void appendPackageForTopLevelClass(Appendable a, String pkg, CharSequence name)
@@ -132,12 +144,12 @@ class ImportManager extends AbstractTypeShortener {
     String qualifiedName = pkg + "." + name;
     if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {
       // Append nothing
-    } else if (visibleSimpleNames.contains(name.toString())) {
+    } else if (visibleSimpleNames.containsKey(name.toString())) {
       a.append(pkg).append(".");
     } else if (pkg.equals(JAVA_LANG_PACKAGE)) {
       // Append nothing
     } else {
-      visibleSimpleNames.add(name.toString());
+      visibleSimpleNames.put(name.toString(), QualifiedName.of(pkg, name.toString()));
       explicitImports.add(qualifiedName);
       // Append nothing
     }
