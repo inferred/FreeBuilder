@@ -2025,6 +2025,11 @@ public class ListSourceTest {
         .setPropertyEnum(generatedBuilder.nestedType("Property").withParameters())
         .setType(person.withParameters())
         .setValueType(generatedBuilder.nestedType("Value").withParameters())
+        .addVisibleNestedTypes(
+            generatedBuilder,
+            generatedBuilder.nestedType("Partial"),
+            generatedBuilder.nestedType("Property"),
+            generatedBuilder.nestedType("Value"))
         .build();
     Property name = new Property.Builder()
         .setAllCapsName("NAME")

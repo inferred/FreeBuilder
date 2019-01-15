@@ -187,6 +187,7 @@ public abstract class Datatype {
       checkState(datatype.getPropertyEnum().getQualifiedName().getEnclosingType()
               .equals(generatedBuilder),
           "%s not a nested class of %s", datatype.getPropertyEnum(), generatedBuilder);
+      checkState(!datatype.getVisibleNestedTypes().isEmpty(), "No nested types provided");
       return datatype;
     }
   }
