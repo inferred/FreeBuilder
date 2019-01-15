@@ -58,7 +58,7 @@ public class ImportManagerTest {
     assertThat(manager.getClassImports()).containsExactly("java.util.Map");
   }
 
-  private static String shorten(TypeShortener shortener, QualifiedName type) {
+  private static String shorten(ImportManager shortener, QualifiedName type) {
     try {
       StringBuilder result = new StringBuilder();
       shortener.appendShortened(result, type);
