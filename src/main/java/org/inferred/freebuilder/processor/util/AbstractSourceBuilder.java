@@ -29,10 +29,12 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
 
   protected final FeatureSet features;
   protected final Scope scope;
+  protected final TypeMirrorShortener typeMirrorShortener;
 
   protected AbstractSourceBuilder(FeatureSet features, Scope scope) {
     this.features = features;
     this.scope = scope;
+    typeMirrorShortener = new TypeMirrorShortener(this);
   }
 
   protected abstract TypeShortener getShortener();
@@ -135,7 +137,7 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
       } else if (arg instanceof TypeMirror) {
         TypeMirror mirror = (TypeMirror) arg;
         checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
-        getShortener().appendShortened(this, mirror);
+        typeMirrorShortener.appendShortened(getShortener(), mirror);
       } else if (arg instanceof QualifiedName) {
         getShortener().appendShortened(this, (QualifiedName) arg);
       } else if (arg instanceof AnnotationMirror) {

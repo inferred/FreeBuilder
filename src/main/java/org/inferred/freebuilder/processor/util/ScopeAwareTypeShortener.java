@@ -6,28 +6,25 @@ import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.util.ScopeHandler.ScopeState;
 import org.inferred.freebuilder.processor.util.ScopeHandler.Visibility;
-import org.inferred.freebuilder.processor.util.TypeShortener.AbstractTypeShortener;
 
 import java.io.IOException;
 import java.util.Set;
 
-import javax.lang.model.element.TypeElement;
+class ScopeAwareTypeShortener implements TypeShortener {
 
-class ScopeAwareTypeShortener extends AbstractTypeShortener {
-
-  private final TypeShortener delegate;
+  private final ImportManager delegate;
   private final String pkg;
   private final QualifiedName scope;
   private final ScopeHandler handler;
 
-  ScopeAwareTypeShortener(TypeShortener delegate, ScopeHandler handler, String pkg) {
+  ScopeAwareTypeShortener(ImportManager delegate, ScopeHandler handler, String pkg) {
     this.delegate = delegate;
     this.pkg = pkg;
     this.scope = null;
     this.handler = handler;
   }
 
-  ScopeAwareTypeShortener(TypeShortener delegate, QualifiedName scope, ScopeHandler handler) {
+  ScopeAwareTypeShortener(ImportManager delegate, QualifiedName scope, ScopeHandler handler) {
     this.delegate = delegate;
     this.pkg = scope.getPackage();
     this.scope = scope;
@@ -55,7 +52,6 @@ class ScopeAwareTypeShortener extends AbstractTypeShortener {
     }
   }
 
-  @Override
   public Optional<QualifiedName> lookup(String shortenedType) {
     if (scope == null) {
       return delegate.lookup(shortenedType);
@@ -78,11 +74,6 @@ class ScopeAwareTypeShortener extends AbstractTypeShortener {
       return Optional.of(result);
     }
     return handler.lookup(shortenedType);
-  }
-
-  @Override
-  public void appendShortened(Appendable a, TypeElement type) throws IOException {
-    appendShortened(a, QualifiedName.of(type));
   }
 
   public ScopeAwareTypeShortener inScope(String simpleName, Set<String> supertypes) {

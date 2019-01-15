@@ -26,17 +26,11 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
-import org.inferred.freebuilder.processor.util.TypeShortener.AbstractTypeShortener;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
 
 /**
  * Manages the imports for a source file, and produces short type references by adding extra
@@ -45,7 +39,7 @@ import javax.lang.model.element.TypeElement;
  * <p>To ensure we never import common names like 'Builder', nested classes are never directly
  * imported. This is necessarily less readable when types are used as namespaces, e.g. in proto2.
  */
-class ImportManager extends AbstractTypeShortener {
+class ImportManager implements TypeShortener {
 
   private static final String JAVA_LANG_PACKAGE = "java.lang";
   private static final String PACKAGE_PREFIX = "package ";
@@ -108,20 +102,6 @@ class ImportManager extends AbstractTypeShortener {
     }
   }
 
-  @Override
-  public void appendShortened(Appendable a, TypeElement type) throws IOException {
-    if (type.getNestingKind().isNested()) {
-      appendShortened(a, (TypeElement) type.getEnclosingElement());
-      a.append('.');
-    } else {
-      PackageElement pkg = (PackageElement) type.getEnclosingElement();
-      Name name = type.getSimpleName();
-      appendPackageForTopLevelClass(a, pkg.getQualifiedName().toString(), name);
-    }
-    a.append(type.getSimpleName());
-  }
-
-  @Override
   public Optional<QualifiedName> lookup(String shortenedType) {
     String[] simpleNames = shortenedType.split("\\.");
     Set<QualifiedName> possibilities = visibleSimpleNames.get(simpleNames[0]);
