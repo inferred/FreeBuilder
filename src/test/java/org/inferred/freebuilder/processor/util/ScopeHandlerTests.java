@@ -40,6 +40,12 @@ public class ScopeHandlerTests {
   }
 
   @Test
+  public void typeInJavaLangPackageIsInScope() {
+    ScopeState result = handler.visibilityIn("java.util", QualifiedName.of(Integer.class));
+    assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
+  }
+
+  @Test
   public void generatedTypeInThisPackageIsInScope() {
     QualifiedName myType = QualifiedName.of("com.example", "MyType");
     handler.declareGeneratedType(Visibility.PACKAGE, myType, ImmutableSet.of());

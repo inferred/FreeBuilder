@@ -1317,6 +1317,29 @@ public class ProcessorTest {
         .withNoWarnings();
   }
 
+  @Test
+  public void testNameConflictWithJavaLangType() {
+    // The implicit import of java.lang in every scope can be hidden by an explicit import of
+    // a type with the same name. This sounds crazy but even com.sun is occasionally guilty of
+    // reusing a tempting name like "Override" — and accidentally importing such a type is just
+    // as chaotic as you might expect.
+    behaviorTester.with(new Processor(features))
+        .with(new SourceBuilder()
+            .addLine("package com.example.p;")
+            .addLine("public interface Override { }")
+            .build())
+        .with(new SourceBuilder()
+            .addLine("package com.example.r;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface A {")
+            .addLine("  com.example.p.Override override();")
+            .addLine("  class Builder extends A_Builder {}")
+            .addLine("}")
+            .build())
+        .compiles()
+        .withNoWarnings();
+  }
+
   private static TestBuilder testBuilder() {
     return new TestBuilder()
         .addImport("com.example.DataType");

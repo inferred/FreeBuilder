@@ -23,7 +23,13 @@ import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.junit.ComparisonFailure;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +41,8 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
 class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> {
+
+  private static volatile Reflections runtimeLib;
 
   public static GeneratedTypeSubject assertThat(GeneratedType subject) {
     return new GeneratedTypeSubject(THROW_ASSERTION_ERROR, subject);
@@ -119,14 +127,41 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
       CharSequence name,
       QualifiedName generatedType,
       Set<QualifiedName> visibleTypes) {
+    List<TypeElement> topLevelTypes = new ArrayList<>();
+    topLevelTypes.addAll(runtimeLibTypeElements(name.toString()));
+    topLevelTypes.addAll(generatedTypeElements(name, generatedType, visibleTypes));
+
+    PackageElement pkgElement = Mockito.mock(PackageElement.class, new ReturnsDeepStubs());
+    doReturn(topLevelTypes).when(pkgElement).getEnclosedElements();
+    return pkgElement;
+  }
+
+  private static List<TypeElement> runtimeLibTypeElements(String pkg) {
+    try {
+      if (runtimeLib == null) {
+        URL url = new File(System.getProperty("java.home"), "lib/rt.jar").toURI().toURL();
+        runtimeLib = new Reflections(url, new SubTypesScanner(false));
+      }
+      return runtimeLib.getAllTypes()
+          .stream()
+          .filter(t -> t.startsWith(pkg) && !t.substring(pkg.length() + 1).contains("."))
+          .map(type -> newTopLevelClass(type.toString()).asElement())
+          .collect(toList());
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static List<TypeElement> generatedTypeElements(
+      CharSequence name,
+      QualifiedName generatedType,
+      Set<QualifiedName> visibleTypes) {
     List<TypeElement> topLevelTypes = visibleTypes.stream()
         .filter(type -> type.getPackage().contentEquals(name))
         .filter(QualifiedName::isTopLevel)
         .filter(Predicate.isEqual(generatedType).negate())
         .map(type -> newTopLevelClass(type.toString()).asElement())
         .collect(toList());
-    PackageElement pkgElement = Mockito.mock(PackageElement.class, new ReturnsDeepStubs());
-    doReturn(topLevelTypes).when(pkgElement).getEnclosedElements();
-    return pkgElement;
+    return topLevelTypes;
   }
 }

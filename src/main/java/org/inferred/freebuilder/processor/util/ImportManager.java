@@ -38,9 +38,6 @@ import java.util.TreeSet;
  */
 class ImportManager {
 
-  private static final String JAVA_LANG_PACKAGE = "java.lang";
-  private static final String PACKAGE_PREFIX = "package ";
-
   private final SetMultimap<String, QualifiedName> visibleSimpleNames = HashMultimap.create();
   private final ImmutableSet<String> implicitImports = ImmutableSet.of();
   private final Set<String> explicitImports = new TreeSet<String>();
@@ -73,17 +70,12 @@ class ImportManager {
 
   private void appendPackageForTopLevelClass(Appendable a, String pkg, CharSequence name)
       throws IOException {
-    if (pkg.startsWith(PACKAGE_PREFIX)) {
-      pkg = pkg.substring(PACKAGE_PREFIX.length());
-    }
     pkg = unshadedName(pkg);
     String qualifiedName = pkg + "." + name;
     if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {
       // Append nothing
     } else if (visibleSimpleNames.containsKey(name.toString())) {
       a.append(pkg).append(".");
-    } else if (pkg.equals(JAVA_LANG_PACKAGE)) {
-      // Append nothing
     } else {
       visibleSimpleNames.put(name.toString(), QualifiedName.of(pkg, name.toString()));
       explicitImports.add(qualifiedName);

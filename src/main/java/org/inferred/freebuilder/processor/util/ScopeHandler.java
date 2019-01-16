@@ -40,6 +40,8 @@ class ScopeHandler {
   }
   enum Visibility { PUBLIC, PROTECTED, PACKAGE, PRIVATE, UNKNOWN }
 
+  private static final String UNIVERSALLY_VISIBLE_PACKAGE = "java.lang";
+
   private final Elements elements;
 
   /** Type ↦ visibility in parent scope */
@@ -60,12 +62,16 @@ class ScopeHandler {
    * {@code pkg}.
    */
   ScopeState visibilityIn(String pkg, QualifiedName type) {
-    if (!typesInPackage(pkg).contains(type.getSimpleName())) {
-      return ScopeState.IMPORTABLE;
-    } else if (type.isTopLevel() && type.getPackage().equals(pkg)) {
-      return ScopeState.IN_SCOPE;
+    if (typesInPackage(pkg).contains(type.getSimpleName())) {
+      if (type.isTopLevel() && type.getPackage().equals(pkg)) {
+        return ScopeState.IN_SCOPE;
+      } else {
+        return ScopeState.HIDDEN;
+      }
+    } else if (!pkg.equals(UNIVERSALLY_VISIBLE_PACKAGE)) {
+      return visibilityIn(UNIVERSALLY_VISIBLE_PACKAGE, type);
     } else {
-      return ScopeState.HIDDEN;
+      return ScopeState.IMPORTABLE;
     }
   }
 
@@ -88,6 +94,8 @@ class ScopeHandler {
   Optional<QualifiedName> typeInScope(String pkg, String simpleName) {
     if (typesInPackage(pkg).contains(simpleName)) {
       return Optional.of(QualifiedName.of(pkg, simpleName));
+    } else if (typesInPackage(UNIVERSALLY_VISIBLE_PACKAGE).contains(simpleName)) {
+      return Optional.of(QualifiedName.of(UNIVERSALLY_VISIBLE_PACKAGE, simpleName));
     } else {
       return Optional.absent();
     }
