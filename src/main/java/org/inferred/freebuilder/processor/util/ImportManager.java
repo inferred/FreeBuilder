@@ -15,17 +15,14 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.collect.Maps.newLinkedHashMap;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Manages the imports for a source file, and produces short type references by adding extra
@@ -36,12 +33,15 @@ import java.util.TreeSet;
  */
 class ImportManager {
 
-  private final SetMultimap<String, QualifiedName> visibleSimpleNames = HashMultimap.create();
-  private final ImmutableSet<String> implicitImports = ImmutableSet.of();
-  private final Set<String> explicitImports = new TreeSet<String>();
+  /** Imported types, indexed by simple name. */
+  private final Map<String, QualifiedName> imports = newLinkedHashMap();
 
   public Set<String> getClassImports() {
-    return Collections.unmodifiableSet(explicitImports);
+    ImmutableSortedSet.Builder<String> result = ImmutableSortedSet.naturalOrder();
+    for (QualifiedName type : imports.values()) {
+      result.add(type.toString());
+    }
+    return result.build();
   }
 
   public void appendShortened(Appendable a, QualifiedName type) throws IOException {
@@ -55,28 +55,26 @@ class ImportManager {
 
   public Optional<QualifiedName> lookup(String shortenedType) {
     String[] simpleNames = shortenedType.split("\\.");
-    Set<QualifiedName> possibilities = visibleSimpleNames.get(simpleNames[0]);
-    if (possibilities.size() != 1) {
+    QualifiedName result = imports.get(simpleNames[0]);
+    if (result == null) {
       return Optional.absent();
     }
-    QualifiedName result = getOnlyElement(possibilities);
     for (int i = 1; i < simpleNames.length; i++) {
       result = result.nestedType(simpleNames[i]);
     }
     return Optional.of(result);
   }
 
-  private void appendPackageForTopLevelClass(Appendable a, String pkg, CharSequence name)
+  private void appendPackageForTopLevelClass(Appendable a, String pkg, String simpleName)
       throws IOException {
-    String qualifiedName = pkg + "." + name;
-    if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {
+    QualifiedName qualifiedName = QualifiedName.of(pkg, simpleName);
+    if (!imports.containsKey(simpleName)) {
+      imports.put(simpleName.toString(), qualifiedName);
       // Append nothing
-    } else if (visibleSimpleNames.containsKey(name.toString())) {
-      a.append(pkg).append(".");
+    } else if (imports.get(simpleName).equals(qualifiedName)) {
+      // Append nothing
     } else {
-      visibleSimpleNames.put(name.toString(), QualifiedName.of(pkg, name.toString()));
-      explicitImports.add(qualifiedName);
-      // Append nothing
+      a.append(pkg).append(".");
     }
   }
 }

@@ -35,8 +35,17 @@ public class ImportManagerTest {
     assertEquals("java.awt.List", shorten(manager, QualifiedName.of("java.awt", "List")));
     assertEquals("Map", shorten(manager, QualifiedName.of("java.util", "Map")));
     assertEquals("Map.Entry", shorten(manager, QualifiedName.of("java.util", "Map", "Entry")));
+    assertThat(manager.getClassImports()).containsExactly("java.util.List", "java.util.Map");
+  }
+
+  @Test
+  public void testImportsAreSorted() {
+    ImportManager manager = new ImportManager();
+    shorten(manager, QualifiedName.of("java.util", "Map"));
+    shorten(manager, QualifiedName.of("java.util", "List"));
+    shorten(manager, QualifiedName.of("java.util", "Collection"));
     assertThat(manager.getClassImports())
-        .containsExactly("java.util.List", "java.util.Map").inOrder();
+        .containsExactly("java.util.Collection", "java.util.List", "java.util.Map").inOrder();
   }
 
   private static String shorten(ImportManager shortener, QualifiedName type) {
