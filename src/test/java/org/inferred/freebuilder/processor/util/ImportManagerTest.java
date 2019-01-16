@@ -17,7 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -25,30 +24,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-
 @RunWith(JUnit4.class)
 public class ImportManagerTest {
-
-  @Test
-  public void testImports() {
-    ImportManager manager = new ImportManager();
-    assertEquals("List", shorten(manager, QualifiedName.of("java.util", "List")));
-    assertEquals("java.awt.List", shorten(manager, QualifiedName.of("java.awt", "List")));
-    assertEquals("Map", shorten(manager, QualifiedName.of("java.util", "Map")));
-    assertEquals("Map.Entry", shorten(manager, QualifiedName.of("java.util", "Map", "Entry")));
-    assertThat(manager.getClassImports()).containsExactly("java.util.List", "java.util.Map");
-  }
-
-  @Test
-  public void testImportsAreSorted() {
-    ImportManager manager = new ImportManager();
-    shorten(manager, QualifiedName.of("java.util", "Map"));
-    shorten(manager, QualifiedName.of("java.util", "List"));
-    shorten(manager, QualifiedName.of("java.util", "Collection"));
-    assertThat(manager.getClassImports())
-        .containsExactly("java.util.Collection", "java.util.List", "java.util.Map").inOrder();
-  }
 
   @Test
   public void testAdd() {
@@ -73,15 +50,5 @@ public class ImportManagerTest {
     assertThat(manager.lookup("List")).hasValue(list1);
     manager.add(list2);
     assertThat(manager.lookup("List")).hasValue(list1);
-  }
-
-  private static String shorten(ImportManager shortener, QualifiedName type) {
-    try {
-      StringBuilder result = new StringBuilder();
-      shortener.appendShortened(result, type);
-      return result.toString();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
   }
 }

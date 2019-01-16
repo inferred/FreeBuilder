@@ -20,7 +20,6 @@ import static com.google.common.collect.Maps.newLinkedHashMap;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,18 +44,6 @@ class ImportManager {
       result.add(type.toString());
     }
     return result.build();
-  }
-
-  public void appendShortened(Appendable a, QualifiedName type) throws IOException {
-    String pkg = type.getPackage();
-    if (!add(QualifiedName.of(pkg, type.getSimpleNames().get(0)))) {
-      a.append(pkg).append(".");
-    }
-    String prefix = "";
-    for (String simpleName : type.getSimpleNames()) {
-      a.append(prefix).append(simpleName);
-      prefix = ".";
-    }
   }
 
   /**
