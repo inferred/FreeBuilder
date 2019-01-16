@@ -31,7 +31,6 @@ public class ImportManagerTest {
   @Test
   public void testImports() {
     ImportManager manager = new ImportManager();
-    assertEquals("String", shorten(manager, QualifiedName.of("java.lang", "String")));
     assertEquals("List", shorten(manager, QualifiedName.of("java.util", "List")));
     assertEquals("java.awt.List", shorten(manager, QualifiedName.of("java.awt", "List")));
     assertEquals("Map", shorten(manager, QualifiedName.of("java.util", "Map")));
