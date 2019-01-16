@@ -17,8 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 
-import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -70,7 +68,6 @@ class ImportManager {
 
   private void appendPackageForTopLevelClass(Appendable a, String pkg, CharSequence name)
       throws IOException {
-    pkg = unshadedName(pkg);
     String qualifiedName = pkg + "." + name;
     if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {
       // Append nothing
