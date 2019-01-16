@@ -18,6 +18,8 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
 
+import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -50,11 +52,12 @@ public class QualifiedName extends ValueType {
     Preconditions.checkNotNull(!packageName.isEmpty());
     Preconditions.checkArgument(!topLevelType.isEmpty());
     return new QualifiedName(
-        packageName, ImmutableList.<String>builder().add(topLevelType).add(nestedTypes).build());
+        unshadedName(packageName),  // shadowJar modifies string literals; unshade them here
+        ImmutableList.<String>builder().add(topLevelType).add(nestedTypes).build());
   }
 
   /**
-   * Returns a {@link QualifiedName} for {@code cls}.
+   * Returns a {@link QualifiedName} for {@code cls}, unshading if necessary.
    */
   public static QualifiedName of(Class<?> cls) {
     if (cls.getEnclosingClass() != null) {
