@@ -1,7 +1,6 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Maps.newHashMap;
-import static com.google.common.collect.Sets.newHashSet;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
@@ -16,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -46,8 +44,6 @@ class ScopeHandler {
 
   /** Type ↦ visibility in parent scope */
   private final Map<QualifiedName, Visibility> typeVisibility = newHashMap();
-  /** Package ↦ simple names */
-  private final Map<String, Set<String>> topLevelTypes = newHashMap();
   /** Scope ↦ simple name ↦ type */
   private final Map<QualifiedName, SetMultimap<String, QualifiedName>> visibleTypes = newHashMap();
   /** Qualified name as string ↦ qualified name */
@@ -62,7 +58,7 @@ class ScopeHandler {
    * {@code pkg}.
    */
   ScopeState visibilityIn(String pkg, QualifiedName type) {
-    if (typesInPackage(pkg).contains(type.getSimpleName())) {
+    if (isTopLevelType(pkg, type.getSimpleName())) {
       if (type.isTopLevel() && type.getPackage().equals(pkg)) {
         return ScopeState.IN_SCOPE;
       } else {
@@ -92,10 +88,10 @@ class ScopeHandler {
   }
 
   Optional<QualifiedName> typeInScope(String pkg, String simpleName) {
-    if (typesInPackage(pkg).contains(simpleName)) {
+    if (isTopLevelType(pkg, simpleName)) {
       return Optional.of(QualifiedName.of(pkg, simpleName));
-    } else if (typesInPackage(UNIVERSALLY_VISIBLE_PACKAGE).contains(simpleName)) {
-      return Optional.of(QualifiedName.of(UNIVERSALLY_VISIBLE_PACKAGE, simpleName));
+    } else if (!pkg.equals(UNIVERSALLY_VISIBLE_PACKAGE)) {
+      return typeInScope(UNIVERSALLY_VISIBLE_PACKAGE, simpleName);
     } else {
       return Optional.absent();
     }
@@ -129,9 +125,7 @@ class ScopeHandler {
       Set<QualifiedName> supertypes) {
     generatedTypes.put(generatedType.toString(), generatedType);
     typeVisibility.put(generatedType, visibility);
-    if (generatedType.isTopLevel()) {
-      typesInPackage(generatedType.getPackage()).add(generatedType.getSimpleName());
-    } else {
+    if (!generatedType.isTopLevel()) {
       get(visibleTypes, generatedType.enclosingType())
           .put(generatedType.getSimpleName(), generatedType);
     }
@@ -156,26 +150,16 @@ class ScopeHandler {
     return Optional.absent();
   }
 
+  private boolean isTopLevelType(String pkg, String simpleName) {
+    String name = pkg + "." + simpleName;
+    return generatedTypes.containsKey(name) || elements.getTypeElement(name) != null;
+  }
+
   private static <K1, K2, V> SetMultimap<K2, V> get(Map<K1, SetMultimap<K2, V>> map, K1 key) {
     SetMultimap<K2, V> result = map.get(key);
     if (result == null) {
       result = HashMultimap.create();
       map.put(key, result);
-    }
-    return result;
-  }
-
-  private Set<String> typesInPackage(String pkg) {
-    Set<String> result = topLevelTypes.get(pkg);
-    if (result == null) {
-      result = newHashSet();
-      PackageElement packageElement = elements.getPackageElement(pkg);
-      if (packageElement != null) {
-        for (TypeElement type : ElementFilter.typesIn(packageElement.getEnclosedElements())) {
-          result.add(type.getSimpleName().toString());
-        }
-      }
-      topLevelTypes.put(pkg, result);
     }
     return result;
   }

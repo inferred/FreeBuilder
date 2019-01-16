@@ -53,7 +53,6 @@ dependencies {
   testCompile javassist
   testCompile junit
   testCompile mockito
-  testCompile reflections
   testCompile truth
 }
 
