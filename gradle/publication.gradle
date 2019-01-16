@@ -176,6 +176,12 @@ afterEvaluate {
         desc = "$project.archivesBaseName $project.version"
         released = new Date()
         vcsTag = System.env.TRAVIS_TAG
+        if (System.env.OSS_USER != null) {
+          mavenCentralSync {
+            user = System.env.OSS_USER
+            password = System.env.OSS_PASSWORD
+          }
+        }
       }
     }
   }

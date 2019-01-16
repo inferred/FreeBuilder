@@ -21,6 +21,10 @@ env:
     - BINTRAY_ORG=inferred
       # BINTRAY_KEY
     - secure: "Ci4GciF9lPGiR9GcJAoNcBE/nXuCXBzwUTvWB48r5p5Zuc+W7gRr6oP/l625Of/Du5kNLpyCBywD/lOX9VEMY51yHqE+2YFAg6yZ0pIRcrUxLA8YHDWXtbdzF/UvUMHqGkohQv1Tww/5Tookh8jAI/BUgVM2kTbK5t68GDlrpQU="
+      # OSS_USER
+    - secure: "1ibrm2LTiu98V/CEVEkxy+rmVu7fKJFWH/iHmrhzGmUhkjDjjCwzFL/zZRqBqgzgZH0mkZXusNvUFuwN0LuK+ZzhSdaiagq8SGg4U9xL6T02PUGkJFQwEUqkxYKNu5dBHruHyUZCvouizlk/3DTaFWaRvYXbeoeES5tXiSalT84="
+      # OSS_PASSWORD
+    - secure: "SaTDDaSV+CInR5IHaKzhAeNOblIFQ5qnLAdrFrRCYlneSfqQxEQWaIxuGqwOQITYLKIBIdPSn5dWRwQaJXJM+6BKDcckRs4cvVAWRtWQi0H8Uedztjr2/yV1301lKvEptxNkzMsXDbgqbSOLmMCOUHeGq2OO66bUhvsep6SINIM="
 
 deploy:
   skip_cleanup: true
