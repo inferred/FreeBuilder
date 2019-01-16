@@ -15,17 +15,13 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.collect.Maps.newLinkedHashMap;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
-import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Manages the imports for a source file, and produces short type references by adding extra
@@ -36,47 +32,50 @@ import java.util.TreeSet;
  */
 class ImportManager {
 
-  private final SetMultimap<String, QualifiedName> visibleSimpleNames = HashMultimap.create();
-  private final ImmutableSet<String> implicitImports = ImmutableSet.of();
-  private final Set<String> explicitImports = new TreeSet<String>();
+  /** Imported types, indexed by simple name. */
+  private final Map<String, QualifiedName> imports = newLinkedHashMap();
 
+  /**
+   * Returns a sorted set of the qualified name of all imported types.
+   */
   public Set<String> getClassImports() {
-    return Collections.unmodifiableSet(explicitImports);
-  }
-
-  public void appendShortened(Appendable a, QualifiedName type) throws IOException {
-    appendPackageForTopLevelClass(a, type.getPackage(), type.getSimpleNames().get(0));
-    String prefix = "";
-    for (String simpleName : type.getSimpleNames()) {
-      a.append(prefix).append(simpleName);
-      prefix = ".";
+    ImmutableSortedSet.Builder<String> result = ImmutableSortedSet.naturalOrder();
+    for (QualifiedName type : imports.values()) {
+      result.add(type.toString());
     }
+    return result.build();
   }
 
+  /**
+   * Adds {@code type} to the set of imports, if it does not conflict with an existing import.
+   *
+   * @return true if {@code type} is already in, or has been added to, the import set
+   */
+  public boolean add(QualifiedName type) {
+    QualifiedName existingType = imports.get(type.getSimpleName());
+    if (existingType == null) {
+      imports.put(type.getSimpleName(), type);
+      return true;
+    }
+    return type.equals(existingType);
+  }
+
+  /**
+   * Returns the full name of {@code shortenedType}, if there is an import matching its
+   * first part.
+   *
+   * <p>For example, if {@code java.util.Map} has been imported, then {@code Map.Entry} will
+   * resolve to {@code java.util.Map.Entry}.
+   */
   public Optional<QualifiedName> lookup(String shortenedType) {
     String[] simpleNames = shortenedType.split("\\.");
-    Set<QualifiedName> possibilities = visibleSimpleNames.get(simpleNames[0]);
-    if (possibilities.size() != 1) {
+    QualifiedName result = imports.get(simpleNames[0]);
+    if (result == null) {
       return Optional.absent();
     }
-    QualifiedName result = getOnlyElement(possibilities);
     for (int i = 1; i < simpleNames.length; i++) {
       result = result.nestedType(simpleNames[i]);
     }
     return Optional.of(result);
-  }
-
-  private void appendPackageForTopLevelClass(Appendable a, String pkg, CharSequence name)
-      throws IOException {
-    String qualifiedName = pkg + "." + name;
-    if (implicitImports.contains(qualifiedName) || explicitImports.contains(qualifiedName)) {
-      // Append nothing
-    } else if (visibleSimpleNames.containsKey(name.toString())) {
-      a.append(pkg).append(".");
-    } else {
-      visibleSimpleNames.put(name.toString(), QualifiedName.of(pkg, name.toString()));
-      explicitImports.add(qualifiedName);
-      // Append nothing
-    }
   }
 }

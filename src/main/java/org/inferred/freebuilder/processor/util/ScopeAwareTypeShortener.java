@@ -38,12 +38,12 @@ class ScopeAwareTypeShortener implements TypeShortener {
         break;
 
       case IMPORTABLE:
-        if (type.isTopLevel()) {
-          importManager.appendShortened(a, type);
-          return;
+        if (!type.isTopLevel()) {
+          appendShortened(a, type.getEnclosingType());
+          a.append('.');
+        } else if (!importManager.add(type)) {
+          a.append(type.getPackage()).append(".");
         }
-        appendShortened(a, type.getEnclosingType());
-        a.append('.');
         break;
 
       case HIDDEN:

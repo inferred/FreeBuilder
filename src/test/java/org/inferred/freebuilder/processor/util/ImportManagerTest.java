@@ -17,35 +17,38 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-
 @RunWith(JUnit4.class)
 public class ImportManagerTest {
 
   @Test
-  public void testImports() {
+  public void testAdd() {
     ImportManager manager = new ImportManager();
-    assertEquals("List", shorten(manager, QualifiedName.of("java.util", "List")));
-    assertEquals("java.awt.List", shorten(manager, QualifiedName.of("java.awt", "List")));
-    assertEquals("Map", shorten(manager, QualifiedName.of("java.util", "Map")));
-    assertEquals("Map.Entry", shorten(manager, QualifiedName.of("java.util", "Map", "Entry")));
-    assertThat(manager.getClassImports())
-        .containsExactly("java.util.List", "java.util.Map").inOrder();
+    assertTrue(manager.add(QualifiedName.of("java.util", "List")));
+    assertFalse(manager.add(QualifiedName.of("java.awt", "List")));
+    assertTrue(manager.add(QualifiedName.of("java.util", "Map")));
+    assertTrue(manager.add(QualifiedName.of("java.util", "Map", "Entry")));
+    assertTrue(manager.add(QualifiedName.of("java.util", "List")));
+    assertThat(manager.getClassImports()).containsExactly(
+        "java.util.List", "java.util.Map", "java.util.Map.Entry");
   }
 
-  private static String shorten(ImportManager shortener, QualifiedName type) {
-    try {
-      StringBuilder result = new StringBuilder();
-      shortener.appendShortened(result, type);
-      return result.toString();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  @Test
+  public void testLookup() {
+    QualifiedName list1 = QualifiedName.of("java.util", "List");
+    QualifiedName list2 = QualifiedName.of("java.awt", "List");
+
+    ImportManager manager = new ImportManager();
+    assertThat(manager.lookup("List")).isAbsent();
+    manager.add(list1);
+    assertThat(manager.lookup("List")).hasValue(list1);
+    manager.add(list2);
+    assertThat(manager.lookup("List")).hasValue(list1);
   }
 }
