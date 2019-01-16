@@ -18,6 +18,8 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,6 +48,31 @@ public class ImportManagerTest {
     shorten(manager, QualifiedName.of("java.util", "Collection"));
     assertThat(manager.getClassImports())
         .containsExactly("java.util.Collection", "java.util.List", "java.util.Map").inOrder();
+  }
+
+  @Test
+  public void testAdd() {
+    ImportManager manager = new ImportManager();
+    assertTrue(manager.add(QualifiedName.of("java.util", "List")));
+    assertFalse(manager.add(QualifiedName.of("java.awt", "List")));
+    assertTrue(manager.add(QualifiedName.of("java.util", "Map")));
+    assertTrue(manager.add(QualifiedName.of("java.util", "Map", "Entry")));
+    assertTrue(manager.add(QualifiedName.of("java.util", "List")));
+    assertThat(manager.getClassImports()).containsExactly(
+        "java.util.List", "java.util.Map", "java.util.Map.Entry");
+  }
+
+  @Test
+  public void testLookup() {
+    QualifiedName list1 = QualifiedName.of("java.util", "List");
+    QualifiedName list2 = QualifiedName.of("java.awt", "List");
+
+    ImportManager manager = new ImportManager();
+    assertThat(manager.lookup("List")).isAbsent();
+    manager.add(list1);
+    assertThat(manager.lookup("List")).hasValue(list1);
+    manager.add(list2);
+    assertThat(manager.lookup("List")).hasValue(list1);
   }
 
   private static String shorten(ImportManager shortener, QualifiedName type) {

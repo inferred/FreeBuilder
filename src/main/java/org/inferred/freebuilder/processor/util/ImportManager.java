@@ -36,6 +36,9 @@ class ImportManager {
   /** Imported types, indexed by simple name. */
   private final Map<String, QualifiedName> imports = newLinkedHashMap();
 
+  /**
+   * Returns a sorted set of the qualified name of all imported types.
+   */
   public Set<String> getClassImports() {
     ImmutableSortedSet.Builder<String> result = ImmutableSortedSet.naturalOrder();
     for (QualifiedName type : imports.values()) {
@@ -45,7 +48,10 @@ class ImportManager {
   }
 
   public void appendShortened(Appendable a, QualifiedName type) throws IOException {
-    appendPackageForTopLevelClass(a, type.getPackage(), type.getSimpleNames().get(0));
+    String pkg = type.getPackage();
+    if (!add(QualifiedName.of(pkg, type.getSimpleNames().get(0)))) {
+      a.append(pkg).append(".");
+    }
     String prefix = "";
     for (String simpleName : type.getSimpleNames()) {
       a.append(prefix).append(simpleName);
@@ -53,6 +59,27 @@ class ImportManager {
     }
   }
 
+  /**
+   * Adds {@code type} to the set of imports, if it does not conflict with an existing import.
+   *
+   * @return true if {@code type} is already in, or has been added to, the import set
+   */
+  public boolean add(QualifiedName type) {
+    QualifiedName existingType = imports.get(type.getSimpleName());
+    if (existingType == null) {
+      imports.put(type.getSimpleName(), type);
+      return true;
+    }
+    return type.equals(existingType);
+  }
+
+  /**
+   * Returns the full name of {@code shortenedType}, if there is an import matching its
+   * first part.
+   *
+   * <p>For example, if {@code java.util.Map} has been imported, then {@code Map.Entry} will
+   * resolve to {@code java.util.Map.Entry}.
+   */
   public Optional<QualifiedName> lookup(String shortenedType) {
     String[] simpleNames = shortenedType.split("\\.");
     QualifiedName result = imports.get(simpleNames[0]);
@@ -63,18 +90,5 @@ class ImportManager {
       result = result.nestedType(simpleNames[i]);
     }
     return Optional.of(result);
-  }
-
-  private void appendPackageForTopLevelClass(Appendable a, String pkg, String simpleName)
-      throws IOException {
-    QualifiedName qualifiedName = QualifiedName.of(pkg, simpleName);
-    if (!imports.containsKey(simpleName)) {
-      imports.put(simpleName.toString(), qualifiedName);
-      // Append nothing
-    } else if (imports.get(simpleName).equals(qualifiedName)) {
-      // Append nothing
-    } else {
-      a.append(pkg).append(".");
-    }
   }
 }
