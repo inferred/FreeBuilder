@@ -17,10 +17,10 @@ script: ./gradlew check
 env:
   global:
     - JAVA_9_HOME=$(jdk_switcher home oraclejdk9)
-    - BINTRAY_USER=cjp39
+    - BINTRAY_USER=alicederyn
     - BINTRAY_ORG=inferred
       # BINTRAY_KEY
-    - secure: "c0Z97k2GsIMwz4zk0sOhujwDohMzyaGO8Sdi//mqv0lLCanSrSdX0j5KAeUrT6vL3DjqgKvvDoMCq6JB29mJfQS9e4WuJHKwW8kTKh2yy/hNcQYVl+xie+gj5GfLnsW3CwW8rY6cHKtfkaFIPFkUoG1hEiezM7HukN146yf0y7U="
+    - secure: "Ci4GciF9lPGiR9GcJAoNcBE/nXuCXBzwUTvWB48r5p5Zuc+W7gRr6oP/l625Of/Du5kNLpyCBywD/lOX9VEMY51yHqE+2YFAg6yZ0pIRcrUxLA8YHDWXtbdzF/UvUMHqGkohQv1Tww/5Tookh8jAI/BUgVM2kTbK5t68GDlrpQU="
 
 deploy:
   skip_cleanup: true
