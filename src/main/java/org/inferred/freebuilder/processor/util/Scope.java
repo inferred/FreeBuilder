@@ -32,11 +32,11 @@ public abstract class Scope {
   }
 
   @SuppressWarnings("unused")
-  public interface Element<T> {
+  public interface Key<V> {
     Level level();
   }
 
-  private final Map<Element<?>, Object> elements = new LinkedHashMap<>();
+  private final Map<Key<?>, Object> elements = new LinkedHashMap<>();
   private final Scope parent;
   private final Level level;
 
@@ -45,59 +45,59 @@ public abstract class Scope {
     this.level = level;
   }
 
-  public boolean contains(Element<?> element) {
-    return get(element) != null;
+  public boolean contains(Key<?> key) {
+    return get(key) != null;
   }
 
-  public <T> T get(Element<T> element) {
+  public <V> V get(Key<V> key) {
     @SuppressWarnings("unchecked")
-    T value = (T) elements.get(element);
+    V value = (V) elements.get(key);
     if (value != null) {
       return value;
     } else if (parent != null) {
-      return parent.get(element);
+      return parent.get(key);
     } else {
       return null;
     }
   }
 
-  public <T> T computeIfAbsent(Element<T> element, Supplier<T> supplier) {
-    T value = get(element);
+  public <V> V computeIfAbsent(Key<V> key, Supplier<V> supplier) {
+    V value = get(key);
     if (value != null) {
       return value;
-    } else if (level == element.level()) {
+    } else if (level == key.level()) {
       value = supplier.get();
-      elements.put(element, value);
+      elements.put(key, value);
       return value;
     } else if (parent != null) {
-      return parent.computeIfAbsent(element, supplier);
+      return parent.computeIfAbsent(key, supplier);
     } else {
       throw new IllegalStateException(
-          "Not in " + element.level().toString().toLowerCase() + " scope");
+          "Not in " + key.level().toString().toLowerCase() + " scope");
     }
   }
 
-  public <T> Set<T> keysOfType(Class<T> elementType) {
-    ImmutableSet.Builder<T> keys = ImmutableSet.builder();
+  public <V> Set<V> keysOfType(Class<V> keyType) {
+    ImmutableSet.Builder<V> keys = ImmutableSet.builder();
     if (parent != null) {
-      keys.addAll(parent.keysOfType(elementType));
+      keys.addAll(parent.keysOfType(keyType));
     }
-    keys.addAll(FluentIterable.from(elements.keySet()).filter(elementType).toSet());
+    keys.addAll(FluentIterable.from(elements.keySet()).filter(keyType).toSet());
     return keys.build();
   }
 
-  public <T> T putIfAbsent(Element<T> element, T value) {
-    requireNonNull(element);
+  public <V> V putIfAbsent(Key<V> key, V value) {
+    requireNonNull(key);
     requireNonNull(value);
-    if (level == element.level()) {
+    if (level == key.level()) {
       @SuppressWarnings("unchecked")
-      T existingValue = (T) elements.get(element);
+      V existingValue = (V) elements.get(key);
       if (existingValue == null) {
-        elements.put(element, value);
+        elements.put(key, value);
       }
       return existingValue;
     } else if (parent != null) {
-      return parent.putIfAbsent(element, value);
+      return parent.putIfAbsent(key, value);
     }
     return null;
   }

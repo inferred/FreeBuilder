@@ -26,7 +26,7 @@ import org.junit.Test;
 
 public class ScopeTest {
 
-  private static class FileElement extends ValueType implements Scope.Element<String> {
+  private static class FileElement extends ValueType implements Scope.Key<String> {
 
     private final String name;
 
@@ -45,7 +45,7 @@ public class ScopeTest {
     }
   }
 
-  private static class MethodElement extends ValueType implements Scope.Element<Integer> {
+  private static class MethodElement extends ValueType implements Scope.Key<Integer> {
 
     private final String name;
 
