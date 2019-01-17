@@ -102,9 +102,63 @@ public class SourceParserTest {
   }
 
   @Test
+  public void methodWithNoArguments() {
+    parse("void foo() {");
+    verify(eventHandler).onMethodBlockStart("foo", ImmutableSet.of());
+  }
+
+  @Test
+  public void methodWithOneArgument() {
+    parse("public static int foo(String bar) {");
+    verify(eventHandler).onMethodBlockStart("foo", ImmutableSet.of("bar"));
+  }
+
+  @Test
+  public void methodWithTwoArguments() {
+    parse("public static int foo(String bar, Map<K, V> baz) {");
+    verify(eventHandler).onMethodBlockStart("foo", ImmutableSet.of("bar", "baz"));
+  }
+
+  @Test
+  public void methodWithThreeArguments() {
+    parse("public static int foo(String bar, Map<K, V> baz, Set<Integer> bam) {");
+    verify(eventHandler).onMethodBlockStart("foo", ImmutableSet.of("bar", "baz", "bam"));
+  }
+
+  @Test
+  public void methodWithQualifiedTypes() {
+    parse("public static java.lang.Integer foo(java.lang.String bar) {");
+    verify(eventHandler).onMethodBlockStart("foo", ImmutableSet.of("bar"));
+  }
+
+  @Test
+  public void plainConstructor() {
+    parse("FooBar(int bar) {");
+    verify(eventHandler).onMethodBlockStart("FooBar", ImmutableSet.of("bar"));
+  }
+
+  @Test
+  public void methodWithAnnotations() {
+    parse("public static void foo(@MyAnnotation(\"name, age\") int bar) {");
+    verify(eventHandler).onMethodBlockStart("foo", ImmutableSet.of("bar"));
+  }
+
+  @Test
+  public void methodWithThrows() {
+    parse("public static void foo(int bar) throws FooError, BarError {");
+    verify(eventHandler).onMethodBlockStart("foo", ImmutableSet.of("bar"));
+  }
+
+  @Test
   public void parameterWithInterfaceKeywordIn() {
     // This triggered a bug due to accidentally marking the space after "interface" as optional.
     parse("public Builder setInterfaceType(boolean interfaceType) {");
+    verify(eventHandler).onMethodBlockStart("setInterfaceType", ImmutableSet.of("interfaceType"));
+  }
+
+  @Test
+  public void ifWithComparisons() {
+    parse("if (a < b && c > d) {");
     verify(eventHandler).onOtherBlockStart();
   }
 

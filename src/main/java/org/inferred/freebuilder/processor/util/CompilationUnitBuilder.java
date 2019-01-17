@@ -76,6 +76,11 @@ public class CompilationUnitBuilder
   }
 
   @Override
+  public void onMethodBlockStart(String methodName, Set<String> paramNames) {
+    onOtherBlockStart();
+  }
+
+  @Override
   public void onOtherBlockStart() {
     typeShorteners.add(getLast(typeShorteners));
   }
