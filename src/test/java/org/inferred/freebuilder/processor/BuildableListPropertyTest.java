@@ -677,7 +677,27 @@ public class BuildableListPropertyTest {
   }
 
   @Test
-  public void getter_returnsUnmodifiableListOfItemBuilders() {
+  public void getter_returnsLiveView() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt.Builder builder = new Receipt.Builder();")
+            .addLine("%s<Item.Builder> itemBuilders = builder.%s;",
+                List.class, convention.get("buildersOfItems"))
+            .addLine("assertThat(itemBuilders).hasSize(0);")
+            .addLine("builder.addItems(candy);")
+            .addLine("assertThat(itemBuilders).hasSize(1);")
+            .addLine("builder.addItems(apple);")
+            .addLine("assertThat(itemBuilders).hasSize(2);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void getter_returnsUnmodifiableList() {
     thrown.expect(UnsupportedOperationException.class);
     behaviorTester
         .with(new Processor(features))
@@ -692,7 +712,7 @@ public class BuildableListPropertyTest {
   }
 
   @Test
-  public void getter_returnsListOfMutableItemBuildersUsedInContainingBuilder() {
+  public void getter_returnsMutableItemBuilders() {
     behaviorTester
         .with(new Processor(features))
         .with(buildableListType)
