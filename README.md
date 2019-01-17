@@ -40,7 +40,9 @@ _Automatic generation of the Builder pattern for Java 1.8+_
   - [Gradle](#gradle)
   - [Eclipse](#eclipse)
   - [IntelliJ](#intellij)
-- [Upgrading from v1](#upgrading-from-v1)
+- [Release notes](#release-notes)
+  - [2.1—Lists of buildable types](#21lists-of-buildable-types)
+  - [Upgrading from v1](#upgrading-from-v1)
 - [Troubleshooting](#troubleshooting)
   - [Troubleshooting javac](#troubleshooting-javac)
   - [Troubleshooting Eclipse](#troubleshooting-eclipse)
@@ -719,9 +721,16 @@ directory** setting) and select **Mark Directory As > Generated Sources Root**.
 [IntelliJ 14.0.3 documentation]: http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html
 [Auto Issue #106]: https://github.com/google/auto/issues/106
 
+Release notes
+-------------
 
-Upgrading from v1
------------------
+### 2.1—Lists of buildable types
+
+FreeBuilder 2.1 adds more extensive API customization for [lists of buildable types](#lists-of-buildable-types), storing Builder instances internally until build is called, cascading buildPartial automatically, and adding overloads accepting Builder instances.
+
+This is a behavioural and, for the get and mutate methods, a non-binary-backwards-compatible change. If you have existing properties that you do not want this to affect, see [disabling buildable lists](#disabling-buildable-lists) for instructions on restoring the 2.0 behaviour on a case-by-case basis.
+
+### Upgrading from v1
 
 There are three API-breaking changes between v1 and v2 of FreeBuilder:
 
