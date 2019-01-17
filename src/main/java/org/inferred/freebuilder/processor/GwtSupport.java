@@ -12,6 +12,7 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.Collection;
 import java.util.Map;
@@ -120,38 +121,26 @@ class GwtSupport {
               datatype.getValueType(), SERIALIZATION_STREAM_READER)
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
       Block body = Block.methodBody(code, "reader");
-      Excerpt builder = body.declare(
-          datatype.getBuilder(), "builder", Excerpts.add("new %s()", datatype.getBuilder()));
+      Variable builder = new Variable("builder");
+      body.addLine("    %1$s %2$s = new %1$s();", datatype.getBuilder(), builder);
       for (Property property : generatorsByProperty.keySet()) {
         TypeMirrorExcerpt propertyType = new TypeMirrorExcerpt(property.getType());
+        Variable temporary = new Variable(property.getName());
         if (property.getType().getKind().isPrimitive()) {
-          Excerpt value = body.declare(
-              propertyType,
-              property.getName(),
-              Excerpts.add("reader.read%s()", withInitialCapital(property.getType())));
-          generatorsByProperty.get(property).addSetFromResult(body, builder, value);
+          body.addLine("    %s %s = reader.read%s();",
+              propertyType, temporary, withInitialCapital(property.getType()));
+          generatorsByProperty.get(property).addSetFromResult(body, builder, temporary);
         } else if (String.class.getName().equals(property.getType().toString())) {
-          Excerpt value = body.declare(
-              propertyType,
-              property.getName(),
-              Excerpts.add("reader.readString()"));
-          generatorsByProperty.get(property).addSetFromResult(body, builder, value);
+          body.addLine("    %s %s = reader.readString();", propertyType, temporary);
+          generatorsByProperty.get(property).addSetFromResult(body, builder, temporary);
         } else {
           body.addLine("    try {");
-          Block tryBlock = body.innerBlock();
-          Excerpt typeAndPreamble;
           if (!property.isFullyCheckedCast()) {
-            typeAndPreamble = Excerpts.add("@SuppressWarnings(\"unchecked\") %s", propertyType);
-          } else {
-            typeAndPreamble = propertyType;
+            body.addLine("      @SuppressWarnings(\"unchecked\")");
           }
-          Excerpt value = tryBlock.declare(
-              typeAndPreamble,
-              property.getName(),
-              Excerpts.add("(%s) reader.readObject()", propertyType));
-          generatorsByProperty.get(property).addSetFromResult(tryBlock, builder, value);
-          body.add(tryBlock)
-              .addLine("    } catch (%s e) {", ClassCastException.class)
+          body.addLine("      %1$s %2$s = (%1$s) reader.readObject();", propertyType, temporary);
+          generatorsByProperty.get(property).addSetFromResult(body, builder, temporary);
+          body.addLine("    } catch (%s e) {", ClassCastException.class)
               .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
               .addLine("          \"Wrong type for property '%s'\", e);", property.getName())
               .addLine("    }");

@@ -23,14 +23,15 @@ import com.google.common.collect.ImmutableSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public abstract class Scope {
 
-  enum Level {
+  public enum Level {
     FILE, METHOD;
   }
 
-  interface Element<T> {
+  public interface Element<T> {
     Level level();
   }
 
@@ -56,6 +57,22 @@ public abstract class Scope {
       return parent.get(element);
     } else {
       return null;
+    }
+  }
+
+  public <T> T computeIfAbsent(Element<T> element, Supplier<T> supplier) {
+    T value = get(element);
+    if (value != null) {
+      return value;
+    } else if (level == element.level()) {
+      value = supplier.get();
+      elements.put(element, value);
+      return value;
+    } else if (parent != null) {
+      return parent.computeIfAbsent(element, supplier);
+    } else {
+      throw new IllegalStateException(
+          "Not in " + element.level().toString().toLowerCase() + " scope");
     }
   }
 
