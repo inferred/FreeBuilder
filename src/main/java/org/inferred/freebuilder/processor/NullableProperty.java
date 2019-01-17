@@ -219,7 +219,7 @@ class NullableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addClearField(Block code) {
-    Optional<Excerpt> defaults = Declarations.freshBuilder(code, datatype);
+    Optional<Variable> defaults = Declarations.freshBuilder(code, datatype);
     if (defaults.isPresent()) {
       code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
     } else {

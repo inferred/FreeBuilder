@@ -221,7 +221,7 @@ class GeneratedBuilder extends GeneratedType {
       codeGenerator.addClearField(body);
     });
     if (generatorsByProperty.values().stream().anyMatch(IS_REQUIRED)) {
-      Optional<Excerpt> defaults = Declarations.freshBuilder(body, datatype);
+      Optional<Variable> defaults = Declarations.freshBuilder(body, datatype);
       if (defaults.isPresent()) {
         body.addLine("  %s.clear();", UNSET_PROPERTIES)
             .addLine("  %s.addAll(%s);", UNSET_PROPERTIES, UNSET_PROPERTIES.on(defaults.get()));
