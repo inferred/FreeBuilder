@@ -26,6 +26,8 @@ _Automatic generation of the Builder pattern for Java 1.8+_
     - [Converting from `@Nullable`](#converting-from-nullable)
   - [Collections and Maps](#collections-and-maps)
   - [Nested buildable types](#nested-buildable-types)
+  - [Lists of buildable types](#lists-of-buildable-types)
+    - [Disabling buildable lists](#disabling-buildable-lists)
   - [Custom toString method](#custom-tostring-method)
   - [Custom functional interfaces](#custom-functional-interfaces)
   - [Builder construction](#builder-construction)
@@ -38,7 +40,9 @@ _Automatic generation of the Builder pattern for Java 1.8+_
   - [Gradle](#gradle)
   - [Eclipse](#eclipse)
   - [IntelliJ](#intellij)
-- [Upgrading from v1](#upgrading-from-v1)
+- [Release notes](#release-notes)
+  - [2.1—Lists of buildable types](#21lists-of-buildable-types)
+  - [Upgrading from v1](#upgrading-from-v1)
 - [Troubleshooting](#troubleshooting)
   - [Troubleshooting javac](#troubleshooting-javac)
   - [Troubleshooting Eclipse](#troubleshooting-eclipse)
@@ -437,6 +441,51 @@ Project project = new Project.Builder()
 [Consumer]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html
 
 
+### Lists of buildable types
+
+FreeBuilder has special support for lists of buildable types, too. It maintains
+a list of builders, to allow elements of the list to be built incrementally. (For
+better performance, if given a built instance for the list, it will lazily convert
+it to a Builder on demand. This may cause problems if your buildable types
+continue to be mutable after construction; to avoid unpredictable aliasing,
+we recommend disabling buildable list support, as described below.)
+
+A list of buildable properties called 'owners' would generate:
+
+| Method | Description |
+|:------:| ----------- |
+| `addOwners(Person element)` | Appends `element` to the collection of owners. Throws a NullPointerException if element is null. The element may be lazily converted to/from a Builder. |
+| `addOwners(Person.Builder builder)` | Appends the value built by `builder` to the collection of owners. Throws a NullPointerException if builder is null. Only a copy of the builder will be stored; changes made to it after this method returns will have no effect on the list. The copied builder's `build()` method will not be called immediately, so if this builder's state is not legal, you will not get failures until you build the final immutable object. |
+| `addOwners(Person... elements)` | Appends all `elements` to the collection of owners.  Throws a NullPointerException if elements, or any of the values it holds, is null. Each element may be lazily converted to/from a Builder. |
+| `addOwners(Person.Builder... builders)` | Appends the values built by `builders` to the collection of owners.  Throws a NullPointerException if builders, or any of the values it holds, is null. Only copies of the builders will be stored, and `build()` methods will not be called immediately. |
+| `addAllOwners(​Iterable<Person> elements)`<br>`addAllOwners(​Stream<Person> elements)`<br>`addAllOwners(​Spliterator<Person> elements)` | Appends all `elements` to the collection of owners.  Throws a NullPointerException if elements, or any of the values it holds, is null. Each element may be lazily converted to/from a Builder. |
+| `addAllBuildersOfOwners(​Iterable<Person.Builder> builders)`<br>`addAllBuildersOfOwners(​Stream<Person.Builder> builders)`<br>`addAllBuildersOfOwners(​Spliterator<Person.Builder> builders)` | Appends the values built by `builders` to the collection of owners.  Throws a NullPointerException if builders, or any of the values it holds, is null. Only copies of the builders will be stored, and `build()` methods will not be called immediately. |
+| `mutateOwners(​Consumer<? super List<Person.Builder>> mutator)` | Invokes the [Consumer] `mutator` with the list of owner builders. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned collection to replace the existing collection. |
+| `clearOwners()` | Removes all elements from the collection of owners, leaving it empty. |
+| `buildersOfOwners()` | Returns an unmodifiable view of the list of owner builders. Changes to the list held by the builder will be reflected in the view, and changes made to any of the returned builders will be reflected in the final list of owners. |
+
+Note that `mutateOwners` and `buildersOfOwners` are the only methods which can cause lazy convertion of an inserted value to a Builder, and then only upon accessing the element, so avoid these actions if possible to avoid unexpected performance hits.
+
+#### Disabling buildable lists
+
+You can force FreeBuilder to use vanilla list support, rather than converting elements
+to/from Builders under the hood, by declaring a vanilla getter in the Builder. For
+instance, to force `owners` to drop Builder support:
+
+```java
+  class Builder extends Foo_Builder {
+    @Override
+    public List<Person> owners() {
+      // Disable FreeBuilder's lazy conversion to/from Person.Builder by declaring
+      // a non-Builder-compatible getter.
+      return super.owners();
+    }
+  }
+```
+
+FreeBuilder will now generate the methods described in [Collections and Maps](#collections-and-maps).
+
+
 ### Custom toString method
 
 FreeBuilder will only generate toString, hashCode and equals methods if they are left abstract, so to customise them, just implement them.
@@ -672,9 +721,16 @@ directory** setting) and select **Mark Directory As > Generated Sources Root**.
 [IntelliJ 14.0.3 documentation]: http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html
 [Auto Issue #106]: https://github.com/google/auto/issues/106
 
+Release notes
+-------------
 
-Upgrading from v1
------------------
+### 2.1—Lists of buildable types
+
+FreeBuilder 2.1 adds more extensive API customization for [lists of buildable types](#lists-of-buildable-types), storing Builder instances internally until build is called, cascading buildPartial automatically, and adding overloads accepting Builder instances.
+
+This is a behavioural and, for the get and mutate methods, a non-binary-backwards-compatible change. If you have existing properties that you do not want this to affect, see [disabling buildable lists](#disabling-buildable-lists) for instructions on restoring the 2.0 behaviour on a case-by-case basis.
+
+### Upgrading from v1
 
 There are three API-breaking changes between v1 and v2 of FreeBuilder:
 

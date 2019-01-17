@@ -31,12 +31,24 @@ public class BuilderMethods {
     }
   }
 
+  public static String getBuildersMethod(Property property) {
+    if (property.isUsingBeanConvention()) {
+      return "getBuildersOf" + property.getCapitalizedName();
+    } else {
+      return "buildersOf" + property.getCapitalizedName();
+    }
+  }
+
   public static String addMethod(Property property) {
     return "add" + property.getCapitalizedName();
   }
 
   public static String addAllMethod(Property property) {
     return "addAll" + property.getCapitalizedName();
+  }
+
+  public static String addAllBuildersOfMethod(Property property) {
+    return "addAllBuildersOf" + property.getCapitalizedName();
   }
 
   public static String addCopiesMethod(Property property) {
