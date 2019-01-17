@@ -15,13 +15,14 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static javax.lang.model.type.TypeKind.DECLARED;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
+
+import static javax.lang.model.type.TypeKind.DECLARED;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -32,7 +33,7 @@ import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
+import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -141,11 +142,10 @@ class NullableProperty extends PropertyCodeGenerator {
             datatype.getBuilder(), mapper(property), mapperType.getFunctionalInterface())
         .addLine("  %s.requireNonNull(mapper);", Objects.class);
     Block body = methodBody(code, "mapper");
-    Excerpt propertyValue = body.declare(new TypeMirrorExcerpt(
-        property.getType()), property.getName(), Excerpts.add("%s()", getter(property)));
-    body.addLine("  if (%s != null) {", propertyValue)
-        .addLine("    %s(mapper.%s(%s));",
-            setter(property), mapperType.getMethodName(), propertyValue)
+    Variable temporary = new Variable(property.getName());
+    body.addLine("  %s %s = %s();", property.getType(), temporary, getter(property))
+        .addLine("  if (%s != null) {", temporary)
+        .addLine("    %s(mapper.%s(%s));", setter(property), mapperType.getMethodName(), temporary)
         .addLine("  }")
         .addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
