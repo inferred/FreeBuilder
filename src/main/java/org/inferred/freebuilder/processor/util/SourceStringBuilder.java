@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor.util;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
+import org.inferred.freebuilder.processor.util.Scope.MethodScope;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
@@ -31,7 +32,9 @@ public class SourceStringBuilder extends AbstractSourceBuilder<SourceStringBuild
    */
   public static SourceStringBuilder simple(Feature<?>... features) {
     return new SourceStringBuilder(
-        new TypeShortener.AlwaysShorten(), new StaticFeatureSet(features), new FileScope());
+        new TypeShortener.AlwaysShorten(),
+        new StaticFeatureSet(features),
+        new MethodScope(new FileScope()));
   }
 
   /**
@@ -43,16 +46,23 @@ public class SourceStringBuilder extends AbstractSourceBuilder<SourceStringBuild
   }
 
   private final TypeShortener shortener;
-  final StringBuilder destination = new StringBuilder();
+  private final Scope scope;
+  private final StringBuilder destination = new StringBuilder();
 
   SourceStringBuilder(TypeShortener shortener, FeatureSet features, Scope scope) {
-    super(features, scope);
+    super(features);
     this.shortener = shortener;
+    this.scope = scope;
   }
 
   @Override
   protected TypeShortener getShortener() {
     return shortener;
+  }
+
+  @Override
+  public Scope scope() {
+    return scope;
   }
 
   @Override

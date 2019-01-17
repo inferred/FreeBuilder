@@ -6,7 +6,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
 import com.google.common.annotations.GwtCompatible;
 
 import org.inferred.freebuilder.processor.Datatype.Visibility;
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -115,39 +114,36 @@ class GwtSupport {
     }
 
     private void addInstantiateInstance(SourceBuilder code) {
+      Variable builder = new Variable("builder");
       code.addLine("")
           .addLine("  @%s", Override.class)
-          .addLine("  public %s instantiateInstance(%s reader)",
-              datatype.getValueType(), SERIALIZATION_STREAM_READER)
-          .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
-      Block body = Block.methodBody(code, "reader");
-      Variable builder = new Variable("builder");
-      body.addLine("    %1$s %2$s = new %1$s();", datatype.getBuilder(), builder);
+          .addLine("  public %s instantiateInstance(%s reader) throws %s {",
+              datatype.getValueType(), SERIALIZATION_STREAM_READER, SERIALIZATION_EXCEPTION)
+          .addLine("    %1$s %2$s = new %1$s();", datatype.getBuilder(), builder);
       for (Property property : generatorsByProperty.keySet()) {
         TypeMirrorExcerpt propertyType = new TypeMirrorExcerpt(property.getType());
         Variable temporary = new Variable(property.getName());
         if (property.getType().getKind().isPrimitive()) {
-          body.addLine("    %s %s = reader.read%s();",
+          code.addLine("    %s %s = reader.read%s();",
               propertyType, temporary, withInitialCapital(property.getType()));
-          generatorsByProperty.get(property).addSetFromResult(body, builder, temporary);
+          generatorsByProperty.get(property).addSetFromResult(code, builder, temporary);
         } else if (String.class.getName().equals(property.getType().toString())) {
-          body.addLine("    %s %s = reader.readString();", propertyType, temporary);
-          generatorsByProperty.get(property).addSetFromResult(body, builder, temporary);
+          code.addLine("    %s %s = reader.readString();", propertyType, temporary);
+          generatorsByProperty.get(property).addSetFromResult(code, builder, temporary);
         } else {
-          body.addLine("    try {");
+          code.addLine("    try {");
           if (!property.isFullyCheckedCast()) {
-            body.addLine("      @SuppressWarnings(\"unchecked\")");
+            code.addLine("      @SuppressWarnings(\"unchecked\")");
           }
-          body.addLine("      %1$s %2$s = (%1$s) reader.readObject();", propertyType, temporary);
-          generatorsByProperty.get(property).addSetFromResult(body, builder, temporary);
-          body.addLine("    } catch (%s e) {", ClassCastException.class)
+          code.addLine("      %1$s %2$s = (%1$s) reader.readObject();", propertyType, temporary);
+          generatorsByProperty.get(property).addSetFromResult(code, builder, temporary);
+          code.addLine("    } catch (%s e) {", ClassCastException.class)
               .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
               .addLine("          \"Wrong type for property '%s'\", e);", property.getName())
               .addLine("    }");
         }
       }
-      body.addLine("    return (%s) %s.build();", datatype.getValueType(), builder);
-      code.add(body)
+      code.addLine("    return (%s) %s.build();", datatype.getValueType(), builder)
           .addLine("  }");
     }
 

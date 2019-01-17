@@ -23,7 +23,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.putMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -34,7 +33,6 @@ import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -184,16 +182,14 @@ class MapProperty extends PropertyCodeGenerator {
             putMethod(property),
             unboxedKeyType.orElse(keyType),
             unboxedValueType.orElse(valueType));
-    Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
-      body.addLine("  %s.requireNonNull(key);", Objects.class);
+      code.addLine("  %s.requireNonNull(key);", Objects.class);
     }
     if (!unboxedValueType.isPresent()) {
-      body.addLine("  %s.requireNonNull(value);", Objects.class);
+      code.addLine("  %s.requireNonNull(value);", Objects.class);
     }
-    body.addLine("  %s.put(key, value);", property.getField())
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  %s.put(key, value);", property.getField())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -238,13 +234,11 @@ class MapProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             removeMethod(property),
             unboxedKeyType.orElse(keyType));
-    Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
-      body.addLine("  %s.requireNonNull(key);", Objects.class);
+      code.addLine("  %s.requireNonNull(key);", Objects.class);
     }
-    body.addLine("  %s.remove(key);", property.getField())
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  %s.remove(key);", property.getField())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -266,17 +260,15 @@ class MapProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface());
-    Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      body.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(), CheckedMap.TYPE, property.getField(), putMethod(property));
     } else {
-      body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    body.addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -318,12 +310,12 @@ class MapProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     code.addLine("%s(%s.%s());", putAllMethod(property), value, property.getGetterName());
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", putAllMethod(property), property.getField().on(base));
   }
@@ -334,7 +326,7 @@ class MapProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     code.addLine("%s.clear();", property.getField());
   }
 

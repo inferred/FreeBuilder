@@ -22,7 +22,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -30,7 +29,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -238,15 +236,13 @@ class OptionalProperty extends PropertyCodeGenerator {
             setter(property),
             unboxedType.orElse(elementType),
             property.getName());
-    Block body = methodBody(code, property.getName());
     if (unboxedType.isPresent()) {
-      body.addLine("  %s = %s;", property.getField(), property.getName());
+      code.addLine("  %s = %s;", property.getField(), property.getName());
     } else {
-      body.addLine("  %s = %s.requireNonNull(%s);",
+      code.addLine("  %s = %s.requireNonNull(%s);",
           property.getField(), Objects.class, property.getName());
     }
-    body.addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -265,12 +261,11 @@ class OptionalProperty extends PropertyCodeGenerator {
             optional.cls,
             elementType,
             property.getName())
-        .add(methodBody(code, property.getName())
-            .addLine("  if (%s.isPresent()) {", property.getName())
-            .addLine("    return %s(%s.get());", setter(property), property.getName())
-            .addLine("  } else {")
-            .addLine("    return %s();", clearMethod(property))
-            .addLine("  }"))
+        .addLine("  if (%s.isPresent()) {", property.getName())
+        .addLine("    return %s(%s.get());", setter(property), property.getName())
+        .addLine("  } else {")
+        .addLine("    return %s();", clearMethod(property))
+        .addLine("  }")
         .addLine("}");
   }
 
@@ -288,12 +283,11 @@ class OptionalProperty extends PropertyCodeGenerator {
             Jsr305.nullable(),
             elementType,
             property.getName())
-        .add(methodBody(code, property.getName())
-            .addLine("  if (%s != null) {", property.getName())
-            .addLine("    return %s(%s);", setter(property), property.getName())
-            .addLine("  } else {")
-            .addLine("    return %s();", clearMethod(property))
-            .addLine("  }"))
+        .addLine("  if (%s != null) {", property.getName())
+        .addLine("    return %s(%s);", setter(property), property.getName())
+        .addLine("  } else {")
+        .addLine("    return %s();", clearMethod(property))
+        .addLine("  }")
         .addLine("}");
   }
 
@@ -351,19 +345,19 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     String propertyValue = value + "." + property.getGetterName() + "()";
     optional.invokeIfPresent(code, propertyValue, setter(property));
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     String propertyValue = builder + "." + getter(property) + "()";
     optional.invokeIfPresent(code, propertyValue, setter(property));
   }
 
   @Override
-  public void addSetBuilderFromPartial(Block code, Variable builder) {
+  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
     code.addLine("%s.%s(%s);", builder, nullableSetter(property), property.getField());
   }
 
@@ -378,7 +372,7 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     Optional<Variable> defaults = Declarations.freshBuilder(code, datatype);
     if (defaults.isPresent()) {
       code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));

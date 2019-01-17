@@ -24,7 +24,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setCountMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -39,7 +38,6 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 
 import org.inferred.freebuilder.processor.excerpt.CheckedMultiset;
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -290,10 +288,9 @@ class MultisetProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             addCopiesMethod(property),
             unboxedType.orElse(elementType))
-        .add(methodBody(code, "element", "occurrences")
-            .addLine("  %s(element, %s.count(element) + occurrences);",
-                setCountMethod(property), property.getField())
-            .addLine("  return (%s) this;", datatype.getBuilder()))
+        .addLine("  %s(element, %s.count(element) + occurrences);",
+            setCountMethod(property), property.getField())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -315,20 +312,18 @@ class MultisetProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface());
-    Block body = methodBody(code, "mutator");
     if (overridesSetCountMethod) {
-      body.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(),
           CheckedMultiset.TYPE,
           property.getField(),
           setCountMethod(property));
     } else {
-      body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               setCountMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    body.addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -364,13 +359,11 @@ class MultisetProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             setCountMethod(property),
             unboxedType.orElse(elementType));
-    Block body = methodBody(code, "element", "occurrences");
     if (!unboxedType.isPresent()) {
       code.addLine("  %s.checkNotNull(element);", Preconditions.class);
     }
     code.addLine("  %s.setCount(element, occurrences);", property.getField())
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -393,12 +386,12 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", addAllMethod(property), property.getField().on(base));
   }
@@ -409,7 +402,7 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     code.addLine("%s.clear();", property.getField());
   }
 }
