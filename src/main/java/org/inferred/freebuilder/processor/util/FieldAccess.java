@@ -15,9 +15,7 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import org.inferred.freebuilder.processor.util.Scope.Level;
-
-public class FieldAccess extends ValueType implements Excerpt, Scope.Element<FieldAccess> {
+public class FieldAccess extends ValueType implements Excerpt {
 
   private final String fieldName;
 
@@ -26,17 +24,10 @@ public class FieldAccess extends ValueType implements Excerpt, Scope.Element<Fie
   }
 
   @Override
-  public Level level() {
-    return Level.METHOD;
-  }
-
-  @Override
   public void addTo(SourceBuilder source) {
-    if (source.scope().contains(new VariableName(fieldName))) {
+    Object idOwner = source.scope().putIfAbsent(new IdKey(fieldName), this);
+    if (idOwner != null && !idOwner.equals(this)) {
       source.add("this.");
-    } else {
-      // Prevent a new variable being declared and obscuring this field access
-      source.scope().add(this);
     }
     source.add(fieldName);
   }

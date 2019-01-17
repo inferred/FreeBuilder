@@ -86,10 +86,6 @@ public abstract class Scope {
     return keys.build();
   }
 
-  public <T extends Element<T>> void add(T element) {
-    putIfAbsent(element, element);
-  }
-
   public <T> T putIfAbsent(Element<T> element, T value) {
     requireNonNull(element);
     requireNonNull(value);

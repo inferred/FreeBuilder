@@ -83,7 +83,7 @@ public class CompilationUnitBuilder
   public void onMethodBlockStart(String methodName, Set<String> paramNames) {
     Scope methodScope = new Scope.MethodScope(getLast(scopes));
     for (String paramName : paramNames) {
-      methodScope.add(new VariableName(paramName));
+      methodScope.putIfAbsent(new IdKey(paramName), methodScope);
     }
     typeShorteners.add(getLast(typeShorteners));
     scopes.add(methodScope);

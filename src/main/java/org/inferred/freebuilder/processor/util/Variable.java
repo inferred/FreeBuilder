@@ -15,11 +15,9 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import org.inferred.freebuilder.processor.util.Scope.Level;
 
-public class Variable extends ValueType implements Excerpt, Scope.Element<VariableName> {
+public class Variable extends ValueType implements Excerpt, Scope.Element<IdKey> {
 
   private final String preferredName;
 
@@ -44,13 +42,7 @@ public class Variable extends ValueType implements Excerpt, Scope.Element<Variab
 
   @Override
   public void addTo(SourceBuilder code) {
-    VariableName name = code.scope().get(this);
-    if (name == null) {
-      name = new VariableName(pickName(code));
-      code.scope().putIfAbsent(name, name);
-      code.scope().putIfAbsent(this, name);
-      checkState(code.scope().get(this) != null, "Variable used outside of method body");
-    }
+    IdKey name = code.scope().computeIfAbsent(this, () -> new IdKey(pickName(code)));
     code.add("%s", name.name());
   }
 
@@ -60,21 +52,20 @@ public class Variable extends ValueType implements Excerpt, Scope.Element<Variab
   }
 
   private String pickName(SourceBuilder code) {
-    if (!nameCollides(code, preferredName)) {
+    if (registerName(code, preferredName)) {
       return preferredName;
     }
-    if (!nameCollides(code, "_" + preferredName)) {
+    if (registerName(code, "_" + preferredName)) {
       return "_" + preferredName;
     }
     int suffix = 2;
-    while (nameCollides(code, "_" + preferredName + suffix)) {
+    while (!registerName(code, "_" + preferredName + suffix)) {
       suffix++;
     }
     return "_" + preferredName + suffix;
   }
 
-  private static boolean nameCollides(SourceBuilder code, String name) {
-    return code.scope().contains(new VariableName(name))
-        || code.scope().contains(new FieldAccess(name));
+  private boolean registerName(SourceBuilder code, String name) {
+    return code.scope().putIfAbsent(new IdKey(name), this) == null;
   }
 }
