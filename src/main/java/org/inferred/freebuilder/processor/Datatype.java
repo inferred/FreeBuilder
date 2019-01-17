@@ -49,11 +49,11 @@ public abstract class Datatype {
     FINAL;
   }
 
-  public static class Visibility extends Excerpt {
-    public static final Visibility PUBLIC = new Visibility(0, "PUBLIC", "public ");
-    public static final Visibility PROTECTED = new Visibility(1, "PROTECTED", "protected ");
-    public static final Visibility PACKAGE = new Visibility(2, "PACKAGE", "");
-    public static final Visibility PRIVATE = new Visibility(3, "PRIVATE", "private ");
+  public enum Visibility implements Excerpt {
+    PUBLIC(0, "PUBLIC", "public "),
+    PROTECTED(1, "PROTECTED", "protected "),
+    PACKAGE(2, "PACKAGE", ""),
+    PRIVATE(3, "PRIVATE", "private ");
 
     private final int order;
     private final String name;
@@ -77,11 +77,6 @@ public abstract class Datatype {
     @Override
     public String toString() {
       return name;
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("excerpt", excerpt);
     }
   }
 

@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import org.inferred.freebuilder.processor.util.Scope.Level;
 
-public class Variable extends Excerpt implements Scope.Element<VariableName> {
+public class Variable extends ValueType implements Excerpt, Scope.Element<VariableName> {
 
   private final String preferredName;
 

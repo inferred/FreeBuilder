@@ -3,6 +3,7 @@ package org.inferred.freebuilder.processor.excerpt;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.util.AbstractList;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.function.Consumer;
  * Excerpts defining a list implementation that delegates to a provided add method to perform
  * element validation and insertion into a random-access backing list.
  */
-public class CheckedList extends Excerpt {
+public class CheckedList extends ValueType implements Excerpt {
 
   public static final LazyName TYPE = LazyName.of("CheckedList", new CheckedList());
 

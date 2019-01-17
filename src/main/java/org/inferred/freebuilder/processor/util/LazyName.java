@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class LazyName extends Excerpt implements Scope.Element<LazyName.Declaration> {
+public class LazyName extends ValueType implements Excerpt, Scope.Element<LazyName.Declaration> {
 
   /**
    * Finds all lazily-declared classes and methods and adds their definitions to the source.
@@ -48,7 +48,7 @@ public class LazyName extends Excerpt implements Scope.Element<LazyName.Declarat
     }
   }
 
-  public static LazyName of(String preferredName, Excerpt definition) {
+  public static <E extends ValueType & Excerpt> LazyName of(String preferredName, E definition) {
     return new LazyName(preferredName, definition);
   }
 

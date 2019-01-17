@@ -39,6 +39,7 @@ import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -330,7 +331,7 @@ class MapProperty extends PropertyCodeGenerator {
     code.addLine("%s.clear();", property.getField());
   }
 
-  private static class ImmutableMapMethod extends Excerpt {
+  private static class ImmutableMapMethod extends ValueType implements Excerpt {
 
     static final LazyName REFERENCE = LazyName.of("immutableMap", new ImmutableMapMethod());
 

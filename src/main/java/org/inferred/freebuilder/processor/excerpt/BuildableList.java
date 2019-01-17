@@ -25,6 +25,7 @@ import org.inferred.freebuilder.processor.BuildableType;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ import java.util.RandomAccess;
 /**
  * Excerpts defining a list implementation that stores a mixture of builders and value types.
  */
-public class BuildableList extends Excerpt {
+public class BuildableList extends ValueType implements Excerpt {
 
   public static LazyName of(BuildableType element) {
     return new BuildableList(element).name();

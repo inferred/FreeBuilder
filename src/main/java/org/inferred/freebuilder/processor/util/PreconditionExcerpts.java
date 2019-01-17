@@ -7,7 +7,6 @@ import com.google.common.escape.Escaper;
 import com.google.common.escape.Escapers;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -16,7 +15,7 @@ import java.util.regex.Pattern;
  */
 public class PreconditionExcerpts {
 
-  private static final class GuavaCheckExcerpt extends Excerpt {
+  private static final class GuavaCheckExcerpt implements Excerpt {
     private final Object[] args;
     private final Object condition;
     private final String message;
@@ -58,15 +57,6 @@ public class PreconditionExcerpts {
             .addLine("  throw new %s(%s);", exceptionType, messageConcatenated)
             .addLine("}");
       }
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("methodName", methodName);
-      fields.add("exceptionType", exceptionType);
-      fields.add("condition", condition);
-      fields.add("message", message);
-      fields.add("args", Arrays.asList(args));
     }
   }
 

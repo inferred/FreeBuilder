@@ -17,27 +17,7 @@ package org.inferred.freebuilder.processor.util;
 
 import org.inferred.freebuilder.processor.util.Scope.Level;
 
-public class FieldAccess extends Excerpt implements Scope.Element<FieldAccess> {
-
-  private static class ExplicitFieldAccess extends Excerpt {
-    private final Object obj;
-    private final String fieldName;
-
-    ExplicitFieldAccess(Object obj, String fieldName) {
-      this.obj = obj;
-      this.fieldName = fieldName;
-    }
-
-    @Override
-    public void addTo(SourceBuilder source) {
-      source.add("%s", obj).add(".").add(fieldName);
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      throw new UnsupportedOperationException();
-    }
-  }
+public class FieldAccess extends ValueType implements Excerpt, Scope.Element<FieldAccess> {
 
   private final String fieldName;
 
@@ -62,7 +42,7 @@ public class FieldAccess extends Excerpt implements Scope.Element<FieldAccess> {
   }
 
   public Excerpt on(Object obj) {
-    return new ExplicitFieldAccess(obj, fieldName);
+    return code -> code.add("%s.%s", obj, fieldName);
   }
 
   @Override

@@ -4,6 +4,7 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.util.AbstractSet;
 import java.util.Comparator;
@@ -16,7 +17,7 @@ import java.util.function.Consumer;
  * Excerpts defining a navigable set implementation that delegates to a provided add method to
  * perform element validation and insertion into a backing set.
  */
-public class CheckedNavigableSet extends Excerpt {
+public class CheckedNavigableSet extends ValueType implements Excerpt {
 
   public static final LazyName TYPE =
       LazyName.of("CheckedNavigableSet", new CheckedNavigableSet());
