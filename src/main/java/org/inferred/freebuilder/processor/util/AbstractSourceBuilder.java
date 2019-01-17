@@ -28,12 +28,10 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
   private static final Pattern TEMPLATE_PARAM = Pattern.compile("%([%ns]|([1-9]\\d*)\\$s)");
 
   protected final FeatureSet features;
-  protected final Scope scope;
   protected final TypeMirrorShortener typeMirrorShortener;
 
-  protected AbstractSourceBuilder(FeatureSet features, Scope scope) {
+  protected AbstractSourceBuilder(FeatureSet features) {
     this.features = features;
-    this.scope = scope;
     typeMirrorShortener = new TypeMirrorShortener(this);
   }
 
@@ -93,22 +91,12 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
 
   @Override
   public SourceStringBuilder subBuilder() {
-    return new SourceStringBuilder(getShortener(), features, scope);
-  }
-
-  @Override
-  public SourceStringBuilder subScope(Scope newScope) {
-    return new SourceStringBuilder(getShortener(), features, newScope);
+    return new SourceStringBuilder(getShortener(), features, scope());
   }
 
   @Override
   public <T extends Feature<T>> T feature(FeatureType<T> feature) {
     return features.get(feature);
-  }
-
-  @Override
-  public Scope scope() {
-    return scope;
   }
 
   @Override

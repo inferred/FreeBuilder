@@ -9,17 +9,13 @@ import org.inferred.freebuilder.processor.util.feature.FeatureType;
 public class Block extends Excerpt implements SourceBuilder {
 
   public static Block methodBody(SourceBuilder parent, String... paramNames) {
-    Scope methodScope = new Scope.MethodScope(parent.scope());
-    for (String paramName : paramNames) {
-      methodScope.add(new VariableName(paramName));
-    }
-    return new Block(parent, methodScope);
+    return new Block(parent);
   }
 
   private final SourceStringBuilder body;
 
-  private Block(SourceBuilder parent, Scope newScope) {
-    body = parent.subScope(newScope);
+  private Block(SourceBuilder parent) {
+    body = parent.subBuilder();
   }
 
   @Override
@@ -43,11 +39,6 @@ public class Block extends Excerpt implements SourceBuilder {
   @Override
   public SourceStringBuilder subBuilder() {
     return body.subBuilder();
-  }
-
-  @Override
-  public SourceStringBuilder subScope(Scope newScope) {
-    return body.subScope(newScope);
   }
 
   @Override

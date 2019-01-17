@@ -41,6 +41,7 @@ public class CompilationUnitBuilder
   private final QualifiedName classToWrite;
   private final ScopeHandler scopeHandler;
   private final SourceParser parser;
+  private final List<Scope> scopes;
   private final List<ScopeAwareTypeShortener> typeShorteners = new ArrayList<>();
   private final StringBuilder source = new StringBuilder();
 
@@ -54,7 +55,7 @@ public class CompilationUnitBuilder
       QualifiedName classToWrite,
       Collection<QualifiedName> implicitImports,
       FeatureSet features) {
-    super(features, new FileScope());
+    super(features);
     this.classToWrite = classToWrite;
     // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
     // written first, but aren't known yet.
@@ -65,6 +66,8 @@ public class CompilationUnitBuilder
     }
     importManager = new ImportManager();
     parser = new SourceParser(this);
+    scopes = new ArrayList<>();
+    scopes.add(new FileScope());
     typeShorteners.add(new ScopeAwareTypeShortener(
         importManager, scopeHandler, classToWrite.getPackage()));
   }
@@ -73,21 +76,29 @@ public class CompilationUnitBuilder
   public void onTypeBlockStart(String keyword, String simpleName, Set<String> supertypes) {
     ScopeAwareTypeShortener typeShortener = getLast(typeShorteners).inScope(simpleName, supertypes);
     typeShorteners.add(typeShortener);
+    scopes.add(getLast(scopes));
   }
 
   @Override
   public void onMethodBlockStart(String methodName, Set<String> paramNames) {
-    onOtherBlockStart();
+    Scope methodScope = new Scope.MethodScope(getLast(scopes));
+    for (String paramName : paramNames) {
+      methodScope.add(new VariableName(paramName));
+    }
+    typeShorteners.add(getLast(typeShorteners));
+    scopes.add(methodScope);
   }
 
   @Override
   public void onOtherBlockStart() {
     typeShorteners.add(getLast(typeShorteners));
+    scopes.add(getLast(scopes));
   }
 
   @Override
   public void onBlockEnd() {
     typeShorteners.remove(typeShorteners.size() - 1);
+    scopes.remove(scopes.size() - 1);
     checkState(!typeShorteners.isEmpty(), "Unexpected '}'");
   }
 
@@ -106,6 +117,11 @@ public class CompilationUnitBuilder
   @Override
   protected TypeShortener getShortener() {
     return getLast(typeShorteners);
+  }
+
+  @Override
+  public Scope scope() {
+    return getLast(scopes);
   }
 
   @Override
