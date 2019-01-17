@@ -20,14 +20,12 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EX
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 
 import org.inferred.freebuilder.processor.BuildableType.MergeBuilderMethod;
 import org.inferred.freebuilder.processor.BuildableType.PartialToBuilderMethod;
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -117,8 +115,7 @@ class BuildableProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             setter(property),
             property.getType(),
-            property.getName());
-    Block body = methodBody(code, property.getName())
+            property.getName())
         .addLine("  %s.requireNonNull(%s);", Objects.class, property.getName())
         .addLine("  if (%1$s == null || %1$s instanceof %2$s) {",
             property.getField(), ModelUtils.maybeAsTypeElement(property.getType()).get())
@@ -129,8 +126,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("    %s.clear();", builder)
         .addLine("    %s.mergeFrom(%s);", builder, property.getName())
         .addLine("  }")
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -168,9 +164,8 @@ class BuildableProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface())
-        .add(methodBody(code, "mutator")
-            .addLine("  mutator.%s(%s());", mutatorType.getMethodName(), getBuilderMethod(property))
-            .addLine("  return (%s) this;", datatype.getBuilder()))
+        .addLine("  mutator.%s(%s());", mutatorType.getMethodName(), getBuilderMethod(property))
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -182,8 +177,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine(" * Returns a builder for the value that will be returned by %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
-        .addLine("public %s %s() {", type.builderType(), getBuilderMethod(property));
-    Block body = methodBody(code)
+        .addLine("public %s %s() {", type.builderType(), getBuilderMethod(property))
         .addLine("  if (%s == null) {", property.getField())
         .addLine("    %s = %s;", property.getField(), type.newBuilder(EXPLICIT_TYPES))
         .addLine("  } else if (%s instanceof %s) {",
@@ -191,16 +185,15 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
             type.suppressUnchecked(), property.getType(), value, property.getField());
     if (type.partialToBuilder() == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
-      body.addLine("    %s = %s.toBuilder();", property.getField(), value);
+      code.addLine("    %s = %s.toBuilder();", property.getField(), value);
     } else {
-      body.addLine("    %s = %s", property.getField(), type.newBuilder(EXPLICIT_TYPES))
+      code.addLine("    %s = %s", property.getField(), type.newBuilder(EXPLICIT_TYPES))
           .addLine("        .mergeFrom(%s);", value);
     }
-    body.addLine("  }")
+    code.addLine("  }")
         .addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
             type.suppressUnchecked(), type.builderType(), builder, property.getField())
-        .addLine("  return %s;", builder);
-    code.add(body)
+        .addLine("  return %s;", builder)
         .addLine("}");
   }
 
@@ -248,7 +241,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     code.addLine("if (%s == null) {", property.getField())
         .addLine("  %s = %s.%s();", property.getField(), value, property.getGetterName())
         .addLine("} else {")
@@ -258,7 +251,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     Variable fieldValue = new Variable(property.getName() + "Value");
     code.addLine("if (%s == null) {", property.getField().on(base))
@@ -284,7 +277,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addSetBuilderFromPartial(Block code, Variable builder) {
+  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
     if (type.partialToBuilder() == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
       code.add("%s.%s().mergeFrom(%s.toBuilder());",
           builder, getBuilderMethod(property), property.getField());
@@ -300,7 +293,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     Variable fieldBuilder = new Variable(property.getName() + "Builder");
     code.addLine("  if (%1$s == null || %1$s instanceof %2$s) {",
             property.getField(),

@@ -24,7 +24,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.removeAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -40,7 +39,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 import org.inferred.freebuilder.processor.excerpt.CheckedListMultimap;
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -190,16 +188,14 @@ class ListMultimapProperty extends PropertyCodeGenerator {
             putMethod(property),
             unboxedKeyType.orElse(keyType),
             unboxedValueType.orElse(valueType));
-    Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
-      body.addLine("  %s.checkNotNull(key);", Preconditions.class);
+      code.addLine("  %s.checkNotNull(key);", Preconditions.class);
     }
     if (!unboxedValueType.isPresent()) {
-      body.addLine("  %s.checkNotNull(value);", Preconditions.class);
+      code.addLine("  %s.checkNotNull(value);", Preconditions.class);
     }
-    body.addLine("  %s.put(key, value);", property.getField())
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  %s.put(key, value);", property.getField())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -286,16 +282,14 @@ class ListMultimapProperty extends PropertyCodeGenerator {
             removeMethod(property),
             unboxedKeyType.orElse(keyType),
             unboxedValueType.orElse(valueType));
-    Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
-      body.addLine("  %s.checkNotNull(key);", Preconditions.class);
+      code.addLine("  %s.checkNotNull(key);", Preconditions.class);
     }
     if (!unboxedValueType.isPresent()) {
-      body.addLine("  %s.checkNotNull(value);", Preconditions.class);
+      code.addLine("  %s.checkNotNull(value);", Preconditions.class);
     }
-    body.addLine("  %s.remove(key, value);", property.getField())
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  %s.remove(key, value);", property.getField())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -315,13 +309,11 @@ class ListMultimapProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             removeAllMethod(property),
             unboxedKeyType.orElse(keyType));
-    Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
-      body.addLine("  %s.checkNotNull(key);", Preconditions.class);
+      code.addLine("  %s.checkNotNull(key);", Preconditions.class);
     }
-    body.addLine("  %s.removeAll(key);", property.getField())
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  %s.removeAll(key);", property.getField())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -341,20 +333,18 @@ class ListMultimapProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface());
-    Block body = methodBody(code, "mutator");
     if (overridesPutMethod) {
-      body.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(),
           CheckedListMultimap.TYPE,
           property.getField(),
           putMethod(property));
     } else {
-      body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    body.addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -396,12 +386,12 @@ class ListMultimapProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     code.addLine("%s(%s.%s());", putAllMethod(property), value, property.getGetterName());
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", putAllMethod(property), property.getField().on(base));
   }
@@ -412,7 +402,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     code.addLine("%s.clear();", property.getField());
   }
 }

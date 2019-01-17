@@ -20,7 +20,6 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -147,13 +146,13 @@ public abstract class PropertyCodeGenerator {
   }
 
   /** Add a merge from value for the property to the builder's source code. */
-  public abstract void addMergeFromValue(Block code, String value);
+  public abstract void addMergeFromValue(SourceBuilder code, String value);
 
   /** Add a merge from builder for the property to the builder's source code. */
-  public abstract void addMergeFromBuilder(Block code, String builder);
+  public abstract void addMergeFromBuilder(SourceBuilder code, String builder);
 
   /** Sets the property on a builder from within a partial value's toBuilder() method. */
-  public void addSetBuilderFromPartial(Block code, Variable builder) {
+  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
     addSetFromResult(code, builder, property.getField());
   }
 
@@ -169,7 +168,7 @@ public abstract class PropertyCodeGenerator {
   public abstract void addSetFromResult(SourceBuilder code, Excerpt builder, Excerpt variable);
 
   /** Adds a clear call for the property given a template builder to the builder's source code. */
-  public abstract void addClearField(Block code);
+  public abstract void addClearField(SourceBuilder code);
 
   protected void addAccessorAnnotations(SourceBuilder code) {
     for (Excerpt annotation : property.getAccessorAnnotations()) {

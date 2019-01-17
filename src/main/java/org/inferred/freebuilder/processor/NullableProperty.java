@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 
@@ -26,7 +25,6 @@ import static javax.lang.model.type.TypeKind.DECLARED;
 
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
@@ -122,13 +120,13 @@ class NullableProperty extends PropertyCodeGenerator {
     code.add("public %s %s(", datatype.getBuilder(), setter(property));
     addGetterAnnotations(code);
     code.add("%s %s) {\n", property.getType(), property.getName())
-        .add(methodBody(code, property.getName())
-            .addLine("  %s = %s;", property.getField(), property.getName())
-            .addLine("  return (%s) this;", datatype.getBuilder()))
+        .addLine("  %s = %s;", property.getField(), property.getName())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
   private void addMapper(SourceBuilder code) {
+    Variable temporary = new Variable(property.getName());
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is not",
@@ -140,15 +138,12 @@ class NullableProperty extends PropertyCodeGenerator {
         .addLine(" */")
         .addLine("public %s %s(%s mapper) {",
             datatype.getBuilder(), mapper(property), mapperType.getFunctionalInterface())
-        .addLine("  %s.requireNonNull(mapper);", Objects.class);
-    Block body = methodBody(code, "mapper");
-    Variable temporary = new Variable(property.getName());
-    body.addLine("  %s %s = %s();", property.getType(), temporary, getter(property))
+        .addLine("  %s.requireNonNull(mapper);", Objects.class)
+        .addLine("  %s %s = %s();", property.getType(), temporary, getter(property))
         .addLine("  if (%s != null) {", temporary)
         .addLine("    %s(mapper.%s(%s));", setter(property), mapperType.getMethodName(), temporary)
         .addLine("  }")
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -176,7 +171,7 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
@@ -191,7 +186,7 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
@@ -218,7 +213,7 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     Optional<Variable> defaults = Declarations.freshBuilder(code, datatype);
     if (defaults.isPresent()) {
       code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));

@@ -19,11 +19,9 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unboxedUnaryOperator;
 
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
@@ -105,24 +103,22 @@ class DefaultProperty extends PropertyCodeGenerator {
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s %s) {",
         datatype.getBuilder(), setter(property), property.getType(), property.getName());
-    Block body = methodBody(code, property.getName());
     if (kind.isPrimitive()) {
-      body.addLine("  %s = %s;", property.getField(), property.getName());
+      code.addLine("  %s = %s;", property.getField(), property.getName());
     } else {
-      body.addLine("  %s = %s.requireNonNull(%s);",
+      code.addLine("  %s = %s.requireNonNull(%s);",
           property.getField(), Objects.class, property.getName());
     }
     if (!hasDefault) {
-      body.addLine("  %s.remove(%s.%s);",
+      code.addLine("  %s.remove(%s.%s);",
           UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
     }
     if ((datatype.getBuilder() == datatype.getGeneratedBuilder())) {
-      body.addLine("  return this;");
+      code.addLine("  return this;");
     } else {
-      body.addLine("  return (%s) this;", datatype.getBuilder());
+      code.addLine("  return (%s) this;", datatype.getBuilder());
     }
-    code.add(body)
-        .addLine("}");
+    code.addLine("}");
   }
 
   private void addMapper(SourceBuilder code) {
@@ -184,7 +180,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.add("if (");
@@ -205,7 +201,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base =
         hasDefault ? null : Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
@@ -238,7 +234,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addSetBuilderFromPartial(Block code, Variable builder) {
+  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
     if (!hasDefault) {
       code.add("if (!%s.contains(%s.%s)) {",
           UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
@@ -255,7 +251,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     Optional<Variable> defaults = Declarations.freshBuilder(code, datatype);
     // Cannot clear property without defaults
     if (defaults.isPresent()) {

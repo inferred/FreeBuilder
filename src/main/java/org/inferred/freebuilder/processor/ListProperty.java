@@ -22,7 +22,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -35,7 +34,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.excerpt.CheckedList;
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -193,19 +191,17 @@ class ListProperty extends PropertyCodeGenerator {
     code.addLine(" */")
         .addLine("public %s %s(%s element) {",
             datatype.getBuilder(), addMethod(property), unboxedType.orElse(elementType));
-    Block body = methodBody(code, "element");
-    if (body.feature(GUAVA).isAvailable()) {
-      body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
+    if (code.feature(GUAVA).isAvailable()) {
+      code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
           .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("  }");
     }
     if (unboxedType.isPresent()) {
-      body.addLine("  %s.add(element);", property.getField());
+      code.addLine("  %s.add(element);", property.getField());
     } else {
-      body.addLine("  %s.add(%s.requireNonNull(element));", property.getField(), Objects.class);
+      code.addLine("  %s.add(%s.requireNonNull(element));", property.getField(), Objects.class);
     }
-    body.addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -237,20 +233,18 @@ class ListProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             addMethod(property),
             unboxedType.orElse(elementType));
-    Block body = methodBody(code, "elements");
-    Optional<Class<?>> arrayUtils = body.feature(GUAVA).arrayUtils(unboxedType.orElse(elementType));
+    Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.orElse(elementType));
     if (arrayUtils.isPresent()) {
-      body.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
+      code.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
     } else {
       // Primitive type, Guava not available
-      body.addLine("  %1$s.ensureCapacity(%1$s.size() + elements.length);", property.getField())
+      code.addLine("  %1$s.ensureCapacity(%1$s.size() + elements.length);", property.getField())
           .addLine("  for (%s element : elements) {", unboxedType.get())
           .addLine("    %s(element);", addMethod(property))
           .addLine("  }")
           .addLine("  return (%s) this;", datatype.getBuilder());
     }
-    code.add(body)
-        .addLine("}");
+    code.addLine("}");
   }
 
   private void addSpliteratorAddAll(SourceBuilder code) {
@@ -259,25 +253,23 @@ class ListProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             addAllMethod(property),
             Spliterator.class,
-            elementType);
-    Block body = methodBody(code, "elements");
-    body.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class)
+            elementType)
+        .addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class)
         .addLine("    long elementsSize = elements.estimateSize();")
         .addLine("    if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {");
-    if (body.feature(GUAVA).isAvailable()) {
-      body.addLine("      if (%s instanceof %s) {", property.getField(), ImmutableList.class)
+    if (code.feature(GUAVA).isAvailable()) {
+      code.addLine("      if (%s instanceof %s) {", property.getField(), ImmutableList.class)
           .addLine("        %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("      }")
           .add("      ((%s<?>) %s)", ArrayList.class, property.getField());
     } else {
-      body.add("      %s", property.getField());
+      code.add("      %s", property.getField());
     }
-    body.add(".ensureCapacity(%s.size() + (int) elementsSize);%n", property.getField())
+    code.add(".ensureCapacity(%s.size() + (int) elementsSize);%n", property.getField())
         .addLine("    }")
         .addLine("  }")
         .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -334,22 +326,20 @@ class ListProperty extends PropertyCodeGenerator {
             datatype.getBuilder(),
             mutator(property),
             mutatorType.getFunctionalInterface());
-    Block body = methodBody(code, "mutator");
-    if (body.feature(GUAVA).isAvailable()) {
-      body.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
+    if (code.feature(GUAVA).isAvailable()) {
+      code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
           .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("  }");
     }
     if (overridesAddMethod) {
-      body.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(), CheckedList.TYPE, property.getField(), addMethod(property));
     } else {
-      body.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    body.addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+    code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -404,7 +394,7 @@ class ListProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("if (%s instanceof %s && %s == %s.<%s>of()) {",
               value,
@@ -423,7 +413,7 @@ class ListProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", addAllMethod(property), property.getField().on(base));
   }
@@ -434,7 +424,7 @@ class ListProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     code.addLine("%s();", clearMethod(property));
   }
 

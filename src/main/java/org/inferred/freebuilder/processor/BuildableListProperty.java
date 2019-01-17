@@ -10,7 +10,6 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getBuildersMetho
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.Util.upperBound;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
@@ -19,7 +18,6 @@ import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.excerpt.BuildableList;
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
@@ -167,11 +165,9 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine(" * @throws NullPointerException if {@code element} is null")
         .addLine(" */")
         .addLine("public %s %s(%s element) {",
-            datatype.getBuilder(), addMethod(property), element.type());
-    Block body = methodBody(code, "element")
+            datatype.getBuilder(), addMethod(property), element.type())
         .addLine("  %s.addValue(element);", property.getField())
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -195,11 +191,10 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine(" */")
         .addLine("public %s %s(%s builder) {",
             datatype.getBuilder(), addMethod(property), element.builderType())
-        .add(methodBody(code, "builder")
-          .addLine("  %s.add(%s.mergeFrom(builder));",
-              property.getField(),
-              element.builderFactory().newBuilder(element.builderType(), EXPLICIT_TYPES))
-          .addLine("  return (%s) this;", datatype.getBuilder()))
+        .addLine("  %s.add(%s.mergeFrom(builder));",
+            property.getField(),
+            element.builderFactory().newBuilder(element.builderType(), EXPLICIT_TYPES))
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -279,41 +274,37 @@ class BuildableListProperty extends PropertyCodeGenerator {
     code.addLine("");
     addJavadocForAddingMultipleValues(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(), addAllMethod(property), Spliterator.class, element.type());
-    Block body = methodBody(code, "elements");
-    body.addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class);
+            datatype.getBuilder(), addAllMethod(property), Spliterator.class, element.type())
+        .addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class);
     Variable newSize = new Variable("newSize");
-    body.addLine("    long %s = elements.estimateSize() + %s.size();", newSize, property.getField())
+    code.addLine("    long %s = elements.estimateSize() + %s.size();", newSize, property.getField())
         .addLine("    if (%s <= Integer.MAX_VALUE) {", newSize)
         .addLine("      %s.ensureCapacity((int) %s);", property.getField(), newSize)
         .addLine("    }")
         .addLine("  }")
         .addLine("  elements.forEachRemaining(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
   private void addSpliteratorBuilderAddAll(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleBuilders(code);
+    Variable newSize = new Variable("newSize");
     code.addLine("public %s %s(%s<? extends %s> elementBuilders) {",
             datatype.getBuilder(),
             addAllBuildersOfMethod(property),
             Spliterator.class,
-            element.builderType());
-    Block body = methodBody(code, "elementBuilders");
-    body.addLine("  if ((elementBuilders.characteristics() & %s.SIZED) != 0) {", Spliterator.class);
-    Variable newSize = new Variable("newSize");
-    body.addLine("    long %s = elementBuilders.estimateSize() + %s.size();",
+            element.builderType())
+        .addLine("  if ((elementBuilders.characteristics() & %s.SIZED) != 0) {", Spliterator.class)
+        .addLine("    long %s = elementBuilders.estimateSize() + %s.size();",
             newSize, property.getField())
         .addLine("    if (%s <= Integer.MAX_VALUE) {", newSize)
         .addLine("      %s.ensureCapacity((int) %s);", property.getField(), newSize)
         .addLine("    }")
         .addLine("  }")
         .addLine("  elementBuilders.forEachRemaining(this::%s);", addMethod(property))
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.add(body)
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -323,15 +314,13 @@ class BuildableListProperty extends PropertyCodeGenerator {
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type());
-    Block body = methodBody(code, "elements");
     if (code.feature(GUAVA).isAvailable()) {
-      body.addLine("  %s.addAllValues(elements);", property.getField())
+      code.addLine("  %s.addAllValues(elements);", property.getField())
           .addLine("  return (%s) this;", datatype.getBuilder());
     } else {
-      body.addLine("  return %s(elements.spliterator());", addAllMethod(property));
+      code.addLine("  return %s(elements.spliterator());", addAllMethod(property));
     }
-    code.add(body)
-        .addLine("}");
+    code.addLine("}");
   }
 
   private void addIterableBuilderAddAll(SourceBuilder code) {
@@ -388,9 +377,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
             Consumer.class,
             List.class,
             element.builderType())
-        .add(methodBody(code, "mutator")
-            .addLine("  mutator.accept(%s);", property.getField())
-            .addLine("  return (%s) this;", datatype.getBuilder()))
+        .addLine("  mutator.accept(%s);", property.getField())
+        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -442,12 +430,12 @@ class BuildableListProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addMergeFromValue(Block code, String value) {
+  public void addMergeFromValue(SourceBuilder code, String value) {
     code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
   }
 
   @Override
-  public void addMergeFromBuilder(Block code, String builder) {
+  public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", addAllBuildersOfMethod(property), property.getField().on(base));
   }
@@ -458,7 +446,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addClearField(Block code) {
+  public void addClearField(SourceBuilder code) {
     code.addLine("%s();", clearMethod(property));
   }
 }

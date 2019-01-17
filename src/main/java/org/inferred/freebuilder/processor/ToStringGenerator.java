@@ -3,10 +3,8 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
 import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
-import static org.inferred.freebuilder.processor.util.Block.methodBody;
 
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
-import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
@@ -36,16 +34,14 @@ class ToStringGenerator {
     code.addLine("")
         .addLine("@%s", Override.class)
         .addLine("public %s toString() {", String.class);
-    Block body = methodBody(code);
     if (allOptional) {
-      bodyWithBuilderAndSeparator(body, datatype, generatorsByProperty, typename);
+      bodyWithBuilderAndSeparator(code, datatype, generatorsByProperty, typename);
     } else if (anyOptional) {
-      bodyWithBuilder(body, datatype, generatorsByProperty, typename, isOptional);
+      bodyWithBuilder(code, datatype, generatorsByProperty, typename, isOptional);
     } else {
-      bodyWithConcatenation(body, generatorsByProperty.keySet(), typename);
+      bodyWithConcatenation(code, generatorsByProperty.keySet(), typename);
     }
-    code.add(body)
-        .addLine("}");
+    code.addLine("}");
   }
 
   /**
@@ -57,7 +53,7 @@ class ToStringGenerator {
    * if we use simple string concatenation, so we use the more readable approach.
    */
   private static void bodyWithConcatenation(
-      Block code,
+      SourceBuilder code,
       Collection<Property> properties,
       String typename) {
     code.add("  return \"%s{", typename);
@@ -86,7 +82,7 @@ class ToStringGenerator {
    * much as a mildly compulsive programmer would when writing the same code.
    */
   private static void bodyWithBuilder(
-      Block code,
+      SourceBuilder code,
       Datatype datatype,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
       String typename,
@@ -176,7 +172,7 @@ class ToStringGenerator {
    * (it is always empty), and the last one need not update it (it will not be used again).
    */
   private static void bodyWithBuilderAndSeparator(
-      Block code,
+      SourceBuilder code,
       Datatype datatype,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
       String typename) {
