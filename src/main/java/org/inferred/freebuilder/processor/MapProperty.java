@@ -332,7 +332,7 @@ class MapProperty extends PropertyCodeGenerator {
 
   private static class ImmutableMapMethod extends Excerpt {
 
-    static final LazyName REFERENCE = new LazyName("immutableMap", new ImmutableMapMethod());
+    static final LazyName REFERENCE = LazyName.of("immutableMap", new ImmutableMapMethod());
 
     private ImmutableMapMethod() {}
 

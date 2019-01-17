@@ -51,7 +51,7 @@ public class BuildableList extends Excerpt {
   }
 
   LazyName name() {
-    return new LazyName(element.type().getSimpleName() + "BuilderList", this);
+    return LazyName.of(element.type().getSimpleName() + "BuilderList", this);
   }
 
   @Override

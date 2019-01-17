@@ -448,7 +448,7 @@ class SetProperty extends PropertyCodeGenerator {
 
   private static class ImmutableSetMethod extends Excerpt {
 
-    static final LazyName REFERENCE = new LazyName("immutableSet", new ImmutableSetMethod());
+    static final LazyName REFERENCE = LazyName.of("immutableSet", new ImmutableSetMethod());
 
     private ImmutableSetMethod() {}
 

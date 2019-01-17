@@ -24,7 +24,7 @@ import java.util.function.BiConsumer;
 public class CheckedListMultimap extends Excerpt {
 
   public static final LazyName TYPE =
-      new LazyName("CheckedListMultimap", new CheckedListMultimap());
+      LazyName.of("CheckedListMultimap", new CheckedListMultimap());
 
   private CheckedListMultimap() {}
 

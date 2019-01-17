@@ -18,11 +18,11 @@ import java.util.function.BiConsumer;
  */
 public class CheckedMap extends Excerpt {
 
-  public static final LazyName TYPE = new LazyName("CheckedMap", new CheckedMap());
+  public static final LazyName TYPE = LazyName.of("CheckedMap", new CheckedMap());
 
   private static class CheckedEntry extends Excerpt {
 
-    static final LazyName TYPE = new LazyName("CheckedEntry", new CheckedEntry());
+    static final LazyName TYPE = LazyName.of("CheckedEntry", new CheckedEntry());
 
     private CheckedEntry() {}
 
@@ -70,7 +70,7 @@ public class CheckedMap extends Excerpt {
 
   private static class CheckedEntryIterator extends Excerpt {
 
-    static final LazyName TYPE = new LazyName("CheckedEntryIterator", new CheckedEntryIterator());
+    static final LazyName TYPE = LazyName.of("CheckedEntryIterator", new CheckedEntryIterator());
 
     private CheckedEntryIterator() {}
 
@@ -110,7 +110,7 @@ public class CheckedMap extends Excerpt {
 
   private static class CheckedEntrySet extends Excerpt {
 
-    static final LazyName TYPE = new LazyName("CheckedEntrySet", new CheckedEntrySet());
+    static final LazyName TYPE = LazyName.of("CheckedEntrySet", new CheckedEntrySet());
 
     private CheckedEntrySet() {}
 

@@ -18,7 +18,7 @@ import java.util.function.BiConsumer;
  */
 public class CheckedMultiset extends Excerpt {
 
-  public static final LazyName TYPE = new LazyName("CheckedMultiset", new CheckedMultiset());
+  public static final LazyName TYPE = LazyName.of("CheckedMultiset", new CheckedMultiset());
 
   private CheckedMultiset() {}
 

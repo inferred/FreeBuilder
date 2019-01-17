@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 public class CheckedNavigableSet extends Excerpt {
 
   public static final LazyName TYPE =
-      new LazyName("CheckedNavigableSet", new CheckedNavigableSet());
+      LazyName.of("CheckedNavigableSet", new CheckedNavigableSet());
 
   private CheckedNavigableSet() {}
 

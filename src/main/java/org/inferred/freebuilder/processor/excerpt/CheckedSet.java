@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  */
 public class CheckedSet extends Excerpt {
 
-  public static final LazyName TYPE = new LazyName("CheckedSet", new CheckedSet());
+  public static final LazyName TYPE = LazyName.of("CheckedSet", new CheckedSet());
 
   private CheckedSet() {}
 

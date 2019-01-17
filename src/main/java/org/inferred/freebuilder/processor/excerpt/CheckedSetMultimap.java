@@ -23,7 +23,7 @@ import java.util.function.BiConsumer;
  */
 public class CheckedSetMultimap extends Excerpt {
 
-  public static final LazyName TYPE = new LazyName("CheckedSetMultimap", new CheckedSetMultimap());
+  public static final LazyName TYPE = LazyName.of("CheckedSetMultimap", new CheckedSetMultimap());
 
   protected CheckedSetMultimap() {}
 

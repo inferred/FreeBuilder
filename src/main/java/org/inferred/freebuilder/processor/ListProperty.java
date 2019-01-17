@@ -430,7 +430,7 @@ class ListProperty extends PropertyCodeGenerator {
 
   private static class ImmutableListMethod extends Excerpt {
 
-    static final LazyName REFERENCE = new LazyName("immutableList", new ImmutableListMethod());
+    static final LazyName REFERENCE = LazyName.of("immutableList", new ImmutableListMethod());
 
     private ImmutableListMethod() {}
 

@@ -48,6 +48,10 @@ public class LazyName extends Excerpt implements Scope.Element<LazyName.Declarat
     }
   }
 
+  public static LazyName of(String preferredName, Excerpt definition) {
+    return new LazyName(preferredName, definition);
+  }
+
   private final String preferredName;
   private final Excerpt definition;
 
@@ -55,7 +59,7 @@ public class LazyName extends Excerpt implements Scope.Element<LazyName.Declarat
    * A LazyName, when first used, determines a unique name, using {@code preferredName} if
    * still available, and registers the {@code definition} to be added later.
    */
-  public LazyName(String preferredName, Excerpt definition) {
+  private LazyName(String preferredName, Excerpt definition) {
     this.preferredName = preferredName;
     this.definition = definition;
   }
