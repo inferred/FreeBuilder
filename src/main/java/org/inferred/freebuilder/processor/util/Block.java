@@ -61,14 +61,6 @@ public class Block extends Excerpt implements SourceBuilder {
     return Excerpts.add("%s", name);
   }
 
-  /**
-   * Contains variable declaration to an inner block.
-   */
-  public Block innerBlock() {
-    Scope innerScope = new Scope.MethodScope(scope());
-    return new Block(this, innerScope);
-  }
-
   private String pickName(String preferredName) {
     if (!nameCollides(preferredName)) {
       return preferredName;
