@@ -1,7 +1,5 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.FunctionalType.BI_CONSUMER;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ForwardingMultiset;
 import com.google.common.collect.Multiset;
@@ -9,10 +7,10 @@ import com.google.common.collect.Multiset;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.feature.Jsr305;
 
 import java.util.Collection;
-
-import javax.annotation.Nullable;
+import java.util.function.BiConsumer;
 
 /**
  * Excerpts defining a multiset implementation that delegates to a provided setCount method to
@@ -34,10 +32,10 @@ public class CheckedMultiset extends Excerpt {
         .addLine("private static class %s<E> extends %s<E> {", TYPE, ForwardingMultiset.class)
         .addLine("")
         .addLine("  private final %s<E> multiset;", Multiset.class)
-        .addLine("  private final %s<E, Integer> setCount;", BI_CONSUMER)
+        .addLine("  private final %s<E, Integer> setCount;", BiConsumer.class)
         .addLine("")
         .addLine("  %s(%s<E> multiset, %s<E, Integer> setCount) {",
-            TYPE, Multiset.class, BI_CONSUMER)
+            TYPE, Multiset.class, BiConsumer.class)
         .addLine("    this.multiset = multiset;")
         .addLine("    this.setCount = setCount;")
         .addLine("  }")
@@ -46,12 +44,12 @@ public class CheckedMultiset extends Excerpt {
         .addLine("    return multiset;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean add(@%s E element) {", Nullable.class)
+        .addLine("  @Override public boolean add(%s E element) {", Jsr305.nullable())
         .addLine("    return standardAdd(element);")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public int add(@%s E element, int occurrences) {",
-            Nullable.class)
+        .addLine("  @Override public int add(%s E element, int occurrences) {",
+            Jsr305.nullable())
         .addLine("    %s.checkArgument(occurrences >= 0,", Preconditions.class)
         .addLine("        \"occurrences cannot be negative: %%s\", occurrences);")
         .addLine("    int oldCount = multiset.count(element);")
@@ -70,13 +68,13 @@ public class CheckedMultiset extends Excerpt {
         .addLine("    return standardAddAll(elementsToAdd);")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public int setCount(@%s E element, int count) {",
-            Nullable.class)
+        .addLine("  @Override public int setCount(%s E element, int count) {",
+            Jsr305.nullable())
         .addLine("    return standardSetCount(element, count);")
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public boolean setCount(")
-        .addLine("      @%s E element, int oldCount, int newCount) {", Nullable.class)
+        .addLine("      %s E element, int oldCount, int newCount) {", Jsr305.nullable())
         .addLine("    return standardSetCount(element, oldCount, newCount);")
         .addLine("  }")
         .addLine("}");

@@ -29,11 +29,8 @@ import static org.inferred.freebuilder.processor.util.FunctionalType.functionalT
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.diamondOperator;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
@@ -42,7 +39,6 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
 
@@ -50,6 +46,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -67,16 +65,16 @@ class MapProperty extends PropertyCodeGenerator {
     @Override
     public Optional<MapProperty> create(Config config) {
       Property property = config.getProperty();
-      DeclaredType type = maybeDeclared(property.getType()).orNull();
+      DeclaredType type = maybeDeclared(property.getType()).orElse(null);
       if (type == null || !erasesToAnyOf(type, Map.class, ImmutableMap.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
       TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
       boolean overridesPutMethod = hasPutMethodOverride(
-          config, unboxedKeyType.or(keyType), unboxedValueType.or(valueType));
+          config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -143,12 +141,11 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %1$s<%2$s, %3$s> %4$s = new %1$s%5$s();",
+    code.addLine("private final %1$s<%2$s, %3$s> %4$s = new %1$s<>();",
         LinkedHashMap.class,
         keyType,
         valueType,
-        property.getField(),
-        diamondOperator(Excerpts.add("%s, %s", keyType, valueType)));
+        property.getField());
   }
 
   @Override
@@ -185,14 +182,14 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key, %s value) {",
             datatype.getBuilder(),
             putMethod(property),
-            unboxedKeyType.or(keyType),
-            unboxedValueType.or(valueType));
+            unboxedKeyType.orElse(keyType),
+            unboxedValueType.orElse(valueType));
     Block body = methodBody(code, "key", "value");
     if (!unboxedKeyType.isPresent()) {
-      body.add(PreconditionExcerpts.checkNotNull("key"));
+      body.addLine("  %s.requireNonNull(key);", Objects.class);
     }
     if (!unboxedValueType.isPresent()) {
-      body.add(PreconditionExcerpts.checkNotNull("value"));
+      body.addLine("  %s.requireNonNull(value);", Objects.class);
     }
     body.addLine("  %s.put(key, value);", property.getField())
         .addLine("  return (%s) this;", datatype.getBuilder());
@@ -240,10 +237,10 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s key) {",
             datatype.getBuilder(),
             removeMethod(property),
-            unboxedKeyType.or(keyType));
+            unboxedKeyType.orElse(keyType));
     Block body = methodBody(code, "key");
     if (!unboxedKeyType.isPresent()) {
-      body.add(PreconditionExcerpts.checkNotNull("key"));
+      body.addLine("  %s.requireNonNull(key);", Objects.class);
     }
     body.addLine("  %s.remove(key);", property.getField())
         .addLine("  return (%s) this;", datatype.getBuilder());
@@ -252,9 +249,6 @@ class MapProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Invokes {@code mutator} with the map to be returned from")
@@ -363,8 +357,8 @@ class MapProperty extends PropertyCodeGenerator {
           .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
               Collections.class)
           .addLine("  default:")
-          .addLine("    return %s.unmodifiableMap(new %s%s(entries));",
-              Collections.class, LinkedHashMap.class, diamondOperator("K, V"))
+          .addLine("    return %s.unmodifiableMap(new %s<>(entries));",
+              Collections.class, LinkedHashMap.class)
           .addLine("  }")
           .addLine("}");
     }

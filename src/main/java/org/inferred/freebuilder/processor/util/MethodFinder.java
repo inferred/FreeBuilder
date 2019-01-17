@@ -17,8 +17,6 @@ package org.inferred.freebuilder.processor.util;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
@@ -27,6 +25,7 @@ import com.google.common.collect.SetMultimap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.ElementKind;
@@ -44,6 +43,7 @@ import javax.lang.model.util.Elements;
  */
 public class MethodFinder {
 
+  @FunctionalInterface
   public interface ErrorTypeHandling<E extends Exception> {
     void handleErrorType(ErrorType type) throws E;
   }
@@ -62,7 +62,7 @@ public class MethodFinder {
       ErrorTypeHandling<E> errorTypeHandling) throws E {
     TypeElement objectType = elements.getTypeElement(Object.class.getCanonicalName());
     Map<Signature, ExecutableElement> objectMethods = Maps.uniqueIndex(
-        methodsIn(objectType.getEnclosedElements()), Signature.NEW);
+        methodsIn(objectType.getEnclosedElements()), Signature::new);
     SetMultimap<Signature, ExecutableElement> methods = LinkedHashMultimap.create();
     for (TypeElement supertype : getSupertypes(type, errorTypeHandling)) {
       for (ExecutableElement method : methodsIn(supertype.getEnclosedElements())) {
@@ -93,7 +93,7 @@ public class MethodFinder {
   private static <E extends Exception> ImmutableSet<TypeElement> getSupertypes(
       TypeElement type,
       ErrorTypeHandling<E> errorTypeHandling) throws E {
-    Set<TypeElement> supertypes = new LinkedHashSet<TypeElement>();
+    Set<TypeElement> supertypes = new LinkedHashSet<>();
     addSupertypesToSet(type, supertypes, errorTypeHandling);
     return ImmutableSet.copyOf(supertypes);
   }
@@ -103,13 +103,13 @@ public class MethodFinder {
       Set<TypeElement> mutableSet,
       ErrorTypeHandling<E> errorTypeHandling) throws E {
     for (TypeMirror iface : type.getInterfaces()) {
-      TypeElement typeElement = maybeTypeElement(iface, errorTypeHandling).orNull();
+      TypeElement typeElement = maybeTypeElement(iface, errorTypeHandling).orElse(null);
       if (typeElement != null) {
         addSupertypesToSet(typeElement, mutableSet, errorTypeHandling);
       }
     }
     TypeElement superclassElement =
-        maybeTypeElement(type.getSuperclass(), errorTypeHandling).orNull();
+        maybeTypeElement(type.getSuperclass(), errorTypeHandling).orElse(null);
     if (superclassElement != null) {
       addSupertypesToSet(superclassElement, mutableSet, errorTypeHandling);
     }
@@ -129,14 +129,6 @@ public class MethodFinder {
    * {@link Elements#overrides}.
    */
   private static class Signature {
-
-    private static final Function<ExecutableElement, Signature> NEW =
-        new Function<ExecutableElement, Signature>() {
-          @Override
-          public Signature apply(ExecutableElement method) {
-            return new Signature(method);
-          }
-        };
 
     final Name name;
     final int params;

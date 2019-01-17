@@ -53,7 +53,7 @@ public class RequiredMapperMethodTest {
     List<ElementFactory> types = ElementFactory.TYPES_WITH_EXTRA_PRIMITIVES;
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
-    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
         .cartesianProduct(types, checked, conventions, features)
         .stream()
@@ -157,7 +157,7 @@ public class RequiredMapperMethodTest {
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .%s(%s)", convention.set("property"), property.example(0))
-            .addLine("    .mapProperty(a -> null);")
+            .addLine("    .mapProperty(a -> (%s) null);", property.type())
             .build())
         .runTest();
   }

@@ -31,16 +31,6 @@ import javax.lang.model.SourceVersion;
 public class SourceLevelTest {
 
   @Test
-  public void java6() {
-    assertEquals(SourceLevel.JAVA_6, sourceLevelFrom(SourceVersion.RELEASE_6));
-  }
-
-  @Test
-  public void java7() {
-    assertEquals(SourceLevel.JAVA_7, sourceLevelFrom(SourceVersion.RELEASE_7));
-  }
-
-  @Test
   public void java8() {
     assertEquals(SourceLevel.JAVA_8, sourceLevelFrom(SourceVersion.RELEASE_8));
   }

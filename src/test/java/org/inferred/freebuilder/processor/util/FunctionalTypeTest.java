@@ -1,6 +1,8 @@
 package org.inferred.freebuilder.processor.util;
 
+import static java.util.stream.Collectors.toMap;
 import static org.inferred.freebuilder.processor.util.FunctionalType.maybeFunctionalType;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unboxedUnaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -8,14 +10,25 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
+import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.reflections.Reflections;
+import org.reflections.util.ClasspathHelper;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
@@ -81,6 +94,77 @@ public class FunctionalTypeTest {
         new TypeToken<BiFunction<String, Long, Integer>>() {});
 
     assertFalse(FunctionalType.isAssignable(biFunction, myFunction, model.typeUtils()));
+  }
+
+  private static Set<TypeToken<?>> sampleTypes() {
+    Set<Class<?>> classes = new HashSet<>();
+    classes.addAll(Primitives.allPrimitiveTypes());
+    classes.remove(void.class);  // Not meaningful for an operator
+    classes.add(String.class);
+
+    Set<TypeToken<?>> types = new HashSet<>();
+    classes.stream().map(TypeToken::of).forEach(types::add);
+    types.add(new TypeToken<Set<? extends Number>>() {});
+    return types;
+  }
+
+  @Test
+  public void testUnboxedUnaryOperatorAcceptsAndReturnsCompatibleTypes() {
+    for (TypeToken<?> type : sampleTypes()) {
+      FunctionalType operator = unboxedUnaryOperator(model.typeMirror(type), model.typeUtils());
+
+      BehaviorTester.create(new StaticFeatureSet())
+          .with(new org.inferred.freebuilder.processor.util.testing.SourceBuilder()
+              .addLine("package com.example;")
+              .addLine("public class TestClass {")
+              .addLine("  public static %s x;", type)
+              .addLine("  public void run() {")
+              .addLine("    %s fn = $ -> $;", operator.getFunctionalInterface())
+              .addLine("    %s y = fn.%s(x);", type, operator.getMethodName())
+              .addLine("  }")
+              .addLine("}")
+              .build())
+          .compiles()
+          .withNoWarnings();
+    }
+  }
+
+  @Test
+  public void testUnboxedUnaryOperatorsUsedWherePossible() {
+    UnaryOperatorFinder finder = new UnaryOperatorFinder();
+    for (TypeToken<?> type : sampleTypes()) {
+      FunctionalType operator = unboxedUnaryOperator(model.typeMirror(type), model.typeUtils());
+      assertEquals(finder.expectedUnaryOperatorClass(type).getName(),
+          operator.getFunctionalInterface().getQualifiedName().toString());
+    }
+  }
+
+  /**
+   * Finds all unary operator functional interfaces in java.util.function.
+   */
+  private static class UnaryOperatorFinder {
+
+    private final Map<TypeToken<?>, Class<?>> unaryOperatorClasses;
+
+    private UnaryOperatorFinder() {
+      Reflections reflections = new Reflections(
+          "java.util.function", ClasspathHelper.forClass(UnaryOperator.class));
+      unaryOperatorClasses = reflections
+          .getTypesAnnotatedWith(FunctionalInterface.class)
+          .stream()
+          .flatMap(cls -> Arrays.stream(cls.getMethods()))
+          .filter(method -> Modifier.isAbstract(method.getModifiers()))
+          .filter(method -> method.getParameterTypes().length == 1)
+          .filter(method -> method.getGenericParameterTypes()[0]
+              .equals(method.getGenericReturnType()))
+          .collect(toMap(
+              method -> TypeToken.of(method.getGenericReturnType()),
+              Method::getDeclaringClass));
+    }
+
+    public Class<?> expectedUnaryOperatorClass(TypeToken<?> type) {
+      return unaryOperatorClasses.getOrDefault(type, UnaryOperator.class);
+    }
   }
 
   @Test
@@ -200,11 +284,11 @@ public class FunctionalTypeTest {
 
   private FunctionalType functionalType(Class<?> cls) {
     DeclaredType declaredType = maybeDeclared(model.typeMirror(cls)).get();
-    return maybeFunctionalType(declaredType, model.elementUtils(), model.typeUtils()).orNull();
+    return maybeFunctionalType(declaredType, model.elementUtils(), model.typeUtils()).orElse(null);
   }
 
   private FunctionalType functionalType(TypeToken<?> type) {
     DeclaredType declaredType = maybeDeclared(model.typeMirror(type)).get();
-    return maybeFunctionalType(declaredType, model.elementUtils(), model.typeUtils()).orNull();
+    return maybeFunctionalType(declaredType, model.elementUtils(), model.typeUtils()).orElse(null);
   }
 }

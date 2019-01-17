@@ -27,24 +27,24 @@ import static org.inferred.freebuilder.processor.util.FunctionalType.functionalT
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
+import org.inferred.freebuilder.processor.util.feature.Jsr305;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.SimpleTypeVisitor6;
 
 /**
  * {@link PropertyCodeGenerator} providing a default value (absent/empty) and convenience setter
@@ -54,7 +54,7 @@ class OptionalProperty extends PropertyCodeGenerator {
 
   @VisibleForTesting
   enum OptionalType {
-    GUAVA(QualifiedName.of(Optional.class), "absent", "fromNullable") {
+    GUAVA(QualifiedName.of(com.google.common.base.Optional.class), "absent", "fromNullable") {
       @Override
       protected void applyMapper(
           SourceBuilder code,
@@ -66,7 +66,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         // turning a null into an empty (absent) optional as that is the de facto standard
         // now. (If the mapper type *can* return null, of course.)
         if (mapperType.canReturnNull()) {
-          code.add(PreconditionExcerpts.checkNotNull("mapper"))
+          code.addLine("%s.requireNonNull(mapper);", Objects.class)
               .addLine("  %s old%s = %s();",
                   property.getType(), property.getCapitalizedName(), getter(property))
               .addLine("  if (old%s.isPresent()) {", property.getCapitalizedName())
@@ -89,7 +89,7 @@ class OptionalProperty extends PropertyCodeGenerator {
             .addLine("}");
       }
     },
-    JAVA8(QualifiedName.of("java.util", "Optional"), "empty", "ofNullable") {
+    JAVA8(QualifiedName.of(Optional.class), "empty", "ofNullable") {
       @Override
       protected void applyMapper(
           SourceBuilder code,
@@ -98,7 +98,7 @@ class OptionalProperty extends PropertyCodeGenerator {
           Property property) {
         code.add("  return %s(%s().map(mapper", setter(property), getter(property));
         if (!mapperType.getFunctionalInterface().getQualifiedName()
-            .equals(FunctionalType.UNARY_OPERATOR)) {
+            .equals(QualifiedName.of(UnaryOperator.class))) {
           code.add("::%s", mapperType.getMethodName());
         }
         code.add("));%n");
@@ -133,23 +133,18 @@ class OptionalProperty extends PropertyCodeGenerator {
     @Override
     public Optional<OptionalProperty> create(Config config) {
       Property property = config.getProperty();
-      DeclaredType type = maybeDeclared(property.getType()).orNull();
+      DeclaredType type = maybeDeclared(property.getType()).orElse(null);
       if (type == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
-      OptionalType optionalType = maybeOptional(type).orNull();
+      OptionalType optionalType = maybeOptional(type).orElse(null);
       if (optionalType == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-
-      // Issue 29: In Java 7 and earlier, wildcards are not correctly handled when inferring the
-      // type parameter of a static method (i.e. Optional.fromNullable(t)). We need to set the
-      // type parameter explicitly (i.e. Optional.<T>fromNullable(t)).
-      boolean requiresExplicitTypeParameters = HAS_WILDCARD.visit(elementType);
 
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -164,8 +159,7 @@ class OptionalProperty extends PropertyCodeGenerator {
           optionalType,
           elementType,
           unboxedType,
-          mapperType,
-          requiresExplicitTypeParameters));
+          mapperType));
     }
 
     private static Optional<OptionalType> maybeOptional(DeclaredType type) {
@@ -174,7 +168,7 @@ class OptionalProperty extends PropertyCodeGenerator {
           return Optional.of(optionalType);
         }
       }
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -182,7 +176,6 @@ class OptionalProperty extends PropertyCodeGenerator {
   private final TypeMirror elementType;
   private final Optional<TypeMirror> unboxedType;
   private final FunctionalType mapperType;
-  private final boolean requiresExplicitTypeParameters;
 
   @VisibleForTesting OptionalProperty(
       Datatype datatype,
@@ -190,14 +183,12 @@ class OptionalProperty extends PropertyCodeGenerator {
       OptionalType optional,
       TypeMirror elementType,
       Optional<TypeMirror> unboxedType,
-      FunctionalType mapperType,
-      boolean requiresExplicitTypeParametersInJava7) {
+      FunctionalType mapperType) {
     super(datatype, property);
     this.optional = optional;
     this.elementType = elementType;
     this.unboxedType = unboxedType;
     this.mapperType = mapperType;
-    this.requiresExplicitTypeParameters = requiresExplicitTypeParametersInJava7;
   }
 
   @Override
@@ -245,15 +236,14 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s %s) {",
             datatype.getBuilder(),
             setter(property),
-            unboxedType.or(elementType),
+            unboxedType.orElse(elementType),
             property.getName());
     Block body = methodBody(code, property.getName());
     if (unboxedType.isPresent()) {
       body.addLine("  %s = %s;", property.getField(), property.getName());
     } else {
-      body.add(PreconditionExcerpts.checkNotNullPreamble(property.getName()))
-          .addLine("  %s = %s;",
-              property.getField(), PreconditionExcerpts.checkNotNullInline(property.getName()));
+      body.addLine("  %s = %s.requireNonNull(%s);",
+          property.getField(), Objects.class, property.getName());
     }
     body.addLine("  return (%s) this;", datatype.getBuilder());
     code.add(body)
@@ -292,10 +282,10 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s %s(@%s %s %s) {",
+        .addLine("public %s %s(%s %s %s) {",
             datatype.getBuilder(),
             nullableSetter(property),
-            javax.annotation.Nullable.class,
+            Jsr305.nullable(),
             elementType,
             property.getName())
         .add(methodBody(code, property.getName())
@@ -308,9 +298,6 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is present,",
@@ -353,12 +340,8 @@ class OptionalProperty extends PropertyCodeGenerator {
         .addLine(" * Returns the value that will be returned by %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
-        .addLine("public %s %s() {", property.getType(), getter(property));
-    code.add("  return %s.", optional.cls);
-    if (requiresExplicitTypeParameters) {
-      code.add("<%s>", elementType);
-    }
-    code.add("%s(%s);\n", optional.ofNullable, property.getField())
+        .addLine("public %s %s() {", property.getType(), getter(property))
+        .addLine("  return %s.%s(%s);\n", optional.cls, optional.ofNullable, property.getField())
         .addLine("}");
   }
 
@@ -386,11 +369,7 @@ class OptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addReadValueFragment(SourceBuilder code, Excerpt finalField) {
-    code.add("%s.", optional.cls);
-    if (requiresExplicitTypeParameters) {
-      code.add("<%s>", elementType);
-    }
-    code.add("%s(%s)", optional.ofNullable, finalField);
+    code.add("%s.%s(%s)", optional.cls, optional.ofNullable, finalField);
   }
 
   @Override
@@ -407,26 +386,4 @@ class OptionalProperty extends PropertyCodeGenerator {
       code.addLine("%s = null;", property.getField());
     }
   }
-
-  private static final SimpleTypeVisitor6<Boolean, Void> HAS_WILDCARD =
-      new SimpleTypeVisitor6<Boolean, Void>() {
-        @Override protected Boolean defaultAction(TypeMirror e, Void p) {
-          return false;
-        }
-
-        @Override
-        public Boolean visitDeclared(DeclaredType t, Void p) {
-          for (TypeMirror typeArgument : t.getTypeArguments()) {
-            if (visit(typeArgument)) {
-              return true;
-            }
-          }
-          return false;
-        }
-
-        @Override
-        public Boolean visitWildcard(WildcardType t, Void p) {
-          return true;
-        }
-      };
 }

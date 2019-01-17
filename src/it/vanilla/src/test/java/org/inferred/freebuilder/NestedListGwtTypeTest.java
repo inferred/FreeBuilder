@@ -15,10 +15,9 @@
  */
 package org.inferred.freebuilder;
 
-import static org.junit.Assert.assertEquals;
+import static java.util.Arrays.asList;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,38 +36,29 @@ public class NestedListGwtTypeTest {
     NestedListGwtType.Builder builder = new NestedListGwtType.Builder();
     // getItemBuilder()
     builder.getItemBuilder().addNames(NAME_1);
-    assertEquals(newArrayList(NAME_1), builder.build().getItem().getNames());
+    assertEquals(asList(NAME_1), builder.build().getItem().getNames());
     // setItem(Value)
     builder.setItem(new StringListGwtType.Builder()
         .addNames(NAME_2, NAME_3)
         .build());
-    assertEquals(newArrayList(NAME_2, NAME_3), builder.build().getItem().getNames());
+    assertEquals(asList(NAME_2, NAME_3), builder.build().getItem().getNames());
     // setItem(Builder)
     builder.setItem(new StringListGwtType.Builder()
         .addNames(NAME_1, NAME_3));
-    assertEquals(newArrayList(NAME_1, NAME_3), builder.build().getItem().getNames());
+    assertEquals(asList(NAME_1, NAME_3), builder.build().getItem().getNames());
     // Top-level clear()
     builder.clear();
-    assertEquals(newArrayList(), builder.build().getItem().getNames());
+    assertEquals(asList(), builder.build().getItem().getNames());
     // mergeFrom(Value)
     builder.mergeFrom(new NestedListGwtType.Builder()
         .setItem(new StringListGwtType.Builder()
             .addNames(NAME_2))
         .build());
-    assertEquals(newArrayList(NAME_2), builder.build().getItem().getNames());
+    assertEquals(asList(NAME_2), builder.build().getItem().getNames());
     // mergeFrom(Builder)
     builder.mergeFrom(new NestedListGwtType.Builder()
         .setItem(new StringListGwtType.Builder()
             .addNames(NAME_3)));
-    assertEquals(newArrayList(NAME_2, NAME_3), builder.build().getItem().getNames());
-  }
-
-  @SafeVarargs
-  private static <E> List<E> newArrayList(E... items) {
-    List<E> list = new ArrayList<E>();
-    for (E item : items) {
-      list.add(item);
-    }
-    return list;
+    assertEquals(asList(NAME_2, NAME_3), builder.build().getItem().getNames());
   }
 }

@@ -54,11 +54,7 @@ public class Diagnostics {
    */
   public static final Predicate<Diagnostic<?>> isKind(Kind kind, Kind... otherKinds) {
     final EnumSet<Kind> allKinds = EnumSet.of(kind, otherKinds);
-    return new Predicate<Diagnostic<?>>() {
-      @Override public boolean apply(Diagnostic<?> diagnostic) {
-        return allKinds.contains(diagnostic.getKind());
-      }
-    };
+    return diagnostic -> allKinds.contains(diagnostic.getKind());
   }
 
   private Diagnostics() {}

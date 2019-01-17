@@ -24,7 +24,6 @@ import static java.util.Collections.nCopies;
 
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.util.List;
@@ -75,9 +74,6 @@ public abstract class Type extends Excerpt {
   /**
    * Returns a source excerpt suitable for constructing an instance of this type, including "new"
    * keyword but excluding brackets.
-   *
-   * <p>At {@link SourceLevel#JAVA_7} and above, we can use the diamond operator. Otherwise, we
-   * write out the type parameters in full.
    */
   public Excerpt constructor() {
     return Excerpts.add("new %s%s", getQualifiedName(), diamondOperator());
@@ -93,7 +89,7 @@ public abstract class Type extends Excerpt {
   /**
    * Returns a source excerpt of a JavaDoc link to a no-args method on this type.
    */
-  public Excerpt javadocNoArgMethodLink(final String memberName) {
+  public Excerpt javadocNoArgMethodLink(String memberName) {
     return Excerpts.add("{@link %s#%s()}", getQualifiedName(), memberName);
   }
 
@@ -114,13 +110,10 @@ public abstract class Type extends Excerpt {
   /**
    * Returns a source excerpt equivalent to the diamond operator for this type.
    *
-   * <p>Always an empty string if the type class is not generic. Matches {@link #typeParameters()}
-   * for {@link SourceLevel#JAVA_6}.
+   * <p>Always an empty string if the type class is not generic.
    */
   public Excerpt diamondOperator() {
-    return isParameterized()
-        ? SourceLevel.diamondOperator(Excerpts.join(", ", getTypeParameters()))
-        : Excerpts.empty();
+    return isParameterized() ? Excerpts.add("<>") : Excerpts.empty();
   }
 
   /**

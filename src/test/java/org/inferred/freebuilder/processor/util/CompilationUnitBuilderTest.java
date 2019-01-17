@@ -212,7 +212,7 @@ public class CompilationUnitBuilderTest {
     return new CompilationUnitBuilder(
         environment,
         QualifiedName.of(pkg, simpleName),
-        ImmutableSet.<QualifiedName>of(),
+        ImmutableSet.of(),
         new StaticFeatureSet());
   }
 }

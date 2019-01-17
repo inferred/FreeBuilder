@@ -2,29 +2,34 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static javax.lang.model.element.Modifier.ABSTRACT;
+
 import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.only;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import static javax.lang.model.element.Modifier.ABSTRACT;
 
-import org.inferred.freebuilder.processor.util.MethodFinder.ErrorTypeHandling;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.IntUnaryOperator;
+import java.util.function.LongUnaryOperator;
+import java.util.function.UnaryOperator;
 
-import javax.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -35,24 +40,10 @@ import javax.lang.model.util.Types;
  */
 public class FunctionalType extends ValueType {
 
-  private static final String FUNCTION_PACKAGE = "java.util.function";
-
-  public static final QualifiedName CONSUMER =
-      QualifiedName.of(FUNCTION_PACKAGE, "Consumer");
-  public static final QualifiedName BI_CONSUMER =
-      QualifiedName.of(FUNCTION_PACKAGE, "BiConsumer");
-  public static final QualifiedName UNARY_OPERATOR =
-      QualifiedName.of(FUNCTION_PACKAGE, "UnaryOperator");
-
-  private static final ErrorTypeHandling<RuntimeException> IGNORE_ERROR_TYPES =
-      new ErrorTypeHandling<RuntimeException>() {
-        @Override public void handleErrorType(ErrorType type) { }
-      };
-
   public static FunctionalType consumer(TypeMirror type) {
     checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
     return new FunctionalType(
-        CONSUMER.withParameters(type),
+        QualifiedName.of(Consumer.class).withParameters(type),
         "accept",
         ImmutableList.of(type),
         null);
@@ -61,10 +52,50 @@ public class FunctionalType extends ValueType {
   public static FunctionalType unaryOperator(TypeMirror type) {
     checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
     return new FunctionalType(
-        UNARY_OPERATOR.withParameters(type),
+        QualifiedName.of(UnaryOperator.class).withParameters(type),
         "apply",
         ImmutableList.of(type),
         type);
+  }
+
+  public static FunctionalType intUnaryOperator(PrimitiveType type) {
+    Preconditions.checkArgument(type.getKind() == TypeKind.INT);
+    return new FunctionalType(
+        Type.from(IntUnaryOperator.class),
+        "applyAsInt",
+        ImmutableList.of(type),
+        type);
+  }
+
+  public static FunctionalType unboxedUnaryOperator(TypeMirror type, Types types) {
+    switch (type.getKind()) {
+      case INT:
+        return intUnaryOperator((PrimitiveType) type);
+
+      case LONG:
+        return new FunctionalType(
+            Type.from(LongUnaryOperator.class),
+            "applyAsLong",
+            ImmutableList.of(type),
+            type);
+
+      case DOUBLE:
+        return new FunctionalType(
+            Type.from(DoubleUnaryOperator.class),
+            "applyAsDouble",
+            ImmutableList.of(type),
+            type);
+
+      case BOOLEAN:
+      case BYTE:
+      case CHAR:
+      case SHORT:
+      case FLOAT:
+        return unaryOperator(types.boxedClass((PrimitiveType) type).asType());
+
+      default:
+        return unaryOperator(type);
+    }
   }
 
   /**
@@ -81,14 +112,14 @@ public class FunctionalType extends ValueType {
       Elements elements,
       Types types) {
     TypeElement typeElement = asElement(type);
-    for (ExecutableElement method : methodsOn(typeElement, elements, IGNORE_ERROR_TYPES)) {
+    for (ExecutableElement method : methodsOn(typeElement, elements, errorType -> { })) {
       if (!method.getSimpleName().contentEquals(methodName)
           || method.getParameters().size() != 1) {
         continue;
       }
       ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
       TypeMirror parameter = getOnlyElement(methodType.getParameterTypes());
-      FunctionalType functionalType = maybeFunctionalType(parameter, elements, types).orNull();
+      FunctionalType functionalType = maybeFunctionalType(parameter, elements, types).orElse(null);
       if (functionalType == null || !isAssignable(functionalType, prototype, types)) {
         continue;
       }
@@ -101,11 +132,8 @@ public class FunctionalType extends ValueType {
       TypeMirror type,
       Elements elements,
       Types types) {
-    DeclaredType declaredType = maybeDeclared(type).orNull();
-    if (declaredType == null) {
-      return Optional.absent();
-    }
-    return maybeFunctionalType(declaredType, elements, types);
+    return maybeDeclared(type)
+        .flatMap(declaredType -> maybeFunctionalType(declaredType, elements, types));
   }
 
   public static Optional<FunctionalType> maybeFunctionalType(
@@ -114,12 +142,12 @@ public class FunctionalType extends ValueType {
       Types types) {
     TypeElement typeElement = asElement(type);
     if (!typeElement.getKind().isInterface()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     Set<ExecutableElement> abstractMethods =
-        only(ABSTRACT, methodsOn(typeElement, elements, IGNORE_ERROR_TYPES));
+        only(ABSTRACT, methodsOn(typeElement, elements, errorType -> { }));
     if (abstractMethods.size() != 1) {
-      return Optional.absent();
+      return Optional.empty();
     }
     ExecutableElement method = getOnlyElement(abstractMethods);
     ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
@@ -147,15 +175,14 @@ public class FunctionalType extends ValueType {
     return isAssignable(fromType.getReturnType(), toType.getReturnType(), types);
   }
 
-  private static boolean isAssignable(
-      @Nullable TypeMirror fromParam, @Nullable TypeMirror toParam, Types types) {
+  private static boolean isAssignable(TypeMirror fromParam, TypeMirror toParam, Types types) {
     if (isVoid(fromParam) || isVoid(toParam)) {
       return isVoid(fromParam) && isVoid(toParam);
     }
     return types.isAssignable(fromParam, toParam);
   }
 
-  private static boolean isVoid(@Nullable TypeMirror type) {
+  private static boolean isVoid(TypeMirror type) {
     return type == null || type.getKind() == TypeKind.VOID;
   }
 
@@ -199,7 +226,7 @@ public class FunctionalType extends ValueType {
   protected void addFields(FieldReceiver fields) {
     fields.add("functionalInterface", functionalInterface);
     fields.add("methodName", methodName);
-    List<String> parametersAsStrings = new ArrayList<String>();
+    List<String> parametersAsStrings = new ArrayList<>();
     for (TypeMirror parameter : parameters) {
       parametersAsStrings.add(parameter.toString());
     }

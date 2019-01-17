@@ -15,13 +15,15 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
 
 import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -49,8 +51,8 @@ public class QualifiedName extends ValueType {
    * type.
    */
   public static QualifiedName of(String packageName, String topLevelType, String... nestedTypes) {
-    Preconditions.checkNotNull(!packageName.isEmpty());
-    Preconditions.checkArgument(!topLevelType.isEmpty());
+    requireNonNull(!packageName.isEmpty());
+    checkArgument(!topLevelType.isEmpty());
     return new QualifiedName(
         unshadedName(packageName),  // shadowJar modifies string literals; unshade them here
         ImmutableList.<String>builder().add(topLevelType).add(nestedTypes).build());
@@ -111,7 +113,7 @@ public class QualifiedName extends ValueType {
    */
   @Override
   public String toString() {
-    return packageName + "." + Joiner.on('.').join(simpleNames);
+    return packageName + "." + simpleNames.stream().collect(joining("."));
   }
 
   public String getPackage() {

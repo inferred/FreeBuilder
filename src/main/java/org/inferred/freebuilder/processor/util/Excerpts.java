@@ -1,15 +1,12 @@
 package org.inferred.freebuilder.processor.util;
 
 import static java.util.Arrays.asList;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.util.feature.JavaxPackage;
 
 import java.util.List;
-
-import javax.lang.model.type.TypeMirror;
 
 public class Excerpts {
 
@@ -47,7 +44,7 @@ public class Excerpts {
     }
   }
 
-  public static Excerpt add(final String fmt, final Object... args) {
+  public static Excerpt add(String fmt, Object... args) {
     return new AddingExcerpt(fmt, args);
   }
 
@@ -65,46 +62,6 @@ public class Excerpts {
     return EMPTY;
   }
 
-  private static final class ForEachExcerpt extends Excerpt {
-    private final TypeMirror elementType;
-    private final String iterable;
-    private final String method;
-
-    private ForEachExcerpt(TypeMirror elementType, String iterable, String method) {
-      this.elementType = elementType;
-      this.iterable = iterable;
-      this.method = method;
-    }
-
-    @Override
-    public void addTo(SourceBuilder code) {
-      if (code.feature(SOURCE_LEVEL).hasLambdas()) {
-        code.addLine("%s.forEach(this::%s);", iterable, method);
-      } else {
-        code.addLine("for (%s element : %s) {", elementType, iterable)
-            .addLine("  %s(element);", method)
-            .addLine("}");
-      }
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("elementType", elementType);
-      fields.add("iterable", iterable);
-      fields.add("method", method);
-    }
-  }
-
-  /**
-   * Returns an excerpt calling {@code method} with each {@code elementType} element of
-   * {@code iterable}.
-   *
-   * <p>Will be {@code iterable.forEach(this::method);} on Java 8+.
-   */
-  public static Excerpt forEach(TypeMirror elementType, String iterable, String method) {
-    return new ForEachExcerpt(elementType, iterable, method);
-  }
-
   private static final class GeneratedAnnotationExcerpt extends Excerpt {
     private final Class<?> generator;
 
@@ -114,10 +71,9 @@ public class Excerpts {
 
     @Override
     public void addTo(SourceBuilder code) {
-      QualifiedName generated = code.feature(JavaxPackage.JAVAX).generated().orNull();
-      if (generated != null) {
+      code.feature(JavaxPackage.JAVAX).generated().ifPresent(generated -> {
         code.addLine("@%s(\"%s\")", generated, generator.getName());
-      }
+      });
     }
 
     @Override
@@ -159,39 +115,8 @@ public class Excerpts {
     }
   }
 
-  public static Object join(final String separator, final Iterable<?> excerpts) {
+  public static Object join(String separator, Iterable<?> excerpts) {
     return new JoiningExcerpt(separator, excerpts);
-  }
-
-  private static final class EqualsExcerpt extends Excerpt {
-    private final Object a;
-    private final Object b;
-
-    private EqualsExcerpt(Object a, Object b) {
-      this.a = a;
-      this.b = b;
-    }
-
-    @Override
-    public void addTo(SourceBuilder source) {
-      QualifiedName objects = source.feature(SOURCE_LEVEL).javaUtilObjects().orNull();
-      if (objects != null) {
-        source.add("%s.equals(%s, %s)", objects, a, b);
-      } else {
-        source.add("(%1$s == %2$s || (%1$s != null && %1$s.equals(%2$s)))", a, b);
-      }
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("a", a);
-      fields.add("b", b);
-    }
-  }
-
-  /** Returns an excerpt equivalent to Java 7's {@code Object.equals(a, b)}. */
-  public static Object equals(Object a, Object b) {
-    return new EqualsExcerpt(a, b);
   }
 
   private Excerpts() {}

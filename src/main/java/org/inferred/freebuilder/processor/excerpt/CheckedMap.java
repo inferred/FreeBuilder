@@ -1,17 +1,16 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.FunctionalType.BI_CONSUMER;
-
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /**
  * Excerpts defining a map implementation that delegates to a provided put method to perform entry
@@ -33,9 +32,9 @@ public class CheckedMap extends Excerpt {
           .addLine("private static class %s<K, V> implements %s<K, V> {", TYPE, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<K, V> entry;", Map.Entry.class)
-          .addLine("  private final %s<K, V> put;", BI_CONSUMER)
+          .addLine("  private final %s<K, V> put;", BiConsumer.class)
           .addLine("")
-          .addLine("  %s(%s<K, V> entry, %s<K, V> put) {", TYPE, Map.Entry.class, BI_CONSUMER)
+          .addLine("  %s(%s<K, V> entry, %s<K, V> put) {", TYPE, Map.Entry.class, BiConsumer.class)
           .addLine("    this.entry = entry;")
           .addLine("    this.put = put;")
           .addLine("  }")
@@ -49,7 +48,7 @@ public class CheckedMap extends Excerpt {
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public V setValue(V value) {")
-          .add(PreconditionExcerpts.checkNotNull("value"))
+          .addLine("    %s.requireNonNull(value);", Objects.class)
           .addLine("    V oldValue = entry.getValue();")
           .addLine("    put.accept(entry.getKey(), value);")
           .addLine("    return oldValue;")
@@ -82,11 +81,11 @@ public class CheckedMap extends Excerpt {
               TYPE, Iterator.class, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<%s<K, V>> iterator;", Iterator.class, Map.Entry.class)
-          .addLine("  private final %s<K, V> put;", BI_CONSUMER)
+          .addLine("  private final %s<K, V> put;", BiConsumer.class)
           .addLine("")
           .addLine("  %s(", TYPE)
           .addLine("      %s<%s<K, V>> iterator,", Iterator.class, Map.Entry.class)
-          .addLine("      %s<K, V> put) {", BI_CONSUMER)
+          .addLine("      %s<K, V> put) {", BiConsumer.class)
           .addLine("    this.iterator = iterator;")
           .addLine("    this.put = put;")
           .addLine("  }")
@@ -122,10 +121,10 @@ public class CheckedMap extends Excerpt {
               TYPE, AbstractSet.class, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<%s<K, V>> set;", Set.class, Map.Entry.class)
-          .addLine("  private final %s<K, V> put;", BI_CONSUMER)
+          .addLine("  private final %s<K, V> put;", BiConsumer.class)
           .addLine("")
           .addLine("  %s(%s<%s<K, V>> set, %s<K, V> put) {",
-              TYPE, Set.class, Map.Entry.class, BI_CONSUMER)
+              TYPE, Set.class, Map.Entry.class, BiConsumer.class)
           .addLine("    this.set = set;")
           .addLine("    this.put = put;")
           .addLine("  }")
@@ -169,9 +168,9 @@ public class CheckedMap extends Excerpt {
         .addLine("private static class %s<K, V> extends %s<K, V> {", TYPE, AbstractMap.class)
         .addLine("")
         .addLine("  private final %s<K, V> map;", Map.class)
-        .addLine("  private final %s<K, V> put;", BI_CONSUMER)
+        .addLine("  private final %s<K, V> put;", BiConsumer.class)
         .addLine("")
-        .addLine("  %s(%s<K, V> map, %s<K, V> put) {", TYPE, Map.class, BI_CONSUMER)
+        .addLine("  %s(%s<K, V> map, %s<K, V> put) {", TYPE, Map.class, BiConsumer.class)
         .addLine("    this.map = map;")
         .addLine("    this.put = put;")
         .addLine("  }")

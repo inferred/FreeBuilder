@@ -18,19 +18,17 @@ package org.inferred.freebuilder.processor;
 import static org.inferred.freebuilder.processor.ElementFactory.INTEGERS;
 import static org.inferred.freebuilder.processor.ElementFactory.TYPES;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 import static org.junit.Assume.assumeTrue;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.testing.EqualsTester;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.testing.EqualsTester;
+
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
@@ -194,7 +192,6 @@ public class ListPropertyTest {
 
   @Test
   public void testAddAllSpliterator() {
-    assumeStreamsAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
@@ -210,7 +207,6 @@ public class ListPropertyTest {
 
   @Test
   public void testAddAllSpliterator_null() {
-    assumeStreamsAvailable();
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
@@ -225,7 +221,6 @@ public class ListPropertyTest {
 
   @Test
   public void testAddAllStream() {
-    assumeStreamsAvailable();
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
@@ -241,7 +236,6 @@ public class ListPropertyTest {
 
   @Test
   public void testAddAllStream_null() {
-    assumeStreamsAvailable();
     thrown.expect(NullPointerException.class);
     behaviorTester
         .with(new Processor(features))
@@ -256,7 +250,6 @@ public class ListPropertyTest {
 
   @Test
   public void testAddAllIntStream() {
-    assumeStreamsAvailable();
     assumeTrue(elements == INTEGERS);
     behaviorTester
         .with(new Processor(features))
@@ -796,7 +789,6 @@ public class ListPropertyTest {
 
   @Test
   public void testValidation_addAllSpliterator() {
-    assumeStreamsAvailable();
     thrown.expectMessage(elements.errorMessage());
     behaviorTester
         .with(new Processor(features))
@@ -810,7 +802,6 @@ public class ListPropertyTest {
 
   @Test
   public void testValidation_addAllStream() {
-    assumeStreamsAvailable();
     thrown.expectMessage(elements.errorMessage());
     behaviorTester
         .with(new Processor(features))
@@ -902,7 +893,6 @@ public class ListPropertyTest {
 
   @Test
   public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -926,7 +916,6 @@ public class ListPropertyTest {
 
   @Test
   public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -949,7 +938,6 @@ public class ListPropertyTest {
   @Test
   public void testCanOverrideGenericFieldVarargsAdder() {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -977,7 +965,6 @@ public class ListPropertyTest {
   @Test
   public void testCanOverrideGenericBuildableVarargsAdder() {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
-    assumeTrue("Java 7+", features.get(SOURCE_LEVEL).compareTo(SourceLevel.JAVA_7) >= 0);
     behaviorTester
         .with(new Processor(features))
         .with(new SourceBuilder()
@@ -1002,10 +989,6 @@ public class ListPropertyTest {
 
   private void assumeGuavaAvailable() {
     assumeTrue("Guava available", features.get(GUAVA).isAvailable());
-  }
-
-  private void assumeStreamsAvailable() {
-    assumeTrue("Streams available", features.get(SOURCE_LEVEL).stream().isPresent());
   }
 
   private static TestBuilder testBuilder() {

@@ -1,7 +1,5 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import static org.inferred.freebuilder.processor.util.FunctionalType.CONSUMER;
-
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
@@ -11,6 +9,8 @@ import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NavigableSet;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Excerpts defining a navigable set implementation that delegates to a provided add method to
@@ -34,13 +34,14 @@ public class CheckedNavigableSet extends Excerpt {
             TYPE, AbstractSet.class, NavigableSet.class)
         .addLine("")
         .addLine("  private final %s<E> set;", NavigableSet.class)
-        .addLine("  private final %s<E> add;", CONSUMER)
+        .addLine("  private final %s<E> add;", Consumer.class)
         .addLine("  private final E fromElement;")
         .addLine("  private final boolean fromInclusive;")
         .addLine("  private final E toElement;")
         .addLine("  private final boolean toInclusive;")
         .addLine("")
-        .addLine("  %s(%s<E> set, %s<E> add) {", TYPE, NavigableSet.class, CONSUMER)
+        .addLine("  %s(%s<E> set, %s<E> add) {",
+            TYPE, NavigableSet.class, Consumer.class)
         .addLine("    this.set = set;")
         .addLine("    this.add = add;")
         .addLine("    this.fromElement = null;")
@@ -51,7 +52,7 @@ public class CheckedNavigableSet extends Excerpt {
         .addLine("")
         .addLine("  %s(", TYPE)
         .addLine("      %s<E> set,", NavigableSet.class)
-        .addLine("      %s<E> add,", CONSUMER)
+        .addLine("      %s<E> add,", Consumer.class)
         .addLine("      E fromElement,")
         .addLine("      boolean fromInclusive,")
         .addLine("      E toElement,")
@@ -134,8 +135,8 @@ public class CheckedNavigableSet extends Excerpt {
         .addLine("      boolean fromInclusive,")
         .addLine("      E toElement,")
         .addLine("      boolean toInclusive) {")
-        .add(PreconditionExcerpts.checkNotNull("fromElement"))
-        .add(PreconditionExcerpts.checkNotNull("toElement"))
+        .addLine("    %s.requireNonNull(fromElement);", Objects.class)
+        .addLine("    %s.requireNonNull(toElement);", Objects.class)
         .addLine("    %s<E> subSet = set.subSet(", NavigableSet.class)
         .addLine("        fromElement, fromInclusive, toElement, toInclusive);")
         .addLine("    return new %s<>(", TYPE)
@@ -145,7 +146,7 @@ public class CheckedNavigableSet extends Excerpt {
         .addLine("  @Override public %s<E> headSet(", NavigableSet.class)
         .addLine("      E toElement,")
         .addLine("      boolean inclusive) {")
-        .add(PreconditionExcerpts.checkNotNull("toElement"))
+        .addLine("    %s.requireNonNull(toElement);", Objects.class)
         .addLine("    %s<E> headSet = set.headSet(toElement, inclusive);",
             NavigableSet.class)
         .addLine("    return new %s<>(", TYPE)
@@ -155,7 +156,7 @@ public class CheckedNavigableSet extends Excerpt {
         .addLine("  @Override public %s<E> tailSet(", NavigableSet.class)
         .addLine("      E fromElement,")
         .addLine("      boolean inclusive) {")
-        .add(PreconditionExcerpts.checkNotNull("fromElement"))
+        .addLine("    %s.requireNonNull(fromElement);", Objects.class)
         .addLine("    %s<E> tailSet = set.tailSet(fromElement, inclusive);",
             NavigableSet.class)
         .addLine("    return new %s<>(", TYPE)
@@ -168,8 +169,8 @@ public class CheckedNavigableSet extends Excerpt {
     code.addLine("")
         .addLine("  @Override public %s<E> subSet(E fromElement, E toElement) {",
             NavigableSet.class)
-        .add(PreconditionExcerpts.checkNotNull("fromElement"))
-        .add(PreconditionExcerpts.checkNotNull("toElement"))
+        .addLine("    %s.requireNonNull(fromElement);", Objects.class)
+        .addLine("    %s.requireNonNull(toElement);", Objects.class)
         .addLine("    %s<E> subSet = set.subSet(fromElement, true, toElement, false);",
             NavigableSet.class)
         .addLine("    return new %s<>(", TYPE)
@@ -177,14 +178,14 @@ public class CheckedNavigableSet extends Excerpt {
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public %s<E> headSet(E toElement) {", NavigableSet.class)
-        .add(PreconditionExcerpts.checkNotNull("toElement"))
+        .addLine("    %s.requireNonNull(toElement);", Objects.class)
         .addLine("    %s<E> headSet = set.headSet(toElement, false);", NavigableSet.class)
         .addLine("    return new %s<>(", TYPE)
         .addLine("        headSet, add, fromElement, fromInclusive, toElement, false);")
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public %s<E> tailSet(E fromElement) {", NavigableSet.class)
-        .add(PreconditionExcerpts.checkNotNull("fromElement"))
+        .addLine("    %s.requireNonNull(fromElement);", Objects.class)
         .addLine("    %s<E> tailSet = set.tailSet(fromElement, true);", NavigableSet.class)
         .addLine("    return new %s<>(", TYPE)
         .addLine("        tailSet, add, fromElement, true, toElement, toInclusive);")

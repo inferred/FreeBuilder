@@ -10,8 +10,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
+import java.util.stream.BaseStream;
 import javax.annotation.Generated;
-import javax.annotation.Nullable;
 import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.util.Excerpt;
 
@@ -50,7 +55,10 @@ abstract class Property_Builder {
   }
 
   private TypeMirror type;
-  @Nullable private TypeMirror boxedType = null;
+  // Store a nullable object instead of an Optional. Escape analysis then
+  // allows the JVM to optimize away the Optional objects created by and
+  // passed to our API.
+  private TypeMirror boxedType = null;
   private String name;
   private String capitalizedName;
   private String allCapsName;
@@ -67,9 +75,24 @@ abstract class Property_Builder {
    * @throws NullPointerException if {@code type} is null
    */
   public org.inferred.freebuilder.processor.Property.Builder setType(TypeMirror type) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = Objects.requireNonNull(type);
     _unsetProperties.remove(Property.TYPE);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getType()} by applying {@code mapper} to it and
+   * using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mapType(
+      UnaryOperator<TypeMirror> mapper) {
+    Objects.requireNonNull(mapper);
+    return setType(mapper.apply(getType()));
   }
 
   /**
@@ -88,10 +111,67 @@ abstract class Property_Builder {
    * org.inferred.freebuilder.processor.Property#getBoxedType()}.
    *
    * @return this {@code Builder} object
+   * @throws NullPointerException if {@code boxedType} is null
+   */
+  public org.inferred.freebuilder.processor.Property.Builder setBoxedType(TypeMirror boxedType) {
+    this.boxedType = Objects.requireNonNull(boxedType);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
+  }
+
+  /**
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getBoxedType()}.
+   *
+   * @return this {@code Builder} object
    */
   public org.inferred.freebuilder.processor.Property.Builder setBoxedType(
-      @Nullable TypeMirror boxedType) {
-    this.boxedType = boxedType;
+      Optional<? extends TypeMirror> boxedType) {
+    if (boxedType.isPresent()) {
+      return setBoxedType(boxedType.get());
+    } else {
+      return clearBoxedType();
+    }
+  }
+
+  /**
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getBoxedType()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public org.inferred.freebuilder.processor.Property.Builder setNullableBoxedType(
+      TypeMirror boxedType) {
+    if (boxedType != null) {
+      return setBoxedType(boxedType);
+    } else {
+      return clearBoxedType();
+    }
+  }
+
+  /**
+   * If the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getBoxedType()} is present, replaces it by applying
+   * {@code mapper} to it and using the result.
+   *
+   * <p>If the result is null, clears the value.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mapBoxedType(
+      UnaryOperator<TypeMirror> mapper) {
+    return setBoxedType(getBoxedType().map(mapper));
+  }
+
+  /**
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getBoxedType()} to {@link Optional#empty()
+   * Optional.empty()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public org.inferred.freebuilder.processor.Property.Builder clearBoxedType() {
+    boxedType = null;
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -99,9 +179,8 @@ abstract class Property_Builder {
    * Returns the value that will be returned by {@link
    * org.inferred.freebuilder.processor.Property#getBoxedType()}.
    */
-  @Nullable
-  public TypeMirror getBoxedType() {
-    return boxedType;
+  public Optional<TypeMirror> getBoxedType() {
+    return Optional.ofNullable(boxedType);
   }
 
   /**
@@ -111,9 +190,23 @@ abstract class Property_Builder {
    * @throws NullPointerException if {@code name} is null
    */
   public org.inferred.freebuilder.processor.Property.Builder setName(String name) {
-    this.name = Preconditions.checkNotNull(name);
+    this.name = Objects.requireNonNull(name);
     _unsetProperties.remove(Property.NAME);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getName()} by applying {@code mapper} to it and
+   * using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mapName(UnaryOperator<String> mapper) {
+    Objects.requireNonNull(mapper);
+    return setName(mapper.apply(getName()));
   }
 
   /**
@@ -136,9 +229,24 @@ abstract class Property_Builder {
    */
   public org.inferred.freebuilder.processor.Property.Builder setCapitalizedName(
       String capitalizedName) {
-    this.capitalizedName = Preconditions.checkNotNull(capitalizedName);
+    this.capitalizedName = Objects.requireNonNull(capitalizedName);
     _unsetProperties.remove(Property.CAPITALIZED_NAME);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getCapitalizedName()} by applying {@code mapper} to
+   * it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mapCapitalizedName(
+      UnaryOperator<String> mapper) {
+    Objects.requireNonNull(mapper);
+    return setCapitalizedName(mapper.apply(getCapitalizedName()));
   }
 
   /**
@@ -161,9 +269,24 @@ abstract class Property_Builder {
    * @throws NullPointerException if {@code allCapsName} is null
    */
   public org.inferred.freebuilder.processor.Property.Builder setAllCapsName(String allCapsName) {
-    this.allCapsName = Preconditions.checkNotNull(allCapsName);
+    this.allCapsName = Objects.requireNonNull(allCapsName);
     _unsetProperties.remove(Property.ALL_CAPS_NAME);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getAllCapsName()} by applying {@code mapper} to it
+   * and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mapAllCapsName(
+      UnaryOperator<String> mapper) {
+    Objects.requireNonNull(mapper);
+    return setAllCapsName(mapper.apply(getAllCapsName()));
   }
 
   /**
@@ -192,6 +315,21 @@ abstract class Property_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#isUsingBeanConvention()} by applying {@code mapper}
+   * to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mapUsingBeanConvention(
+      UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setUsingBeanConvention(mapper.apply(isUsingBeanConvention()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link
    * org.inferred.freebuilder.processor.Property#isUsingBeanConvention()}.
    *
@@ -211,9 +349,24 @@ abstract class Property_Builder {
    * @throws NullPointerException if {@code getterName} is null
    */
   public org.inferred.freebuilder.processor.Property.Builder setGetterName(String getterName) {
-    this.getterName = Preconditions.checkNotNull(getterName);
+    this.getterName = Objects.requireNonNull(getterName);
     _unsetProperties.remove(Property.GETTER_NAME);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#getGetterName()} by applying {@code mapper} to it
+   * and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mapGetterName(
+      UnaryOperator<String> mapper) {
+    Objects.requireNonNull(mapper);
+    return setGetterName(mapper.apply(getGetterName()));
   }
 
   /**
@@ -242,6 +395,21 @@ abstract class Property_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.Property#isFullyCheckedCast()} by applying {@code mapper} to
+   * it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mapFullyCheckedCast(
+      UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setFullyCheckedCast(mapper.apply(isFullyCheckedCast()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link
    * org.inferred.freebuilder.processor.Property#isFullyCheckedCast()}.
    *
@@ -263,9 +431,9 @@ abstract class Property_Builder {
   public org.inferred.freebuilder.processor.Property.Builder addAccessorAnnotations(
       Excerpt element) {
     if (accessorAnnotations instanceof ImmutableList) {
-      accessorAnnotations = new ArrayList<Excerpt>(accessorAnnotations);
+      accessorAnnotations = new ArrayList<>(accessorAnnotations);
     }
-    accessorAnnotations.add(Preconditions.checkNotNull(element));
+    accessorAnnotations.add(Objects.requireNonNull(element));
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -289,20 +457,63 @@ abstract class Property_Builder {
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
   public org.inferred.freebuilder.processor.Property.Builder addAllAccessorAnnotations(
-      Iterable<? extends Excerpt> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
+      Spliterator<? extends Excerpt> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
         if (accessorAnnotations instanceof ImmutableList) {
-          accessorAnnotations = new ArrayList<Excerpt>(accessorAnnotations);
+          accessorAnnotations = new ArrayList<>(accessorAnnotations);
         }
         ((ArrayList<?>) accessorAnnotations)
-            .ensureCapacity(accessorAnnotations.size() + elementsSize);
+            .ensureCapacity(accessorAnnotations.size() + (int) elementsSize);
       }
     }
-    for (Excerpt element : elements) {
-      addAccessorAnnotations(element);
+    elements.forEachRemaining(this::addAccessorAnnotations);
+    return (org.inferred.freebuilder.processor.Property.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.Property#getAccessorAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.Property.Builder addAllAccessorAnnotations(
+      BaseStream<? extends Excerpt, ?> elements) {
+    return addAllAccessorAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.Property#getAccessorAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.Property.Builder addAllAccessorAnnotations(
+      Iterable<? extends Excerpt> elements) {
+    return addAllAccessorAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.Property#getAccessorAnnotations()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public org.inferred.freebuilder.processor.Property.Builder mutateAccessorAnnotations(
+      Consumer<? super List<Excerpt>> mutator) {
+    if (accessorAnnotations instanceof ImmutableList) {
+      accessorAnnotations = new ArrayList<>(accessorAnnotations);
     }
+    // If addAccessorAnnotations is overridden, this method will be updated to delegate to it
+    mutator.accept(accessorAnnotations);
     return (org.inferred.freebuilder.processor.Property.Builder) this;
   }
 
@@ -328,7 +539,7 @@ abstract class Property_Builder {
    */
   public List<Excerpt> getAccessorAnnotations() {
     if (accessorAnnotations instanceof ImmutableList) {
-      accessorAnnotations = new ArrayList<Excerpt>(accessorAnnotations);
+      accessorAnnotations = new ArrayList<>(accessorAnnotations);
     }
     return Collections.unmodifiableList(accessorAnnotations);
   }
@@ -341,24 +552,20 @@ abstract class Property_Builder {
       org.inferred.freebuilder.processor.Property value) {
     Property_Builder _defaults = new org.inferred.freebuilder.processor.Property.Builder();
     if (_defaults._unsetProperties.contains(Property.TYPE)
-        || !value.getType().equals(_defaults.getType())) {
+        || !Objects.equals(value.getType(), _defaults.getType())) {
       setType(value.getType());
     }
-    if (value.getBoxedType() != _defaults.getBoxedType()
-        && (value.getBoxedType() == null
-            || !value.getBoxedType().equals(_defaults.getBoxedType()))) {
-      setBoxedType(value.getBoxedType());
-    }
+    value.getBoxedType().ifPresent(this::setBoxedType);
     if (_defaults._unsetProperties.contains(Property.NAME)
-        || !value.getName().equals(_defaults.getName())) {
+        || !Objects.equals(value.getName(), _defaults.getName())) {
       setName(value.getName());
     }
     if (_defaults._unsetProperties.contains(Property.CAPITALIZED_NAME)
-        || !value.getCapitalizedName().equals(_defaults.getCapitalizedName())) {
+        || !Objects.equals(value.getCapitalizedName(), _defaults.getCapitalizedName())) {
       setCapitalizedName(value.getCapitalizedName());
     }
     if (_defaults._unsetProperties.contains(Property.ALL_CAPS_NAME)
-        || !value.getAllCapsName().equals(_defaults.getAllCapsName())) {
+        || !Objects.equals(value.getAllCapsName(), _defaults.getAllCapsName())) {
       setAllCapsName(value.getAllCapsName());
     }
     if (_defaults._unsetProperties.contains(Property.USING_BEAN_CONVENTION)
@@ -366,7 +573,7 @@ abstract class Property_Builder {
       setUsingBeanConvention(value.isUsingBeanConvention());
     }
     if (_defaults._unsetProperties.contains(Property.GETTER_NAME)
-        || !value.getGetterName().equals(_defaults.getGetterName())) {
+        || !Objects.equals(value.getGetterName(), _defaults.getGetterName())) {
       setGetterName(value.getGetterName());
     }
     if (_defaults._unsetProperties.contains(Property.FULLY_CHECKED_CAST)
@@ -392,27 +599,23 @@ abstract class Property_Builder {
     Property_Builder _defaults = new org.inferred.freebuilder.processor.Property.Builder();
     if (!base._unsetProperties.contains(Property.TYPE)
         && (_defaults._unsetProperties.contains(Property.TYPE)
-            || !template.getType().equals(_defaults.getType()))) {
+            || !Objects.equals(template.getType(), _defaults.getType()))) {
       setType(template.getType());
     }
-    if (template.getBoxedType() != _defaults.getBoxedType()
-        && (template.getBoxedType() == null
-            || !template.getBoxedType().equals(_defaults.getBoxedType()))) {
-      setBoxedType(template.getBoxedType());
-    }
+    template.getBoxedType().ifPresent(this::setBoxedType);
     if (!base._unsetProperties.contains(Property.NAME)
         && (_defaults._unsetProperties.contains(Property.NAME)
-            || !template.getName().equals(_defaults.getName()))) {
+            || !Objects.equals(template.getName(), _defaults.getName()))) {
       setName(template.getName());
     }
     if (!base._unsetProperties.contains(Property.CAPITALIZED_NAME)
         && (_defaults._unsetProperties.contains(Property.CAPITALIZED_NAME)
-            || !template.getCapitalizedName().equals(_defaults.getCapitalizedName()))) {
+            || !Objects.equals(template.getCapitalizedName(), _defaults.getCapitalizedName()))) {
       setCapitalizedName(template.getCapitalizedName());
     }
     if (!base._unsetProperties.contains(Property.ALL_CAPS_NAME)
         && (_defaults._unsetProperties.contains(Property.ALL_CAPS_NAME)
-            || !template.getAllCapsName().equals(_defaults.getAllCapsName()))) {
+            || !Objects.equals(template.getAllCapsName(), _defaults.getAllCapsName()))) {
       setAllCapsName(template.getAllCapsName());
     }
     if (!base._unsetProperties.contains(Property.USING_BEAN_CONVENTION)
@@ -422,7 +625,7 @@ abstract class Property_Builder {
     }
     if (!base._unsetProperties.contains(Property.GETTER_NAME)
         && (_defaults._unsetProperties.contains(Property.GETTER_NAME)
-            || !template.getGetterName().equals(_defaults.getGetterName()))) {
+            || !Objects.equals(template.getGetterName(), _defaults.getGetterName()))) {
       setGetterName(template.getGetterName());
     }
     if (!base._unsetProperties.contains(Property.FULLY_CHECKED_CAST)
@@ -478,7 +681,10 @@ abstract class Property_Builder {
 
   private static final class Value extends org.inferred.freebuilder.processor.Property {
     private final TypeMirror type;
-    @Nullable private final TypeMirror boxedType;
+    // Store a nullable object instead of an Optional. Escape analysis then
+    // allows the JVM to optimize away the Optional objects created by our
+    // getter method.
+    private final TypeMirror boxedType;
     private final String name;
     private final String capitalizedName;
     private final String allCapsName;
@@ -505,9 +711,8 @@ abstract class Property_Builder {
     }
 
     @Override
-    @Nullable
-    public TypeMirror getBoxedType() {
-      return boxedType;
+    public Optional<TypeMirror> getBoxedType() {
+      return Optional.ofNullable(boxedType);
     }
 
     @Override
@@ -551,51 +756,29 @@ abstract class Property_Builder {
         return false;
       }
       Value other = (Value) obj;
-      if (!type.equals(other.type)) {
-        return false;
-      }
-      if (boxedType != other.boxedType
-          && (boxedType == null || !boxedType.equals(other.boxedType))) {
-        return false;
-      }
-      if (!name.equals(other.name)) {
-        return false;
-      }
-      if (!capitalizedName.equals(other.capitalizedName)) {
-        return false;
-      }
-      if (!allCapsName.equals(other.allCapsName)) {
-        return false;
-      }
-      if (usingBeanConvention != other.usingBeanConvention) {
-        return false;
-      }
-      if (!getterName.equals(other.getterName)) {
-        return false;
-      }
-      if (fullyCheckedCast != other.fullyCheckedCast) {
-        return false;
-      }
-      if (!accessorAnnotations.equals(other.accessorAnnotations)) {
-        return false;
-      }
-      return true;
+      return Objects.equals(type, other.type)
+          && Objects.equals(boxedType, other.boxedType)
+          && Objects.equals(name, other.name)
+          && Objects.equals(capitalizedName, other.capitalizedName)
+          && Objects.equals(allCapsName, other.allCapsName)
+          && usingBeanConvention == other.usingBeanConvention
+          && Objects.equals(getterName, other.getterName)
+          && fullyCheckedCast == other.fullyCheckedCast
+          && Objects.equals(accessorAnnotations, other.accessorAnnotations);
     }
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(
-          new Object[] {
-            type,
-            boxedType,
-            name,
-            capitalizedName,
-            allCapsName,
-            usingBeanConvention,
-            getterName,
-            fullyCheckedCast,
-            accessorAnnotations
-          });
+      return Objects.hash(
+          type,
+          boxedType,
+          name,
+          capitalizedName,
+          allCapsName,
+          usingBeanConvention,
+          getterName,
+          fullyCheckedCast,
+          accessorAnnotations);
     }
 
     @Override
@@ -626,7 +809,10 @@ abstract class Property_Builder {
 
   private static final class Partial extends org.inferred.freebuilder.processor.Property {
     private final TypeMirror type;
-    @Nullable private final TypeMirror boxedType;
+    // Store a nullable object instead of an Optional. Escape analysis then
+    // allows the JVM to optimize away the Optional objects created by our
+    // getter method.
+    private final TypeMirror boxedType;
     private final String name;
     private final String capitalizedName;
     private final String allCapsName;
@@ -658,9 +844,8 @@ abstract class Property_Builder {
     }
 
     @Override
-    @Nullable
-    public TypeMirror getBoxedType() {
-      return boxedType;
+    public Optional<TypeMirror> getBoxedType() {
+      return Optional.ofNullable(boxedType);
     }
 
     @Override
@@ -722,55 +907,31 @@ abstract class Property_Builder {
         return false;
       }
       Partial other = (Partial) obj;
-      if (type != other.type && (type == null || !type.equals(other.type))) {
-        return false;
-      }
-      if (boxedType != other.boxedType
-          && (boxedType == null || !boxedType.equals(other.boxedType))) {
-        return false;
-      }
-      if (name != other.name && (name == null || !name.equals(other.name))) {
-        return false;
-      }
-      if (capitalizedName != other.capitalizedName
-          && (capitalizedName == null || !capitalizedName.equals(other.capitalizedName))) {
-        return false;
-      }
-      if (allCapsName != other.allCapsName
-          && (allCapsName == null || !allCapsName.equals(other.allCapsName))) {
-        return false;
-      }
-      if (usingBeanConvention != other.usingBeanConvention) {
-        return false;
-      }
-      if (getterName != other.getterName
-          && (getterName == null || !getterName.equals(other.getterName))) {
-        return false;
-      }
-      if (fullyCheckedCast != other.fullyCheckedCast) {
-        return false;
-      }
-      if (!accessorAnnotations.equals(other.accessorAnnotations)) {
-        return false;
-      }
-      return _unsetProperties.equals(other._unsetProperties);
+      return Objects.equals(type, other.type)
+          && Objects.equals(boxedType, other.boxedType)
+          && Objects.equals(name, other.name)
+          && Objects.equals(capitalizedName, other.capitalizedName)
+          && Objects.equals(allCapsName, other.allCapsName)
+          && usingBeanConvention == other.usingBeanConvention
+          && Objects.equals(getterName, other.getterName)
+          && fullyCheckedCast == other.fullyCheckedCast
+          && Objects.equals(accessorAnnotations, other.accessorAnnotations)
+          && Objects.equals(_unsetProperties, other._unsetProperties);
     }
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(
-          new Object[] {
-            type,
-            boxedType,
-            name,
-            capitalizedName,
-            allCapsName,
-            usingBeanConvention,
-            getterName,
-            fullyCheckedCast,
-            accessorAnnotations,
-            _unsetProperties
-          });
+      return Objects.hash(
+          type,
+          boxedType,
+          name,
+          capitalizedName,
+          allCapsName,
+          usingBeanConvention,
+          getterName,
+          fullyCheckedCast,
+          accessorAnnotations,
+          _unsetProperties);
     }
 
     @Override

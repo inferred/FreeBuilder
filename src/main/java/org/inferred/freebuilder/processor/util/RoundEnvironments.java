@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
 
 import java.lang.annotation.Annotation;
@@ -34,12 +33,9 @@ public class RoundEnvironments {
    * <p>The canonical example is forgetting to import &#64;Nullable.
    */
   public static Set<? extends Element> annotatedElementsIn(
-      RoundEnvironment roundEnv, final Class<? extends Annotation> a) {
-    return Sets.filter(roundEnv.getElementsAnnotatedWith(a), new Predicate<Element>() {
-      @Override public boolean apply(Element element) {
-        return (element.getAnnotation(a) != null);
-      }
-    });
+      RoundEnvironment roundEnv, Class<? extends Annotation> a) {
+    return Sets.filter(roundEnv.getElementsAnnotatedWith(a),
+        element -> element.getAnnotation(a) != null);
   }
 
   private RoundEnvironments() { }  // COV_NF_LINE

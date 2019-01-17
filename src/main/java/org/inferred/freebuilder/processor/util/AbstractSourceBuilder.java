@@ -113,15 +113,13 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
 
   @Override
   public Appendable append(CharSequence csq) {
-    return append(csq, 0, csq.length());
+    csq.chars().forEach(c -> append((char) c));
+    return getThis();
   }
 
   @Override
   public Appendable append(CharSequence csq, int start, int end) {
-    for (int i = start; i < end; i++) {
-      append(csq.charAt(i));
-    }
-    return getThis();
+    return append(csq.subSequence(start, end));
   }
 
   private void add(Object arg) {

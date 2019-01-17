@@ -1,7 +1,7 @@
-`@FreeBuilder`
-==============
+FreeBuilder
+===========
 
-_Automatic generation of the Builder pattern for Java 1.6+_
+_Automatic generation of the Builder pattern for Java 1.8+_
 
 [![Maven Central](https://img.shields.io/maven-central/v/org.inferred/freebuilder.svg)](https://search.maven.org/artifact/org.inferred/freebuilder)
 [![Bintray](https://api.bintray.com/packages/inferred/maven/org.inferred%3Afreebuilder/images/download.svg)](https://bintray.com/inferred/maven/org.inferred%3Afreebuilder/_latestVersion)
@@ -16,7 +16,7 @@ _Automatic generation of the Builder pattern for Java 1.6+_
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Background](#background)
-- [How to use `@FreeBuilder`](#how-to-use-freebuilder)
+- [How to use FreeBuilder](#how-to-use-freebuilder)
   - [Quick start](#quick-start)
   - [What you get](#what-you-get)
   - [Accessor methods](#accessor-methods)
@@ -38,14 +38,15 @@ _Automatic generation of the Builder pattern for Java 1.6+_
   - [Gradle](#gradle)
   - [Eclipse](#eclipse)
   - [IntelliJ](#intellij)
+- [Upgrading from v1](#upgrading-from-v1)
 - [Troubleshooting](#troubleshooting)
   - [Troubleshooting javac](#troubleshooting-javac)
   - [Troubleshooting Eclipse](#troubleshooting-eclipse)
   - [Online resouces](#online-resouces)
 - [Alternatives](#alternatives)
-  - [Immutables vs `@FreeBuilder`](#immutables-vs-freebuilder)
-  - [AutoValue vs `@FreeBuilder`](#autovalue-vs-freebuilder)
-  - [Proto vs `@FreeBuilder`](#proto-vs-freebuilder)
+  - [Immutables vs FreeBuilder](#immutables-vs-freebuilder)
+  - [AutoValue vs FreeBuilder](#autovalue-vs-freebuilder)
+  - [Proto vs FreeBuilder](#proto-vs-freebuilder)
 - [Wait, why "free"?](#wait-why-free)
 - [License](#license)
 
@@ -62,8 +63,8 @@ class, then added "just one more"? Even a simple four-field class requires 39
 lines of code for the most basic builder API, or 72 lines if you don't use a
 utility like [AutoValue][] to generate the value boilerplate.
 
-`@FreeBuilder` produces all the boilerplate for you, as well as free extras like
-JavaDoc, getter methods, mapper methods (Java 8+), [collections support](#collections-and-maps),
+FreeBuilder produces all the boilerplate for you, as well as free extras like
+JavaDoc, getter methods, mapper methods, [collections support](#collections-and-maps),
 [nested builders](#nested-buildable-types), and [partial values](#partials)
 (used in testing), which are highly useful, but would very rarely justify
 their creation and maintenance burden in hand-crafted code. (We also reserve
@@ -80,13 +81,13 @@ the right to add more awesome methods in future!)
 > &mdash; <em>Effective Java, Second Edition</em>, page 39
 
 
-How to use `@FreeBuilder`
--------------------------
+How to use FreeBuilder
+----------------------
 
 
 ### Quick start
 
-_See [Build tools and IDEs](#build-tools-and-ides) for how to add `@FreeBuilder` 
+_See [Build tools and IDEs](#build-tools-and-ides) for how to add FreeBuilder 
 to your project's build and/or IDE._
 
 Create your value type (e.g. `Person`) as an interface or abstract class,
@@ -113,10 +114,9 @@ public interface Person {
 ```
 
 The `toBuilder()` method here is optional but highly recommended.
-If you are writing an abstract class, or using Java 8, you may wish to make the
-builder's constructor package-protected and manually provide instead a static
-`builder()` method on the value type (though <em>Effective Java</em> does not do
-this).
+You may also wish to make the builder's constructor package-protected and manually
+provide instead a static `builder()` method on the value type (though
+<em>Effective Java</em> does not do this).
 
 
 ### What you get
@@ -128,7 +128,7 @@ If you write the Person interface shown above, you get:
      * JavaDoc
      * getters (throwing `IllegalStateException` for unset fields)
      * setters
-     * lambda-accepting mapper methods (Java 8+)
+     * lambda-accepting mapper methods
      * `from` and `mergeFrom` methods to copy data from existing values or builders
      * a `build` method that verifies all fields have been set
         * [see below for default values and constraint checking](#defaults-and-constraints)
@@ -183,7 +183,7 @@ For each property `foo`, the builder gets:
 |:------:| ----------- |
 | A setter method, `foo` | Throws a NullPointerException if provided a null. (See the sections on [Optional](#optional-values) and [Nullable](#using-nullable) for ways to store properties that can be missing.) |
 | A getter method, `foo` | Throws an IllegalStateException if the property value has not yet been set. |
-| A mapper method, `mapFoo` | *Java 8+* Takes a [UnaryOperator]. Replaces the current property value with the result of invoking the unary operator on it. Throws a NullPointerException if the operator, or the value it returns, is null. Throws an IllegalStateException if the property value has not yet been set. |
+| A mapper method, `mapFoo` | Takes a [UnaryOperator]. Replaces the current property value with the result of invoking the unary operator on it. Throws a NullPointerException if the operator, or the value it returns, is null. Throws an IllegalStateException if the property value has not yet been set. |
 
 The mapper methods are very useful when modifying existing values, e.g.
 
@@ -234,10 +234,10 @@ public interface Person {
 ### Optional values
 
 If a property is optional&mdash;that is, has no reasonable default&mdash;then
-use [the Java 8 Optional type][] (or [the Guava Optional type][] for
+use [the Java Optional type][] (or [the Guava Optional type][] for
 backwards-compatibility).
 
-[the Java 8 Optional type]: https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html
+[the Java Optional type]: https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html
 [the Guava Optional type]: http://google.github.io/guava/releases/19.0/api/docs/com/google/common/base/Optional.html
 
 
@@ -255,7 +255,7 @@ will gain additional convenience setter methods:
 | `clearDescription()` | Sets the property to `Optional.empty()`. |
 | `description(Optional<String> value)` | Sets the property to `value`. |
 | `nullableDescription(String value)` | Sets the property to `Optional.ofNullable(value)`. |
-| `mapDescription(UnaryOperator<String> mapper` | *Java 8+* If the property value is not empty, this replaces the value with the result of invoking `mapper` with the existing value, or clears it if `mapper` returns null. Throws a NullPointerException if `mapper` is null. |
+| `mapDescription(UnaryOperator<String> mapper` | If the property value is not empty, this replaces the value with the result of invoking `mapper` with the existing value, or clears it if `mapper` returns null. Throws a NullPointerException if `mapper` is null. |
 
 Prefer to use explicit defaults where meaningful, as it avoids the need for
 edge-case code; but prefer Optional to ad-hoc 'not set' defaults, like -1 or
@@ -291,7 +291,7 @@ change their null-handling behaviour:
 |:------:| ----------- |
 | `title(@Nullable String title)` | Sets the property to `title`. |
 | `title()` | Returns the current value of the property. May be null. |
-| `mapTitle(UnaryOperator<String> mapper)` | *Java 8+* Takes a [UnaryOperator]. Replaces the current property value, if it is not null, with the result of invoking `mapper` on it. Throws a NullPointerException if `mapper` is null. `mapper` may return a null. |
+| `mapTitle(UnaryOperator<String> mapper)` | Takes a [UnaryOperator]. Replaces the current property value, if it is not null, with the result of invoking `mapper` on it. Throws a NullPointerException if `mapper` is null. `mapper` may return a null. |
 
 [Guava]: https://github.com/google/guava
 [Hoare]: http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare
@@ -317,12 +317,12 @@ optimal yet (e.g.  `if (foo.x().orElse(null) != null)`  instead of  `if
 
  * _[IDE REFACTOR]_ Rename all your `@Nullable` setters to `nullableX` (or `setNullableX`).
 
-Your API is now `@FreeBuilder`-compatible :)
+Your API is now FreeBuilder-compatible :)
 
 
 ### Collections and Maps
 
-`@FreeBuilder` has special support for collection and map properties, removing
+FreeBuilder has special support for collection and map properties, removing
 the `foo` accessor method and generating new ones appropriate to the type.
 Collection and map properties default to an empty collection/map and cannot hold
 nulls.
@@ -339,8 +339,8 @@ property called 'descendants' would generate:
 |:------:| ----------- |
 | `addDescendants(String element)` | Appends `element` to the collection of descendants. If descendants is a set and the element is already present, it is ignored. Throws a NullPointerException if element is null. |
 | `addDescendants(String... elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
-| `addAllDescendants(​Iterable<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null.<br> *Java 8+* Overloaded to also accept a [Stream] or [Spliterator]. |
-| `mutateDescendants(​Consumer<‌.‌.‌.‌<String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the collection of descendants. (The mutator takes a list, set or map as appropriate.) Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned collection to replace the existing collection. |
+| `addAllDescendants(​Iterable<String> elements)`<br>`addAllDescendants(​Stream<String> elements)`<br>`addAllDescendants(​Spliterator<String> elements)` | Appends all `elements` to the collection of descendants. If descendants is a set, any elements already present are ignored. Throws a NullPointerException if elements, or any of the values it holds, is null. |
+| `mutateDescendants(​Consumer<‌.‌.‌.‌<String>> mutator)` | Invokes the [Consumer] `mutator` with the collection of descendants. (The mutator takes a list, set or map as appropriate.) Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned collection to replace the existing collection. |
 | `clearDescendants()` | Removes all elements from the collection of descendants, leaving it empty. |
 | `descendants()` | Returns an unmodifiable view of the collection of descendants. Changes to the collection held by the builder will be reflected in the view. |
 | `setComparatorForDescendants(​Comparator<? super String> comparator)` | *SortedSet only* A protected method that sets the [comparator] to keep the set elements ordered by. Must be called before any other accessor method for this property. Defaults to the [natural ordering] of the set's elements. |
@@ -357,7 +357,7 @@ A <code>[Map][]</code> property called 'albums' would generate:
 | `putAlbums(int key, String value)` | Associates `key` with `value` in albums.  Throws a NullPointerException if either parameter is null. Replaces any existing entry. |
 | `putAllAlbums(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in albums. Throws a NullPointerException if the map is null or contains a null key or value. Throws an IllegalArgumentException if any key is already present. |
 | `removeAlbums(int key)` | Removes the mapping for `key` from albums. Throws a NullPointerException if the parameter is null. Does nothing if the key is not present. |
-| `mutateAlbums(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the map of albums. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned map to replace the existing map. |
+| `mutateAlbums(​Consumer<Map<Integer, String>> mutator)` | Invokes the [Consumer] `mutator` with the map of albums. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned map to replace the existing map. |
 | `clearAlbums()` | Removes all mappings from albums, leaving it empty. |
 | `albums()` | Returns an unmodifiable view of the map of albums. Changes to the map held by the builder will be reflected in this view. |
 
@@ -375,7 +375,7 @@ A <code>[Multimap][]</code> property called 'awards' would generate:
 | `putAllAwards(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in awards. Throws a NullPointerException if the map is null or contains a null key or value. If awards is a map, an IllegalArgumentException will be thrown if any key is already present. |
 | `removeAwards(int key, String value)` | Removes the single pair `key`-`value` from awards. If multiple pairs match, which is removed is unspecified. Throws a NullPointerException if either parameter is null. |
 | `removeAllAwards(int key)` | Removes all values associated with `key` from awards. Throws a NullPointerException if the key is null. |
-| `mutateAwards(​Consumer<Map<Integer, String>> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the multimap of awards. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned multimap to replace the existing multimap. |
+| `mutateAwards(​Consumer<Map<Integer, String>> mutator)` | Invokes the [Consumer] `mutator` with the multimap of awards. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned multimap to replace the existing multimap. |
 | `clearAwards()` | Removes all mappings from awards, leaving it empty. |
 | `awards()` | Returns an unmodifiable view of the multimap of awards. Changes to the multimap held by the builder will be reflected in this view. |
 
@@ -413,21 +413,21 @@ personBuilder
   Person owner();
 ```
 
-`@FreeBuilder` has special support for buildable types like [protos][] and other
-`@FreeBuilder` types. A buildable property called 'owner' would generate:
+FreeBuilder has special support for buildable types like [protos][] and other
+FreeBuilder types. A buildable property called 'owner' would generate:
 
 | Method | Description |
 |:------:| ----------- |
 | `owner(Person owner)` | Sets the owner. Throws a NullPointerException if provided a null. |
 | `owner(Person.Builder builder)` | Calls `build()` on `builder` and sets the owner to the result. Throws a NullPointerException if builder or the result of calling `build()` is null. |
 | `ownerBuilder()` | Returns a builder for the owner property. Unlike other getter methods in FreeBuilder-generated API, this object is mutable, and modifying it **will modify the underlying property**. |
-| `mutateOwner(Consumer<Person.Builder> mutator)` | *Java 8+* Invokes the [Consumer] `mutator` with the builder for the property. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored. |
+| `mutateOwner(Consumer<Person.Builder> mutator)` | Invokes the [Consumer] `mutator` with the builder for the property. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored. |
 
-The mutate method allows the buildable property to be set up or modified succinctly and readably in Java 8+:
+The mutate method allows the buildable property to be set up or modified succinctly and readably:
 
 ```java
 Project project = new Project.Builder()
-    .mutateOwner(b -> b
+    .mutateOwner($ -> $
         .name("Phil")
         .department("HR"))
     .build();
@@ -486,7 +486,7 @@ constructor. While we follow most of the recommendations therein, we explicitly
 do not follow this one: while you gain compile-time verification that all
 parameters are set, you lose flexibility in client code, as well as opening
 yourself back up to the exact same subtle usage bugs as traditional constructors
-and factory methods. For the default `@FreeBuilder` case, where all parameters
+and factory methods. For the default FreeBuilder case, where all parameters
 are required, this does not scale.
 
 If you want to follow <em>Effective Java</em> more faithfully in your own types,
@@ -558,7 +558,7 @@ interface Address {
 }
 ```
 
-`@FreeBuilder` will generate appropriate [@JsonProperty] annotations on the
+FreeBuilder will generate appropriate [@JsonProperty] annotations on the
 builder. (If you use Java 8 or Guava types, you may need to include the
 relevant Jackson extension modules, [jackson-datatype-jdk8] and
 [jackson-datatype-guava].)
@@ -596,7 +596,7 @@ interoperable implementation code (e.g returning [immutable collections]).
 
 ### Maven
 
-Add the `@FreeBuilder` artifact as an optional dependency to your Maven POM:
+Add the FreeBuilder artifact as an optional dependency to your Maven POM:
 
 ```xml
 <dependencies>
@@ -673,6 +673,39 @@ directory** setting) and select **Mark Directory As > Generated Sources Root**.
 [Auto Issue #106]: https://github.com/google/auto/issues/106
 
 
+Upgrading from v1
+-----------------
+
+There are three API-breaking changes between v1 and v2 of FreeBuilder:
+
+ * Mapper methods use primitive, not boxed, functional interfaces for `int`,
+   `long` and `double` properties.
+
+   **This will likely break binary backwards compatibility** for any library
+   using FreeBuilder to generate its builders. We apologise profusely for the
+   hassle this causes. If you simply cannot break your clients, but want to
+   upgrade to v2, you can force FreeBuilder to adhere to your old API with
+   [custom functional interfaces](#custom-functional-interfaces). To do this,
+   use your IDE to override all mapper methods taking a `UnaryOperator<Integer>`,
+   `UnaryOperator<Long>` or `UnaryOperator<Double>` (the implementations can
+   just delegate to super). One of these will have been generated for each
+   `int`, `long` and `double` property. Once all such methods are overridden,
+   upgrading to v2 should now leave your APIs unaltered.
+
+ * No more support for Java 6/7
+
+   If you are still on Java 6/7, please continue to use the v1 releases of FreeBuilder.
+
+ * No longer ships with `javax.annotation.Nullable`
+
+   FreeBuilder treats _any_ annotation named Nullable the same way, so you can either
+   explicitly compile against the old annotation by including
+   [the JSR-305 jar](https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305),
+   or use a more modern alternative, like
+   [org.jetbrains.annotations](https://mvnrepository.com/artifact/org.jetbrains/annotations).
+   (Or use optionals! See [Converting from `@Nullable`](#converting-from-nullable) for
+   advice.)
+
 Troubleshooting
 ---------------
 
@@ -680,14 +713,14 @@ Troubleshooting
 ### Troubleshooting javac
 
 If you make a mistake in your code (e.g. giving your value type a private
-constructor), `@FreeBuilder` is designed to output a Builder superclass anyway,
+constructor), FreeBuilder is designed to output a Builder superclass anyway,
 with as much of the interface intact as possible, so the only errors you see
 are the ones output by the annotation processor.
 
 Unfortunately, `javac` has a broken design: if _any_ annotation processor
 outputs _any error whatsoever_, *all* generated code is discarded, and all
 references to that generated code are flagged as broken references. Since
-your Builder API is generated, that means every usage of a `@FreeBuilder`
+your Builder API is generated, that means every usage of a FreeBuilder
 builder becomes an error. This deluge of false errors swamps the actual
 error you need to find and fix. (See also [the related issue][issue 3].)
 
@@ -701,7 +734,7 @@ string "@FreeBuilder type"; nearly all errors include this in their text.
 Eclipse manages, somehow, to be worse than `javac` here. It will never output
 annotation processor errors unless there is another error of some kind; and,
 even then, only after an incremental, not clean, compile. In practice, most
-mistakes are made while editing the `@FreeBuilder` type, which means the
+mistakes are made while editing the FreeBuilder type, which means the
 incremental compiler will flag the errors. If you find a generated superclass
 appears to be missing after a clean compile, however, try touching the
 relevant file to trigger the incremental compiler. (Or run javac.)
@@ -709,9 +742,9 @@ relevant file to trigger the incremental compiler. (Or run javac.)
 ### Online resouces
 
   * If you find yourself stuck, needing help, wondering whether a given
-    behaviour is a feature or a bug, or just wanting to discuss `@FreeBuilder`,
-    please join and/or post to [the `@FreeBuilder` mailing list][mailing list].
-  * To see a list of open issues, or add a new one, see [the `@FreeBuilder`
+    behaviour is a feature or a bug, or just wanting to discuss FreeBuilder,
+    please join and/or post to [the FreeBuilder mailing list][mailing list].
+  * To see a list of open issues, or add a new one, see [the FreeBuilder
     issue tracker][issue tracker].
   * To submit a bug fix, or land a sweet new feature, [read up on how to
     contribute][contributing].
@@ -724,15 +757,15 @@ relevant file to trigger the incremental compiler. (Or run javac.)
 Alternatives
 ------------
 
-### Immutables vs `@FreeBuilder`
+### Immutables vs FreeBuilder
 
-<em><strong>Where is Immutables better than `@FreeBuilder`?</strong></em>
+<em><strong>Where is Immutables better than FreeBuilder?</strong></em>
 
-[Immutables](https://immutables.github.io/) provides many of the same features as `@FreeBuilder`, plus a whole host more. Some are optional ways to potentially enhance performance, like [derived](https://immutables.github.io/immutable.html#derived-attributes) and [lazy](https://immutables.github.io/immutable.html#lazy-attributes) attributes, [singleton](https://immutables.github.io/immutable.html#singleton-instances) and [interned](https://immutables.github.io/immutable.html#instance-interning) instances, and [hash code precomputation](https://immutables.github.io/immutable.html#precomputed-hashcode). Some are API-changing: [strict builders](https://immutables.github.io/immutable.html#strict-builder) provide a compile-time guarantee that all fields are set (but limit the use of builders as a consequence), while [copy methods](https://immutables.github.io/immutable.html#copy-methods) provide a concise way to clone a value with a single field changed (but require you to reference the generated ImmutableFoo type, not Foo). It provides [advanced binary serialization options](https://immutables.github.io/immutable.html#serialization) and [GSON support](https://immutables.github.io/typeadapters.html). It lets you easily customize the conventional method prefixes. As Immutables is an active project, this list is likely incomplete.
+[Immutables](https://immutables.github.io/) provides many of the same features as FreeBuilder, plus a whole host more. Some are optional ways to potentially enhance performance, like [derived](https://immutables.github.io/immutable.html#derived-attributes) and [lazy](https://immutables.github.io/immutable.html#lazy-attributes) attributes, [singleton](https://immutables.github.io/immutable.html#singleton-instances) and [interned](https://immutables.github.io/immutable.html#instance-interning) instances, and [hash code precomputation](https://immutables.github.io/immutable.html#precomputed-hashcode). Some are API-changing: [strict builders](https://immutables.github.io/immutable.html#strict-builder) provide a compile-time guarantee that all fields are set (but limit the use of builders as a consequence), while [copy methods](https://immutables.github.io/immutable.html#copy-methods) provide a concise way to clone a value with a single field changed (but require you to reference the generated ImmutableFoo type, not Foo). It provides [advanced binary serialization options](https://immutables.github.io/immutable.html#serialization) and [GSON support](https://immutables.github.io/typeadapters.html). It lets you easily customize the conventional method prefixes. As Immutables is an active project, this list is likely incomplete.
 
-<em><strong>Where is `@FreeBuilder` better than Immutables?</strong></em>
+<em><strong>Where is FreeBuilder better than Immutables?</strong></em>
 
-`@FreeBuilder` provides some features that are missing from, or not the default in, Immutables:
+FreeBuilder provides some features that are missing from, or not the default in, Immutables:
 
  * [Partials](#partials).
  * [Builder getter, mapper](#accessor-methods) and [mutation](#collections-and-maps) methods.
@@ -744,15 +777,15 @@ Alternatives
 
 The first three points are increasingly useful as your interfaces grow in complexity and usage. Partials greatly reduce the fragility of your tests by only setting the values the code being tested actually uses. Your interfaces are liable accumulate more constraints, like new required fields, or cross-field constraints, and while these will be vitally important across the application as a whole, they create a big maintenance burden when they break unit tests for existing code that does not rely on those constraints. Builder getter, mapper and mutation methods and nested builders empower the modify-rebuild pattern, where code changes a small part of an object without affecting the remainder.
 
-The last two points arise because Immutables is *type-generating*: you write your value type as a prototype, but you always use the generated class. This type is final, meaning you can't proxy it, which unfortunately breaks tools like [Mockito](http://mockito.org/) and its wonderful [smart nulls](http://site.mockito.org/mockito/docs/current/org/mockito/Answers.html#RETURNS_SMART_NULLS). The generated builder is hard to customize as you cannot override methods, explaining why Immutables has so many annotations: for instance, [the `@Value.Check` annotation](https://immutables.github.io/immutable.html#precondition-check-method) is unnecessary in `@FreeBuilder`, as you can simply override the setters or build method to perform field or cross-field validation.
+The last two points arise because Immutables is *type-generating*: you write your value type as a prototype, but you always use the generated class. This type is final, meaning you can't proxy it, which unfortunately breaks tools like [Mockito](http://mockito.org/) and its wonderful [smart nulls](http://site.mockito.org/mockito/docs/current/org/mockito/Answers.html#RETURNS_SMART_NULLS). The generated builder is hard to customize as you cannot override methods, explaining why Immutables has so many annotations: for instance, [the `@Value.Check` annotation](https://immutables.github.io/immutable.html#precondition-check-method) is unnecessary in FreeBuilder, as you can simply override the setters or build method to perform field or cross-field validation.
 
 1: But note that you *can* write a Builder subclass in your Foo type, enabling FreeBuilder-style override-based customization, though that is not the default approach recommended in the guide, and you will break all your callers if you change between the two.
 
 Immutables is a very active project, frequently adding new features, and future releases may address some or all of these deficiencies.
 
-### AutoValue vs `@FreeBuilder`
+### AutoValue vs FreeBuilder
 
-<em><strong>Why is `@FreeBuilder` better than [AutoValue][]?</strong></em>
+<em><strong>Why is FreeBuilder better than [AutoValue][]?</strong></em>
 
 It’s not! AutoValue provides an implementing class with a package-visible
 constructor, so you can easily implement the Factory pattern. If you’re writing
@@ -762,14 +795,14 @@ Factory pattern.
 
 How about if you want a builder? [AutoValue.Builder][] lets you explicitly
 specify a minimal Builder interface that will then be implemented by generated
-code, while `@FreeBuilder` provides a generated builder API. AutoValue.Builder
+code, while FreeBuilder provides a generated builder API. AutoValue.Builder
 is better if you must have a minimal API&mdash;for instance, in an Android
 project, where every method is expensive&mdash;or strongly prefer a
 visible-in-source API at the expense of many useful methods. Otherwise, consider
-using `@FreeBuilder` to implement the Builder pattern.
+using FreeBuilder to implement the Builder pattern.
 
 <em><strong>I used [AutoValue][], but now have more than three properties! How
-do I migrate to `@FreeBuilder`?</strong></em>
+do I migrate to FreeBuilder?</strong></em>
 
   1. Change your annotation to `@FreeBuilder`.
   2. Rewrite your factory method(s) to use the builder API.
@@ -779,7 +812,7 @@ You can always skip step 3 and have both factory and builder methods, if that
 seems cleaner!
 
 
-<em><strong>Can I use both [AutoValue][] and `@FreeBuilder`?</strong></em>
+<em><strong>Can I use both [AutoValue][] and FreeBuilder?</strong></em>
 
 Not really. You can certainly use both annotations, but you will end up with
 two different implementing classes that never compare equal, even if they have
@@ -789,10 +822,10 @@ the same values.
 [AutoValue.Builder]: https://github.com/google/auto/tree/master/value#builders
 
 
-### Proto vs `@FreeBuilder`
+### Proto vs FreeBuilder
 
 <em><strong>[Protocol buffers][] have provided builders for ages. Why should I
-use `@FreeBuilder`?</strong></em>
+use FreeBuilder?</strong></em>
 
 Protocol buffers are cross-platform, backwards- and forwards-compatible, and
 have a very efficient wire format. Unfortunately, they do not support custom
@@ -812,7 +845,7 @@ Wait, why "free"?
     code.
   * Free as in flexible: you should always be able to customize the builder where
     the defaults don't work for you.
-  * Free as in liberty: you can always drop `@FreeBuilder` and walk away with
+  * Free as in liberty: you can always drop FreeBuilder and walk away with
     the code it generated for you.
 
 License

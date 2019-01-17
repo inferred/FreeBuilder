@@ -15,20 +15,13 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NOT_NULLABLE;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullInline;
-import static org.inferred.freebuilder.processor.util.PreconditionExcerpts.checkNotNullPreamble;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
-
-import com.google.common.base.Optional;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unboxedUnaryOperator;
 
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -39,6 +32,9 @@ import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
+
+import java.util.Objects;
+import java.util.Optional;
 
 import javax.lang.model.type.TypeKind;
 
@@ -55,7 +51,7 @@ class DefaultProperty extends PropertyCodeGenerator {
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
           mapper(property),
-          unaryOperator(firstNonNull(property.getBoxedType(), property.getType())),
+          unboxedUnaryOperator(property.getType(), config.getTypes()),
           config.getElements(),
           config.getTypes());
       return Optional.of(new DefaultProperty(
@@ -113,8 +109,8 @@ class DefaultProperty extends PropertyCodeGenerator {
     if (kind.isPrimitive()) {
       body.addLine("  %s = %s;", property.getField(), property.getName());
     } else {
-      body.add(checkNotNullPreamble(property.getName()))
-          .addLine("  %s = %s;", property.getField(), checkNotNullInline(property.getName()));
+      body.addLine("  %s = %s.requireNonNull(%s);",
+          property.getField(), Objects.class, property.getName());
     }
     if (!hasDefault) {
       body.addLine("  %s.remove(%s.%s);",
@@ -130,9 +126,6 @@ class DefaultProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Replaces the value to be returned by %s",
@@ -153,7 +146,7 @@ class DefaultProperty extends PropertyCodeGenerator {
             mapper(property),
             mapperType.getFunctionalInterface());
     if (!hasDefault) {
-      code.add(PreconditionExcerpts.checkNotNull("mapper"));
+      code.addLine("  %s.requireNonNull(mapper);", Objects.class);
     }
     code.addLine("  return %s(mapper.%s(%s()));",
             setter(property), mapperType.getMethodName(), getter(property))
@@ -192,7 +185,7 @@ class DefaultProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    Excerpt defaults = Declarations.freshBuilder(code, datatype).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {
@@ -202,8 +195,7 @@ class DefaultProperty extends PropertyCodeGenerator {
       code.add(ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", value, property.getGetterName()),
           Excerpts.add("%s.%s()", defaults, getter(property)),
-          kind,
-          NOT_NULLABLE));
+          kind));
       code.add(") {%n");
     }
     code.addLine("  %s(%s.%s());", setter(property), value, property.getGetterName());
@@ -216,7 +208,7 @@ class DefaultProperty extends PropertyCodeGenerator {
   public void addMergeFromBuilder(Block code, String builder) {
     Excerpt base =
         hasDefault ? null : Declarations.upcastToGeneratedBuilder(code, datatype, builder);
-    Excerpt defaults = Declarations.freshBuilder(code, datatype).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.add("if (");
       if (!hasDefault) {
@@ -230,8 +222,7 @@ class DefaultProperty extends PropertyCodeGenerator {
       code.add(ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", builder, getter(property)),
           Excerpts.add("%s.%s()", defaults, getter(property)),
-          kind,
-          NOT_NULLABLE));
+          kind));
       if (!hasDefault) {
         code.add(")");
       }

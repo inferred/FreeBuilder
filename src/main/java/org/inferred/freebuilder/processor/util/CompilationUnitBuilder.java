@@ -17,14 +17,15 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
-import static com.google.common.collect.Lists.newArrayList;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -40,7 +41,7 @@ public class CompilationUnitBuilder
   private final QualifiedName classToWrite;
   private final ScopeHandler scopeHandler;
   private final SourceParser parser;
-  private final List<ScopeAwareTypeShortener> typeShorteners = newArrayList();
+  private final List<ScopeAwareTypeShortener> typeShorteners = new ArrayList<>();
   private final StringBuilder source = new StringBuilder();
 
   /**
@@ -122,10 +123,7 @@ public class CompilationUnitBuilder
   public static String formatSource(String source) {
     try {
       return new Formatter().formatSource(source);
-    } catch (UnsupportedClassVersionError e) {
-      // Formatter requires Java 7+; do no formatting in Java 6.
-      return source;
-    } catch (Exception e) {
+    } catch (FormatterException | RuntimeException e) {
       StringBuilder message = new StringBuilder()
           .append("Formatter failed:\n")
           .append(e.getMessage())

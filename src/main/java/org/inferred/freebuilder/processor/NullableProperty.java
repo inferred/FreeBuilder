@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
@@ -23,10 +22,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.ObjectsExcerpts.Nullability.NULLABLE;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Block;
@@ -35,10 +31,11 @@ import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
 
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -55,12 +52,12 @@ class NullableProperty extends PropertyCodeGenerator {
       boolean isPrimitive = property.getType().getKind().isPrimitive();
       Set<TypeElement> nullableAnnotations = nullablesIn(config.getAnnotations());
       if (isPrimitive || nullableAnnotations.isEmpty()) {
-        return Optional.absent();
+        return Optional.empty();
       }
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
           mapper(property),
-          unaryOperator(firstNonNull(property.getBoxedType(), property.getType())),
+          unaryOperator(property.getBoxedType().orElse(property.getType())),
           config.getElements(),
           config.getTypes());
       return Optional.of(new NullableProperty(
@@ -131,9 +128,6 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   private void addMapper(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is not",
@@ -145,7 +139,7 @@ class NullableProperty extends PropertyCodeGenerator {
         .addLine(" */")
         .addLine("public %s %s(%s mapper) {",
             datatype.getBuilder(), mapper(property), mapperType.getFunctionalInterface())
-        .add(PreconditionExcerpts.checkNotNull("mapper"));
+        .addLine("  %s.requireNonNull(mapper);", Objects.class);
     Block body = methodBody(code, "mapper");
     Excerpt propertyValue = body.declare(new TypeMirrorExcerpt(
         property.getType()), property.getName(), Excerpts.add("%s()", getter(property)));
@@ -183,13 +177,12 @@ class NullableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromValue(Block code, String value) {
-    Excerpt defaults = Declarations.freshBuilder(code, datatype).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", value, property.getGetterName()),
           Excerpts.add("%s.%s()", defaults, getter(property)),
-          DECLARED,
-          NULLABLE));
+          DECLARED));
     }
     code.addLine("  %s(%s.%s());", setter(property), value, property.getGetterName());
     if (defaults != null) {
@@ -199,13 +192,12 @@ class NullableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addMergeFromBuilder(Block code, String builder) {
-    Excerpt defaults = Declarations.freshBuilder(code, datatype).orNull();
+    Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
       code.addLine("if (%s) {", ObjectsExcerpts.notEquals(
           Excerpts.add("%s.%s()", builder, getter(property)),
           Excerpts.add("%s.%s()", defaults, getter(property)),
-          DECLARED,
-          NULLABLE));
+          DECLARED));
     }
     code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
     if (defaults != null) {

@@ -2,7 +2,6 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -16,9 +15,14 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
+import java.util.stream.BaseStream;
 import javax.annotation.Generated;
-import javax.annotation.Nullable;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.Type;
@@ -75,8 +79,7 @@ abstract class Datatype_Builder {
   private Set<QualifiedName> visibleNestedTypes = ImmutableSet.of();
   private TypeClass propertyEnum;
   private final LinkedHashMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
-      standardMethodUnderrides =
-          new LinkedHashMap<Datatype.StandardMethod, Datatype.UnderrideLevel>();
+      standardMethodUnderrides = new LinkedHashMap<>();
   private boolean builderSerializable;
   private boolean hasToBuilderMethod;
   private List<Excerpt> generatedBuilderAnnotations = ImmutableList.of();
@@ -92,9 +95,22 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code type} is null
    */
   public Datatype.Builder setType(TypeClass type) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = Objects.requireNonNull(type);
     _unsetProperties.remove(Property.TYPE);
     return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getType()} by applying {@code mapper} to
+   * it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapType(UnaryOperator<TypeClass> mapper) {
+    Objects.requireNonNull(mapper);
+    return setType(mapper.apply(getType()));
   }
 
   /**
@@ -119,6 +135,19 @@ abstract class Datatype_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link Datatype#isInterfaceType()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapInterfaceType(UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setInterfaceType(mapper.apply(isInterfaceType()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link Datatype#isInterfaceType()}.
    *
    * @throws IllegalStateException if the field has not been set
@@ -136,9 +165,22 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code builder} is null
    */
   public Datatype.Builder setBuilder(Type builder) {
-    this.builder = Preconditions.checkNotNull(builder);
+    this.builder = Objects.requireNonNull(builder);
     _unsetProperties.remove(Property.BUILDER);
     return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getBuilder()} by applying {@code mapper}
+   * to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapBuilder(UnaryOperator<Type> mapper) {
+    Objects.requireNonNull(mapper);
+    return setBuilder(mapper.apply(getBuilder()));
   }
 
   /**
@@ -163,6 +205,19 @@ abstract class Datatype_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link Datatype#isExtensible()} by applying {@code mapper}
+   * to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapExtensible(UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setExtensible(mapper.apply(isExtensible()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link Datatype#isExtensible()}.
    *
    * @throws IllegalStateException if the field has not been set
@@ -179,7 +234,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code builderFactory} is null
    */
   public Datatype.Builder setBuilderFactory(BuilderFactory builderFactory) {
-    this.builderFactory = Preconditions.checkNotNull(builderFactory);
+    this.builderFactory = Objects.requireNonNull(builderFactory);
     return (Datatype.Builder) this;
   }
 
@@ -201,7 +256,7 @@ abstract class Datatype_Builder {
    *
    * @return this {@code Builder} object
    */
-  public Datatype.Builder setNullableBuilderFactory(@Nullable BuilderFactory builderFactory) {
+  public Datatype.Builder setNullableBuilderFactory(BuilderFactory builderFactory) {
     if (builderFactory != null) {
       return setBuilderFactory(builderFactory);
     } else {
@@ -210,8 +265,21 @@ abstract class Datatype_Builder {
   }
 
   /**
+   * If the value to be returned by {@link Datatype#getBuilderFactory()} is present, replaces it by
+   * applying {@code mapper} to it and using the result.
+   *
+   * <p>If the result is null, clears the value.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null
+   */
+  public Datatype.Builder mapBuilderFactory(UnaryOperator<BuilderFactory> mapper) {
+    return setBuilderFactory(getBuilderFactory().map(mapper));
+  }
+
+  /**
    * Sets the value to be returned by {@link Datatype#getBuilderFactory()} to {@link
-   * Optional#absent() Optional.absent()}.
+   * Optional#empty() Optional.empty()}.
    *
    * @return this {@code Builder} object
    */
@@ -222,7 +290,7 @@ abstract class Datatype_Builder {
 
   /** Returns the value that will be returned by {@link Datatype#getBuilderFactory()}. */
   public Optional<BuilderFactory> getBuilderFactory() {
-    return Optional.fromNullable(builderFactory);
+    return Optional.ofNullable(builderFactory);
   }
 
   /**
@@ -232,9 +300,22 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code generatedBuilder} is null
    */
   public Datatype.Builder setGeneratedBuilder(TypeClass generatedBuilder) {
-    this.generatedBuilder = Preconditions.checkNotNull(generatedBuilder);
+    this.generatedBuilder = Objects.requireNonNull(generatedBuilder);
     _unsetProperties.remove(Property.GENERATED_BUILDER);
     return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getGeneratedBuilder()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapGeneratedBuilder(UnaryOperator<TypeClass> mapper) {
+    Objects.requireNonNull(mapper);
+    return setGeneratedBuilder(mapper.apply(getGeneratedBuilder()));
   }
 
   /**
@@ -255,9 +336,22 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code valueType} is null
    */
   public Datatype.Builder setValueType(TypeClass valueType) {
-    this.valueType = Preconditions.checkNotNull(valueType);
+    this.valueType = Objects.requireNonNull(valueType);
     _unsetProperties.remove(Property.VALUE_TYPE);
     return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getValueType()} by applying {@code mapper}
+   * to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapValueType(UnaryOperator<TypeClass> mapper) {
+    Objects.requireNonNull(mapper);
+    return setValueType(mapper.apply(getValueType()));
   }
 
   /**
@@ -277,9 +371,22 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code partialType} is null
    */
   public Datatype.Builder setPartialType(TypeClass partialType) {
-    this.partialType = Preconditions.checkNotNull(partialType);
+    this.partialType = Objects.requireNonNull(partialType);
     _unsetProperties.remove(Property.PARTIAL_TYPE);
     return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getPartialType()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapPartialType(UnaryOperator<TypeClass> mapper) {
+    Objects.requireNonNull(mapper);
+    return setPartialType(mapper.apply(getPartialType()));
   }
 
   /**
@@ -303,9 +410,9 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder addVisibleNestedTypes(QualifiedName element) {
     if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = new LinkedHashSet<QualifiedName>(visibleNestedTypes);
+      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
     }
-    visibleNestedTypes.add(Preconditions.checkNotNull(element));
+    visibleNestedTypes.add(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 
@@ -329,10 +436,34 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
+  public Datatype.Builder addAllVisibleNestedTypes(Spliterator<? extends QualifiedName> elements) {
+    elements.forEachRemaining(this::addVisibleNestedTypes);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the set to be returned from {@link
+   * Datatype#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
+   * element is added).
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Datatype.Builder addAllVisibleNestedTypes(
+      BaseStream<? extends QualifiedName, ?> elements) {
+    return addAllVisibleNestedTypes(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the set to be returned from {@link
+   * Datatype#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
+   * element is added).
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
   public Datatype.Builder addAllVisibleNestedTypes(Iterable<? extends QualifiedName> elements) {
-    for (QualifiedName element : elements) {
-      addVisibleNestedTypes(element);
-    }
+    elements.forEach(this::addVisibleNestedTypes);
     return (Datatype.Builder) this;
   }
 
@@ -345,9 +476,29 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder removeVisibleNestedTypes(QualifiedName element) {
     if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = new LinkedHashSet<QualifiedName>(visibleNestedTypes);
+      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
     }
-    visibleNestedTypes.remove(Preconditions.checkNotNull(element));
+    visibleNestedTypes.remove(Objects.requireNonNull(element));
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Applies {@code mutator} to the set to be returned from {@link
+   * Datatype#getVisibleNestedTypes()}.
+   *
+   * <p>This method mutates the set in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Datatype.Builder mutateVisibleNestedTypes(Consumer<? super Set<QualifiedName>> mutator) {
+    if (visibleNestedTypes instanceof ImmutableSet) {
+      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
+    }
+    // If addVisibleNestedTypes is overridden, this method will be updated to delegate to it
+    mutator.accept(visibleNestedTypes);
     return (Datatype.Builder) this;
   }
 
@@ -371,7 +522,7 @@ abstract class Datatype_Builder {
    */
   public Set<QualifiedName> getVisibleNestedTypes() {
     if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = new LinkedHashSet<QualifiedName>(visibleNestedTypes);
+      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
     }
     return Collections.unmodifiableSet(visibleNestedTypes);
   }
@@ -383,9 +534,22 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code propertyEnum} is null
    */
   public Datatype.Builder setPropertyEnum(TypeClass propertyEnum) {
-    this.propertyEnum = Preconditions.checkNotNull(propertyEnum);
+    this.propertyEnum = Objects.requireNonNull(propertyEnum);
     _unsetProperties.remove(Property.PROPERTY_ENUM);
     return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getPropertyEnum()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapPropertyEnum(UnaryOperator<TypeClass> mapper) {
+    Objects.requireNonNull(mapper);
+    return setPropertyEnum(mapper.apply(getPropertyEnum()));
   }
 
   /**
@@ -409,8 +573,8 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder putStandardMethodUnderrides(
       Datatype.StandardMethod key, Datatype.UnderrideLevel value) {
-    Preconditions.checkNotNull(key);
-    Preconditions.checkNotNull(value);
+    Objects.requireNonNull(key);
+    Objects.requireNonNull(value);
     standardMethodUnderrides.put(key, value);
     return (Datatype.Builder) this;
   }
@@ -439,8 +603,26 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code key} is null
    */
   public Datatype.Builder removeStandardMethodUnderrides(Datatype.StandardMethod key) {
-    Preconditions.checkNotNull(key);
+    Objects.requireNonNull(key);
     standardMethodUnderrides.remove(key);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Invokes {@code mutator} with the map to be returned from {@link
+   * Datatype#getStandardMethodUnderrides()}.
+   *
+   * <p>This method mutates the map in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Datatype.Builder mutateStandardMethodUnderrides(
+      Consumer<? super Map<Datatype.StandardMethod, Datatype.UnderrideLevel>> mutator) {
+    // If putStandardMethodUnderrides is overridden, this method will be updated to delegate to it
+    mutator.accept(standardMethodUnderrides);
     return (Datatype.Builder) this;
   }
 
@@ -475,6 +657,19 @@ abstract class Datatype_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link Datatype#isBuilderSerializable()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapBuilderSerializable(UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setBuilderSerializable(mapper.apply(isBuilderSerializable()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link Datatype#isBuilderSerializable()}.
    *
    * @throws IllegalStateException if the field has not been set
@@ -497,6 +692,19 @@ abstract class Datatype_Builder {
   }
 
   /**
+   * Replaces the value to be returned by {@link Datatype#getHasToBuilderMethod()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapHasToBuilderMethod(UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setHasToBuilderMethod(mapper.apply(getHasToBuilderMethod()));
+  }
+
+  /**
    * Returns the value that will be returned by {@link Datatype#getHasToBuilderMethod()}.
    *
    * @throws IllegalStateException if the field has not been set
@@ -516,9 +724,9 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder addGeneratedBuilderAnnotations(Excerpt element) {
     if (generatedBuilderAnnotations instanceof ImmutableList) {
-      generatedBuilderAnnotations = new ArrayList<Excerpt>(generatedBuilderAnnotations);
+      generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
     }
-    generatedBuilderAnnotations.add(Preconditions.checkNotNull(element));
+    generatedBuilderAnnotations.add(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 
@@ -540,20 +748,63 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Datatype.Builder addAllGeneratedBuilderAnnotations(Iterable<? extends Excerpt> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
+  public Datatype.Builder addAllGeneratedBuilderAnnotations(
+      Spliterator<? extends Excerpt> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
         if (generatedBuilderAnnotations instanceof ImmutableList) {
-          generatedBuilderAnnotations = new ArrayList<Excerpt>(generatedBuilderAnnotations);
+          generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
         }
         ((ArrayList<?>) generatedBuilderAnnotations)
-            .ensureCapacity(generatedBuilderAnnotations.size() + elementsSize);
+            .ensureCapacity(generatedBuilderAnnotations.size() + (int) elementsSize);
       }
     }
-    for (Excerpt element : elements) {
-      addGeneratedBuilderAnnotations(element);
+    elements.forEachRemaining(this::addGeneratedBuilderAnnotations);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Datatype#getGeneratedBuilderAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Datatype.Builder addAllGeneratedBuilderAnnotations(
+      BaseStream<? extends Excerpt, ?> elements) {
+    return addAllGeneratedBuilderAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Datatype#getGeneratedBuilderAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Datatype.Builder addAllGeneratedBuilderAnnotations(Iterable<? extends Excerpt> elements) {
+    return addAllGeneratedBuilderAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link
+   * Datatype#getGeneratedBuilderAnnotations()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Datatype.Builder mutateGeneratedBuilderAnnotations(
+      Consumer<? super List<Excerpt>> mutator) {
+    if (generatedBuilderAnnotations instanceof ImmutableList) {
+      generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
     }
+    // If addGeneratedBuilderAnnotations is overridden, this method will be updated to delegate to it
+    mutator.accept(generatedBuilderAnnotations);
     return (Datatype.Builder) this;
   }
 
@@ -578,7 +829,7 @@ abstract class Datatype_Builder {
    */
   public List<Excerpt> getGeneratedBuilderAnnotations() {
     if (generatedBuilderAnnotations instanceof ImmutableList) {
-      generatedBuilderAnnotations = new ArrayList<Excerpt>(generatedBuilderAnnotations);
+      generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
     }
     return Collections.unmodifiableList(generatedBuilderAnnotations);
   }
@@ -592,9 +843,9 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder addValueTypeAnnotations(Excerpt element) {
     if (valueTypeAnnotations instanceof ImmutableList) {
-      valueTypeAnnotations = new ArrayList<Excerpt>(valueTypeAnnotations);
+      valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
     }
-    valueTypeAnnotations.add(Preconditions.checkNotNull(element));
+    valueTypeAnnotations.add(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 
@@ -616,20 +867,60 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Datatype.Builder addAllValueTypeAnnotations(Iterable<? extends Excerpt> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
+  public Datatype.Builder addAllValueTypeAnnotations(Spliterator<? extends Excerpt> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
         if (valueTypeAnnotations instanceof ImmutableList) {
-          valueTypeAnnotations = new ArrayList<Excerpt>(valueTypeAnnotations);
+          valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
         }
         ((ArrayList<?>) valueTypeAnnotations)
-            .ensureCapacity(valueTypeAnnotations.size() + elementsSize);
+            .ensureCapacity(valueTypeAnnotations.size() + (int) elementsSize);
       }
     }
-    for (Excerpt element : elements) {
-      addValueTypeAnnotations(element);
+    elements.forEachRemaining(this::addValueTypeAnnotations);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Datatype#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Datatype.Builder addAllValueTypeAnnotations(BaseStream<? extends Excerpt, ?> elements) {
+    return addAllValueTypeAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Datatype#getValueTypeAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Datatype.Builder addAllValueTypeAnnotations(Iterable<? extends Excerpt> elements) {
+    return addAllValueTypeAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link
+   * Datatype#getValueTypeAnnotations()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Datatype.Builder mutateValueTypeAnnotations(Consumer<? super List<Excerpt>> mutator) {
+    if (valueTypeAnnotations instanceof ImmutableList) {
+      valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
     }
+    // If addValueTypeAnnotations is overridden, this method will be updated to delegate to it
+    mutator.accept(valueTypeAnnotations);
     return (Datatype.Builder) this;
   }
 
@@ -653,7 +944,7 @@ abstract class Datatype_Builder {
    */
   public List<Excerpt> getValueTypeAnnotations() {
     if (valueTypeAnnotations instanceof ImmutableList) {
-      valueTypeAnnotations = new ArrayList<Excerpt>(valueTypeAnnotations);
+      valueTypeAnnotations = new ArrayList<>(valueTypeAnnotations);
     }
     return Collections.unmodifiableList(valueTypeAnnotations);
   }
@@ -665,9 +956,22 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code valueTypeVisibility} is null
    */
   public Datatype.Builder setValueTypeVisibility(Datatype.Visibility valueTypeVisibility) {
-    this.valueTypeVisibility = Preconditions.checkNotNull(valueTypeVisibility);
+    this.valueTypeVisibility = Objects.requireNonNull(valueTypeVisibility);
     _unsetProperties.remove(Property.VALUE_TYPE_VISIBILITY);
     return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getValueTypeVisibility()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapValueTypeVisibility(UnaryOperator<Datatype.Visibility> mapper) {
+    Objects.requireNonNull(mapper);
+    return setValueTypeVisibility(mapper.apply(getValueTypeVisibility()));
   }
 
   /**
@@ -689,9 +993,9 @@ abstract class Datatype_Builder {
    */
   public Datatype.Builder addNestedClasses(Excerpt element) {
     if (nestedClasses instanceof ImmutableList) {
-      nestedClasses = new ArrayList<Excerpt>(nestedClasses);
+      nestedClasses = new ArrayList<>(nestedClasses);
     }
-    nestedClasses.add(Preconditions.checkNotNull(element));
+    nestedClasses.add(Objects.requireNonNull(element));
     return (Datatype.Builder) this;
   }
 
@@ -713,19 +1017,58 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code elements} is null or contains a null element
    */
-  public Datatype.Builder addAllNestedClasses(Iterable<? extends Excerpt> elements) {
-    if (elements instanceof Collection) {
-      int elementsSize = ((Collection<?>) elements).size();
-      if (elementsSize != 0) {
+  public Datatype.Builder addAllNestedClasses(Spliterator<? extends Excerpt> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
         if (nestedClasses instanceof ImmutableList) {
-          nestedClasses = new ArrayList<Excerpt>(nestedClasses);
+          nestedClasses = new ArrayList<>(nestedClasses);
         }
-        ((ArrayList<?>) nestedClasses).ensureCapacity(nestedClasses.size() + elementsSize);
+        ((ArrayList<?>) nestedClasses).ensureCapacity(nestedClasses.size() + (int) elementsSize);
       }
     }
-    for (Excerpt element : elements) {
-      addNestedClasses(element);
+    elements.forEachRemaining(this::addNestedClasses);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Datatype#getNestedClasses()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Datatype.Builder addAllNestedClasses(BaseStream<? extends Excerpt, ?> elements) {
+    return addAllNestedClasses(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * Datatype#getNestedClasses()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public Datatype.Builder addAllNestedClasses(Iterable<? extends Excerpt> elements) {
+    return addAllNestedClasses(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link Datatype#getNestedClasses()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public Datatype.Builder mutateNestedClasses(Consumer<? super List<Excerpt>> mutator) {
+    if (nestedClasses instanceof ImmutableList) {
+      nestedClasses = new ArrayList<>(nestedClasses);
     }
+    // If addNestedClasses is overridden, this method will be updated to delegate to it
+    mutator.accept(nestedClasses);
     return (Datatype.Builder) this;
   }
 
@@ -749,7 +1092,7 @@ abstract class Datatype_Builder {
    */
   public List<Excerpt> getNestedClasses() {
     if (nestedClasses instanceof ImmutableList) {
-      nestedClasses = new ArrayList<Excerpt>(nestedClasses);
+      nestedClasses = new ArrayList<>(nestedClasses);
     }
     return Collections.unmodifiableList(nestedClasses);
   }
@@ -758,7 +1101,7 @@ abstract class Datatype_Builder {
   public Datatype.Builder mergeFrom(Datatype value) {
     Datatype_Builder _defaults = new Datatype.Builder();
     if (_defaults._unsetProperties.contains(Property.TYPE)
-        || !value.getType().equals(_defaults.getType())) {
+        || !Objects.equals(value.getType(), _defaults.getType())) {
       setType(value.getType());
     }
     if (_defaults._unsetProperties.contains(Property.INTERFACE_TYPE)
@@ -766,26 +1109,24 @@ abstract class Datatype_Builder {
       setInterfaceType(value.isInterfaceType());
     }
     if (_defaults._unsetProperties.contains(Property.BUILDER)
-        || !value.getBuilder().equals(_defaults.getBuilder())) {
+        || !Objects.equals(value.getBuilder(), _defaults.getBuilder())) {
       setBuilder(value.getBuilder());
     }
     if (_defaults._unsetProperties.contains(Property.EXTENSIBLE)
         || value.isExtensible() != _defaults.isExtensible()) {
       setExtensible(value.isExtensible());
     }
-    if (value.getBuilderFactory().isPresent()) {
-      setBuilderFactory(value.getBuilderFactory().get());
-    }
+    value.getBuilderFactory().ifPresent(this::setBuilderFactory);
     if (_defaults._unsetProperties.contains(Property.GENERATED_BUILDER)
-        || !value.getGeneratedBuilder().equals(_defaults.getGeneratedBuilder())) {
+        || !Objects.equals(value.getGeneratedBuilder(), _defaults.getGeneratedBuilder())) {
       setGeneratedBuilder(value.getGeneratedBuilder());
     }
     if (_defaults._unsetProperties.contains(Property.VALUE_TYPE)
-        || !value.getValueType().equals(_defaults.getValueType())) {
+        || !Objects.equals(value.getValueType(), _defaults.getValueType())) {
       setValueType(value.getValueType());
     }
     if (_defaults._unsetProperties.contains(Property.PARTIAL_TYPE)
-        || !value.getPartialType().equals(_defaults.getPartialType())) {
+        || !Objects.equals(value.getPartialType(), _defaults.getPartialType())) {
       setPartialType(value.getPartialType());
     }
     if (value instanceof Value && visibleNestedTypes == ImmutableSet.<QualifiedName>of()) {
@@ -794,7 +1135,7 @@ abstract class Datatype_Builder {
       addAllVisibleNestedTypes(value.getVisibleNestedTypes());
     }
     if (_defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
-        || !value.getPropertyEnum().equals(_defaults.getPropertyEnum())) {
+        || !Objects.equals(value.getPropertyEnum(), _defaults.getPropertyEnum())) {
       setPropertyEnum(value.getPropertyEnum());
     }
     putAllStandardMethodUnderrides(value.getStandardMethodUnderrides());
@@ -817,7 +1158,7 @@ abstract class Datatype_Builder {
       addAllValueTypeAnnotations(value.getValueTypeAnnotations());
     }
     if (_defaults._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
-        || !value.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility())) {
+        || !Objects.equals(value.getValueTypeVisibility(), _defaults.getValueTypeVisibility())) {
       setValueTypeVisibility(value.getValueTypeVisibility());
     }
     if (value instanceof Value && nestedClasses == ImmutableList.<Excerpt>of()) {
@@ -838,7 +1179,7 @@ abstract class Datatype_Builder {
     Datatype_Builder _defaults = new Datatype.Builder();
     if (!base._unsetProperties.contains(Property.TYPE)
         && (_defaults._unsetProperties.contains(Property.TYPE)
-            || !template.getType().equals(_defaults.getType()))) {
+            || !Objects.equals(template.getType(), _defaults.getType()))) {
       setType(template.getType());
     }
     if (!base._unsetProperties.contains(Property.INTERFACE_TYPE)
@@ -848,7 +1189,7 @@ abstract class Datatype_Builder {
     }
     if (!base._unsetProperties.contains(Property.BUILDER)
         && (_defaults._unsetProperties.contains(Property.BUILDER)
-            || !template.getBuilder().equals(_defaults.getBuilder()))) {
+            || !Objects.equals(template.getBuilder(), _defaults.getBuilder()))) {
       setBuilder(template.getBuilder());
     }
     if (!base._unsetProperties.contains(Property.EXTENSIBLE)
@@ -856,28 +1197,26 @@ abstract class Datatype_Builder {
             || template.isExtensible() != _defaults.isExtensible())) {
       setExtensible(template.isExtensible());
     }
-    if (template.getBuilderFactory().isPresent()) {
-      setBuilderFactory(template.getBuilderFactory().get());
-    }
+    template.getBuilderFactory().ifPresent(this::setBuilderFactory);
     if (!base._unsetProperties.contains(Property.GENERATED_BUILDER)
         && (_defaults._unsetProperties.contains(Property.GENERATED_BUILDER)
-            || !template.getGeneratedBuilder().equals(_defaults.getGeneratedBuilder()))) {
+            || !Objects.equals(template.getGeneratedBuilder(), _defaults.getGeneratedBuilder()))) {
       setGeneratedBuilder(template.getGeneratedBuilder());
     }
     if (!base._unsetProperties.contains(Property.VALUE_TYPE)
         && (_defaults._unsetProperties.contains(Property.VALUE_TYPE)
-            || !template.getValueType().equals(_defaults.getValueType()))) {
+            || !Objects.equals(template.getValueType(), _defaults.getValueType()))) {
       setValueType(template.getValueType());
     }
     if (!base._unsetProperties.contains(Property.PARTIAL_TYPE)
         && (_defaults._unsetProperties.contains(Property.PARTIAL_TYPE)
-            || !template.getPartialType().equals(_defaults.getPartialType()))) {
+            || !Objects.equals(template.getPartialType(), _defaults.getPartialType()))) {
       setPartialType(template.getPartialType());
     }
     addAllVisibleNestedTypes(base.visibleNestedTypes);
     if (!base._unsetProperties.contains(Property.PROPERTY_ENUM)
         && (_defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
-            || !template.getPropertyEnum().equals(_defaults.getPropertyEnum()))) {
+            || !Objects.equals(template.getPropertyEnum(), _defaults.getPropertyEnum()))) {
       setPropertyEnum(template.getPropertyEnum());
     }
     putAllStandardMethodUnderrides(base.standardMethodUnderrides);
@@ -895,7 +1234,8 @@ abstract class Datatype_Builder {
     addAllValueTypeAnnotations(base.valueTypeAnnotations);
     if (!base._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
         && (_defaults._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
-            || !template.getValueTypeVisibility().equals(_defaults.getValueTypeVisibility()))) {
+            || !Objects.equals(
+                template.getValueTypeVisibility(), _defaults.getValueTypeVisibility()))) {
       setValueTypeVisibility(template.getValueTypeVisibility());
     }
     addAllNestedClasses(base.nestedClasses);
@@ -1016,7 +1356,7 @@ abstract class Datatype_Builder {
 
     @Override
     public Optional<BuilderFactory> getBuilderFactory() {
-      return Optional.fromNullable(builderFactory);
+      return Optional.ofNullable(builderFactory);
     }
 
     @Override
@@ -1086,83 +1426,45 @@ abstract class Datatype_Builder {
         return false;
       }
       Value other = (Value) obj;
-      if (!type.equals(other.type)) {
-        return false;
-      }
-      if (interfaceType != other.interfaceType) {
-        return false;
-      }
-      if (!builder.equals(other.builder)) {
-        return false;
-      }
-      if (extensible != other.extensible) {
-        return false;
-      }
-      if (builderFactory != other.builderFactory
-          && (builderFactory == null || !builderFactory.equals(other.builderFactory))) {
-        return false;
-      }
-      if (!generatedBuilder.equals(other.generatedBuilder)) {
-        return false;
-      }
-      if (!valueType.equals(other.valueType)) {
-        return false;
-      }
-      if (!partialType.equals(other.partialType)) {
-        return false;
-      }
-      if (!visibleNestedTypes.equals(other.visibleNestedTypes)) {
-        return false;
-      }
-      if (!propertyEnum.equals(other.propertyEnum)) {
-        return false;
-      }
-      if (!standardMethodUnderrides.equals(other.standardMethodUnderrides)) {
-        return false;
-      }
-      if (builderSerializable != other.builderSerializable) {
-        return false;
-      }
-      if (hasToBuilderMethod != other.hasToBuilderMethod) {
-        return false;
-      }
-      if (!generatedBuilderAnnotations.equals(other.generatedBuilderAnnotations)) {
-        return false;
-      }
-      if (!valueTypeAnnotations.equals(other.valueTypeAnnotations)) {
-        return false;
-      }
-      if (!valueTypeVisibility.equals(other.valueTypeVisibility)) {
-        return false;
-      }
-      if (!nestedClasses.equals(other.nestedClasses)) {
-        return false;
-      }
-      return true;
+      return Objects.equals(type, other.type)
+          && interfaceType == other.interfaceType
+          && Objects.equals(builder, other.builder)
+          && extensible == other.extensible
+          && Objects.equals(builderFactory, other.builderFactory)
+          && Objects.equals(generatedBuilder, other.generatedBuilder)
+          && Objects.equals(valueType, other.valueType)
+          && Objects.equals(partialType, other.partialType)
+          && Objects.equals(visibleNestedTypes, other.visibleNestedTypes)
+          && Objects.equals(propertyEnum, other.propertyEnum)
+          && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
+          && builderSerializable == other.builderSerializable
+          && hasToBuilderMethod == other.hasToBuilderMethod
+          && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
+          && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
+          && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
+          && Objects.equals(nestedClasses, other.nestedClasses);
     }
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(
-          new Object[] {
-            type,
-            interfaceType,
-            builder,
-            extensible,
-            builderFactory,
-            generatedBuilder,
-            valueType,
-            partialType,
-            visibleNestedTypes,
-            propertyEnum,
-            standardMethodUnderrides,
-            builderSerializable,
-            hasToBuilderMethod,
-            generatedBuilderAnnotations,
-            valueTypeAnnotations,
-            valueTypeVisibility,
-            nestedClasses
-          });
+      return Objects.hash(
+          type,
+          interfaceType,
+          builder,
+          extensible,
+          builderFactory,
+          generatedBuilder,
+          valueType,
+          partialType,
+          visibleNestedTypes,
+          propertyEnum,
+          standardMethodUnderrides,
+          builderSerializable,
+          hasToBuilderMethod,
+          generatedBuilderAnnotations,
+          valueTypeAnnotations,
+          valueTypeVisibility,
+          nestedClasses);
     }
 
     @Override
@@ -1288,7 +1590,7 @@ abstract class Datatype_Builder {
 
     @Override
     public Optional<BuilderFactory> getBuilderFactory() {
-      return Optional.fromNullable(builderFactory);
+      return Optional.ofNullable(builderFactory);
     }
 
     @Override
@@ -1379,90 +1681,47 @@ abstract class Datatype_Builder {
         return false;
       }
       Partial other = (Partial) obj;
-      if (type != other.type && (type == null || !type.equals(other.type))) {
-        return false;
-      }
-      if (interfaceType != other.interfaceType) {
-        return false;
-      }
-      if (builder != other.builder && (builder == null || !builder.equals(other.builder))) {
-        return false;
-      }
-      if (extensible != other.extensible) {
-        return false;
-      }
-      if (builderFactory != other.builderFactory
-          && (builderFactory == null || !builderFactory.equals(other.builderFactory))) {
-        return false;
-      }
-      if (generatedBuilder != other.generatedBuilder
-          && (generatedBuilder == null || !generatedBuilder.equals(other.generatedBuilder))) {
-        return false;
-      }
-      if (valueType != other.valueType
-          && (valueType == null || !valueType.equals(other.valueType))) {
-        return false;
-      }
-      if (partialType != other.partialType
-          && (partialType == null || !partialType.equals(other.partialType))) {
-        return false;
-      }
-      if (!visibleNestedTypes.equals(other.visibleNestedTypes)) {
-        return false;
-      }
-      if (propertyEnum != other.propertyEnum
-          && (propertyEnum == null || !propertyEnum.equals(other.propertyEnum))) {
-        return false;
-      }
-      if (!standardMethodUnderrides.equals(other.standardMethodUnderrides)) {
-        return false;
-      }
-      if (builderSerializable != other.builderSerializable) {
-        return false;
-      }
-      if (hasToBuilderMethod != other.hasToBuilderMethod) {
-        return false;
-      }
-      if (!generatedBuilderAnnotations.equals(other.generatedBuilderAnnotations)) {
-        return false;
-      }
-      if (!valueTypeAnnotations.equals(other.valueTypeAnnotations)) {
-        return false;
-      }
-      if (valueTypeVisibility != other.valueTypeVisibility
-          && (valueTypeVisibility == null
-              || !valueTypeVisibility.equals(other.valueTypeVisibility))) {
-        return false;
-      }
-      if (!nestedClasses.equals(other.nestedClasses)) {
-        return false;
-      }
-      return _unsetProperties.equals(other._unsetProperties);
+      return Objects.equals(type, other.type)
+          && interfaceType == other.interfaceType
+          && Objects.equals(builder, other.builder)
+          && extensible == other.extensible
+          && Objects.equals(builderFactory, other.builderFactory)
+          && Objects.equals(generatedBuilder, other.generatedBuilder)
+          && Objects.equals(valueType, other.valueType)
+          && Objects.equals(partialType, other.partialType)
+          && Objects.equals(visibleNestedTypes, other.visibleNestedTypes)
+          && Objects.equals(propertyEnum, other.propertyEnum)
+          && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
+          && builderSerializable == other.builderSerializable
+          && hasToBuilderMethod == other.hasToBuilderMethod
+          && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
+          && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
+          && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
+          && Objects.equals(nestedClasses, other.nestedClasses)
+          && Objects.equals(_unsetProperties, other._unsetProperties);
     }
 
     @Override
     public int hashCode() {
-      return Arrays.hashCode(
-          new Object[] {
-            type,
-            interfaceType,
-            builder,
-            extensible,
-            builderFactory,
-            generatedBuilder,
-            valueType,
-            partialType,
-            visibleNestedTypes,
-            propertyEnum,
-            standardMethodUnderrides,
-            builderSerializable,
-            hasToBuilderMethod,
-            generatedBuilderAnnotations,
-            valueTypeAnnotations,
-            valueTypeVisibility,
-            nestedClasses,
-            _unsetProperties
-          });
+      return Objects.hash(
+          type,
+          interfaceType,
+          builder,
+          extensible,
+          builderFactory,
+          generatedBuilder,
+          valueType,
+          partialType,
+          visibleNestedTypes,
+          propertyEnum,
+          standardMethodUnderrides,
+          builderSerializable,
+          hasToBuilderMethod,
+          generatedBuilderAnnotations,
+          valueTypeAnnotations,
+          valueTypeVisibility,
+          nestedClasses,
+          _unsetProperties);
     }
 
     @Override

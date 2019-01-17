@@ -1,15 +1,9 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.all;
-import static com.google.common.collect.Iterables.any;
-import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.getLast;
 import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.Block.methodBody;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.Block;
@@ -18,6 +12,7 @@ import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Predicate;
 
 class ToStringGenerator {
 
@@ -28,17 +23,14 @@ class ToStringGenerator {
       SourceBuilder code,
       Datatype datatype,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
-      final boolean forPartial) {
+      boolean forPartial) {
     String typename = (forPartial ? "partial " : "") + datatype.getType().getSimpleName();
-    Predicate<PropertyCodeGenerator> isOptional = new Predicate<PropertyCodeGenerator>() {
-      @Override
-      public boolean apply(PropertyCodeGenerator generator) {
-        Initially initially = generator.initialState();
-        return (initially == Initially.OPTIONAL || (initially == Initially.REQUIRED && forPartial));
-      }
+    Predicate<PropertyCodeGenerator> isOptional = generator -> {
+      Initially initially = generator.initialState();
+      return (initially == Initially.OPTIONAL || (initially == Initially.REQUIRED && forPartial));
     };
-    boolean anyOptional = any(generatorsByProperty.values(), isOptional);
-    boolean allOptional = all(generatorsByProperty.values(), isOptional)
+    boolean anyOptional = generatorsByProperty.values().stream().anyMatch(isOptional);
+    boolean allOptional = generatorsByProperty.values().stream().allMatch(isOptional)
         && !generatorsByProperty.isEmpty();
 
     code.addLine("")
@@ -106,12 +98,15 @@ class ToStringGenerator {
     boolean midAppends = true;
     boolean prependCommas = false;
 
-    PropertyCodeGenerator lastOptionalGenerator =
-        getLast(filter(generatorsByProperty.values(), isOptional));
+    PropertyCodeGenerator lastOptionalGenerator = generatorsByProperty.values()
+        .stream()
+        .filter(isOptional)
+        .reduce((first, second) -> second)
+        .get();
 
     for (Property property : generatorsByProperty.keySet()) {
       PropertyCodeGenerator generator = generatorsByProperty.get(property);
-      if (isOptional.apply(generator)) {
+      if (isOptional.test(generator)) {
         if (midStringLiteral) {
           code.add("\")");
         }
@@ -195,7 +190,7 @@ class ToStringGenerator {
     }
 
     Property first = generatorsByProperty.keySet().iterator().next();
-    Property last = Iterables.getLast(generatorsByProperty.keySet());
+    Property last = getLast(generatorsByProperty.keySet());
     for (Property property : generatorsByProperty.keySet()) {
       PropertyCodeGenerator generator = generatorsByProperty.get(property);
       switch (generator.initialState()) {

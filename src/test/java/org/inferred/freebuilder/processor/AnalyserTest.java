@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.inferred.freebuilder.processor.BuilderFactory.BUILDER_METHOD;
@@ -29,8 +28,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import static java.util.stream.Collectors.toMap;
+
 import com.google.common.annotations.GwtCompatible;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
@@ -50,6 +50,7 @@ import org.junit.runners.JUnit4;
 
 import java.time.temporal.Temporal;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
@@ -234,7 +235,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         builder.getDatatype().getBuilder().getQualifiedName().toString());
     assertThat(builder.getDatatype().isExtensible()).isTrue();
-    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(builder.getDatatype().getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
@@ -255,7 +256,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         builder.getDatatype().getBuilder().getQualifiedName().toString());
     assertThat(builder.getDatatype().isExtensible()).isTrue();
-    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(builder.getDatatype().getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
@@ -276,7 +277,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         builder.getDatatype().getBuilder().getQualifiedName().toString());
     assertThat(builder.getDatatype().isExtensible()).isFalse();
-    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(BUILDER_METHOD);
+    assertThat(builder.getDatatype().getBuilderFactory().get()).isEqualTo(BUILDER_METHOD);
     assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
@@ -294,7 +295,7 @@ public class AnalyserTest {
     assertEquals("com.example.DataType.Builder",
         builder.getDatatype().getBuilder().getQualifiedName().toString());
     assertThat(builder.getDatatype().isExtensible()).isTrue();
-    assertThat(builder.getDatatype().getBuilderFactory()).hasValue(NEW_BUILDER_METHOD);
+    assertThat(builder.getDatatype().getBuilderFactory().get()).isEqualTo(NEW_BUILDER_METHOD);
     assertFalse(builder.getDatatype().isBuilderSerializable());
   }
 
@@ -554,7 +555,7 @@ public class AnalyserTest {
         "}"));
 
     assertThat(builder.getGeneratorsByProperty()).isEmpty();
-    messager.verifyError("getName", "Getter methods must not be void on @FreeBuilder types");
+    messager.verifyError("getName", "Getter methods must not be void on FreeBuilder types");
   }
 
   @Test
@@ -568,7 +569,7 @@ public class AnalyserTest {
 
     assertThat(builder.getGeneratorsByProperty()).isEmpty();
     messager.verifyError(
-        "isName", "Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
+        "isName", "Getter methods starting with 'is' must return a boolean on FreeBuilder types");
   }
 
   @Test
@@ -581,7 +582,7 @@ public class AnalyserTest {
         "}"));
 
     assertThat(builder.getGeneratorsByProperty()).isEmpty();
-    messager.verifyError("getName", "Getter methods cannot take parameters on @FreeBuilder types");
+    messager.verifyError("getName", "Getter methods cannot take parameters on FreeBuilder types");
   }
 
   @Test
@@ -681,10 +682,10 @@ public class AnalyserTest {
 
     Map<String, Property> properties = propertiesByName(builder);
     assertThat(properties.keySet()).containsExactly("name", "age");
-    messager.verifyError("getNothing", "Getter methods must not be void on @FreeBuilder types");
+    messager.verifyError("getNothing", "Getter methods must not be void on FreeBuilder types");
     messager.verifyError(
         "isDoubleBarrelled",
-        "Getter methods starting with 'is' must return a boolean on @FreeBuilder types");
+        "Getter methods starting with 'is' must return a boolean on FreeBuilder types");
   }
 
   @Test
@@ -797,7 +798,7 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.OVERRIDEABLE));
     messager.verifyError(
-        "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
+        "equals", "hashCode and equals must be implemented together on FreeBuilder types");
   }
 
   @Test
@@ -814,7 +815,7 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.OVERRIDEABLE));
     messager.verifyError(
-        "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
+        "hashCode", "hashCode and equals must be implemented together on FreeBuilder types");
   }
 
   @Test
@@ -888,7 +889,7 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.EQUALS, UnderrideLevel.FINAL));
     messager.verifyError(
-        "equals", "hashCode and equals must be implemented together on @FreeBuilder types");
+        "equals", "hashCode and equals must be implemented together on FreeBuilder types");
   }
 
   @Test
@@ -905,7 +906,7 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEqualTo(ImmutableMap.of(
         StandardMethod.HASH_CODE, UnderrideLevel.FINAL));
     messager.verifyError(
-        "hashCode", "hashCode and equals must be implemented together on @FreeBuilder types");
+        "hashCode", "hashCode and equals must be implemented together on FreeBuilder types");
   }
 
   @Test
@@ -1016,7 +1017,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    messager.verifyError("PrivateType", "@FreeBuilder types cannot be private");
+    messager.verifyError("PrivateType", "FreeBuilder types cannot be private");
   }
 
   @Test
@@ -1035,7 +1036,7 @@ public class AnalyserTest {
 
     messager.verifyError(
         "NestedType",
-        "@FreeBuilder types cannot be private, but enclosing type PrivateType is inaccessible");
+        "FreeBuilder types cannot be private, but enclosing type PrivateType is inaccessible");
   }
 
   @Test
@@ -1052,7 +1053,7 @@ public class AnalyserTest {
 
     messager.verifyError(
         "InnerType",
-        "Inner classes cannot be @FreeBuilder types (did you forget the static keyword?)");
+        "Inner classes cannot be FreeBuilder types (did you forget the static keyword?)");
   }
 
   @Test
@@ -1067,8 +1068,8 @@ public class AnalyserTest {
     Map<String, Property> properties = propertiesByName(builder);
     assertThat(properties.keySet()).containsExactly("name");
     assertThat(builder.getDatatype().isExtensible()).isFalse();
-    assertThat(builder.getDatatype().getBuilderFactory()).isAbsent();
-    messager.verifyError("Builder", "Builder must be static on @FreeBuilder types");
+    assertThat(builder.getDatatype().getBuilderFactory()).isEqualTo(Optional.empty());
+    messager.verifyError("Builder", "Builder must be static on FreeBuilder types");
   }
 
   @Test
@@ -1273,7 +1274,7 @@ public class AnalyserTest {
     } catch (CannotGenerateCodeException expected) { }
 
     messager.verifyError(
-        "<init>", "@FreeBuilder types must have a package-visible no-args constructor");
+        "<init>", "FreeBuilder types must have a package-visible no-args constructor");
   }
 
   @Test
@@ -1288,7 +1289,7 @@ public class AnalyserTest {
     } catch (CannotGenerateCodeException expected) { }
 
     messager.verifyError(
-        "DataType", "@FreeBuilder types must have a package-visible no-args constructor");
+        "DataType", "FreeBuilder types must have a package-visible no-args constructor");
   }
 
   @Test
@@ -1300,7 +1301,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    messager.verifyError("DataType", "@FreeBuilder does not support enum types");
+    messager.verifyError("DataType", "FreeBuilder does not support enum types");
   }
 
   @Test
@@ -1310,7 +1311,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    messager.verifyError("DataType", "@FreeBuilder does not support types in unnamed packages");
+    messager.verifyError("DataType", "FreeBuilder does not support types in unnamed packages");
   }
 
   @Test
@@ -1322,7 +1323,7 @@ public class AnalyserTest {
       fail("Expected CannotGenerateCodeException");
     } catch (CannotGenerateCodeException expected) { }
 
-    messager.verifyError("DataType", "@FreeBuilder does not support annotation types");
+    messager.verifyError("DataType", "FreeBuilder does not support annotation types");
   }
 
   @Test
@@ -1471,36 +1472,31 @@ public class AnalyserTest {
   private static String addBuilderToClassMessage(String builder) {
     return "Add \"public static class Builder extends "
         + builder
-        + " {}\" to your class to enable the @FreeBuilder API";
+        + " {}\" to your class to enable the FreeBuilder API";
   }
 
   private static String addBuilderToInterfaceMessage(String builder) {
     return "Add \"class Builder extends "
         + builder
-        + " {}\" to your interface to enable the @FreeBuilder API";
+        + " {}\" to your interface to enable the FreeBuilder API";
   }
 
   private static String asSource(Excerpt annotation) {
     return SourceStringBuilder.simple().add(annotation).toString().trim();
   }
 
-  private static ImmutableMap<String, Property> propertiesByName(GeneratedBuilder builder) {
-    return uniqueIndex(builder.getGeneratorsByProperty().keySet(), GET_NAME);
+  private static Map<String, Property> propertiesByName(GeneratedBuilder builder) {
+    return builder.getGeneratorsByProperty()
+        .keySet()
+        .stream()
+        .collect(toMap(Property::getName, $ -> $));
   }
 
-  private static ImmutableMap<String, PropertyCodeGenerator> generatorsByName(
-      GeneratedBuilder builder) {
+  private static Map<String, PropertyCodeGenerator> generatorsByName(GeneratedBuilder builder) {
     ImmutableMap.Builder<String, PropertyCodeGenerator> result = ImmutableMap.builder();
-    for (Property property : builder.getGeneratorsByProperty().keySet()) {
-      result.put(property.getName(), builder.getGeneratorsByProperty().get(property));
-    }
+    builder.getGeneratorsByProperty().forEach((property, generator) -> {
+      result.put(property.getName(), generator);
+    });
     return result.build();
   }
-
-  private static final Function<Property, String> GET_NAME = new Function<Property, String>() {
-    @Override
-    public String apply(Property propery) {
-      return propery.getName();
-    }
-  };
 }

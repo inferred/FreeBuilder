@@ -17,7 +17,6 @@ package org.inferred.freebuilder.processor;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -30,6 +29,7 @@ import org.inferred.freebuilder.processor.util.Variable;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -178,7 +178,7 @@ public abstract class PropertyCodeGenerator {
   }
 
   @Override
-  public boolean equals(final Object obj) {
+  public boolean equals(Object obj) {
     if (obj == null || !getClass().isInstance(obj)) {
       return false;
     }

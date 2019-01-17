@@ -18,9 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Iterables.tryFind;
 
 import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
 import static org.inferred.freebuilder.processor.naming.NamingConventions.determineNamingConvention;
@@ -34,8 +32,6 @@ import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,7 +41,6 @@ import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
-import org.inferred.freebuilder.processor.util.MethodFinder.ErrorTypeHandling;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.Type;
@@ -54,7 +49,9 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
@@ -88,7 +85,7 @@ import javax.lang.model.util.Types;
 class Analyser {
 
   /**
-   * Thrown when a @FreeBuilder type cannot have a Builder type generated, for instance if
+   * Thrown when a FreeBuilder type cannot have a Builder type generated, for instance if
    * it is private.
    */
   public static class CannotGenerateCodeException extends Exception { }
@@ -112,14 +109,6 @@ class Analyser {
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
-
-  private static final ErrorTypeHandling<CannotGenerateCodeException> CANNOT_GENERATE_ON_ERROR =
-      new ErrorTypeHandling<CannotGenerateCodeException>() {
-        @Override
-        public void handleErrorType(ErrorType type) throws CannotGenerateCodeException {
-          throw new CannotGenerateCodeException();
-        }
-      };
 
   private final Elements elements;
   private final Messager messager;
@@ -145,14 +134,16 @@ class Analyser {
     QualifiedName generatedBuilder = QualifiedName.of(
         pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
     List<? extends TypeParameterElement> typeParameters = type.getTypeParameters();
-    DeclaredType builder = tryFindBuilder(generatedBuilder, type).orNull();
+    DeclaredType builder = tryFindBuilder(generatedBuilder, type).orElse(null);
     if (builder == null) {
       return new GeneratedStub(
         QualifiedName.of(type),
         generatedBuilder.withParameters(typeParameters));
     }
 
-    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, CANNOT_GENERATE_ON_ERROR);
+    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, errorType -> {
+      throw new CannotGenerateCodeException();
+    });
     Datatype.Builder constructionAndExtension = constructionAndExtension(builder);
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
@@ -183,7 +174,7 @@ class Analyser {
   /** Basic sanity-checking to ensure we can fulfil the &#64;FreeBuilder contract for this type. */
   private void verifyType(TypeElement type, PackageElement pkg) throws CannotGenerateCodeException {
     if (pkg.isUnnamed()) {
-      messager.printMessage(ERROR, "@FreeBuilder does not support types in unnamed packages", type);
+      messager.printMessage(ERROR, "FreeBuilder does not support types in unnamed packages", type);
       throw new CannotGenerateCodeException();
     }
     switch (type.getNestingKind()) {
@@ -194,13 +185,13 @@ class Analyser {
         if (!type.getModifiers().contains(Modifier.STATIC)) {
           messager.printMessage(
               ERROR,
-              "Inner classes cannot be @FreeBuilder types (did you forget the static keyword?)",
+              "Inner classes cannot be FreeBuilder types (did you forget the static keyword?)",
               type);
           throw new CannotGenerateCodeException();
         }
 
         if (type.getModifiers().contains(Modifier.PRIVATE)) {
-          messager.printMessage(ERROR, "@FreeBuilder types cannot be private", type);
+          messager.printMessage(ERROR, "FreeBuilder types cannot be private", type);
           throw new CannotGenerateCodeException();
         }
 
@@ -208,7 +199,7 @@ class Analyser {
           if (e.getModifiers().contains(Modifier.PRIVATE)) {
             messager.printMessage(
                 ERROR,
-                "@FreeBuilder types cannot be private, but enclosing type "
+                "FreeBuilder types cannot be private, but enclosing type "
                     + e.getSimpleName() + " is inaccessible",
                 type);
             throw new CannotGenerateCodeException();
@@ -218,12 +209,12 @@ class Analyser {
 
       default:
         messager.printMessage(
-            ERROR, "Only top-level or static nested types can be @FreeBuilder types", type);
+            ERROR, "Only top-level or static nested types can be FreeBuilder types", type);
         throw new CannotGenerateCodeException();
     }
     switch (type.getKind()) {
       case ANNOTATION_TYPE:
-        messager.printMessage(ERROR, "@FreeBuilder does not support annotation types", type);
+        messager.printMessage(ERROR, "FreeBuilder does not support annotation types", type);
         throw new CannotGenerateCodeException();
 
       case CLASS:
@@ -231,7 +222,7 @@ class Analyser {
         break;
 
       case ENUM:
-        messager.printMessage(ERROR, "@FreeBuilder does not support enum types", type);
+        messager.printMessage(ERROR, "FreeBuilder does not support enum types", type);
         throw new CannotGenerateCodeException();
 
       case INTERFACE:
@@ -255,7 +246,7 @@ class Analyser {
         if (constructor.getModifiers().contains(Modifier.PRIVATE)) {
           messager.printMessage(
               ERROR,
-              "@FreeBuilder types must have a package-visible no-args constructor",
+              "FreeBuilder types must have a package-visible no-args constructor",
               constructor);
           throw new CannotGenerateCodeException();
         }
@@ -263,15 +254,14 @@ class Analyser {
       }
     }
     messager.printMessage(
-        ERROR, "@FreeBuilder types must have a package-visible no-args constructor", type);
+        ERROR, "FreeBuilder types must have a package-visible no-args constructor", type);
     throw new CannotGenerateCodeException();
   }
 
   /** Find any standard methods the user has 'underridden' in their type. */
   private Map<StandardMethod, UnderrideLevel> findUnderriddenMethods(
       Iterable<ExecutableElement> methods) {
-    Map<StandardMethod, ExecutableElement> standardMethods =
-        new LinkedHashMap<StandardMethod, ExecutableElement>();
+    Map<StandardMethod, ExecutableElement> standardMethods = new LinkedHashMap<>();
     for (ExecutableElement method : methods) {
       Optional<StandardMethod> standardMethod = maybeStandardMethod(method);
       if (standardMethod.isPresent() && isUnderride(method)) {
@@ -284,7 +274,7 @@ class Analyser {
           ? standardMethods.get(StandardMethod.EQUALS)
           : standardMethods.get(StandardMethod.HASH_CODE);
       messager.printMessage(ERROR,
-          "hashCode and equals must be implemented together on @FreeBuilder types",
+          "hashCode and equals must be implemented together on FreeBuilder types",
           underriddenMethod);
     }
     ImmutableMap.Builder<StandardMethod, UnderrideLevel> result = ImmutableMap.builder();
@@ -354,29 +344,28 @@ class Analyser {
    */
   private Optional<DeclaredType> tryFindBuilder(
       final QualifiedName superclass, TypeElement valueType) {
-    TypeElement builderType =
-        tryFind(typesIn(valueType.getEnclosedElements()), new Predicate<Element>() {
-          @Override public boolean apply(Element input) {
-            return input.getSimpleName().contentEquals(USER_BUILDER_NAME);
-          }
-        }).orNull();
+    TypeElement builderType = typesIn(valueType.getEnclosedElements())
+        .stream()
+        .filter(element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME))
+        .findAny()
+        .orElse(null);
     if (builderType == null) {
       if (valueType.getKind() == INTERFACE) {
         messager.printMessage(
             NOTE,
             "Add \"class Builder extends "
                 + superclass.getSimpleName()
-                + " {}\" to your interface to enable the @FreeBuilder API",
+                + " {}\" to your interface to enable the FreeBuilder API",
             valueType);
       } else {
         messager.printMessage(
             NOTE,
             "Add \"public static class Builder extends "
                 + superclass.getSimpleName()
-                + " {}\" to your class to enable the @FreeBuilder API",
+                + " {}\" to your class to enable the FreeBuilder API",
             valueType);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
 
     boolean extendsSuperclass =
@@ -387,7 +376,7 @@ class Analyser {
           ERROR,
           "Builder extends the wrong type (should be " + superclass.getSimpleName() + ")",
           builderType);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     if (builderType.getTypeParameters().size() != valueType.getTypeParameters().size()) {
@@ -396,7 +385,7 @@ class Analyser {
       } else {
         messager.printMessage(ERROR, "Builder has the wrong type parameters", builderType);
       }
-      return Optional.absent();
+      return Optional.empty();
     }
 
     DeclaredType declaredValueType = (DeclaredType) valueType.asType();
@@ -409,7 +398,7 @@ class Analyser {
   private Datatype.Builder constructionAndExtension(DeclaredType builder) {
     TypeElement builderElement = ModelUtils.asElement(builder);
     if (!builderElement.getModifiers().contains(Modifier.STATIC)) {
-      messager.printMessage(ERROR, "Builder must be static on @FreeBuilder types", builderElement);
+      messager.printMessage(ERROR, "Builder must be static on FreeBuilder types", builderElement);
       return new Datatype.Builder().setExtensible(false);
     }
     return new Datatype.Builder()
@@ -430,8 +419,7 @@ class Analyser {
     ImmutableMap.Builder<Property, PropertyCodeGenerator> generatorsByProperty =
         ImmutableMap.builder();
     for (ExecutableElement method : methods) {
-      Property.Builder propertyBuilder = namingConvention.getPropertyNames(type, method).orNull();
-      if (propertyBuilder != null) {
+      namingConvention.getPropertyNames(type, method).ifPresent(propertyBuilder -> {
         addPropertyData(propertyBuilder, type, method, jacksonSupport);
         Property property = propertyBuilder.build();
         Config config = new ConfigImpl(
@@ -441,7 +429,7 @@ class Analyser {
             method,
             methodsInvokedInBuilderConstructor);
         generatorsByProperty.put(property, createCodeGenerator(config));
-      }
+      });
     }
     return generatorsByProperty.build();
   }
@@ -609,7 +597,10 @@ class Analyser {
   private boolean shouldBuilderBeSerializable(DeclaredType builder) {
     // If there is a user-provided subclass, only make its generated superclass serializable if
     // it is itself; otherwise, tools may complain about missing a serialVersionUID field.
-    return any(asElement(builder).getInterfaces(), isEqualTo(Serializable.class));
+    return asElement(builder)
+        .getInterfaces()
+        .stream()
+        .anyMatch(isEqualTo(Serializable.class));
   }
 
   /** Returns whether a method is one of the {@link StandardMethod}s, and if so, which. */
@@ -620,22 +611,22 @@ class Analyser {
           && method.getParameters().get(0).asType().toString().equals("java.lang.Object")) {
         return Optional.of(StandardMethod.EQUALS);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else if (methodName.equals("hashCode")) {
       if (method.getParameters().isEmpty()) {
         return Optional.of(StandardMethod.HASH_CODE);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else if (methodName.equals("toString")) {
       if (method.getParameters().isEmpty()) {
         return Optional.of(StandardMethod.TO_STRING);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -692,10 +683,6 @@ class Analyser {
 
   private Predicate<TypeMirror> isEqualTo(Class<?> cls) {
     final TypeMirror typeMirror = elements.getTypeElement(cls.getCanonicalName()).asType();
-    return new Predicate<TypeMirror>() {
-      @Override public boolean apply(TypeMirror input) {
-        return types.isSameType(input, typeMirror);
-      }
-    };
+    return input -> types.isSameType(input, typeMirror);
   }
 }

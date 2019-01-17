@@ -1,8 +1,7 @@
 package org.inferred.freebuilder.processor.util.feature;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.processing.ProcessingEnvironment;
 
@@ -12,34 +11,18 @@ import javax.annotation.processing.ProcessingEnvironment;
  */
 public class EnvironmentFeatureSet implements FeatureSet {
 
-  private class FeatureFromEnvironmentLoader
-      extends CacheLoader<FeatureType<?>, Feature<?>> {
-    private final ProcessingEnvironment env;
-
-    /** <pre>featureType -> featureType.forEnvironment(env)</pre> */
-    private FeatureFromEnvironmentLoader(ProcessingEnvironment env) {
-      this.env = env;
-    }
-
-    @Override
-    public Feature<?> load(FeatureType<?> featureType) {
-      return featureType.forEnvironment(env, EnvironmentFeatureSet.this);
-    }
-  }
-
-  private final LoadingCache<FeatureType<?>, Feature<?>> featuresByType;
+  private final ProcessingEnvironment env;
+  private final Map<FeatureType<?>, Feature<?>> featuresByType = new HashMap<>();
 
   /** Constructs a feature set using the given processing environment. */
   public EnvironmentFeatureSet(ProcessingEnvironment env) {
-    featuresByType = CacheBuilder.newBuilder()
-        .concurrencyLevel(1)
-        .build(new FeatureFromEnvironmentLoader(env));
+    this.env = env;
   }
 
   @Override
   public <T extends Feature<T>> T get(FeatureType<T> featureType) {
     @SuppressWarnings("unchecked")
-    T feature = (T) featuresByType.getUnchecked(featureType);
+    T feature = (T) featuresByType.computeIfAbsent(featureType, $ -> $.forEnvironment(env, this));
     return feature;
   }
 }

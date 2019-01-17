@@ -22,10 +22,6 @@ import static org.inferred.freebuilder.processor.BuilderFactory.NEW_BUILDER_METH
 import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUCTOR;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.INFERRED_TYPES;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_6;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
-
-import com.google.common.base.Optional;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.GenericElement;
@@ -38,6 +34,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Optional;
 
 import javax.lang.model.element.TypeElement;
 
@@ -58,7 +56,7 @@ public class BuilderFactoryTest {
         "  ---> class Builder {}",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(factory.get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
   }
 
   @Test
@@ -70,7 +68,7 @@ public class BuilderFactoryTest {
         "}");
 
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -83,7 +81,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(factory.get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
   }
 
   @Test
@@ -96,7 +94,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -109,7 +107,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -124,7 +122,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(BUILDER_METHOD);
   }
 
   @Test
@@ -141,7 +139,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(BUILDER_METHOD);
   }
 
   @Test
@@ -158,7 +156,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(BUILDER_METHOD);
   }
 
   @Test
@@ -175,7 +173,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(factory.get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
   }
 
   @Test
@@ -192,7 +190,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -209,7 +207,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -226,7 +224,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -241,7 +239,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NEW_BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(NEW_BUILDER_METHOD);
   }
 
   @Test
@@ -258,7 +256,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NEW_BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(NEW_BUILDER_METHOD);
   }
 
   @Test
@@ -275,7 +273,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NEW_BUILDER_METHOD);
+    assertThat(factory.get()).isEqualTo(NEW_BUILDER_METHOD);
   }
 
   @Test
@@ -292,7 +290,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).hasValue(NO_ARGS_CONSTRUCTOR);
+    assertThat(factory.get()).isEqualTo(NO_ARGS_CONSTRUCTOR);
   }
 
   @Test
@@ -309,7 +307,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -326,7 +324,7 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -343,90 +341,48 @@ public class BuilderFactoryTest {
         "  }",
         "}");
     Optional<BuilderFactory> factory = BuilderFactory.from(builderType);
-    assertThat(factory).isAbsent();
+    assertThat(factory).isEqualTo(Optional.empty());
   }
 
   @Test
-  public void testNewBuilderForGenericType_noArgsConstructor_inferredTypes_j6() {
+  public void testNewBuilderForGenericType_noArgsConstructor_inferredTypes_j8() {
     Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
-    assertThat(code).isEqualTo("new Foo.Builder<E>()");
-  }
-
-  @Test
-  public void testNewBuilderForGenericType_noArgsConstructor_explicitTypes_j6() {
-    Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
-    assertThat(code).isEqualTo("new Foo.Builder<E>()");
-  }
-
-  @Test
-  public void testNewBuilderForGenericType_noArgsConstructor_inferredTypes_j7() {
-    Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
+    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("new Foo.Builder<>()");
   }
 
   @Test
-  public void testNewBuilderForGenericType_noArgsConstructor_explicitTypes_j7() {
+  public void testNewBuilderForGenericType_noArgsConstructor_explicitTypes_j8() {
     Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
+    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("new Foo.Builder<E>()");
   }
 
   @Test
-  public void testNewBuilderForGenericType_builderMethod_inferredTypes_j6() {
+  public void testNewBuilderForGenericType_builderMethod_inferredTypes_j8() {
     Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
+    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("Foo.builder()");
   }
 
   @Test
-  public void testNewBuilderForGenericType_builderMethod_explicitTypes_j6() {
+  public void testNewBuilderForGenericType_builderMethod_explicitTypes_j8() {
     Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
+    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("Foo.<E>builder()");
   }
 
   @Test
-  public void testNewBuilderForGenericType_builderMethod_inferredTypes_j7() {
-    Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
-    assertThat(code).isEqualTo("Foo.builder()");
-  }
-
-  @Test
-  public void testNewBuilderForGenericType_builderMethod_explicitTypes_j7() {
-    Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
-    assertThat(code).isEqualTo("Foo.<E>builder()");
-  }
-
-  @Test
-  public void testNewBuilderForGenericType_newBuilderMethod_inferredTypes_j6() {
+  public void testNewBuilderForGenericType_newBuilderMethod_inferredTypes_j8() {
     Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
+    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("Foo.newBuilder()");
   }
 
   @Test
-  public void testNewBuilderForGenericType_newBuilderMethod_explicitTypes_j6() {
+  public void testNewBuilderForGenericType_newBuilderMethod_explicitTypes_j8() {
     Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_6).add(newFooBuilder).toString();
-    assertThat(code).isEqualTo("Foo.<E>newBuilder()");
-  }
-
-  @Test
-  public void testNewBuilderForGenericType_newBuilderMethod_inferredTypes_j7() {
-    Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
-    assertThat(code).isEqualTo("Foo.newBuilder()");
-  }
-
-  @Test
-  public void testNewBuilderForGenericType_newBuilderMethod_explicitTypes_j7() {
-    Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple(JAVA_7).add(newFooBuilder).toString();
+    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("Foo.<E>newBuilder()");
   }
 }

@@ -53,7 +53,7 @@ public class DefaultedMapperMethodTest {
     List<ElementFactory> types = ElementFactory.TYPES_WITH_EXTRA_PRIMITIVES;
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
-    List<FeatureSet> features = FeatureSets.WITH_LAMBDAS;
+    List<FeatureSet> features = FeatureSets.ALL;
     return () -> Lists
         .cartesianProduct(types, checked, conventions, features)
         .stream()
@@ -143,7 +143,9 @@ public class DefaultedMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder().addLine("new DataType.Builder().mapProperty(a -> null);").build())
+        .with(testBuilder()
+            .addLine("new DataType.Builder().mapProperty(a -> (%s) null);", property.type())
+            .build())
         .runTest();
   }
 

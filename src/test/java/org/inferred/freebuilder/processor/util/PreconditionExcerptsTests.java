@@ -15,7 +15,6 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.JAVA_7;
 import static org.junit.Assert.assertEquals;
 
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
@@ -25,58 +24,6 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class PreconditionExcerptsTests {
-
-  @Test
-  public void testCheckNotNull_guava() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
-        .add(PreconditionExcerpts.checkNotNull("foo"))
-        .toString();
-    assertEquals("Preconditions.checkNotNull(foo);\n", source);
-  }
-
-  @Test
-  public void testCheckNotNull_j6() {
-    String source = SourceStringBuilder.simple()
-        .add(PreconditionExcerpts.checkNotNull("foo"))
-        .toString();
-    assertEquals("if (foo == null) {\n  throw new NullPointerException();\n}\n", source);
-  }
-
-  @Test
-  public void testCheckNotNull_j7() {
-    String source = SourceStringBuilder.simple(JAVA_7)
-        .add(PreconditionExcerpts.checkNotNull("foo"))
-        .toString();
-    assertEquals("Objects.requireNonNull(foo);\n", source);
-  }
-
-  @Test
-  public void testCheckNotNullInline_guava() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
-        .add(PreconditionExcerpts.checkNotNullPreamble("foo"))
-        .addLine("this.foo = %s;", PreconditionExcerpts.checkNotNullInline("foo"))
-        .toString();
-    assertEquals("this.foo = Preconditions.checkNotNull(foo);\n", source);
-  }
-
-  @Test
-  public void testCheckNotNullInline_j6() {
-    String source = SourceStringBuilder.simple()
-        .add(PreconditionExcerpts.checkNotNullPreamble("foo"))
-        .addLine("this.foo = %s;", PreconditionExcerpts.checkNotNullInline("foo"))
-        .toString();
-    assertEquals(
-        "if (foo == null) {\n  throw new NullPointerException();\n}\nthis.foo = foo;\n", source);
-  }
-
-  @Test
-  public void testCheckNotNullInline_j7() {
-    String source = SourceStringBuilder.simple(JAVA_7)
-        .add(PreconditionExcerpts.checkNotNullPreamble("foo"))
-        .addLine("this.foo = %s;", PreconditionExcerpts.checkNotNullInline("foo"))
-        .toString();
-    assertEquals("this.foo = Objects.requireNonNull(foo);\n", source);
-  }
 
   @Test
   public void testCheckArgument_guava_simpleMessage() {

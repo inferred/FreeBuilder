@@ -31,10 +31,7 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
-import static org.inferred.freebuilder.processor.util.feature.FunctionPackage.FUNCTION_PACKAGE;
-import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.LinkedHashMultiset;
@@ -45,11 +42,13 @@ import org.inferred.freebuilder.processor.excerpt.CheckedMultiset;
 import org.inferred.freebuilder.processor.util.Block;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
 
 import java.util.Collection;
+import java.util.Optional;
+import java.util.Spliterator;
+import java.util.stream.BaseStream;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -67,18 +66,18 @@ class MultisetProperty extends PropertyCodeGenerator {
 
     @Override
     public Optional<MultisetProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orNull();
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
       if (type == null || !erasesToAnyOf(type, Multiset.class, ImmutableMultiset.class)) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
-      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.or(elementType));
+      boolean needsSafeVarargs = needsSafeVarargs(unboxedType.orElse(elementType));
       boolean overridesSetCountMethod =
-          hasSetCountMethodOverride(config, unboxedType.or(elementType));
+          hasSetCountMethodOverride(config, unboxedType.orElse(elementType));
       boolean overridesVarargsAddMethod =
-          hasVarargsAddMethodOverride(config, unboxedType.or(elementType));
+          hasVarargsAddMethodOverride(config, unboxedType.orElse(elementType));
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -160,7 +159,9 @@ class MultisetProperty extends PropertyCodeGenerator {
   public void addBuilderFieldAccessors(SourceBuilder code) {
     addAdd(code);
     addVarargsAdd(code);
-    addAddAllMethods(code);
+    addSpliteratorAddAll(code);
+    addStreamAddAll(code);
+    addIterableAddAll(code);
     addAddCopiesTo(code);
     addMutate(code);
     addClear(code);
@@ -182,7 +183,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element) {",
             datatype.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType))
+            unboxedType.orElse(elementType))
         .addLine("  %s(element, 1);", addCopiesMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
@@ -200,47 +201,35 @@ class MultisetProperty extends PropertyCodeGenerator {
           .addLine(" *     null element");
     }
     code.addLine(" */");
-    QualifiedName safeVarargs = code.feature(SOURCE_LEVEL).safeVarargs().orNull();
-    if (safeVarargs != null && needsSafeVarargs) {
+    if (needsSafeVarargs) {
       if (!overridesVarargsAddMethod) {
-        code.addLine("@%s", safeVarargs)
+        code.addLine("@%s", SafeVarargs.class)
             .addLine("@%s({\"varargs\"})", SuppressWarnings.class);
       } else {
         code.addLine("@%s({\"unchecked\", \"varargs\"})", SuppressWarnings.class);
       }
     }
     code.add("public ");
-    if (safeVarargs != null && needsSafeVarargs && !overridesVarargsAddMethod) {
+    if (needsSafeVarargs && !overridesVarargsAddMethod) {
       code.add("final ");
     }
     code.add("%s %s(%s... elements) {\n",
            datatype.getBuilder(),
             addMethod(property),
-            unboxedType.or(elementType))
-        .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
+            unboxedType.orElse(elementType))
+        .addLine("  for (%s element : elements) {", unboxedType.orElse(elementType))
         .addLine("    %s(element, 1);", addCopiesMethod(property))
         .addLine("  }")
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
-  private void addAddAllMethods(SourceBuilder code) {
-    if (code.feature(SOURCE_LEVEL).stream().isPresent()) {
-      addSpliteratorAddAll(code);
-      addStreamAddAll(code);
-      addIterableAddAll(code);
-    } else {
-      addPreStreamsAddAll(code);
-    }
-  }
-
   private void addSpliteratorAddAll(SourceBuilder code) {
-    QualifiedName spliterator = code.feature(SOURCE_LEVEL).spliterator().get();
     addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
-            spliterator,
+            Spliterator.class,
             elementType)
         .addLine("  elements.forEachRemaining(element -> {")
         .addLine("    %s(element, 1);", addCopiesMethod(property))
@@ -250,12 +239,11 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   private void addStreamAddAll(SourceBuilder code) {
-    QualifiedName baseStream = code.feature(SOURCE_LEVEL).baseStream().get();
     addJavadocForAddAll(code);
     code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
             datatype.getBuilder(),
             addAllMethod(property),
-            baseStream,
+            BaseStream.class,
             elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
@@ -270,21 +258,6 @@ class MultisetProperty extends PropertyCodeGenerator {
             Iterable.class,
             elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
-        .addLine("}");
-  }
-
-  private void addPreStreamsAddAll(SourceBuilder code) {
-    addJavadocForAddAll(code);
-    addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(),
-            addAllMethod(property),
-            Iterable.class,
-            elementType)
-        .addLine("  for (%s element : elements) {", unboxedType.or(elementType))
-        .addLine("    %s(element, 1);", addCopiesMethod(property))
-        .addLine("  }")
-        .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
 
@@ -316,7 +289,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element, int occurrences) {",
             datatype.getBuilder(),
             addCopiesMethod(property),
-            unboxedType.or(elementType))
+            unboxedType.orElse(elementType))
         .add(methodBody(code, "element", "occurrences")
             .addLine("  %s(element, %s.count(element) + occurrences);",
                 setCountMethod(property), property.getField())
@@ -325,9 +298,6 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   private void addMutate(SourceBuilder code) {
-    if (!code.feature(FUNCTION_PACKAGE).isAvailable()) {
-      return;
-    }
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to the multiset to be returned from %s.",
@@ -393,7 +363,7 @@ class MultisetProperty extends PropertyCodeGenerator {
         .addLine("public %s %s(%s element, int occurrences) {",
             datatype.getBuilder(),
             setCountMethod(property),
-            unboxedType.or(elementType));
+            unboxedType.orElse(elementType));
     Block body = methodBody(code, "element", "occurrences");
     if (!unboxedType.isPresent()) {
       code.addLine("  %s.checkNotNull(element);", Preconditions.class);

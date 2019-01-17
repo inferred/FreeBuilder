@@ -30,7 +30,6 @@ import com.google.common.testing.EqualsTester;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
-import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
@@ -70,10 +69,6 @@ public class OptionalPropertyTest {
           FeatureSet featureSet = (FeatureSet) parameters.get(3);
           if (optional.equals(com.google.common.base.Optional.class)
               && !featureSet.get(GuavaLibrary.GUAVA).isAvailable()) {
-            return false;
-          }
-          if (optional.equals(java.util.Optional.class)
-              && !featureSet.get(SourceLevel.SOURCE_LEVEL).hasLambdas()) {
             return false;
           }
           return true;
@@ -253,8 +248,7 @@ public class OptionalPropertyTest {
         .with(oneProperty)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.<%s>%s())",
-                convention.set("item"), optional, element.type(), empty)
+            .addLine("    .%s(%s.%s())", convention.set("item"), optional, empty)
             .addLine("    .build();")
             .addLine("assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
             .build())
@@ -491,8 +485,7 @@ public class OptionalPropertyTest {
         .with(validatedProperty)
         .with(testBuilder()
             .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s.<%s>%s());",
-                convention.set("item"), optional, element.type(), empty)
+            .addLine("    .%s(%s.%s());", convention.set("item"), optional, empty)
             .build())
         .runTest();
   }
@@ -537,8 +530,7 @@ public class OptionalPropertyTest {
             .addLine("    .addEqualityGroup(")
             .addLine("        DataType.builder().build(),")
             .addLine("        DataType.builder()")
-            .addLine("            .%s(%s.<%s>%s())",
-                convention.set("item"), optional, element.type(), empty)
+            .addLine("            .%s(%s.%s())", convention.set("item"), optional, empty)
             .addLine("            .build(),")
             .addLine("        DataType.builder()")
             .addLine("            .%s(null)", convention.set("nullableItem"))
