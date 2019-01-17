@@ -151,8 +151,9 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code elements} is null or contains a")
         .addLine(" *     null element")
-        .addLine(" */")
-        .addLine("public %s %s(%s<? extends %s> elements) {",
+        .addLine(" */");
+    addAccessorAnnotations(code);
+    code.addLine("public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type());
     Block body = methodBody(code, "elements");
     body.addLine("  if (elements instanceof %s) {", Collection.class);

@@ -1,5 +1,9 @@
 package org.inferred.freebuilder.processor;
 
+import static org.apache.commons.lang3.StringEscapeUtils.escapeJava;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -54,8 +58,10 @@ public class BuildableListPropertyTest {
       buildableListType = new SourceBuilder()
           .addLine("package com.example;")
           .addLine("@%s", FreeBuilder.class)
+          .addLine("@%s(builder = Receipt.Builder.class)", JsonDeserialize.class)
           .addLine("public interface Receipt {")
           .addLine("  @%s", FreeBuilder.class)
+          .addLine("  @%s(builder = Item.Builder.class)", JsonDeserialize.class)
           .addLine("  interface Item {")
           .addLine("    String name();")
           .addLine("    int price();")
@@ -176,6 +182,29 @@ public class BuildableListPropertyTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s).containsExactly(candy, apple).inOrder();",
                 convention.get("items"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testJacksonInteroperability() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(buildableListType)
+        .with(testBuilder()
+            .addLine("Item candy = new Item.Builder().name(\"candy\").price(15).build();")
+            .addLine("Item apple = new Item.Builder().name(\"apple\").price(50).build();")
+            .addLine("Receipt value = new Receipt.Builder()")
+            .addLine("    .addAllItems(ImmutableList.of(candy, apple))")
+            .addLine("    .build();")
+            .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
+            .addLine("String json = mapper.writeValueAsString(value);")
+            .addLine("assertThat(json).isEqualTo(\"%s\");", escapeJava("{\"items\":["
+                + "{\"name\":\"candy\",\"price\":15},"
+                + "{\"name\":\"apple\",\"price\":50}]}"))
+            .addLine("Receipt clone = mapper.readValue(json, Receipt.class);")
+            .addLine("assertThat(clone.%s).containsExactly(candy, apple).inOrder();",
+                convention.get())
             .build())
         .runTest();
   }
