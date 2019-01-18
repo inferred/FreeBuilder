@@ -15,11 +15,13 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static java.util.stream.Collectors.toList;
+
 import org.inferred.freebuilder.processor.util.Scope.Level;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 public class LazyName extends ValueType implements Excerpt, Scope.Key<LazyName.Declaration> {
 
@@ -27,24 +29,18 @@ public class LazyName extends ValueType implements Excerpt, Scope.Key<LazyName.D
    * Finds all lazily-declared classes and methods and adds their definitions to the source.
    */
   public static void addLazyDefinitions(SourceBuilder code) {
-    SortedMap<Declaration, SourceStringBuilder> definitions = new TreeMap<>();
+    Set<Declaration> defined = new HashSet<>();
 
     // Definitions may lazily declare new names; ensure we add them all
-    Set<Declaration> declarations = code.scope().keysOfType(Declaration.class);
-    while (!definitions.keySet().containsAll(declarations)) {
+    List<Declaration> declarations =
+        code.scope().keysOfType(Declaration.class).stream().sorted().collect(toList());
+    while (!defined.containsAll(declarations)) {
       for (Declaration declaration : declarations) {
-        if (!definitions.containsKey(declaration)) {
-          LazyName lazyName = code.scope().get(declaration);
-          definitions.put(declaration, code.subBuilder().add(lazyName.definition));
+        if (defined.add(declaration)) {
+          code.add(code.scope().get(declaration).definition);
         }
       }
-      declarations = code.scope().keysOfType(Declaration.class);
-    }
-
-    // Add the static excerpts in alphabetic order.
-    // Capital letters sort before lowercase ones, so classes will precede methods.
-    for (SourceStringBuilder definition : definitions.values()) {
-      code.add("%s", definition);
+      declarations = code.scope().keysOfType(Declaration.class).stream().sorted().collect(toList());
     }
   }
 
@@ -77,7 +73,19 @@ public class LazyName extends ValueType implements Excerpt, Scope.Key<LazyName.D
 
   @Override
   public void addTo(SourceBuilder code) {
-    Declaration declaration = declare(this, code.scope());
+    Declaration declaration = code.scope().computeIfAbsent(this, () -> {
+      // Search for an unused name, trying the preferred name first
+      int attempt = 1;
+      Declaration name = new Declaration(preferredName);
+      while (true) {
+        LazyName existingExcerpt = code.scope().putIfAbsent(name, this);
+        if (existingExcerpt == null) {
+          return name;
+        }
+        attempt++;
+        name = new Declaration(preferredName + attempt);
+      }
+    });
     code.add(declaration.name);
   }
 
@@ -106,30 +114,6 @@ public class LazyName extends ValueType implements Excerpt, Scope.Key<LazyName.D
     @Override
     public int compareTo(Declaration other) {
       return name.compareTo(other.name);
-    }
-  }
-
-  /**
-   * Declare a name for {@code lazyName} in {@code scope}, using {@code preferredName} if possible.
-   */
-  protected static Declaration declare(LazyName lazyName, Scope scope) {
-    // If we've already declared a name in this scope, use it.
-    Declaration name = scope.get(lazyName);
-    if (name != null) {
-      return name;
-    }
-
-    // Otherwise, search for an unused name, trying the preferred name first
-    int attempt = 1;
-    name = new Declaration(lazyName.preferredName);
-    while (true) {
-      LazyName existingExcerpt = scope.putIfAbsent(name, lazyName);
-      if (existingExcerpt == null) {
-        scope.putIfAbsent(lazyName, name);
-        return name;
-      }
-      attempt++;
-      name = new Declaration(lazyName.preferredName + attempt);
     }
   }
 }

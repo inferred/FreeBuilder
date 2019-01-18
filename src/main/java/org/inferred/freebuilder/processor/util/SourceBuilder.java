@@ -68,13 +68,6 @@ public interface SourceBuilder {
   SourceBuilder addLine(String fmt, Object... args);
 
   /**
-   * Returns a {@code SourceStringBuilder} with the same configuration as this builder. In
-   * particular, the {@code TypeShortener} will be shared, so any types added to the sub-builder
-   * will be included in the imports for this builder (and its parents).
-   */
-  SourceStringBuilder subBuilder();
-
-  /**
    * Returns the instance of {@code featureType} appropriate for the source being written. For
    * instance, <code>code.feature({@link GuavaLibrary#GUAVA
    * GUAVA}).{@link GuavaLibrary#isAvailable() isAvailable()}</code> returns true if the Guava

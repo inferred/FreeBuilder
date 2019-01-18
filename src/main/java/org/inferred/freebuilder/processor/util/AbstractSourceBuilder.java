@@ -62,11 +62,6 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
   }
 
   @Override
-  public SourceStringBuilder subBuilder() {
-    return new SourceStringBuilder(getShortener(), features, scope());
-  }
-
-  @Override
   public <T extends Feature<T>> T feature(FeatureType<T> feature) {
     return features.get(feature);
   }
