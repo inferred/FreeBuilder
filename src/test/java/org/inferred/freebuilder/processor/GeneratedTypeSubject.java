@@ -51,7 +51,6 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
     CompilationUnitBuilder compilationUnitBuilder = new CompilationUnitBuilder(
             mockEnvironment(getSubject().getName(), getSubject().getVisibleNestedTypes()),
             getSubject().getName(),
-            getSubject().getVisibleNestedTypes(),
             new StaticFeatureSet(environmentFeatures.toArray(new Feature<?>[0])));
     String rawSource = compilationUnitBuilder
         .add(getSubject())

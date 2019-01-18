@@ -176,33 +176,6 @@ public class ScopeHandlerTests {
   }
 
   @Test
-  public void promisedNestedTypeHidesTypeInSameNamespace() {
-    QualifiedName outerType = QualifiedName.of("com.example", "A");
-    QualifiedName scopeType = outerType.nestedType("B");
-    QualifiedName nestedType = outerType.nestedType("Set");
-    QualifiedName hiddenType = QualifiedName.of(Set.class);
-    handler.predeclareGeneratedType(outerType);
-    handler.predeclareGeneratedType(scopeType);
-    handler.predeclareGeneratedType(nestedType);
-
-    ScopeState result = handler.visibilityIn(scopeType, hiddenType);
-    assertThat(result).isEqualTo(ScopeState.HIDDEN);
-  }
-
-  @Test
-  public void promisedNestedTypeInScopeOfSubtype() {
-    QualifiedName outerType = QualifiedName.of("com.example", "A");
-    QualifiedName nestedType = outerType.nestedType("Set");
-    QualifiedName scopeType = QualifiedName.of("com.example", "B");
-    handler.predeclareGeneratedType(outerType);
-    handler.predeclareGeneratedType(nestedType);
-    handler.declareGeneratedType(Visibility.PACKAGE, scopeType, ImmutableSet.of(outerType));
-
-    ScopeState result = handler.visibilityIn(scopeType, nestedType);
-    assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
-  }
-
-  @Test
   public void typeInSuperclassHidesTypeInEnclosingClass() {
     model.newType(
         "package com.example;",
@@ -236,7 +209,8 @@ public class ScopeHandlerTests {
     QualifiedName hiddenNestedType = generatedType.nestedType("Entry");
 
     handler.declareGeneratedType(Visibility.PACKAGE, generatedType, ImmutableSet.of());
-    handler.declareGeneratedType(Visibility.PACKAGE, scopeType, ImmutableSet.of(supertype));
+    handler.declareGeneratedType(
+        Visibility.PACKAGE, scopeType, ImmutableSet.of(supertype.toString()));
     handler.declareGeneratedType(Visibility.PACKAGE, hiddenNestedType, ImmutableSet.of());
 
     ScopeState result = handler.visibilityIn(scopeType, hiddenNestedType);
@@ -251,7 +225,8 @@ public class ScopeHandlerTests {
     QualifiedName hiddenNestedType = generatedType.nestedType("Entry");
 
     handler.declareGeneratedType(Visibility.PACKAGE, generatedType, ImmutableSet.of());
-    handler.declareGeneratedType(Visibility.PACKAGE, scopeType, ImmutableSet.of(interfaceType));
+    handler.declareGeneratedType(
+        Visibility.PACKAGE, scopeType, ImmutableSet.of(interfaceType.toString()));
     handler.declareGeneratedType(Visibility.PACKAGE, hiddenNestedType, ImmutableSet.of());
 
     ScopeState result = handler.visibilityIn(scopeType, hiddenNestedType);

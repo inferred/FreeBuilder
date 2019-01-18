@@ -15,66 +15,135 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import com.google.common.collect.ImmutableSortedSet;
+import static java.util.function.Predicate.isEqual;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toMap;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import org.inferred.freebuilder.processor.util.ScopeHandler.ScopeState;
+
+import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
- * Manages the imports for a source file, and produces short type references by adding extra
- * imports when possible.
+ * Adds imports to a compilation unit.
  *
  * <p>To ensure we never import common names like 'Builder', nested classes are never directly
  * imported. This is necessarily less readable when types are used as namespaces, e.g. in proto2.
  */
 class ImportManager {
 
-  /** Imported types, indexed by simple name. */
-  private final Map<String, QualifiedName> imports = new LinkedHashMap<>();
+  public static String shortenReferences(
+      CharSequence codeWithQualifiedNames,
+      int importsIndex,
+      List<TypeUsage> usages,
+      ScopeHandler scopeHandler) {
+    // Run through all type usages, determining what is in scope
+    SortedSet<QualifiedName> imports = usages.stream()
+        .flatMap(usage -> imports(scopeHandler, usage))
+        .collect(toMap(QualifiedName::getSimpleName, $ -> $, (a, b) -> a.equals(b) ? a : CONFLICT))
+        .values()
+        .stream()
+        .filter(isEqual(CONFLICT).negate())
+        .collect(toCollection(TreeSet::new));
 
-  /**
-   * Returns a sorted set of the qualified name of all imported types.
-   */
-  public Set<String> getClassImports() {
-    ImmutableSortedSet.Builder<String> result = ImmutableSortedSet.naturalOrder();
-    for (QualifiedName type : imports.values()) {
-      result.add(type.toString());
+    StringBuilder result = new StringBuilder()
+        .append(codeWithQualifiedNames, 0, importsIndex);
+    if (!imports.isEmpty()) {
+      result.append("\n");
+      imports.forEach(type -> result.append("import ").append(type).append(";\n"));
+      result.append("\n");
     }
-    return result.build();
+    int i = importsIndex;
+    for (TypeUsage usage : usages) {
+      result.append(codeWithQualifiedNames, i, usage.start());
+      appendUsage(result, usage, scopeHandler, imports);
+      i = usage.end();
+    }
+    return result
+        .append(codeWithQualifiedNames, i, codeWithQualifiedNames.length())
+        .toString();
   }
 
-  /**
-   * Adds {@code type} to the set of imports, if it does not conflict with an existing import.
-   *
-   * @return true if {@code type} is already in, or has been added to, the import set
-   */
-  public boolean add(QualifiedName type) {
-    QualifiedName existingType = imports.get(type.getSimpleName());
-    if (existingType == null) {
-      imports.put(type.getSimpleName(), type);
-      return true;
+  /** Impossible type to use in place of null (which toMap goes odd over). */
+  private static final QualifiedName CONFLICT = QualifiedName.of("", "import");
+
+  private static Function<QualifiedName, ScopeState> visibilityIn(
+      ScopeHandler scopeHandler, TypeUsage usage) {
+    if (usage.scope().isPresent()) {
+      return t -> scopeHandler.visibilityIn(usage.scope().get(), t);
+    } else {
+      return t -> scopeHandler.visibilityIn(usage.pkg(), t);
     }
-    return type.equals(existingType);
   }
 
-  /**
-   * Returns the full name of {@code shortenedType}, if there is an import matching its
-   * first part.
-   *
-   * <p>For example, if {@code java.util.Map} has been imported, then {@code Map.Entry} will
-   * resolve to {@code java.util.Map.Entry}.
-   */
-  public Optional<QualifiedName> lookup(String shortenedType) {
-    String[] simpleNames = shortenedType.split("\\.");
-    QualifiedName result = imports.get(simpleNames[0]);
-    if (result == null) {
-      return Optional.empty();
-    }
-    for (int i = 1; i < simpleNames.length; i++) {
-      result = result.nestedType(simpleNames[i]);
-    }
-    return Optional.of(result);
+  private static Stream<QualifiedName> imports(ScopeHandler scopeHandler, TypeUsage usage) {
+    return imports(visibilityIn(scopeHandler, usage), usage.type());
   }
+
+  private static Stream<QualifiedName> imports(
+      Function<QualifiedName, ScopeState> visibility,
+      QualifiedName type) {
+    for (QualifiedName candidate = type; true; candidate = candidate.enclosingType()) {
+      switch (visibility.apply(candidate)) {
+        case IN_SCOPE:
+          return Stream.of();
+
+        case IMPORTABLE:
+          if (candidate.isTopLevel()) {
+            return Stream.of(candidate);
+          }
+          break;
+
+        case HIDDEN:
+          if (candidate.isTopLevel()) {
+            return Stream.of();
+          }
+          break;
+      }
+    }
+  }
+
+  private static void appendUsage(
+      StringBuilder result,
+      TypeUsage usage,
+      ScopeHandler scopeHandler,
+      Set<QualifiedName> imports) {
+    appendUsage(result, visibilityIn(scopeHandler, usage), usage.type(), imports);
+  }
+
+  private static void appendUsage(
+      StringBuilder result,
+      Function<QualifiedName, ScopeState> visibility,
+      QualifiedName type,
+      Set<QualifiedName> imports) {
+    if (!isVisible(visibility.apply(type), imports.contains(type))) {
+      if (type.isTopLevel()) {
+        result.append(type.getPackage());
+      } else {
+        appendUsage(result, visibility, type.enclosingType(), imports);
+      }
+      result.append('.');
+    }
+    result.append(type.getSimpleName());
+  }
+
+  private static boolean isVisible(ScopeState state, boolean imported) {
+    switch (state) {
+      case IN_SCOPE:
+        return true;
+
+      case IMPORTABLE:
+        return imported;
+
+      case HIDDEN:
+        return false;
+    }
+    throw new IllegalStateException("Unexpected state " + state);
+  }
+
+  private ImportManager() { }
 }

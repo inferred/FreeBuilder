@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -116,14 +117,10 @@ class ScopeHandler {
     }
   }
 
-  void predeclareGeneratedType(QualifiedName generatedType) {
-    declareGeneratedType(Visibility.UNKNOWN, generatedType, ImmutableSet.<QualifiedName>of());
-  }
-
   void declareGeneratedType(
       Visibility visibility,
       QualifiedName generatedType,
-      Set<QualifiedName> supertypes) {
+      Set<String> supertypes) {
     generatedTypes.put(generatedType.toString(), generatedType);
     typeVisibility.put(generatedType, visibility);
     if (!generatedType.isTopLevel()) {
@@ -131,24 +128,24 @@ class ScopeHandler {
           .put(generatedType.getSimpleName(), generatedType);
     }
     SetMultimap<String, QualifiedName> visibleInScope = get(visibleTypes, generatedType);
-    for (QualifiedName supertype : supertypes) {
+    supertypes.stream().flatMap(this::lookup).forEach(supertype -> {
       for (QualifiedName type : typesInScope(supertype).values()) {
         if (maybeVisibleInScope(generatedType, type)) {
           visibleInScope.put(type.getSimpleName(), type);
         }
       }
-    }
+    });
   }
 
-  Optional<QualifiedName> lookup(String typename) {
+  private Stream<QualifiedName> lookup(String typename) {
     if (generatedTypes.containsKey(typename)) {
-      return Optional.of(generatedTypes.get(typename));
+      return Stream.of(generatedTypes.get(typename));
     }
     TypeElement scopeElement = elements.getTypeElement(typename);
     if (scopeElement != null) {
-      return Optional.of(QualifiedName.of(scopeElement));
+      return Stream.of(QualifiedName.of(scopeElement));
     }
-    return Optional.empty();
+    return Stream.empty();
   }
 
   private boolean isTopLevelType(String pkg, String simpleName) {

@@ -116,7 +116,6 @@ public class Processor extends AbstractProcessor {
         CompilationUnitBuilder code = new CompilationUnitBuilder(
             processingEnv,
             builder.getName(),
-            builder.getVisibleNestedTypes(),
             firstNonNull(features, environmentFeatures));
         code.add(builder);
         FilerUtils.writeCompilationUnit(
