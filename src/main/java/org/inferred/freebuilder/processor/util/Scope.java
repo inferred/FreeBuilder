@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.ConcurrentModificationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,8 @@ public abstract class Scope {
   public interface Key<V> {
     Level level();
   }
+
+  private static final Object RECURSION_SENTINEL = new Object();
 
   private final Map<Key<?>, Object> entries = new LinkedHashMap<>();
   private final Scope parent;
@@ -52,7 +55,10 @@ public abstract class Scope {
   public <V> V get(Key<V> key) {
     @SuppressWarnings("unchecked")
     V value = (V) entries.get(key);
-    if (value != null) {
+    if (value == RECURSION_SENTINEL) {
+      throw new ConcurrentModificationException(
+          "Cannot access scope key " + key + " while computing its value");
+    } else if (value != null) {
       return value;
     } else if (parent != null) {
       return parent.get(key);
@@ -66,6 +72,7 @@ public abstract class Scope {
     if (value != null) {
       return value;
     } else if (level == key.level()) {
+      entries.put(key, RECURSION_SENTINEL);
       value = supplier.get();
       entries.put(key, value);
       return value;
@@ -92,7 +99,10 @@ public abstract class Scope {
     if (level == key.level()) {
       @SuppressWarnings("unchecked")
       V existingValue = (V) entries.get(key);
-      if (existingValue == null) {
+      if (value == RECURSION_SENTINEL) {
+        throw new ConcurrentModificationException(
+            "Cannot access scope key " + key + " while computing its value");
+      } else if (existingValue == null) {
         entries.put(key, value);
       }
       return existingValue;
