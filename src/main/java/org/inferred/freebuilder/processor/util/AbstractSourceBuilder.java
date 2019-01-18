@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
-import org.inferred.freebuilder.processor.util.TypeMirrorShortener.QualifiedNameAppendable;
+import org.inferred.freebuilder.processor.util.TypeMirrorAppender.QualifiedNameAppendable;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
@@ -83,7 +83,7 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
     } else if (arg instanceof TypeMirror) {
       TypeMirror mirror = (TypeMirror) arg;
       checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
-      TypeMirrorShortener.appendShortened(mirror, this);
+      TypeMirrorAppender.appendShortened(mirror, this);
     } else if (arg instanceof QualifiedName) {
       append((QualifiedName) arg);
     } else if (arg instanceof AnnotationMirror) {

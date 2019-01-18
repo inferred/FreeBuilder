@@ -23,13 +23,13 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.common.reflect.TypeToken;
 
+import org.inferred.freebuilder.processor.util.TypeMirrorAppender.QualifiedNameAppendable;
 import org.inferred.freebuilder.processor.util.testing.Model;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -38,12 +38,33 @@ import javax.lang.model.element.Name;
 import javax.lang.model.type.TypeMirror;
 
 @RunWith(JUnit4.class)
-public class TypeMirrorShortenerTest {
+public class TypeMirrorAppenderTest {
 
-  private static class FakeShortener implements TypeShortener {
+  private static class FakeAppendable implements QualifiedNameAppendable<FakeAppendable> {
+
+    private final StringBuilder s = new StringBuilder();
+
     @Override
-    public void appendShortened(Appendable a, QualifiedName type) throws IOException {
-      a.append("{{").append(type.getSimpleNames().stream().collect(joining("."))).append("}}");
+    public FakeAppendable append(char c) {
+      s.append(c);
+      return this;
+    }
+
+    @Override
+    public FakeAppendable append(CharSequence csq) {
+      s.append(csq);
+      return this;
+    }
+
+    @Override
+    public FakeAppendable append(QualifiedName type) {
+      s.append("{{").append(type.getSimpleNames().stream().collect(joining("."))).append("}}");
+      return this;
+    }
+
+    @Override
+    public String toString() {
+      return s.toString();
     }
   }
 
@@ -86,9 +107,9 @@ public class TypeMirrorShortenerTest {
   @Test
   public void testInnerClassOnGenericType() {
     createModel();
-    assertEquals("{{TypeMirrorShortenerTest.OuterClass}}<{{List}}<{{String}}>>.InnerClass",
+    assertEquals("{{TypeMirrorAppenderTest.OuterClass}}<{{List}}<{{String}}>>.InnerClass",
         shorten(model.typeMirror(
-            new TypeToken<TypeMirrorShortenerTest.OuterClass<List<String>>.InnerClass>() {})));
+            new TypeToken<TypeMirrorAppenderTest.OuterClass<List<String>>.InnerClass>() {})));
   }
 
   @Test
@@ -108,13 +129,9 @@ public class TypeMirrorShortenerTest {
   }
 
   private static String shorten(TypeMirror type) {
-    try {
-      StringBuilder result = new StringBuilder();
-      new TypeMirrorShortener(result).appendShortened(new FakeShortener(), type);
-      return result.toString();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    FakeAppendable result = new FakeAppendable();
+    TypeMirrorAppender.appendShortened(type, result);
+    return result.toString();
   }
 
   private static class OuterClass<T> {

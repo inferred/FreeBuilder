@@ -8,8 +8,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
-class TypeMirrorShortener
-    extends SimpleTypeVisitor6<Void, TypeMirrorShortener.QualifiedNameAppendable<?>> {
+class TypeMirrorAppender
+    extends SimpleTypeVisitor6<Void, TypeMirrorAppender.QualifiedNameAppendable<?>> {
 
   interface QualifiedNameAppendable<B extends QualifiedNameAppendable<B>> {
     B append(char c);
@@ -17,13 +17,13 @@ class TypeMirrorShortener
     B append(QualifiedName type);
   }
 
-  private static TypeMirrorShortener INSTANCE = new TypeMirrorShortener();
+  private static final TypeMirrorAppender INSTANCE = new TypeMirrorAppender();
 
   public static void appendShortened(TypeMirror mirror, QualifiedNameAppendable<?> a) {
     mirror.accept(INSTANCE, a);
   }
 
-  private TypeMirrorShortener() { }
+  private TypeMirrorAppender() { }
 
   @Override
   public Void visitDeclared(DeclaredType mirror, QualifiedNameAppendable<?> a) {
