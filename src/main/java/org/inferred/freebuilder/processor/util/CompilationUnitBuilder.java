@@ -73,6 +73,11 @@ public class CompilationUnitBuilder
   }
 
   @Override
+  public void onPackageStatement(String packageName) {
+    throw new IllegalStateException("Package redeclared");
+  }
+
+  @Override
   public void onTypeBlockStart(String keyword, String simpleName, Set<String> supertypes) {
     ScopeAwareTypeShortener typeShortener = getLast(typeShorteners).inScope(simpleName, supertypes);
     typeShorteners.add(typeShortener);
