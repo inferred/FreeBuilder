@@ -31,6 +31,7 @@ public abstract class Scope {
     FILE, METHOD;
   }
 
+  @SuppressWarnings("unused")
   public interface Element<T> {
     Level level();
   }

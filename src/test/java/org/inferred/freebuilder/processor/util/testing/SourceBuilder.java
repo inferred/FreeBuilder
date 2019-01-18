@@ -18,8 +18,6 @@ package org.inferred.freebuilder.processor.util.testing;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.common.base.Throwables;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
@@ -94,7 +92,7 @@ public class SourceBuilder {
     try {
       return new URI("mem:///" + typeName.replaceAll("\\.", "/") + ".java");
     } catch (URISyntaxException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

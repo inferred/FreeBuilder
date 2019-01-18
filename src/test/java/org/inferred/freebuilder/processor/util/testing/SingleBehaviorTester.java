@@ -17,13 +17,16 @@ package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
+import static com.google.common.base.Throwables.throwIfUnchecked;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
-import static java.util.stream.Collectors.toSet;
-import static javax.tools.JavaFileObject.Kind.CLASS;
+
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.util.feature.SourceLevel.SOURCE_LEVEL;
 
-import com.google.common.base.Throwables;
+import static java.util.stream.Collectors.toSet;
+
+import static javax.tools.JavaFileObject.Kind.CLASS;
+
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -306,7 +309,7 @@ class SingleBehaviorTester implements BehaviorTester {
       if (exceptions.size() == 1) {
         // If there was a single error on the same thread, propagate it directly.
         // This makes testing for expected errors easier.
-        Throwables.propagateIfPossible(exceptions.get(0));
+        throwIfUnchecked(exceptions.get(0));
       }
     }
     if (!exceptions.isEmpty()) {
