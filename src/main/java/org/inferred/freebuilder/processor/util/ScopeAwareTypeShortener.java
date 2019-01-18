@@ -93,7 +93,9 @@ class ScopeAwareTypeShortener implements TypeShortener {
   }
 
   private ScopeState visibilityInScope(QualifiedName type) {
-    if (scope != null) {
+    if (type.getPackage().isEmpty()) {
+      return ScopeState.IN_SCOPE;
+    } else if (scope != null) {
       return handler.visibilityIn(scope, type);
     } else {
       return handler.visibilityIn(pkg, type);
