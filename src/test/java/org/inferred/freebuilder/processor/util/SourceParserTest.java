@@ -24,6 +24,24 @@ public class SourceParserTest {
   }
 
   @Test
+  public void packageDeclaration() {
+    parse("/* This is my cool type! */ package com.example.foo;");
+    verify(eventHandler).onPackageStatement("com.example.foo");
+  }
+
+  @Test
+  public void packageWithUmlaut() {
+    parse("package com.example.vögel;");
+    verify(eventHandler).onPackageStatement("com.example.vögel");
+  }
+
+  @Test
+  public void packageWithOddSpacing() {
+    parse("package com.example\n    .foo;");
+    verify(eventHandler).onPackageStatement("com.example.foo");
+  }
+
+  @Test
   public void ifBlockStart() {
     parse("if (something < someOtherThing) {");
     verify(eventHandler).onOtherBlockStart();

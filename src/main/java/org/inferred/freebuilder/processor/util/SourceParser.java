@@ -21,12 +21,14 @@ class SourceParser {
    * Receive notifications of gross Java structure events.
    */
   interface EventHandler {
+    void onPackageStatement(String packageName);
     void onTypeBlockStart(String keyword, String simpleName, Set<String> supertypes);
     void onMethodBlockStart(String methodName, Set<String> parameterNames);
     void onOtherBlockStart();
     void onBlockEnd();
   }
 
+  private static final Pattern PACKAGE = Pattern.compile("\\bpackage\\s([^;]*);");
   private static final Pattern TYPE = Pattern.compile(
       "\\b(class|interface|enum|@interface)\\s+([^\\s<>]+)");
   private static final Pattern METHOD = Pattern.compile(
@@ -73,6 +75,7 @@ class SourceParser {
             statement.setLength(0);
             break;
           case ';':
+            onStatement(statement);
             statement.setLength(0);
             break;
           case '"':
@@ -156,6 +159,15 @@ class SourceParser {
             break;
         }
         break;
+    }
+  }
+
+  private void onStatement(CharSequence chars) {
+    Matcher packageMatcher = PACKAGE.matcher(chars);
+    if (packageMatcher.find()) {
+      String packageName = packageMatcher.group(1).replaceAll("\\s+", "");
+      checkState(!packageName.isEmpty(), "Unexpected ';'");
+      eventHandler.onPackageStatement(packageName);
     }
   }
 
