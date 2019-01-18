@@ -17,11 +17,14 @@ package org.inferred.freebuilder.processor.util;
 
 import org.inferred.freebuilder.processor.util.Scope.Level;
 
-class VariableName extends ValueType implements Scope.Element<VariableName> {
+/**
+ * Maps Java identifiers to their usage (e.g. a parameter, a variable) in the current method scope.
+ */
+class IdKey extends ValueType implements Scope.Element<Object> {
 
   private final String name;
 
-  VariableName(String name) {
+  IdKey(String name) {
     this.name = name;
   }
 
