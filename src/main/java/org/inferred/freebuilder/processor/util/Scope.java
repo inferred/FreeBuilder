@@ -36,7 +36,7 @@ public abstract class Scope {
     Level level();
   }
 
-  private final Map<Key<?>, Object> elements = new LinkedHashMap<>();
+  private final Map<Key<?>, Object> entries = new LinkedHashMap<>();
   private final Scope parent;
   private final Level level;
 
@@ -51,7 +51,7 @@ public abstract class Scope {
 
   public <V> V get(Key<V> key) {
     @SuppressWarnings("unchecked")
-    V value = (V) elements.get(key);
+    V value = (V) entries.get(key);
     if (value != null) {
       return value;
     } else if (parent != null) {
@@ -67,7 +67,7 @@ public abstract class Scope {
       return value;
     } else if (level == key.level()) {
       value = supplier.get();
-      elements.put(key, value);
+      entries.put(key, value);
       return value;
     } else if (parent != null) {
       return parent.computeIfAbsent(key, supplier);
@@ -82,7 +82,7 @@ public abstract class Scope {
     if (parent != null) {
       keys.addAll(parent.keysOfType(keyType));
     }
-    keys.addAll(FluentIterable.from(elements.keySet()).filter(keyType).toSet());
+    keys.addAll(FluentIterable.from(entries.keySet()).filter(keyType).toSet());
     return keys.build();
   }
 
@@ -91,9 +91,9 @@ public abstract class Scope {
     requireNonNull(value);
     if (level == key.level()) {
       @SuppressWarnings("unchecked")
-      V existingValue = (V) elements.get(key);
+      V existingValue = (V) entries.get(key);
       if (existingValue == null) {
-        elements.put(key, value);
+        entries.put(key, value);
       }
       return existingValue;
     } else if (parent != null) {
