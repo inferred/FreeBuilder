@@ -33,7 +33,6 @@ compileTestJava {
 }
 
 dependencies {
-  compile commonsLang3
   compile googleJavaFormat
   compile guava
   compileOnly autoService
@@ -132,11 +131,6 @@ shadowJar {
   include 'com/google/googlejavaformat/**'
   include 'org/openjdk/**'
   exclude 'org/openjdk/tools/javadoc/**'
-
-  // Include StringEscapeUtils from Apache Commons' lang3
-  // (Used to correctly quote Java string literals)
-  include 'org/apache/commons/lang3/StringEscapeUtils.class'
-  include 'org/apache/commons/lang3/text/translate/CharSequenceTranslator.class'
 }
 tasks.shadowJar.shouldRunAfter tasks.test
 

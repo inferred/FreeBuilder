@@ -171,7 +171,7 @@ class GeneratedBuilder extends GeneratedType {
         .addLine("public %s build() {", datatype.getType());
     if (hasRequiredProperties) {
       code.add(PreconditionExcerpts.checkState(
-          Excerpts.add("%s.isEmpty()", UNSET_PROPERTIES), "Not set: %s", UNSET_PROPERTIES));
+          "%1$s.isEmpty()", "Not set: %1$s", UNSET_PROPERTIES));
     }
     code.addLine("  return %s(this);", datatype.getValueType().constructor())
         .addLine("}");
