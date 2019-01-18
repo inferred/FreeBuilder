@@ -21,6 +21,8 @@ import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
+import java.io.IOException;
+
 /**
  * A {@link SourceBuilder} that writes to a {@link StringBuilder}.
  */
@@ -56,11 +58,6 @@ public class SourceStringBuilder extends AbstractSourceBuilder<SourceStringBuild
   }
 
   @Override
-  protected TypeShortener getShortener() {
-    return shortener;
-  }
-
-  @Override
   public Scope scope() {
     return scope;
   }
@@ -69,6 +66,16 @@ public class SourceStringBuilder extends AbstractSourceBuilder<SourceStringBuild
   public SourceStringBuilder append(char c) {
     destination.append(c);
     return this;
+  }
+
+  @Override
+  public SourceStringBuilder append(QualifiedName type) {
+    try {
+      shortener.appendShortened(destination, type);
+      return this;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

@@ -25,6 +25,7 @@ import com.google.googlejavaformat.java.FormatterException;
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -120,8 +121,13 @@ public class CompilationUnitBuilder
   }
 
   @Override
-  protected TypeShortener getShortener() {
-    return getLast(typeShorteners);
+  public CompilationUnitBuilder append(QualifiedName type) {
+    try {
+      getLast(typeShorteners).appendShortened(this, type);
+      return this;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

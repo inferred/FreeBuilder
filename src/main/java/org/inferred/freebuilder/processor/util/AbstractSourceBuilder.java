@@ -4,11 +4,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import static org.inferred.freebuilder.processor.util.AnnotationSource.addSource;
 
+import org.inferred.freebuilder.processor.util.TypeMirrorShortener.QualifiedNameAppendable;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
-
-import java.io.IOException;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -19,24 +18,17 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor6;
 
 public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
-    implements SourceBuilder, Appendable {
+    implements SourceBuilder, Appendable, QualifiedNameAppendable<B> {
 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
   protected final FeatureSet features;
-  protected final TypeMirrorShortener typeMirrorShortener;
 
   protected AbstractSourceBuilder(FeatureSet features) {
     this.features = features;
-    typeMirrorShortener = new TypeMirrorShortener(this);
   }
 
-  protected abstract TypeShortener getShortener();
-
   protected abstract B getThis();
-
-  @Override
-  public abstract Appendable append(char c);
 
   static boolean isLegalType(TypeMirror mirror) {
     return !(new IsInvalidTypeVisitor().visit(mirror));
@@ -67,12 +59,12 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
   }
 
   @Override
-  public Appendable append(CharSequence csq) {
+  public B append(CharSequence csq) {
     return append(csq, 0, csq.length());
   }
 
   @Override
-  public Appendable append(CharSequence csq, int start, int end) {
+  public B append(CharSequence csq, int start, int end) {
     for (int i = start; i < end; i++) {
       append(csq.charAt(i));
     }
@@ -80,30 +72,26 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
   }
 
   private void add(Object arg) {
-    try {
-      if (arg instanceof Excerpt) {
-        ((Excerpt) arg).addTo(this);
-      } else if (arg instanceof Package) {
-        append(((Package) arg).getName());
-      } else if (arg instanceof Element) {
-        ADD_ELEMENT.visit((Element) arg, this);
-      } else if (arg instanceof Class<?>) {
-        getShortener().appendShortened(this, QualifiedName.of((Class<?>) arg));
-      } else if (arg instanceof TypeMirror) {
-        TypeMirror mirror = (TypeMirror) arg;
-        checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
-        typeMirrorShortener.appendShortened(getShortener(), mirror);
-      } else if (arg instanceof QualifiedName) {
-        getShortener().appendShortened(this, (QualifiedName) arg);
-      } else if (arg instanceof AnnotationMirror) {
-        addSource(this, (AnnotationMirror) arg);
-      } else if (arg instanceof CharSequence) {
-        append((CharSequence) arg);
-      } else {
-        append(arg.toString());
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    if (arg instanceof Excerpt) {
+      ((Excerpt) arg).addTo(this);
+    } else if (arg instanceof Package) {
+      append(((Package) arg).getName());
+    } else if (arg instanceof Element) {
+      ADD_ELEMENT.visit((Element) arg, this);
+    } else if (arg instanceof Class<?>) {
+      append(QualifiedName.of((Class<?>) arg));
+    } else if (arg instanceof TypeMirror) {
+      TypeMirror mirror = (TypeMirror) arg;
+      checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
+      TypeMirrorShortener.appendShortened(mirror, this);
+    } else if (arg instanceof QualifiedName) {
+      append((QualifiedName) arg);
+    } else if (arg instanceof AnnotationMirror) {
+      addSource(this, (AnnotationMirror) arg);
+    } else if (arg instanceof CharSequence) {
+      append((CharSequence) arg);
+    } else {
+      append(arg.toString());
     }
   }
 
@@ -118,7 +106,7 @@ public abstract class AbstractSourceBuilder<B extends AbstractSourceBuilder<B>>
 
         @Override
         public Void visitType(TypeElement type, AbstractSourceBuilder<?> p) {
-          p.add(QualifiedName.of(type));
+          p.append(QualifiedName.of(type));
           return null;
         }
 
