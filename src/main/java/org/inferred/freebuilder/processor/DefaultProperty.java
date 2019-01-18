@@ -161,9 +161,12 @@ class DefaultProperty extends PropertyCodeGenerator {
     code.addLine(" */")
         .addLine("public %s %s() {", property.getType(), getter(property));
     if (!hasDefault) {
-      Excerpt propertyIsSet = Excerpts.add("!%s.contains(%s.%s)",
-              UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
-      code.add(PreconditionExcerpts.checkState(propertyIsSet, property.getName() + " not set"));
+      code.add(PreconditionExcerpts.checkState(
+          "!%s.contains(%s.%s)",
+          property.getName() + " not set",
+          UNSET_PROPERTIES,
+          datatype.getPropertyEnum(),
+          property.getAllCapsName()));
     }
     code.addLine("  return %s;", property.getField())
         .addLine("}");

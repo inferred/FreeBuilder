@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.inferred.freebuilder.processor.excerpt.CheckedNavigableSet;
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -192,9 +191,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
             Comparator.class,
             elementType)
         .add(PreconditionExcerpts.checkState(
-            Excerpts.add("%s == null", property.getField()),
-            "Comparator already set for %s",
-            property.getField()));
+            "%1$s == null", "Comparator already set for %1$s", property.getField()));
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  if (comparator == null) {")
           .addLine("    %s = %s.of();", property.getField(), ImmutableSortedSet.class)

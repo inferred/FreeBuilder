@@ -1,6 +1,6 @@
 package org.inferred.freebuilder.processor;
 
-import static org.apache.commons.lang3.StringEscapeUtils.escapeJava;
+import static org.inferred.freebuilder.processor.util.Quotes.escapeJava;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 import static org.junit.Assume.assumeTrue;
 

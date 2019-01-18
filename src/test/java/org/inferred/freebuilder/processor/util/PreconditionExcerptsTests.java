@@ -69,7 +69,7 @@ public class PreconditionExcerptsTests {
             "foo.contains(\"\\\"\")", "foo must contain at least one double quote ('\"')"))
         .toString();
     assertEquals("Preconditions.checkArgument(foo.contains(\"\\\"\"), "
-        + "\"foo must contain at least one double quote ('\"')\");\n", source);
+        + "\"foo must contain at least one double quote ('\\\"')\");\n", source);
   }
 
   @Test
@@ -93,7 +93,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_simpleMessage() {
+  public void testCheckArgument_if_simpleMessage() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "message"))
         .toString();
@@ -102,7 +102,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_singleParameterAtEnd() {
+  public void testCheckArgument_if_singleParameterAtEnd() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "message about %s", "foo"))
         .toString();
@@ -112,7 +112,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_singleParameterInMiddle() {
+  public void testCheckArgument_if_singleParameterInMiddle() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "bar %s baz", "foo"))
         .toString();
@@ -122,7 +122,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_singleParameterAtStart() {
+  public void testCheckArgument_if_singleParameterAtStart() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "%s is wrong", "foo"))
         .toString();
@@ -132,7 +132,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_twoParametersInMiddle() {
+  public void testCheckArgument_if_twoParametersInMiddle() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("condition", "a %s c %s e", "b", "d"))
         .toString();
@@ -143,19 +143,19 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_doubleQuotes() {
+  public void testCheckArgument_if_doubleQuotes() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\"\")", "foo must contain at least one double quote ('\"')"))
         .toString();
     assertEquals(
         "if (!foo.contains(\"\\\"\")) {\n  throw new IllegalArgumentException("
-                + "\"foo must contain at least one double quote ('\"')\");\n}\n",
+                + "\"foo must contain at least one double quote ('\\\"')\");\n}\n",
         source);
   }
 
   @Test
-  public void testCheckArgument_j6_backslashes() {
+  public void testCheckArgument_if_backslashes() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\\\")", "foo must contain at least one backslash ('\\')"))
@@ -167,7 +167,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_newLines() {
+  public void testCheckArgument_if_newLines() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\n\")", "foo must contain at least one newline ('\n')"))
@@ -179,7 +179,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_doubleNegative() {
+  public void testCheckArgument_if_doubleNegative() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("!foo.isEmpty()", "foo must not be empty"))
         .toString();
@@ -190,7 +190,17 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_complexCondition() {
+  public void testCheckArgument_if_doubleNegativeBooleanLogic() {
+    String source = SourceStringBuilder.simple()
+        .add(PreconditionExcerpts.checkArgument("!a && !b", "message"))
+        .toString();
+    assertEquals(
+        "if (!(!a && !b)) {\n  throw new IllegalArgumentException(\"message\");\n}\n",
+        source);
+  }
+
+  @Test
+  public void testCheckArgument_if_complexCondition() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("a % 3 > 0", "message"))
         .toString();
@@ -199,7 +209,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_complexConditionWithMultipleBrackets() {
+  public void testCheckArgument_if_complexConditionWithMultipleBrackets() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("(a || b) && (c || d)", "message"))
         .toString();
@@ -209,7 +219,7 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckArgument_j6_instanceOf() {
+  public void testCheckArgument_if_instanceOf() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkArgument("a instanceof Integer", "message"))
         .toString();
@@ -227,13 +237,37 @@ public class PreconditionExcerptsTests {
   }
 
   @Test
-  public void testCheckState_j6_simpleMessage() {
+  public void testCheckState_if_simpleMessage() {
     String source = SourceStringBuilder.simple()
         .add(PreconditionExcerpts.checkState("foo != 0", "foo must not be zero"))
         .toString();
     assertEquals(
         "if (!(foo != 0)) {\n  throw new IllegalStateException("
                 + "\"foo must not be zero\");\n}\n",
+        source);
+  }
+
+  @Test
+  public void testCheckState_guava_parameterizedCondition() {
+    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+        .add(PreconditionExcerpts.checkState(
+            "%1$s > 0", "foo must be positive (got %1$s)", new Variable("foo")))
+        .toString();
+    assertEquals(
+        "Preconditions.checkState(foo > 0, \"foo must be positive (got %s)\", foo);\n",
+        source);
+  }
+
+  @Test
+  public void testCheckState_if_parameterizedCondition() {
+    String source = SourceStringBuilder.simple()
+        .add(PreconditionExcerpts.checkState(
+            "%1$s > 0", "foo must be positive (got %1$s)", new Variable("foo")))
+        .toString();
+    assertEquals(
+        "if (!(foo > 0)) {\n"
+            + "  throw new IllegalStateException(\"foo must be positive (got \" + foo + \")\");\n"
+            + "}\n",
         source);
   }
 }
