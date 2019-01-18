@@ -3,6 +3,7 @@ package org.inferred.freebuilder.processor.excerpt;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.util.AbstractSet;
 import java.util.Iterator;
@@ -13,9 +14,9 @@ import java.util.function.Consumer;
  * Excerpts defining a set implementation that delegates to a provided add method to perform
  * element validation and insertion into a backing set.
  */
-public class CheckedSet extends Excerpt {
+public class CheckedSet extends ValueType implements Excerpt {
 
-  public static final LazyName TYPE = new LazyName("CheckedSet", new CheckedSet());
+  public static final LazyName TYPE = LazyName.of("CheckedSet", new CheckedSet());
 
   private CheckedSet() {}
 

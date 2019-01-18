@@ -19,15 +19,39 @@ import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 public class LazyNameTest {
+
+  private static class AddExcerpt extends ValueType implements Excerpt {
+
+    private final String fmt;
+    private final Object[] args;
+
+    AddExcerpt(String fmt, Object... args) {
+      this.fmt = fmt;
+      this.args = args;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      code.add(fmt, args);
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("excerpt", fmt);
+      fields.add("args", Arrays.asList(args));
+    }
+  }
 
   @Test
   public void selectsUniqueName() {
-    Excerpt excerpt1 = Excerpts.add("excerpt 1%n");
-    LazyName name1 = new LazyName("foobar", excerpt1);
-    Excerpt excerpt2 = Excerpts.add("excerpt 2%n");
-    LazyName name2 = new LazyName("foobar", excerpt2);
-    LazyName name1Duplicate = new LazyName("foobar", excerpt1);
+    AddExcerpt excerpt1 = new AddExcerpt("excerpt 1%n");
+    LazyName name1 = LazyName.of("foobar", excerpt1);
+    AddExcerpt excerpt2 = new AddExcerpt("excerpt 2%n");
+    LazyName name2 = LazyName.of("foobar", excerpt2);
+    LazyName name1Duplicate = LazyName.of("foobar", excerpt1);
 
     SourceBuilder code = SourceStringBuilder.simple();
     code.add("%s %s %s", name1, name2, name1Duplicate);
@@ -36,10 +60,10 @@ public class LazyNameTest {
 
   @Test
   public void addsDefinitionsInAlphabeticOrder() {
-    Excerpt excerpt1 = Excerpts.add("excerpt 1%n");
-    LazyName name1 = new LazyName("foobar", excerpt1);
-    Excerpt excerpt2 = Excerpts.add("excerpt 2%n");
-    LazyName name2 = new LazyName("BazBam", excerpt2);
+    AddExcerpt excerpt1 = new AddExcerpt("excerpt 1%n");
+    LazyName name1 = LazyName.of("foobar", excerpt1);
+    AddExcerpt excerpt2 = new AddExcerpt("excerpt 2%n");
+    LazyName name2 = LazyName.of("BazBam", excerpt2);
 
     SourceBuilder code = SourceStringBuilder.simple();
     code.addLine("%s", name1);
@@ -51,10 +75,10 @@ public class LazyNameTest {
 
   @Test
   public void addsDefinitionsAddedByOtherDefinitions() {
-    Excerpt excerpt1 = Excerpts.add("excerpt%n");
-    LazyName name1 = new LazyName("foobar", excerpt1);
-    Excerpt excerpt2 = Excerpts.add("%s%n", name1);
-    LazyName name2 = new LazyName("hoolah", excerpt2);
+    AddExcerpt excerpt1 = new AddExcerpt("excerpt%n");
+    LazyName name1 = LazyName.of("foobar", excerpt1);
+    AddExcerpt excerpt2 = new AddExcerpt("%s%n", name1);
+    LazyName name2 = LazyName.of("hoolah", excerpt2);
 
     SourceBuilder code = SourceStringBuilder.simple();
     code.addLine("%s", name2);

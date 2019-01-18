@@ -71,7 +71,7 @@ public class TypeClass extends Type {
    * <p>e.g. {@code <N extends Number, C extends Consumer<N>>}
    */
   public Excerpt declarationParameters() {
-    return new DeclarationParameters(getTypeParameters());
+    return code -> addDeclarationParameters(code, getTypeParameters());
   }
 
   @Override
@@ -91,46 +91,34 @@ public class TypeClass extends Type {
     return SourceStringBuilder.compilable(new StaticFeatureSet()).add(declaration()).toString();
   }
 
-  private static class DeclarationParameters extends Excerpt {
-
-    private final List<TypeParameterElement> typeParameters;
-
-    DeclarationParameters(List<TypeParameterElement> typeParameters) {
-      this.typeParameters = typeParameters;
-    }
-
-    @Override public void addTo(SourceBuilder source) {
-      if (!typeParameters.isEmpty()) {
-        String prefix = "<";
-        for (TypeParameterElement typeParameter : typeParameters) {
-          source.add("%s%s", prefix, typeParameter.getSimpleName());
-          if (!extendsObject(typeParameter)) {
-            String separator = " extends ";
-            for (TypeMirror bound : typeParameter.getBounds()) {
-              source.add("%s%s", separator, bound);
-              separator = " & ";
-            }
+  private static void addDeclarationParameters(
+      SourceBuilder source,
+      List<TypeParameterElement> typeParameters) {
+    if (!typeParameters.isEmpty()) {
+      String prefix = "<";
+      for (TypeParameterElement typeParameter : typeParameters) {
+        source.add("%s%s", prefix, typeParameter.getSimpleName());
+        if (!extendsObject(typeParameter)) {
+          String separator = " extends ";
+          for (TypeMirror bound : typeParameter.getBounds()) {
+            source.add("%s%s", separator, bound);
+            separator = " & ";
           }
-          prefix = ", ";
         }
-        source.add(">");
+        prefix = ", ";
       }
+      source.add(">");
     }
+  }
 
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("typeParameters", typeParameters);
+  private static boolean extendsObject(TypeParameterElement element) {
+    if (element.getBounds().size() != 1) {
+      return false;
     }
-
-    private static boolean extendsObject(TypeParameterElement element) {
-      if (element.getBounds().size() != 1) {
-        return false;
-      }
-      TypeElement bound = maybeAsTypeElement(getOnlyElement(element.getBounds())).orElse(null);
-      if (bound == null) {
-        return false;
-      }
-      return bound.getQualifiedName().contentEquals(Object.class.getName());
+    TypeElement bound = maybeAsTypeElement(getOnlyElement(element.getBounds())).orElse(null);
+    if (bound == null) {
+      return false;
     }
+    return bound.getQualifiedName().contentEquals(Object.class.getName());
   }
 }

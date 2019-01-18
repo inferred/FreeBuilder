@@ -7,6 +7,7 @@ import com.google.common.collect.Multiset;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
 import org.inferred.freebuilder.processor.util.feature.Jsr305;
 
 import java.util.Collection;
@@ -16,9 +17,9 @@ import java.util.function.BiConsumer;
  * Excerpts defining a multiset implementation that delegates to a provided setCount method to
  * perform element validation and insertion into a backing multiset.
  */
-public class CheckedMultiset extends Excerpt {
+public class CheckedMultiset extends ValueType implements Excerpt {
 
-  public static final LazyName TYPE = new LazyName("CheckedMultiset", new CheckedMultiset());
+  public static final LazyName TYPE = LazyName.of("CheckedMultiset", new CheckedMultiset());
 
   private CheckedMultiset() {}
 

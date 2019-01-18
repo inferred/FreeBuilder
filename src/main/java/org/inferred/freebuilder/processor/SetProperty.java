@@ -40,6 +40,7 @@ import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -446,9 +447,9 @@ class SetProperty extends PropertyCodeGenerator {
     code.addLine("%s();", clearMethod(property));
   }
 
-  private static class ImmutableSetMethod extends Excerpt {
+  private static class ImmutableSetMethod extends ValueType implements Excerpt {
 
-    static final LazyName REFERENCE = new LazyName("immutableSet", new ImmutableSetMethod());
+    static final LazyName REFERENCE = LazyName.of("immutableSet", new ImmutableSetMethod());
 
     private ImmutableSetMethod() {}
 

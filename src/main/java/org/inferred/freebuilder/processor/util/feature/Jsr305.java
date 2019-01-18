@@ -39,7 +39,7 @@ public enum Jsr305 implements Feature<Jsr305> {
     return new NullableExcerpt();
   }
 
-  private static class NullableExcerpt extends Excerpt {
+  private static class NullableExcerpt implements Excerpt {
 
     @Override
     public void addTo(SourceBuilder source) {
@@ -57,9 +57,6 @@ public enum Jsr305 implements Feature<Jsr305> {
     public String toString() {
       return "@Nullable";
     }
-
-    @Override
-    protected void addFields(FieldReceiver fields) { }
   }
 
   private static final QualifiedName NULLABLE = QualifiedName.of("javax.annotation", "Nullable");

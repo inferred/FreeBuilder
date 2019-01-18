@@ -3,6 +3,7 @@ package org.inferred.freebuilder.processor.excerpt;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -16,13 +17,13 @@ import java.util.function.BiConsumer;
  * Excerpts defining a map implementation that delegates to a provided put method to perform entry
  * validation and insertion into a backing map.
  */
-public class CheckedMap extends Excerpt {
+public class CheckedMap extends ValueType implements Excerpt {
 
-  public static final LazyName TYPE = new LazyName("CheckedMap", new CheckedMap());
+  public static final LazyName TYPE = LazyName.of("CheckedMap", new CheckedMap());
 
-  private static class CheckedEntry extends Excerpt {
+  private static class CheckedEntry extends ValueType implements Excerpt {
 
-    static final LazyName TYPE = new LazyName("CheckedEntry", new CheckedEntry());
+    static final LazyName TYPE = LazyName.of("CheckedEntry", new CheckedEntry());
 
     private CheckedEntry() {}
 
@@ -68,9 +69,9 @@ public class CheckedMap extends Excerpt {
     protected void addFields(FieldReceiver fields) {}
   }
 
-  private static class CheckedEntryIterator extends Excerpt {
+  private static class CheckedEntryIterator extends ValueType implements Excerpt {
 
-    static final LazyName TYPE = new LazyName("CheckedEntryIterator", new CheckedEntryIterator());
+    static final LazyName TYPE = LazyName.of("CheckedEntryIterator", new CheckedEntryIterator());
 
     private CheckedEntryIterator() {}
 
@@ -108,9 +109,9 @@ public class CheckedMap extends Excerpt {
     protected void addFields(FieldReceiver fields) {}
   }
 
-  private static class CheckedEntrySet extends Excerpt {
+  private static class CheckedEntrySet extends ValueType implements Excerpt {
 
-    static final LazyName TYPE = new LazyName("CheckedEntrySet", new CheckedEntrySet());
+    static final LazyName TYPE = LazyName.of("CheckedEntrySet", new CheckedEntrySet());
 
     private CheckedEntrySet() {}
 

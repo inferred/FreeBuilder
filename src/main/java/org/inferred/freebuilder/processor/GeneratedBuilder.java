@@ -550,7 +550,7 @@ class GeneratedBuilder extends GeneratedType {
     return Excerpts.add(isInterface ? "implements %s" : "extends %s", type);
   }
 
-  private static class FieldAccessList extends Excerpt {
+  private static class FieldAccessList implements Excerpt {
     private final List<FieldAccess> fieldAccesses;
 
     FieldAccessList(List<FieldAccess> fieldAccesses) {
@@ -571,11 +571,6 @@ class GeneratedBuilder extends GeneratedType {
           .addAll(fieldAccesses)
           .add(fieldAccess)
           .build());
-    }
-
-    @Override
-    protected void addFields(FieldReceiver fields) {
-      fields.add("fields", this.fieldAccesses);
     }
   }
 

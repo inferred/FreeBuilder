@@ -36,7 +36,7 @@ import javax.lang.model.type.DeclaredType;
  *
  * <p>Similar to {@link DeclaredType}, with a code-generation and test-friendly focus.
  */
-public abstract class Type extends Excerpt {
+public abstract class Type extends ValueType implements Excerpt {
 
   public static Type from(DeclaredType declaredType) {
     if (declaredType.getTypeArguments().isEmpty()) {
@@ -101,7 +101,7 @@ public abstract class Type extends Excerpt {
    */
   public Excerpt typeParameters() {
     if (getTypeParameters().isEmpty()) {
-      return Excerpts.empty();
+      return Excerpts.EMPTY;
     } else {
       return Excerpts.add("<%s>", Excerpts.join(", ", getTypeParameters()));
     }
@@ -113,7 +113,7 @@ public abstract class Type extends Excerpt {
    * <p>Always an empty string if the type class is not generic.
    */
   public Excerpt diamondOperator() {
-    return isParameterized() ? Excerpts.add("<>") : Excerpts.empty();
+    return isParameterized() ? Excerpts.add("<>") : Excerpts.EMPTY;
   }
 
   /**

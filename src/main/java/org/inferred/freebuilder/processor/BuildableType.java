@@ -232,7 +232,7 @@ public abstract class BuildableType {
     if (ModelUtils.needsSafeVarargs(datatype)) {
       return Excerpts.add("@SuppressWarnings(\"unchecked\")");
     } else {
-      return Excerpts.empty();
+      return Excerpts.EMPTY;
     }
   }
 

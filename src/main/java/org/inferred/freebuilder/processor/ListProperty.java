@@ -40,6 +40,7 @@ import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -428,9 +429,9 @@ class ListProperty extends PropertyCodeGenerator {
     code.addLine("%s();", clearMethod(property));
   }
 
-  private static class ImmutableListMethod extends Excerpt {
+  private static class ImmutableListMethod extends ValueType implements Excerpt {
 
-    static final LazyName REFERENCE = new LazyName("immutableList", new ImmutableListMethod());
+    static final LazyName REFERENCE = LazyName.of("immutableList", new ImmutableListMethod());
 
     private ImmutableListMethod() {}
 

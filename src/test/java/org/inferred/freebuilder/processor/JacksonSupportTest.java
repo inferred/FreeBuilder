@@ -26,6 +26,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.MessagerRule;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -136,11 +137,16 @@ public class JacksonSupportTest {
       Property property, Class<? extends Annotation> annotationClass, String annotationString) {
     Optional<Excerpt> annotationExcerpt = property.getAccessorAnnotations()
             .stream()
-            .filter(excerpt -> excerpt.toString().contains(annotationClass.getCanonicalName()))
+            .filter(excerpt -> asCompilableString(excerpt)
+                .contains(annotationClass.getCanonicalName()))
             .findFirst();
     assertThat(annotationExcerpt).named("property accessor annotations").isNotNull();
     assertThat(asString(annotationExcerpt.get()))
             .isEqualTo(String.format("%s%n", annotationString));
+  }
+
+  private static String asCompilableString(Excerpt excerpt) {
+    return SourceStringBuilder.compilable(new StaticFeatureSet()).add(excerpt).toString();
   }
 
   private static String asString(Excerpt excerpt) {

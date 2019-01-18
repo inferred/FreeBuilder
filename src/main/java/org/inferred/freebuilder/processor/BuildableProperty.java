@@ -219,7 +219,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("} else if (%s instanceof %s) {",
             property.getField().on(builder),
             ModelUtils.maybeAsTypeElement(property.getType()).get());
-    if (type.suppressUnchecked() != Excerpts.empty()) {
+    if (type.suppressUnchecked() != Excerpts.EMPTY) {
       code.addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
               type.suppressUnchecked(),
               property.getType(),

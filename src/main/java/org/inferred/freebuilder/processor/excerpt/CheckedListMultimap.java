@@ -10,6 +10,7 @@ import com.google.common.collect.Multimaps;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.LazyName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.ValueType;
 import org.inferred.freebuilder.processor.util.feature.Jsr305;
 
 import java.util.Collection;
@@ -21,10 +22,10 @@ import java.util.function.BiConsumer;
  * Excerpts defining a multimap implementation that delegates to a provided put method to perform
  * entry validation and insertion into a backing multimap.
  */
-public class CheckedListMultimap extends Excerpt {
+public class CheckedListMultimap extends ValueType implements Excerpt {
 
   public static final LazyName TYPE =
-      new LazyName("CheckedListMultimap", new CheckedListMultimap());
+      LazyName.of("CheckedListMultimap", new CheckedListMultimap());
 
   private CheckedListMultimap() {}
 

@@ -10,7 +10,7 @@ import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.TypeMirrorExcerpt;
+import org.inferred.freebuilder.processor.util.ValueType;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.Collection;
@@ -58,7 +58,7 @@ class GwtSupport {
     return extraMetadata;
   }
 
-  private static final class CustomValueSerializer extends Excerpt {
+  private static final class CustomValueSerializer extends ValueType implements Excerpt {
 
     private final Datatype datatype;
     private final Map<Property, PropertyCodeGenerator> generatorsByProperty;
@@ -121,21 +121,21 @@ class GwtSupport {
               datatype.getValueType(), SERIALIZATION_STREAM_READER, SERIALIZATION_EXCEPTION)
           .addLine("    %1$s %2$s = new %1$s();", datatype.getBuilder(), builder);
       for (Property property : generatorsByProperty.keySet()) {
-        TypeMirrorExcerpt propertyType = new TypeMirrorExcerpt(property.getType());
         Variable temporary = new Variable(property.getName());
         if (property.getType().getKind().isPrimitive()) {
           code.addLine("    %s %s = reader.read%s();",
-              propertyType, temporary, withInitialCapital(property.getType()));
+              property.getType(), temporary, withInitialCapital(property.getType()));
           generatorsByProperty.get(property).addSetFromResult(code, builder, temporary);
         } else if (String.class.getName().equals(property.getType().toString())) {
-          code.addLine("    %s %s = reader.readString();", propertyType, temporary);
+          code.addLine("    %s %s = reader.readString();", property.getType(), temporary);
           generatorsByProperty.get(property).addSetFromResult(code, builder, temporary);
         } else {
           code.addLine("    try {");
           if (!property.isFullyCheckedCast()) {
             code.addLine("      @SuppressWarnings(\"unchecked\")");
           }
-          code.addLine("      %1$s %2$s = (%1$s) reader.readObject();", propertyType, temporary);
+          code.addLine("      %1$s %2$s = (%1$s) reader.readObject();",
+              property.getType(), temporary);
           generatorsByProperty.get(property).addSetFromResult(code, builder, temporary);
           code.addLine("    } catch (%s e) {", ClassCastException.class)
               .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
@@ -175,7 +175,7 @@ class GwtSupport {
     }
   }
 
-  private static final class GwtWhitelist extends Excerpt {
+  private static final class GwtWhitelist extends ValueType implements Excerpt {
 
     private final Datatype datatype;
     private final Collection<Property> properties;
