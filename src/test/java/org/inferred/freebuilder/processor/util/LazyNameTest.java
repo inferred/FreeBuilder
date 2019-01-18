@@ -84,6 +84,6 @@ public class LazyNameTest {
     code.addLine("%s", name2);
     LazyName.addLazyDefinitions(code);
 
-    assertThat(code.toString()).isEqualTo("hoolah\nexcerpt\nfoobar\n");
+    assertThat(code.toString()).isEqualTo("hoolah\nfoobar\nexcerpt\n");
   }
 }
