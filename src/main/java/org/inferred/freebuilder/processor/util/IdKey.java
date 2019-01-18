@@ -20,7 +20,7 @@ import org.inferred.freebuilder.processor.util.Scope.Level;
 /**
  * Maps Java identifiers to their usage (e.g. a parameter, a variable) in the current method scope.
  */
-class IdKey extends ValueType implements Scope.Element<Object> {
+class IdKey extends ValueType implements Scope.Key<Object> {
 
   private final String name;
 

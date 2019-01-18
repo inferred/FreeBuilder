@@ -20,11 +20,24 @@ import static java.util.Objects.requireNonNull;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.ConcurrentModificationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+/**
+ * An append-only, hierarchical map with key-specific value typing.
+ *
+ * <p>Scopes allow source generators to cooperate with each other&mdash;to avoid namespace clashes
+ * or reuse variables, for example&mdash;in a decoupled fashion using a shared key-value space.
+ * The key type dictates the type of the value that can be stored in the map, as well as at what
+ * level in the source the key should be unique at: {@code FILE} keys are unique within a
+ * compilation unit, while {@code METHOD} keys are scoped to the current method.
+ *
+ * <p>While a Scope has to be mutable, it limits the potential for complex bugs by only permitting
+ * key-values pairs to be inserted, not modified or removed.
+ */
 public abstract class Scope {
 
   public enum Level {
@@ -32,11 +45,13 @@ public abstract class Scope {
   }
 
   @SuppressWarnings("unused")
-  public interface Element<T> {
+  public interface Key<V> {
     Level level();
   }
 
-  private final Map<Element<?>, Object> elements = new LinkedHashMap<>();
+  private static final Object RECURSION_SENTINEL = new Object();
+
+  private final Map<Key<?>, Object> entries = new LinkedHashMap<>();
   private final Scope parent;
   private final Level level;
 
@@ -45,59 +60,77 @@ public abstract class Scope {
     this.level = level;
   }
 
-  public boolean contains(Element<?> element) {
-    return get(element) != null;
+  public boolean contains(Key<?> key) {
+    return get(key) != null;
   }
 
-  public <T> T get(Element<T> element) {
+  public <V> V get(Key<V> key) {
     @SuppressWarnings("unchecked")
-    T value = (T) elements.get(element);
-    if (value != null) {
+    V value = (V) entries.get(key);
+    if (value == RECURSION_SENTINEL) {
+      throw new ConcurrentModificationException(
+          "Cannot access scope key " + key + " while computing its value");
+    } else if (value != null) {
       return value;
     } else if (parent != null) {
-      return parent.get(element);
+      return parent.get(key);
     } else {
       return null;
     }
   }
 
-  public <T> T computeIfAbsent(Element<T> element, Supplier<T> supplier) {
-    T value = get(element);
+  /**
+   * If {@code key} is not already associated with a value, computes its value using
+   * {@code supplier} and enters it into the scope.
+   *
+   * @return the current (existing or computed) value associated with {@code key}
+   */
+  public <V> V computeIfAbsent(Key<V> key, Supplier<V> supplier) {
+    V value = get(key);
     if (value != null) {
       return value;
-    } else if (level == element.level()) {
+    } else if (level == key.level()) {
+      entries.put(key, RECURSION_SENTINEL);
       value = supplier.get();
-      elements.put(element, value);
+      entries.put(key, requireNonNull(value));
       return value;
     } else if (parent != null) {
-      return parent.computeIfAbsent(element, supplier);
+      return parent.computeIfAbsent(key, supplier);
     } else {
       throw new IllegalStateException(
-          "Not in " + element.level().toString().toLowerCase() + " scope");
+          "Not in " + key.level().toString().toLowerCase() + " scope");
     }
   }
 
-  public <T> Set<T> keysOfType(Class<T> elementType) {
-    ImmutableSet.Builder<T> keys = ImmutableSet.builder();
+  public <V> Set<V> keysOfType(Class<V> keyType) {
+    ImmutableSet.Builder<V> keys = ImmutableSet.builder();
     if (parent != null) {
-      keys.addAll(parent.keysOfType(elementType));
+      keys.addAll(parent.keysOfType(keyType));
     }
-    keys.addAll(FluentIterable.from(elements.keySet()).filter(elementType).toSet());
+    keys.addAll(FluentIterable.from(entries.keySet()).filter(keyType).toSet());
     return keys.build();
   }
 
-  public <T> T putIfAbsent(Element<T> element, T value) {
-    requireNonNull(element);
+  /**
+   * If {@code key} is not already associated with a value, associates it with {@code value}.
+   *
+   * @return the original value, or {@code null} if there was no value associated
+   */
+  public <V> V putIfAbsent(Key<V> key, V value) {
+    requireNonNull(key);
     requireNonNull(value);
-    if (level == element.level()) {
+    if (level == key.level()) {
       @SuppressWarnings("unchecked")
-      T existingValue = (T) elements.get(element);
-      if (existingValue == null) {
-        elements.put(element, value);
+      V existingValue = (V) entries.get(key);
+      if (value == RECURSION_SENTINEL) {
+        throw new ConcurrentModificationException(
+            "Cannot access scope key " + key + " while computing its value");
+      } else if (existingValue == null) {
+        entries.put(key, value);
       }
       return existingValue;
     } else if (parent != null) {
-      return parent.putIfAbsent(element, value);
+      return parent.putIfAbsent(key, value);
     }
     return null;
   }

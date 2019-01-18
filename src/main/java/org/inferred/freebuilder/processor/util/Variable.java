@@ -17,7 +17,7 @@ package org.inferred.freebuilder.processor.util;
 
 import org.inferred.freebuilder.processor.util.Scope.Level;
 
-public class Variable extends ValueType implements Excerpt, Scope.Element<IdKey> {
+public class Variable extends ValueType implements Excerpt, Scope.Key<IdKey> {
 
   private final String preferredName;
 

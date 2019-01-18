@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class LazyName extends ValueType implements Excerpt, Scope.Element<LazyName.Declaration> {
+public class LazyName extends ValueType implements Excerpt, Scope.Key<LazyName.Declaration> {
 
   /**
    * Finds all lazily-declared classes and methods and adds their definitions to the source.
@@ -85,7 +85,7 @@ public class LazyName extends ValueType implements Excerpt, Scope.Element<LazyNa
    * A Declaration maps a unique static class name to its static excerpt in a scope.
    */
   static class Declaration extends ValueType
-      implements Comparable<Declaration>, Scope.Element<LazyName> {
+      implements Comparable<Declaration>, Scope.Key<LazyName> {
 
     private final String name;
 
