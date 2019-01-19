@@ -159,10 +159,6 @@ public class AnalyserTest {
             .setPropertyEnum(generatedType.nestedType("Property").withParameters())
             .setType(dataType.withParameters())
             .setValueType(generatedType.nestedType("Value").withParameters())
-            .addVisibleNestedTypes(
-                generatedType.nestedType("Partial"),
-                generatedType.nestedType("Property"),
-                generatedType.nestedType("Value"))
             .build(),
         ImmutableMap.of()));
   }
@@ -197,10 +193,6 @@ public class AnalyserTest {
             .setPropertyEnum(generatedType.nestedType("Property").withParameters())
             .setType(dataType.withParameters(k, v))
             .setValueType(generatedType.nestedType("Value").withParameters(k, v))
-            .addVisibleNestedTypes(
-                generatedType.nestedType("Partial"),
-                generatedType.nestedType("Property"),
-                generatedType.nestedType("Value"))
             .build(),
         ImmutableMap.of()));
   }
@@ -757,9 +749,6 @@ public class AnalyserTest {
     assertThat(builder.getDatatype().getValueTypeVisibility()).isEqualTo(PRIVATE);
     assertThat(builder.getDatatype().getValueTypeAnnotations()).isEmpty();
     assertThat(builder.getDatatype().getNestedClasses()).isEmpty();
-    assertThat(builder.getDatatype().getVisibleNestedTypes()).containsNoneOf(
-        QualifiedName.of("com.example", "DataType", "Value_CustomFieldSerializer"),
-        QualifiedName.of("com.example", "DataType", "GwtWhitelist"));
   }
 
   @Test
@@ -779,9 +768,6 @@ public class AnalyserTest {
     assertThat(asSource(builder.getDatatype().getValueTypeAnnotations().get(0)))
         .isEqualTo("@GwtCompatible(serializable = true)");
     assertThat(builder.getDatatype().getNestedClasses()).hasSize(2);
-    assertThat(builder.getDatatype().getVisibleNestedTypes()).containsAllOf(
-        QualifiedName.of("com.example", "DataType_Builder", "Value_CustomFieldSerializer"),
-        QualifiedName.of("com.example", "DataType_Builder", "GwtWhitelist"));
   }
 
   @Test
@@ -1103,10 +1089,6 @@ public class AnalyserTest {
         .setPropertyEnum(generatedType.nestedType("Property").withParameters())
         .setType(dataType.withParameters(a, b))
         .setValueType(generatedType.nestedType("Value").withParameters(a, b))
-        .addVisibleNestedTypes(
-            generatedType.nestedType("Partial"),
-            generatedType.nestedType("Property"),
-            generatedType.nestedType("Value"))
         .build());
     assertThat(builder.getGeneratorsByProperty().keySet())
         .containsExactly(
@@ -1217,10 +1199,6 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType.withParameters())
         .setType(QualifiedName.of("com.example", "DataType").withParameters())
         .setValueType(valueType.withParameters())
-        .addVisibleNestedTypes(
-            partialType,
-            propertyType,
-            valueType)
         .build();
 
     assertEquals(expectedDatatype, builder.getDatatype());
@@ -1253,10 +1231,6 @@ public class AnalyserTest {
         .setPropertyEnum(propertyType.withParameters())
         .setType(QualifiedName.of("com.example", "DataType").withParameters())
         .setValueType(valueType.withParameters())
-        .addVisibleNestedTypes(
-            partialType,
-            propertyType,
-            valueType)
         .build();
 
     assertEquals(expectedDatatype, builder.getDatatype());

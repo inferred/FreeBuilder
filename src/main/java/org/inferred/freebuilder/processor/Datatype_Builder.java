@@ -5,26 +5,22 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.BaseStream;
 import javax.annotation.Generated;
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.Type;
 import org.inferred.freebuilder.processor.util.TypeClass;
 
@@ -76,7 +72,6 @@ abstract class Datatype_Builder {
   private TypeClass generatedBuilder;
   private TypeClass valueType;
   private TypeClass partialType;
-  private Set<QualifiedName> visibleNestedTypes = ImmutableSet.of();
   private TypeClass propertyEnum;
   private final LinkedHashMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
       standardMethodUnderrides = new LinkedHashMap<>();
@@ -398,133 +393,6 @@ abstract class Datatype_Builder {
     Preconditions.checkState(
         !_unsetProperties.contains(Property.PARTIAL_TYPE), "partialType not set");
     return partialType;
-  }
-
-  /**
-   * Adds {@code element} to the set to be returned from {@link Datatype#getVisibleNestedTypes()}.
-   * If the set already contains {@code element}, then {@code addVisibleNestedTypes} has no effect
-   * (only the previously added element is retained).
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code element} is null
-   */
-  public Datatype.Builder addVisibleNestedTypes(QualifiedName element) {
-    if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
-    }
-    visibleNestedTypes.add(Objects.requireNonNull(element));
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Adds each element of {@code elements} to the set to be returned from {@link
-   * Datatype#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
-   * element is added).
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a null element
-   */
-  public Datatype.Builder addVisibleNestedTypes(QualifiedName... elements) {
-    return addAllVisibleNestedTypes(Arrays.asList(elements));
-  }
-
-  /**
-   * Adds each element of {@code elements} to the set to be returned from {@link
-   * Datatype#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
-   * element is added).
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a null element
-   */
-  public Datatype.Builder addAllVisibleNestedTypes(Spliterator<? extends QualifiedName> elements) {
-    elements.forEachRemaining(this::addVisibleNestedTypes);
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Adds each element of {@code elements} to the set to be returned from {@link
-   * Datatype#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
-   * element is added).
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a null element
-   */
-  public Datatype.Builder addAllVisibleNestedTypes(
-      BaseStream<? extends QualifiedName, ?> elements) {
-    return addAllVisibleNestedTypes(elements.spliterator());
-  }
-
-  /**
-   * Adds each element of {@code elements} to the set to be returned from {@link
-   * Datatype#getVisibleNestedTypes()}, ignoring duplicate elements (only the first duplicate
-   * element is added).
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code elements} is null or contains a null element
-   */
-  public Datatype.Builder addAllVisibleNestedTypes(Iterable<? extends QualifiedName> elements) {
-    elements.forEach(this::addVisibleNestedTypes);
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Removes {@code element} from the set to be returned from {@link
-   * Datatype#getVisibleNestedTypes()}. Does nothing if {@code element} is not a member of the set.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code element} is null
-   */
-  public Datatype.Builder removeVisibleNestedTypes(QualifiedName element) {
-    if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
-    }
-    visibleNestedTypes.remove(Objects.requireNonNull(element));
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Applies {@code mutator} to the set to be returned from {@link
-   * Datatype#getVisibleNestedTypes()}.
-   *
-   * <p>This method mutates the set in-place. {@code mutator} is a void consumer, so any value
-   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
-   * Collection#stream()}.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code mutator} is null
-   */
-  public Datatype.Builder mutateVisibleNestedTypes(Consumer<? super Set<QualifiedName>> mutator) {
-    if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
-    }
-    // If addVisibleNestedTypes is overridden, this method will be updated to delegate to it
-    mutator.accept(visibleNestedTypes);
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Clears the set to be returned from {@link Datatype#getVisibleNestedTypes()}.
-   *
-   * @return this {@code Builder} object
-   */
-  public Datatype.Builder clearVisibleNestedTypes() {
-    if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = ImmutableSet.of();
-    } else {
-      visibleNestedTypes.clear();
-    }
-    return (Datatype.Builder) this;
-  }
-
-  /**
-   * Returns an unmodifiable view of the set that will be returned by {@link
-   * Datatype#getVisibleNestedTypes()}. Changes to this builder will be reflected in the view.
-   */
-  public Set<QualifiedName> getVisibleNestedTypes() {
-    if (visibleNestedTypes instanceof ImmutableSet) {
-      visibleNestedTypes = new LinkedHashSet<>(visibleNestedTypes);
-    }
-    return Collections.unmodifiableSet(visibleNestedTypes);
   }
 
   /**
@@ -1129,11 +997,6 @@ abstract class Datatype_Builder {
         || !Objects.equals(value.getPartialType(), _defaults.getPartialType())) {
       setPartialType(value.getPartialType());
     }
-    if (value instanceof Value && visibleNestedTypes == ImmutableSet.<QualifiedName>of()) {
-      visibleNestedTypes = ImmutableSet.copyOf(value.getVisibleNestedTypes());
-    } else {
-      addAllVisibleNestedTypes(value.getVisibleNestedTypes());
-    }
     if (_defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
         || !Objects.equals(value.getPropertyEnum(), _defaults.getPropertyEnum())) {
       setPropertyEnum(value.getPropertyEnum());
@@ -1213,7 +1076,6 @@ abstract class Datatype_Builder {
             || !Objects.equals(template.getPartialType(), _defaults.getPartialType()))) {
       setPartialType(template.getPartialType());
     }
-    addAllVisibleNestedTypes(base.visibleNestedTypes);
     if (!base._unsetProperties.contains(Property.PROPERTY_ENUM)
         && (_defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
             || !Objects.equals(template.getPropertyEnum(), _defaults.getPropertyEnum()))) {
@@ -1253,7 +1115,6 @@ abstract class Datatype_Builder {
     generatedBuilder = _defaults.generatedBuilder;
     valueType = _defaults.valueType;
     partialType = _defaults.partialType;
-    clearVisibleNestedTypes();
     propertyEnum = _defaults.propertyEnum;
     standardMethodUnderrides.clear();
     builderSerializable = _defaults.builderSerializable;
@@ -1303,7 +1164,6 @@ abstract class Datatype_Builder {
     private final TypeClass generatedBuilder;
     private final TypeClass valueType;
     private final TypeClass partialType;
-    private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final TypeClass propertyEnum;
     private final ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
         standardMethodUnderrides;
@@ -1323,7 +1183,6 @@ abstract class Datatype_Builder {
       this.generatedBuilder = builder.generatedBuilder;
       this.valueType = builder.valueType;
       this.partialType = builder.partialType;
-      this.visibleNestedTypes = ImmutableSet.copyOf(builder.visibleNestedTypes);
       this.propertyEnum = builder.propertyEnum;
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
@@ -1372,11 +1231,6 @@ abstract class Datatype_Builder {
     @Override
     public TypeClass getPartialType() {
       return partialType;
-    }
-
-    @Override
-    public ImmutableSet<QualifiedName> getVisibleNestedTypes() {
-      return visibleNestedTypes;
     }
 
     @Override
@@ -1434,7 +1288,6 @@ abstract class Datatype_Builder {
           && Objects.equals(generatedBuilder, other.generatedBuilder)
           && Objects.equals(valueType, other.valueType)
           && Objects.equals(partialType, other.partialType)
-          && Objects.equals(visibleNestedTypes, other.visibleNestedTypes)
           && Objects.equals(propertyEnum, other.propertyEnum)
           && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
           && builderSerializable == other.builderSerializable
@@ -1456,7 +1309,6 @@ abstract class Datatype_Builder {
           generatedBuilder,
           valueType,
           partialType,
-          visibleNestedTypes,
           propertyEnum,
           standardMethodUnderrides,
           builderSerializable,
@@ -1488,8 +1340,6 @@ abstract class Datatype_Builder {
           .append(valueType)
           .append(", partialType=")
           .append(partialType)
-          .append(", visibleNestedTypes=")
-          .append(visibleNestedTypes)
           .append(", propertyEnum=")
           .append(propertyEnum)
           .append(", standardMethodUnderrides=")
@@ -1523,7 +1373,6 @@ abstract class Datatype_Builder {
     private final TypeClass generatedBuilder;
     private final TypeClass valueType;
     private final TypeClass partialType;
-    private final ImmutableSet<QualifiedName> visibleNestedTypes;
     private final TypeClass propertyEnum;
     private final ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
         standardMethodUnderrides;
@@ -1544,7 +1393,6 @@ abstract class Datatype_Builder {
       this.generatedBuilder = builder.generatedBuilder;
       this.valueType = builder.valueType;
       this.partialType = builder.partialType;
-      this.visibleNestedTypes = ImmutableSet.copyOf(builder.visibleNestedTypes);
       this.propertyEnum = builder.propertyEnum;
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
@@ -1618,11 +1466,6 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ImmutableSet<QualifiedName> getVisibleNestedTypes() {
-      return visibleNestedTypes;
-    }
-
-    @Override
     public TypeClass getPropertyEnum() {
       if (_unsetProperties.contains(Property.PROPERTY_ENUM)) {
         throw new UnsupportedOperationException("propertyEnum not set");
@@ -1689,7 +1532,6 @@ abstract class Datatype_Builder {
           && Objects.equals(generatedBuilder, other.generatedBuilder)
           && Objects.equals(valueType, other.valueType)
           && Objects.equals(partialType, other.partialType)
-          && Objects.equals(visibleNestedTypes, other.visibleNestedTypes)
           && Objects.equals(propertyEnum, other.propertyEnum)
           && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
           && builderSerializable == other.builderSerializable
@@ -1712,7 +1554,6 @@ abstract class Datatype_Builder {
           generatedBuilder,
           valueType,
           partialType,
-          visibleNestedTypes,
           propertyEnum,
           standardMethodUnderrides,
           builderSerializable,
@@ -1751,11 +1592,10 @@ abstract class Datatype_Builder {
       if (!_unsetProperties.contains(Property.PARTIAL_TYPE)) {
         result.append("partialType=").append(partialType).append(", ");
       }
-      result.append("visibleNestedTypes=").append(visibleNestedTypes);
       if (!_unsetProperties.contains(Property.PROPERTY_ENUM)) {
-        result.append(", propertyEnum=").append(propertyEnum);
+        result.append("propertyEnum=").append(propertyEnum).append(", ");
       }
-      result.append(", standardMethodUnderrides=").append(standardMethodUnderrides);
+      result.append("standardMethodUnderrides=").append(standardMethodUnderrides);
       if (!_unsetProperties.contains(Property.BUILDER_SERIALIZABLE)) {
         result.append(", builderSerializable=").append(builderSerializable);
       }

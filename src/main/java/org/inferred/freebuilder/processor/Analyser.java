@@ -157,9 +157,6 @@ class Analyser {
         .setValueType(valueType.withParameters(typeParameters))
         .setPartialType(partialType.withParameters(typeParameters))
         .setPropertyEnum(propertyType.withParameters())
-        .addVisibleNestedTypes(valueType)
-        .addVisibleNestedTypes(partialType)
-        .addVisibleNestedTypes(propertyType)
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))

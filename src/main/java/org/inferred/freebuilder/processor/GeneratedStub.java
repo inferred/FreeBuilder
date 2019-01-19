@@ -1,13 +1,9 @@
 package org.inferred.freebuilder.processor;
 
-import com.google.common.collect.ImmutableSet;
-
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeClass;
-
-import java.util.Set;
 
 class GeneratedStub extends GeneratedType {
 
@@ -22,11 +18,6 @@ class GeneratedStub extends GeneratedType {
   @Override
   public QualifiedName getName() {
     return stub.getQualifiedName();
-  }
-
-  @Override
-  public Set<QualifiedName> getVisibleNestedTypes() {
-    return ImmutableSet.of();
   }
 
   @Override

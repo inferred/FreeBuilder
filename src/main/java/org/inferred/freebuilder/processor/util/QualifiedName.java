@@ -24,8 +24,10 @@ import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 
 import org.inferred.freebuilder.processor.util.Type.TypeImpl;
 
@@ -43,7 +45,7 @@ import javax.lang.model.type.TypeMirror;
  * The qualified name of a type. Lets us pass a type to a {@link TypeShortener} without a Class or
  * javax.lang.model reference.
  */
-public class QualifiedName extends ValueType {
+public class QualifiedName extends ValueType implements Comparable<QualifiedName> {
 
   /**
    * Returns a {@link QualifiedName} for a type in {@code packageName}. If {@code nestedTypes} is
@@ -172,6 +174,14 @@ public class QualifiedName extends ValueType {
   public QualifiedName getEnclosingType() {
     checkState(!isTopLevel(), "%s has no enclosing type", this);
     return new QualifiedName(packageName, simpleNames.subList(0, simpleNames.size() - 1));
+  }
+
+  @Override
+  public int compareTo(QualifiedName o) {
+    return ComparisonChain.start()
+        .compare(packageName, o.packageName)
+        .compare(simpleNames, o.simpleNames, Ordering.natural().lexicographical())
+        .result();
   }
 
   @Override

@@ -49,9 +49,8 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
   public void generates(String... code) {
     String expected = Arrays.stream(code).collect(joining("\n", "", "\n"));
     CompilationUnitBuilder compilationUnitBuilder = new CompilationUnitBuilder(
-            mockEnvironment(getSubject().getName(), getSubject().getVisibleNestedTypes()),
+            mockEnvironment(),
             getSubject().getName(),
-            getSubject().getVisibleNestedTypes(),
             new StaticFeatureSet(environmentFeatures.toArray(new Feature<?>[0])));
     String rawSource = compilationUnitBuilder
         .add(getSubject())
@@ -70,34 +69,19 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
     }
   }
 
-  private static ProcessingEnvironment mockEnvironment(
-      QualifiedName generatedType,
-      Set<QualifiedName> visibleTypes) {
+  private static ProcessingEnvironment mockEnvironment() {
     ProcessingEnvironment env = Mockito.mock(ProcessingEnvironment.class, new ReturnsDeepStubs());
     when(env.getElementUtils().getTypeElement(any())).thenAnswer(invocation -> {
-      CharSequence name = invocation.getArgumentAt(0, CharSequence.class);
-      return mockTypeElement(name, generatedType, visibleTypes);
+      return mockTypeElement(invocation.getArgumentAt(0, CharSequence.class));
     });
     return env;
   }
 
-  private static TypeElement mockTypeElement(
-      CharSequence name,
-      QualifiedName generatedType,
-      Set<QualifiedName> visibleTypes) {
+  private static TypeElement mockTypeElement(CharSequence name) {
     try {
       Class<?> cls = ClassLoader.getSystemClassLoader().loadClass(name.toString());
       return classType(QualifiedName.of(cls));
     } catch (ClassNotFoundException e) {
-      for (QualifiedName visibleType : visibleTypes) {
-        if (visibleType.toString().contentEquals(name)) {
-          if (visibleType.equals(generatedType) || visibleType.isNestedIn(generatedType)) {
-            return null;
-          } else {
-            return classType(visibleType);
-          }
-        }
-      }
       return null;
     }
   }

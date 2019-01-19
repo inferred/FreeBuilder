@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
@@ -108,12 +107,6 @@ public abstract class Datatype {
   /** Returns the partial value class that should be generated. */
   public abstract TypeClass getPartialType();
 
-  /**
-   * Returns a set of nested types that will be visible in the generated class, either because they
-   * will be generated, or because they are present in a superclass.
-   */
-  public abstract ImmutableSet<QualifiedName> getVisibleNestedTypes();
-
   /** Returns the Property enum that may be generated. */
   public abstract TypeClass getPropertyEnum();
 
@@ -183,11 +176,6 @@ public abstract class Datatype {
       checkState(datatype.getPropertyEnum().getQualifiedName().getEnclosingType()
               .equals(generatedBuilder),
           "%s not a nested class of %s", datatype.getPropertyEnum(), generatedBuilder);
-      checkState(!datatype.getVisibleNestedTypes().isEmpty(), "No nested types provided");
-      for (QualifiedName nestedType : datatype.getVisibleNestedTypes()) {
-        checkState(nestedType.isNestedIn(generatedBuilder),
-            "%s not nested in %s", nestedType, generatedBuilder);
-      }
       return datatype;
     }
   }
