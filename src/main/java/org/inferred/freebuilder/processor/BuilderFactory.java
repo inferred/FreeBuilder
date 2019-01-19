@@ -50,10 +50,10 @@ public enum BuilderFactory {
   BUILDER_METHOD {
     @Override public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
       if (typeInference == TypeInference.INFERRED_TYPES) {
-        return Excerpts.add("%s.builder()", builderType.getQualifiedName().getEnclosingType());
+        return Excerpts.add("%s.builder()", builderType.getQualifiedName().enclosingType());
       } else {
         return Excerpts.add("%s.%sbuilder()",
-            builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
+            builderType.getQualifiedName().enclosingType(), builderType.typeParameters());
       }
     }
   },
@@ -62,10 +62,10 @@ public enum BuilderFactory {
   NEW_BUILDER_METHOD {
     @Override public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
       if (typeInference == TypeInference.INFERRED_TYPES) {
-        return Excerpts.add("%s.newBuilder()", builderType.getQualifiedName().getEnclosingType());
+        return Excerpts.add("%s.newBuilder()", builderType.getQualifiedName().enclosingType());
       } else {
         return Excerpts.add("%s.%snewBuilder()",
-            builderType.getQualifiedName().getEnclosingType(), builderType.typeParameters());
+            builderType.getQualifiedName().enclosingType(), builderType.typeParameters());
       }
     }
   };

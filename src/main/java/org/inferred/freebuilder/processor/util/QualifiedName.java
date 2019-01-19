@@ -122,6 +122,11 @@ public class QualifiedName extends ValueType implements Comparable<QualifiedName
     return packageName;
   }
 
+  /**
+   * Returns the {@link QualifiedName} of the type enclosing this one.
+   *
+   * @throws IllegalStateException if {@link #isTopLevel()} returns true
+   */
   public QualifiedName enclosingType() {
     checkState(!isTopLevel(), "Cannot return enclosing type of top-level type");
     return new QualifiedName(packageName, simpleNames.subList(0, simpleNames.size() - 1));
@@ -164,16 +169,6 @@ public class QualifiedName extends ValueType implements Comparable<QualifiedName
 
   public TypeClass withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
     return new TypeClass(this, ImmutableList.copyOf(typeParameters));
-  }
-
-  /**
-   * Returns the {@link QualifiedName} of the type enclosing this one.
-   *
-   * @throws IllegalStateException if {@link #isTopLevel()} returns true
-   */
-  public QualifiedName getEnclosingType() {
-    checkState(!isTopLevel(), "%s has no enclosing type", this);
-    return new QualifiedName(packageName, simpleNames.subList(0, simpleNames.size() - 1));
   }
 
   @Override
