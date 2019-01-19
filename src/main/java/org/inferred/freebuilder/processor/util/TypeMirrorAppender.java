@@ -2,6 +2,8 @@ package org.inferred.freebuilder.processor.util;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -27,7 +29,7 @@ class TypeMirrorAppender
 
   @Override
   public Void visitDeclared(DeclaredType mirror, QualifiedNameAppendable<?> a) {
-    if (mirror.getEnclosingType().getKind() == TypeKind.NONE) {
+    if (!isInnerClass(mirror)) {
       a.append(QualifiedName.of(asElement(mirror)));
     } else {
       mirror.getEnclosingType().accept(this, a);
@@ -43,6 +45,18 @@ class TypeMirrorAppender
       a.append(">");
     }
     return null;
+  }
+
+  private static boolean isInnerClass(DeclaredType mirror) {
+    if (mirror.getEnclosingType().getKind() == TypeKind.NONE) {
+      return false;
+    }
+    // Work around a little Eclipse bug
+    TypeElement element = ModelUtils.asElement(mirror);
+    if (element.getModifiers().contains(Modifier.STATIC)) {
+      return false;
+    }
+    return true;
   }
 
   @Override
