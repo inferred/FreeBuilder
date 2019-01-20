@@ -1,0 +1,67 @@
+/**
+ * Enable Java compatibility support.
+ *
+ * Simply set sourceCompatibility (or targetCompatibility) to automatically fork the correct JDK.
+ * In tests, set the executable to the desired version, e.g. "1.9", and it will be pointed to the
+ * correct executable. Executable lookup is done lazily when the task runs, so users lacking the
+ * right JDK can still run any other task, and (with a warning) any compile task using an older
+ * JDK.
+ */
+
+import org.gradle.internal.jvm.JavaInfo
+import org.gradle.internal.jvm.Jvm
+
+// Map Java version to JVM information, using $JAVA_x_HOME environment variables
+// and falling back to gradle properties as an extra option for devs.
+Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
+  JavaVersion version = JavaVersion.toVersion(versionString)
+  String propertyName = "java${version.majorVersion}Home"
+  String envName = "JAVA_${version.majorVersion}_HOME"
+  JavaInfo javaInfo
+  if (hasProperty(propertyName)) {
+    javaInfo = Jvm.forHome(file(getProperty(propertyName)))
+  } else if (System.env.containsKey(envName)) {
+    javaInfo = Jvm.forHome(file(System.env[envName]))
+  } else {
+    throw new RuntimeException("Set the property $propertyName in your gradle.properties"
+        + " pointing to a Java $version installation")
+  }
+  logger.info "Java ${versionString} found at ${javaInfo.javaHome}"
+  return javaInfo
+}
+jvms[(JavaVersion.current().name)] = Jvm.current()
+
+// Fork the correct JVM version if installed.
+// Runs lazily so users lacking some JVMs can still run most tasks.
+tasks.withType(JavaCompile) {
+  doFirst{
+    if (targetCompatibility != JavaVersion.current().name) {
+      options.with {
+        try {
+          fork javaHome: jvms[targetCompatibility].javaHome
+        } catch (RuntimeException e) {
+          if (JavaVersion.toVersion(targetCompatibility).compareTo(JavaVersion.current()) < 0) {
+            logger.warn "Java ${targetCompatibility} not available, using ${JavaVersion.current()}"
+          } else {
+            throw e
+          }
+        }
+      }
+    }
+  }
+}
+
+// Sets the correct JVM executable path on tests.
+// Runs lazily so users lacking the correct version can run all other tasks.
+afterEvaluate {
+  tasks.withType(Test) {
+    if (executable =~ /^\d+\.\d+$/) {
+      def version = executable
+      executable = new Object() {
+        @Override public String toString() {
+          return jvms[version].javaExecutable.toString()
+        }
+      }
+    }
+  }
+}
