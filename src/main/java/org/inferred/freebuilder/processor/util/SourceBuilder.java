@@ -37,7 +37,8 @@ public interface SourceBuilder {
   /**
    * Appends formatted text to the source.
    *
-   * <p>Formatting is done by {@link String#format}, except that:<ul>
+   * <p>Formatting supports {@code %s} and {@code %n$s}. Most args are converted according to their
+   * {@link Object#toString()} method, except that:<ul>
    * <li> {@link Package} and {@link PackageElement} instances use their fully-qualified names
    *      (no "package " prefix).
    * <li> {@link Class}, {@link TypeElement}, {@link DeclaredType} and {@link QualifiedName}
@@ -56,7 +57,8 @@ public interface SourceBuilder {
   /**
    * Appends a formatted line of code to the source.
    *
-   * <p>Formatting is done by {@link String#format}, except that:<ul>
+   * <p>Formatting supports {@code %s} and {@code %n$s}. Most args are converted according to their
+   * {@link Object#toString()} method, except that:<ul>
    * <li> {@link Package} and {@link PackageElement} instances use their fully-qualified names
    *      (no "package " prefix).
    * <li> {@link Class}, {@link TypeElement}, {@link DeclaredType} and {@link QualifiedName}
