@@ -20,6 +20,8 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.BaseStream;
 import javax.annotation.Generated;
+import org.inferred.freebuilder.processor.Datatype.StandardMethod;
+import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Type;
 import org.inferred.freebuilder.processor.util.TypeClass;
@@ -73,8 +75,8 @@ abstract class Datatype_Builder {
   private TypeClass valueType;
   private TypeClass partialType;
   private TypeClass propertyEnum;
-  private final LinkedHashMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
-      standardMethodUnderrides = new LinkedHashMap<>();
+  private final LinkedHashMap<StandardMethod, UnderrideLevel> standardMethodUnderrides =
+      new LinkedHashMap<>();
   private boolean builderSerializable;
   private boolean hasToBuilderMethod;
   private List<Excerpt> generatedBuilderAnnotations = ImmutableList.of();
@@ -439,8 +441,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if either {@code key} or {@code value} are null
    */
-  public Datatype.Builder putStandardMethodUnderrides(
-      Datatype.StandardMethod key, Datatype.UnderrideLevel value) {
+  public Datatype.Builder putStandardMethodUnderrides(StandardMethod key, UnderrideLevel value) {
     Objects.requireNonNull(key);
     Objects.requireNonNull(value);
     standardMethodUnderrides.put(key, value);
@@ -455,9 +456,8 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code map} is null or contains a null key or value
    */
   public Datatype.Builder putAllStandardMethodUnderrides(
-      Map<? extends Datatype.StandardMethod, ? extends Datatype.UnderrideLevel> map) {
-    for (Map.Entry<? extends Datatype.StandardMethod, ? extends Datatype.UnderrideLevel> entry :
-        map.entrySet()) {
+      Map<? extends StandardMethod, ? extends UnderrideLevel> map) {
+    for (Map.Entry<? extends StandardMethod, ? extends UnderrideLevel> entry : map.entrySet()) {
       putStandardMethodUnderrides(entry.getKey(), entry.getValue());
     }
     return (Datatype.Builder) this;
@@ -470,7 +470,7 @@ abstract class Datatype_Builder {
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code key} is null
    */
-  public Datatype.Builder removeStandardMethodUnderrides(Datatype.StandardMethod key) {
+  public Datatype.Builder removeStandardMethodUnderrides(StandardMethod key) {
     Objects.requireNonNull(key);
     standardMethodUnderrides.remove(key);
     return (Datatype.Builder) this;
@@ -488,7 +488,7 @@ abstract class Datatype_Builder {
    * @throws NullPointerException if {@code mutator} is null
    */
   public Datatype.Builder mutateStandardMethodUnderrides(
-      Consumer<? super Map<Datatype.StandardMethod, Datatype.UnderrideLevel>> mutator) {
+      Consumer<? super Map<StandardMethod, UnderrideLevel>> mutator) {
     // If putStandardMethodUnderrides is overridden, this method will be updated to delegate to it
     mutator.accept(standardMethodUnderrides);
     return (Datatype.Builder) this;
@@ -509,7 +509,7 @@ abstract class Datatype_Builder {
    * Returns an unmodifiable view of the map that will be returned by {@link
    * Datatype#getStandardMethodUnderrides()}. Changes to this builder will be reflected in the view.
    */
-  public Map<Datatype.StandardMethod, Datatype.UnderrideLevel> getStandardMethodUnderrides() {
+  public Map<StandardMethod, UnderrideLevel> getStandardMethodUnderrides() {
     return Collections.unmodifiableMap(standardMethodUnderrides);
   }
 
@@ -967,47 +967,47 @@ abstract class Datatype_Builder {
 
   /** Sets all property values using the given {@code Datatype} as a template. */
   public Datatype.Builder mergeFrom(Datatype value) {
-    Datatype_Builder _defaults = new Datatype.Builder();
-    if (_defaults._unsetProperties.contains(Property.TYPE)
-        || !Objects.equals(value.getType(), _defaults.getType())) {
+    Datatype_Builder defaults = new Datatype.Builder();
+    if (defaults._unsetProperties.contains(Property.TYPE)
+        || !Objects.equals(value.getType(), defaults.getType())) {
       setType(value.getType());
     }
-    if (_defaults._unsetProperties.contains(Property.INTERFACE_TYPE)
-        || value.isInterfaceType() != _defaults.isInterfaceType()) {
+    if (defaults._unsetProperties.contains(Property.INTERFACE_TYPE)
+        || value.isInterfaceType() != defaults.isInterfaceType()) {
       setInterfaceType(value.isInterfaceType());
     }
-    if (_defaults._unsetProperties.contains(Property.BUILDER)
-        || !Objects.equals(value.getBuilder(), _defaults.getBuilder())) {
+    if (defaults._unsetProperties.contains(Property.BUILDER)
+        || !Objects.equals(value.getBuilder(), defaults.getBuilder())) {
       setBuilder(value.getBuilder());
     }
-    if (_defaults._unsetProperties.contains(Property.EXTENSIBLE)
-        || value.isExtensible() != _defaults.isExtensible()) {
+    if (defaults._unsetProperties.contains(Property.EXTENSIBLE)
+        || value.isExtensible() != defaults.isExtensible()) {
       setExtensible(value.isExtensible());
     }
     value.getBuilderFactory().ifPresent(this::setBuilderFactory);
-    if (_defaults._unsetProperties.contains(Property.GENERATED_BUILDER)
-        || !Objects.equals(value.getGeneratedBuilder(), _defaults.getGeneratedBuilder())) {
+    if (defaults._unsetProperties.contains(Property.GENERATED_BUILDER)
+        || !Objects.equals(value.getGeneratedBuilder(), defaults.getGeneratedBuilder())) {
       setGeneratedBuilder(value.getGeneratedBuilder());
     }
-    if (_defaults._unsetProperties.contains(Property.VALUE_TYPE)
-        || !Objects.equals(value.getValueType(), _defaults.getValueType())) {
+    if (defaults._unsetProperties.contains(Property.VALUE_TYPE)
+        || !Objects.equals(value.getValueType(), defaults.getValueType())) {
       setValueType(value.getValueType());
     }
-    if (_defaults._unsetProperties.contains(Property.PARTIAL_TYPE)
-        || !Objects.equals(value.getPartialType(), _defaults.getPartialType())) {
+    if (defaults._unsetProperties.contains(Property.PARTIAL_TYPE)
+        || !Objects.equals(value.getPartialType(), defaults.getPartialType())) {
       setPartialType(value.getPartialType());
     }
-    if (_defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
-        || !Objects.equals(value.getPropertyEnum(), _defaults.getPropertyEnum())) {
+    if (defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
+        || !Objects.equals(value.getPropertyEnum(), defaults.getPropertyEnum())) {
       setPropertyEnum(value.getPropertyEnum());
     }
     putAllStandardMethodUnderrides(value.getStandardMethodUnderrides());
-    if (_defaults._unsetProperties.contains(Property.BUILDER_SERIALIZABLE)
-        || value.isBuilderSerializable() != _defaults.isBuilderSerializable()) {
+    if (defaults._unsetProperties.contains(Property.BUILDER_SERIALIZABLE)
+        || value.isBuilderSerializable() != defaults.isBuilderSerializable()) {
       setBuilderSerializable(value.isBuilderSerializable());
     }
-    if (_defaults._unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)
-        || value.getHasToBuilderMethod() != _defaults.getHasToBuilderMethod()) {
+    if (defaults._unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)
+        || value.getHasToBuilderMethod() != defaults.getHasToBuilderMethod()) {
       setHasToBuilderMethod(value.getHasToBuilderMethod());
     }
     if (value instanceof Value && generatedBuilderAnnotations == ImmutableList.<Excerpt>of()) {
@@ -1020,8 +1020,8 @@ abstract class Datatype_Builder {
     } else {
       addAllValueTypeAnnotations(value.getValueTypeAnnotations());
     }
-    if (_defaults._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
-        || !Objects.equals(value.getValueTypeVisibility(), _defaults.getValueTypeVisibility())) {
+    if (defaults._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
+        || !Objects.equals(value.getValueTypeVisibility(), defaults.getValueTypeVisibility())) {
       setValueTypeVisibility(value.getValueTypeVisibility());
     }
     if (value instanceof Value && nestedClasses == ImmutableList.<Excerpt>of()) {
@@ -1039,65 +1039,65 @@ abstract class Datatype_Builder {
   public Datatype.Builder mergeFrom(Datatype.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
     Datatype_Builder base = template;
-    Datatype_Builder _defaults = new Datatype.Builder();
+    Datatype_Builder defaults = new Datatype.Builder();
     if (!base._unsetProperties.contains(Property.TYPE)
-        && (_defaults._unsetProperties.contains(Property.TYPE)
-            || !Objects.equals(template.getType(), _defaults.getType()))) {
+        && (defaults._unsetProperties.contains(Property.TYPE)
+            || !Objects.equals(template.getType(), defaults.getType()))) {
       setType(template.getType());
     }
     if (!base._unsetProperties.contains(Property.INTERFACE_TYPE)
-        && (_defaults._unsetProperties.contains(Property.INTERFACE_TYPE)
-            || template.isInterfaceType() != _defaults.isInterfaceType())) {
+        && (defaults._unsetProperties.contains(Property.INTERFACE_TYPE)
+            || template.isInterfaceType() != defaults.isInterfaceType())) {
       setInterfaceType(template.isInterfaceType());
     }
     if (!base._unsetProperties.contains(Property.BUILDER)
-        && (_defaults._unsetProperties.contains(Property.BUILDER)
-            || !Objects.equals(template.getBuilder(), _defaults.getBuilder()))) {
+        && (defaults._unsetProperties.contains(Property.BUILDER)
+            || !Objects.equals(template.getBuilder(), defaults.getBuilder()))) {
       setBuilder(template.getBuilder());
     }
     if (!base._unsetProperties.contains(Property.EXTENSIBLE)
-        && (_defaults._unsetProperties.contains(Property.EXTENSIBLE)
-            || template.isExtensible() != _defaults.isExtensible())) {
+        && (defaults._unsetProperties.contains(Property.EXTENSIBLE)
+            || template.isExtensible() != defaults.isExtensible())) {
       setExtensible(template.isExtensible());
     }
     template.getBuilderFactory().ifPresent(this::setBuilderFactory);
     if (!base._unsetProperties.contains(Property.GENERATED_BUILDER)
-        && (_defaults._unsetProperties.contains(Property.GENERATED_BUILDER)
-            || !Objects.equals(template.getGeneratedBuilder(), _defaults.getGeneratedBuilder()))) {
+        && (defaults._unsetProperties.contains(Property.GENERATED_BUILDER)
+            || !Objects.equals(template.getGeneratedBuilder(), defaults.getGeneratedBuilder()))) {
       setGeneratedBuilder(template.getGeneratedBuilder());
     }
     if (!base._unsetProperties.contains(Property.VALUE_TYPE)
-        && (_defaults._unsetProperties.contains(Property.VALUE_TYPE)
-            || !Objects.equals(template.getValueType(), _defaults.getValueType()))) {
+        && (defaults._unsetProperties.contains(Property.VALUE_TYPE)
+            || !Objects.equals(template.getValueType(), defaults.getValueType()))) {
       setValueType(template.getValueType());
     }
     if (!base._unsetProperties.contains(Property.PARTIAL_TYPE)
-        && (_defaults._unsetProperties.contains(Property.PARTIAL_TYPE)
-            || !Objects.equals(template.getPartialType(), _defaults.getPartialType()))) {
+        && (defaults._unsetProperties.contains(Property.PARTIAL_TYPE)
+            || !Objects.equals(template.getPartialType(), defaults.getPartialType()))) {
       setPartialType(template.getPartialType());
     }
     if (!base._unsetProperties.contains(Property.PROPERTY_ENUM)
-        && (_defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
-            || !Objects.equals(template.getPropertyEnum(), _defaults.getPropertyEnum()))) {
+        && (defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
+            || !Objects.equals(template.getPropertyEnum(), defaults.getPropertyEnum()))) {
       setPropertyEnum(template.getPropertyEnum());
     }
     putAllStandardMethodUnderrides(base.standardMethodUnderrides);
     if (!base._unsetProperties.contains(Property.BUILDER_SERIALIZABLE)
-        && (_defaults._unsetProperties.contains(Property.BUILDER_SERIALIZABLE)
-            || template.isBuilderSerializable() != _defaults.isBuilderSerializable())) {
+        && (defaults._unsetProperties.contains(Property.BUILDER_SERIALIZABLE)
+            || template.isBuilderSerializable() != defaults.isBuilderSerializable())) {
       setBuilderSerializable(template.isBuilderSerializable());
     }
     if (!base._unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)
-        && (_defaults._unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)
-            || template.getHasToBuilderMethod() != _defaults.getHasToBuilderMethod())) {
+        && (defaults._unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)
+            || template.getHasToBuilderMethod() != defaults.getHasToBuilderMethod())) {
       setHasToBuilderMethod(template.getHasToBuilderMethod());
     }
     addAllGeneratedBuilderAnnotations(base.generatedBuilderAnnotations);
     addAllValueTypeAnnotations(base.valueTypeAnnotations);
     if (!base._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
-        && (_defaults._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
+        && (defaults._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
             || !Objects.equals(
-                template.getValueTypeVisibility(), _defaults.getValueTypeVisibility()))) {
+                template.getValueTypeVisibility(), defaults.getValueTypeVisibility()))) {
       setValueTypeVisibility(template.getValueTypeVisibility());
     }
     addAllNestedClasses(base.nestedClasses);
@@ -1106,25 +1106,25 @@ abstract class Datatype_Builder {
 
   /** Resets the state of this builder. */
   public Datatype.Builder clear() {
-    Datatype_Builder _defaults = new Datatype.Builder();
-    type = _defaults.type;
-    interfaceType = _defaults.interfaceType;
-    builder = _defaults.builder;
-    extensible = _defaults.extensible;
-    builderFactory = _defaults.builderFactory;
-    generatedBuilder = _defaults.generatedBuilder;
-    valueType = _defaults.valueType;
-    partialType = _defaults.partialType;
-    propertyEnum = _defaults.propertyEnum;
+    Datatype_Builder defaults = new Datatype.Builder();
+    type = defaults.type;
+    interfaceType = defaults.interfaceType;
+    builder = defaults.builder;
+    extensible = defaults.extensible;
+    builderFactory = defaults.builderFactory;
+    generatedBuilder = defaults.generatedBuilder;
+    valueType = defaults.valueType;
+    partialType = defaults.partialType;
+    propertyEnum = defaults.propertyEnum;
     standardMethodUnderrides.clear();
-    builderSerializable = _defaults.builderSerializable;
-    hasToBuilderMethod = _defaults.hasToBuilderMethod;
+    builderSerializable = defaults.builderSerializable;
+    hasToBuilderMethod = defaults.hasToBuilderMethod;
     clearGeneratedBuilderAnnotations();
     clearValueTypeAnnotations();
-    valueTypeVisibility = _defaults.valueTypeVisibility;
+    valueTypeVisibility = defaults.valueTypeVisibility;
     clearNestedClasses();
     _unsetProperties.clear();
-    _unsetProperties.addAll(_defaults._unsetProperties);
+    _unsetProperties.addAll(defaults._unsetProperties);
     return (Datatype.Builder) this;
   }
 
@@ -1165,13 +1165,12 @@ abstract class Datatype_Builder {
     private final TypeClass valueType;
     private final TypeClass partialType;
     private final TypeClass propertyEnum;
-    private final ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
-        standardMethodUnderrides;
+    private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
     private final boolean builderSerializable;
     private final boolean hasToBuilderMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
-    private final Datatype.Visibility valueTypeVisibility;
+    private final Visibility valueTypeVisibility;
     private final ImmutableList<Excerpt> nestedClasses;
 
     private Value(Datatype_Builder builder) {
@@ -1239,8 +1238,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
-        getStandardMethodUnderrides() {
+    public ImmutableMap<StandardMethod, UnderrideLevel> getStandardMethodUnderrides() {
       return standardMethodUnderrides;
     }
 
@@ -1265,7 +1263,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public Datatype.Visibility getValueTypeVisibility() {
+    public Visibility getValueTypeVisibility() {
       return valueTypeVisibility;
     }
 
@@ -1374,13 +1372,12 @@ abstract class Datatype_Builder {
     private final TypeClass valueType;
     private final TypeClass partialType;
     private final TypeClass propertyEnum;
-    private final ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
-        standardMethodUnderrides;
+    private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
     private final boolean builderSerializable;
     private final boolean hasToBuilderMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
-    private final Datatype.Visibility valueTypeVisibility;
+    private final Visibility valueTypeVisibility;
     private final ImmutableList<Excerpt> nestedClasses;
     private final EnumSet<Property> _unsetProperties;
 
@@ -1474,8 +1471,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public ImmutableMap<Datatype.StandardMethod, Datatype.UnderrideLevel>
-        getStandardMethodUnderrides() {
+    public ImmutableMap<StandardMethod, UnderrideLevel> getStandardMethodUnderrides() {
       return standardMethodUnderrides;
     }
 
@@ -1506,7 +1502,7 @@ abstract class Datatype_Builder {
     }
 
     @Override
-    public Datatype.Visibility getValueTypeVisibility() {
+    public Visibility getValueTypeVisibility() {
       if (_unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)) {
         throw new UnsupportedOperationException("valueTypeVisibility not set");
       }

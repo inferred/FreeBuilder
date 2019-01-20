@@ -15,60 +15,50 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static java.util.function.Predicate.isEqual;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toMap;
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import org.inferred.freebuilder.processor.util.ScopeHandler.ScopeState;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
- * Adds imports to a compilation unit.
+ * Adds imports and applies scope visibility rules to a compilation unit.
  *
- * <p>To ensure we never import common names like 'Builder', nested classes are never directly
- * imported. This is necessarily less readable when types are used as namespaces, e.g. in proto2.
+ * <p>To ensure we never import common names like 'Builder', nested classes must have at least one
+ * non-lowercase letter (apart from the first) in their name.
  */
 class ImportManager {
 
-  public static String shortenReferences(
+  static String shortenReferences(
       CharSequence codeWithQualifiedNames,
       int importsIndex,
-      List<TypeUsage> usages,
+      List<TypeUsage> typeUsages,
       ScopeHandler scopeHandler) {
-    // Run through all type usages, determining what is in scope
-    SortedSet<QualifiedName> imports = usages.stream()
-        .flatMap(usage -> imports(scopeHandler, usage))
-        .collect(toMap(QualifiedName::getSimpleName, $ -> $, (a, b) -> a.equals(b) ? a : CONFLICT))
-        .values()
-        .stream()
-        .filter(isEqual(CONFLICT).negate())
-        .collect(toCollection(TreeSet::new));
-
+    ImportManager importManager = new ImportManager(typeUsages, scopeHandler);
+    importManager.selectImports();
     StringBuilder result = new StringBuilder()
         .append(codeWithQualifiedNames, 0, importsIndex);
-    if (!imports.isEmpty()) {
-      result.append("\n");
-      imports.forEach(type -> result.append("import ").append(type).append(";\n"));
-      result.append("\n");
-    }
-    int i = importsIndex;
-    for (TypeUsage usage : usages) {
-      result.append(codeWithQualifiedNames, i, usage.start());
-      appendUsage(result, usage, scopeHandler, imports);
-      i = usage.end();
+    importManager.appendImports(result);
+    int offset = importsIndex;
+    for (TypeUsage usage : typeUsages) {
+      result.append(codeWithQualifiedNames, offset, usage.start());
+      importManager.appendUsage(result, usage);
+      offset = usage.end();
     }
     return result
-        .append(codeWithQualifiedNames, i, codeWithQualifiedNames.length())
+        .append(codeWithQualifiedNames, offset, codeWithQualifiedNames.length())
         .toString();
   }
 
-  /** Impossible type to use in place of null (which toMap goes odd over). */
+  /** Impossible typename, to use instead of null (which toMap goes odd over). */
   private static final QualifiedName CONFLICT = QualifiedName.of("", "import");
 
   private static Function<QualifiedName, ScopeState> visibilityIn(
@@ -80,70 +70,119 @@ class ImportManager {
     }
   }
 
-  private static Stream<QualifiedName> imports(ScopeHandler scopeHandler, TypeUsage usage) {
-    return imports(visibilityIn(scopeHandler, usage), usage.type());
+  /** Type usages to process. */
+  private final Deque<TypeUsage> todo = new ArrayDeque<>();
+  /** Simple name → type, or {@link #CONFLICT} if multiple types conflicted for that name. */
+  private final Map<String, QualifiedName> namespace = new HashMap<>();
+  /** Types to import, and for which usages. */
+  private final Multimap<QualifiedName, TypeUsage> imports = ArrayListMultimap.create();
+  /** Which type, imported or in scope, to use to shorten each type usage. */
+  private final Map<TypeUsage, QualifiedName> resolutions = new HashMap<>();
+  private final ScopeHandler scopeHandler;
+
+  private ImportManager(List<TypeUsage> usages, ScopeHandler scopeHandler) {
+    this.scopeHandler = scopeHandler;
+    todo.addAll(usages);
   }
 
-  private static Stream<QualifiedName> imports(
-      Function<QualifiedName, ScopeState> visibility,
-      QualifiedName type) {
-    for (QualifiedName candidate = type; true; candidate = candidate.enclosingType()) {
-      switch (visibility.apply(candidate)) {
+  private void selectImports() {
+    while (!todo.isEmpty()) {
+      resolveUsage(todo.removeLast());
+    }
+    imports.asMap().forEach((name, usages) -> {
+      usages.forEach(usage -> {
+        resolutions.put(usage, name);
+      });
+    });
+  }
+
+  private void appendImports(StringBuilder result) {
+    checkState(todo.isEmpty());
+    if (!imports.isEmpty()) {
+      result.append("\n");
+      imports.keySet()
+          .stream()
+          .sorted()
+          .forEach(type -> result.append("import ").append(type).append(";\n"));
+      result.append("\n");
+    }
+  }
+
+  private void appendUsage(StringBuilder result, TypeUsage usage) {
+    checkState(todo.isEmpty());
+    QualifiedName name = resolutions.get(usage);
+    if (name == null) {
+      result.append(usage.type());
+    } else {
+      result.append(name.getSimpleName());
+      usage.type()
+          .getSimpleNames()
+          .stream()
+          .skip(name.getSimpleNames().size())
+          .forEach(simpleName -> result.append('.').append(simpleName));
+    }
+  }
+
+  private boolean reserveName(QualifiedName name) {
+    QualifiedName conflict = namespace.putIfAbsent(name.getSimpleName(), name);
+    if (conflict != null && !conflict.equals(name)) {
+      namespace.put(name.getSimpleName(), CONFLICT);
+      todo.addAll(imports.removeAll(conflict));
+      return false;
+    }
+    return true;
+  }
+
+  private void rejectName(QualifiedName name) {
+    QualifiedName conflict = namespace.putIfAbsent(name.getSimpleName(), CONFLICT);
+    todo.addAll(imports.removeAll(conflict));
+  }
+
+  private boolean addImport(QualifiedName name, TypeUsage usage) {
+    if (reserveName(name)) {
+      imports.put(name, usage);
+      return true;
+    }
+    return false;
+  }
+
+  private void resolveUsage(TypeUsage usage) {
+    Function<QualifiedName, ScopeState> visibility = visibilityIn(scopeHandler, usage);
+    for (QualifiedName name = usage.type(); true; name = name.enclosingType()) {
+      switch (visibility.apply(name)) {
         case IN_SCOPE:
-          return Stream.of();
+          // Consider using this identifier for imports everywhere
+          reserveName(name);
+          resolutions.put(usage, name);
+          return;
 
         case IMPORTABLE:
-          if (candidate.isTopLevel()) {
-            return Stream.of(candidate);
+          if (isSensibleImport(name) && addImport(name, usage)) {
+            return;
           }
           break;
 
         case HIDDEN:
-          if (candidate.isTopLevel()) {
-            return Stream.of();
-          }
+          // Don't use this identifier for imports elsewhere either, it will be confusing
+          rejectName(name);
           break;
       }
-    }
-  }
-
-  private static void appendUsage(
-      StringBuilder result,
-      TypeUsage usage,
-      ScopeHandler scopeHandler,
-      Set<QualifiedName> imports) {
-    appendUsage(result, visibilityIn(scopeHandler, usage), usage.type(), imports);
-  }
-
-  private static void appendUsage(
-      StringBuilder result,
-      Function<QualifiedName, ScopeState> visibility,
-      QualifiedName type,
-      Set<QualifiedName> imports) {
-    if (!isVisible(visibility.apply(type), imports.contains(type))) {
-      if (type.isTopLevel()) {
-        result.append(type.getPackage());
-      } else {
-        appendUsage(result, visibility, type.enclosingType(), imports);
+      if (name.isTopLevel()) {
+        return;
       }
-      result.append('.');
     }
-    result.append(type.getSimpleName());
   }
 
-  private static boolean isVisible(ScopeState state, boolean imported) {
-    switch (state) {
-      case IN_SCOPE:
+  private static boolean isSensibleImport(QualifiedName name) {
+    if (name.isTopLevel()) {
+      return true;
+    }
+    String simpleName = name.getSimpleName();
+    for (int i = 1; i < simpleName.length(); i++) {
+      if (!Character.isLowerCase(simpleName.charAt(i))) {
         return true;
-
-      case IMPORTABLE:
-        return imported;
-
-      case HIDDEN:
-        return false;
+      }
     }
-    throw new IllegalStateException("Unexpected state " + state);
+    return false;
   }
-
-  private ImportManager() { }
 }
