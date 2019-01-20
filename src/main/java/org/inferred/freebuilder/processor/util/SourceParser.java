@@ -228,6 +228,7 @@ class SourceParser {
 
   private static CharSequence withoutAnnotations(CharSequence chars) {
     StringBuilder result = new StringBuilder();
+    StringBuilder identifier = new StringBuilder();
     AnnotationState state = AnnotationState.CODE;
     int depth = 0;
     for (int i = 0; i < chars.length(); i++) {
@@ -236,12 +237,14 @@ class SourceParser {
         case CODE:
           if (c == '@') {
             state = AnnotationState.SYMBOL;
+            identifier.delete(0, identifier.length());
           }
           break;
 
         case SYMBOL:
           if (Character.isJavaIdentifierStart(c)) {
             state = AnnotationState.NAME;
+            identifier.append(c);
           } else if (!Character.isWhitespace(c)) {
             throw new IllegalStateException("Unexpected character " + c + " after @");
           }
@@ -249,12 +252,17 @@ class SourceParser {
 
         case NAME:
           if (Character.isWhitespace(c)) {
+            if ("interface".contentEquals(identifier)) {
+              result.append("@interface ");
+            }
             state = AnnotationState.SPACE;
           } else if (c == '(') {
             state = AnnotationState.BODY;
             depth = 1;
           } else if (!Character.isJavaIdentifierPart(c)) {
             state = AnnotationState.CODE;
+          } else {
+            identifier.append(c);
           }
           break;
 

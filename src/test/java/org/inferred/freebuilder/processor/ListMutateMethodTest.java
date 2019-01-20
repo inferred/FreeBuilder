@@ -23,11 +23,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,11 +38,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -69,10 +66,10 @@ public class ListMutateMethodTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject listPropertyType;
-  private final JavaFileObject genericType;
+  private final CompilationUnitBuilder listPropertyType;
+  private final CompilationUnitBuilder genericType;
   /** Simple type that substitutes passed-in objects, in this case by interning strings. */
-  private final JavaFileObject internedStringsType;
+  private final CompilationUnitBuilder internedStringsType;
 
   public ListMutateMethodTest(
       ElementFactory elements,
@@ -84,7 +81,7 @@ public class ListMutateMethodTest {
     this.convention = convention;
     this.features = features;
 
-    SourceBuilder listPropertyTypeBuilder = new SourceBuilder()
+    listPropertyType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -92,7 +89,7 @@ public class ListMutateMethodTest {
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (checked) {
-      listPropertyTypeBuilder
+      listPropertyType
           .addLine("    @Override public Builder addItems(%s element) {",
               elements.unwrappedType())
           .addLine("      if (!(%s)) {", elements.validation())
@@ -101,12 +98,11 @@ public class ListMutateMethodTest {
           .addLine("      return super.addItems(element);")
           .addLine("    }");
     }
-    listPropertyType = listPropertyTypeBuilder
+    listPropertyType
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
 
-    SourceBuilder genericTypeBuilder = new SourceBuilder()
+    genericType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType<T extends %s> {", elements.supertype())
@@ -115,7 +111,7 @@ public class ListMutateMethodTest {
         .addLine("  public static class Builder<T extends %s> extends DataType_Builder<T> {",
             elements.supertype());
     if (checked) {
-      genericTypeBuilder
+      genericType
           .addLine("    @Override public Builder<T> addItems(T element) {")
           .addLine("      if (!(%s)) {", elements.supertypeValidation())
           .addLine("        throw new IllegalArgumentException(\"%s\");", elements.errorMessage())
@@ -123,13 +119,12 @@ public class ListMutateMethodTest {
           .addLine("      return super.addItems(element);")
           .addLine("    }");
     }
-    genericType = genericTypeBuilder
+    genericType
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
 
     if (!checked && elements == STRINGS) {
-      internedStringsType = new SourceBuilder()
+      internedStringsType = CompilationUnitBuilder.forTesting()
           .addLine("package com.example;")
           .addLine("@%s", FreeBuilder.class)
           .addLine("public interface DataType {")
@@ -140,8 +135,7 @@ public class ListMutateMethodTest {
           .addLine("      return super.addItems(element.intern());")
           .addLine("    }")
           .addLine("  }")
-          .addLine("}")
-          .build();
+          .addLine("}");
     } else {
       internedStringsType = null;
     }
@@ -461,24 +455,27 @@ public class ListMutateMethodTest {
   }
 
   @Test
-  public void canUseCustomFunctionalInterface() throws IOException {
-    String defaultsTypeCode = listPropertyType.getCharContent(true).toString();
-    SourceBuilder customMutatorType = new SourceBuilder();
-    for (String line : defaultsTypeCode.split("\n")) {
-      customMutatorType.addLine("%s", line);
+  public void canUseCustomFunctionalInterface() {
+    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    for (String line : listPropertyType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
+        int insertLocation = line.indexOf("{") + 1;
         customMutatorType
+            .addLine("%s", line.substring(0, insertLocation))
             .addLine("    public interface Mutator {")
             .addLine("      void mutate(%s<%s> list);", List.class, elements.type())
             .addLine("    }")
             .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
             .addLine("      return super.mutateItems(mutator);")
-            .addLine("    }");
+            .addLine("    }")
+            .addLine("%s", line.substring(insertLocation));
+      } else {
+        customMutatorType.addLine("%s", line);
       }
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMutatorType.build())
+        .with(customMutatorType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
@@ -490,24 +487,27 @@ public class ListMutateMethodTest {
   }
 
   @Test
-  public void canUseCustomGenericFunctionalInterface() throws IOException {
-    String defaultsTypeCode = genericType.getCharContent(true).toString();
-    SourceBuilder customMutatorType = new SourceBuilder();
-    for (String line : defaultsTypeCode.split("\n")) {
-      customMutatorType.addLine("%s", line);
+  public void canUseCustomGenericFunctionalInterface() {
+    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    for (String line : genericType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
+        int insertOffset = line.indexOf('{') + 1;
         customMutatorType
+            .addLine("%s", line.substring(0, insertOffset))
             .addLine("    public interface Mutator<T> {")
             .addLine("      void mutate(%s<T> list);", List.class)
             .addLine("    }")
             .addLine("    @Override public Builder mutateItems(Mutator<T> mutator) {")
             .addLine("      return super.mutateItems(mutator);")
-            .addLine("    }");
+            .addLine("    }")
+            .addLine("%s", line.substring(insertOffset));
+      } else {
+        customMutatorType.addLine("%s", line);
       }
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMutatorType.build())
+        .with(customMutatorType)
         .with(testBuilder()
             .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
             .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))

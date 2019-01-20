@@ -21,11 +21,11 @@ import static org.junit.Assume.assumeTrue;
 import com.google.common.collect.Ordering;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,8 +40,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.stream.Stream;
-
-import javax.tools.JavaFileObject;
 
 /**
  * Partial set of tests of {@link SortedSetProperty}. Tests specific to the mutateX methods
@@ -62,24 +60,24 @@ public class SortedSetPropertyTest {
 
   private final FeatureSet features;
 
-  private static final JavaFileObject SORTED_SET_PROPERTY_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<String> items();", SortedSet.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override")
-      .addLine("    public Builder setComparatorForItems(%s<? super String> comparator) {",
-          Comparator.class)
-      .addLine("      return super.setComparatorForItems(comparator);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
+  private final CompilationUnitBuilder datatype;
 
   public SortedSetPropertyTest(FeatureSet features) {
     this.features = features;
+    datatype = CompilationUnitBuilder.forTesting()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public abstract class DataType {")
+        .addLine("  public abstract %s<String> items();", SortedSet.class)
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {")
+        .addLine("    @Override")
+        .addLine("    public Builder setComparatorForItems(%s<? super String> comparator) {",
+            Comparator.class)
+        .addLine("      return super.setComparatorForItems(comparator);")
+        .addLine("    }")
+        .addLine("  }")
+        .addLine("}");
   }
 
   public static final Comparator<String> NATURAL_ORDER =
@@ -90,7 +88,7 @@ public class SortedSetPropertyTest {
   public void testDefaultOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(\"11\", \"3\", \"222\")")
@@ -104,7 +102,7 @@ public class SortedSetPropertyTest {
   public void testNullOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(null)")
@@ -119,7 +117,7 @@ public class SortedSetPropertyTest {
   public void testReverseOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(%s.reverseOrder())", Collections.class)
@@ -134,7 +132,7 @@ public class SortedSetPropertyTest {
   public void testNaturalOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -149,7 +147,7 @@ public class SortedSetPropertyTest {
   public void testBuilderGetter() {
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -164,7 +162,7 @@ public class SortedSetPropertyTest {
   public void testGetterComparator() {
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -179,7 +177,7 @@ public class SortedSetPropertyTest {
   public void testBuilderGetterComparator() {
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType.Builder builder = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -194,7 +192,7 @@ public class SortedSetPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(null)")
@@ -214,7 +212,7 @@ public class SortedSetPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -233,7 +231,7 @@ public class SortedSetPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -252,7 +250,7 @@ public class SortedSetPropertyTest {
   public void testMergeFromDoesNotReuseImmutableSetInstanceWhenComparatorsDoNotMatch() {
     behaviorTester
         .with(new Processor(features))
-        .with(SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(null)")

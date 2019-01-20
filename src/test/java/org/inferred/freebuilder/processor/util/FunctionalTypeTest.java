@@ -1,6 +1,5 @@
 package org.inferred.freebuilder.processor.util;
 
-import static java.util.stream.Collectors.toMap;
 import static org.inferred.freebuilder.processor.util.FunctionalType.maybeFunctionalType;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unboxedUnaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -9,6 +8,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import static java.util.stream.Collectors.toMap;
 
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
@@ -114,7 +115,7 @@ public class FunctionalTypeTest {
       FunctionalType operator = unboxedUnaryOperator(model.typeMirror(type), model.typeUtils());
 
       BehaviorTester.create(new StaticFeatureSet())
-          .with(new org.inferred.freebuilder.processor.util.testing.SourceBuilder()
+          .with(CompilationUnitBuilder.forTesting()
               .addLine("package com.example;")
               .addLine("public class TestClass {")
               .addLine("  public static %s x;", type)
@@ -122,8 +123,7 @@ public class FunctionalTypeTest {
               .addLine("    %s fn = $ -> $;", operator.getFunctionalInterface())
               .addLine("    %s y = fn.%s(x);", type, operator.getMethodName())
               .addLine("  }")
-              .addLine("}")
-              .build())
+              .addLine("}"))
           .compiles()
           .withNoWarnings();
     }

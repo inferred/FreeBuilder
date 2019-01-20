@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -28,7 +29,6 @@ import static org.mockito.Mockito.when;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,26 +53,27 @@ import javax.tools.JavaFileObject;
 @RunWith(MockitoJUnitRunner.class)
 public class FilerUtilsTest {
 
-  private static final QualifiedName CLASS_TO_WRITE = QualifiedName.of("com.example", "bar");
-
-  @Rule public final ModelRule model = new ModelRule();
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Mock private Filer filer;
   @Mock private JavaFileObject sourceFile;
   private final StringWriter source = new StringWriter();
   private TypeElement originatingElement;
 
+  private final CompilationUnitBuilder unit = CompilationUnitBuilder.forTesting()
+      .addLine("package com.example;")
+      .addLine("class Bar { }");
+
   @Before
   public void setup() throws IOException {
-    originatingElement = model.newType("package com.example; public class Foo { }");
-    when(filer.createSourceFile(eq("com.example.bar"), (Element[]) any())).thenReturn(sourceFile);
+    originatingElement = newTopLevelClass("com.example.Foo").asElement();
+    when(filer.createSourceFile(eq("com.example.Bar"), (Element[]) any())).thenReturn(sourceFile);
     when(sourceFile.openWriter()).thenReturn(source);
   }
 
   @Test
   public void testSimplePath() throws IOException {
-    FilerUtils.writeCompilationUnit(filer, CLASS_TO_WRITE, originatingElement, "Hello!");
-    assertEquals("Hello!", source.toString());
+    FilerUtils.writeCompilationUnit(filer, unit, originatingElement);
+    assertEquals("package com.example;\n\nclass Bar {}\n", source.toString());
   }
 
   @Test
@@ -90,7 +91,7 @@ public class FilerUtilsTest {
     });
     when(sourceFile.openWriter()).thenReturn(mockWriter);
 
-    FilerUtils.writeCompilationUnit(filer, CLASS_TO_WRITE, originatingElement, "Hello!");
+    FilerUtils.writeCompilationUnit(filer, unit, originatingElement);
     verify(mockWriter).close();
   }
 
@@ -105,7 +106,7 @@ public class FilerUtilsTest {
     thrown.expectMessage("Error appending");
     thrown.expect(suppressed(instanceOf(IOException.class)));
     thrown.expect(suppressed(hasProperty("message", equalTo("Error closing"))));
-    FilerUtils.writeCompilationUnit(filer, CLASS_TO_WRITE, originatingElement, "Hello!");
+    FilerUtils.writeCompilationUnit(filer, unit, originatingElement);
   }
 
   private static Matcher<Throwable> suppressed(Matcher<?> matcher) {

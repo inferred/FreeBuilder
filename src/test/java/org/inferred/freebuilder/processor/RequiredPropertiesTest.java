@@ -18,11 +18,11 @@ package org.inferred.freebuilder.processor;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,9 +34,6 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -60,13 +57,13 @@ public class RequiredPropertiesTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject requiredPropertiesType;
+  private final CompilationUnitBuilder requiredPropertiesType;
 
   public RequiredPropertiesTest(NamingConvention convention, FeatureSet features) {
     this.convention = convention;
     this.features = features;
 
-    requiredPropertiesType = new SourceBuilder()
+    requiredPropertiesType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -74,8 +71,7 @@ public class RequiredPropertiesTest {
         .addLine("  public abstract boolean %s;", convention.is("propertyB"))
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Test
@@ -99,7 +95,7 @@ public class RequiredPropertiesTest {
     thrown.expectMessage("Not set: [propertyB, propertyD]");
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -109,8 +105,7 @@ public class RequiredPropertiesTest {
             .addLine("  public abstract int %s;", convention.get("propertyD"))
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .%s(11)", convention.set("propertyA"))
@@ -174,9 +169,8 @@ public class RequiredPropertiesTest {
   public void testMergeFrom_noTemplate() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
-            .addLine("import %s;", Optional.class)
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
             .addLine("  public abstract int %s;", convention.get("propertyA"))
@@ -192,10 +186,8 @@ public class RequiredPropertiesTest {
             .addLine("      }")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
-            .addImport(Optional.class)
             .addLine("DataType.Builder template = new DataType")
             .addLine("    .Builder(11, null);")
             .addLine("DataType.Builder builder = new DataType")

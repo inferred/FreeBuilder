@@ -23,11 +23,11 @@ import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,14 +38,11 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -73,7 +70,7 @@ public class MapMutateMethodTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject mapPropertyType;
+  private final CompilationUnitBuilder mapPropertyType;
 
   public MapMutateMethodTest(
       ElementFactory keys,
@@ -87,7 +84,7 @@ public class MapMutateMethodTest {
     this.convention = convention;
     this.features = features;
 
-    SourceBuilder mapPropertyTypeBuilder = new SourceBuilder()
+    mapPropertyType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -95,7 +92,7 @@ public class MapMutateMethodTest {
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (checked) {
-      mapPropertyTypeBuilder
+      mapPropertyType
           .addLine("    @Override public Builder putItems(%s key, %s value) {",
               keys.unwrappedType(), values.unwrappedType())
           .addLine("      if (!(%s)) {", keys.validation("key"))
@@ -108,10 +105,9 @@ public class MapMutateMethodTest {
           .addLine("      return super.putItems(key, value);")
           .addLine("    }");
     }
-    mapPropertyType = mapPropertyTypeBuilder
+    mapPropertyType
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Before
@@ -354,24 +350,28 @@ public class MapMutateMethodTest {
   }
 
   @Test
-  public void canUseCustomFunctionalInterface() throws IOException {
-    SourceBuilder customMutatorType = new SourceBuilder();
-    for (String line : mapPropertyType.getCharContent(true).toString().split("\n")) {
-      customMutatorType.addLine("%s", line);
+  public void canUseCustomFunctionalInterface() {
+    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    for (String line : mapPropertyType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
+        int insertIndex = line.indexOf('{') + 1;
         customMutatorType
+            .addLine("%s", line.substring(0, insertIndex))
             .addLine("    public interface Mutator {")
             .addLine("      void mutate(%s<%s, %s> multimap);",
                 Map.class, keys.type(), values.type())
             .addLine("    }")
             .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
             .addLine("      return super.mutateItems(mutator);")
-            .addLine("    }");
+            .addLine("    }")
+            .addLine("%s", line.substring(insertIndex));
+      } else {
+        customMutatorType.addLine("%s", line);
       }
     }
 
     behaviorTester
-        .with(customMutatorType.build())
+        .with(customMutatorType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))

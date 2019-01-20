@@ -16,17 +16,16 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.junit.Test;
-
-import javax.tools.JavaFileObject;
 
 public class AbstractBuilderTest {
   private final BehaviorTester behaviorTester = BehaviorTester.create(new StaticFeatureSet());
 
-  private static final JavaFileObject TYPE_WITH_ABSTRACT_BUILDER = new SourceBuilder()
+  private static final CompilationUnitBuilder TYPE_WITH_ABSTRACT_BUILDER = CompilationUnitBuilder
+      .forTesting()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)
       .addLine("public abstract class TypeWithAbstractBuilder {")
@@ -34,8 +33,7 @@ public class AbstractBuilderTest {
       .addLine("")
       .addLine("  public abstract static class Builder")
       .addLine("      extends TypeWithAbstractBuilder_Builder {}")
-      .addLine("}")
-      .build();
+      .addLine("}");
 
   @Test
   public void testGenericWithConstraint() {

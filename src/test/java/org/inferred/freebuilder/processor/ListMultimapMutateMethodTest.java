@@ -27,11 +27,11 @@ import com.google.common.collect.Multimaps;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,12 +42,9 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -75,7 +72,7 @@ public class ListMultimapMutateMethodTest {
   private final boolean interned;
   private final NamingConvention convention;
   private final FeatureSet features;
-  private final JavaFileObject dataType;
+  private final CompilationUnitBuilder dataType;
 
   public ListMultimapMutateMethodTest(
       ElementFactory key,
@@ -90,7 +87,7 @@ public class ListMultimapMutateMethodTest {
     this.convention = convention;
     this.features = features;
 
-    SourceBuilder dataType = new SourceBuilder()
+    dataType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -111,7 +108,6 @@ public class ListMultimapMutateMethodTest {
     dataType
         .addLine("  }")
         .addLine("}");
-    this.dataType = dataType.build();
   }
 
   @Before
@@ -514,24 +510,28 @@ public class ListMultimapMutateMethodTest {
   }
 
   @Test
-  public void canUseCustomFunctionalInterface() throws IOException {
-    SourceBuilder customMutatorType = new SourceBuilder();
-    for (String line : dataType.getCharContent(true).toString().split("\n")) {
-      customMutatorType.addLine("%s", line);
+  public void canUseCustomFunctionalInterface() {
+    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
+        int insertIndex = line.indexOf('{') + 1;
         customMutatorType
+            .addLine("%s", line.substring(0, insertIndex))
             .addLine("    public interface Mutator {")
             .addLine("      void mutate(%s<%s, %s> multimap);",
                 ListMultimap.class, key.type(), value.type())
             .addLine("    }")
             .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
             .addLine("      return super.mutateItems(mutator);")
-            .addLine("    }");
+            .addLine("    }")
+            .addLine("%s", line.substring(insertIndex));
+      } else {
+        customMutatorType.addLine("%s", line);
       }
     }
 
     behaviorTester
-        .with(customMutatorType.build())
+        .with(customMutatorType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")

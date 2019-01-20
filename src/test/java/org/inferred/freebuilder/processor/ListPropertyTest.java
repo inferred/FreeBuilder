@@ -28,11 +28,11 @@ import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,8 +49,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code List<?>} properties. */
 @RunWith(Parameterized.class)
@@ -76,8 +74,8 @@ public class ListPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject listPropertyType;
-  private final JavaFileObject validatedType;
+  private final CompilationUnitBuilder listPropertyType;
+  private final CompilationUnitBuilder validatedType;
 
   public ListPropertyTest(
       ElementFactory elements,
@@ -87,7 +85,7 @@ public class ListPropertyTest {
     this.convention = convention;
     this.features = features;
 
-    listPropertyType = new SourceBuilder()
+    listPropertyType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -95,10 +93,9 @@ public class ListPropertyTest {
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {}")
         .addLine("  public abstract Builder toBuilder();")
-        .addLine("}")
-        .build();
+        .addLine("}");
 
-    validatedType = new SourceBuilder()
+    validatedType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -112,8 +109,7 @@ public class ListPropertyTest {
         .addLine("      return super.addItems(element);")
         .addLine("    }")
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Before
@@ -456,7 +452,7 @@ public class ListPropertyTest {
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -469,8 +465,7 @@ public class ListPropertyTest {
             .addLine("  public static Builder builder(%s... items) {", elements.unwrappedType())
             .addLine("    return new Builder().addItems(items);")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = DataType.builder(%s)", elements.examples(0, 1))
             .addLine("    .clear()")
@@ -625,7 +620,7 @@ public class ListPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/227
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -633,8 +628,7 @@ public class ListPropertyTest {
                 Collection.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -650,7 +644,7 @@ public class ListPropertyTest {
   public void testCollectionProperty_withWildcard() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -658,8 +652,7 @@ public class ListPropertyTest {
                 Collection.class, elements.supertype(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -678,15 +671,14 @@ public class ListPropertyTest {
     //  - https://github.com/google/FreeBuilder/issues/229
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<E> {")
             .addLine("  public abstract %s<E> %s;", List.class, convention.get())
             .addLine("")
             .addLine("  public static class Builder<E> extends DataType_Builder<E> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
             .addLine("    .addItems(%s)", elements.example(0))
@@ -702,15 +694,14 @@ public class ListPropertyTest {
   public void testListOfParameterWildcards() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<E> {")
             .addLine("  public abstract %s<? extends E> %s;", List.class, convention.get())
             .addLine("")
             .addLine("  public static class Builder<E> extends DataType_Builder<E> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.supertype())
             .addLine("    .addItems(%s)", elements.example(0))
@@ -727,7 +718,7 @@ public class ListPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -735,8 +726,7 @@ public class ListPropertyTest {
                 ImmutableList.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -753,7 +743,7 @@ public class ListPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -761,8 +751,7 @@ public class ListPropertyTest {
                 ImmutableList.class, elements.supertype(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -831,7 +820,7 @@ public class ListPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
             .addLine("@%s", FreeBuilder.class)
@@ -841,8 +830,7 @@ public class ListPropertyTest {
                 List.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -871,7 +859,7 @@ public class ListPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/258
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -879,8 +867,7 @@ public class ListPropertyTest {
                 List.class, elements.type(), convention.get("elements"))
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addElements(%s)", elements.examples(0, 1))
@@ -895,7 +882,7 @@ public class ListPropertyTest {
   public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -903,8 +890,7 @@ public class ListPropertyTest {
                 List.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("new DataType.Builder().addItems(")
             .addLine("    ImmutableList.of(%s),", elements.examples(0, 1))
@@ -918,15 +904,14 @@ public class ListPropertyTest {
   public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
             .addLine("  public abstract %s<T> %s;", List.class, convention.get())
             .addLine("")
             .addLine("  public static class Builder<T> extends DataType_Builder<T> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("new DataType.Builder<%s>().addItems(%s).build();",
                 elements.type(), elements.examples(0, 1))
@@ -940,7 +925,7 @@ public class ListPropertyTest {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -956,8 +941,7 @@ public class ListPropertyTest {
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .compiles()
         .withNoWarnings();
   }
@@ -967,7 +951,7 @@ public class ListPropertyTest {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
@@ -981,8 +965,7 @@ public class ListPropertyTest {
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .compiles()
         .withNoWarnings();
   }

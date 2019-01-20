@@ -18,11 +18,11 @@ package org.inferred.freebuilder.processor;
 import com.google.common.collect.Ordering;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,8 +37,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Stream;
-
-import javax.tools.JavaFileObject;
 
 /**
  * Partial set of tests of {@link SortedSetProperty}. Tests common to unsorted tests can be found in
@@ -60,33 +58,33 @@ public class SortedSetMutateMethodTest {
 
   private static final String FAILED_VALIDATION_MESSAGE = "Elements cannot start with a '0'";
 
-  private static final JavaFileObject VALIDATED_SORTED_SET_PROPERTY_TYPE = new SourceBuilder()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class DataType {")
-      .addLine("  public abstract %s<String> items();", SortedSet.class)
-      .addLine("")
-      .addLine("  public static class Builder extends DataType_Builder {")
-      .addLine("    @Override")
-      .addLine("    public Builder setComparatorForItems(%s<? super String> comparator) {",
-          Comparator.class)
-      .addLine("      return super.setComparatorForItems(comparator);")
-      .addLine("    }")
-      .addLine("")
-      .addLine("    @Override")
-      .addLine("    public Builder addItems(String element) {")
-            .addLine("      if (element.startsWith(\"0\")) {")
-            .addLine("        throw new IllegalArgumentException(\"%s\");",
-                FAILED_VALIDATION_MESSAGE)
-            .addLine("      }")
-      .addLine("      return super.addItems(element);")
-      .addLine("    }")
-      .addLine("  }")
-      .addLine("}")
-      .build();
+  private final CompilationUnitBuilder datatype;
 
   public SortedSetMutateMethodTest(FeatureSet features) {
     this.features = features;
+    datatype = CompilationUnitBuilder.forTesting()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public abstract class DataType {")
+        .addLine("  public abstract %s<String> items();", SortedSet.class)
+        .addLine("")
+        .addLine("  public static class Builder extends DataType_Builder {")
+        .addLine("    @Override")
+        .addLine("    public Builder setComparatorForItems(%s<? super String> comparator) {",
+            Comparator.class)
+        .addLine("      return super.setComparatorForItems(comparator);")
+        .addLine("    }")
+        .addLine("")
+        .addLine("    @Override")
+        .addLine("    public Builder addItems(String element) {")
+              .addLine("      if (element.startsWith(\"0\")) {")
+              .addLine("        throw new IllegalArgumentException(\"%s\");",
+                  FAILED_VALIDATION_MESSAGE)
+              .addLine("      }")
+        .addLine("      return super.addItems(element);")
+        .addLine("    }")
+        .addLine("  }")
+        .addLine("}");
   }
 
   public static final Comparator<String> NATURAL_ORDER = new Comparator<String>() {
@@ -108,7 +106,7 @@ public class SortedSetMutateMethodTest {
   public void testGetsDataInOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -124,7 +122,7 @@ public class SortedSetMutateMethodTest {
   public void testComparator() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -140,7 +138,7 @@ public class SortedSetMutateMethodTest {
   public void testSubSet_contents() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -157,7 +155,7 @@ public class SortedSetMutateMethodTest {
   public void testHeadSet_contents() {
     behaviorTester
     .with(new Processor(features))
-    .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+    .with(datatype)
     .with(testBuilder()
         .addLine("new DataType.Builder()")
         .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -174,7 +172,7 @@ public class SortedSetMutateMethodTest {
   public void testTailSet_contents() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -193,7 +191,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage(FAILED_VALIDATION_MESSAGE);
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -209,7 +207,7 @@ public class SortedSetMutateMethodTest {
   public void testSubSet_permitsInsertionAtBoundaries_defaultOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
@@ -227,7 +225,7 @@ public class SortedSetMutateMethodTest {
   public void testSubSet_permitsInsertionAtBoundaries_naturalOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -248,7 +246,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage("element must be at least 44 (got 4399)");
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
@@ -265,7 +263,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage("element must be at least 6 (got 5) using comparator 'natural order'");
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -283,7 +281,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage("element must be less than 6 (got 6)");
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
@@ -300,7 +298,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage("element must be less than 44 (got 44) using comparator 'natural order'");
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -318,7 +316,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage(FAILED_VALIDATION_MESSAGE);
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -334,7 +332,7 @@ public class SortedSetMutateMethodTest {
   public void testHeadSet_permitsInsertionBelowUpperBound_defaultOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
@@ -352,7 +350,7 @@ public class SortedSetMutateMethodTest {
   public void testHeadSet_permitsInsertionBelowUpperBound_naturalOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -373,7 +371,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage("element must be less than 6 (got 6)");
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
@@ -390,7 +388,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage("element must be less than 44 (got 44) using comparator 'natural order'");
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -408,7 +406,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage(FAILED_VALIDATION_MESSAGE);
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -424,7 +422,7 @@ public class SortedSetMutateMethodTest {
   public void testTailSet_permitsInsertionAtLowerBound_defaultOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
@@ -442,7 +440,7 @@ public class SortedSetMutateMethodTest {
   public void testTailSet_permitsInsertionAtLowerBound_naturalOrder() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -463,7 +461,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage("element must be at least 44 (got 4399)");
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .mutateItems(items -> {")
@@ -480,7 +478,7 @@ public class SortedSetMutateMethodTest {
     thrown.expectMessage("element must be at least 6 (got 5) using comparator 'natural order'");
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -496,7 +494,7 @@ public class SortedSetMutateMethodTest {
   public void testFirstAndLastMatch() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")
@@ -513,7 +511,7 @@ public class SortedSetMutateMethodTest {
   public void testSubSet_firstAndLastMatch() {
     behaviorTester
         .with(new Processor(features))
-        .with(VALIDATED_SORTED_SET_PROPERTY_TYPE)
+        .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
             .addLine("    .setComparatorForItems(NATURAL_ORDER)")

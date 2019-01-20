@@ -21,11 +21,11 @@ import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +39,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -64,8 +63,8 @@ public class NullablePropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject oneProperty;
-  private final JavaFileObject twoProperties;
+  private final CompilationUnitBuilder oneProperty;
+  private final CompilationUnitBuilder twoProperties;
 
   public NullablePropertyTest(
       ElementFactory element,
@@ -75,17 +74,16 @@ public class NullablePropertyTest {
     this.convention = convention;
     this.features = features;
 
-    oneProperty = new SourceBuilder()
+    oneProperty = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
         .addLine("  @%s %s %s;", Nullable.class, element.type(), convention.get("item"))
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
+        .addLine("}");
 
-    twoProperties = new SourceBuilder()
+    twoProperties = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -93,8 +91,7 @@ public class NullablePropertyTest {
         .addLine("  @%s %s %s;", Nullable.class, element.type(), convention.get("item2"))
         .addLine("")
         .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Test
@@ -216,7 +213,7 @@ public class NullablePropertyTest {
   public void testBuilderClear_customDefault() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -227,8 +224,7 @@ public class NullablePropertyTest {
             .addLine("      %s(%s);", convention.set("item"), element.example(0))
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(%s)", convention.set("item"), element.example(1))
@@ -244,7 +240,7 @@ public class NullablePropertyTest {
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -255,8 +251,7 @@ public class NullablePropertyTest {
             .addLine("      %s(s);", convention.set("item"))
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder(%s)", element.example(0))
             .addLine("    .clear()")

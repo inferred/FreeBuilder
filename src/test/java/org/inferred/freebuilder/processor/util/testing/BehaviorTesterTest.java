@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -24,6 +25,7 @@ import static org.junit.rules.ExpectedException.none;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.inferred.freebuilder.processor.util.feature.SourceLevel;
@@ -46,7 +48,6 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import javax.tools.JavaFileObject;
 
 /** Unit tests for {@link BehaviorTester}. */
 @RunWith(JUnit4.class)
@@ -57,19 +58,17 @@ public class BehaviorTesterTest {
   @Test
   public void simpleExample() {
     behaviorTester()
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s(%s.RUNTIME)", Retention.class, RetentionPolicy.class)
-            .addLine("public @interface TestAnnotation { }")
-            .build())
-        .with(new SourceBuilder()
+            .addLine("public @interface TestAnnotation { }"))
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@TestAnnotation public class MyClass {")
             .addLine("  public MyOtherClass get() {")
             .addLine("    return new MyOtherClass();")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(
             new TestProcessor() {
               @Override public boolean process(
@@ -147,12 +146,11 @@ public class BehaviorTesterTest {
 
   @Test
   public void guavaPackageAffectsAvailabilityOfGuavaInSource() {
-    JavaFileObject source = new SourceBuilder()
+    CompilationUnitBuilder source = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("public class Test {")
         .addLine("  private final %s<Integer> aField = %s.of();", List.class, ImmutableList.class)
-        .addLine("}")
-        .build();
+        .addLine("}");
     TestSource test = new TestBuilder()
         .addLine("new com.example.Test();")
         .build();

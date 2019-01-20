@@ -22,11 +22,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,12 +36,9 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.UnaryOperator;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -68,7 +65,7 @@ public class DefaultedMapperMethodTest {
   private final boolean checked;
   private final NamingConvention convention;
   private final FeatureSet features;
-  private final JavaFileObject dataType;
+  private final CompilationUnitBuilder dataType;
 
   public DefaultedMapperMethodTest(
       ElementFactory property,
@@ -80,7 +77,7 @@ public class DefaultedMapperMethodTest {
     this.convention = convention;
     this.features = features;
 
-    SourceBuilder dataType = new SourceBuilder()
+    dataType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -105,7 +102,6 @@ public class DefaultedMapperMethodTest {
     dataType
         .addLine("  }")
         .addLine("}");
-    this.dataType = dataType.build();
   }
 
   @Test
@@ -165,9 +161,9 @@ public class DefaultedMapperMethodTest {
   }
 
   @Test
-  public void mapCanAcceptPrimitiveFunctionalInterface() throws IOException {
-    SourceBuilder customMapperType = new SourceBuilder();
-    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+  public void mapCanAcceptPrimitiveFunctionalInterface() {
+    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    for (String line : dataType.toString().split("\n")) {
       customMapperType.addLine("%s", line);
       if (line.contains("extends DataType_Builder")) {
         customMapperType
@@ -179,7 +175,7 @@ public class DefaultedMapperMethodTest {
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMapperType.build())
+        .with(customMapperType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mapProperty(a -> (%s) (a + %s))",
@@ -195,9 +191,9 @@ public class DefaultedMapperMethodTest {
   }
 
   @Test
-  public void mapCanAcceptGenericFunctionalInterface() throws IOException {
-    SourceBuilder customMapperType = new SourceBuilder();
-    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+  public void mapCanAcceptGenericFunctionalInterface() {
+    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    for (String line : dataType.toString().split("\n")) {
       customMapperType.addLine("%s", line);
       if (line.contains("extends DataType_Builder")) {
         customMapperType
@@ -209,7 +205,7 @@ public class DefaultedMapperMethodTest {
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMapperType.build())
+        .with(customMapperType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mapProperty(a -> (%s) (a + %s))",
@@ -225,10 +221,10 @@ public class DefaultedMapperMethodTest {
   }
 
   @Test
-  public void mapCanAcceptOtherFunctionalInterface() throws IOException {
+  public void mapCanAcceptOtherFunctionalInterface() {
     assumeGuavaAvailable();
-    SourceBuilder customMapperType = new SourceBuilder();
-    for (String line : dataType.getCharContent(true).toString().split("\n")) {
+    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    for (String line : dataType.toString().split("\n")) {
       customMapperType.addLine("%s", line);
       if (line.contains("extends DataType_Builder")) {
         customMapperType
@@ -240,7 +236,7 @@ public class DefaultedMapperMethodTest {
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMapperType.build())
+        .with(customMapperType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mapProperty(a -> (%s) (a + %s))",

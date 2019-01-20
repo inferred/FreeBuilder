@@ -29,11 +29,11 @@ import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,8 +49,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -77,9 +75,9 @@ public class SetPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject setPropertyType;
+  private final CompilationUnitBuilder setPropertyType;
   private final String validationErrorMessage;
-  private final JavaFileObject validatedType;
+  private final CompilationUnitBuilder validatedType;
 
   public SetPropertyTest(
       SetType set, ElementFactory elements, NamingConvention convention, FeatureSet features) {
@@ -88,7 +86,7 @@ public class SetPropertyTest {
     this.convention = convention;
     this.features = features;
 
-    SourceBuilder setPropertyTypeBuilder = new SourceBuilder()
+    setPropertyType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -97,19 +95,18 @@ public class SetPropertyTest {
         .addLine("  public abstract Builder toBuilder();")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (set.isSorted() && elements.comparator().isPresent()) {
-      setPropertyTypeBuilder
+      setPropertyType
           .addLine("    public Builder() {")
           .addLine("      setComparatorForItems(new %s());", elements.comparator().get())
           .addLine("    }");
     }
-    setPropertyType = setPropertyTypeBuilder
+    setPropertyType
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
 
     validationErrorMessage = elements.errorMessage();
 
-    SourceBuilder validatedTypeBuilder = new SourceBuilder()
+    validatedType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -117,12 +114,12 @@ public class SetPropertyTest {
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (set.isSorted() && elements.comparator().isPresent()) {
-      validatedTypeBuilder
+      validatedType
           .addLine("    public Builder() {")
           .addLine("      setComparatorForItems(new %s());", elements.comparator().get())
           .addLine("    }");
     }
-    validatedType = validatedTypeBuilder
+    validatedType
         .addLine("    @Override public Builder addItems(%s element) {", elements.unwrappedType())
         .addLine("      if (!(%s)) {", elements.validation())
         .addLine("        throw new IllegalArgumentException(\"%s\");", validationErrorMessage)
@@ -130,8 +127,7 @@ public class SetPropertyTest {
         .addLine("      return super.addItems(element);")
         .addLine("    }")
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Before
@@ -561,7 +557,7 @@ public class SetPropertyTest {
     assumeNoComparatorRequired();
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -573,8 +569,7 @@ public class SetPropertyTest {
             .addLine("      addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder(%s)", elements.example(0))
             .addLine("    .clear()")
@@ -592,15 +587,14 @@ public class SetPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
             .addLine("  %s<%s> %s;", set.immutableType(), elements.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(1))
@@ -618,7 +612,7 @@ public class SetPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -626,8 +620,7 @@ public class SetPropertyTest {
                 set.immutableType(), elements.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(0))
@@ -645,15 +638,14 @@ public class SetPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/229
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<E> {")
             .addLine("  %s<E> %s;", set.type(), convention.get())
             .addLine("")
             .addLine("  class Builder<E> extends DataType_Builder<E> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
             .addLine("    .addItems(%s)", elements.example(0))
@@ -670,15 +662,14 @@ public class SetPropertyTest {
     assumeNoComparatorRequired();
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<E> {")
             .addLine("  %s<? extends E> %s;", set.type(), convention.get())
             .addLine("")
             .addLine("  class Builder<E> extends DataType_Builder<E> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
             .addLine("    .addItems(%s)", elements.example(0))
@@ -782,7 +773,7 @@ public class SetPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
             .addLine("@%s", FreeBuilder.class)
@@ -792,8 +783,7 @@ public class SetPropertyTest {
                 set.type(), elements.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addItems(%s)", elements.example(1))
@@ -990,7 +980,7 @@ public class SetPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/258
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -998,8 +988,7 @@ public class SetPropertyTest {
                 set.type(), elements.type(), convention.get("elements"))
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .addElements(%s)", elements.examples(1, 0))
@@ -1053,7 +1042,7 @@ public class SetPropertyTest {
     assumeTrue("Comparable element type", Comparable.class.isAssignableFrom(elements.type()));
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1061,8 +1050,7 @@ public class SetPropertyTest {
                 set.type(), ComparablePair.class, elements.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("new DataType.Builder().addItems(")
             .addLine("    new %s<>(%s),", ComparablePair.class, elements.examples(0, 1))
@@ -1076,15 +1064,14 @@ public class SetPropertyTest {
   public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
             .addLine("  public abstract %s<T> %s;", set.type(), convention.get())
             .addLine("")
             .addLine("  public static class Builder<T> extends DataType_Builder<T> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("new DataType.Builder<%s>()", elements.type())
             .addLine("    .addItems(%s)", elements.examples(0, 1))
@@ -1100,7 +1087,7 @@ public class SetPropertyTest {
     assumeTrue("Comparable element type", Comparable.class.isAssignableFrom(elements.type()));
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1116,8 +1103,7 @@ public class SetPropertyTest {
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .compiles()
         .withNoWarnings();
   }
@@ -1127,7 +1113,7 @@ public class SetPropertyTest {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
@@ -1141,8 +1127,7 @@ public class SetPropertyTest {
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .compiles()
         .withNoWarnings();
   }
