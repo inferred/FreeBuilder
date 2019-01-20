@@ -56,7 +56,9 @@ class ScopeHandler {
    * {@code pkg}.
    */
   ScopeState visibilityIn(String pkg, QualifiedName type) {
-    if (isTopLevelType(pkg, type.getSimpleName())) {
+    if (pkg == null) {
+      return visibilityIn(UNIVERSALLY_VISIBLE_PACKAGE, type);
+    } else if (isTopLevelType(pkg, type.getSimpleName())) {
       if (type.isTopLevel() && type.getPackage().equals(pkg)) {
         return ScopeState.IN_SCOPE;
       } else {

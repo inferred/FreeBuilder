@@ -26,7 +26,6 @@ abstract class TypeUsage_Builder {
     START("start"),
     END("end"),
     TYPE("type"),
-    PKG("pkg"),
     ;
 
     private final String name;
@@ -44,7 +43,6 @@ abstract class TypeUsage_Builder {
   private int start;
   private int end;
   private QualifiedName type;
-  private String pkg;
   // Store a nullable object instead of an Optional. Escape analysis then
   // allows the JVM to optimize away the Optional objects created by and
   // passed to our API.
@@ -155,41 +153,6 @@ abstract class TypeUsage_Builder {
   }
 
   /**
-   * Sets the value to be returned by {@link TypeUsage#pkg()}.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code pkg} is null
-   */
-  public TypeUsage.Builder pkg(String pkg) {
-    this.pkg = Objects.requireNonNull(pkg);
-    _unsetProperties.remove(Property.PKG);
-    return (TypeUsage.Builder) this;
-  }
-
-  /**
-   * Replaces the value to be returned by {@link TypeUsage#pkg()} by applying {@code mapper} to it
-   * and using the result.
-   *
-   * @return this {@code Builder} object
-   * @throws NullPointerException if {@code mapper} is null or returns null
-   * @throws IllegalStateException if the field has not been set
-   */
-  public TypeUsage.Builder mapPkg(UnaryOperator<String> mapper) {
-    Objects.requireNonNull(mapper);
-    return pkg(mapper.apply(pkg()));
-  }
-
-  /**
-   * Returns the value that will be returned by {@link TypeUsage#pkg()}.
-   *
-   * @throws IllegalStateException if the field has not been set
-   */
-  public String pkg() {
-    Preconditions.checkState(!_unsetProperties.contains(Property.PKG), "pkg not set");
-    return pkg;
-  }
-
-  /**
    * Sets the value to be returned by {@link TypeUsage#scope()}.
    *
    * @return this {@code Builder} object
@@ -257,20 +220,16 @@ abstract class TypeUsage_Builder {
 
   /** Sets all property values using the given {@code TypeUsage} as a template. */
   public TypeUsage.Builder mergeFrom(TypeUsage value) {
-    TypeUsage_Builder _defaults = new TypeUsage.Builder();
-    if (_defaults._unsetProperties.contains(Property.START) || value.start() != _defaults.start()) {
+    TypeUsage_Builder defaults = new TypeUsage.Builder();
+    if (defaults._unsetProperties.contains(Property.START) || value.start() != defaults.start()) {
       start(value.start());
     }
-    if (_defaults._unsetProperties.contains(Property.END) || value.end() != _defaults.end()) {
+    if (defaults._unsetProperties.contains(Property.END) || value.end() != defaults.end()) {
       end(value.end());
     }
-    if (_defaults._unsetProperties.contains(Property.TYPE)
-        || !Objects.equals(value.type(), _defaults.type())) {
+    if (defaults._unsetProperties.contains(Property.TYPE)
+        || !Objects.equals(value.type(), defaults.type())) {
       type(value.type());
-    }
-    if (_defaults._unsetProperties.contains(Property.PKG)
-        || !Objects.equals(value.pkg(), _defaults.pkg())) {
-      pkg(value.pkg());
     }
     value.scope().ifPresent(this::scope);
     return (TypeUsage.Builder) this;
@@ -283,26 +242,20 @@ abstract class TypeUsage_Builder {
   public TypeUsage.Builder mergeFrom(TypeUsage.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
     TypeUsage_Builder base = template;
-    TypeUsage_Builder _defaults = new TypeUsage.Builder();
+    TypeUsage_Builder defaults = new TypeUsage.Builder();
     if (!base._unsetProperties.contains(Property.START)
-        && (_defaults._unsetProperties.contains(Property.START)
-            || template.start() != _defaults.start())) {
+        && (defaults._unsetProperties.contains(Property.START)
+            || template.start() != defaults.start())) {
       start(template.start());
     }
     if (!base._unsetProperties.contains(Property.END)
-        && (_defaults._unsetProperties.contains(Property.END)
-            || template.end() != _defaults.end())) {
+        && (defaults._unsetProperties.contains(Property.END) || template.end() != defaults.end())) {
       end(template.end());
     }
     if (!base._unsetProperties.contains(Property.TYPE)
-        && (_defaults._unsetProperties.contains(Property.TYPE)
-            || !Objects.equals(template.type(), _defaults.type()))) {
+        && (defaults._unsetProperties.contains(Property.TYPE)
+            || !Objects.equals(template.type(), defaults.type()))) {
       type(template.type());
-    }
-    if (!base._unsetProperties.contains(Property.PKG)
-        && (_defaults._unsetProperties.contains(Property.PKG)
-            || !Objects.equals(template.pkg(), _defaults.pkg()))) {
-      pkg(template.pkg());
     }
     template.scope().ifPresent(this::scope);
     return (TypeUsage.Builder) this;
@@ -310,14 +263,13 @@ abstract class TypeUsage_Builder {
 
   /** Resets the state of this builder. */
   public TypeUsage.Builder clear() {
-    TypeUsage_Builder _defaults = new TypeUsage.Builder();
-    start = _defaults.start;
-    end = _defaults.end;
-    type = _defaults.type;
-    pkg = _defaults.pkg;
-    scope = _defaults.scope;
+    TypeUsage_Builder defaults = new TypeUsage.Builder();
+    start = defaults.start;
+    end = defaults.end;
+    type = defaults.type;
+    scope = defaults.scope;
     _unsetProperties.clear();
-    _unsetProperties.addAll(_defaults._unsetProperties);
+    _unsetProperties.addAll(defaults._unsetProperties);
     return (TypeUsage.Builder) this;
   }
 
@@ -349,7 +301,6 @@ abstract class TypeUsage_Builder {
     private final int start;
     private final int end;
     private final QualifiedName type;
-    private final String pkg;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
@@ -359,7 +310,6 @@ abstract class TypeUsage_Builder {
       this.start = builder.start;
       this.end = builder.end;
       this.type = builder.type;
-      this.pkg = builder.pkg;
       this.scope = builder.scope;
     }
 
@@ -379,11 +329,6 @@ abstract class TypeUsage_Builder {
     }
 
     @Override
-    public String pkg() {
-      return pkg;
-    }
-
-    @Override
     public Optional<QualifiedName> scope() {
       return Optional.ofNullable(scope);
     }
@@ -397,13 +342,12 @@ abstract class TypeUsage_Builder {
       return start == other.start
           && end == other.end
           && Objects.equals(type, other.type)
-          && Objects.equals(pkg, other.pkg)
           && Objects.equals(scope, other.scope);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(start, end, type, pkg, scope);
+      return Objects.hash(start, end, type, scope);
     }
 
     @Override
@@ -414,9 +358,7 @@ abstract class TypeUsage_Builder {
               .append(", end=")
               .append(end)
               .append(", type=")
-              .append(type)
-              .append(", pkg=")
-              .append(pkg);
+              .append(type);
       if (scope != null) {
         result.append(", scope=").append(scope);
       }
@@ -428,7 +370,6 @@ abstract class TypeUsage_Builder {
     private final int start;
     private final int end;
     private final QualifiedName type;
-    private final String pkg;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
     // getter method.
@@ -439,7 +380,6 @@ abstract class TypeUsage_Builder {
       this.start = builder.start;
       this.end = builder.end;
       this.type = builder.type;
-      this.pkg = builder.pkg;
       this.scope = builder.scope;
       this._unsetProperties = builder._unsetProperties.clone();
     }
@@ -469,14 +409,6 @@ abstract class TypeUsage_Builder {
     }
 
     @Override
-    public String pkg() {
-      if (_unsetProperties.contains(Property.PKG)) {
-        throw new UnsupportedOperationException("pkg not set");
-      }
-      return pkg;
-    }
-
-    @Override
     public Optional<QualifiedName> scope() {
       return Optional.ofNullable(scope);
     }
@@ -490,14 +422,13 @@ abstract class TypeUsage_Builder {
       return start == other.start
           && end == other.end
           && Objects.equals(type, other.type)
-          && Objects.equals(pkg, other.pkg)
           && Objects.equals(scope, other.scope)
           && Objects.equals(_unsetProperties, other._unsetProperties);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(start, end, type, pkg, scope, _unsetProperties);
+      return Objects.hash(start, end, type, scope, _unsetProperties);
     }
 
     @Override
@@ -514,10 +445,6 @@ abstract class TypeUsage_Builder {
       }
       if (!_unsetProperties.contains(Property.TYPE)) {
         result.append(separator).append("type=").append(type);
-        separator = ", ";
-      }
-      if (!_unsetProperties.contains(Property.PKG)) {
-        result.append(separator).append("pkg=").append(pkg);
         separator = ", ";
       }
       if (scope != null) {

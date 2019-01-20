@@ -108,7 +108,7 @@ public class Processor extends AbstractProcessor {
       try {
         GeneratedType builder = analyser.analyse(type);
         CompilationUnitBuilder code = CompilationUnitBuilder.forEnvironment(
-            processingEnv, builder.getName(), features);
+            processingEnv, features);
         code.add(builder);
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),

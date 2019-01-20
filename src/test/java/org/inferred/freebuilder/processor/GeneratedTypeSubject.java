@@ -37,7 +37,6 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
   public void generates(String... code) {
     String expected = Arrays.stream(code).collect(joining("\n", "", "\n"));
     CompilationUnitBuilder compilationUnitBuilder = CompilationUnitBuilder.forTesting(
-            getSubject().getName(),
             environmentFeatures.toArray(new Feature<?>[0]));
     String rawSource = compilationUnitBuilder
         .add(getSubject())
