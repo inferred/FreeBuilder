@@ -61,7 +61,7 @@ public class CompilationUnitBuilder
     this.classToWrite = classToWrite;
     // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
     // written first, but aren't known yet.
-    scopeHandler = new ScopeHandler(env.getElementUtils());
+    scopeHandler = new ScopeHandler(new CompilerReflection(env.getElementUtils()));
     parser = new SourceParser(this);
     scopes.add(new FileScope());
     types.add(null);
