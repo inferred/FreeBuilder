@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.base.Preconditions.checkArgument;
+
 import static javax.tools.JavaFileObject.Kind.CLASS;
 import static javax.tools.JavaFileObject.Kind.OTHER;
 import static javax.tools.StandardLocation.CLASS_OUTPUT;
@@ -32,7 +33,6 @@ import org.inferred.freebuilder.processor.util.ValueType;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -42,13 +42,14 @@ import java.util.stream.Stream;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.FileObject;
+import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardJavaFileManager;
 
 /** Implementation of {@link JavaFileManager} that provides its own temporary output storage. */
-public class TempJavaFileManager implements JavaFileManager {
+public class TempJavaFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
 
   public static TempJavaFileManager newTempFileManager(
       DiagnosticListener<? super JavaFileObject> diagnosticListener,
@@ -93,17 +94,11 @@ public class TempJavaFileManager implements JavaFileManager {
   private static final Set<Kind> KINDS = ImmutableSet.of(Kind.CLASS, Kind.SOURCE);
   private static final Set<Location> LOCATIONS = ImmutableSet.of(SOURCE_OUTPUT, CLASS_OUTPUT);
 
-  private final StandardJavaFileManager delegate;
   private final Map<FileKey, InMemoryJavaFile> javaFiles = new LinkedHashMap<>();
   private final Map<FileKey, InMemoryFile> otherFiles = new LinkedHashMap<>();
 
   private TempJavaFileManager(StandardJavaFileManager delegate) {
-    this.delegate = delegate;
-  }
-
-  @Override
-  public int isSupportedOption(String option) {
-    return delegate.isSupportedOption(option);
+    super(delegate);
   }
 
   @Override
@@ -120,7 +115,7 @@ public class TempJavaFileManager implements JavaFileManager {
         }
       };
     } else {
-      return delegate.getClassLoader(location);
+      return super.getClassLoader(location);
     }
   }
 
@@ -129,13 +124,13 @@ public class TempJavaFileManager implements JavaFileManager {
     if (a instanceof InMemoryJavaFile || b instanceof InMemoryJavaFile) {
       return a == b;
     }
-    return delegate.isSameFile(a, b);
+    return super.isSameFile(a, b);
   }
 
   @Override
   public Iterable<JavaFileObject> list(
       Location location, String packageName, Set<Kind> kinds, boolean recurse) throws IOException {
-    Iterable<JavaFileObject> delegateList = delegate.list(location, packageName, kinds, recurse);
+    Iterable<JavaFileObject> delegateList = super.list(location, packageName, kinds, recurse);
     String directory = packageName.replace('.', '/');
     return () -> {
       Stream<JavaFileObject> inMemoryFiles = javaFiles.entrySet()
@@ -157,18 +152,13 @@ public class TempJavaFileManager implements JavaFileManager {
     if (file.toUri().getScheme().equals("mem")) {
       return file.getName();
     } else {
-      return delegate.inferBinaryName(location, file);
+      return super.inferBinaryName(location, file);
     }
   }
 
   @Override
-  public boolean handleOption(String current, Iterator<String> remaining) {
-    return delegate.handleOption(current, remaining);
-  }
-
-  @Override
   public boolean hasLocation(Location location) {
-    return LOCATIONS.contains(location) || delegate.hasLocation(location);
+    return LOCATIONS.contains(location) || super.hasLocation(location);
   }
 
   @Override
@@ -177,7 +167,7 @@ public class TempJavaFileManager implements JavaFileManager {
     if (LOCATIONS.contains(location)) {
       return javaFiles.get(FileKey.forClass(location, className, kind));
     } else {
-      return delegate.getJavaFileForInput(location, className, kind);
+      return super.getJavaFileForInput(location, className, kind);
     }
   }
 
@@ -211,7 +201,7 @@ public class TempJavaFileManager implements JavaFileManager {
       FileKey key = FileKey.forFile(location, packageName, relativeName);
       return (KINDS.contains(kind) ? javaFiles : otherFiles).get(key);
     } else {
-      return delegate.getFileForInput(location, packageName, relativeName);
+      return super.getFileForInput(location, packageName, relativeName);
     }
   }
 
@@ -255,7 +245,7 @@ public class TempJavaFileManager implements JavaFileManager {
     javaFiles.clear();
     otherFiles.clear();
     try {
-      delegate.close();
+      super.close();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

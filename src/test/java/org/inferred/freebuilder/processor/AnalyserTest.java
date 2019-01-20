@@ -52,7 +52,6 @@ import java.time.temporal.Temporal;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Generated;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
@@ -1163,7 +1162,6 @@ public class AnalyserTest {
   public void wrongBuilderSuperclass_actualType() throws CannotGenerateCodeException {
     model.newType(
         "package com.example;",
-        "@" + Generated.class.getCanonicalName() + "(\"FreeBuilder FTW!\")",
         "class SomeOther_Builder { }");
     analyser.analyse(model.newType(
         "package com.example;",
