@@ -106,7 +106,7 @@ class ScopeHandler {
         if (scope.isTopLevel()) {
           return typeInScope(scope.getPackage(), simpleName);
         } else {
-          return typeInScope(scope.getEnclosingType(), simpleName);
+          return typeInScope(scope.enclosingType(), simpleName);
         }
 
       case 1:

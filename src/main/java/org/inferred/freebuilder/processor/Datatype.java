@@ -167,13 +167,13 @@ public abstract class Datatype {
     public Datatype build() {
       Datatype datatype = super.build();
       QualifiedName generatedBuilder = datatype.getGeneratedBuilder().getQualifiedName();
-      checkState(datatype.getValueType().getQualifiedName().getEnclosingType()
+      checkState(datatype.getValueType().getQualifiedName().enclosingType()
               .equals(generatedBuilder),
           "%s not a nested class of %s", datatype.getValueType(), generatedBuilder);
-      checkState(datatype.getPartialType().getQualifiedName().getEnclosingType()
+      checkState(datatype.getPartialType().getQualifiedName().enclosingType()
               .equals(generatedBuilder),
           "%s not a nested class of %s", datatype.getPartialType(), generatedBuilder);
-      checkState(datatype.getPropertyEnum().getQualifiedName().getEnclosingType()
+      checkState(datatype.getPropertyEnum().getQualifiedName().enclosingType()
               .equals(generatedBuilder),
           "%s not a nested class of %s", datatype.getPropertyEnum(), generatedBuilder);
       return datatype;

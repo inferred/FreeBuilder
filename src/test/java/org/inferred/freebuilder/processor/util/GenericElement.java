@@ -217,7 +217,7 @@ public abstract class GenericElement implements TypeElement {
   @Override
   public Element getEnclosingElement() {
     if (!qualifiedName.isTopLevel()) {
-      return newTopLevelClass(qualifiedName.getEnclosingType().toString()).asElement();
+      return newTopLevelClass(qualifiedName.enclosingType().toString()).asElement();
     } else {
       return PackageElementImpl.create(qualifiedName.getPackage());
     }
