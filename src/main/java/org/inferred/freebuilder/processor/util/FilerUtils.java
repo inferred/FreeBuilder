@@ -25,20 +25,19 @@ import javax.lang.model.element.Element;
 public class FilerUtils {
 
   /**
-   * Writes {@code source} to the correct file for {@code classToWrite}.
+   * Writes {@code unit} to the correct file.
    *
    * <p>This is complicated by an EJC bug that returns the wrong object from
    * {@link Writer#append(CharSequence)}.
    */
   public static void writeCompilationUnit(
       Filer filer,
-      QualifiedName classToWrite,
-      Element originatingElement,
-      String source) throws IOException {
-    try (Writer writer = filer
-        .createSourceFile(classToWrite.toString(), originatingElement)
-        .openWriter()) {
-      writer.append(source);
+      CompilationUnitBuilder unit,
+      Element originatingElement) throws IOException {
+    String typename = unit.typename().toString();
+    String finalSource = unit.toString();
+    try (Writer writer = filer.createSourceFile(typename, originatingElement).openWriter()) {
+      writer.append(finalSource);
     }
   }
 

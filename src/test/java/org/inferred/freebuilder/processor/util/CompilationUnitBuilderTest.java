@@ -50,18 +50,18 @@ public class CompilationUnitBuilderTest {
 
   @Test
   public void testAddLine() {
-    String code = source()
+    CompilationUnitBuilder unit = source()
         .addLine("package com.example;")
         .addLine("public class Bar {")
         .addLine("  // %s %s", "Foo", 100)
-        .addLine("}")
-        .toString();
+        .addLine("}");
     assertEquals(
         "package com.example;\n\n"
             + "public class Bar {\n"
             + "  // Foo 100\n"
             + "}\n",
-        code);
+        unit.toString());
+    assertEquals(QualifiedName.of("com.example", "Bar"), unit.typename());
   }
 
   @Test

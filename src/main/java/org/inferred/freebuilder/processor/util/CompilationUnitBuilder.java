@@ -50,6 +50,7 @@ public class CompilationUnitBuilder
   private final List<QualifiedName> types = new ArrayList<>();
   private final List<TypeUsage> usages = new ArrayList<>();
   private String pkg;
+  private String topLevelType;
   private int importsIndex = -1;
   private final StringBuilder source = new StringBuilder();
 
@@ -87,6 +88,12 @@ public class CompilationUnitBuilder
     types.add(null);
   }
 
+  public QualifiedName typename() {
+    checkState(pkg != null, "No package statement");
+    checkState(topLevelType != null, "No class declaration");
+    return QualifiedName.of(pkg, topLevelType);
+  }
+
   @Override
   public void onPackageStatement(String packageName) {
     checkState(importsIndex == -1, "Package redeclared");
@@ -96,6 +103,9 @@ public class CompilationUnitBuilder
 
   @Override
   public void onTypeBlockStart(String keyword, String simpleName, Set<String> supertypes) {
+    if (topLevelType == null) {
+      topLevelType = simpleName;
+    }
     QualifiedName type = nestedType(simpleName);
     types.add(type);
     scopes.add(getLast(scopes));
