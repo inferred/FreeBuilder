@@ -39,10 +39,11 @@ class ImportManager {
 
   static String shortenReferences(
       CharSequence codeWithQualifiedNames,
+      String pkg,
       int importsIndex,
       List<TypeUsage> typeUsages,
       ScopeHandler scopeHandler) {
-    ImportManager importManager = new ImportManager(typeUsages, scopeHandler);
+    ImportManager importManager = new ImportManager(typeUsages, scopeHandler, pkg);
     importManager.selectImports();
     StringBuilder result = new StringBuilder()
         .append(codeWithQualifiedNames, 0, importsIndex);
@@ -61,15 +62,6 @@ class ImportManager {
   /** Impossible typename, to use instead of null (which toMap goes odd over). */
   private static final QualifiedName CONFLICT = QualifiedName.of("", "import");
 
-  private static Function<QualifiedName, ScopeState> visibilityIn(
-      ScopeHandler scopeHandler, TypeUsage usage) {
-    if (usage.scope().isPresent()) {
-      return t -> scopeHandler.visibilityIn(usage.scope().get(), t);
-    } else {
-      return t -> scopeHandler.visibilityIn(usage.pkg(), t);
-    }
-  }
-
   /** Type usages to process. */
   private final Deque<TypeUsage> todo = new ArrayDeque<>();
   /** Simple name → type, or {@link #CONFLICT} if multiple types conflicted for that name. */
@@ -79,9 +71,12 @@ class ImportManager {
   /** Which type, imported or in scope, to use to shorten each type usage. */
   private final Map<TypeUsage, QualifiedName> resolutions = new HashMap<>();
   private final ScopeHandler scopeHandler;
+  private final String pkg;
 
-  private ImportManager(List<TypeUsage> usages, ScopeHandler scopeHandler) {
+
+  private ImportManager(List<TypeUsage> usages, ScopeHandler scopeHandler, String pkg) {
     this.scopeHandler = scopeHandler;
+    this.pkg = pkg;
     todo.addAll(usages);
   }
 
@@ -170,6 +165,15 @@ class ImportManager {
       if (name.isTopLevel()) {
         return;
       }
+    }
+  }
+
+  private Function<QualifiedName, ScopeState> visibilityIn(
+      ScopeHandler scopeHandler, TypeUsage usage) {
+    if (usage.scope().isPresent()) {
+      return t -> scopeHandler.visibilityIn(usage.scope().get(), t);
+    } else {
+      return t -> scopeHandler.visibilityIn(pkg, t);
     }
   }
 

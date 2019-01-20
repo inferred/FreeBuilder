@@ -28,11 +28,11 @@ import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,8 +47,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -74,7 +72,7 @@ public class MapPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject mapPropertyType;
+  private final CompilationUnitBuilder mapPropertyType;
 
   public MapPropertyTest(
       ElementFactory keys,
@@ -86,15 +84,14 @@ public class MapPropertyTest {
     this.convention = convention;
     this.features = features;
 
-    mapPropertyType = new SourceBuilder()
+    mapPropertyType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
         .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.get())
         .addLine("")
         .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Before
@@ -383,7 +380,7 @@ public class MapPropertyTest {
   @Test
   public void testBuilderClear_noDefaultFactory() {
     behaviorTester
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -395,8 +392,7 @@ public class MapPropertyTest {
             .addLine("      putItems(key, value);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value =")
             .addLine("    new DataType.Builder(%s, %s)", keys.example(0), values.example(0))
@@ -415,7 +411,7 @@ public class MapPropertyTest {
   public void testImmutableMapProperty() {
     assumeTrue("Guava available", features.get(GUAVA).isAvailable());
     behaviorTester
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -423,8 +419,7 @@ public class MapPropertyTest {
                 ImmutableMap.class, keys.type(), values.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -439,7 +434,7 @@ public class MapPropertyTest {
   @Test
   public void testOverridingAdd() {
     behaviorTester
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -451,8 +446,7 @@ public class MapPropertyTest {
             .addLine("      return this;")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
@@ -499,7 +493,7 @@ public class MapPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     assumeTrue(keys.isSerializableAsMapKey());
     behaviorTester
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
             .addLine("@%s", FreeBuilder.class)
@@ -509,8 +503,7 @@ public class MapPropertyTest {
                 Map.class, keys.type(), values.type(), convention.get())
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))

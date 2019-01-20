@@ -10,11 +10,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,8 +27,6 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -52,12 +50,12 @@ public class BuildableListPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject buildableListType;
+  private final CompilationUnitBuilder buildableListType;
 
   public BuildableListPropertyTest(NamingConvention convention, FeatureSet features) {
       this.convention = convention;
       this.features = features;
-      buildableListType = new SourceBuilder()
+      buildableListType = CompilationUnitBuilder.forTesting()
           .addLine("package com.example;")
           .addLine("@%s", FreeBuilder.class)
           .addLine("@%s(builder = Receipt.Builder.class)", JsonDeserialize.class)
@@ -76,8 +74,7 @@ public class BuildableListPropertyTest {
           .addLine("")
           .addLine("  Builder toBuilder();")
           .addLine("  class Builder extends Receipt_Builder {}")
-          .addLine("}")
-          .build();
+          .addLine("}");
   }
 
   @Test
@@ -845,7 +842,7 @@ public class BuildableListPropertyTest {
   public void varargsAddValueInstances_genericFieldCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt {")
@@ -862,8 +859,7 @@ public class BuildableListPropertyTest {
             .addLine("")
             .addLine("  Builder toBuilder();")
             .addLine("  class Builder extends Receipt_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item<Integer> candy =")
             .addLine("    new Item.Builder<Integer>().name(\"candy\").price(15).build();")
@@ -884,7 +880,7 @@ public class BuildableListPropertyTest {
   public void varargAddValueInstances_genericTypeCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt<T> {")
@@ -901,8 +897,7 @@ public class BuildableListPropertyTest {
             .addLine("")
             .addLine("  Builder<T> toBuilder();")
             .addLine("  class Builder<T> extends Receipt_Builder<T> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item<Integer> candy =")
             .addLine("    new Item.Builder<Integer>().name(\"candy\").price(15).build();")
@@ -923,7 +918,7 @@ public class BuildableListPropertyTest {
   public void varargsAddBuilders_genericFieldCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt {")
@@ -940,8 +935,7 @@ public class BuildableListPropertyTest {
             .addLine("")
             .addLine("  Builder toBuilder();")
             .addLine("  class Builder extends Receipt_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item.Builder<Integer> candy =")
             .addLine("    new Item.Builder<Integer>().name(\"candy\").price(15);")
@@ -962,7 +956,7 @@ public class BuildableListPropertyTest {
   public void varargAddBuilders_genericTypeCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt<T> {")
@@ -979,8 +973,7 @@ public class BuildableListPropertyTest {
             .addLine("")
             .addLine("  Builder<T> toBuilder();")
             .addLine("  class Builder<T> extends Receipt_Builder<T> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item.Builder<Integer> candy =")
             .addLine("    new Item.Builder<Integer>().name(\"candy\").price(15);")
@@ -1001,7 +994,7 @@ public class BuildableListPropertyTest {
   public void canOverrideVarargsAddValueInstancesForGenericField() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt {")
@@ -1025,8 +1018,7 @@ public class BuildableListPropertyTest {
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item<Integer> candy =")
             .addLine("    new Item.Builder<Integer>().name(\"candy\").price(15).build();")
@@ -1047,7 +1039,7 @@ public class BuildableListPropertyTest {
   public void canOverrideVarargAddValueInstancesForGenericType() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt<T> {")
@@ -1071,8 +1063,7 @@ public class BuildableListPropertyTest {
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item<Integer> candy =")
             .addLine("    new Item.Builder<Integer>().name(\"candy\").price(15).build();")
@@ -1093,7 +1084,7 @@ public class BuildableListPropertyTest {
   public void canOverrideVarargsAddBuildersForGenericField() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt {")
@@ -1117,8 +1108,7 @@ public class BuildableListPropertyTest {
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item.Builder<Integer> candy =")
             .addLine("    new Item.Builder<Integer>().name(\"candy\").price(15);")
@@ -1139,7 +1129,7 @@ public class BuildableListPropertyTest {
   public void canOverrideVarargAddBuildersForGenericType() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt<T> {")
@@ -1163,8 +1153,7 @@ public class BuildableListPropertyTest {
             .addLine("      return super.addItems(items);")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item.Builder<Integer> candy =")
             .addLine("    new Item.Builder<Integer>().name(\"candy\").price(15);")
@@ -1185,7 +1174,7 @@ public class BuildableListPropertyTest {
   public void canDisableListOfBuilderSupportWithGetterDeclaration() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface Receipt {")
@@ -1206,8 +1195,7 @@ public class BuildableListPropertyTest {
             .addLine("      return super.%s;", convention.get("items"))
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("Item candy = new Item.Builder().name(\"candy\").build();")
             .addLine("candy.price = 10;")

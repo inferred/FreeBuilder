@@ -23,11 +23,11 @@ import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,13 +38,10 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -75,7 +72,7 @@ public class SetMutateMethodTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject setPropertyType;
+  private final CompilationUnitBuilder setPropertyType;
 
   public SetMutateMethodTest(
       SetType set,
@@ -89,7 +86,7 @@ public class SetMutateMethodTest {
     this.convention = convention;
     this.features = features;
 
-    SourceBuilder setPropertyTypeBuilder = new SourceBuilder()
+    setPropertyType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -97,7 +94,7 @@ public class SetMutateMethodTest {
         .addLine("")
         .addLine("  public static class Builder extends DataType_Builder {");
     if (checked) {
-      setPropertyTypeBuilder
+      setPropertyType
           .addLine("    @Override public Builder addItems(%s element) {", elements.unwrappedType())
           .addLine("      if (!(%s)) {", elements.validation())
           .addLine("        throw new IllegalArgumentException(\"%s\");", elements.errorMessage())
@@ -105,10 +102,9 @@ public class SetMutateMethodTest {
           .addLine("      return super.addItems(element);")
           .addLine("    }");
     }
-    setPropertyType = setPropertyTypeBuilder
+    setPropertyType
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Before
@@ -271,23 +267,27 @@ public class SetMutateMethodTest {
   }
 
   @Test
-  public void canUseCustomFunctionalInterface() throws IOException {
-    SourceBuilder customMutatorType = new SourceBuilder();
-    for (String line : setPropertyType.getCharContent(true).toString().split("\n")) {
-      customMutatorType.addLine("%s", line);
+  public void canUseCustomFunctionalInterface() {
+    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    for (String line : setPropertyType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
+        int insertOffset = line.indexOf('{') + 1;
         customMutatorType
+            .addLine("%s", line.substring(0, insertOffset))
             .addLine("    public interface Mutator {")
             .addLine("      void mutate(%s<%s> set);", set.type(), elements.type())
             .addLine("    }")
             .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
             .addLine("      return super.mutateItems(mutator);")
-            .addLine("    }");
+            .addLine("    }")
+            .addLine("%s", line.substring(insertOffset));
+      } else {
+        customMutatorType.addLine("%s", line);
       }
     }
 
     behaviorTester
-        .with(customMutatorType.build())
+        .with(customMutatorType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder().addItems(%s).build();",
                 elements.examples(0, 1))

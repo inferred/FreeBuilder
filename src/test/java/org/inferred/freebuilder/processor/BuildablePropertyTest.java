@@ -26,11 +26,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,13 +40,10 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -101,9 +98,9 @@ public class BuildablePropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject noDefaultsType;
-  private final JavaFileObject defaultsType;
-  private final JavaFileObject nestedListType;
+  private final CompilationUnitBuilder noDefaultsType;
+  private final CompilationUnitBuilder defaultsType;
+  private final CompilationUnitBuilder nestedListType;
 
   public BuildablePropertyTest(
       BuildableType buildableType,
@@ -118,12 +115,12 @@ public class BuildablePropertyTest {
     nestedListType = generateNestedListType(buildableType);
   }
 
-  private static JavaFileObject generateBuildableType(
+  private static CompilationUnitBuilder generateBuildableType(
       BuildableType buildableType,
       NamingConvention convention,
       boolean hasDefaults,
       boolean hasJacksonAnnotations) {
-    SourceBuilder code = new SourceBuilder()
+    CompilationUnitBuilder code = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class);
     if (hasJacksonAnnotations) {
@@ -184,14 +181,14 @@ public class BuildablePropertyTest {
     if (buildableType == FREEBUILDER_LIKE) {
       generateBuildableTypeBuilder(code, convention, hasDefaults, hasJacksonAnnotations);
     }
-    return code.build();
+    return code;
   }
 
   private static void generateProtoLikeType(
       NamingConvention convention,
       boolean hasDefaults,
       boolean hasJacksonAnnotations,
-      SourceBuilder code) {
+      CompilationUnitBuilder code) {
     if (hasJacksonAnnotations) {
       code.addLine("@%s(builder = DataType.Item.Builder.class)",
           JsonDeserialize.class);
@@ -312,7 +309,7 @@ public class BuildablePropertyTest {
   }
 
   private static void generateBuildableTypeBuilder(
-      SourceBuilder code,
+      CompilationUnitBuilder code,
       NamingConvention convention,
       boolean hasDefaults,
       boolean hasJacksonAnnotations) {
@@ -444,12 +441,11 @@ public class BuildablePropertyTest {
     }
     code.addLine("    }")
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
-  private static JavaFileObject generateNestedListType(BuildableType buildableType) {
-    SourceBuilder code = new SourceBuilder()
+  private static CompilationUnitBuilder generateNestedListType(BuildableType buildableType) {
+    CompilationUnitBuilder code = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {");
@@ -565,7 +561,7 @@ public class BuildablePropertyTest {
             .addLine("  }")
             .addLine("}");
     }
-    return code.build();
+    return code;
   }
 
   @Test
@@ -787,9 +783,9 @@ public class BuildablePropertyTest {
   }
 
   @Test
-  public void testMutateMethod_canUseCustomFunctionalInterface() throws IOException {
-    String defaultsTypeCode = defaultsType.getCharContent(true).toString();
-    SourceBuilder customMutatorType = new SourceBuilder();
+  public void testMutateMethod_canUseCustomFunctionalInterface() {
+    String defaultsTypeCode = defaultsType.toString();
+    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
     for (String line : defaultsTypeCode.split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         customMutatorType
@@ -810,7 +806,7 @@ public class BuildablePropertyTest {
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMutatorType.build())
+        .with(customMutatorType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .mutateItem1(b -> b")
@@ -1170,22 +1166,20 @@ public class BuildablePropertyTest {
     // Raised in issue #183
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface PIdentityDefinition<T, U> {")
             .addLine("    class Builder<T, U> extends PIdentityDefinition_Builder<T, U> {}")
-            .addLine("}")
-            .build())
-        .with(new SourceBuilder()
+            .addLine("}"))
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface PAccess<T, U> {")
             .addLine("    class Builder<T, U> extends PAccess_Builder<T, U> {}")
             .addLine("")
             .addLine("    PIdentityDefinition<T, U> %s;", convention.get("identity"))
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .compiles()
         .withNoWarnings();
   }
@@ -1195,7 +1189,7 @@ public class BuildablePropertyTest {
     // mergeFrom(DataType value) must resolve the name collision on "value"
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -1209,8 +1203,7 @@ public class BuildablePropertyTest {
             .addLine("  Value %s;", convention.get("value"))
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(new DataType.Value.Builder()", convention.set("value"))
@@ -1227,7 +1220,7 @@ public class BuildablePropertyTest {
     // mergeFrom(DataType.Template template) must resolve the name collision on "template"
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -1241,8 +1234,7 @@ public class BuildablePropertyTest {
             .addLine("  Template %s;", convention.get("template"))
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(new DataType.Template.Builder()", convention.set("template"))
@@ -1292,23 +1284,21 @@ public class BuildablePropertyTest {
   public void hiddenBuilderNotIllegallyReferenced() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example.foo;")
             .addLine("public abstract class Item {")
             .addLine("  public abstract %s<String> %s;", List.class, convention.get("names"))
             .addLine("  static class Builder extends Item_Builder {}")
-            .addLine("}")
-            .build())
-        .with(new SourceBuilder()
+            .addLine("}"))
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example.bar;")
             .addLine("import com.example.foo.Item;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
             .addLine("  Item %s;", convention.get("item1"))
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
-        .with(new SourceBuilder()
+            .addLine("}"))
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example.foo;")
             .addLine("class Item_Builder {")
             .addLine("  private final %s<String> names = new %s<String>();",
@@ -1342,8 +1332,7 @@ public class BuildablePropertyTest {
             .addLine("    @%s public %s<String> %s { return names; }",
                 Override.class, ImmutableList.class, convention.get("names"))
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .compiles();
   }
 

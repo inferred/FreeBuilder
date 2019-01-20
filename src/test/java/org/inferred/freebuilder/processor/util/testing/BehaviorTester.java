@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 import org.junit.Test;
@@ -97,6 +98,10 @@ public interface BehaviorTester {
    * @see TestBuilder
    */
   BehaviorTester with(JavaFileObject compilationUnit);
+
+  default BehaviorTester with(CompilationUnitBuilder code) {
+    return with(new CompilationUnit(code));
+  }
 
   /**
    * Adds a {@link TestSource} to compile and execute when {@link #runTest} is invoked.

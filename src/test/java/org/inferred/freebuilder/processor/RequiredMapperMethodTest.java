@@ -22,11 +22,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,12 +36,9 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.UnaryOperator;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -68,7 +65,7 @@ public class RequiredMapperMethodTest {
   private final boolean checked;
   private final NamingConvention convention;
   private final FeatureSet features;
-  private final JavaFileObject dataType;
+  private final CompilationUnitBuilder dataType;
 
   public RequiredMapperMethodTest(
       ElementFactory property,
@@ -80,7 +77,7 @@ public class RequiredMapperMethodTest {
     this.convention = convention;
     this.features = features;
 
-    SourceBuilder dataType = new SourceBuilder()
+    dataType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -101,7 +98,6 @@ public class RequiredMapperMethodTest {
     dataType
         .addLine("  }")
         .addLine("}");
-    this.dataType = dataType.build();
   }
 
   @Test
@@ -193,21 +189,25 @@ public class RequiredMapperMethodTest {
   }
 
   @Test
-  public void mapCanAcceptPrimitiveFunctionalInterface() throws IOException {
-    SourceBuilder customMapperType = new SourceBuilder();
-    for (String line : dataType.getCharContent(true).toString().split("\n")) {
-      customMapperType.addLine("%s", line);
+  public void mapCanAcceptPrimitiveFunctionalInterface() {
+    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
+        int insertOffset = line.indexOf('{') + 1;
         customMapperType
+            .addLine("%s", line.substring(0, insertOffset))
             .addLine("    @Override public Builder mapProperty(%s mapper) {",
                 property.unboxedUnaryOperator())
             .addLine("      return super.mapProperty(mapper);")
-            .addLine("    }");
+            .addLine("    }")
+            .addLine("%s", line.substring(insertOffset));
+      } else {
+        customMapperType.addLine("%s", line);
       }
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMapperType.build())
+        .with(customMapperType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(%s)", convention.set("property"), property.example(0))
@@ -224,21 +224,25 @@ public class RequiredMapperMethodTest {
   }
 
   @Test
-  public void mapCanAcceptGenericFunctionalInterface() throws IOException {
-    SourceBuilder customMapperType = new SourceBuilder();
-    for (String line : dataType.getCharContent(true).toString().split("\n")) {
-      customMapperType.addLine("%s", line);
+  public void mapCanAcceptGenericFunctionalInterface() {
+    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
+        int insertOffset = line.indexOf('{') + 1;
         customMapperType
+            .addLine("%s", line.substring(0, insertOffset))
             .addLine("    @Override public Builder mapProperty(%s<%s> mapper) {",
                 UnaryOperator.class, property.type())
             .addLine("      return super.mapProperty(mapper);")
-            .addLine("    }");
+            .addLine("    }")
+            .addLine("%s", line.substring(insertOffset));
+      } else {
+        customMapperType.addLine("%s", line);
       }
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMapperType.build())
+        .with(customMapperType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(%s)", convention.set("property"), property.example(0))
@@ -255,22 +259,26 @@ public class RequiredMapperMethodTest {
   }
 
   @Test
-  public void mapCanAcceptOtherFunctionalInterface() throws IOException {
+  public void mapCanAcceptOtherFunctionalInterface() {
     assumeGuavaAvailable();
-    SourceBuilder customMapperType = new SourceBuilder();
-    for (String line : dataType.getCharContent(true).toString().split("\n")) {
-      customMapperType.addLine("%s", line);
+    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
+        int insertOffset = line.indexOf('{') + 1;
         customMapperType
+            .addLine("%s", line.substring(0, insertOffset))
             .addLine("    @Override public Builder mapProperty(%1$s<%2$s, %2$s> mapper) {",
                 com.google.common.base.Function.class, property.type())
             .addLine("      return super.mapProperty(mapper);")
-            .addLine("    }");
+            .addLine("    }")
+            .addLine("%s", line.substring(insertOffset));
+      } else {
+        customMapperType.addLine("%s", line);
       }
     }
     behaviorTester
         .with(new Processor(features))
-        .with(customMapperType.build())
+        .with(customMapperType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(%s)", convention.set("property"), property.example(0))

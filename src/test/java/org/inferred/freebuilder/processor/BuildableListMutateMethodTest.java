@@ -20,11 +20,11 @@ import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,8 +37,6 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -62,12 +60,12 @@ public class BuildableListMutateMethodTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject buildableListType;
+  private final CompilationUnitBuilder buildableListType;
 
   public BuildableListMutateMethodTest(NamingConvention convention, FeatureSet features) {
     this.convention = convention;
     this.features = features;
-    buildableListType = new SourceBuilder()
+    buildableListType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface Receipt {")
@@ -84,8 +82,7 @@ public class BuildableListMutateMethodTest {
         .addLine("")
         .addLine("  Builder toBuilder();")
         .addLine("  class Builder extends Receipt_Builder {}")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Test

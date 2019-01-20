@@ -19,11 +19,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,8 +35,6 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -61,7 +59,7 @@ public class DefaultedPropertiesTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject dataType;
+  private final CompilationUnitBuilder dataType;
 
   public DefaultedPropertiesTest(
       NamingConvention convention,
@@ -70,7 +68,7 @@ public class DefaultedPropertiesTest {
     this.convention = convention;
     this.features = features;
 
-    SourceBuilder dataTypeBuilder = new SourceBuilder()
+    dataType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -83,21 +81,20 @@ public class DefaultedPropertiesTest {
         .addLine("    public Builder() {");
     if (!optimized) {
       // Test that defaults work correctly when we cannot detect them at compile-time.
-      dataTypeBuilder.addLine("if (true) {  // Disable optimization in javac");
+      dataType.addLine("if (true) {  // Disable optimization in javac");
     }
-    dataTypeBuilder
+    dataType
         .addLine("      %s(0);", convention.set("propertyA"))
         .addLine("      %s(false);", convention.set("propertyB"))
         .addLine("      %s(\"default\");", convention.set("propertyC"))
         .addLine("      %s(Double.NaN);", convention.set("propertyD"));
     if (!optimized) {
-      dataTypeBuilder.addLine("}");
+      dataType.addLine("}");
     }
-    dataType = dataTypeBuilder
+    dataType
         .addLine("    }")
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Test

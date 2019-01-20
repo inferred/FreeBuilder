@@ -31,6 +31,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
@@ -339,11 +341,10 @@ public class Model {
       TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
       DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
       try {
-        final JavaFileObject bootstrapType = new SourceBuilder()
+        JavaFileObject bootstrapType = new CompilationUnit(CompilationUnitBuilder.forTesting()
             .addLine("package %s;", PACKAGE)
             .addLine("@%s", Target.class)
-            .addLine("class %s { }", PLACEHOLDER_TYPE)
-            .build();
+            .addLine("class %s { }", PLACEHOLDER_TYPE));
 
         CompilationTask task = getSystemJavaCompiler().getTask(
             null,  // Writer

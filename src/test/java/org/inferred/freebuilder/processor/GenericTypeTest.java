@@ -16,11 +16,11 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +48,7 @@ public class GenericTypeTest {
   public void testGenericInterface() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<A, B> {")
@@ -56,8 +56,7 @@ public class GenericTypeTest {
             .addLine("  B getPropertyB();")
             .addLine("")
             .addLine("  public static class Builder<A, B> extends DataType_Builder<A, B> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(new TestBuilder()
             .addLine("com.example.DataType<Integer, Boolean> value =")
             .addLine("    new com.example.DataType.Builder<Integer, Boolean>()")
@@ -74,7 +73,7 @@ public class GenericTypeTest {
   public void testGenericInterface_compilesWithoutWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<A, B> {")
@@ -82,8 +81,7 @@ public class GenericTypeTest {
             .addLine("  B getPropertyB();")
             .addLine("")
             .addLine("  public static class Builder<A, B> extends DataType_Builder<A, B> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .compiles()
         .withNoWarnings();
   }
@@ -92,7 +90,7 @@ public class GenericTypeTest {
   public void testBoundedParameters() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<A extends Number, B extends Number> {")
@@ -101,8 +99,7 @@ public class GenericTypeTest {
             .addLine("")
             .addLine("  public static class Builder<A extends Number, B extends Number>")
             .addLine("      extends DataType_Builder<A, B> {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(new TestBuilder()
             .addLine("com.example.DataType<Integer, Double> value =")
             .addLine("    new com.example.DataType.Builder<Integer, Double>()")

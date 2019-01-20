@@ -16,7 +16,7 @@
 package org.inferred.freebuilder.processor.util.testing;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.inferred.freebuilder.processor.util.testing.SourceBuilder.getTypeNameFromSource;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.runners.MethodSorters.NAME_ASCENDING;
 
@@ -28,8 +28,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-
 import javax.tools.JavaFileObject;
 
 /** Unit tests for {@link TestBuilder}. */
@@ -40,15 +38,13 @@ public class TestBuilderTest {
   private final Multiset<String> seenNames = LinkedHashMultiset.create();
 
   @Test
-  public void test1_UniqueNames() throws IOException {
+  public void test1_UniqueNames() {
     JavaFileObject source1 = new TestBuilder().build().selectName(seenNames);
     assertEquals(
-        "org.inferred.freebuilder.processor.util.testing.generatedcode.TestBuilderTest",
-        getTypeNameFromSource(source1.getCharContent(false)));
+        "mem:///org/inferred/freebuilder/processor/util/testing/generatedcode/TestBuilderTest.java",
+        source1.toUri().toString());
     JavaFileObject source2 = new TestBuilder().build().selectName(seenNames);
-    assertEquals(
-        "org.inferred.freebuilder.processor.util.testing.generatedcode.TestBuilderTest__2",
-        getTypeNameFromSource(source2.getCharContent(false)));
+    assertThat(source2.toUri().toString()).endsWith("TestBuilderTest__2.java");
     assertEquals(2, seenNames.size());
   }
 

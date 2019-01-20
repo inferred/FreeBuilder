@@ -28,12 +28,12 @@ import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,8 +45,6 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-
-import javax.tools.JavaFileObject;
 
 /** Behavioral tests for {@code Optional<?>} properties. */
 @RunWith(Parameterized.class)
@@ -86,9 +84,9 @@ public class OptionalPropertyTest {
   private final FeatureSet features;
   private final String empty;
 
-  private final JavaFileObject oneProperty;
-  private final JavaFileObject twoProperties;
-  private final JavaFileObject validatedProperty;
+  private final CompilationUnitBuilder oneProperty;
+  private final CompilationUnitBuilder twoProperties;
+  private final CompilationUnitBuilder validatedProperty;
 
   public OptionalPropertyTest(
       Class<?> optional,
@@ -101,7 +99,7 @@ public class OptionalPropertyTest {
     this.features = features;
     this.empty = optional.getName().startsWith("com.google") ? "absent" : "empty";
 
-    oneProperty = new SourceBuilder()
+    oneProperty = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -112,10 +110,9 @@ public class OptionalPropertyTest {
         .addLine("  public static Builder builder() {")
         .addLine("    return new Builder();")
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
 
-    twoProperties = new SourceBuilder()
+    twoProperties = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -128,10 +125,9 @@ public class OptionalPropertyTest {
         .addLine("  public static Builder builder() {")
         .addLine("    return new Builder();")
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
 
-    validatedProperty = new SourceBuilder()
+    validatedProperty = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -154,8 +150,7 @@ public class OptionalPropertyTest {
         .addLine("  public static Builder builder() {")
         .addLine("    return new Builder();")
         .addLine("  }")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Test
@@ -397,7 +392,7 @@ public class OptionalPropertyTest {
   public void testBuilderClear_customDefault() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -408,8 +403,7 @@ public class OptionalPropertyTest {
             .addLine("  public static Builder builder() {")
             .addLine("    return new Builder().%s(%s);", convention.set("item"), element.example(3))
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = DataType.builder()")
             .addLine("    .%s(%s)", convention.set("item"), element.example(0))
@@ -425,7 +419,7 @@ public class OptionalPropertyTest {
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -437,8 +431,7 @@ public class OptionalPropertyTest {
             .addLine("      %s(s);", convention.set("item"))
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder(%s)", element.example(0))
             .addLine("    .clear()")
@@ -495,7 +488,7 @@ public class OptionalPropertyTest {
     thrown.expectMessage("Fooled you!");
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -511,8 +504,7 @@ public class OptionalPropertyTest {
             .addLine("  public static Builder builder() {")
             .addLine("    return new Builder();")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType.Builder template = DataType.builder()")
             .addLine("    .%s(null);", convention.set("nullableItem"))
@@ -648,15 +640,14 @@ public class OptionalPropertyTest {
   public void testWildcardHandling_noWildcard() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
               .addLine("package com.example;")
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
               .addLine("  public abstract %s<%s<%s>> %s;",
                       optional, List.class, Number.class, convention.get("items"))
               .addLine("  public static class Builder extends DataType_Builder {}")
-              .addLine("}")
-              .build())
+              .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(%s.of((%s) 1, 2, 3, 4))",
@@ -672,15 +663,14 @@ public class OptionalPropertyTest {
   public void testWildcardHandling_unboundedWildcard() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
               .addLine("package com.example;")
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
               .addLine("  public abstract %s<%s<?>> %s;",
                   optional, List.class, convention.get("items"))
               .addLine("  public static class Builder extends DataType_Builder {}")
-              .addLine("}")
-              .build())
+              .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(%s.of(1, 2, 3, 4))", convention.set("items"), ImmutableList.class)
@@ -695,15 +685,14 @@ public class OptionalPropertyTest {
   public void testWildcardHandling_wildcardWithExtendsBound() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
               .addLine("package com.example;")
               .addLine("@%s", FreeBuilder.class)
               .addLine("public abstract class DataType {")
               .addLine("  public abstract %s<%s<? extends %s>> %s;",
                       optional, List.class, Number.class, convention.get("items"))
               .addLine("  public static class Builder extends DataType_Builder {}")
-              .addLine("}")
-              .build())
+              .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(%s.of(1, 2, 3, 4))", convention.set("items"), ImmutableList.class)
@@ -721,7 +710,7 @@ public class OptionalPropertyTest {
         optional.getName().startsWith("com.google") ? GuavaModule.class : Jdk8Module.class;
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
             .addLine("@%s", FreeBuilder.class)
@@ -731,8 +720,7 @@ public class OptionalPropertyTest {
                 optional, element.type(), convention.get("item"))
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .%s(%s)", convention.set("item"), element.example(0))

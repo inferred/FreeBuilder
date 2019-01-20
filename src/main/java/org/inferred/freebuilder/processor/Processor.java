@@ -106,15 +106,10 @@ public class Processor extends AbstractProcessor {
     }
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
-        GeneratedType builder = analyser.analyse(type);
         CompilationUnitBuilder code = CompilationUnitBuilder.forEnvironment(
-            processingEnv, builder.getName(), features);
-        code.add(builder);
-        FilerUtils.writeCompilationUnit(
-            processingEnv.getFiler(),
-            builder.getName(),
-            type,
-            code.toString());
+            processingEnv, features);
+        code.add(analyser.analyse(type));
+        FilerUtils.writeCompilationUnit(processingEnv.getFiler(), code, type);
       } catch (Analyser.CannotGenerateCodeException e) {
         // Thrown to skip writing the builder source; the error will already have been issued.
       } catch (FilerException e) {

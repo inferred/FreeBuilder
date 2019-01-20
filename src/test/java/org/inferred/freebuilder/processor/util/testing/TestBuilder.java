@@ -99,7 +99,7 @@ public class TestBuilder {
 
     Object[] substituteArgs = new Object[args.length];
     for (int i = 0; i < args.length; i++) {
-      substituteArgs[i] = SourceBuilder.substitute(args[i]);
+      substituteArgs[i] = substitute(args[i]);
     }
     String text = String.format(fmt, substituteArgs);
 
@@ -131,6 +131,14 @@ public class TestBuilder {
         + ".generatedcode" + originalClassName.substring(periodIndex);
     } else {
       return "com.example.test.generatedcode.Test";
+    }
+  }
+
+  private static Object substitute(Object object) {
+    if (object instanceof Class) {
+      return ((Class<?>) object).getCanonicalName();
+    } else {
+      return object;
     }
   }
 
@@ -187,7 +195,7 @@ public class TestBuilder {
     private final String source;
 
     private TestFile(String className, String methodName, String imports, String testCode) {
-      super(SourceBuilder.uriForClass(className), Kind.SOURCE);
+      super(CompilationUnit.uriForClass(className), Kind.SOURCE);
       this.className = className;
       this.methodName = methodName;
       int period = className.lastIndexOf('.');

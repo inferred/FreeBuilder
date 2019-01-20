@@ -32,11 +32,11 @@ import com.google.common.collect.Multimap;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,8 +49,6 @@ import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.tools.JavaFileObject;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -76,7 +74,7 @@ public class ListMultimapPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final JavaFileObject dataType;
+  private final CompilationUnitBuilder dataType;
 
   public ListMultimapPropertyTest(
       ElementFactory key,
@@ -88,7 +86,7 @@ public class ListMultimapPropertyTest {
     this.convention = convention;
     this.features = features;
 
-    dataType = new SourceBuilder()
+    dataType = CompilationUnitBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -96,8 +94,7 @@ public class ListMultimapPropertyTest {
             Multimap.class, key.type(), value.type(), convention.get("items"))
         .addLine("")
         .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}")
-        .build();
+        .addLine("}");
   }
 
   @Test
@@ -589,7 +586,7 @@ public class ListMultimapPropertyTest {
   public void testToBuilder_fromPartial() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -597,8 +594,7 @@ public class ListMultimapPropertyTest {
             .addLine("")
             .addLine("  Builder toBuilder();")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value1 = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
@@ -654,7 +650,7 @@ public class ListMultimapPropertyTest {
   private void testPropertyOfMultimapSubclassType(Class<?> propertyType) {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -662,8 +658,7 @@ public class ListMultimapPropertyTest {
                 propertyType, key.type(), value.type(), convention.get("items"))
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
@@ -682,7 +677,7 @@ public class ListMultimapPropertyTest {
   public void testOverridingPut() {
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -695,8 +690,7 @@ public class ListMultimapPropertyTest {
             .addLine("      return this;")
             .addLine("    }")
             .addLine("  }")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", key.example(0), value.example(0))
@@ -749,7 +743,7 @@ public class ListMultimapPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(new SourceBuilder()
+        .with(CompilationUnitBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
             .addLine("@%s", FreeBuilder.class)
@@ -759,8 +753,7 @@ public class ListMultimapPropertyTest {
                 Multimap.class, key.type(), value.type(), convention.get("items"))
             .addLine("")
             .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}")
-            .build())
+            .addLine("}"))
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
