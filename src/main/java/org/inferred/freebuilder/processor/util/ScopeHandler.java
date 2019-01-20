@@ -1,7 +1,5 @@
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.collect.Iterables.getOnlyElement;
-
 import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 
 import com.google.common.collect.HashMultimap;
@@ -11,7 +9,6 @@ import com.google.common.collect.SetMultimap;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -86,34 +83,6 @@ class ScopeHandler {
       return visibilityIn(scope.enclosingType(), type);
     } else {
       return visibilityIn(scope.getPackage(), type);
-    }
-  }
-
-  Optional<QualifiedName> typeInScope(String pkg, String simpleName) {
-    if (isTopLevelType(pkg, simpleName)) {
-      return Optional.of(QualifiedName.of(pkg, simpleName));
-    } else if (!pkg.equals(UNIVERSALLY_VISIBLE_PACKAGE)) {
-      return typeInScope(UNIVERSALLY_VISIBLE_PACKAGE, simpleName);
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  Optional<QualifiedName> typeInScope(QualifiedName scope, String simpleName) {
-    Set<QualifiedName> possibleTypes = typesInScope(scope).get(simpleName);
-    switch (possibleTypes.size()) {
-      case 0:
-        if (scope.isTopLevel()) {
-          return typeInScope(scope.getPackage(), simpleName);
-        } else {
-          return typeInScope(scope.enclosingType(), simpleName);
-        }
-
-      case 1:
-        return Optional.of(getOnlyElement(possibleTypes));
-
-      default:
-        return Optional.empty();
     }
   }
 
