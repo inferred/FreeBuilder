@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import static javax.lang.model.util.ElementFilter.fieldsIn;
@@ -35,7 +34,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
@@ -44,7 +42,6 @@ import java.util.AbstractMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.processing.Filer;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -249,11 +246,7 @@ public class CompilationUnitBuilderTest {
   }
 
   private CompilationUnitBuilder newSourceWriter(String pkg, String simpleName) {
-    ProcessingEnvironment environment = Mockito.spy(model.environment());
-    doReturn(filer).when(environment).getFiler();
-    return new CompilationUnitBuilder(
-        environment,
-        QualifiedName.of(pkg, simpleName),
-        new StaticFeatureSet());
+    return CompilationUnitBuilder.forEnvironment(
+        model.environment(), QualifiedName.of(pkg, simpleName), new StaticFeatureSet());
   }
 }

@@ -15,10 +15,10 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.util.RoundEnvironments.annotatedElementsIn;
+
+import static javax.lang.model.util.ElementFilter.typesIn;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
@@ -30,7 +30,6 @@ import com.google.common.collect.MapMaker;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
 import org.inferred.freebuilder.processor.util.FilerUtils;
-import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
 import java.io.IOException;
@@ -65,8 +64,6 @@ public class Processor extends AbstractProcessor {
   private Analyser analyser;
   private final FeatureSet features;
 
-  private transient FeatureSet environmentFeatures;
-
   public Processor() {
     this.features = null;
   }
@@ -99,9 +96,6 @@ public class Processor extends AbstractProcessor {
         processingEnv.getMessager(),
         MethodIntrospector.instance(processingEnv),
         processingEnv.getTypeUtils());
-    if (features == null) {
-      environmentFeatures = new EnvironmentFeatureSet(processingEnv);
-    }
   }
 
   @Override
@@ -113,10 +107,8 @@ public class Processor extends AbstractProcessor {
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
         GeneratedType builder = analyser.analyse(type);
-        CompilationUnitBuilder code = new CompilationUnitBuilder(
-            processingEnv,
-            builder.getName(),
-            firstNonNull(features, environmentFeatures));
+        CompilationUnitBuilder code = CompilationUnitBuilder.forEnvironment(
+            processingEnv, builder.getName(), features);
         code.add(builder);
         FilerUtils.writeCompilationUnit(
             processingEnv.getFiler(),

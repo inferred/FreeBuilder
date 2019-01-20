@@ -25,11 +25,16 @@ import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
+import org.inferred.freebuilder.processor.util.ScopeHandler.Reflection;
 import org.inferred.freebuilder.processor.util.ScopeHandler.Visibility;
+import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
+import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -51,17 +56,40 @@ public class CompilationUnitBuilder
   /**
    * Returns a {@link CompilationUnitBuilder} for {@code classToWrite} using {@code features}. The
    * file preamble (package and imports) will be generated automatically, and {@code env} will be
-   * inspected for potential import collisions.
+   * inspected for potential import collisions. If {@code features} is null, it will be deduced
+   * from {@code env}.
    */
-  public CompilationUnitBuilder(
+  public static CompilationUnitBuilder forEnvironment(
       ProcessingEnvironment env,
+      QualifiedName classToWrite,
+      FeatureSet features) {
+    return new CompilationUnitBuilder(
+        new CompilerReflection(env.getElementUtils()),
+        classToWrite,
+        Optional.ofNullable(features).orElseGet(() -> new EnvironmentFeatureSet(env)));
+  }
+
+  /**
+   * Returns a {@link CompilationUnitBuilder} for {@code classToWrite} using {@code features}. The
+   * file preamble (package and imports) will be generated automatically.
+   */
+  @VisibleForTesting
+  public static CompilationUnitBuilder forTesting(
+      QualifiedName classToWrite,
+      Feature<?>... features) {
+    return new CompilationUnitBuilder(
+        new RuntimeReflection(ClassLoader.getSystemClassLoader()),
+        classToWrite,
+        new StaticFeatureSet(features));
+  }
+
+  private CompilationUnitBuilder(
+      Reflection reflect,
       QualifiedName classToWrite,
       FeatureSet features) {
     super(features);
     this.classToWrite = classToWrite;
-    // Write the source code into an intermediate SourceStringBuilder, as the imports need to be
-    // written first, but aren't known yet.
-    scopeHandler = new ScopeHandler(env.getElementUtils());
+    scopeHandler = new ScopeHandler(reflect);
     parser = new SourceParser(this);
     scopes.add(new FileScope());
     types.add(null);

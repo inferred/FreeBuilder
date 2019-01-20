@@ -24,7 +24,7 @@ public class ScopeHandlerTests {
 
   @Before
   public void setUp() {
-    handler = new ScopeHandler(model.elementUtils());
+    handler = new ScopeHandler(new CompilerReflection(model.elementUtils()));
   }
 
   @Test
