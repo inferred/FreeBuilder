@@ -24,8 +24,6 @@ import static java.util.Collections.nCopies;
 
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
-
 import java.util.List;
 
 import javax.lang.model.element.TypeParameterElement;
@@ -161,7 +159,7 @@ public abstract class Type extends ValueType implements Excerpt {
     @Override
     public String toString() {
       // Only used when debugging, so an empty feature set is fine.
-      return SourceStringBuilder.compilable(new StaticFeatureSet()).add(this).toString();
+      return SourceStringBuilder.simple().add(this).toString();
     }
   }
 }

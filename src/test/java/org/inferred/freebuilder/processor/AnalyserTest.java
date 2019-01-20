@@ -1123,7 +1123,7 @@ public class AnalyserTest {
         "  public static class Builder<Q, R> extends DataType_Builder<Q, R> {}",
         "}"));
 
-    assertEquals("com.example.DataType.Builder<A, B>",
+    assertEquals("DataType.Builder<A, B>",
         builder.getDatatype().getBuilder().toString());
     assertEquals("DataType<A extends CharSequence, B extends Temporal>",
         SourceStringBuilder.simple().add(builder.getDatatype().getType().declaration()).toString());
