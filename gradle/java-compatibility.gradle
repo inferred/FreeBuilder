@@ -55,7 +55,7 @@ tasks.withType(JavaCompile) {
 // Runs lazily so users lacking the correct version can run all other tasks.
 afterEvaluate {
   tasks.withType(Test) {
-    if (executable =~ /^\d+\.\d+$/) {
+    if (executable =~ /^\d+(\.\d+)?$/) {
       def version = executable
       executable = new Object() {
         @Override public String toString() {

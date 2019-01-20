@@ -192,7 +192,7 @@ task vanillaTest {
   check.dependsOn it
 }
 
-(8..9).each { jdk ->
+(8..11).each { jdk ->
   def sourceSet = sourceSets.create("vanilla${jdk}") {
     java {
       srcDir file('src/it/vanilla/src/main/java')
@@ -209,12 +209,12 @@ task vanillaTest {
   }
 
   tasks.getByName("compileVanilla${jdk}Java") {
-    sourceCompatibility = "1.$jdk"
-    targetCompatibility = "1.$jdk"
+    sourceCompatibility = jdk
+    targetCompatibility = jdk
   }
   tasks.getByName("compileVanilla${jdk}TestJava") {
-    sourceCompatibility = "1.$jdk"
-    targetCompatibility = "1.$jdk"
+    sourceCompatibility = jdk
+    targetCompatibility = jdk
   }
 
   def compile = configurations["vanilla${jdk}Compile"]
@@ -230,7 +230,7 @@ task vanillaTest {
     vanillaTest.dependsOn it
     testClassesDirs = sourceSets["vanilla${jdk}Test"].output.classesDirs
     classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
-    executable "1.${jdk}"
+    executable jdk
     reports {
       html {
         destination file("$reportsDir/vanilla${jdk}")
