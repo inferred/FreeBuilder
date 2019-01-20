@@ -127,7 +127,7 @@ class ScopeHandler {
   }
 
   private SetMultimap<String, QualifiedName> typesInScope(QualifiedName scope) {
-    return visibleTypes.computeIfAbsent(scope, this::computeTypesInScope);
+    return Optional.ofNullable(visibleTypes.get(scope)).orElseGet(() -> computeTypesInScope(scope));
   }
 
   private SetMultimap<String, QualifiedName> computeTypesInScope(QualifiedName scope) {
