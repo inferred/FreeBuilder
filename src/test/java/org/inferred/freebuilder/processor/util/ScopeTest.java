@@ -16,13 +16,17 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.inferred.freebuilder.processor.util.Scope.Level.FILE;
 import static org.inferred.freebuilder.processor.util.Scope.Level.METHOD;
+import static org.junit.rules.ExpectedException.none;
 
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.Scope.Level;
 import org.inferred.freebuilder.processor.util.Scope.MethodScope;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ScopeTest {
 
@@ -64,6 +68,8 @@ public class ScopeTest {
     }
   }
 
+  @Rule public final ExpectedException thrown = none();
+
   @Test
   public void testPutIfAbsent() {
     Scope scope = new FileScope();
@@ -85,14 +91,12 @@ public class ScopeTest {
   }
 
   @Test
-  public void testPutIfAbsent_methodElementIgnoredAtFileScope() {
+  public void testPutIfAbsent_throwsGivenMethodElementAtFileScope() {
     Scope scope = new FileScope();
     MethodElement key = new MethodElement("foo");
 
-    Integer existingValue1 = scope.putIfAbsent(key, 1);
-    assertThat(existingValue1).isNull();
-    Integer existingValue2 = scope.putIfAbsent(key, 2);
-    assertThat(existingValue2).isNull();
+    thrown.expect(IllegalStateException.class);
+    scope.putIfAbsent(key, 1);
   }
 
   @Test
@@ -160,8 +164,6 @@ public class ScopeTest {
     Scope scope = new FileScope();
     MethodElement key = new MethodElement("foo");
 
-    assertThat(scope.get(key)).isNull();
-    scope.putIfAbsent(key, 1);
     assertThat(scope.get(key)).isNull();
   }
 
