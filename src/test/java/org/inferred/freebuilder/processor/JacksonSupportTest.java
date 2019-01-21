@@ -24,9 +24,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.MessagerRule;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -153,6 +152,6 @@ public class JacksonSupportTest {
   }
 
   private static String asString(Excerpt excerpt) {
-    return SourceStringBuilder.simple().add(excerpt).toString();
+    return SourceBuilder.forTesting().add(excerpt).toString();
   }
 }

@@ -53,7 +53,7 @@ public class LazyNameTest {
     LazyName name2 = LazyName.of("foobar", excerpt2);
     LazyName name1Duplicate = LazyName.of("foobar", excerpt1);
 
-    SourceBuilder code = SourceStringBuilder.simple();
+    SourceBuilder code = SourceBuilder.forTesting();
     code.add("%s %s %s", name1, name2, name1Duplicate);
     assertThat(code.toString()).isEqualTo("foobar foobar2 foobar");
   }
@@ -65,7 +65,7 @@ public class LazyNameTest {
     AddExcerpt excerpt2 = new AddExcerpt("excerpt 2%n");
     LazyName name2 = LazyName.of("BazBam", excerpt2);
 
-    SourceBuilder code = SourceStringBuilder.simple();
+    SourceBuilder code = SourceBuilder.forTesting();
     code.addLine("%s", name1);
     code.addLine("%s", name2);
     LazyName.addLazyDefinitions(code);
@@ -80,7 +80,7 @@ public class LazyNameTest {
     AddExcerpt excerpt2 = new AddExcerpt("%s%n", name1);
     LazyName name2 = LazyName.of("hoolah", excerpt2);
 
-    SourceBuilder code = SourceStringBuilder.simple();
+    SourceBuilder code = SourceBuilder.forTesting();
     code.addLine("%s", name2);
     LazyName.addLazyDefinitions(code);
 

@@ -20,11 +20,11 @@ import static com.google.common.collect.Iterables.getLast;
 
 import static org.inferred.freebuilder.processor.util.ImportManager.shortenReferences;
 
-import com.google.common.annotations.VisibleForTesting;
+import static java.util.stream.Collectors.joining;
+
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
-import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.ScopeHandler.Reflection;
 import org.inferred.freebuilder.processor.util.ScopeHandler.Visibility;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
@@ -48,13 +48,11 @@ class CompilationUnitBuilder
   private int importsIndex = -1;
   private final StringBuilder source = new StringBuilder();
 
-  CompilationUnitBuilder(
-      Reflection reflect,
-      FeatureSet features) {
+  CompilationUnitBuilder(Reflection reflect, FeatureSet features) {
     super(features);
     scopeHandler = new ScopeHandler(reflect);
     parser = new SourceParser(this);
-    scopes.add(new FileScope());
+    scopes.add(new InitialScope());
     types.add(null);
   }
 
@@ -68,6 +66,10 @@ class CompilationUnitBuilder
   @Override
   public void onPackageStatement(String packageName) {
     checkState(importsIndex == -1, "Package redeclared");
+    checkState(scopes.size() == 1, "Package declaration too late");
+    InitialScope initialScope = (InitialScope) getLast(scopes);
+    checkState(initialScope.isEmpty(), "Package declaration too late");
+    scopes.add(new Scope.FileScope());
     pkg = packageName;
     importsIndex = source.length();
   }
@@ -149,14 +151,25 @@ class CompilationUnitBuilder
   @Override
   public String toString() {
     if (importsIndex == -1) {
-      return formatSource(source.toString());
+      return formatSnippet(source, usages);
     } else {
       return formatSource(shortenReferences(source, pkg, importsIndex, usages, scopeHandler));
     }
   }
 
-  @VisibleForTesting
-  public static String formatSource(String source) {
+  private static String formatSnippet(StringBuilder source, List<TypeUsage> usages) {
+    StringBuilder snippet = new StringBuilder();
+    int offset = 0;
+    for (TypeUsage usage : usages) {
+      snippet.append(source, offset, usage.start());
+      snippet.append(usage.type().getSimpleNames().stream().collect(joining(".")));
+      offset = usage.end();
+    }
+    snippet.append(source, offset, source.length());
+    return snippet.toString();
+  }
+
+  private static String formatSource(String source) {
     try {
       return new Formatter().formatSource(source);
     } catch (FormatterException | RuntimeException e) {
@@ -173,6 +186,13 @@ class CompilationUnitBuilder
             .append(line);
       }
       throw new RuntimeException(message.toString());
+    }
+  }
+
+  private static class InitialScope extends Scope {
+    @Override
+    protected boolean canStore(Key<?> key) {
+      return true;
     }
   }
 }

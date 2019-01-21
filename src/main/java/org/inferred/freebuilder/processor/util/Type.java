@@ -159,7 +159,7 @@ public abstract class Type extends ValueType implements Excerpt {
     @Override
     public String toString() {
       // Only used when debugging, so an empty feature set is fine.
-      return SourceStringBuilder.simple().add(this).toString();
+      return SourceBuilder.forTesting().add(this).toString();
     }
   }
 }

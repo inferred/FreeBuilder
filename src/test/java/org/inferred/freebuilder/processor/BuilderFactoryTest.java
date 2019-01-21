@@ -26,7 +26,7 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.IN
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.GenericElement;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
 import org.inferred.freebuilder.processor.util.TypeClass;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
@@ -347,42 +347,42 @@ public class BuilderFactoryTest {
   @Test
   public void testNewBuilderForGenericType_noArgsConstructor_inferredTypes_j8() {
     Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
+    String code = SourceBuilder.forTesting().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("new Foo.Builder<>()");
   }
 
   @Test
   public void testNewBuilderForGenericType_noArgsConstructor_explicitTypes_j8() {
     Excerpt newFooBuilder = NO_ARGS_CONSTRUCTOR.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
+    String code = SourceBuilder.forTesting().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("new Foo.Builder<E>()");
   }
 
   @Test
   public void testNewBuilderForGenericType_builderMethod_inferredTypes_j8() {
     Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
+    String code = SourceBuilder.forTesting().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("Foo.builder()");
   }
 
   @Test
   public void testNewBuilderForGenericType_builderMethod_explicitTypes_j8() {
     Excerpt newFooBuilder = BUILDER_METHOD.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
+    String code = SourceBuilder.forTesting().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("Foo.<E>builder()");
   }
 
   @Test
   public void testNewBuilderForGenericType_newBuilderMethod_inferredTypes_j8() {
     Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(FOO_BUILDER, INFERRED_TYPES);
-    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
+    String code = SourceBuilder.forTesting().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("Foo.newBuilder()");
   }
 
   @Test
   public void testNewBuilderForGenericType_newBuilderMethod_explicitTypes_j8() {
     Excerpt newFooBuilder = NEW_BUILDER_METHOD.newBuilder(FOO_BUILDER, EXPLICIT_TYPES);
-    String code = SourceStringBuilder.simple().add(newFooBuilder).toString();
+    String code = SourceBuilder.forTesting().add(newFooBuilder).toString();
     assertThat(code).isEqualTo("Foo.<E>newBuilder()");
   }
 }

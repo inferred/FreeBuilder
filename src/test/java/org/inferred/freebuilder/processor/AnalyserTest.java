@@ -39,7 +39,7 @@ import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.MessagerRule;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -1126,7 +1126,7 @@ public class AnalyserTest {
     assertEquals("DataType.Builder<A, B>",
         builder.getDatatype().getBuilder().toString());
     assertEquals("DataType<A extends CharSequence, B extends Temporal>",
-        SourceStringBuilder.simple().add(builder.getDatatype().getType().declaration()).toString());
+        SourceBuilder.forTesting().add(builder.getDatatype().getType().declaration()).toString());
   }
 
   @Test
@@ -1454,7 +1454,7 @@ public class AnalyserTest {
   }
 
   private static String asSource(Excerpt annotation) {
-    return SourceStringBuilder.simple().add(annotation).toString().trim();
+    return SourceBuilder.forTesting().add(annotation).toString().trim();
   }
 
   private static Map<String, Property> propertiesByName(GeneratedBuilder builder) {

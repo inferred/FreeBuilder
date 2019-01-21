@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
@@ -44,7 +45,7 @@ public class GenericElementTest {
         new GenericElement.Builder(FOO_BAR_NAME).build();
     assertThat(foobar.getSimpleName().toString()).isEqualTo("FooBar");
     assertThat(foobar.getTypeParameters()).isEmpty();
-    assertThat(SourceStringBuilder.simple().add("%s", foobar).toString()).isEqualTo("FooBar");
+    assertThat(SourceBuilder.forTesting().add("%s", foobar).toString()).isEqualTo("FooBar");
   }
 
   @Test
@@ -86,7 +87,7 @@ public class GenericElementTest {
     Consumer<DeclaredType> test = foobar -> {
       assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
       assertThat(foobar.getTypeArguments()).hasSize(2);
-      assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
+      assertThat(SourceBuilder.forTesting().add("%s", foobar).toString())
           .isEqualTo("FooBar<T, C>");
     };
     DeclaredType realFoobar = (DeclaredType)
@@ -105,7 +106,7 @@ public class GenericElementTest {
     Consumer<DeclaredType> test = foobar -> {
       assertThat(foobar.asElement().getSimpleName().toString()).isEqualTo("FooBar");
       assertThat(foobar.getTypeArguments()).hasSize(2);
-      assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
+      assertThat(SourceBuilder.forTesting().add("%s", foobar).toString())
           .isEqualTo("FooBar<T, C>");
     };
     DeclaredType realFoobar = (DeclaredType)
@@ -126,7 +127,7 @@ public class GenericElementTest {
       TypeElement foobarElement = maybeAsTypeElement(foobar).get();
       assertThat(foobarElement.getSimpleName().toString()).isEqualTo("FooBar");
       assertThat(foobar.getTypeArguments()).hasSize(1);
-      assertThat(SourceStringBuilder.simple().add("%s", foobar).toString())
+      assertThat(SourceBuilder.forTesting().add("%s", foobar).toString())
           .isEqualTo("FooBar<E>");
       // E extends FooBar<E>
       TypeParameterElement typeParameter = foobarElement.getTypeParameters().get(0);

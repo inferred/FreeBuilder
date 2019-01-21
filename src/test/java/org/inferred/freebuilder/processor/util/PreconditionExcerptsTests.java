@@ -27,7 +27,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_simpleMessage() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument("foo != 0", "foo must not be zero"))
         .toString();
     assertEquals("Preconditions.checkArgument(foo != 0, \"foo must not be zero\");\n", source);
@@ -35,7 +35,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_singleParameter() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo > 0", "foo must be positive, but got %s", "foo"))
         .toString();
@@ -45,7 +45,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_twoParameters() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo > bar", "foo must be greater than bar, but got %s <= %s", "foo", "bar"))
         .toString();
@@ -55,7 +55,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_doubleNegative() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument("!foo.isEmpty()", "foo must not be empty"))
         .toString();
     assertEquals(
@@ -64,7 +64,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_doubleQuotes() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\"\")", "foo must contain at least one double quote ('\"')"))
         .toString();
@@ -74,7 +74,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_backslashes() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\")", "foo must contain at least one backslash ('\\')"))
         .toString();
@@ -84,7 +84,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_guava_newLines() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkArgument(
             "foo.length() <= 80", "foo should not be more than 80 characters, but got:\n%s", "foo"))
         .toString();
@@ -94,7 +94,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_simpleMessage() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("condition", "message"))
         .toString();
     assertEquals(
@@ -103,7 +103,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_singleParameterAtEnd() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("condition", "message about %s", "foo"))
         .toString();
     assertEquals(
@@ -113,7 +113,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_singleParameterInMiddle() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("condition", "bar %s baz", "foo"))
         .toString();
     assertEquals(
@@ -123,7 +123,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_singleParameterAtStart() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("condition", "%s is wrong", "foo"))
         .toString();
     assertEquals(
@@ -133,7 +133,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_twoParametersInMiddle() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("condition", "a %s c %s e", "b", "d"))
         .toString();
     assertEquals(
@@ -144,7 +144,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_doubleQuotes() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\"\")", "foo must contain at least one double quote ('\"')"))
         .toString();
@@ -156,7 +156,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_backslashes() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\\\\")", "foo must contain at least one backslash ('\\')"))
         .toString();
@@ -168,7 +168,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_newLines() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument(
             "foo.contains(\"\\n\")", "foo must contain at least one newline ('\n')"))
         .toString();
@@ -180,7 +180,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_doubleNegative() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("!foo.isEmpty()", "foo must not be empty"))
         .toString();
     assertEquals(
@@ -191,7 +191,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_doubleNegativeBooleanLogic() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("!a && !b", "message"))
         .toString();
     assertEquals(
@@ -201,7 +201,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_complexCondition() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("a % 3 > 0", "message"))
         .toString();
     assertEquals(
@@ -210,7 +210,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_complexConditionWithMultipleBrackets() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("(a || b) && (c || d)", "message"))
         .toString();
     assertEquals(
@@ -220,7 +220,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckArgument_if_instanceOf() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkArgument("a instanceof Integer", "message"))
         .toString();
     assertEquals(
@@ -230,7 +230,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckState_guava_simpleMessage() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkState("foo != 0", "foo must not be zero"))
         .toString();
     assertEquals("Preconditions.checkState(foo != 0, \"foo must not be zero\");\n", source);
@@ -238,7 +238,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckState_if_simpleMessage() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkState("foo != 0", "foo must not be zero"))
         .toString();
     assertEquals(
@@ -249,7 +249,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckState_guava_parameterizedCondition() {
-    String source = SourceStringBuilder.simple(GuavaLibrary.AVAILABLE)
+    String source = SourceBuilder.forTesting(GuavaLibrary.AVAILABLE)
         .add(PreconditionExcerpts.checkState(
             "%1$s > 0", "foo must be positive (got %1$s)", new Variable("foo")))
         .toString();
@@ -260,7 +260,7 @@ public class PreconditionExcerptsTests {
 
   @Test
   public void testCheckState_if_parameterizedCondition() {
-    String source = SourceStringBuilder.simple()
+    String source = SourceBuilder.forTesting()
         .add(PreconditionExcerpts.checkState(
             "%1$s > 0", "foo must be positive (got %1$s)", new Variable("foo")))
         .toString();

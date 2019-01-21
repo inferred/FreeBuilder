@@ -86,7 +86,7 @@ public class TypeClass extends Type {
   @Override
   public String toString() {
     // Only used when debugging, so an empty feature set is fine.
-    return SourceStringBuilder.simple().add(declaration()).toString();
+    return SourceBuilder.forTesting().add(declaration()).toString();
   }
 
   private static void addDeclarationParameters(

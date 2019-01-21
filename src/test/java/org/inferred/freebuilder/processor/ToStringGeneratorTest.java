@@ -1,13 +1,13 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.SourceStringBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -547,13 +547,13 @@ public class ToStringGeneratorTest {
     }
 
     String valueToString() {
-      SourceBuilder code = SourceStringBuilder.simple();
+      SourceBuilder code = SourceBuilder.forTesting();
       ToStringGenerator.addToString(code, datatype, generatorsByProperty, false);
       return code.toString();
     }
 
     String partialToString() {
-      SourceBuilder code = SourceStringBuilder.simple();
+      SourceBuilder code = SourceBuilder.forTesting();
       ToStringGenerator.addToString(code, datatype, generatorsByProperty, true);
       return code.toString();
     }

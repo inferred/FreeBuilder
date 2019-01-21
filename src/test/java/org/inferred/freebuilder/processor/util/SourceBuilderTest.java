@@ -45,7 +45,7 @@ public class SourceBuilderTest {
   @Test
   public void testEmptyUnit() {
     String code = source().toString();
-    assertEquals("\n", code);
+    assertEquals("", code);
   }
 
   @Test
