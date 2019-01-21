@@ -17,6 +17,7 @@ plugins {
   id 'com.jfrog.bintray' version '1.8.4'
 }
 
+apply from: "gradle/java-compatibility.gradle"
 apply from: "gradle/publication.gradle"
 apply from: "gradle/travis-keep-alive.gradle"
 
@@ -175,29 +176,6 @@ task shadowTest {
   }
 }
 
-//// Java 9 support (for tests) //////////////////////////////////
-if (!hasProperty('java9Home') && System.env.containsKey('JAVA_9_HOME')) {
-  project.ext.java9Home = System.env['JAVA_9_HOME']
-}
-assert hasProperty('java9Home') : "Set the property 'java9Home' in your your gradle.properties pointing to a Java 9 installation"
-def java9Path = new File(java9Home, 'bin')
-def java9 = [:].withDefault { execName ->
-    def unixExec = new File(java9Path, execName)
-    def winExec = new File(java9Path, execName + ".exe")
-    assert unixExec.exists() || winExec.exists() : "There is no ${execName} executable in ${java9Path}"
-    unixExec.exists() ? unixExec : winExec
-}
-
-afterEvaluate {
-  tasks.withType(JavaCompile) {
-    if (targetCompatibility == "1.9") {
-      options.with {
-        fork javaHome: file(java9Home)
-      }
-    }
-  }
-}
-
 //// Vanilla integration tests ///////////////////////////////////
 configurations {
   vanillaCompile
@@ -214,7 +192,7 @@ task vanillaTest {
   check.dependsOn it
 }
 
-(8..9).each { jdk ->
+(8..11).each { jdk ->
   def sourceSet = sourceSets.create("vanilla${jdk}") {
     java {
       srcDir file('src/it/vanilla/src/main/java')
@@ -231,12 +209,12 @@ task vanillaTest {
   }
 
   tasks.getByName("compileVanilla${jdk}Java") {
-    sourceCompatibility = "1.$jdk"
-    targetCompatibility = "1.$jdk"
+    sourceCompatibility = jdk
+    targetCompatibility = jdk
   }
   tasks.getByName("compileVanilla${jdk}TestJava") {
-    sourceCompatibility = "1.$jdk"
-    targetCompatibility = "1.$jdk"
+    sourceCompatibility = jdk
+    targetCompatibility = jdk
   }
 
   def compile = configurations["vanilla${jdk}Compile"]
@@ -252,9 +230,7 @@ task vanillaTest {
     vanillaTest.dependsOn it
     testClassesDirs = sourceSets["vanilla${jdk}Test"].output.classesDirs
     classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
-    if (jdk == 9) {
-      executable java9.java
-    }
+    executable jdk
     reports {
       html {
         destination file("$reportsDir/vanilla${jdk}")
