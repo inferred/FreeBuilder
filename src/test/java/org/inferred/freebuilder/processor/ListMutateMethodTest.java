@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -66,10 +66,10 @@ public class ListMutateMethodTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder listPropertyType;
-  private final CompilationUnitBuilder genericType;
+  private final SourceBuilder listPropertyType;
+  private final SourceBuilder genericType;
   /** Simple type that substitutes passed-in objects, in this case by interning strings. */
-  private final CompilationUnitBuilder internedStringsType;
+  private final SourceBuilder internedStringsType;
 
   public ListMutateMethodTest(
       ElementFactory elements,
@@ -81,7 +81,7 @@ public class ListMutateMethodTest {
     this.convention = convention;
     this.features = features;
 
-    listPropertyType = CompilationUnitBuilder.forTesting()
+    listPropertyType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -102,7 +102,7 @@ public class ListMutateMethodTest {
         .addLine("  }")
         .addLine("}");
 
-    genericType = CompilationUnitBuilder.forTesting()
+    genericType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType<T extends %s> {", elements.supertype())
@@ -124,7 +124,7 @@ public class ListMutateMethodTest {
         .addLine("}");
 
     if (!checked && elements == STRINGS) {
-      internedStringsType = CompilationUnitBuilder.forTesting()
+      internedStringsType = SourceBuilder.forTesting()
           .addLine("package com.example;")
           .addLine("@%s", FreeBuilder.class)
           .addLine("public interface DataType {")
@@ -456,7 +456,7 @@ public class ListMutateMethodTest {
 
   @Test
   public void canUseCustomFunctionalInterface() {
-    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    SourceBuilder customMutatorType = SourceBuilder.forTesting();
     for (String line : listPropertyType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         int insertLocation = line.indexOf("{") + 1;
@@ -488,7 +488,7 @@ public class ListMutateMethodTest {
 
   @Test
   public void canUseCustomGenericFunctionalInterface() {
-    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    SourceBuilder customMutatorType = SourceBuilder.forTesting();
     for (String line : genericType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         int insertOffset = line.indexOf('{') + 1;

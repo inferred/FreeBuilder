@@ -28,7 +28,7 @@ import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -72,7 +72,7 @@ public class MapPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder mapPropertyType;
+  private final SourceBuilder mapPropertyType;
 
   public MapPropertyTest(
       ElementFactory keys,
@@ -84,7 +84,7 @@ public class MapPropertyTest {
     this.convention = convention;
     this.features = features;
 
-    mapPropertyType = CompilationUnitBuilder.forTesting()
+    mapPropertyType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -380,7 +380,7 @@ public class MapPropertyTest {
   @Test
   public void testBuilderClear_noDefaultFactory() {
     behaviorTester
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -411,7 +411,7 @@ public class MapPropertyTest {
   public void testImmutableMapProperty() {
     assumeTrue("Guava available", features.get(GUAVA).isAvailable());
     behaviorTester
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -434,7 +434,7 @@ public class MapPropertyTest {
   @Test
   public void testOverridingAdd() {
     behaviorTester
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -493,7 +493,7 @@ public class MapPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     assumeTrue(keys.isSerializableAsMapKey());
     behaviorTester
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
             .addLine("@%s", FreeBuilder.class)

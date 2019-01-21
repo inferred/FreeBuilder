@@ -18,7 +18,7 @@ package org.inferred.freebuilder.processor;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -57,13 +57,13 @@ public class RequiredPropertiesTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder requiredPropertiesType;
+  private final SourceBuilder requiredPropertiesType;
 
   public RequiredPropertiesTest(NamingConvention convention, FeatureSet features) {
     this.convention = convention;
     this.features = features;
 
-    requiredPropertiesType = CompilationUnitBuilder.forTesting()
+    requiredPropertiesType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -95,7 +95,7 @@ public class RequiredPropertiesTest {
     thrown.expectMessage("Not set: [propertyB, propertyD]");
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -169,7 +169,7 @@ public class RequiredPropertiesTest {
   public void testMergeFrom_noTemplate() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")

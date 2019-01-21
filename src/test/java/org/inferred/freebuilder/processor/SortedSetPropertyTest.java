@@ -21,7 +21,7 @@ import static org.junit.Assume.assumeTrue;
 import com.google.common.collect.Ordering;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -60,11 +60,11 @@ public class SortedSetPropertyTest {
 
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder datatype;
+  private final SourceBuilder datatype;
 
   public SortedSetPropertyTest(FeatureSet features) {
     this.features = features;
-    datatype = CompilationUnitBuilder.forTesting()
+    datatype = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")

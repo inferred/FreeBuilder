@@ -25,7 +25,7 @@ import static org.junit.rules.ExpectedException.none;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.inferred.freebuilder.processor.util.feature.SourceLevel;
@@ -58,11 +58,11 @@ public class BehaviorTesterTest {
   @Test
   public void simpleExample() {
     behaviorTester()
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s(%s.RUNTIME)", Retention.class, RetentionPolicy.class)
             .addLine("public @interface TestAnnotation { }"))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@TestAnnotation public class MyClass {")
             .addLine("  public MyOtherClass get() {")
@@ -146,7 +146,7 @@ public class BehaviorTesterTest {
 
   @Test
   public void guavaPackageAffectsAvailabilityOfGuavaInSource() {
-    CompilationUnitBuilder source = CompilationUnitBuilder.forTesting()
+    SourceBuilder source = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("public class Test {")
         .addLine("  private final %s<Integer> aField = %s.of();", List.class, ImmutableList.class)

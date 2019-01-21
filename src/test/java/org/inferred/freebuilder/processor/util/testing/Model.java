@@ -31,7 +31,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -341,7 +341,7 @@ public class Model {
       TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
       DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
       try {
-        JavaFileObject bootstrapType = new CompilationUnit(CompilationUnitBuilder.forTesting()
+        JavaFileObject bootstrapType = new CompilationUnit(SourceBuilder.forTesting()
             .addLine("package %s;", PACKAGE)
             .addLine("@%s", Target.class)
             .addLine("class %s { }", PLACEHOLDER_TYPE));

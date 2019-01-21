@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -65,7 +65,7 @@ public class RequiredMapperMethodTest {
   private final boolean checked;
   private final NamingConvention convention;
   private final FeatureSet features;
-  private final CompilationUnitBuilder dataType;
+  private final SourceBuilder dataType;
 
   public RequiredMapperMethodTest(
       ElementFactory property,
@@ -77,7 +77,7 @@ public class RequiredMapperMethodTest {
     this.convention = convention;
     this.features = features;
 
-    dataType = CompilationUnitBuilder.forTesting()
+    dataType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -190,7 +190,7 @@ public class RequiredMapperMethodTest {
 
   @Test
   public void mapCanAcceptPrimitiveFunctionalInterface() {
-    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    SourceBuilder customMapperType = SourceBuilder.forTesting();
     for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         int insertOffset = line.indexOf('{') + 1;
@@ -225,7 +225,7 @@ public class RequiredMapperMethodTest {
 
   @Test
   public void mapCanAcceptGenericFunctionalInterface() {
-    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    SourceBuilder customMapperType = SourceBuilder.forTesting();
     for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         int insertOffset = line.indexOf('{') + 1;
@@ -261,7 +261,7 @@ public class RequiredMapperMethodTest {
   @Test
   public void mapCanAcceptOtherFunctionalInterface() {
     assumeGuavaAvailable();
-    CompilationUnitBuilder customMapperType = CompilationUnitBuilder.forTesting();
+    SourceBuilder customMapperType = SourceBuilder.forTesting();
     for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         int insertOffset = line.indexOf('{') + 1;

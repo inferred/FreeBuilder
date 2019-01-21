@@ -16,7 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.junit.Test;
@@ -24,7 +24,7 @@ import org.junit.Test;
 public class AbstractBuilderTest {
   private final BehaviorTester behaviorTester = BehaviorTester.create(new StaticFeatureSet());
 
-  private static final CompilationUnitBuilder TYPE_WITH_ABSTRACT_BUILDER = CompilationUnitBuilder
+  private static final SourceBuilder TYPE_WITH_ABSTRACT_BUILDER = SourceBuilder
       .forTesting()
       .addLine("package com.example;")
       .addLine("@%s", FreeBuilder.class)

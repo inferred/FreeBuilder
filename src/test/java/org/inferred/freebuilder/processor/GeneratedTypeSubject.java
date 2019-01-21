@@ -9,7 +9,7 @@ import com.google.common.truth.Subject;
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.junit.ComparisonFailure;
 
@@ -36,7 +36,7 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
 
   public void generates(String... code) {
     String expected = Arrays.stream(code).collect(joining("\n", "", "\n"));
-    CompilationUnitBuilder compilationUnitBuilder = CompilationUnitBuilder.forTesting(
+    SourceBuilder compilationUnitBuilder = SourceBuilder.forTesting(
             environmentFeatures.toArray(new Feature<?>[0]));
     String rawSource = compilationUnitBuilder
         .add(getSubject())

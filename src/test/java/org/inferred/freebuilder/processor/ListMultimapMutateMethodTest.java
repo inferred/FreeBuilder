@@ -27,7 +27,7 @@ import com.google.common.collect.Multimaps;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -72,7 +72,7 @@ public class ListMultimapMutateMethodTest {
   private final boolean interned;
   private final NamingConvention convention;
   private final FeatureSet features;
-  private final CompilationUnitBuilder dataType;
+  private final SourceBuilder dataType;
 
   public ListMultimapMutateMethodTest(
       ElementFactory key,
@@ -87,7 +87,7 @@ public class ListMultimapMutateMethodTest {
     this.convention = convention;
     this.features = features;
 
-    dataType = CompilationUnitBuilder.forTesting()
+    dataType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -511,7 +511,7 @@ public class ListMultimapMutateMethodTest {
 
   @Test
   public void canUseCustomFunctionalInterface() {
-    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    SourceBuilder customMutatorType = SourceBuilder.forTesting();
     for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         int insertIndex = line.indexOf('{') + 1;

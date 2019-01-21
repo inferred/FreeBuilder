@@ -24,7 +24,7 @@ import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -101,7 +101,7 @@ public class ProcessorTest {
   public void testPrefixlessInterface() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -125,7 +125,7 @@ public class ProcessorTest {
   public void testGenericInterfaceWithBound() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<N extends Number> {")
@@ -172,7 +172,7 @@ public class ProcessorTest {
   public void testBuilderSerializability_serializableSubclass() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -219,7 +219,7 @@ public class ProcessorTest {
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -244,7 +244,7 @@ public class ProcessorTest {
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -271,7 +271,7 @@ public class ProcessorTest {
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -301,7 +301,7 @@ public class ProcessorTest {
     thrown.expectMessage("Not set: [propertyA, propertyB]");
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -329,7 +329,7 @@ public class ProcessorTest {
   public void testClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -357,7 +357,7 @@ public class ProcessorTest {
   public void testPropertyNamedTemplate() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -449,7 +449,7 @@ public class ProcessorTest {
   public void testDoubleEquality() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -501,7 +501,7 @@ public class ProcessorTest {
   public void testToString_noProperties() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -551,7 +551,7 @@ public class ProcessorTest {
     // See https://github.com/google/FreeBuilder/issues/261
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -577,7 +577,7 @@ public class ProcessorTest {
     // See https://github.com/google/FreeBuilder/issues/261
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -602,7 +602,7 @@ public class ProcessorTest {
   public void testGwtSerialize_twoStringProperties() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(serializable = true)", GwtCompatible.class)
@@ -627,7 +627,7 @@ public class ProcessorTest {
   public void testGwtSerialize_twoPrimitiveProperties() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(serializable = true)", GwtCompatible.class)
@@ -652,7 +652,7 @@ public class ProcessorTest {
   public void testGwtSerialize_stringListProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(serializable = true)", GwtCompatible.class)
@@ -715,7 +715,7 @@ public class ProcessorTest {
   public void testUnderriding_hashCodeAndEquals() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class Person {")
@@ -770,7 +770,7 @@ public class ProcessorTest {
   public void testUnderriding_toString() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class Person {")
@@ -802,7 +802,7 @@ public class ProcessorTest {
   public void testUnderriding_finalHashCodeEqualsAndToString() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class Person {")
@@ -829,7 +829,7 @@ public class ProcessorTest {
   public void testUnderriding_finalHashCodeAndEquals() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class Person {")
@@ -866,7 +866,7 @@ public class ProcessorTest {
   public void testUnderriding_finalToString() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class Person {")
@@ -899,7 +899,7 @@ public class ProcessorTest {
   public void testToBuilder() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -924,7 +924,7 @@ public class ProcessorTest {
   public void testToBuilder_fromPartial() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -950,7 +950,7 @@ public class ProcessorTest {
   public void testToBuilder_fromPartial_withGenerics() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<T> {")
@@ -976,7 +976,7 @@ public class ProcessorTest {
   public void testToBuilder_fromPartial_withProtectedConstructorAndStaticBuilderMethod() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1005,7 +1005,7 @@ public class ProcessorTest {
   public void testToBuilder_fromPartial_withProtectedConstructorAndParameterizedBuilderMethod() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1035,7 +1035,7 @@ public class ProcessorTest {
   public void testToBuilder_withPropertyCalledBuilder() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -1060,11 +1060,11 @@ public class ProcessorTest {
   public void testSiblingNameClashes() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("/** Block import of java.lang.String. #evil */")
             .addLine("public interface String {}"))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -1085,11 +1085,11 @@ public class ProcessorTest {
   public void testNestedNameClashes() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("/** Clashes with the inner type generated by FreeBuilder. */")
             .addLine("public class Value {}"))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -1111,7 +1111,7 @@ public class ProcessorTest {
   public void testBuilderClassIsEmpty_whenNotSubclassed() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1130,7 +1130,7 @@ public class ProcessorTest {
     // See also https://github.com/google/FreeBuilder/issues/61
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1156,7 +1156,7 @@ public class ProcessorTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
@@ -1209,15 +1209,15 @@ public class ProcessorTest {
     // in our value type implementations.
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example.p;")
             .addLine("public interface A {")
             .addLine("  interface X { }")
             .addLine("}"))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example.q;")
             .addLine("public interface X { }"))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example.r;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface B extends com.example.p.A {")
@@ -1235,10 +1235,10 @@ public class ProcessorTest {
     // reusing a tempting name like "Override" — and accidentally importing such a type is just
     // as chaotic as you might expect.
     behaviorTester.with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example.p;")
             .addLine("public interface Override { }"))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example.r;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface A {")
@@ -1249,8 +1249,8 @@ public class ProcessorTest {
         .withNoWarnings();
   }
 
-  private static CompilationUnitBuilder twoPropertyType() {
-    return CompilationUnitBuilder.forTesting()
+  private static SourceBuilder twoPropertyType() {
+    return SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -1264,8 +1264,8 @@ public class ProcessorTest {
         .addLine("}");
   }
 
-  private static CompilationUnitBuilder twoPropertyInterface() {
-    return CompilationUnitBuilder.forTesting()
+  private static SourceBuilder twoPropertyInterface() {
+    return SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -1276,8 +1276,8 @@ public class ProcessorTest {
         .addLine("}");
   }
 
-  private static CompilationUnitBuilder stringPropertyType() {
-    return CompilationUnitBuilder.forTesting()
+  private static SourceBuilder stringPropertyType() {
+    return SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")

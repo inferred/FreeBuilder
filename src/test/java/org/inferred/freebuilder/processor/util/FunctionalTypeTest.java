@@ -115,7 +115,7 @@ public class FunctionalTypeTest {
       FunctionalType operator = unboxedUnaryOperator(model.typeMirror(type), model.typeUtils());
 
       BehaviorTester.create(new StaticFeatureSet())
-          .with(CompilationUnitBuilder.forTesting()
+          .with(SourceBuilder.forTesting()
               .addLine("package com.example;")
               .addLine("public class TestClass {")
               .addLine("  public static %s x;", type)

@@ -27,20 +27,14 @@ import com.google.googlejavaformat.java.FormatterException;
 import org.inferred.freebuilder.processor.util.Scope.FileScope;
 import org.inferred.freebuilder.processor.util.ScopeHandler.Reflection;
 import org.inferred.freebuilder.processor.util.ScopeHandler.Visibility;
-import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
-import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.processing.ProcessingEnvironment;
-
 /** {@code SourceBuilder} which also handles package declaration and imports. */
-public class CompilationUnitBuilder
+class CompilationUnitBuilder
     extends AbstractSourceBuilder<CompilationUnitBuilder>
     implements SourceParser.EventHandler {
 
@@ -54,31 +48,7 @@ public class CompilationUnitBuilder
   private int importsIndex = -1;
   private final StringBuilder source = new StringBuilder();
 
-  /**
-   * Returns a {@link CompilationUnitBuilder}. {@code env} will be inspected for potential import
-   * collisions. If {@code features} is not null, it will be used instead of those deduced from
-   * {@code env}.
-   */
-  public static CompilationUnitBuilder forEnvironment(
-      ProcessingEnvironment env,
-      FeatureSet features) {
-    return new CompilationUnitBuilder(
-        new CompilerReflection(env.getElementUtils()),
-        Optional.ofNullable(features).orElseGet(() -> new EnvironmentFeatureSet(env)));
-  }
-
-  /**
-   * Returns a {@link CompilationUnitBuilder} for {@code classToWrite} using {@code features}. The
-   * file preamble (package and imports) will be generated automatically.
-   */
-  @VisibleForTesting
-  public static CompilationUnitBuilder forTesting(Feature<?>... features) {
-    return new CompilationUnitBuilder(
-        new RuntimeReflection(ClassLoader.getSystemClassLoader()),
-        new StaticFeatureSet(features));
-  }
-
-  private CompilationUnitBuilder(
+  CompilationUnitBuilder(
       Reflection reflect,
       FeatureSet features) {
     super(features);
@@ -88,6 +58,7 @@ public class CompilationUnitBuilder
     types.add(null);
   }
 
+  @Override
   public QualifiedName typename() {
     checkState(pkg != null, "No package statement");
     checkState(topLevelType != null, "No class declaration");
