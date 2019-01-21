@@ -54,11 +54,19 @@ public abstract class Scope {
   private final Map<Key<?>, Object> entries = new LinkedHashMap<>();
   private final Scope parent;
 
-  private Scope(Scope parent) {
+  protected Scope() {
+    this.parent = null;
+  }
+
+  protected Scope(Scope parent) {
     this.parent = parent;
   }
 
   protected abstract boolean canStore(Key<?> key);
+
+  public boolean isEmpty() {
+    return (parent == null || parent.isEmpty()) && entries.isEmpty();
+  }
 
   public boolean contains(Key<?> key) {
     return get(key) != null;
@@ -138,10 +146,6 @@ public abstract class Scope {
   }
 
   static class FileScope extends Scope {
-    FileScope() {
-      super(null);
-    }
-
     @Override
     protected boolean canStore(Key<?> key) {
       return key.level() == Level.FILE;

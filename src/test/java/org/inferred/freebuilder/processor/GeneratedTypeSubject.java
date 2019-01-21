@@ -6,8 +6,6 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
-import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.Feature;
@@ -36,22 +34,12 @@ class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> 
 
   public void generates(String... code) {
     String expected = Arrays.stream(code).collect(joining("\n", "", "\n"));
-    SourceBuilder compilationUnitBuilder = SourceBuilder.forTesting(
-            environmentFeatures.toArray(new Feature<?>[0]));
-    String rawSource = compilationUnitBuilder
+    String source = SourceBuilder
+        .forTesting(environmentFeatures.toArray(new Feature<?>[0]))
         .add(getSubject())
         .toString();
-    try {
-      String formattedSource = new Formatter().formatSource(rawSource);
-      if (!formattedSource.equals(expected)) {
-        throw new ComparisonFailure("Generated code incorrect", expected, formattedSource);
-      }
-    } catch (FormatterException e) {
-      int no = 0;
-      for (String line : rawSource.split("\n")) {
-        System.err.println((++no) + ": " + line);
-      }
-      failWithRawMessage("%s", e.getMessage());
+    if (!source.equals(expected)) {
+      throw new ComparisonFailure("Generated code incorrect", expected, source);
     }
   }
 }

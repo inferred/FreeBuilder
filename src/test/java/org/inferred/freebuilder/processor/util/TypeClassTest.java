@@ -107,6 +107,6 @@ public class TypeClassTest {
   }
 
   private static String prettyPrint(Excerpt type, SourceLevel sourceLevel) {
-    return SourceStringBuilder.simple(sourceLevel).add(type).toString();
+    return SourceBuilder.forTesting(sourceLevel).add(type).toString();
   }
 }
