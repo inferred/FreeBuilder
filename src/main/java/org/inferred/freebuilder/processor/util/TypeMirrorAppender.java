@@ -10,30 +10,24 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
-class TypeMirrorAppender
-    extends SimpleTypeVisitor6<Void, TypeMirrorAppender.QualifiedNameAppendable<?>> {
-
-  interface QualifiedNameAppendable<B extends QualifiedNameAppendable<B>> {
-    B append(char c);
-    B append(CharSequence csq);
-    B append(QualifiedName type);
-  }
+class TypeMirrorAppender extends SimpleTypeVisitor6<Void, QualifiedNameAppendable> {
 
   private static final TypeMirrorAppender INSTANCE = new TypeMirrorAppender();
 
-  public static void appendShortened(TypeMirror mirror, QualifiedNameAppendable<?> a) {
+  public static void appendShortened(TypeMirror mirror, QualifiedNameAppendable a) {
     mirror.accept(INSTANCE, a);
   }
 
   private TypeMirrorAppender() { }
 
   @Override
-  public Void visitDeclared(DeclaredType mirror, QualifiedNameAppendable<?> a) {
+  public Void visitDeclared(DeclaredType mirror, QualifiedNameAppendable a) {
     if (!isInnerClass(mirror)) {
       a.append(QualifiedName.of(asElement(mirror)));
     } else {
       mirror.getEnclosingType().accept(this, a);
-      a.append('.').append(mirror.asElement().getSimpleName());
+      a.append('.');
+      a.append(mirror.asElement().getSimpleName());
     }
     if (!mirror.getTypeArguments().isEmpty()) {
       String prefix = "<";
@@ -60,7 +54,7 @@ class TypeMirrorAppender
   }
 
   @Override
-  public Void visitWildcard(WildcardType t, QualifiedNameAppendable<?> a) {
+  public Void visitWildcard(WildcardType t, QualifiedNameAppendable a) {
     a.append("?");
     if (t.getSuperBound() != null) {
       a.append(" super ");
@@ -74,7 +68,7 @@ class TypeMirrorAppender
   }
 
   @Override
-  protected Void defaultAction(TypeMirror mirror, QualifiedNameAppendable<?> a) {
+  protected Void defaultAction(TypeMirror mirror, QualifiedNameAppendable a) {
     a.append(mirror.toString());
     return null;
   }

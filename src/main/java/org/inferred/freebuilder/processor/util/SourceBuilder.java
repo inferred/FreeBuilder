@@ -15,10 +15,15 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import static org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor.isLegalType;
+
 import static java.lang.ClassLoader.getSystemClassLoader;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.inferred.freebuilder.processor.util.ScopeHandler.Reflection;
 import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
 import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
@@ -29,9 +34,12 @@ import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * Source code builder, using format strings for readability, with sensible formatting for
@@ -41,14 +49,14 @@ import javax.lang.model.type.DeclaredType;
  * // Imports StringBuilder and appends "  StringBuilder foo;\n" to the source code.
  * builder.addLine("  %s foo;", StringBuilder.class);</pre>
  */
-public interface SourceBuilder {
+public class SourceBuilder {
 
   /**
    * Returns a {@link SourceBuilder}. {@code env} will be inspected for potential import collisions.
    * If {@code features} is not null, it will be used instead of those deduced from {@code env}.
    */
-  static SourceBuilder forEnvironment(ProcessingEnvironment env, FeatureSet features) {
-    return new CompilationUnitBuilder(
+  public static SourceBuilder forEnvironment(ProcessingEnvironment env, FeatureSet features) {
+    return new SourceBuilder(
         new CompilerReflection(env.getElementUtils()),
         Optional.ofNullable(features).orElseGet(() -> new EnvironmentFeatureSet(env)));
   }
@@ -58,7 +66,7 @@ public interface SourceBuilder {
    * inspected for potential import collisions.
    */
   @VisibleForTesting
-  static SourceBuilder forTesting(Feature<?>... features) {
+  public static SourceBuilder forTesting(Feature<?>... features) {
     return forTesting(new StaticFeatureSet(features));
   }
 
@@ -67,8 +75,16 @@ public interface SourceBuilder {
    * inspected for potential import collisions.
    */
   @VisibleForTesting
-  static SourceBuilder forTesting(FeatureSet features) {
-    return new CompilationUnitBuilder(new RuntimeReflection(getSystemClassLoader()), features);
+  public static SourceBuilder forTesting(FeatureSet features) {
+    return new SourceBuilder(new RuntimeReflection(getSystemClassLoader()), features);
+  }
+
+  private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
+  private final CompilationUnitBuilder source;
+
+  private SourceBuilder(Reflection reflect, FeatureSet features) {
+    source = new CompilationUnitBuilder(reflect, features);
   }
 
   /**
@@ -84,12 +100,18 @@ public interface SourceBuilder {
    * <li> {@link Excerpt} instances have {@link Excerpt#addTo(SourceBuilder)} called.
    * </ul>
    */
-  SourceBuilder add(String fmt, Object... args);
+  public SourceBuilder add(String fmt, Object... args) {
+    TemplateApplier.withParams(args).onText(source::append).onParam(this::add).parse(fmt);
+    return this;
+  }
 
   /**
    * Equivalent to {@code add("%s", excerpt)}.
    */
-  SourceBuilder add(Excerpt excerpt);
+  public SourceBuilder add(Excerpt excerpt) {
+    excerpt.addTo(this);
+    return this;
+  }
 
   /**
    * Appends a formatted line of code to the source.
@@ -104,7 +126,11 @@ public interface SourceBuilder {
    * <li> {@link Excerpt} instances have {@link Excerpt#addTo(SourceBuilder)} called.
    * </ul>
    */
-  SourceBuilder addLine(String fmt, Object... args);
+  public SourceBuilder addLine(String fmt, Object... args) {
+    add(fmt, args);
+    source.append(LINE_SEPARATOR);
+    return this;
+  }
 
   /**
    * Returns the instance of {@code featureType} appropriate for the source being written. For
@@ -117,17 +143,52 @@ public interface SourceBuilder {
    *
    * @see Feature
    */
-  <T extends Feature<T>> T feature(FeatureType<T> featureType);
+  public <T extends Feature<T>> T feature(FeatureType<T> featureType) {
+    return source.feature(featureType);
+  }
 
   /**
    * Returns the current scope (e.g. visible method parameters).
    */
-  Scope scope();
+  public Scope scope() {
+    return source.scope();
+  }
 
   /**
    * Return the qualified name of the main type declared by this unit.
    *
    * @throws IllegalStateException if no package or type has been declared
    */
-  QualifiedName typename();
+  public QualifiedName typename() {
+    return source.typename();
+  }
+
+  @Override
+  public String toString() {
+    return source.toString();
+  }
+
+  private void add(Object arg) {
+    if (arg instanceof Excerpt) {
+      ((Excerpt) arg).addTo(this);
+    } else if (arg instanceof Package) {
+      source.append(((Package) arg).getName());
+    } else if (arg instanceof Element) {
+      ElementAppender.appendShortened((Element) arg, source);
+    } else if (arg instanceof Class<?>) {
+      source.append(QualifiedName.of((Class<?>) arg));
+    } else if (arg instanceof TypeMirror) {
+      TypeMirror mirror = (TypeMirror) arg;
+      checkArgument(isLegalType(mirror), "Cannot write unknown type %s", mirror);
+      TypeMirrorAppender.appendShortened(mirror, source);
+    } else if (arg instanceof QualifiedName) {
+      source.append((QualifiedName) arg);
+    } else if (arg instanceof AnnotationMirror) {
+      AnnotationSource.addSource(this, (AnnotationMirror) arg);
+    } else if (arg instanceof CharSequence) {
+      source.append((CharSequence) arg);
+    } else {
+      source.append(arg.toString());
+    }
+  }
 }
