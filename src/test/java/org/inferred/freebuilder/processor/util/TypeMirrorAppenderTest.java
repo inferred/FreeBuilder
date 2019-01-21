@@ -23,7 +23,6 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.common.reflect.TypeToken;
 
-import org.inferred.freebuilder.processor.util.TypeMirrorAppender.QualifiedNameAppendable;
 import org.inferred.freebuilder.processor.util.testing.Model;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -40,26 +39,28 @@ import javax.lang.model.type.TypeMirror;
 @RunWith(JUnit4.class)
 public class TypeMirrorAppenderTest {
 
-  private static class FakeAppendable implements QualifiedNameAppendable<FakeAppendable> {
+  private static class FakeAppendable implements QualifiedNameAppendable {
 
     private final StringBuilder s = new StringBuilder();
 
     @Override
-    public FakeAppendable append(char c) {
+    public void append(char c) {
       s.append(c);
-      return this;
     }
 
     @Override
-    public FakeAppendable append(CharSequence csq) {
+    public void append(CharSequence csq) {
       s.append(csq);
-      return this;
     }
 
     @Override
-    public FakeAppendable append(QualifiedName type) {
+    public void append(CharSequence csq, int start, int end) {
+      s.append(csq, start, end);
+    }
+
+    @Override
+    public void append(QualifiedName type) {
       s.append("{{").append(type.getSimpleNames().stream().collect(joining("."))).append("}}");
-      return this;
     }
 
     @Override

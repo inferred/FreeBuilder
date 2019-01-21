@@ -15,10 +15,11 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
+import static org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor.isLegalType;
+
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 import org.inferred.freebuilder.processor.Property;
-import org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 
 import java.beans.Introspector;
@@ -126,7 +127,7 @@ class BeanConvention implements NamingConvention {
       }
       return Optional.empty();
     }
-    if (new IsInvalidTypeVisitor().visit(returnType)) {
+    if (!isLegalType(returnType)) {
       // The compiler should already have issued an error.
       return Optional.empty();
     }

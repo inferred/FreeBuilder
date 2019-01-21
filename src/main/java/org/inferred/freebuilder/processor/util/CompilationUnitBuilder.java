@@ -27,17 +27,18 @@ import com.google.googlejavaformat.java.FormatterException;
 
 import org.inferred.freebuilder.processor.util.ScopeHandler.Reflection;
 import org.inferred.freebuilder.processor.util.ScopeHandler.Visibility;
+import org.inferred.freebuilder.processor.util.feature.Feature;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
+import org.inferred.freebuilder.processor.util.feature.FeatureType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/** {@code SourceBuilder} which also handles package declaration and imports. */
-class CompilationUnitBuilder
-    extends AbstractSourceBuilder<CompilationUnitBuilder>
-    implements SourceParser.EventHandler {
+/** Internals of {@code SourceBuilder}, handling source parsing and type shortening. */
+class CompilationUnitBuilder implements QualifiedNameAppendable, SourceParser.EventHandler {
 
+  private final FeatureSet features;
   private final ScopeHandler scopeHandler;
   private final SourceParser parser;
   private final List<Scope> scopes = new ArrayList<>();
@@ -49,14 +50,17 @@ class CompilationUnitBuilder
   private final StringBuilder source = new StringBuilder();
 
   CompilationUnitBuilder(Reflection reflect, FeatureSet features) {
-    super(features);
+    this.features = features;
     scopeHandler = new ScopeHandler(reflect);
     parser = new SourceParser(this);
     scopes.add(new InitialScope());
     types.add(null);
   }
 
-  @Override
+  public <T extends Feature<T>> T feature(FeatureType<T> feature) {
+    return features.get(feature);
+  }
+
   public QualifiedName typename() {
     checkState(pkg != null, "No package statement");
     checkState(topLevelType != null, "No class declaration");
@@ -118,21 +122,28 @@ class CompilationUnitBuilder
   }
 
   @Override
-  protected CompilationUnitBuilder getThis() {
-    return this;
-  }
-
-  @Override
-  public CompilationUnitBuilder append(char c) {
+  public void append(char c) {
     source.append(c);
     parser.parse(c);
-    return this;
   }
 
   @Override
-  public CompilationUnitBuilder append(QualifiedName type) {
+  public void append(CharSequence csq) {
+    append(csq, 0, csq.length());
+  }
+
+  @Override
+  public void append(CharSequence csq, int start, int end) {
+    for (int i = start; i < end; i++) {
+      append(csq.charAt(i));
+    }
+  }
+
+  @Override
+  public void append(QualifiedName type) {
     if (type.getPackage().isEmpty() && type.isTopLevel()) {
-      return append(type.getSimpleName());
+      append(type.getSimpleName());
+      return;
     }
     TypeUsage.Builder usage = new TypeUsage.Builder()
         .start(source.length())
@@ -140,10 +151,8 @@ class CompilationUnitBuilder
         .nullableScope(getLast(types));
     append(type.toString());
     usages.add(usage.end(source.length()).build());
-    return this;
   }
 
-  @Override
   public Scope scope() {
     return getLast(scopes);
   }
