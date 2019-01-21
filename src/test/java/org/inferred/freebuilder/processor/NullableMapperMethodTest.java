@@ -18,7 +18,7 @@ package org.inferred.freebuilder.processor;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -60,12 +60,12 @@ public class NullableMapperMethodTest {
 
   private final NamingConvention convention;
   private final FeatureSet features;
-  private final CompilationUnitBuilder nullableIntegerType;
+  private final SourceBuilder nullableIntegerType;
 
   public NullableMapperMethodTest(NamingConvention convention, FeatureSet features) {
     this.convention = convention;
     this.features = features;
-    nullableIntegerType = CompilationUnitBuilder.forTesting()
+    nullableIntegerType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -148,7 +148,7 @@ public class NullableMapperMethodTest {
     thrown.expectMessage("property must be non-negative");
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -177,7 +177,7 @@ public class NullableMapperMethodTest {
   public void mapCanAcceptGenericFunctionalInterface() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -204,7 +204,7 @@ public class NullableMapperMethodTest {
   public void mapCanAcceptPrimitiveFunctionalInterface() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")

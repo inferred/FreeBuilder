@@ -29,7 +29,7 @@ import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -75,9 +75,9 @@ public class SetPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder setPropertyType;
+  private final SourceBuilder setPropertyType;
   private final String validationErrorMessage;
-  private final CompilationUnitBuilder validatedType;
+  private final SourceBuilder validatedType;
 
   public SetPropertyTest(
       SetType set, ElementFactory elements, NamingConvention convention, FeatureSet features) {
@@ -86,7 +86,7 @@ public class SetPropertyTest {
     this.convention = convention;
     this.features = features;
 
-    setPropertyType = CompilationUnitBuilder.forTesting()
+    setPropertyType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -106,7 +106,7 @@ public class SetPropertyTest {
 
     validationErrorMessage = elements.errorMessage();
 
-    validatedType = CompilationUnitBuilder.forTesting()
+    validatedType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")
@@ -557,7 +557,7 @@ public class SetPropertyTest {
     assumeNoComparatorRequired();
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -587,7 +587,7 @@ public class SetPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -612,7 +612,7 @@ public class SetPropertyTest {
     assumeGuavaAvailable();
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -638,7 +638,7 @@ public class SetPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/229
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<E> {")
@@ -662,7 +662,7 @@ public class SetPropertyTest {
     assumeNoComparatorRequired();
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<E> {")
@@ -773,7 +773,7 @@ public class SetPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
             .addLine("@%s", FreeBuilder.class)
@@ -980,7 +980,7 @@ public class SetPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/258
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1042,7 +1042,7 @@ public class SetPropertyTest {
     assumeTrue("Comparable element type", Comparable.class.isAssignableFrom(elements.type()));
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1064,7 +1064,7 @@ public class SetPropertyTest {
   public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")
@@ -1087,7 +1087,7 @@ public class SetPropertyTest {
     assumeTrue("Comparable element type", Comparable.class.isAssignableFrom(elements.type()));
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -1113,7 +1113,7 @@ public class SetPropertyTest {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType<T> {")

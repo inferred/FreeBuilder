@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
@@ -76,7 +76,7 @@ public class OptionalMapperMethodTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder dataType;
+  private final SourceBuilder dataType;
 
   public OptionalMapperMethodTest(
       Class<?> optional,
@@ -89,7 +89,7 @@ public class OptionalMapperMethodTest {
     this.convention = convention;
     this.features = features;
 
-    dataType = CompilationUnitBuilder.forTesting()
+    dataType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -205,7 +205,7 @@ public class OptionalMapperMethodTest {
 
   @Test
   public void canUseCustomBoxedFunctionalInterface() {
-    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    SourceBuilder customMutatorType = SourceBuilder.forTesting();
     for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         int insertOffset = line.indexOf('{') + 1;
@@ -239,7 +239,7 @@ public class OptionalMapperMethodTest {
 
   @Test
   public void canUseCustomUnboxedFunctionalInterface() {
-    CompilationUnitBuilder customMutatorType = CompilationUnitBuilder.forTesting();
+    SourceBuilder customMutatorType = SourceBuilder.forTesting();
     for (String line : dataType.toString().split("\n")) {
       if (line.contains("extends DataType_Builder")) {
         int insertOffset = line.indexOf('{') + 1;

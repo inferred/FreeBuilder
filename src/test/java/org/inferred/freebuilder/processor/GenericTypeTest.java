@@ -16,7 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -48,7 +48,7 @@ public class GenericTypeTest {
   public void testGenericInterface() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<A, B> {")
@@ -73,7 +73,7 @@ public class GenericTypeTest {
   public void testGenericInterface_compilesWithoutWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<A, B> {")
@@ -90,7 +90,7 @@ public class GenericTypeTest {
   public void testBoundedParameters() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<A extends Number, B extends Number> {")

@@ -28,7 +28,7 @@ import com.google.common.collect.Multiset;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -71,7 +71,7 @@ public class MultisetPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder dataType;
+  private final SourceBuilder dataType;
 
   public MultisetPropertyTest(
       ElementFactory element,
@@ -80,7 +80,7 @@ public class MultisetPropertyTest {
     this.element = element;
     this.convention = convention;
     this.features = features;
-    dataType = CompilationUnitBuilder.forTesting()
+    dataType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -548,7 +548,7 @@ public class MultisetPropertyTest {
   public void testToBuilder_fromPartial() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -591,7 +591,7 @@ public class MultisetPropertyTest {
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -619,7 +619,7 @@ public class MultisetPropertyTest {
   public void testImmutableSetProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -643,7 +643,7 @@ public class MultisetPropertyTest {
   public void testOverridingSetCount() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public abstract class DataType {")
@@ -699,7 +699,7 @@ public class MultisetPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("import " + JsonProperty.class.getName() + ";")
             .addLine("@%s", FreeBuilder.class)
@@ -729,7 +729,7 @@ public class MultisetPropertyTest {
   public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -751,7 +751,7 @@ public class MultisetPropertyTest {
   public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<T> {")
@@ -773,7 +773,7 @@ public class MultisetPropertyTest {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -799,7 +799,7 @@ public class MultisetPropertyTest {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType<T> {")

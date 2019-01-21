@@ -15,7 +15,7 @@
  */
 package org.inferred.freebuilder.processor.util.testing;
 
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 
 import java.net.URI;
@@ -39,7 +39,7 @@ class CompilationUnit extends SimpleJavaFileObject {
     }
   }
 
-  CompilationUnit(CompilationUnitBuilder unit) {
+  CompilationUnit(SourceBuilder unit) {
     super(uriForClass(unit.typename().toString()), Kind.SOURCE);
     this.typename = unit.typename();
     this.code = unit.toString();

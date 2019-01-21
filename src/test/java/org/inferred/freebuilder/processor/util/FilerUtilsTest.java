@@ -59,7 +59,7 @@ public class FilerUtilsTest {
   private final StringWriter source = new StringWriter();
   private TypeElement originatingElement;
 
-  private final CompilationUnitBuilder unit = CompilationUnitBuilder.forTesting()
+  private final SourceBuilder unit = SourceBuilder.forTesting()
       .addLine("package com.example;")
       .addLine("class Bar { }");
 

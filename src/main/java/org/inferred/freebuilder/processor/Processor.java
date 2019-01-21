@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.FilerUtils;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 
@@ -106,8 +106,7 @@ public class Processor extends AbstractProcessor {
     }
     for (TypeElement type : typesIn(annotatedElementsIn(roundEnv, FreeBuilder.class))) {
       try {
-        CompilationUnitBuilder code = CompilationUnitBuilder.forEnvironment(
-            processingEnv, features);
+        SourceBuilder code = SourceBuilder.forEnvironment(processingEnv, features);
         code.add(analyser.analyse(type));
         FilerUtils.writeCompilationUnit(processingEnv.getFiler(), code, type);
       } catch (Analyser.CannotGenerateCodeException e) {

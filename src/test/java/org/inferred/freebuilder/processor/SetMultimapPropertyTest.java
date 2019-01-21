@@ -31,7 +31,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -73,7 +73,7 @@ public class SetMultimapPropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder dataType;
+  private final SourceBuilder dataType;
 
   public SetMultimapPropertyTest(
       ElementFactory key,
@@ -85,7 +85,7 @@ public class SetMultimapPropertyTest {
     this.convention = convention;
     this.features = features;
 
-    dataType = CompilationUnitBuilder.forTesting()
+    dataType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -582,7 +582,7 @@ public class SetMultimapPropertyTest {
   public void testToBuilder_fromPartial() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -633,7 +633,7 @@ public class SetMultimapPropertyTest {
   public void testImmutableSetMultimapProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -660,7 +660,7 @@ public class SetMultimapPropertyTest {
   public void testOverridingPut() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -726,7 +726,7 @@ public class SetMultimapPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)

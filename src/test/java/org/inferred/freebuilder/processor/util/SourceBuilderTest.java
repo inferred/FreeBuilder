@@ -36,8 +36,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 
-/** Tests for {@link CompilationUnitBuilder}. */
-public class CompilationUnitBuilderTest {
+/** Tests for {@link SourceBuilder}. */
+public class SourceBuilderTest {
 
   @Rule public final ModelRule model = new ModelRule();
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -50,7 +50,7 @@ public class CompilationUnitBuilderTest {
 
   @Test
   public void testAddLine() {
-    CompilationUnitBuilder unit = source()
+    SourceBuilder unit = source()
         .addLine("package com.example;")
         .addLine("public class Bar {")
         .addLine("  // %s %s", "Foo", 100)
@@ -232,7 +232,7 @@ public class CompilationUnitBuilderTest {
         .addLine("package com.example;").addLine("%s", errorType);
   }
 
-  private CompilationUnitBuilder source() {
-    return CompilationUnitBuilder.forEnvironment(model.environment(), null);
+  private SourceBuilder source() {
+    return SourceBuilder.forEnvironment(model.environment(), null);
   }
 }

@@ -79,6 +79,11 @@ public class SourceStringBuilder extends AbstractSourceBuilder<SourceStringBuild
   }
 
   @Override
+  public QualifiedName typename() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   protected SourceStringBuilder getThis() {
     return this;
   }

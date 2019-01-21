@@ -20,7 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -60,12 +60,12 @@ public class BuildableListMutateMethodTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder buildableListType;
+  private final SourceBuilder buildableListType;
 
   public BuildableListMutateMethodTest(NamingConvention convention, FeatureSet features) {
     this.convention = convention;
     this.features = features;
-    buildableListType = CompilationUnitBuilder.forTesting()
+    buildableListType = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface Receipt {")

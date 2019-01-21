@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -63,8 +63,8 @@ public class NullablePropertyTest {
   private final NamingConvention convention;
   private final FeatureSet features;
 
-  private final CompilationUnitBuilder oneProperty;
-  private final CompilationUnitBuilder twoProperties;
+  private final SourceBuilder oneProperty;
+  private final SourceBuilder twoProperties;
 
   public NullablePropertyTest(
       ElementFactory element,
@@ -74,7 +74,7 @@ public class NullablePropertyTest {
     this.convention = convention;
     this.features = features;
 
-    oneProperty = CompilationUnitBuilder.forTesting()
+    oneProperty = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -83,7 +83,7 @@ public class NullablePropertyTest {
         .addLine("  public static class Builder extends DataType_Builder {}")
         .addLine("}");
 
-    twoProperties = CompilationUnitBuilder.forTesting()
+    twoProperties = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public interface DataType {")
@@ -213,7 +213,7 @@ public class NullablePropertyTest {
   public void testBuilderClear_customDefault() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
@@ -240,7 +240,7 @@ public class NullablePropertyTest {
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(CompilationUnitBuilder.forTesting()
+        .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")

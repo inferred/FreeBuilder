@@ -18,7 +18,7 @@ package org.inferred.freebuilder.processor;
 import com.google.common.collect.Ordering;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.CompilationUnitBuilder;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
 import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
@@ -58,11 +58,11 @@ public class SortedSetMutateMethodTest {
 
   private static final String FAILED_VALIDATION_MESSAGE = "Elements cannot start with a '0'";
 
-  private final CompilationUnitBuilder datatype;
+  private final SourceBuilder datatype;
 
   public SortedSetMutateMethodTest(FeatureSet features) {
     this.features = features;
-    datatype = CompilationUnitBuilder.forTesting()
+    datatype = SourceBuilder.forTesting()
         .addLine("package com.example;")
         .addLine("@%s", FreeBuilder.class)
         .addLine("public abstract class DataType {")

@@ -15,9 +15,16 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
 import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.feature.FeatureType;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
+import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
+
+import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
@@ -33,6 +40,27 @@ import javax.lang.model.type.DeclaredType;
  * builder.addLine("  %s foo;", StringBuilder.class);</pre>
  */
 public interface SourceBuilder {
+
+  /**
+   * Returns a {@link SourceBuilder}. {@code env} will be inspected for potential import collisions.
+   * If {@code features} is not null, it will be used instead of those deduced from {@code env}.
+   */
+  static SourceBuilder forEnvironment(ProcessingEnvironment env, FeatureSet features) {
+    return new CompilationUnitBuilder(
+        new CompilerReflection(env.getElementUtils()),
+        Optional.ofNullable(features).orElseGet(() -> new EnvironmentFeatureSet(env)));
+  }
+
+  /**
+   * Returns a {@link SourceBuilder} using {@code features}. The system classloader will be
+   * inspected for potential import collisions.
+   */
+  @VisibleForTesting
+  static SourceBuilder forTesting(Feature<?>... features) {
+    return new CompilationUnitBuilder(
+        new RuntimeReflection(ClassLoader.getSystemClassLoader()),
+        new StaticFeatureSet(features));
+  }
 
   /**
    * Appends formatted text to the source.
@@ -87,4 +115,10 @@ public interface SourceBuilder {
    */
   Scope scope();
 
+  /**
+   * Return the qualified name of the main type declared by this unit.
+   *
+   * @throws IllegalStateException if no package or type has been declared
+   */
+  QualifiedName typename();
 }

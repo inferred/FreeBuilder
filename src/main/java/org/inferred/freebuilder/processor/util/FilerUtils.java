@@ -32,7 +32,7 @@ public class FilerUtils {
    */
   public static void writeCompilationUnit(
       Filer filer,
-      CompilationUnitBuilder unit,
+      SourceBuilder unit,
       Element originatingElement) throws IOException {
     String typename = unit.typename().toString();
     String finalSource = unit.toString();
