@@ -25,9 +25,13 @@ public class FieldAccess extends ValueType implements Excerpt {
 
   @Override
   public void addTo(SourceBuilder source) {
-    Object idOwner = source.scope().putIfAbsent(new IdKey(fieldName), this);
-    if (idOwner != null && !idOwner.equals(this)) {
-      source.add("this.");
+    IdKey key = new IdKey(fieldName);
+    if (source.scope().canStore(key)) {
+      // In method scope; we may need to qualify the field reference
+      Object idOwner = source.scope().putIfAbsent(key, this);
+      if (idOwner != null && !idOwner.equals(this)) {
+        source.add("this.");
+      }
     }
     source.add(fieldName);
   }

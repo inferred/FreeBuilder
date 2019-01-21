@@ -53,12 +53,12 @@ public abstract class Scope {
 
   private final Map<Key<?>, Object> entries = new LinkedHashMap<>();
   private final Scope parent;
-  private final Level level;
 
-  private Scope(Scope parent, Level level) {
+  private Scope(Scope parent) {
     this.parent = parent;
-    this.level = level;
   }
+
+  protected abstract boolean canStore(Key<?> key);
 
   public boolean contains(Key<?> key) {
     return get(key) != null;
@@ -89,7 +89,7 @@ public abstract class Scope {
     V value = get(key);
     if (value != null) {
       return value;
-    } else if (level == key.level()) {
+    } else if (canStore(key)) {
       entries.put(key, RECURSION_SENTINEL);
       value = supplier.get();
       entries.put(key, requireNonNull(value));
@@ -119,7 +119,7 @@ public abstract class Scope {
   public <V> V putIfAbsent(Key<V> key, V value) {
     requireNonNull(key);
     requireNonNull(value);
-    if (level == key.level()) {
+    if (canStore(key)) {
       @SuppressWarnings("unchecked")
       V existingValue = (V) entries.get(key);
       if (value == RECURSION_SENTINEL) {
@@ -131,19 +131,31 @@ public abstract class Scope {
       return existingValue;
     } else if (parent != null) {
       return parent.putIfAbsent(key, value);
+    } else {
+      throw new IllegalStateException(
+          "Not in " + key.level().toString().toLowerCase() + " scope");
     }
-    return null;
   }
 
   static class FileScope extends Scope {
     FileScope() {
-      super(null, Level.FILE);
+      super(null);
+    }
+
+    @Override
+    protected boolean canStore(Key<?> key) {
+      return key.level() == Level.FILE;
     }
   }
 
   static class MethodScope extends Scope {
     MethodScope(Scope parent) {
-      super(parent, Level.METHOD);
+      super(parent);
+    }
+
+    @Override
+    protected boolean canStore(Key<?> key) {
+      return key.level() == Level.METHOD;
     }
   }
 }
