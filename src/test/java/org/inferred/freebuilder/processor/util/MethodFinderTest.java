@@ -16,8 +16,10 @@
 package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.truth.Truth.assertThat;
-import static java.util.stream.Collectors.joining;
+
 import static org.junit.Assert.fail;
+
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableList;
 
@@ -36,7 +38,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleTypeVisitor6;
+import javax.lang.model.util.SimpleTypeVisitor8;
 
 public class MethodFinderTest {
 
@@ -241,8 +243,8 @@ public class MethodFinderTest {
     return resultBuilder.build();
   }
 
-  private static final SimpleTypeVisitor6<CharSequence, ?> STRINGIFY =
-      new SimpleTypeVisitor6<CharSequence, Void>() {
+  private static final SimpleTypeVisitor8<CharSequence, ?> STRINGIFY =
+      new SimpleTypeVisitor8<CharSequence, Void>() {
 
     @Override public Name visitDeclared(DeclaredType t, Void p) {
       return t.asElement().getSimpleName();

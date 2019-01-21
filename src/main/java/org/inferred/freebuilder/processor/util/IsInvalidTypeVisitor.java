@@ -27,17 +27,19 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.NullType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.UnionType;
 import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.AbstractTypeVisitor6;
+import javax.lang.model.util.AbstractTypeVisitor8;
 
 /** A type visitor that returns true if the type will be invalid if we write it out. */
 public class IsInvalidTypeVisitor
-    extends AbstractTypeVisitor6<Boolean, Void> implements Predicate<TypeMirror> {
+    extends AbstractTypeVisitor8<Boolean, Void> implements Predicate<TypeMirror> {
 
   public static boolean isLegalType(TypeMirror mirror) {
     return !(new IsInvalidTypeVisitor().visit(mirror));
@@ -107,5 +109,15 @@ public class IsInvalidTypeVisitor
   @Override
   public Boolean visitNoType(NoType t, Void p) {
     return false;
+  }
+
+  @Override
+  public Boolean visitIntersection(IntersectionType t, Void p) {
+    return any(t.getBounds(), this);
+  }
+
+  @Override
+  public Boolean visitUnion(UnionType t, Void p) {
+    return any(t.getAlternatives(), this);
   }
 }

@@ -69,7 +69,7 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.SimpleTypeVisitor6;
+import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
 
 /**
@@ -540,8 +540,8 @@ class Analyser {
    * runtime. This is true for any type that is non-generic, raw, or parameterized with unbounded
    * wildcards, such as {@code Integer}, {@code List} or {@code Map<?, ?>}.
    */
-  private static final SimpleTypeVisitor6<Boolean, ?> CAST_IS_FULLY_CHECKED =
-      new SimpleTypeVisitor6<Boolean, Void>() {
+  private static final SimpleTypeVisitor8<Boolean, ?> CAST_IS_FULLY_CHECKED =
+      new SimpleTypeVisitor8<Boolean, Void>() {
         @Override
         public Boolean visitArray(ArrayType t, Void p) {
           return visit(t.getComponentType());
@@ -565,8 +565,8 @@ class Analyser {
   /**
    * Visitor that returns true if the visited type is an unbounded wildcard, i.e. {@code <?>}.
    */
-  private static final SimpleTypeVisitor6<Boolean, ?> IS_UNBOUNDED_WILDCARD =
-      new SimpleTypeVisitor6<Boolean, Void>() {
+  private static final SimpleTypeVisitor8<Boolean, ?> IS_UNBOUNDED_WILDCARD =
+      new SimpleTypeVisitor8<Boolean, Void>() {
         @Override public Boolean visitWildcard(WildcardType t, Void p) {
           return t.getExtendsBound() == null
               || t.getExtendsBound().toString().equals("java.lang.Object");
@@ -633,7 +633,7 @@ class Analyser {
    * same package.
    */
   private static final class IsSubclassOfGeneratedTypeVisitor extends
-      SimpleTypeVisitor6<Boolean, Void> {
+      SimpleTypeVisitor8<Boolean, Void> {
     private final QualifiedName superclass;
     private final List<? extends TypeParameterElement> typeParameters;
 

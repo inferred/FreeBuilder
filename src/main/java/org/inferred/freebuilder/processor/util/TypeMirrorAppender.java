@@ -8,9 +8,9 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.SimpleTypeVisitor6;
+import javax.lang.model.util.SimpleTypeVisitor8;
 
-class TypeMirrorAppender extends SimpleTypeVisitor6<Void, QualifiedNameAppendable> {
+class TypeMirrorAppender extends SimpleTypeVisitor8<Void, QualifiedNameAppendable> {
 
   private static final TypeMirrorAppender INSTANCE = new TypeMirrorAppender();
 

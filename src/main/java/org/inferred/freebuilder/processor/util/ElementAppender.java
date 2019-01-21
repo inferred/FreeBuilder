@@ -3,9 +3,9 @@ package org.inferred.freebuilder.processor.util;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.SimpleElementVisitor6;
+import javax.lang.model.util.SimpleElementVisitor8;
 
-class ElementAppender extends SimpleElementVisitor6<Void, QualifiedNameAppendable> {
+class ElementAppender extends SimpleElementVisitor8<Void, QualifiedNameAppendable> {
   private static final ElementAppender INSTANCE = new ElementAppender();
 
   public static void appendShortened(Element arg, QualifiedNameAppendable source) {
