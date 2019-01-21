@@ -6,8 +6,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElem
 
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
-
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -88,7 +86,7 @@ public class TypeClass extends Type {
   @Override
   public String toString() {
     // Only used when debugging, so an empty feature set is fine.
-    return SourceStringBuilder.compilable(new StaticFeatureSet()).add(declaration()).toString();
+    return SourceStringBuilder.simple().add(declaration()).toString();
   }
 
   private static void addDeclarationParameters(

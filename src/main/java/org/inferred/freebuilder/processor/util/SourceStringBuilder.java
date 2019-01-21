@@ -39,14 +39,6 @@ public class SourceStringBuilder extends AbstractSourceBuilder<SourceStringBuild
         new MethodScope(new FileScope()));
   }
 
-  /**
-   * Returns a {@link SourceStringBuilder} that returns compilable code.
-   */
-  public static SourceStringBuilder compilable(FeatureSet features) {
-    return new SourceStringBuilder(
-        new TypeShortener.NeverShorten(), features, new FileScope());
-  }
-
   private final TypeShortener shortener;
   private final Scope scope;
   private final StringBuilder destination = new StringBuilder();

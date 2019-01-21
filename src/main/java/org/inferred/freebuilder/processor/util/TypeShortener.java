@@ -24,19 +24,6 @@ interface TypeShortener {
 
   void appendShortened(Appendable a, QualifiedName type) throws IOException;
 
-  /** A {@link TypeShortener} that never shortens types. */
-  class NeverShorten implements TypeShortener {
-    @Override
-    public void appendShortened(Appendable a, QualifiedName type) throws IOException {
-      a.append(type.getPackage());
-      String separator = (type.getPackage().isEmpty()) ? "" : ".";
-      for (String simpleName : type.getSimpleNames()) {
-        a.append(separator).append(simpleName);
-        separator = ".";
-      }
-    }
-  }
-
   /** A {@link TypeShortener} that always shortens types, even if that causes conflicts. */
   class AlwaysShorten implements TypeShortener {
     @Override

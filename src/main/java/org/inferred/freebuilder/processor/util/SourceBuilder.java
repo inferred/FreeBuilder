@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor.util;
 
+import static java.lang.ClassLoader.getSystemClassLoader;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import org.inferred.freebuilder.processor.util.feature.EnvironmentFeatureSet;
@@ -57,9 +59,16 @@ public interface SourceBuilder {
    */
   @VisibleForTesting
   static SourceBuilder forTesting(Feature<?>... features) {
-    return new CompilationUnitBuilder(
-        new RuntimeReflection(ClassLoader.getSystemClassLoader()),
-        new StaticFeatureSet(features));
+    return forTesting(new StaticFeatureSet(features));
+  }
+
+  /**
+   * Returns a {@link SourceBuilder} using {@code features}. The system classloader will be
+   * inspected for potential import collisions.
+   */
+  @VisibleForTesting
+  static SourceBuilder forTesting(FeatureSet features) {
+    return new CompilationUnitBuilder(new RuntimeReflection(getSystemClassLoader()), features);
   }
 
   /**

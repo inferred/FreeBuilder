@@ -6,15 +6,13 @@ import com.google.common.collect.Lists;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
-import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
-import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,7 +20,6 @@ import java.util.List;
 import javax.lang.model.type.TypeKind;
 
 @RunWith(Parameterized.class)
-@UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class ObjectsExcerptsTest {
 
   public enum ValueSet {
@@ -55,13 +52,12 @@ public class ObjectsExcerptsTest {
         .iterator();
   }
 
-  @Shared public BehaviorTester behaviorTester;
   @Parameter(value = 0) public FeatureSet features;
   @Parameter(value = 1) public ValueSet valueSet;
 
   @Test
   public void testEquals_notNullable() {
-    SourceBuilder code = SourceStringBuilder.compilable(features);
+    SourceBuilder code = testerClass();
     int numValues = valueSet.values.size();
     for (int i = 0; i < numValues; ++i) {
       code.addLine("%s value%s = %s;", valueSet.notNullableType, i, valueSet.values.get(i));
@@ -75,12 +71,12 @@ public class ObjectsExcerptsTest {
                 ObjectsExcerpts.equals("value" + i, "value" + j, valueSet.kind));
       }
     }
-    behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
+    runTesterClass(code);
   }
 
   @Test
   public void testEquals_nullable() {
-    SourceBuilder code = SourceStringBuilder.compilable(features);
+    SourceBuilder code = testerClass();
     int numValues = valueSet.values.size();
     for (int i = 0; i < numValues; ++i) {
       code.addLine("%s value%s = %s;", valueSet.nullableType, i, valueSet.values.get(i));
@@ -95,12 +91,12 @@ public class ObjectsExcerptsTest {
                 ObjectsExcerpts.equals("value" + i, "value" + j, TypeKind.DECLARED));
       }
     }
-    behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
+    runTesterClass(code);
   }
 
   @Test
   public void testNotEquals_notNullable() {
-    SourceBuilder code = SourceStringBuilder.compilable(features);
+    SourceBuilder code = testerClass();
     int numValues = valueSet.values.size();
     for (int i = 0; i < numValues; ++i) {
       code.addLine("%s value%s = %s;", valueSet.notNullableType, i, valueSet.values.get(i));
@@ -114,12 +110,12 @@ public class ObjectsExcerptsTest {
                 ObjectsExcerpts.notEquals("value" + i, "value" + j, valueSet.kind));
       }
     }
-    behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
+    runTesterClass(code);
   }
 
   @Test
   public void testNotEquals_nullable() {
-    SourceBuilder code = SourceStringBuilder.compilable(features);
+    SourceBuilder code = testerClass();
     int numValues = valueSet.values.size();
     for (int i = 0; i < numValues; ++i) {
       code.addLine("%s value%s = %s;", valueSet.nullableType, i, valueSet.values.get(i));
@@ -134,6 +130,23 @@ public class ObjectsExcerptsTest {
                 ObjectsExcerpts.notEquals("value" + i, "value" + j, TypeKind.DECLARED));
       }
     }
-    behaviorTester.with(new TestBuilder().addLine("%s", code.toString()).build()).runTest();
+    runTesterClass(code);
+  }
+
+  private SourceBuilder testerClass() {
+    return SourceBuilder.forTesting(features)
+        .addLine("package com.example;")
+        .addLine("import static " + Assert.class.getName() + ".*;")
+        .addLine("public class EqualityTester {")
+        .addLine("  public static void test() {");
+  }
+
+  private void runTesterClass(SourceBuilder code) {
+    code.addLine("  }")
+        .addLine("}");
+    BehaviorTester.create(features)
+        .withPermittedPackage(Assert.class.getPackage())
+        .with(code)
+        .with(new TestBuilder().addLine("com.example.EqualityTester.test();").build()).runTest();
   }
 }

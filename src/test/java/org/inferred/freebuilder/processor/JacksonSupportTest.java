@@ -24,9 +24,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceStringBuilder;
-import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
 import org.inferred.freebuilder.processor.util.testing.MessagerRule;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Before;
@@ -37,7 +37,6 @@ import org.junit.runners.JUnit4;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
-import java.util.Optional;
 
 /** Unit tests for {@link Analyser}. */
 @RunWith(JUnit4.class)
@@ -135,18 +134,22 @@ public class JacksonSupportTest {
 
   private static void assertPropertyHasAnnotation(
       Property property, Class<? extends Annotation> annotationClass, String annotationString) {
-    Optional<Excerpt> annotationExcerpt = property.getAccessorAnnotations()
+    Excerpt annotationExcerpt = property.getAccessorAnnotations()
             .stream()
             .filter(excerpt -> asCompilableString(excerpt)
                 .contains(annotationClass.getCanonicalName()))
-            .findFirst();
+            .findFirst()
+            .orElse(null);
     assertThat(annotationExcerpt).named("property accessor annotations").isNotNull();
-    assertThat(asString(annotationExcerpt.get()))
-            .isEqualTo(String.format("%s%n", annotationString));
+    assertThat(asString(annotationExcerpt)).contains(String.format("%s%n", annotationString));
   }
 
   private static String asCompilableString(Excerpt excerpt) {
-    return SourceStringBuilder.compilable(new StaticFeatureSet()).add(excerpt).toString();
+    return SourceBuilder.forTesting()
+        .addLine("package com.example;")
+        .add(excerpt)
+        .addLine(" interface Foo { }")
+        .toString();
   }
 
   private static String asString(Excerpt excerpt) {
