@@ -37,7 +37,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
-import javax.lang.model.util.AbstractElementVisitor6;
+import javax.lang.model.util.AbstractElementVisitor8;
 
 abstract class GenericTypeElementImpl extends ValueType
     implements javax.lang.model.element.TypeElement {
@@ -140,8 +140,8 @@ abstract class GenericTypeElementImpl extends ValueType
     }
   }
 
-  private static final AbstractElementVisitor6<Name, ?> GET_QUALIFIED_NAME =
-      new AbstractElementVisitor6<Name, Void>() {
+  private static final AbstractElementVisitor8<Name, ?> GET_QUALIFIED_NAME =
+      new AbstractElementVisitor8<Name, Void>() {
 
         @Override
         public Name visitPackage(PackageElement e, Void p) {

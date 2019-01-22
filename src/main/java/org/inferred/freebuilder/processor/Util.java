@@ -24,7 +24,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.SimpleTypeVisitor6;
 
 /** Utility class for common static methods. */
 public class Util {
@@ -52,7 +51,7 @@ public class Util {
 
   /** Returns true if {@code type} erases to any of {@code possibilities}. */
   static boolean erasesToAnyOf(DeclaredType type, QualifiedName... possibilities) {
-    String erasedType = new TypeToStringVisitor().visit(type);
+    String erasedType = type.asElement().toString();
     for (QualifiedName possibility : possibilities) {
       if (unshadedName(possibility.toString()).equals(erasedType)) {
         return true;
@@ -63,19 +62,12 @@ public class Util {
 
   /** Returns true if {@code type} erases to any of {@code possibilities}. */
   static boolean erasesToAnyOf(DeclaredType type, Class<?>... possibilities) {
-    String erasedType = new TypeToStringVisitor().visit(type);
+    String erasedType = type.asElement().toString();
     for (Class<?> possibility : possibilities) {
       if (unshadedName(possibility.getName()).equals(erasedType)) {
         return true;
       }
     }
     return false;
-  }
-
-  private static final class TypeToStringVisitor extends SimpleTypeVisitor6<String, Object> {
-    @Override
-    public String visitDeclared(DeclaredType t, Object p) {
-      return t.asElement().toString();
-    }
   }
 }

@@ -35,8 +35,8 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.SimpleElementVisitor6;
-import javax.lang.model.util.SimpleTypeVisitor6;
+import javax.lang.model.util.SimpleElementVisitor8;
+import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
 
 /**
@@ -149,7 +149,7 @@ public class ModelUtils {
    * {@code &#64;SafeVarargs} annotation to avoid compiler warnings in Java 7+.
    */
   public static boolean needsSafeVarargs(TypeMirror elementType) {
-    return elementType.accept(new SimpleTypeVisitor6<Boolean, Void>() {
+    return elementType.accept(new SimpleTypeVisitor8<Boolean, Void>() {
       @Override
       public Boolean visitDeclared(DeclaredType t, Void p) {
         // Set<?>... does not need @SafeVarargs; Set<Integer>... or Set<? extends Number> does.
@@ -189,7 +189,7 @@ public class ModelUtils {
   }
 
   private static boolean isPlainWildcard(TypeMirror type) {
-    return type.accept(new SimpleTypeVisitor6<Boolean, Void>() {
+    return type.accept(new SimpleTypeVisitor8<Boolean, Void>() {
       @Override
       public Boolean visitWildcard(WildcardType t, Void p) {
         return (t.getExtendsBound() == null) && (t.getSuperBound() == null);
@@ -225,8 +225,8 @@ public class ModelUtils {
     return true;
   }
 
-  private static final SimpleElementVisitor6<Optional<TypeElement>, ?> TYPE_ELEMENT_VISITOR =
-      new SimpleElementVisitor6<Optional<TypeElement>, Void>() {
+  private static final SimpleElementVisitor8<Optional<TypeElement>, ?> TYPE_ELEMENT_VISITOR =
+      new SimpleElementVisitor8<Optional<TypeElement>, Void>() {
 
         @Override
         public Optional<TypeElement> visitType(TypeElement e, Void p) {
@@ -239,8 +239,8 @@ public class ModelUtils {
         }
       };
 
-  private static final SimpleTypeVisitor6<Optional<DeclaredType>, ?> DECLARED_TYPE_VISITOR =
-      new SimpleTypeVisitor6<Optional<DeclaredType>, Void>() {
+  private static final SimpleTypeVisitor8<Optional<DeclaredType>, ?> DECLARED_TYPE_VISITOR =
+      new SimpleTypeVisitor8<Optional<DeclaredType>, Void>() {
 
         @Override
         public Optional<DeclaredType> visitDeclared(DeclaredType t, Void p) {
@@ -253,8 +253,8 @@ public class ModelUtils {
         }
       };
 
-  private static final SimpleTypeVisitor6<Optional<TypeVariable>, ?> TYPE_VARIABLE_VISITOR =
-      new SimpleTypeVisitor6<Optional<TypeVariable>, Void>() {
+  private static final SimpleTypeVisitor8<Optional<TypeVariable>, ?> TYPE_VARIABLE_VISITOR =
+      new SimpleTypeVisitor8<Optional<TypeVariable>, Void>() {
 
         @Override
         public Optional<TypeVariable> visitTypeVariable(TypeVariable t, Void p) {

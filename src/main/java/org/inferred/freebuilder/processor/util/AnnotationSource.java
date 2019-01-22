@@ -26,7 +26,7 @@ import java.util.Map.Entry;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.util.SimpleAnnotationValueVisitor6;
+import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
 /**
  * Static methods for annotation-related source-code generation.
@@ -53,7 +53,7 @@ public class AnnotationSource {
   }
 
   private static class ValueSourceAdder
-      extends SimpleAnnotationValueVisitor6<Void, AnnotationValue> {
+      extends SimpleAnnotationValueVisitor8<Void, AnnotationValue> {
 
     private final SourceBuilder code;
 
