@@ -9,6 +9,7 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.primitiveUnaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.util.ModelUtils.override;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -28,8 +29,10 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
+import javax.tools.Diagnostic.Kind;
 
 /**
  * This property class handles the primitive optional fields, including
@@ -61,11 +64,30 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
           config.getElements(),
           config.getTypes());
 
+      checkForInfiniteLoop(config, optionalType);
+
       return Optional.of(new PrimitiveOptionalProperty(
           config.getDatatype(),
           config.getProperty(),
           optionalType,
           mapperType));
+    }
+
+    private static void checkForInfiniteLoop(Config config, OptionalType optional) {
+      ExecutableElement override = override(
+          config.getBuilder(),
+          config.getTypes(),
+          setter(config.getProperty()),
+          config.getTypes().getPrimitiveType(optional.primitiveKind)).orElse(null);
+      if (override == null) {
+        return;
+      }
+      MethodIntrospector.instance(config.getEnvironment())
+          .visitAllOwnMethodInvocations(override, (methodName, logger) -> {
+            if (setter(config.getProperty()).contentEquals(methodName)) {
+              logger.logMessage(Kind.ERROR, "Infinite recursive loop detected");
+            }
+          });
     }
   }
 

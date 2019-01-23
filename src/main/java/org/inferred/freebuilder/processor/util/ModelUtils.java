@@ -128,17 +128,28 @@ public class ModelUtils {
     }
   }
 
+  /** Returns the method on {@code type} that overrides method {@code methodName(params)}. */
+  public static Optional<ExecutableElement> override(
+      TypeElement type, Types types, String methodName, TypeMirror... params) {
+    return methodsIn(type.getEnclosedElements())
+        .stream()
+        .filter(method -> signatureMatches(method, types, methodName, params))
+        .findAny();
+  }
+
+  /** Returns the method on {@code type} that overrides method {@code methodName(params)}. */
+  public static Optional<ExecutableElement> override(
+      DeclaredType type, Types types, String methodName, TypeMirror... params) {
+    return override(asElement(type), types, methodName, params);
+  }
+
   /** Returns whether {@code type} overrides method {@code methodName(params)}. */
   public static boolean overrides(
       TypeElement type, Types types, String methodName, TypeMirror... params) {
-    for (ExecutableElement method : methodsIn(type.getEnclosedElements())) {
-      if (signatureMatches(method, types, methodName, params)) {
-        return true;
-      }
-    }
-    return false;
+    return override(type, types, methodName, params).isPresent();
   }
 
+  /** Returns whether {@code type} overrides method {@code methodName(params)}. */
   public static boolean overrides(
       DeclaredType type, Types types, String methodName, TypeMirror... params) {
     return overrides(asElement(type), types, methodName, params);

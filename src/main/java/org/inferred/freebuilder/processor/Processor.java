@@ -91,11 +91,7 @@ public class Processor extends AbstractProcessor {
           Kind.NOTE, "FreeBuilder processor registered twice; disabling duplicate instance");
       return;
     }
-    analyser = new Analyser(
-        processingEnv.getElementUtils(),
-        processingEnv.getMessager(),
-        MethodIntrospector.instance(processingEnv),
-        processingEnv.getTypeUtils());
+    analyser = new Analyser(processingEnv, processingEnv.getMessager());
   }
 
   @Override

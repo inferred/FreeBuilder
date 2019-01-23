@@ -39,6 +39,10 @@ public class CompilationException extends RuntimeException {
     this(e.diagnostics);
   }
 
+  public List<Diagnostic<? extends JavaFileObject>> getDiagnostics() {
+    return diagnostics;
+  }
+
   @Override
   public String getMessage() {
     StringBuilder fullMessage = new StringBuilder("Compilation failed");

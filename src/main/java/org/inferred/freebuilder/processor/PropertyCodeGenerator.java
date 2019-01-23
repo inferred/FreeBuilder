@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
@@ -64,6 +65,9 @@ public abstract class PropertyCodeGenerator {
      * so must only be used for making optimizations.
      */
     Set<String> getMethodsInvokedInBuilderConstructor();
+
+    /** The compiler's {@link ProcessingEnvironment} implementation. */
+    ProcessingEnvironment getEnvironment();
 
     /** The compiler's {@link Elements} implementation. */
     Elements getElements();

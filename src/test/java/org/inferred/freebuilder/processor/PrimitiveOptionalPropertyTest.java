@@ -614,6 +614,38 @@ public class PrimitiveOptionalPropertyTest {
         .runTest();
   }
 
+  @Test
+  public void testUpgradeMishapCaughtInCompiler() {
+    // Users upgrading from older FreeBuilder versions may have implemented their own primitive
+    // setter delegating to the OptionalP-accepting setter. We need to turn this runtime stack
+    // overflow into a compile-time error.
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting(features)
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s %s;", optional.type, convention.get("item"))
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public Builder %s(%s item) {",
+                convention.set("item"), optional.primitiveType)
+            .addLine("      return %s(%s.of(item));", convention.set("item"), optional.type)
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}"))
+        .failsToCompile()
+        .withErrorThat(error -> error
+            .hasMessage("Infinite recursive loop detected")
+            .inFile("/com/example/DataType.java")
+            .onLine(14));
+  }
+
   private static TestBuilder testBuilder() {
     return new TestBuilder()
         .addImport("com.example.DataType");

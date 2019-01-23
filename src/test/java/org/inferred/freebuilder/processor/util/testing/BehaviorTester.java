@@ -20,6 +20,8 @@ import org.inferred.freebuilder.processor.util.feature.FeatureSet;
 import org.inferred.freebuilder.processor.util.testing.TestBuilder.TestSource;
 import org.junit.Test;
 
+import java.util.function.Consumer;
+
 import javax.annotation.processing.Processor;
 import javax.tools.JavaFileObject;
 
@@ -128,6 +130,13 @@ public interface BehaviorTester {
   CompilationSubject compiles();
 
   /**
+   * Errors when attempting to compile everything given to {@link #with}.
+   *
+   * @return a {@link CompilationFailureSubject} with which to make further assertions
+   */
+  CompilationFailureSubject failsToCompile();
+
+  /**
    * Compiles, loads and tests everything given to {@link #with}.
    *
    * <p>Runs the compiler with the provided sources and processors. Loads the generated code into a
@@ -165,5 +174,18 @@ public interface BehaviorTester {
     CompilationSubject testsPass(
         Iterable<? extends TestSource> testSources,
         boolean shouldSetContextClassLoader);
+  }
+
+  /**
+   * Assertions that can be made about a failed compilation.
+   */
+  public interface CompilationFailureSubject {
+    CompilationFailureSubject withErrorThat(Consumer<DiagnosticSubject> diagnosticAssertions);
+  }
+
+  public interface DiagnosticSubject {
+    DiagnosticSubject hasMessage(CharSequence expected);
+    DiagnosticSubject inFile(CharSequence expected);
+    DiagnosticSubject onLine(long line);
   }
 }

@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -112,17 +113,16 @@ class Analyser {
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
 
+  private final ProcessingEnvironment env;
   private final Elements elements;
   private final Messager messager;
-  private final MethodIntrospector methodIntrospector;
   private final Types types;
 
-  Analyser(
-      Elements elements, Messager messager, MethodIntrospector methodIntrospector, Types types) {
-    this.elements = elements;
+  Analyser(ProcessingEnvironment env, Messager messager) {
+    this.env = env;
+    this.elements = env.getElementUtils();
     this.messager = messager;
-    this.methodIntrospector = methodIntrospector;
-    this.types = types;
+    this.types = env.getTypeUtils();
   }
 
   /**
@@ -434,6 +434,7 @@ class Analyser {
   }
 
   private Set<String> getMethodsInvokedInBuilderConstructor(TypeElement builder) {
+    MethodIntrospector methodIntrospector = MethodIntrospector.instance(env);
     List<ExecutableElement> constructors = constructorsIn(builder.getEnclosedElements());
     Set<Name> result = null;
     for (ExecutableElement constructor : constructors) {
@@ -523,6 +524,11 @@ class Analyser {
     @Override
     public Set<String> getMethodsInvokedInBuilderConstructor() {
       return methodsInvokedInBuilderConstructor;
+    }
+
+    @Override
+    public ProcessingEnvironment getEnvironment() {
+      return env;
     }
 
     @Override
