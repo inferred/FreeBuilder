@@ -151,6 +151,8 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
+        .addLine(" * @throws %s if {@code %s} is null",
+            NullPointerException.class, property.getName())
         .addLine(" */");
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s %s) {",
@@ -257,7 +259,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addToStringCondition(SourceBuilder code) {
-    code.add("!%s.isEmpty()", property.getField());
+    code.add("%s.isPresent()", property.getField());
   }
 
   @Override
