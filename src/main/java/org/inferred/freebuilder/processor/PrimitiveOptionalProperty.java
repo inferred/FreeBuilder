@@ -254,4 +254,14 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
       code.addLine("%s = %s.empty();", property.getField(), optional.type);
     }
   }
+
+  @Override
+  public void addToStringCondition(SourceBuilder code) {
+    code.add("!%s.isEmpty()", property.getField());
+  }
+
+  @Override
+  public void addToStringValue(SourceBuilder code) {
+    code.add("%s.%s()", property.getField(), optional.getter);
+  }
 }
