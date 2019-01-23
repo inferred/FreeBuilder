@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Primitives;
 import com.google.common.testing.EqualsTester;
 
 import org.inferred.freebuilder.FreeBuilder;
@@ -55,6 +56,7 @@ public class PrimitiveOptionalPropertyTest {
 
     private final Class<?> type;
     private final Class<? extends Number> primitiveType;
+    private final Class<?> boxedType;
     private final IntFunction<? extends Number> examples;
 
     <T, P extends Number> OptionalFactory(
@@ -63,6 +65,7 @@ public class PrimitiveOptionalPropertyTest {
         IntFunction<P> examples) {
       this.type = type;
       this.primitiveType = primitiveType;
+      this.boxedType = Primitives.wrap(primitiveType);
       this.examples = examples;
     }
 
@@ -201,6 +204,20 @@ public class PrimitiveOptionalPropertyTest {
   }
 
   @Test
+  public void testSet_optionalDelegatesToPrimitiveSetterForValidation() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(INVALID_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(datatype)
+        .with(testBuilder()
+            .addLine("DataType.Builder template = DataType.builder()")
+            .addLine("    .%s(%s.of(-1));", convention.set("item"), optional.type)
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testSet_empty() {
     behaviorTester
         .with(new Processor(features))
@@ -222,6 +239,145 @@ public class PrimitiveOptionalPropertyTest {
         .with(datatype)
         .with(testBuilder()
             .addLine("new DataType.Builder().%s((%s) null);", convention.set("item"), optional.type)
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMap_modifiesValue() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(datatype)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("item"), optional.example(1))
+            .addLine("    .mapItem(a -> a + %s)", optional.example(2))
+            .addLine("    .build();")
+            .addLine("assertEquals(%s.of(%s + %s), value.%s);",
+                optional.type, optional.example(1), optional.example(2), convention.get("item"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMap_delegatesToSetterForValidation() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(INVALID_MESSAGE);
+    behaviorTester
+        .with(new Processor(features))
+        .with(datatype)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+            .addLine("    .mapItem(a -> -1);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMap_throwsNpeIfMapperIsNull() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(datatype)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+            .addLine("    .mapItem(null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMap_throwsNpeIfMapperIsNullAndPropertyIsEmpty() {
+    thrown.expect(NullPointerException.class);
+    behaviorTester
+        .with(new Processor(features))
+        .with(datatype)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .mapItem(null);")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMap_skipsMapperIfPropertyIsEmpty() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(datatype)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .mapItem(a -> { fail(\"mapper called\"); return -1; })")
+            .addLine("    .build();")
+            .addLine("assertFalse(value.%s.isPresent());", convention.get("item"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMap_canUseCustomBoxedFunctionalInterface() {
+    SourceBuilder customMutatorType = SourceBuilder.forTesting();
+    for (String line : datatype.toString().split("\n")) {
+      if (line.contains("extends DataType_Builder")) {
+        int insertOffset = line.indexOf('{') + 1;
+        customMutatorType
+            .addLine("%s", line.substring(0, insertOffset))
+            .addLine("    public interface Mapper {")
+            .addLine("      %1$s map(%1$s value);", optional.boxedType)
+            .addLine("    }")
+            .addLine("    @Override public Builder mapItem(Mapper mapper) {")
+            .addLine("      return super.mapItem(mapper);")
+            .addLine("    }")
+            .addLine("%s", line.substring(insertOffset));
+      } else {
+        customMutatorType.addLine("%s", line);
+      }
+    }
+
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMutatorType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+            .addLine("    .mapItem(a -> null)")
+            .addLine("    .build();")
+            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testMap_canUseCustomUnboxedFunctionalInterface() {
+    SourceBuilder customMutatorType = SourceBuilder.forTesting();
+    for (String line : datatype.toString().split("\n")) {
+      if (line.contains("extends DataType_Builder")) {
+        int insertOffset = line.indexOf('{') + 1;
+        customMutatorType
+            .addLine("%s", line.substring(0, insertOffset))
+            .addLine("    public interface Mapper {")
+            .addLine("      %1$s map(%1$s value);", optional.primitiveType)
+            .addLine("    }")
+            .addLine("    @Override public Builder mapItem(Mapper mapper) {")
+            .addLine("      return super.mapItem(mapper);")
+            .addLine("    }")
+            .addLine("%s", line.substring(insertOffset));
+      } else {
+        customMutatorType.addLine("%s", line);
+      }
+    }
+
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMutatorType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+            .addLine("    .mapItem(a -> %s)", optional.example(1))
+            .addLine("    .build();")
+            .addLine("assertEquals(%s.of(%s), value.%s);",
+                optional.type, optional.example(1), convention.get("item"))
             .build())
         .runTest();
   }
@@ -370,20 +526,6 @@ public class PrimitiveOptionalPropertyTest {
             .addLine("    .clear()")
             .addLine("    .build();")
             .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
-            .build())
-        .runTest();
-  }
-
-  @Test
-  public void testCustomization_optionalSetter() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(INVALID_MESSAGE);
-    behaviorTester
-        .with(new Processor(features))
-        .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s.of(-1));", convention.set("item"), optional.type)
             .build())
         .runTest();
   }

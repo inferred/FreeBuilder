@@ -22,6 +22,7 @@ import org.inferred.freebuilder.processor.util.TypeClass;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
@@ -180,7 +181,8 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         .addLine(" * @throws NullPointerException if {@code mapper} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mapper) {",
-            datatype.getBuilder(), mapper(property), mapperType.getFunctionalInterface());
+            datatype.getBuilder(), mapper(property), mapperType.getFunctionalInterface())
+        .addLine("  %s.requireNonNull(mapper);", Objects.class);
     Variable value = new Variable("value");
     if (mapperType.canReturnNull()) {
       Variable result = new Variable("result");
