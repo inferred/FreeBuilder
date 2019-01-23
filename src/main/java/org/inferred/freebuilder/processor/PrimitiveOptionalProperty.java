@@ -1,46 +1,108 @@
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.primitives.Primitives.wrap;
+
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
-import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.util.FunctionalType.primitiveUnaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CaseFormat;
 
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
+import org.inferred.freebuilder.processor.util.FunctionalType;
+import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.util.TypeClass;
 import org.inferred.freebuilder.processor.util.Variable;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeKind;
 
 /**
  * This property class handles the primitive optional fields, including
  * {@link OptionalDouble}, {@link OptionalLong}, and {@link OptionalInt}.
  */
 public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
-  private final OptionalType optional;
-  private final TypeMirror elementType;
-  private final Property flag;
+  static class Factory implements PropertyCodeGenerator.Factory {
+
+    @Override
+    public Optional<PrimitiveOptionalProperty> create(Config config) {
+      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
+      if (type == null || !type.getTypeArguments().isEmpty()) {
+        return Optional.empty();
+      }
+
+      QualifiedName typename = QualifiedName.of(ModelUtils.asElement(type));
+      OptionalType optionalType = Arrays.stream(OptionalType.values())
+          .filter(candidate -> candidate.type.getQualifiedName().equals(typename))
+          .findAny()
+          .orElse(null);
+      if (optionalType == null) {
+        return Optional.empty();
+      }
+
+      FunctionalType mapperType = functionalTypeAcceptedByMethod(
+          config.getBuilder(),
+          mapper(config.getProperty()),
+          primitiveUnaryOperator(config.getTypes().getPrimitiveType(optionalType.primitiveKind)),
+          config.getElements(),
+          config.getTypes());
+
+      return Optional.of(new PrimitiveOptionalProperty(
+          config.getDatatype(),
+          config.getProperty(),
+          optionalType,
+          mapperType));
+    }
+  }
 
   @VisibleForTesting
-  PrimitiveOptionalProperty(Datatype datatype, Property property) {
+  enum OptionalType {
+    INT(OptionalInt.class, int.class, TypeKind.INT, "getAsInt"),
+    LONG(OptionalLong.class, long.class, TypeKind.LONG, "getAsLong"),
+    DOUBLE(OptionalDouble.class, double.class, TypeKind.DOUBLE, "getAsDouble");
+
+    private final TypeClass type;
+    private final Class<?> primitiveType;
+    private final TypeKind primitiveKind;
+    private final String getter;
+
+    OptionalType(
+        Class<?> optionalType,
+        Class<?> primitiveType,
+        TypeKind primitiveKind,
+        String getter) {
+      this.type = TypeClass.fromNonGeneric(optionalType);
+      this.primitiveType = primitiveType;
+      this.primitiveKind = primitiveKind;
+      this.getter = getter;
+    }
+  }
+
+  private final OptionalType optional;
+  private final FunctionalType mapperType;
+
+  @VisibleForTesting
+  PrimitiveOptionalProperty(
+      Datatype datatype,
+      Property property,
+      OptionalType optional,
+      FunctionalType mapperType) {
     super(datatype, property);
-    this.elementType = property.getType();
-    this.optional = OptionalType.lookup(this.elementType);
-    this.flag = Property.Builder.from(property).setName(property.getName() + "Valid")
-                                         .build();
+    this.optional = optional;
+    this.mapperType = mapperType;
   }
 
   @Override
@@ -50,13 +112,12 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
 
   @Override
   public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
-    code.addLine("private final %s %s;", optional.wrapper, finalField);
+    code.addLine("private final %s %s;", optional.type, finalField);
   }
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private %s %s;", optional.primitiveType, property.getField())
-        .addLine("private boolean %s = false;", flag.getField());
+    code.addLine("private %1$s %2$s = %1$s.empty();", optional.type, property.getField());
   }
 
   @Override
@@ -78,8 +139,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         .addLine(" */")
         .addLine("public %s %s(%s %s) {",
             datatype.getBuilder(), setter(property), optional.primitiveType, property.getName())
-        .addLine("  %s = %s;", property.getField(), property.getName())
-        .addLine("  %s = true;", flag.getField())
+        .addLine("  %s = %s.of(%s);", property.getField(), optional.type, property.getName())
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
@@ -94,10 +154,9 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         .addLine(" */");
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s %s) {",
-            datatype.getBuilder(), setter(property), optional.cls, property.getName())
+            datatype.getBuilder(), setter(property), optional.type, property.getName())
         .addLine("  if (%s.isPresent()) {", property.getName())
-        .addLine("    return %s(%s.%s());", setter(property),
-            property.getName(), optional.getAsMethod)
+        .addLine("    return %s(%s.%s());", setter(property), property.getName(), optional.getter)
         .addLine("  } else {")
         .addLine("    return %s();", clearMethod(property))
         .addLine("  }")
@@ -109,32 +168,48 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is present,",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
-        .addLine(" * replaces it by applying {@code mapper} to it and using the result.")
-        .addLine(" *")
-        .addLine(" * <p>If the result is null, clears the value.")
-        .addLine(" *")
+        .addLine(" * replaces it by applying {@code mapper} to it and using the result.");
+    if (mapperType.canReturnNull()) {
+      code.addLine(" *")
+          .addLine(" * <p>If the result is null, clears the value.");
+    }
+    code.addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code mapper} is null")
         .addLine(" */")
         .addLine("public %s %s(%s mapper) {",
-            datatype.getBuilder(), mapper(property), optional.unaryType)
-        .addLine("  %s().ifPresent(value -> %s(mapper.%s(value)));", getter(property),
-            setter(property), optional.unaryMethod)
-        .addLine("  return (%s) this;", datatype.getBuilder());
-    code.addLine("}");
+            datatype.getBuilder(), mapper(property), mapperType.getFunctionalInterface());
+    Variable value = new Variable("value");
+    if (mapperType.canReturnNull()) {
+      Variable result = new Variable("result");
+      code.addLine("  %s.ifPresent(%s -> {", property.getField(), value)
+          .addLine("    %s %s = mapper.%s(%s);",
+              wrap(optional.primitiveType), result, mapperType.getMethodName(), value)
+          .addLine("    if (%s != null) {", result)
+          .addLine("      %s(%s);", setter(property), result)
+          .addLine("    } else {")
+          .addLine("      %s();", clearMethod(property))
+          .addLine("    }")
+          .addLine("  });");
+    } else {
+      code.addLine("  %1$s.ifPresent(%2$s -> %3$s(mapper.%4$s(%2$s)));",
+              property.getField(), value, setter(property), mapperType.getMethodName());
+    }
+    code.addLine("  return (%s) this;", datatype.getBuilder())
+        .addLine("}");
   }
 
   private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Sets the value to be returned by %s",
-                 datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
-        .addLine(" * to {@link %1$s#empty() %2$s}.", optional.cls, optional.empty)
+        .addLine(" * Sets the value to be returned by %s to %s.",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()),
+            optional.type.javadocNoArgMethodLink("empty"))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
         .addLine("public %s %s() {", datatype.getBuilder(), clearMethod(property))
-        .addLine("  %s = false;", flag.getField())
+        .addLine("  %s = %s.empty();", property.getField(), optional.type)
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
@@ -143,41 +218,26 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns the value that will be returned by %s.",
-                 datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" */")
-        .addLine("public %s %s() {", property.getType(), getter(property));
-    code.add("return %s ? %s.of(%s) : %s;\n", flag.getField(), optional.cls,
-             property.getField(), optional.empty)
+        .addLine("public %s %s() {", property.getType(), getter(property))
+        .addLine("  return %s;", property.getField())
         .addLine("}");
   }
 
   @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
-    code.addLine("%s = %s ? %s : null;", finalField, flag.getField().on(builder),
-                 property.getField().on(builder));
+    code.addLine("%s = %s;", finalField, property.getField().on(builder));
   }
 
   @Override
   public void addMergeFromValue(SourceBuilder code, String value) {
-    String propertyValue = value + "." + property.getGetterName() + "()";
-    optional.invokeIfPresent(code, propertyValue, setter(property));
+    code.addLine("%s.%s().ifPresent(this::%s);", value, property.getGetterName(), setter(property));
   }
 
   @Override
   public void addMergeFromBuilder(SourceBuilder code, String builder) {
-    String propertyValue = builder + "." + getter(property) + "()";
-    optional.invokeIfPresent(code, propertyValue, setter(property));
-  }
-
-  @Override
-  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
-    code.addLine("%s.%s(%s);", builder, nullableSetter(property), property.getField());
-  }
-
-  @Override
-  public void addReadValueFragment(SourceBuilder code, Excerpt finalField) {
-    code.add("%s == null ? %s : %s.of(%s)", finalField, optional.empty, optional.cls,
-             finalField);
+    code.addLine("%s.%s().ifPresent(this::%s);", builder, getter(property), setter(property));
   }
 
   @Override
@@ -189,81 +249,9 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   public void addClearField(SourceBuilder code) {
     Optional<Variable> defaults = Declarations.freshBuilder(code, datatype);
     if (defaults.isPresent()) {
-      code.addLine("%s(%s.%s());", setter(property), defaults.get(), getter(property));
+      code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
     } else {
-      code.addLine("%s = false;", flag.getField());
-    }
-  }
-
-  @VisibleForTesting
-  enum OptionalType {
-    INT(QualifiedName.of("java.util", "OptionalInt"), Integer.class, "int"),
-    LONG(QualifiedName.of("java.util", "OptionalLong"), Long.class, "long"),
-    DOUBLE(QualifiedName.of("java.util", "OptionalDouble"), Double.class, "double");
-
-    private final QualifiedName cls;
-    private final QualifiedName wrapper;
-    private final String empty;
-    private final String primitiveType;
-    private final QualifiedName unaryType;
-    private final String unaryMethod;
-    private final String getAsMethod;
-
-    OptionalType(QualifiedName qualifiedName, Class<?> wrapper, String primitiveType) {
-      this.cls = qualifiedName;
-      this.wrapper = QualifiedName.of(wrapper);
-      this.primitiveType = primitiveType;
-
-      String upperCamelName = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, primitiveType);
-      this.unaryType = QualifiedName.of("java.util.function", upperCamelName + "UnaryOperator");
-      this.unaryMethod = "applyAs" + upperCamelName;
-      this.getAsMethod = "getAs" + upperCamelName;
-      this.empty = qualifiedName.getSimpleName() + ".empty()";
-    }
-
-    public static OptionalType lookup(TypeMirror elementType) {
-      String type = elementType.toString();
-
-      for (OptionalType op : values()) {
-        if (type.contains(op.cls.getSimpleName())) {
-          return op;
-        }
-      }
-
-      throw new IllegalStateException("Not a supported type: " + type);
-    }
-
-    protected void invokeIfPresent(SourceBuilder code, String value, String method) {
-      code.addLine("%s.ifPresent(this::%s);", value, method);
-    }
-  }
-
-  static class Factory implements PropertyCodeGenerator.Factory {
-
-    @Override
-    public Optional<PrimitiveOptionalProperty> create(Config config) {
-      DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
-      if (type == null) {
-        return Optional.empty();
-      }
-
-      OptionalType optionalType = maybeOptional(type).orElse(null);
-      if (optionalType == null) {
-        return Optional.empty();
-      }
-
-      return Optional.of(new PrimitiveOptionalProperty(
-        config.getDatatype(),
-        config.getProperty()));
-    }
-
-    private static Optional<OptionalType> maybeOptional(DeclaredType type) {
-      for (OptionalType optionalType : OptionalType.values()) {
-        if (erasesToAnyOf(type, optionalType.cls)) {
-          return Optional.of(optionalType);
-        }
-      }
-      return Optional.empty();
+      code.addLine("%s = %s.empty();", property.getField(), optional.type);
     }
   }
 }

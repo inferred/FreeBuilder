@@ -20,7 +20,7 @@ import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
 import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
-import static org.inferred.freebuilder.processor.util.FunctionalType.intUnaryOperator;
+import static org.inferred.freebuilder.processor.util.FunctionalType.primitiveUnaryOperator;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
@@ -948,6 +948,6 @@ public class RequiredPropertiesSourceTest {
 
     return new GeneratedBuilder(datatype, ImmutableMap.of(
         name, new DefaultProperty(datatype, name, false, unaryOperator(STRING)),
-        age, new DefaultProperty(datatype, age, false, intUnaryOperator(INT))));
+        age, new DefaultProperty(datatype, age, false, primitiveUnaryOperator(INT))));
   }
 }

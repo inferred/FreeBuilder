@@ -11,7 +11,6 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.only;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -58,19 +57,14 @@ public class FunctionalType extends ValueType {
         type);
   }
 
-  public static FunctionalType intUnaryOperator(PrimitiveType type) {
-    Preconditions.checkArgument(type.getKind() == TypeKind.INT);
-    return new FunctionalType(
-        Type.from(IntUnaryOperator.class),
-        "applyAsInt",
-        ImmutableList.of(type),
-        type);
-  }
-
-  public static FunctionalType unboxedUnaryOperator(TypeMirror type, Types types) {
+  public static FunctionalType primitiveUnaryOperator(PrimitiveType type) {
     switch (type.getKind()) {
       case INT:
-        return intUnaryOperator((PrimitiveType) type);
+        return new FunctionalType(
+            Type.from(IntUnaryOperator.class),
+            "applyAsInt",
+            ImmutableList.of(type),
+            type);
 
       case LONG:
         return new FunctionalType(
@@ -85,6 +79,18 @@ public class FunctionalType extends ValueType {
             "applyAsDouble",
             ImmutableList.of(type),
             type);
+
+      default:
+        throw new IllegalArgumentException("No primitive unary operator exists for " + type);
+    }
+  }
+
+  public static FunctionalType unboxedUnaryOperator(TypeMirror type, Types types) {
+    switch (type.getKind()) {
+      case INT:
+      case LONG:
+      case DOUBLE:
+        return primitiveUnaryOperator((PrimitiveType) type);
 
       case BOOLEAN:
       case BYTE:
