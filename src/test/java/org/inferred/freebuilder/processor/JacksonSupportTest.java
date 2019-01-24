@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.util.Excerpt;
@@ -95,6 +96,22 @@ public class JacksonSupportTest {
     Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
     assertPropertyHasAnnotation(property,
             JacksonXmlProperty.class, "@JacksonXmlProperty(localName = \"b-ob\")");
+  }
+
+  @Test
+  public void jacksonXmlTextAnnotationAdded() throws CannotGenerateCodeException {
+    // See also https://github.com/google/FreeBuilder/issues/68
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+         "import " + JacksonXmlText.class.getName() + ";",
+        "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
+        "public interface DataType {",
+        "  @JacksonXmlText String getFooBar();",
+        "  class Builder extends DataType_Builder {}",
+        "}"));
+
+    Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
+    assertPropertyHasAnnotation(property, JacksonXmlText.class, "@JacksonXmlText");
   }
 
   @Test
