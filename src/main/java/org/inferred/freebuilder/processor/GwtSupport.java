@@ -6,6 +6,8 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
 import com.google.common.annotations.GwtCompatible;
 
 import org.inferred.freebuilder.processor.Datatype.Visibility;
+import org.inferred.freebuilder.processor.property.Property;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.QualifiedName;

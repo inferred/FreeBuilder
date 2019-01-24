@@ -25,6 +25,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
+import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.MessagerRule;

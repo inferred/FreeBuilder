@@ -38,7 +38,7 @@ public class Util {
    * <li>? super T -> Object
    * </ul>
    */
-  static TypeMirror upperBound(Elements elements, TypeMirror type) {
+  public static TypeMirror upperBound(Elements elements, TypeMirror type) {
     if (type.getKind() == TypeKind.WILDCARD) {
       WildcardType wildcard = (WildcardType) type;
       type = wildcard.getExtendsBound();
@@ -50,7 +50,7 @@ public class Util {
   }
 
   /** Returns true if {@code type} erases to any of {@code possibilities}. */
-  static boolean erasesToAnyOf(DeclaredType type, QualifiedName... possibilities) {
+  public static boolean erasesToAnyOf(DeclaredType type, QualifiedName... possibilities) {
     String erasedType = type.asElement().toString();
     for (QualifiedName possibility : possibilities) {
       if (unshadedName(possibility.toString()).equals(erasedType)) {
@@ -61,7 +61,7 @@ public class Util {
   }
 
   /** Returns true if {@code type} erases to any of {@code possibilities}. */
-  static boolean erasesToAnyOf(DeclaredType type, Class<?>... possibilities) {
+  public static boolean erasesToAnyOf(DeclaredType type, Class<?>... possibilities) {
     String erasedType = type.asElement().toString();
     for (Class<?> possibility : possibilities) {
       if (unshadedName(possibility.getName()).equals(erasedType)) {

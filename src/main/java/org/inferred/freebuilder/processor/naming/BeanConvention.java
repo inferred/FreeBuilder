@@ -19,7 +19,7 @@ import static org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor.isLeg
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
-import org.inferred.freebuilder.processor.Property;
+import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 
 import java.beans.Introspector;

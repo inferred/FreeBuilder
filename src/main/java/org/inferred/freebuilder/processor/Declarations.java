@@ -8,7 +8,7 @@ import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.Optional;
 
-class Declarations {
+public class Declarations {
 
   private static final String UPCAST_COMMENT =
       "// Upcast to access private fields; otherwise, oddly, we get an access violation.";

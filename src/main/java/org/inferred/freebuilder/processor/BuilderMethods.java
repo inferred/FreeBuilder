@@ -1,5 +1,7 @@
 package org.inferred.freebuilder.processor;
 
+import org.inferred.freebuilder.processor.property.Property;
+
 /** Utility methods for method names used in builders. */
 public class BuilderMethods {
 

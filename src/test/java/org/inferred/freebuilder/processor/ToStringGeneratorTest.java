@@ -8,7 +8,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
+import org.inferred.freebuilder.processor.property.Property;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.junit.Test;
