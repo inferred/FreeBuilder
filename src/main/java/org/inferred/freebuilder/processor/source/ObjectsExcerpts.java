@@ -42,6 +42,7 @@ public class ObjectsExcerpts {
       case INT:
       case LONG:
       case CHAR:
+      case ARRAY:
         return code -> code.add("%s %s %s", a, areEqual ? "==" : "!=", b);
 
       default:
