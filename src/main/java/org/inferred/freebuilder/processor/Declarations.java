@@ -1,10 +1,10 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.processor.BuilderFactory.TypeInference;
-import org.inferred.freebuilder.processor.util.Scope;
-import org.inferred.freebuilder.processor.util.Scope.Level;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.Variable;
+import org.inferred.freebuilder.processor.source.Scope;
+import org.inferred.freebuilder.processor.source.Scope.Level;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Optional;
 

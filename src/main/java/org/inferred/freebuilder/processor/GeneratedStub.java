@@ -1,9 +1,9 @@
 package org.inferred.freebuilder.processor;
 
-import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.TypeClass;
+import org.inferred.freebuilder.processor.source.Excerpts;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.TypeClass;
 
 class GeneratedStub extends GeneratedType {
 

@@ -20,9 +20,9 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.Excerpts;
+import org.inferred.freebuilder.processor.source.Type;
 
 import java.util.Optional;
 import java.util.Set;

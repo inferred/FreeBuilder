@@ -1,10 +1,10 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.LazyName;
-import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.ValueType;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.LazyName;
+import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 import java.util.AbstractSet;
 import java.util.Comparator;

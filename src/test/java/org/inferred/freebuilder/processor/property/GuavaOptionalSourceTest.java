@@ -22,7 +22,7 @@ import static org.inferred.freebuilder.processor.model.ClassTypeImpl.INTEGER;
 import static org.inferred.freebuilder.processor.model.ClassTypeImpl.STRING;
 import static org.inferred.freebuilder.processor.model.GenericTypeElementImpl.newTopLevelGenericType;
 import static org.inferred.freebuilder.processor.model.PrimitiveTypeImpl.INT;
-import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
+import static org.inferred.freebuilder.processor.source.FunctionalType.unaryOperator;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -33,9 +33,9 @@ import org.inferred.freebuilder.processor.NamingConvention;
 import org.inferred.freebuilder.processor.model.GenericTypeElementImpl;
 import org.inferred.freebuilder.processor.model.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.property.OptionalProperty.OptionalType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
-import org.inferred.freebuilder.processor.util.feature.Jsr305;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.feature.GuavaLibrary;
+import org.inferred.freebuilder.processor.source.feature.Jsr305;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

@@ -18,8 +18,8 @@ package org.inferred.freebuilder.processor.property;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
+import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.source.FunctionalType.unaryOperator;
 
 import static javax.lang.model.type.TypeKind.DECLARED;
 
@@ -27,13 +27,13 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.FieldAccess;
-import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.ObjectsExcerpts;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.Variable;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.Excerpts;
+import org.inferred.freebuilder.processor.source.FieldAccess;
+import org.inferred.freebuilder.processor.source.FunctionalType;
+import org.inferred.freebuilder.processor.source.ObjectsExcerpts;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Objects;
 import java.util.Optional;

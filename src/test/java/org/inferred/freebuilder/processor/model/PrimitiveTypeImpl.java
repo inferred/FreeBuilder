@@ -17,7 +17,7 @@ package org.inferred.freebuilder.processor.model;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import org.inferred.freebuilder.processor.util.Partial;
+import org.inferred.freebuilder.processor.source.Partial;
 
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;

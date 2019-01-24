@@ -27,22 +27,22 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
-import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
-import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.source.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedSet;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.LazyName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.Type;
-import org.inferred.freebuilder.processor.util.ValueType;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.Excerpts;
+import org.inferred.freebuilder.processor.source.FunctionalType;
+import org.inferred.freebuilder.processor.source.LazyName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.Type;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 import java.util.Collection;
 import java.util.Collections;

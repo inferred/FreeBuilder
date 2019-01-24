@@ -2,7 +2,7 @@ package org.inferred.freebuilder.processor.model;
 
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.Partial;
+import org.inferred.freebuilder.processor.source.Partial;
 
 import java.util.List;
 

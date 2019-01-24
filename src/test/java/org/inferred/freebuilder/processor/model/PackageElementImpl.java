@@ -15,7 +15,7 @@
  */
 package org.inferred.freebuilder.processor.model;
 
-import org.inferred.freebuilder.processor.util.Partial;
+import org.inferred.freebuilder.processor.source.Partial;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;

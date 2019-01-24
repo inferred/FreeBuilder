@@ -1,7 +1,7 @@
 package org.inferred.freebuilder.processor;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.ValueType;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 abstract class GeneratedType extends ValueType implements Excerpt {
 }

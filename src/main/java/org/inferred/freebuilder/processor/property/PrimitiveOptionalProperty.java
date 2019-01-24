@@ -9,23 +9,23 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.override;
-import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypesAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.FunctionalType.isAssignable;
-import static org.inferred.freebuilder.processor.util.FunctionalType.primitiveUnaryOperator;
-import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
+import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypesAcceptedByMethod;
+import static org.inferred.freebuilder.processor.source.FunctionalType.isAssignable;
+import static org.inferred.freebuilder.processor.source.FunctionalType.primitiveUnaryOperator;
+import static org.inferred.freebuilder.processor.source.FunctionalType.unaryOperator;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.model.MethodIntrospector;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.FieldAccess;
-import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.TypeClass;
-import org.inferred.freebuilder.processor.util.Variable;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.FieldAccess;
+import org.inferred.freebuilder.processor.source.FunctionalType;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.TypeClass;
+import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Arrays;
 import java.util.List;

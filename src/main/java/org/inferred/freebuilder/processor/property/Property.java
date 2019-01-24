@@ -3,8 +3,8 @@ package org.inferred.freebuilder.processor.property;
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.processor.Datatype;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.FieldAccess;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.FieldAccess;
 
 import java.util.Optional;
 

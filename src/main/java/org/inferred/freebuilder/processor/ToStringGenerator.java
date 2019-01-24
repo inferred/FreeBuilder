@@ -8,9 +8,9 @@ import static org.inferred.freebuilder.processor.property.DefaultProperty.UNSET_
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Initially;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.Variable;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Map;
 import java.util.function.Predicate;

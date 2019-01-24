@@ -8,12 +8,12 @@ import com.google.common.annotations.GwtCompatible;
 import org.inferred.freebuilder.processor.Datatype.Visibility;
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.ValueType;
-import org.inferred.freebuilder.processor.util.Variable;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.Excerpts;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.ValueType;
+import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Collection;
 import java.util.Map;

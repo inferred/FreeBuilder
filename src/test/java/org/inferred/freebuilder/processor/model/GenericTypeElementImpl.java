@@ -17,8 +17,8 @@ package org.inferred.freebuilder.processor.model;
 
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.Partial;
-import org.inferred.freebuilder.processor.util.ValueType;
+import org.inferred.freebuilder.processor.source.Partial;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;

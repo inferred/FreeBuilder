@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 
-import org.inferred.freebuilder.processor.util.Partial;
+import org.inferred.freebuilder.processor.source.Partial;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;

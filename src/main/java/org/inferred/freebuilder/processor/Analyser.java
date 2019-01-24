@@ -44,8 +44,8 @@ import org.inferred.freebuilder.processor.property.Factories;
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.Type;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;

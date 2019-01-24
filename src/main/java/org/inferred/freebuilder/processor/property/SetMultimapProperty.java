@@ -27,8 +27,8 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
-import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
-import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.source.FunctionalType.consumer;
+import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -40,9 +40,9 @@ import com.google.common.collect.SetMultimap;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedSetMultimap;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.FunctionalType;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
 
 import java.util.Collection;
 import java.util.Map.Entry;
