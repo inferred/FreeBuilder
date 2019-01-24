@@ -32,6 +32,7 @@ import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Variable;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -262,6 +263,15 @@ public class DefaultProperty extends PropertyCodeGenerator {
     // Cannot clear property without defaults
     if (defaults.isPresent()) {
       code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
+    }
+  }
+
+  @Override
+  public void addToStringValue(SourceBuilder code) {
+    if (kind == TypeKind.ARRAY) {
+      code.add("%s.toString(%s)", Arrays.class, property.getField());
+    } else {
+      code.add(property.getField());
     }
   }
 }
