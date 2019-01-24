@@ -331,6 +331,9 @@ public class ModelUtils {
 
   /** Returns true if {@code type} erases to any of {@code possibilities}. */
   public static boolean erasesToAnyOf(DeclaredType type, QualifiedName... possibilities) {
+    if (type == null) {
+      return false;
+    }
     String erasedType = type.asElement().toString();
     for (QualifiedName possibility : possibilities) {
       if (unshadedName(possibility.toString()).equals(erasedType)) {
@@ -342,6 +345,9 @@ public class ModelUtils {
 
   /** Returns true if {@code type} erases to any of {@code possibilities}. */
   public static boolean erasesToAnyOf(DeclaredType type, Class<?>... possibilities) {
+    if (type == null) {
+      return false;
+    }
     String erasedType = type.asElement().toString();
     for (Class<?> possibility : possibilities) {
       if (unshadedName(possibility.getName()).equals(erasedType)) {

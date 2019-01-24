@@ -8,9 +8,11 @@ import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuildersMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.collect.ImmutableList;
@@ -19,7 +21,6 @@ import org.inferred.freebuilder.processor.BuildableType;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.BuildableList;
-import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;
@@ -48,15 +49,14 @@ class BuildableListProperty extends PropertyCodeGenerator {
     @Override
     public Optional<BuildableListProperty> create(Config config) {
       DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
-      if (type == null
-          || !ModelUtils.erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
+      if (!erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
         return Optional.empty();
       }
       if (disablingGetterExists(config)) {
         return Optional.empty();
       }
 
-      TypeMirror rawElementType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(0));
+      TypeMirror rawElementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       DeclaredType elementType = maybeDeclared(rawElementType).orElse(null);
       if (elementType == null) {
         return Optional.empty();

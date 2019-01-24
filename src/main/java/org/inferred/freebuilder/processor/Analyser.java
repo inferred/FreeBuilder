@@ -39,7 +39,6 @@ import com.google.common.collect.Sets;
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
 import org.inferred.freebuilder.processor.model.MethodIntrospector;
-import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
 import org.inferred.freebuilder.processor.property.Factories;
 import org.inferred.freebuilder.processor.property.Property;
@@ -379,7 +378,7 @@ class Analyser {
   }
 
   private Datatype.Builder constructionAndExtension(DeclaredType builder) {
-    TypeElement builderElement = ModelUtils.asElement(builder);
+    TypeElement builderElement = asElement(builder);
     if (!builderElement.getModifiers().contains(Modifier.STATIC)) {
       messager.printMessage(ERROR, "Builder must be static on FreeBuilder types", builderElement);
       return new Datatype.Builder().setExtensible(false);

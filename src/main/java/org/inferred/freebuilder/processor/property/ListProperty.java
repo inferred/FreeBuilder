@@ -20,10 +20,12 @@ import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
@@ -34,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedList;
-import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -69,11 +70,11 @@ class ListProperty extends PropertyCodeGenerator {
     @Override
     public Optional<ListProperty> create(Config config) {
       DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
-      if (type == null || !ModelUtils.erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
+      if (!erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
         return Optional.empty();
       }
 
-      TypeMirror elementType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(0));
+      TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
       boolean needsSafeVarargs = needsSafeVarargs(unboxedType.orElse(elementType));
       boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.orElse(elementType));

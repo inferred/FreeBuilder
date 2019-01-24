@@ -20,6 +20,7 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EX
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuilderMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
@@ -29,7 +30,6 @@ import org.inferred.freebuilder.processor.BuildableType.MergeBuilderMethod;
 import org.inferred.freebuilder.processor.BuildableType.PartialToBuilderMethod;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
-import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -121,7 +121,7 @@ class BuildableProperty extends PropertyCodeGenerator {
             property.getName())
         .addLine("  %s.requireNonNull(%s);", Objects.class, property.getName())
         .addLine("  if (%1$s == null || %1$s instanceof %2$s) {",
-            property.getField(), ModelUtils.maybeAsTypeElement(property.getType()).get())
+            property.getField(), maybeAsTypeElement(property.getType()).get())
         .addLine("    %s = %s;", property.getField(), property.getName())
         .addLine("  } else {")
         .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
@@ -184,7 +184,7 @@ class BuildableProperty extends PropertyCodeGenerator {
         .addLine("  if (%s == null) {", property.getField())
         .addLine("    %s = %s;", property.getField(), type.newBuilder(EXPLICIT_TYPES))
         .addLine("  } else if (%s instanceof %s) {",
-            property.getField(), ModelUtils.maybeAsTypeElement(property.getType()).get())
+            property.getField(), maybeAsTypeElement(property.getType()).get())
         .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",
             type.suppressUnchecked(), property.getType(), value, property.getField());
     if (type.partialToBuilder() == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
@@ -220,8 +220,7 @@ class BuildableProperty extends PropertyCodeGenerator {
     code.addLine("if (%s == null) {", property.getField().on(builder))
         .addLine("  %s = %s.%s();", finalField, type.newBuilder(EXPLICIT_TYPES), buildMethod)
         .addLine("} else if (%s instanceof %s) {",
-            property.getField().on(builder),
-            ModelUtils.maybeAsTypeElement(property.getType()).get());
+            property.getField().on(builder), maybeAsTypeElement(property.getType()).get());
     if (type.suppressUnchecked() != Excerpts.EMPTY) {
       code.addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
               type.suppressUnchecked(),
@@ -260,8 +259,7 @@ class BuildableProperty extends PropertyCodeGenerator {
     code.addLine("if (%s == null) {", property.getField().on(base))
         .addLine("  // Nothing to merge")
         .addLine("} else if (%s instanceof %s) {",
-            property.getField().on(base),
-            ModelUtils.maybeAsTypeElement(property.getType()).get())
+            property.getField().on(base), maybeAsTypeElement(property.getType()).get())
         .addLine("  %1$s %2$s %3$s = (%2$s) %4$s;",
            type.suppressUnchecked(), property.getType(), fieldValue, property.getField().on(base))
         .addLine("  if (%s == null) {", property.getField())
@@ -299,8 +297,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   public void addClearField(SourceBuilder code) {
     Variable fieldBuilder = new Variable(property.getName() + "Builder");
     code.addLine("  if (%1$s == null || %1$s instanceof %2$s) {",
-            property.getField(),
-            ModelUtils.maybeAsTypeElement(property.getType()).get())
+            property.getField(), maybeAsTypeElement(property.getType()).get())
         .addLine("    %s = null;", property.getField())
         .addLine("  } else {")
         .addLine("    %1$s %2$s %3$s = (%2$s) %4$s;",

@@ -21,9 +21,11 @@ import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.putAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.putMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
@@ -33,7 +35,6 @@ import com.google.common.collect.ImmutableMap;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
-import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -66,11 +67,11 @@ class MapProperty extends PropertyCodeGenerator {
     public Optional<MapProperty> create(Config config) {
       Property property = config.getProperty();
       DeclaredType type = maybeDeclared(property.getType()).orElse(null);
-      if (type == null || !ModelUtils.erasesToAnyOf(type, Map.class, ImmutableMap.class)) {
+      if (!erasesToAnyOf(type, Map.class, ImmutableMap.class)) {
         return Optional.empty();
       }
-      TypeMirror keyType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(0));
-      TypeMirror valueType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(1));
+      TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+      TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
       boolean overridesPutMethod = hasPutMethodOverride(

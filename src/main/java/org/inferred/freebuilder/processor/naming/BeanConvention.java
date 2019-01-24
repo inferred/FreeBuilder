@@ -15,11 +15,11 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
+import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
 import static org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor.isLegalType;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 
-import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.property.Property;
 
 import java.beans.Introspector;
@@ -96,7 +96,7 @@ class BeanConvention implements NamingConvention {
       }
       return Optional.empty();
     }
-    TypeMirror returnType = ModelUtils.getReturnType(valueType, method, types);
+    TypeMirror returnType = getReturnType(valueType, method, types);
     if (returnType.getKind() == TypeKind.VOID) {
       if (declaredOnValueType) {
         messager.printMessage(

@@ -22,10 +22,12 @@ import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.setCountMethod;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 
@@ -38,7 +40,6 @@ import com.google.common.collect.Multisets;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedMultiset;
-import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -66,11 +67,11 @@ class MultisetProperty extends PropertyCodeGenerator {
     @Override
     public Optional<MultisetProperty> create(Config config) {
       DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
-      if (type == null || !ModelUtils.erasesToAnyOf(type, Multiset.class, ImmutableMultiset.class)) {
+      if (!erasesToAnyOf(type, Multiset.class, ImmutableMultiset.class)) {
         return Optional.empty();
       }
 
-      TypeMirror elementType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(0));
+      TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
       boolean needsSafeVarargs = needsSafeVarargs(unboxedType.orElse(elementType));
       boolean overridesSetCountMethod =

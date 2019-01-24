@@ -20,8 +20,10 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 
@@ -29,7 +31,6 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
-import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -133,16 +134,12 @@ class OptionalProperty extends PropertyCodeGenerator {
     public Optional<OptionalProperty> create(Config config) {
       Property property = config.getProperty();
       DeclaredType type = maybeDeclared(property.getType()).orElse(null);
-      if (type == null) {
-        return Optional.empty();
-      }
-
       OptionalType optionalType = maybeOptional(type).orElse(null);
       if (optionalType == null) {
         return Optional.empty();
       }
 
-      TypeMirror elementType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(0));
+      TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
 
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
@@ -163,7 +160,7 @@ class OptionalProperty extends PropertyCodeGenerator {
 
     private static Optional<OptionalType> maybeOptional(DeclaredType type) {
       for (OptionalType optionalType : OptionalType.values()) {
-        if (ModelUtils.erasesToAnyOf(type, optionalType.cls)) {
+        if (erasesToAnyOf(type, optionalType.cls)) {
           return Optional.of(optionalType);
         }
       }
