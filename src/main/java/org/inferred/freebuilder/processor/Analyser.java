@@ -411,7 +411,7 @@ class Analyser {
       DeclaredType builder,
       Iterable<ExecutableElement> methods) {
     NamingConvention namingConvention = determineNamingConvention(type, methods, messager, types);
-    Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type);
+    Optional<JacksonSupport> jacksonSupport = JacksonSupport.create(type, elements);
     Set<String> methodsInvokedInBuilderConstructor =
         getMethodsInvokedInBuilderConstructor(asElement(builder));
 

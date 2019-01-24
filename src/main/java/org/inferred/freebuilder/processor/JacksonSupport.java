@@ -12,7 +12,9 @@ import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 
 class JacksonSupport {
 
@@ -20,8 +22,8 @@ class JacksonSupport {
       "com.fasterxml.jackson.databind.annotation.JsonDeserialize";
   private static final QualifiedName JSON_PROPERTY =
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonProperty");
-  private static final QualifiedName JACKSON_XML_PROPERTY =
-      QualifiedName.of("com.fasterxml.jackson.dataformat.xml.annotation", "JacksonXmlProperty");
+  private static final String JACKSON_XML_ANNOTATION_PACKAGE =
+      "com.fasterxml.jackson.dataformat.xml.annotation";
   /** Annotations which disable automatic generation of JsonProperty annotations. */
   private static final Set<QualifiedName> DISABLE_PROPERTY_ANNOTATIONS = ImmutableSet.of(
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonAnyGetter"),
@@ -29,15 +31,20 @@ class JacksonSupport {
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonUnwrapped"),
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonValue"));
 
-  public static Optional<JacksonSupport> create(TypeElement userValueType) {
+  public static Optional<JacksonSupport> create(TypeElement userValueType, Elements elements) {
     return findAnnotationMirror(userValueType, JSON_DESERIALIZE)
-        .map($ -> new JacksonSupport());
+        .map($ -> new JacksonSupport(elements));
   }
 
-  private JacksonSupport() {}
+  private final Elements elements;
+
+  private JacksonSupport(Elements elements) {
+    this.elements = elements;
+  }
 
   public void addJacksonAnnotations(
-      Property.Builder resultBuilder, ExecutableElement getterMethod) {
+      Property.Builder resultBuilder,
+      ExecutableElement getterMethod) {
     Optional<AnnotationMirror> jsonPropertyAnnotation = findAnnotationMirror(getterMethod,
             JSON_PROPERTY);
     if (jsonPropertyAnnotation.isPresent()) {
@@ -47,12 +54,18 @@ class JacksonSupport {
           "@%s(\"%s\")%n", JSON_PROPERTY, resultBuilder.getName()));
     }
 
-    Optional<AnnotationMirror> jacksonXmlPropertyAnnotation = findAnnotationMirror(getterMethod,
-            JACKSON_XML_PROPERTY);
-    if (jacksonXmlPropertyAnnotation.isPresent()) {
-      resultBuilder
-              .addAccessorAnnotations(Excerpts.add("%s%n", jacksonXmlPropertyAnnotation.get()));
-    }
+    getterMethod
+        .getAnnotationMirrors()
+        .stream()
+        .filter(this::isXmlAnnotation)
+        .forEach(annotation -> {
+          resultBuilder.addAccessorAnnotations(code -> code.addLine("%s", annotation));
+        });
+  }
+
+  private boolean isXmlAnnotation(AnnotationMirror mirror) {
+    Name pkg = elements.getPackageOf(mirror.getAnnotationType().asElement()).getQualifiedName();
+    return pkg.contentEquals(JACKSON_XML_ANNOTATION_PACKAGE);
   }
 
   private static boolean generateDefaultAnnotations(ExecutableElement getterMethod) {
@@ -66,5 +79,4 @@ class JacksonSupport {
     }
     return true;
   }
-
 }
