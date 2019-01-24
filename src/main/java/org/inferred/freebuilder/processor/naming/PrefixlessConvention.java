@@ -15,11 +15,11 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
+import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
+
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 import org.inferred.freebuilder.processor.property.Property;
-
-import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 
 import java.util.Optional;
 import java.util.Set;

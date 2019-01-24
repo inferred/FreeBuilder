@@ -1,7 +1,7 @@
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
-import static org.inferred.freebuilder.processor.util.ModelUtils.findProperty;
+import static org.inferred.freebuilder.processor.model.ModelUtils.findAnnotationMirror;
+import static org.inferred.freebuilder.processor.model.ModelUtils.findProperty;
 
 import com.google.common.annotations.GwtCompatible;
 

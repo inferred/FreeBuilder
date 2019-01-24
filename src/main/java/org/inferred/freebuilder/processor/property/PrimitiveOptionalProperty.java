@@ -6,22 +6,22 @@ import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.override;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypesAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.isAssignable;
 import static org.inferred.freebuilder.processor.util.FunctionalType.primitiveUnaryOperator;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.override;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
-import org.inferred.freebuilder.processor.MethodIntrospector;
+import org.inferred.freebuilder.processor.model.MethodIntrospector;
+import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
-import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.TypeClass;

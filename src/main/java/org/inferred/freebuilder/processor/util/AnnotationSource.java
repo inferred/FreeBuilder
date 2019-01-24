@@ -17,7 +17,7 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.Quotes.escapeJava;
 
 import java.util.List;

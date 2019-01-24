@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
+
+import org.inferred.freebuilder.processor.util.Partial;
 
 import javax.lang.model.type.NullType;
 import javax.lang.model.type.TypeKind;

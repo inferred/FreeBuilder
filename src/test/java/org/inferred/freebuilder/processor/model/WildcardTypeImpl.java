@@ -1,4 +1,7 @@
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
+
+import org.inferred.freebuilder.processor.util.Partial;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;

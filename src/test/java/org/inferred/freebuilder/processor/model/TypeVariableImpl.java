@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
 
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 
 import com.google.common.collect.ImmutableList;
+
+import org.inferred.freebuilder.processor.util.Partial;
 
 import java.util.List;
 

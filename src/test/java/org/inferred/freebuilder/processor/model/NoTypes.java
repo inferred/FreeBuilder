@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Google Inc. All rights reserved.
+ * Copyright 2014 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,28 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
 
-import static com.google.common.base.Preconditions.checkState;
+import org.inferred.freebuilder.processor.util.Partial;
 
-import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeVisitor;
 
 /**
- * Fake implementation of {@link PrimitiveType} for unit tests.
+ * Fake implementation of {@link NoType} for unit tests.
  */
-public abstract class PrimitiveTypeImpl implements PrimitiveType {
+public abstract class NoTypes implements NoType {
 
-  public static final PrimitiveType CHAR = Partial.of(PrimitiveTypeImpl.class, TypeKind.CHAR);
-  public static final PrimitiveType INT = Partial.of(PrimitiveTypeImpl.class, TypeKind.INT);
-  public static final PrimitiveType FLOAT = Partial.of(PrimitiveTypeImpl.class, TypeKind.FLOAT);
-  public static final PrimitiveType DOUBLE = Partial.of(PrimitiveTypeImpl.class, TypeKind.DOUBLE);
+  public static final NoType NONE = Partial.of(NoTypes.class, TypeKind.NONE);
 
   private final TypeKind kind;
 
-  PrimitiveTypeImpl(TypeKind kind) {
-    checkState(kind.isPrimitive());
+  NoTypes(TypeKind kind) {
     this.kind = kind;
   }
 
@@ -45,11 +41,12 @@ public abstract class PrimitiveTypeImpl implements PrimitiveType {
 
   @Override
   public <R, P> R accept(TypeVisitor<R, P> v, P p) {
-    return v.visitPrimitive(this, p);
+    return v.visitNoType(this, p);
   }
 
   @Override
   public String toString() {
-    return kind.toString().toLowerCase();
+    return getKind().toString().toLowerCase();
   }
 }
+

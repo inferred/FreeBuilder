@@ -15,13 +15,14 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedClass;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newNestedClass;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.inferred.freebuilder.processor.util.ClassTypeImpl.ClassElementImpl;
+import org.inferred.freebuilder.processor.model.GenericElement;
+import org.inferred.freebuilder.processor.model.ClassTypeImpl.ClassElementImpl;
 import org.inferred.freebuilder.processor.util.feature.SourceLevel;
 import org.junit.Test;
 

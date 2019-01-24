@@ -1,6 +1,8 @@
 package org.inferred.freebuilder.processor.util;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
+
+import org.inferred.freebuilder.processor.model.ModelUtils;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;

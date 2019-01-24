@@ -3,10 +3,10 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
-import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.only;
+import static org.inferred.freebuilder.processor.model.MethodFinder.methodsOn;
+import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.only;
 
 import static java.util.stream.Collectors.toList;
 

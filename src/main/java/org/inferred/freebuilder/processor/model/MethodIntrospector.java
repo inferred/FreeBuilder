@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor;
+package org.inferred.freebuilder.processor.model;
 
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
+
+import org.inferred.freebuilder.processor.model.javac.JavacMethodIntrospector;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +36,7 @@ import javax.tools.Diagnostic;
 public abstract class MethodIntrospector {
 
   private static final String JAVAC_METHOD_INTROSPECTOR =
-      "org.inferred.freebuilder.processor.JavacMethodIntrospector";
+      "org.inferred.freebuilder.processor.model.javac.JavacMethodIntrospector";
 
   public interface OwnMethodInvocationVisitor {
     interface Logger {

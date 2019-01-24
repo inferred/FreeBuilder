@@ -3,7 +3,7 @@ package org.inferred.freebuilder.processor.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
 
 import com.google.common.collect.ImmutableList;
 

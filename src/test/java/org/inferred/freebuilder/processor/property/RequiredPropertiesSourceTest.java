@@ -18,11 +18,11 @@ package org.inferred.freebuilder.processor.property;
 import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
 import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.INTEGER;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.INTEGER;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.model.PrimitiveTypeImpl.INT;
 import static org.inferred.freebuilder.processor.util.FunctionalType.primitiveUnaryOperator;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.PrimitiveTypeImpl.INT;
 
 import com.google.common.collect.ImmutableMap;
 

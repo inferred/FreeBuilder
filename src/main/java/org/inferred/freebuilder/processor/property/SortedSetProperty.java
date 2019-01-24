@@ -22,14 +22,12 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.setComparatorMethod;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
-import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
+import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
-import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
-import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.collect.ImmutableSortedSet;
@@ -37,6 +35,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedNavigableSet;
+import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.PreconditionExcerpts;
@@ -70,11 +69,11 @@ class SortedSetProperty extends PropertyCodeGenerator {
     @Override
     public Optional<SortedSetProperty> create(Config config) {
       DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
-      if (type == null || !erasesToAnyOf(type, SortedSet.class, ImmutableSortedSet.class)) {
+      if (type == null || !ModelUtils.erasesToAnyOf(type, SortedSet.class, ImmutableSortedSet.class)) {
         return Optional.empty();
       }
 
-      TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+      TypeMirror elementType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
       boolean needsSafeVarargs = needsSafeVarargs(unboxedType.orElse(elementType));
       boolean overridesAddMethod = hasAddMethodOverride(config, unboxedType.orElse(elementType));

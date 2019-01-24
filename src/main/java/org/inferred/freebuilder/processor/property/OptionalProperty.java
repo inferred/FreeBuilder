@@ -20,17 +20,16 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
-import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
+import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FieldAccess;
 import org.inferred.freebuilder.processor.util.FunctionalType;
@@ -143,7 +142,7 @@ class OptionalProperty extends PropertyCodeGenerator {
         return Optional.empty();
       }
 
-      TypeMirror elementType = upperBound(config.getElements(), type.getTypeArguments().get(0));
+      TypeMirror elementType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(0));
       Optional<TypeMirror> unboxedType = maybeUnbox(elementType, config.getTypes());
 
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
@@ -164,7 +163,7 @@ class OptionalProperty extends PropertyCodeGenerator {
 
     private static Optional<OptionalType> maybeOptional(DeclaredType type) {
       for (OptionalType optionalType : OptionalType.values()) {
-        if (erasesToAnyOf(type, optionalType.cls)) {
+        if (ModelUtils.erasesToAnyOf(type, optionalType.cls)) {
           return Optional.of(optionalType);
         }
       }

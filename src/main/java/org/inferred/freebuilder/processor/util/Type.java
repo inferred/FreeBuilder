@@ -17,7 +17,7 @@ package org.inferred.freebuilder.processor.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;

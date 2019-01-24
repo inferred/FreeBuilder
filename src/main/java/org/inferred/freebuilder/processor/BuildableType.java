@@ -15,17 +15,17 @@
  */
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
+import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.findAnnotationMirror;
 
 import static java.util.stream.Collectors.toList;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.Type;
 
 import java.util.List;

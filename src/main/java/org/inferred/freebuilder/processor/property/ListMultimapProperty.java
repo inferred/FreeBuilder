@@ -22,13 +22,11 @@ import static org.inferred.freebuilder.processor.BuilderMethods.putAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.putMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
-import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
-import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
@@ -41,6 +39,7 @@ import com.google.common.collect.Multimaps;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedListMultimap;
+import org.inferred.freebuilder.processor.model.ModelUtils;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.FunctionalType;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
@@ -69,7 +68,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
       if (type == null) {
         return Optional.empty();
       }
-      if (!erasesToAnyOf(type,
+      if (!ModelUtils.erasesToAnyOf(type,
           Multimap.class,
           ImmutableMultimap.class,
           ListMultimap.class,
@@ -77,8 +76,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         return Optional.empty();
       }
 
-      TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
-      TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
+      TypeMirror keyType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(0));
+      TypeMirror valueType = ModelUtils.upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
       boolean overridesPutMethod = hasPutMethodOverride(

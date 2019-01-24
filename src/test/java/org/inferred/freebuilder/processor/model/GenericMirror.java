@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
 
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
+
+import org.inferred.freebuilder.processor.util.Partial;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;

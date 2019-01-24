@@ -17,7 +17,7 @@ package org.inferred.freebuilder.processor.property;
 
 import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.util.FunctionalType.primitiveUnaryOperator;
 
 import com.google.common.collect.ImmutableMap;
@@ -26,9 +26,9 @@ import org.inferred.freebuilder.processor.BuilderFactory;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.GeneratedBuilder;
 import org.inferred.freebuilder.processor.NamingConvention;
+import org.inferred.freebuilder.processor.model.ClassTypeImpl;
+import org.inferred.freebuilder.processor.model.PrimitiveTypeImpl;
 import org.inferred.freebuilder.processor.property.PrimitiveOptionalProperty.OptionalType;
-import org.inferred.freebuilder.processor.util.ClassTypeImpl;
-import org.inferred.freebuilder.processor.util.PrimitiveTypeImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
