@@ -1,6 +1,7 @@
 package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
+
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 
@@ -121,11 +122,11 @@ public enum ElementFactory {
   private final Object supertypeExample;
   private final IntFunction<?> exampleGenerator;
 
-  ElementFactory(
-      Class<?> type,
+  <S, T extends S> ElementFactory(
+      Class<T> type,
       TypeToken<?> unaryOperator,
-      @Nullable Class<? extends Comparator<?>> comparator,
-      Class<?> supertype,
+      @Nullable Class<? extends Comparator<S>> comparator,
+      Class<S> supertype,
       boolean serializableAsMapKey,
       String intern,
       String validation,
@@ -133,7 +134,7 @@ public enum ElementFactory {
       String errorMessage,
       Object invalidExample,
       Object supertypeExample,
-      IntFunction<?> exampleGenerator) {
+      IntFunction<T> exampleGenerator) {
     this.type = type;
     this.unaryOperator = unaryOperator;
     this.comparator = comparator;

@@ -41,6 +41,7 @@ _Automatic generation of the Builder pattern for Java 1.8+_
   - [Eclipse](#eclipse)
   - [IntelliJ](#intellij)
 - [Release notes](#release-notes)
+  - [2.2—Primitive optional types](#22primitive-optional-types)
   - [2.1—Lists of buildable types](#21lists-of-buildable-types)
   - [Upgrading from v1](#upgrading-from-v1)
 - [Troubleshooting](#troubleshooting)
@@ -724,6 +725,30 @@ directory** setting) and select **Mark Directory As > Generated Sources Root**.
 Release notes
 -------------
 
+### 2.2—Primitive optional types
+
+FreeBuilder 2.2 extends its [optional value API customization](#optional-values)
+to [OptionalInt], [OptionalLong] and [OptionalDouble]. This is, for mutate
+methods, a non-binary-backwards-compatible change. If you have existing
+properties that you do not want this to affect, you can force FreeBuilder to
+adhere to your existing API with [custom functional interfaces](#custom-functional-interfaces).
+To do this, use your IDE to override all mapper methods taking an `OptionalInt`,
+`OptionalLong` or `OptionalDouble` (the implementations can just delegate to
+super). One of these will have been generated for each primitive optional
+property. Once all such methods are overridden, upgrading to 2.2 should now leave your
+APIs unaltered.
+
+This change also alters the default behavior of the Optional-accepting setter method
+to delegate to a new primitive-accepting setter method, to allow constraints to be
+added through overriding. If you have previously added such a primitive-accepting
+setter method that delegates to the Optional-accepting setter method, this will of
+course now result in a stack overflow at runtime. FreeBuilder will attempt to flag
+this as a compiler error, but please double-check your builders when upgrading.
+
+[OptionalInt]: https://docs.oracle.com/javase/8/docs/api/java/util/OptionalInt.html
+[OptionalLong]: https://docs.oracle.com/javase/8/docs/api/java/util/OptionalLong.html
+[OptionalDouble]: https://docs.oracle.com/javase/8/docs/api/java/util/OptionalDouble.html
+
 ### 2.1—Lists of buildable types
 
 FreeBuilder 2.1 adds more extensive API customization for [lists of buildable types](#lists-of-buildable-types), storing Builder instances internally until build is called, cascading buildPartial automatically, and adding overloads accepting Builder instances.
@@ -740,7 +765,7 @@ There are three API-breaking changes between v1 and v2 of FreeBuilder:
    **This will likely break binary backwards compatibility** for any library
    using FreeBuilder to generate its builders. We apologise profusely for the
    hassle this causes. If you simply cannot break your clients, but want to
-   upgrade to v2, you can force FreeBuilder to adhere to your old API with
+   upgrade to v2, you can force FreeBuilder to adhere to your existing API with
    [custom functional interfaces](#custom-functional-interfaces). To do this,
    use your IDE to override all mapper methods taking a `UnaryOperator<Integer>`,
    `UnaryOperator<Long>` or `UnaryOperator<Double>` (the implementations can

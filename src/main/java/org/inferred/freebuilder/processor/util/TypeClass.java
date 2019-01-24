@@ -1,5 +1,6 @@
 package org.inferred.freebuilder.processor.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
@@ -36,6 +37,11 @@ public class TypeClass extends Type {
 
   public static TypeClass from(TypeElement typeElement) {
     return new TypeClass(QualifiedName.of(typeElement), typeElement.getTypeParameters());
+  }
+
+  public static TypeClass fromNonGeneric(Class<?> cls) {
+    checkArgument(cls.getTypeParameters().length == 0, "%s is generic", cls);
+    return new TypeClass(QualifiedName.of(cls), ImmutableList.of());
   }
 
   private final QualifiedName qualifiedName;

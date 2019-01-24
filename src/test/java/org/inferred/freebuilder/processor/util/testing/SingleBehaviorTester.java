@@ -133,6 +133,16 @@ class SingleBehaviorTester implements BehaviorTester {
         testClassLoader, diagnostics, shouldSetContextClassLoader, testFilesBySource);
   }
 
+  @Override
+  public CompilationFailureSubject failsToCompile() {
+    try {
+      compiles();
+      throw new AssertionError("Expected compilation to fail but it succeeded");
+    } catch (CompilationException e) {
+      return new CompilationFailureSubjectImpl(e.getDiagnostics());
+    }
+  }
+
   /**
    * A wrapper around the boot classloader that blocks access to packages not in the current
    * {@link FeatureSet}.

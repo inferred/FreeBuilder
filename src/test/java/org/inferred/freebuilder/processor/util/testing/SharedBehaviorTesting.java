@@ -31,6 +31,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -225,7 +226,7 @@ public class SharedBehaviorTesting {
       RunNotifier notifier,
       SharedCompiler sharedCompiler,
       FrameworkMethod child) {
-    tester = new DelegatingBehaviorTester(sharedCompiler, features);
+    tester = sharedCompiler.behaviorTester();
     try {
       superChildRunner.accept(child, notifier);
     } finally {
@@ -332,6 +333,18 @@ public class SharedBehaviorTesting {
     }
 
     @Override
+    public CompilationFailureSubject failsToCompile() {
+      unmergeable = true;
+      return new CompilationFailureSubject() {
+        @Override
+        public CompilationFailureSubject
+            withErrorThat(Consumer<DiagnosticSubject> diagnosticAssertions) {
+          return this;
+        }
+      };
+    }
+
+    @Override
     public CompilationSubject compiles() {
       return new CompilationSubject() {
         @Override
@@ -378,6 +391,14 @@ public class SharedBehaviorTesting {
       permittedPackages.addAll(child.permittedPackages);
       testSources.addAll(child.testSources);
       this.features = features;
+    }
+
+    BehaviorTester behaviorTester() {
+      if (children.size() > 1) {
+        return new DelegatingBehaviorTester(this, features);
+      } else {
+        return new SingleBehaviorTester(features);
+      }
     }
 
     boolean canShareCompiler(Child child) {
@@ -484,6 +505,11 @@ public class SharedBehaviorTesting {
       shouldSetContextClassLoader = true;
       fallbackCompiler.withContextClassLoader();
       return this;
+    }
+
+    @Override
+    public CompilationFailureSubject failsToCompile() {
+      throw new UnsupportedOperationException();
     }
 
     @Override

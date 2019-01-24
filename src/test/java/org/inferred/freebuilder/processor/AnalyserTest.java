@@ -68,11 +68,7 @@ public class AnalyserTest {
 
   @Before
   public void setup() {
-    analyser = new Analyser(
-        model.elementUtils(),
-        messager,
-        MethodIntrospector.instance(model.environment()),
-        model.typeUtils());
+    analyser = new Analyser(model.environment(), messager);
   }
 
   @Test

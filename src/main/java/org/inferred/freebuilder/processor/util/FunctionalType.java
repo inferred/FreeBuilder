@@ -1,6 +1,6 @@
 package org.inferred.freebuilder.processor.util;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
 import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
@@ -8,10 +8,10 @@ import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.only;
 
+import static java.util.stream.Collectors.toList;
+
 import static javax.lang.model.element.Modifier.ABSTRACT;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ import java.util.function.DoubleUnaryOperator;
 import java.util.function.IntUnaryOperator;
 import java.util.function.LongUnaryOperator;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -40,8 +41,13 @@ import javax.lang.model.util.Types;
  */
 public class FunctionalType extends ValueType {
 
+  /**
+   * Returns {@code Consumer<type>}.
+   *
+   * @throws IllegalArgumentException if {@code type} is primitive
+   */
   public static FunctionalType consumer(TypeMirror type) {
-    checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
+    checkArgument(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
     return new FunctionalType(
         QualifiedName.of(Consumer.class).withParameters(type),
         "accept",
@@ -49,8 +55,13 @@ public class FunctionalType extends ValueType {
         null);
   }
 
+  /**
+   * Returns {@code UnaryOperator<type>}.
+   *
+   * @throws IllegalArgumentException if {@code type} is primitive
+   */
   public static FunctionalType unaryOperator(TypeMirror type) {
-    checkState(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
+    checkArgument(!type.getKind().isPrimitive(), "Unexpected primitive type %s", type);
     return new FunctionalType(
         QualifiedName.of(UnaryOperator.class).withParameters(type),
         "apply",
@@ -58,19 +69,20 @@ public class FunctionalType extends ValueType {
         type);
   }
 
-  public static FunctionalType intUnaryOperator(PrimitiveType type) {
-    Preconditions.checkArgument(type.getKind() == TypeKind.INT);
-    return new FunctionalType(
-        Type.from(IntUnaryOperator.class),
-        "applyAsInt",
-        ImmutableList.of(type),
-        type);
-  }
-
-  public static FunctionalType unboxedUnaryOperator(TypeMirror type, Types types) {
+  /**
+   * Returns one of {@link IntUnaryOperator}, {@link LongUnaryOperator} or
+   * {@link DoubleUnaryOperator}, depending on {@code type}.
+   *
+   * @throws IllegalArgumentException if {@code type} is not one of int, long or double
+   */
+  public static FunctionalType primitiveUnaryOperator(PrimitiveType type) {
     switch (type.getKind()) {
       case INT:
-        return intUnaryOperator((PrimitiveType) type);
+        return new FunctionalType(
+            Type.from(IntUnaryOperator.class),
+            "applyAsInt",
+            ImmutableList.of(type),
+            type);
 
       case LONG:
         return new FunctionalType(
@@ -85,6 +97,21 @@ public class FunctionalType extends ValueType {
             "applyAsDouble",
             ImmutableList.of(type),
             type);
+
+      default:
+        throw new IllegalArgumentException("No primitive unary operator exists for " + type);
+    }
+  }
+
+  /**
+   * Returns a unary operator that will accept {@code type}, without autoboxing if possible.
+   */
+  public static FunctionalType unboxedUnaryOperator(TypeMirror type, Types types) {
+    switch (type.getKind()) {
+      case INT:
+      case LONG:
+      case DOUBLE:
+        return primitiveUnaryOperator((PrimitiveType) type);
 
       case BOOLEAN:
       case BYTE:
@@ -111,21 +138,31 @@ public class FunctionalType extends ValueType {
       FunctionalType prototype,
       Elements elements,
       Types types) {
+    return functionalTypesAcceptedByMethod(type, methodName, elements, types)
+        .stream()
+        .filter(functionalType -> isAssignable(functionalType, prototype, types))
+        .findAny()
+        .orElse(prototype);
+  }
+
+  /** Returns the functional types accepted by {@code methodName} on {@code type}. */
+  public static List<FunctionalType> functionalTypesAcceptedByMethod(
+      DeclaredType type,
+      String methodName,
+      Elements elements,
+      Types types) {
     TypeElement typeElement = asElement(type);
-    for (ExecutableElement method : methodsOn(typeElement, elements, errorType -> { })) {
-      if (!method.getSimpleName().contentEquals(methodName)
-          || method.getParameters().size() != 1) {
-        continue;
-      }
-      ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
-      TypeMirror parameter = getOnlyElement(methodType.getParameterTypes());
-      FunctionalType functionalType = maybeFunctionalType(parameter, elements, types).orElse(null);
-      if (functionalType == null || !isAssignable(functionalType, prototype, types)) {
-        continue;
-      }
-      return functionalType;
-    }
-    return prototype;
+    return methodsOn(typeElement, elements, errorType -> { })
+        .stream()
+        .filter(method -> method.getSimpleName().contentEquals(methodName)
+            && method.getParameters().size() == 1)
+        .flatMap(method -> {
+          ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
+          TypeMirror parameter = getOnlyElement(methodType.getParameterTypes());
+          return maybeFunctionalType(parameter, elements, types)
+              .map(Stream::of).orElse(Stream.of());
+        })
+        .collect(toList());
   }
 
   public static Optional<FunctionalType> maybeFunctionalType(
@@ -158,10 +195,7 @@ public class FunctionalType extends ValueType {
         methodType.getReturnType()));
   }
 
-  @VisibleForTesting static boolean isAssignable(
-      FunctionalType fromType,
-      FunctionalType toType,
-      Types types) {
+  public static boolean isAssignable(FunctionalType fromType, FunctionalType toType, Types types) {
     if (toType.getParameters().size() != fromType.getParameters().size()) {
       return false;
     }

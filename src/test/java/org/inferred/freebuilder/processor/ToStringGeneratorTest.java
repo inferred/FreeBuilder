@@ -2,6 +2,9 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -565,6 +568,20 @@ public class ToStringGeneratorTest {
           .buildPartial();
       PropertyCodeGenerator generator = mock(PropertyCodeGenerator.class, new ReturnsSmartNulls());
       when(generator.initialState()).thenReturn(initially);
+      if (generator.initialState() == Initially.OPTIONAL) {
+        doAnswer(invocation -> {
+          SourceBuilder code = invocation.getArgumentAt(0, SourceBuilder.class);
+          code.add("%s != null", name);
+          return null;
+        }).when(generator).addToStringCondition(any());
+      } else {
+        doThrow(IllegalStateException.class).when(generator).addToStringCondition(any());
+      }
+      doAnswer(invocation -> {
+        SourceBuilder code = invocation.getArgumentAt(0, SourceBuilder.class);
+        code.add(name);
+        return null;
+      }).when(generator).addToStringValue(any());
       generatorsByProperty.put(property, generator);
       return this;
     }

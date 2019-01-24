@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
@@ -62,6 +65,9 @@ public abstract class PropertyCodeGenerator {
      * so must only be used for making optimizations.
      */
     Set<String> getMethodsInvokedInBuilderConstructor();
+
+    /** The compiler's {@link ProcessingEnvironment} implementation. */
+    ProcessingEnvironment getEnvironment();
 
     /** The compiler's {@link Elements} implementation. */
     Elements getElements();
@@ -169,6 +175,24 @@ public abstract class PropertyCodeGenerator {
 
   /** Adds a clear call for the property given a template builder to the builder's source code. */
   public abstract void addClearField(SourceBuilder code);
+
+  /**
+   * Adds condition statement for an initially optional property to be included in the toString
+   * output for the Value/Partial types.
+   *
+   * @throws IllegalStateException if {@link #initialState()} is not {@link Initially#OPTIONAL}
+   */
+  public void addToStringCondition(SourceBuilder code) {
+    checkState(initialState() == Initially.OPTIONAL);
+    code.add("%s != null", property.getField());
+  }
+
+  /**
+   * Adds value to an ongoing toString concatenation or append sequence.
+   */
+  public void addToStringValue(SourceBuilder code) {
+    code.add(property.getField());
+  }
 
   protected void addAccessorAnnotations(SourceBuilder code) {
     for (Excerpt annotation : property.getAccessorAnnotations()) {

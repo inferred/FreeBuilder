@@ -2,13 +2,14 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
+
 import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
 
 import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
+import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -39,7 +40,7 @@ class ToStringGenerator {
     } else if (anyOptional) {
       bodyWithBuilder(code, datatype, generatorsByProperty, typename, isOptional);
     } else {
-      bodyWithConcatenation(code, generatorsByProperty.keySet(), typename);
+      bodyWithConcatenation(code, generatorsByProperty, typename);
     }
     code.addLine("}");
   }
@@ -54,12 +55,14 @@ class ToStringGenerator {
    */
   private static void bodyWithConcatenation(
       SourceBuilder code,
-      Collection<Property> properties,
+      Map<Property, PropertyCodeGenerator> generatorsByProperty,
       String typename) {
     code.add("  return \"%s{", typename);
     String prefix = "";
-    for (Property property : properties) {
-      code.add("%s%s=\" + %s + \"", prefix, property.getName(), property.getField());
+    for (Property property : generatorsByProperty.keySet()) {
+      PropertyCodeGenerator generator = generatorsByProperty.get(property);
+      code.add("%s%s=\" + %s + \"",
+          prefix, property.getName(), (Excerpt) generator::addToStringValue);
       prefix = ", ";
     }
     code.add("}\";%n");
@@ -111,7 +114,7 @@ class ToStringGenerator {
         }
         code.add("if (");
         if (generator.initialState() == Initially.OPTIONAL) {
-          code.add("%s != null", property.getField());
+          generator.addToStringCondition(code);
         } else {
           code.add("!%s.contains(%s.%s)",
               UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
@@ -143,7 +146,7 @@ class ToStringGenerator {
         if (prependCommas) {
           code.add(", ");
         }
-        code.add("%s=\").append(%s)", property.getName(), property.getField());
+        code.add("%s=\").append(%s)", property.getName(), (Excerpt) generator::addToStringValue);
         midStringLiteral = false;
         midAppends = true;
         prependCommas = true;
@@ -194,7 +197,7 @@ class ToStringGenerator {
           throw new RuntimeException("Internal error: unexpected default field");
 
         case OPTIONAL:
-          code.addLine("  if (%s != null) {", property.getField());
+          code.addLine("  if (%s) {", (Excerpt) generator::addToStringCondition);
           break;
 
         case REQUIRED:
@@ -206,7 +209,8 @@ class ToStringGenerator {
       if (property != first) {
         code.add(".append(%s)", separator);
       }
-      code.add(".append(\"%s=\").append(%s)", property.getName(), property.getField());
+      code.add(".append(\"%s=\").append(%s)",
+          property.getName(), (Excerpt) generator::addToStringValue);
       if (property != last) {
         code.add(";%n    %s = \", \"", separator);
       }

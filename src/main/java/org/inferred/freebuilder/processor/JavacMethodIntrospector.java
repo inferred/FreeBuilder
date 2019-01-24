@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import com.google.common.collect.ImmutableSet;
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionStatementTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
@@ -32,13 +33,14 @@ import com.sun.source.util.Trees;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 
 /** Implementation of {@link MethodIntrospector} for javac. */
-class JavacMethodIntrospector extends MethodIntrospector {
+public class JavacMethodIntrospector extends MethodIntrospector {
 
   /**
    * Returns a {@link MethodIntrospector} implementation for the given javac environment.
@@ -66,6 +68,18 @@ class JavacMethodIntrospector extends MethodIntrospector {
       // Fail gracefully
       return ImmutableSet.of();
     }
+  }
+
+  @Override
+  public void visitAllOwnMethodInvocations(
+      ExecutableElement method,
+      OwnMethodInvocationVisitor visitor) {
+    trees.getTree(method).accept(OWN_METHOD_INVOCATIONS_VISITOR, (tree, methodName) -> {
+      visitor.visitInvocation(methodName, (kind, msg) -> {
+        CompilationUnitTree compilationUnit = trees.getPath(method).getCompilationUnit();
+        trees.printMessage(kind, msg, tree, compilationUnit);
+      });
+    });
   }
 
   /** Data object retuned by {@link #OWN_METHOD_INVOCATIONS_FETCHER}. */
@@ -101,31 +115,11 @@ class JavacMethodIntrospector extends MethodIntrospector {
 
         @Override
         public TreeAnalysis visitMethodInvocation(MethodInvocationTree node, Void p) {
-          return node.getMethodSelect().accept(this, p);
-        }
-
-        @Override
-        public TreeAnalysis visitIdentifier(IdentifierTree node, Void p) {
-          // An identifier is an own method invocation under the condition that we
-          // only hit this case from visitMethodInvocation.
           TreeAnalysis result = new TreeAnalysis();
-          result.names.add(node.getName());
-          return result;
-        }
-
-        @Override
-        public TreeAnalysis visitMemberSelect(MemberSelectTree node, Void p) {
-          // A member select is an "own method invocation" if the expression is "this",
-          // under the condition that we only hit this case from visitMethodInvocation.
-          TreeAnalysis result = new TreeAnalysis();
-          ExpressionTree lhs = node.getExpression();
-          if (lhs.getKind() != Kind.IDENTIFIER) {
-            return result;
+          Name identifier = node.getMethodSelect().accept(OWNED_IDENTIFIER, null);
+          if (identifier != null) {
+            result.names.add(identifier);
           }
-          if (!((IdentifierTree) lhs).getName().contentEquals("this")) {
-            return result;
-          }
-          result.names.add(node.getIdentifier());
           return result;
         }
 
@@ -143,6 +137,31 @@ class JavacMethodIntrospector extends MethodIntrospector {
         }
       };
 
+  /** Returns the name of an identifier or a this member selection. */
+  private static final SimpleTreeVisitor<Name, ?> OWNED_IDENTIFIER =
+      new SimpleTreeVisitor<Name, Void>() {
+        @Override
+        public Name visitIdentifier(IdentifierTree node, Void p) {
+          // An identifier is an own method invocation under the condition that we
+          // only hit this case from visitMethodInvocation.
+          return node.getName();
+        }
+
+        @Override
+        public Name visitMemberSelect(MemberSelectTree node, Void p) {
+          // A member select is an "own method invocation" if the expression is "this",
+          // under the condition that we only hit this case from visitMethodInvocation.
+          ExpressionTree lhs = node.getExpression();
+          if (lhs.getKind() != Kind.IDENTIFIER) {
+            return null;
+          }
+          if (!((IdentifierTree) lhs).getName().contentEquals("this")) {
+            return null;
+          }
+          return node.getIdentifier();
+        }
+      };
+
   /** Tree scanner to return any ReturnTree, or null if none is present. */
   private static final TreeScanner<ReturnTree, ?> RETURN_TREE_FINDER =
       new TreeScanner<ReturnTree, Void>() {
@@ -156,4 +175,19 @@ class JavacMethodIntrospector extends MethodIntrospector {
           return (r1 != null) ? r1 : r2;
         }
       };
+
+  private static final TreeScanner<?, BiConsumer<MethodInvocationTree, Name>>
+      OWN_METHOD_INVOCATIONS_VISITOR =
+          new TreeScanner<Void, BiConsumer<MethodInvocationTree, Name>>() {
+            @Override
+            public Void visitMethodInvocation(
+                MethodInvocationTree node,
+                BiConsumer<MethodInvocationTree, Name> biConsumer) {
+              Name identifier = OWNED_IDENTIFIER.visit(node.getMethodSelect(), null);
+              if (identifier != null) {
+                biConsumer.accept(node, identifier);
+              }
+              return super.visitMethodInvocation(node, biConsumer);
+            }
+          };
 }
