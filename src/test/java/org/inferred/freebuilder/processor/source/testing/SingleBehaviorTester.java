@@ -48,9 +48,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
+import javax.tools.Diagnostic.Kind;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
@@ -139,7 +141,15 @@ class SingleBehaviorTester implements BehaviorTester {
       compiles();
       throw new AssertionError("Expected compilation to fail but it succeeded");
     } catch (CompilationException e) {
-      return new CompilationFailureSubjectImpl(e.getDiagnostics());
+      return new CompilationFailureSubject() {
+        @Override
+        public CompilationFailureSubject withErrorThat(
+            Consumer<DiagnosticSubject> diagnosticAssertions) {
+          diagnosticAssertions.accept(
+              MultipleDiagnosticSubjects.create(e.getDiagnostics(), Kind.ERROR));
+          return this;
+        }
+      };
     }
   }
 
@@ -275,6 +285,13 @@ class SingleBehaviorTester implements BehaviorTester {
         }
         throw new AssertionError(message.toString());
       }
+      return this;
+    }
+
+    @Override
+    public CompilationSubject withWarningThat(Consumer<DiagnosticSubject> diagnosticAssertions) {
+      checkState(classLoader != null, "CompilationSubject closed");
+      diagnosticAssertions.accept(MultipleDiagnosticSubjects.create(diagnostics, Kind.WARNING));
       return this;
     }
 

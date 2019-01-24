@@ -485,6 +485,11 @@ class Analyser {
     }
 
     @Override
+    public ExecutableElement getSourceElement() {
+      return getterMethod;
+    }
+
+    @Override
     public DeclaredType getBuilder() {
       return builder;
     }

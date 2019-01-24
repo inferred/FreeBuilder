@@ -32,10 +32,13 @@ import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Variable;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeKind;
+import javax.tools.Diagnostic.Kind;
 
 /** Default {@link PropertyCodeGenerator}, providing reference semantics for any type. */
 public class DefaultProperty extends PropertyCodeGenerator {
@@ -47,6 +50,7 @@ public class DefaultProperty extends PropertyCodeGenerator {
       Property property = config.getProperty();
       boolean hasDefault = config.getMethodsInvokedInBuilderConstructor()
           .contains(setter(property));
+      issueMutabilityWarning(config);
       FunctionalType mapperType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
           mapper(property),
@@ -55,6 +59,31 @@ public class DefaultProperty extends PropertyCodeGenerator {
           config.getTypes());
       return Optional.of(new DefaultProperty(
           config.getDatatype(), property, hasDefault, mapperType));
+    }
+
+    private static void issueMutabilityWarning(Config config) {
+      TypeKind kind = config.getProperty().getType().getKind();
+      if (kind == TypeKind.ARRAY && !mutableWarningsSuppressed(config.getSourceElement())) {
+        config.getEnvironment().getMessager().printMessage(
+            Kind.WARNING,
+            "This property returns a mutable array that can be modified by the caller. "
+                + "FreeBuilder will use reference equality for this property. If possible, prefer "
+                + "an immutable type like List. You can suppress this warning with "
+                + "@SuppressWarnings(\"mutable\").",
+            config.getSourceElement());
+      }
+    }
+
+    private static boolean mutableWarningsSuppressed(Element element) {
+      SuppressWarnings suppressed = element.getAnnotation(SuppressWarnings.class);
+      if (suppressed != null && Arrays.asList(suppressed.value()).contains("mutable")) {
+        return true;
+      }
+      Element parent = element.getEnclosingElement();
+      if (parent != null) {
+        return mutableWarningsSuppressed(parent);
+      }
+      return false;
     }
   }
 
@@ -262,6 +291,15 @@ public class DefaultProperty extends PropertyCodeGenerator {
     // Cannot clear property without defaults
     if (defaults.isPresent()) {
       code.addLine("%s = %s;", property.getField(), property.getField().on(defaults.get()));
+    }
+  }
+
+  @Override
+  public void addToStringValue(SourceBuilder code) {
+    if (kind == TypeKind.ARRAY) {
+      code.add("%s.toString(%s)", Arrays.class, property.getField());
+    } else {
+      code.add(property.getField());
     }
   }
 }

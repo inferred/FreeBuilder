@@ -158,6 +158,11 @@ public interface BehaviorTester {
     CompilationSubject withNoWarnings();
 
     /**
+     * Fails if the compiler did not issue a warning matching {@code diagnosticAssertions}.
+     */
+    CompilationSubject withWarningThat(Consumer<DiagnosticSubject> diagnosticAssertions);
+
+    /**
      * Loads and tests all test sources.
      *
      * <p>Aggregates all exceptions, and propagates them to the caller.
@@ -185,7 +190,7 @@ public interface BehaviorTester {
 
   public interface DiagnosticSubject {
     DiagnosticSubject hasMessage(CharSequence expected);
-    DiagnosticSubject inFile(CharSequence expected);
+    DiagnosticSubject inFile(String expected);
     DiagnosticSubject onLine(long line);
   }
 }

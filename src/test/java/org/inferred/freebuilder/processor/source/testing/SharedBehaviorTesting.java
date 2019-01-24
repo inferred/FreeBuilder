@@ -353,6 +353,13 @@ public class SharedBehaviorTesting {
         }
 
         @Override
+        public CompilationSubject withWarningThat(
+            Consumer<DiagnosticSubject> diagnosticAssertions) {
+          unmergeable = true;
+          return this;
+        }
+
+        @Override
         public CompilationSubject allTestsPass() {
           return this;
         }
@@ -521,6 +528,12 @@ public class SharedBehaviorTesting {
           public CompilationSubject withNoWarnings() {
             assertCompiled.withNoWarnings();
             return this;
+          }
+
+          @Override
+          public CompilationSubject withWarningThat(
+              Consumer<DiagnosticSubject> diagnosticAssertions) {
+            throw new UnsupportedOperationException();
           }
 
           @Override
