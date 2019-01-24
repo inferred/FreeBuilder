@@ -31,6 +31,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Optional;
+
 @RunWith(JUnit4.class)
 public class PrimitiveOptionalSourceTest {
 
@@ -357,11 +359,13 @@ public class PrimitiveOptionalSourceTest {
             datatype,
             cost,
             OptionalType.INT,
-            primitiveUnaryOperator(PrimitiveTypeImpl.INT)),
+            Optional.of(primitiveUnaryOperator(PrimitiveTypeImpl.INT)),
+            Optional.empty()),
         tax, new PrimitiveOptionalProperty(
             datatype,
             tax,
             OptionalType.DOUBLE,
-            primitiveUnaryOperator(PrimitiveTypeImpl.DOUBLE))));
+            Optional.of(primitiveUnaryOperator(PrimitiveTypeImpl.DOUBLE)),
+            Optional.empty())));
   }
 }

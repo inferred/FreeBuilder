@@ -383,6 +383,39 @@ public class PrimitiveOptionalPropertyTest {
   }
 
   @Test
+  public void testMap_canUseCustomOptionalFunctionalInterface() {
+    SourceBuilder customMutatorType = SourceBuilder.forTesting();
+    for (String line : datatype.toString().split("\n")) {
+      if (line.contains("extends DataType_Builder")) {
+        int insertOffset = line.indexOf('{') + 1;
+        customMutatorType
+            .addLine("%s", line.substring(0, insertOffset))
+            .addLine("    public interface Mapper {")
+            .addLine("      %1$s map(%1$s value);", optional.type)
+            .addLine("    }")
+            .addLine("    @Override public Builder mapItem(Mapper mapper) {")
+            .addLine("      return super.mapItem(mapper);")
+            .addLine("    }")
+            .addLine("%s", line.substring(insertOffset));
+      } else {
+        customMutatorType.addLine("%s", line);
+      }
+    }
+
+    behaviorTester
+        .with(new Processor(features))
+        .with(customMutatorType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+            .addLine("    .mapItem(a -> %s.empty())", optional.type)
+            .addLine("    .build();")
+            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testClear() {
     behaviorTester
         .with(new Processor(features))

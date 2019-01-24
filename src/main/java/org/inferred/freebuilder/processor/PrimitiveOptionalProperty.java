@@ -6,8 +6,10 @@ import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
+import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypesAcceptedByMethod;
+import static org.inferred.freebuilder.processor.util.FunctionalType.isAssignable;
 import static org.inferred.freebuilder.processor.util.FunctionalType.primitiveUnaryOperator;
+import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
 import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.ModelUtils.override;
 
@@ -23,6 +25,7 @@ import org.inferred.freebuilder.processor.util.TypeClass;
 import org.inferred.freebuilder.processor.util.Variable;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalDouble;
@@ -31,6 +34,7 @@ import java.util.OptionalLong;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic.Kind;
 
@@ -57,20 +61,33 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         return Optional.empty();
       }
 
-      FunctionalType mapperType = functionalTypeAcceptedByMethod(
+      checkForInfiniteLoop(config, optionalType);
+
+      // Implement mapper methods for primitive, boxed and/or optional unary operators
+      PrimitiveType primitiveType = config.getTypes().getPrimitiveType(optionalType.primitiveKind);
+      FunctionalType primitiveOperator = primitiveUnaryOperator(primitiveType);
+      FunctionalType optionalOperator = unaryOperator(type);
+      List<FunctionalType> declaredOperators = functionalTypesAcceptedByMethod(
           config.getBuilder(),
           mapper(config.getProperty()),
-          primitiveUnaryOperator(config.getTypes().getPrimitiveType(optionalType.primitiveKind)),
           config.getElements(),
           config.getTypes());
-
-      checkForInfiniteLoop(config, optionalType);
+      Optional<FunctionalType> declaredPrimitiveOperator = declaredOperators.stream()
+          .filter(t -> isAssignable(t, primitiveOperator, config.getTypes()))
+          .findAny();
+      Optional<FunctionalType> declaredOptionalOperator = declaredOperators.stream()
+          .filter(t -> isAssignable(t, optionalOperator, config.getTypes()))
+          .findAny();
+      if (!declaredPrimitiveOperator.isPresent() && !declaredOptionalOperator.isPresent()) {
+        declaredPrimitiveOperator = Optional.of(primitiveOperator);
+      }
 
       return Optional.of(new PrimitiveOptionalProperty(
           config.getDatatype(),
           config.getProperty(),
           optionalType,
-          mapperType));
+          declaredPrimitiveOperator,
+          declaredOptionalOperator));
     }
 
     private static void checkForInfiniteLoop(Config config, OptionalType optional) {
@@ -115,17 +132,20 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   }
 
   private final OptionalType optional;
-  private final FunctionalType mapperType;
+  private final Optional<FunctionalType> primitiveOperator;
+  private final Optional<FunctionalType> optionalOperator;
 
   @VisibleForTesting
   PrimitiveOptionalProperty(
       Datatype datatype,
       Property property,
       OptionalType optional,
-      FunctionalType mapperType) {
+      Optional<FunctionalType> primitiveOperator,
+      Optional<FunctionalType> optionalOperator) {
     super(datatype, property);
     this.optional = optional;
-    this.mapperType = mapperType;
+    this.primitiveOperator = primitiveOperator;
+    this.optionalOperator = optionalOperator;
   }
 
   @Override
@@ -147,7 +167,8 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   public void addBuilderFieldAccessors(SourceBuilder code) {
     addSetter(code);
     addOptionalSetter(code);
-    addMapper(code);
+    primitiveOperator.ifPresent(operator -> addPrimitiveMapper(code, operator));
+    optionalOperator.ifPresent(operator -> addOptionalMapper(code, operator));
     addClear(code);
     addGetter(code);
   }
@@ -188,7 +209,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
         .addLine("}");
   }
 
-  private void addMapper(SourceBuilder code) {
+  private void addPrimitiveMapper(SourceBuilder code, FunctionalType mapperType) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * If the value to be returned by %s is present,",
@@ -222,6 +243,23 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
               property.getField(), value, setter(property), mapperType.getMethodName());
     }
     code.addLine("  return (%s) this;", datatype.getBuilder())
+        .addLine("}");
+  }
+
+  private void addOptionalMapper(SourceBuilder code, FunctionalType mapperType) {
+    code.addLine("")
+        .addLine("/**")
+        .addLine(" * Replaces the value to be returned by %s",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * by applying {@code mapper} to it and using the result.")
+        .addLine(" *")
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
+        .addLine(" * @throws NullPointerException if {@code mapper} is null or returns null")
+        .addLine(" */")
+        .addLine("public %s %s(%s mapper) {",
+            datatype.getBuilder(), mapper(property), mapperType.getFunctionalInterface())
+        .addLine("  return %s(mapper.%s(%s()));",
+            setter(property), mapperType.getMethodName(), getter(property))
         .addLine("}");
   }
 
