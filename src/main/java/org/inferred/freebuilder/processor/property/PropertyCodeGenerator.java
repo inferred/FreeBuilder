@@ -36,6 +36,7 @@ import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -45,6 +46,9 @@ public abstract class PropertyCodeGenerator {
 
   /** Data available to {@link Factory} instances when creating a {@link PropertyCodeGenerator}. */
   public interface Config {
+    /** Returns the element this property was inferred from. */
+    ExecutableElement getSourceElement();
+
     /** Returns datatype about the builder being generated. */
     Datatype getDatatype();
 

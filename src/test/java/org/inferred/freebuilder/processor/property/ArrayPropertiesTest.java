@@ -75,6 +75,62 @@ public class ArrayPropertiesTest {
         .runTest();
   }
 
+  @Test
+  public void issuesMutabilityWarning() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  int[] ints();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .compiles()
+        .withWarningThat(warning -> warning
+            .hasMessage("This property returns a mutable array that can be modified by the caller. "
+                + "FreeBuilder will use reference equality for this property. If possible, prefer "
+                + "an immutable type like List. You can suppress this warning with "
+                + "@SuppressWarnings(\"mutable\").")
+            .inFile("/com/example/DataType.java")
+            .onLine(7));
+  }
+
+  @Test
+  public void canSuppressMutabilityWarningOnClass() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@SuppressWarnings(\"mutable\")")
+            .addLine("public interface DataType {")
+            .addLine("  int[] ints();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .compiles()
+        .withNoWarnings();
+  }
+
+  @Test
+  public void canSuppressMutabilityWarningOnMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @SuppressWarnings(\"mutable\")")
+            .addLine("  int[] ints();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .compiles()
+        .withNoWarnings();
+  }
+
   private static TestBuilder testBuilder() {
     return new TestBuilder().addImport("com.example.DataType");
   }
