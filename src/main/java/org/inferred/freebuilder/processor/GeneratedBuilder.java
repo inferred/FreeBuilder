@@ -19,6 +19,7 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EX
 import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.ToStringGenerator.addToString;
+import static org.inferred.freebuilder.processor.property.DefaultProperty.UNSET_PROPERTIES;
 import static org.inferred.freebuilder.processor.util.LazyName.addLazyDefinitions;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
@@ -27,7 +28,9 @@ import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
+import org.inferred.freebuilder.processor.property.Property;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.Excerpts;
 import org.inferred.freebuilder.processor.util.FieldAccess;
@@ -48,14 +51,14 @@ import java.util.function.Predicate;
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
  */
-class GeneratedBuilder extends GeneratedType {
-
-  static final FieldAccess UNSET_PROPERTIES = new FieldAccess("_unsetProperties");
+public class GeneratedBuilder extends GeneratedType {
 
   private final Datatype datatype;
   private final Map<Property, PropertyCodeGenerator> generatorsByProperty;
 
-  GeneratedBuilder(Datatype datatype, Map<Property, PropertyCodeGenerator> generatorsByProperty) {
+  @VisibleForTesting
+  public GeneratedBuilder(
+      Datatype datatype, Map<Property, PropertyCodeGenerator> generatorsByProperty) {
     this.datatype = datatype;
     this.generatorsByProperty = generatorsByProperty;
   }

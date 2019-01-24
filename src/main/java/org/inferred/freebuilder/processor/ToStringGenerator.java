@@ -3,9 +3,11 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
 
-import static org.inferred.freebuilder.processor.GeneratedBuilder.UNSET_PROPERTIES;
+import static org.inferred.freebuilder.processor.property.DefaultProperty.UNSET_PROPERTIES;
 
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Initially;
+import org.inferred.freebuilder.processor.property.Property;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Initially;
 import org.inferred.freebuilder.processor.util.Excerpt;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Variable;

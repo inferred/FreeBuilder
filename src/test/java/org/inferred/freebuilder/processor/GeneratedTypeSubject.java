@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> {
+public class GeneratedTypeSubject extends Subject<GeneratedTypeSubject, GeneratedType> {
 
   public static GeneratedTypeSubject assertThat(GeneratedType subject) {
     return new GeneratedTypeSubject(THROW_ASSERTION_ERROR, subject);

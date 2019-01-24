@@ -32,15 +32,17 @@ import static javax.lang.model.util.ElementFilter.typesIn;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
-import org.inferred.freebuilder.processor.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
+import org.inferred.freebuilder.processor.property.Factories;
+import org.inferred.freebuilder.processor.property.Property;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Config;
 import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.Type;
@@ -90,25 +92,6 @@ class Analyser {
    * it is private.
    */
   public static class CannotGenerateCodeException extends Exception { }
-
-  /**
-   * Factories of {@link PropertyCodeGenerator} instances. Note: order is important; the default
-   * factory should always be last.
-   */
-  private static final List<PropertyCodeGenerator.Factory> PROPERTY_FACTORIES = ImmutableList.of(
-      new NullableProperty.Factory(), // Must be first, as no other factory supports nulls
-      new BuildableListProperty.Factory(), // Must be before ListProperty
-      new ListProperty.Factory(),
-      new SetProperty.Factory(),
-      new SortedSetProperty.Factory(),
-      new MapProperty.Factory(),
-      new MultisetProperty.Factory(),
-      new ListMultimapProperty.Factory(),
-      new SetMultimapProperty.Factory(),
-      new PrimitiveOptionalProperty.Factory(),
-      new OptionalProperty.Factory(),
-      new BuildableProperty.Factory(),
-      new DefaultProperty.Factory()); // Must be last, as it will always return a CodeGenerator
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
@@ -471,7 +454,7 @@ class Analyser {
   }
 
   private static PropertyCodeGenerator createCodeGenerator(Config config) {
-    for (PropertyCodeGenerator.Factory factory : PROPERTY_FACTORIES) {
+    for (PropertyCodeGenerator.Factory factory : Factories.PROPERTY_FACTORIES) {
       Optional<? extends PropertyCodeGenerator> codeGenerator = factory.create(config);
       if (codeGenerator.isPresent()) {
         return codeGenerator.get();
