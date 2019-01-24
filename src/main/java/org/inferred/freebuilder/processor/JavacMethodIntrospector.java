@@ -40,7 +40,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 
 /** Implementation of {@link MethodIntrospector} for javac. */
-class JavacMethodIntrospector extends MethodIntrospector {
+public class JavacMethodIntrospector extends MethodIntrospector {
 
   /**
    * Returns a {@link MethodIntrospector} implementation for the given javac environment.
