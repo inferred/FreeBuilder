@@ -3,8 +3,12 @@ sudo: required
 dist: trusty
 
 language: java
-
 jdk: oraclejdk11
+
+branches:
+  only:
+   - master
+   - /^v\d+\.\d+(\.\d+)*(-\S*)?$/
 
 install: ./gradlew clean shadowJar
 script: ./gradlew check
