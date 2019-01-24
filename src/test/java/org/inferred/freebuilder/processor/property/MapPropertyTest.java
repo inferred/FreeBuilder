@@ -16,7 +16,7 @@
 package org.inferred.freebuilder.processor.property;
 
 import static org.inferred.freebuilder.processor.property.ElementFactory.TYPES;
-import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
+import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUAVA;
 import static org.junit.Assume.assumeTrue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,13 +30,13 @@ import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
 import org.inferred.freebuilder.processor.Processor;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.feature.FeatureSet;
+import org.inferred.freebuilder.processor.source.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.source.testing.ParameterizedBehaviorTestFactory;
+import org.inferred.freebuilder.processor.source.testing.ParameterizedBehaviorTestFactory.Shared;
+import org.inferred.freebuilder.processor.source.testing.TestBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.feature.FeatureSet;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
-import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory;
-import org.inferred.freebuilder.processor.util.testing.ParameterizedBehaviorTestFactory.Shared;
-import org.inferred.freebuilder.processor.util.testing.TestBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

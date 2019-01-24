@@ -5,8 +5,8 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.findAnnotation
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.property.Property;
-import org.inferred.freebuilder.processor.util.Excerpts;
-import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.source.Excerpts;
+import org.inferred.freebuilder.processor.source.QualifiedName;
 
 import java.util.Optional;
 import java.util.Set;

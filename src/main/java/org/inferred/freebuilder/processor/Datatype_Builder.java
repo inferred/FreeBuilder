@@ -8,9 +8,9 @@ import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Type;
-import org.inferred.freebuilder.processor.util.TypeClass;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.Type;
+import org.inferred.freebuilder.processor.source.TypeClass;
 
 import java.util.ArrayList;
 import java.util.Arrays;

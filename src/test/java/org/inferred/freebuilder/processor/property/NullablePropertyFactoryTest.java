@@ -18,7 +18,7 @@ package org.inferred.freebuilder.processor.property;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
+import static org.inferred.freebuilder.processor.source.FunctionalType.unaryOperator;
 import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.testing.ModelRule;
+import org.inferred.freebuilder.processor.source.testing.ModelRule;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -7,8 +7,8 @@ import static java.util.stream.Collectors.joining;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.feature.Feature;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.feature.Feature;
 import org.junit.ComparisonFailure;
 
 import java.util.Arrays;

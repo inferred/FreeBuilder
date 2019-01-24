@@ -22,9 +22,9 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeEle
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeVariable;
 
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.testing.ModelRule;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.testing.ModelRule;
 import org.junit.Rule;
 import org.junit.Test;
 

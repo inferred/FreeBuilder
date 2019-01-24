@@ -22,8 +22,8 @@ import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevel
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.Partial;
-import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.source.Partial;
+import org.inferred.freebuilder.processor.source.QualifiedName;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;

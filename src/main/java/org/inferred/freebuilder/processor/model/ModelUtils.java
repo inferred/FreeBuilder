@@ -15,14 +15,14 @@
  */
 package org.inferred.freebuilder.processor.model;
 
-import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
+import static org.inferred.freebuilder.processor.source.Shading.unshadedName;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.Shading;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.Shading;
 
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;

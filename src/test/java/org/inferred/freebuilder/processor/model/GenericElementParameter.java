@@ -24,7 +24,7 @@ import static org.inferred.freebuilder.processor.model.NullTypeImpl.NULL;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import org.inferred.freebuilder.processor.util.Partial;
+import org.inferred.freebuilder.processor.source.Partial;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;

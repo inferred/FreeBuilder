@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.reflect.TypeToken;
 
-import org.inferred.freebuilder.processor.util.testing.ModelRule;
+import org.inferred.freebuilder.processor.source.testing.ModelRule;
 import org.junit.ComparisonFailure;
 import org.junit.Rule;
 import org.junit.Test;

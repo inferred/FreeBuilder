@@ -4,8 +4,8 @@ package org.inferred.freebuilder.processor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.Type;
 
 import java.util.EnumSet;
 import java.util.Objects;

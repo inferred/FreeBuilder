@@ -16,7 +16,7 @@
 package org.inferred.freebuilder.processor.naming;
 
 import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
-import static org.inferred.freebuilder.processor.util.IsInvalidTypeVisitor.isLegalType;
+import static org.inferred.freebuilder.processor.source.IsInvalidTypeVisitor.isLegalType;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 

@@ -16,9 +16,9 @@
 package org.inferred.freebuilder.processor;
 
 import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.util.SourceBuilder;
-import org.inferred.freebuilder.processor.util.feature.StaticFeatureSet;
-import org.inferred.freebuilder.processor.util.testing.BehaviorTester;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.feature.StaticFeatureSet;
+import org.inferred.freebuilder.processor.source.testing.BehaviorTester;
 import org.junit.Test;
 
 public class AbstractBuilderTest {
