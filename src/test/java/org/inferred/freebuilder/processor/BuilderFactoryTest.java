@@ -23,8 +23,8 @@ import static org.inferred.freebuilder.processor.BuilderFactory.NO_ARGS_CONSTRUC
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.INFERRED_TYPES;
 
+import org.inferred.freebuilder.processor.model.GenericElement;
 import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.GenericElement;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.Type;

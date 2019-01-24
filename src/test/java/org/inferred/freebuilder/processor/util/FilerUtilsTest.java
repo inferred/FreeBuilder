@@ -18,7 +18,7 @@ package org.inferred.freebuilder.processor.util;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;

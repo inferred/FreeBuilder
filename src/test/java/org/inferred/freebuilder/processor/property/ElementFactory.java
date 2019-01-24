@@ -10,10 +10,10 @@ import com.google.common.collect.Ordering;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 
+import org.inferred.freebuilder.processor.model.NameImpl;
 import org.inferred.freebuilder.processor.testtype.AbstractNonComparable;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
 import org.inferred.freebuilder.processor.testtype.OtherNonComparable;
-import org.inferred.freebuilder.processor.util.NameImpl;
 
 import java.util.Arrays;
 import java.util.Comparator;

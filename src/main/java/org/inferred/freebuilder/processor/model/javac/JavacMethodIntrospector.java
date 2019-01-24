@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor;
+package org.inferred.freebuilder.processor.model.javac;
 
 import com.google.common.collect.ImmutableSet;
 import com.sun.source.tree.CompilationUnitTree;
@@ -30,6 +30,8 @@ import com.sun.source.tree.Tree.Kind;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
+
+import org.inferred.freebuilder.processor.model.MethodIntrospector;
 
 import java.util.HashSet;
 import java.util.Set;

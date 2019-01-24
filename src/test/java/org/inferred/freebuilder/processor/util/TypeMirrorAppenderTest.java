@@ -15,14 +15,15 @@
  */
 package org.inferred.freebuilder.processor.util;
 
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newNestedClass;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newNestedClass;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.reflect.TypeToken;
 
+import org.inferred.freebuilder.processor.model.ClassTypeImpl;
 import org.inferred.freebuilder.processor.util.testing.Model;
 import org.junit.AfterClass;
 import org.junit.Test;

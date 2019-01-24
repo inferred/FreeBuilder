@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
+
+import static org.inferred.freebuilder.processor.util.Shading.unshadedName;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 import com.google.common.collect.ImmutableSet;
+
+import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.Shading;
 
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;
@@ -32,9 +37,11 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleElementVisitor8;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
@@ -301,6 +308,53 @@ public class ModelUtils {
       // As a workaround for the common case, fall back to the declared return type.
       return method.getReturnType();
     }
+  }
+
+  /**
+   * Returns the upper bound of {@code type}.<ul>
+   * <li>T -> T
+   * <li>? -> Object
+   * <li>? extends T -> T
+   * <li>? super T -> Object
+   * </ul>
+   */
+  public static TypeMirror upperBound(Elements elements, TypeMirror type) {
+    if (type.getKind() == TypeKind.WILDCARD) {
+      WildcardType wildcard = (WildcardType) type;
+      type = wildcard.getExtendsBound();
+      if (type == null) {
+        type = elements.getTypeElement(Object.class.getName()).asType();
+      }
+    }
+    return type;
+  }
+
+  /** Returns true if {@code type} erases to any of {@code possibilities}. */
+  public static boolean erasesToAnyOf(DeclaredType type, QualifiedName... possibilities) {
+    if (type == null) {
+      return false;
+    }
+    String erasedType = type.asElement().toString();
+    for (QualifiedName possibility : possibilities) {
+      if (unshadedName(possibility.toString()).equals(erasedType)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Returns true if {@code type} erases to any of {@code possibilities}. */
+  public static boolean erasesToAnyOf(DeclaredType type, Class<?>... possibilities) {
+    if (type == null) {
+      return false;
+    }
+    String erasedType = type.asElement().toString();
+    for (Class<?> possibility : possibilities) {
+      if (unshadedName(possibility.getName()).equals(erasedType)) {
+        return true;
+      }
+    }
+    return false;
   }
 
 }

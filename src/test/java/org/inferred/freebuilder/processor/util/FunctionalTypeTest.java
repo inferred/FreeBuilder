@@ -1,8 +1,8 @@
 package org.inferred.freebuilder.processor.util;
 
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.util.FunctionalType.maybeFunctionalType;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unboxedUnaryOperator;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

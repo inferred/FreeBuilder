@@ -3,12 +3,15 @@ package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Type;
+
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
+
 import javax.annotation.Generated;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Type;
 
 /**
  * Auto-generated superclass of {@link BuildableType.Builder}, derived from the API of {@link

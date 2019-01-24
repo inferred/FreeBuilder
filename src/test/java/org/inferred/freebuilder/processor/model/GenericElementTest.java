@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.newTopLevelClass;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeVariable;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeVariable;
 
+import org.inferred.freebuilder.processor.util.QualifiedName;
+import org.inferred.freebuilder.processor.util.SourceBuilder;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.Rule;
 import org.junit.Test;

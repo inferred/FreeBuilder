@@ -1,6 +1,6 @@
 package org.inferred.freebuilder.processor.util;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeAsTypeElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
 
 import org.inferred.freebuilder.processor.util.ScopeHandler.Reflection;
 import org.inferred.freebuilder.processor.util.ScopeHandler.TypeInfo;

@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableList;
 
+import org.inferred.freebuilder.processor.model.MethodFinder;
 import org.inferred.freebuilder.processor.util.testing.ModelRule;
 import org.junit.ClassRule;
 import org.junit.Test;

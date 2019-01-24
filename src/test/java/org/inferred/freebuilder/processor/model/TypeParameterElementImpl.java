@@ -1,6 +1,8 @@
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
 
 import com.google.common.collect.ImmutableList;
+
+import org.inferred.freebuilder.processor.util.Partial;
 
 import java.util.List;
 

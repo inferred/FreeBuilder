@@ -20,12 +20,12 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.nullableSetter;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
-import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -134,10 +134,6 @@ class OptionalProperty extends PropertyCodeGenerator {
     public Optional<OptionalProperty> create(Config config) {
       Property property = config.getProperty();
       DeclaredType type = maybeDeclared(property.getType()).orElse(null);
-      if (type == null) {
-        return Optional.empty();
-      }
-
       OptionalType optionalType = maybeOptional(type).orElse(null);
       if (optionalType == null) {
         return Optional.empty();

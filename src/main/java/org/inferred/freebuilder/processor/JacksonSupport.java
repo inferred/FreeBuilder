@@ -1,6 +1,6 @@
 package org.inferred.freebuilder.processor;
 
-import static org.inferred.freebuilder.processor.util.ModelUtils.findAnnotationMirror;
+import static org.inferred.freebuilder.processor.model.ModelUtils.findAnnotationMirror;
 
 import com.google.common.collect.ImmutableSet;
 

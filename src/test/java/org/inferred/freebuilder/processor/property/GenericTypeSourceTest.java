@@ -16,16 +16,16 @@
 package org.inferred.freebuilder.processor.property;
 
 import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
+import static org.inferred.freebuilder.processor.model.TypeParameterElementImpl.newTypeParameterElement;
 import static org.inferred.freebuilder.processor.util.FunctionalType.unaryOperator;
-import static org.inferred.freebuilder.processor.util.TypeParameterElementImpl.newTypeParameterElement;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.BuilderFactory;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.GeneratedBuilder;
+import org.inferred.freebuilder.processor.model.TypeParameterElementImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.TypeParameterElementImpl;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;

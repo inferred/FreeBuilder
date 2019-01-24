@@ -18,10 +18,10 @@ package org.inferred.freebuilder.processor.property;
 import static org.inferred.freebuilder.processor.GeneratedTypeSubject.assertThat;
 import static org.inferred.freebuilder.processor.NamingConvention.BEAN;
 import static org.inferred.freebuilder.processor.NamingConvention.PREFIXLESS;
-import static org.inferred.freebuilder.processor.util.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.model.ClassTypeImpl.STRING;
+import static org.inferred.freebuilder.processor.model.GenericTypeElementImpl.newTopLevelGenericType;
+import static org.inferred.freebuilder.processor.model.WildcardTypeImpl.wildcardSuper;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
-import static org.inferred.freebuilder.processor.util.GenericTypeElementImpl.newTopLevelGenericType;
-import static org.inferred.freebuilder.processor.util.WildcardTypeImpl.wildcardSuper;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -29,9 +29,9 @@ import org.inferred.freebuilder.processor.BuilderFactory;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.GeneratedBuilder;
 import org.inferred.freebuilder.processor.NamingConvention;
-import org.inferred.freebuilder.processor.util.GenericTypeElementImpl;
+import org.inferred.freebuilder.processor.model.GenericTypeElementImpl;
+import org.inferred.freebuilder.processor.model.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.util.QualifiedName;
-import org.inferred.freebuilder.processor.util.GenericTypeElementImpl.GenericTypeMirrorImpl;
 import org.inferred.freebuilder.processor.util.feature.GuavaLibrary;
 import org.junit.Test;
 import org.junit.runner.RunWith;

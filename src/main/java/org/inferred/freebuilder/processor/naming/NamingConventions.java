@@ -16,9 +16,11 @@
 package org.inferred.freebuilder.processor.naming;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-import static javax.tools.Diagnostic.Kind.ERROR;
+
 import static org.inferred.freebuilder.processor.naming.BeanConvention.GETTER_PATTERN;
 import static org.inferred.freebuilder.processor.naming.BeanConvention.GET_PREFIX;
+
+import static javax.tools.Diagnostic.Kind.ERROR;
 
 import java.util.regex.Matcher;
 

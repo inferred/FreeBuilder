@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
 
 import com.google.common.collect.ImmutableList;
+
+import org.inferred.freebuilder.processor.util.Partial;
+import org.inferred.freebuilder.processor.util.ValueType;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;

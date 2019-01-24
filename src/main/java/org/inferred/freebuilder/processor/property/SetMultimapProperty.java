@@ -22,13 +22,13 @@ import static org.inferred.freebuilder.processor.BuilderMethods.putAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.putMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeAllMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
-import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
-import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -65,7 +65,7 @@ class SetMultimapProperty extends PropertyCodeGenerator {
     public Optional<SetMultimapProperty> create(Config config) {
       Property property = config.getProperty();
       DeclaredType type = maybeDeclared(property.getType()).orElse(null);
-      if (type == null || !erasesToAnyOf(type, SetMultimap.class, ImmutableSetMultimap.class)) {
+      if (!erasesToAnyOf(type, SetMultimap.class, ImmutableSetMultimap.class)) {
         return Optional.empty();
       }
 

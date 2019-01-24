@@ -5,6 +5,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import org.inferred.freebuilder.processor.Datatype.StandardMethod;
+import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
+import org.inferred.freebuilder.processor.util.Excerpt;
+import org.inferred.freebuilder.processor.util.Type;
+import org.inferred.freebuilder.processor.util.TypeClass;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,12 +26,8 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.BaseStream;
+
 import javax.annotation.Generated;
-import org.inferred.freebuilder.processor.Datatype.StandardMethod;
-import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
-import org.inferred.freebuilder.processor.util.Excerpt;
-import org.inferred.freebuilder.processor.util.Type;
-import org.inferred.freebuilder.processor.util.TypeClass;
 
 /**
  * Auto-generated superclass of {@link Datatype.Builder}, derived from the API of {@link Datatype}.

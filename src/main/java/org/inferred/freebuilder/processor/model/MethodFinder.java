@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inferred.freebuilder.processor.util;
+package org.inferred.freebuilder.processor.model;
+
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
 
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
@@ -121,7 +123,7 @@ public class MethodFinder {
     if (mirror.getKind() == TypeKind.ERROR) {
       errorTypeHandling.handleErrorType((ErrorType) mirror);
     }
-    return ModelUtils.maybeAsTypeElement(mirror);
+    return maybeAsTypeElement(mirror);
   }
 
   /**

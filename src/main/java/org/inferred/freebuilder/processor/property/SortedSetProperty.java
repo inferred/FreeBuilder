@@ -22,14 +22,14 @@ import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
 import static org.inferred.freebuilder.processor.BuilderMethods.removeMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.setComparatorMethod;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
-import static org.inferred.freebuilder.processor.Util.upperBound;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
+import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.util.FunctionalType.functionalTypeAcceptedByMethod;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeUnbox;
-import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
-import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.collect.ImmutableSortedSet;
@@ -70,7 +70,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
     @Override
     public Optional<SortedSetProperty> create(Config config) {
       DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
-      if (type == null || !erasesToAnyOf(type, SortedSet.class, ImmutableSortedSet.class)) {
+      if (!erasesToAnyOf(type, SortedSet.class, ImmutableSortedSet.class)) {
         return Optional.empty();
       }
 

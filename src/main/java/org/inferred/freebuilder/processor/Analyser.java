@@ -21,10 +21,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 
 import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
+import static org.inferred.freebuilder.processor.model.MethodFinder.methodsOn;
+import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
+import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
 import static org.inferred.freebuilder.processor.naming.NamingConventions.determineNamingConvention;
-import static org.inferred.freebuilder.processor.util.MethodFinder.methodsOn;
-import static org.inferred.freebuilder.processor.util.ModelUtils.asElement;
-import static org.inferred.freebuilder.processor.util.ModelUtils.getReturnType;
 
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
@@ -38,12 +38,12 @@ import com.google.common.collect.Sets;
 
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
+import org.inferred.freebuilder.processor.model.MethodIntrospector;
 import org.inferred.freebuilder.processor.naming.NamingConvention;
 import org.inferred.freebuilder.processor.property.Factories;
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.util.ModelUtils;
 import org.inferred.freebuilder.processor.util.QualifiedName;
 import org.inferred.freebuilder.processor.util.Type;
 
@@ -378,7 +378,7 @@ class Analyser {
   }
 
   private Datatype.Builder constructionAndExtension(DeclaredType builder) {
-    TypeElement builderElement = ModelUtils.asElement(builder);
+    TypeElement builderElement = asElement(builder);
     if (!builderElement.getModifiers().contains(Modifier.STATIC)) {
       messager.printMessage(ERROR, "Builder must be static on FreeBuilder types", builderElement);
       return new Datatype.Builder().setExtensible(false);

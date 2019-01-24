@@ -8,11 +8,11 @@ import static org.inferred.freebuilder.processor.BuilderMethods.addMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.clearMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.getBuildersMethod;
 import static org.inferred.freebuilder.processor.BuilderMethods.mutator;
-import static org.inferred.freebuilder.processor.Util.erasesToAnyOf;
-import static org.inferred.freebuilder.processor.Util.upperBound;
-import static org.inferred.freebuilder.processor.util.ModelUtils.maybeDeclared;
-import static org.inferred.freebuilder.processor.util.ModelUtils.needsSafeVarargs;
-import static org.inferred.freebuilder.processor.util.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
+import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
+import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
+import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.util.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.collect.ImmutableList;
@@ -49,8 +49,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
     @Override
     public Optional<BuildableListProperty> create(Config config) {
       DeclaredType type = maybeDeclared(config.getProperty().getType()).orElse(null);
-      if (type == null
-          || !erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
+      if (!erasesToAnyOf(type, Collection.class, List.class, ImmutableList.class)) {
         return Optional.empty();
       }
       if (disablingGetterExists(config)) {
