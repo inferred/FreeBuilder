@@ -343,6 +343,11 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+    code.addLine("%s = %s;", property.getField().on(builder), property.getField());
+  }
+
+  @Override
   public void addMergeFromValue(SourceBuilder code, String value) {
     String propertyValue = value + "." + property.getGetterName() + "()";
     optional.invokeIfPresent(code, propertyValue, setter(property));
@@ -352,11 +357,6 @@ class OptionalProperty extends PropertyCodeGenerator {
   public void addMergeFromBuilder(SourceBuilder code, String builder) {
     String propertyValue = builder + "." + getter(property) + "()";
     optional.invokeIfPresent(code, propertyValue, setter(property));
-  }
-
-  @Override
-  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
-    code.addLine("%s.%s(%s);", builder, nullableSetter(property), property.getField());
   }
 
   @Override

@@ -48,8 +48,7 @@ public class CompilationException extends RuntimeException {
     StringBuilder fullMessage = new StringBuilder("Compilation failed");
     int i = 1;
     for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics) {
-      fullMessage.append("\n    ").append(i++).append(") ");
-      Diagnostics.appendTo(fullMessage, diagnostic, 8);
+      fullMessage.append("\n  ").append(i++).append(") ").append(diagnostic);
     }
     return fullMessage.toString();
   }

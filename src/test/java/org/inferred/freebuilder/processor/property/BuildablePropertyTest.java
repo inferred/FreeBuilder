@@ -174,11 +174,9 @@ public class BuildablePropertyTest {
       code.addLine("@%s(\"two\")", JsonProperty.class);
     }
     code.addLine("  Item %s;", convention.get("item2"))
-        .addLine("");
-    if (buildableType == FREEBUILDER_WITH_TO_BUILDER) {
-      code.addLine("    Builder toBuilder();");
-    }
-    code.addLine("  class Builder extends DataType_Builder {}")
+        .addLine("")
+        .addLine("  Builder toBuilder();")
+        .addLine("  class Builder extends DataType_Builder {}")
         .addLine("}");
 
     if (buildableType == FREEBUILDER_LIKE) {
@@ -1038,37 +1036,40 @@ public class BuildablePropertyTest {
         .runTest();
   }
 
-  public void testToBuilder_fromPartial_usingGetter() {
-    assumeHasToBuilder();
+  @Test
+  public void testToBuilder_fromValue() {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
         .with(testBuilder()
-            .addLine("DataType.Builder builder1 = new DataType.Builder();")
-            .addLine("builder1.%s.%s(\"Foo\");",
-                convention.get("item1Builder"), convention.set("name"))
-            .addLine("builder1.%s.%s(2);",
-                convention.get("item2Builder"), convention.set("price"))
-            .addLine("DataType value1 = builder1.buildPartial();")
-            .addLine("DataType.Builder builder2 = value1.toBuilder();")
-            .addLine("builder2.%s.%s(\"Bar\");",
-                convention.get("item2Builder"), convention.set("name"))
-            .addLine("DataType value2 = builder2.build();")
-            .addLine("DataType.Builder expected = new DataType.Builder();")
-            .addLine("expected.%s.%s(\"Foo\");",
-                convention.get("item1Builder"), convention.set("name"))
-            .addLine("expected.%s.%s(2);",
-                convention.get("item2Builder"), convention.set("price"))
-            .addLine("expected.%s.%s(\"Bar\");",
-                convention.get("item2Builder"), convention.set("name"))
-            .addLine("assertEquals(expected.buildPartial(), value2);")
+            .addLine("DataType value1 = new DataType.Builder()")
+            .addLine("    .mutateItem1($ -> $")
+            .addLine("        .%s(\"Foo\")", convention.set("name"))
+            .addLine("        .%s(1))", convention.set("price"))
+            .addLine("    .mutateItem2($ -> $")
+            .addLine("        .%s(\"Bar\")", convention.set("name"))
+            .addLine("        .%s(2))", convention.set("price"))
+            .addLine("    .build();")
+            .addLine("DataType value2 = value1.toBuilder()")
+            .addLine("    .mutateItem2($ -> $")
+            .addLine("        .%s(\"Baz\"))", convention.set("name"))
+            .addLine("    .build();")
+            .addLine("DataType expected = new DataType.Builder()")
+            .addLine("    .mutateItem1($ -> $")
+            .addLine("        .%s(\"Foo\")", convention.set("name"))
+            .addLine("        .%s(1))", convention.set("price"))
+            .addLine("    .mutateItem2($ -> $")
+            .addLine("        .%s(\"Baz\")", convention.set("name"))
+            .addLine("        .%s(2))", convention.set("price"))
+            .addLine("    .build();")
+            .addLine("assertEquals(expected, value2);")
             .build())
         .runTest();
   }
 
 
   @Test
-  public void testToBuilder_fromPartial_usingLambdas() {
+  public void testToBuilder_fromPartial() {
     assumeHasToBuilder();
     behaviorTester
         .with(new Processor(features))

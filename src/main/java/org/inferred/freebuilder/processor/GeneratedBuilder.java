@@ -16,6 +16,7 @@
 package org.inferred.freebuilder.processor;
 
 import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EXPLICIT_TYPES;
+import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.INFERRED_TYPES;
 import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.ToStringGenerator.addToString;
@@ -339,13 +340,24 @@ public class GeneratedBuilder extends GeneratedType {
   }
 
   private void addValueTypeToBuilder(SourceBuilder code) {
+    boolean hasRequiredProperties = generatorsByProperty.values().stream().anyMatch(IS_REQUIRED);
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public %s toBuilder() {", datatype.getBuilder());
     BuilderFactory builderFactory = datatype.getBuilderFactory().orElse(null);
     if (builderFactory != null) {
-      code.addLine("    return %s.mergeFrom(this);",
-              builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES));
+      Variable builder = new Variable("builder");
+      code.addLine("    %s %s = %s;",
+          datatype.getGeneratedBuilder(),
+          builder,
+          builderFactory.newBuilder(datatype.getBuilder(), INFERRED_TYPES));
+      generatorsByProperty.values().forEach(generator -> {
+        generator.addAssignToBuilder(code, builder);
+      });
+      if (hasRequiredProperties) {
+        code.addLine("    %s.clear();", UNSET_PROPERTIES.on(builder));
+      }
+      code.addLine("    return (%s) %s;", datatype.getBuilder(), builder);
     } else {
       code.addLine("    throw new %s();", UnsupportedOperationException.class);
     }
@@ -468,6 +480,7 @@ public class GeneratedBuilder extends GeneratedType {
     if (!datatype.getHasToBuilderMethod()) {
       return;
     }
+    boolean hasRequiredProperties = generatorsByProperty.values().stream().anyMatch(IS_REQUIRED);
     if (datatype.isExtensible()) {
       code.addLine("")
           .addLine("  private static class PartialBuilder%s extends %s {",
@@ -483,11 +496,15 @@ public class GeneratedBuilder extends GeneratedType {
     Variable builder = new Variable("builder");
     if (datatype.isExtensible()) {
       code.addLine("    %s builder = new PartialBuilder%s();",
-              datatype.getBuilder(), datatype.getBuilder().diamondOperator());
+              datatype.getGeneratedBuilder(), datatype.getBuilder().diamondOperator());
       generatorsByProperty.values().forEach(generator -> {
-        generator.addSetBuilderFromPartial(code, builder);
+        generator.addAssignToBuilder(code, builder);
       });
-      code.addLine("    return %s;", builder);
+      if (hasRequiredProperties) {
+        code.addLine("    %s.clear();", UNSET_PROPERTIES.on(builder))
+            .addLine("    %s.addAll(%s);", UNSET_PROPERTIES.on(builder), UNSET_PROPERTIES);
+      }
+      code.addLine("    return (%s) %s;", datatype.getBuilder(), builder);
     } else {
       code.addLine("    throw new %s();", UnsupportedOperationException.class);
     }

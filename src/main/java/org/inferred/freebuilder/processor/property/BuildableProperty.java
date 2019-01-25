@@ -243,6 +243,17 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+    if (type.partialToBuilder() == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
+      code.add("%s = %s.toBuilder();",
+          property.getField().on(builder), property.getField());
+    } else {
+      code.add("%s = %s.mergeFrom(%s);",
+          property.getField().on(builder), type.newBuilder(EXPLICIT_TYPES), property.getField());
+    }
+  }
+
+  @Override
   public void addMergeFromValue(SourceBuilder code, String value) {
     code.addLine("if (%s == null) {", property.getField())
         .addLine("  %s = %s.%s();", property.getField(), value, property.getGetterName())
@@ -275,17 +286,6 @@ class BuildableProperty extends PropertyCodeGenerator {
     }
     code.add(");\n")
         .addLine("}");
-  }
-
-  @Override
-  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
-    if (type.partialToBuilder() == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
-      code.add("%s.%s().mergeFrom(%s.toBuilder());",
-          builder, getBuilderMethod(property), property.getField());
-    } else {
-      code.add("%s.%s().mergeFrom(%s);",
-          builder, getBuilderMethod(property), property.getField());
-    }
   }
 
   @Override
