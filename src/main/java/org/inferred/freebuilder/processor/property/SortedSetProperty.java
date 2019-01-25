@@ -174,7 +174,8 @@ class SortedSetProperty extends PropertyCodeGenerator {
         .addLine(" * Sets the comparator of the set to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
-        .addLine(" * Pass in {@code null} to use the {@linkplain Comparable natural ordering}")
+        .addLine(" * Pass in {@code null} to use the {@linkplain %s natural ordering}",
+            Comparable.class)
         .addLine(" * of the elements.")
         .addLine(" *")
         .addLine(" * <p>If the set is accessed without calling this method first, the comparator")

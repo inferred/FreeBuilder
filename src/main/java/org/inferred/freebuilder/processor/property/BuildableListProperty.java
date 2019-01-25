@@ -182,10 +182,10 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine(" * <p>Only a copy of the builder will be stored; any changes made to it after")
         .addLine(" * returning from this method will not affect the value stored in the list.")
         .addLine(" *")
-        .addLine(" * <p>The copied builder's {@link %s build()} method will not be called until",
-            element.builderType().javadocNoArgMethodLink("build"))
-        .addLine(" * this object's {@link %s build() method} is, so if the builder's state is not",
-            datatype.getBuilder().javadocNoArgMethodLink("build"))
+        .addLine(" * <p>The copied builder's %s will not be called until",
+            element.builderType().javadocNoArgMethodLink("build").withText("build method"))
+        .addLine(" * this object's %s is, so if the builder's state is not",
+            datatype.getBuilder().javadocNoArgMethodLink("build").withText("build method"))
         .addLine(" * legal, you will not get failures until then.")
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
@@ -224,10 +224,10 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine(" * <p>Only copies of the builders will be stored; any changes made to them after")
         .addLine(" * returning from this method will not affect the values stored in the list.")
         .addLine(" *")
-        .addLine(" * <p>The copied builders' {@link %s build()} methods will not be called until",
-            element.builderType().javadocNoArgMethodLink("build"))
-        .addLine(" * this object's {@link %s build() method} is, so if any builder's state is not",
-            datatype.getBuilder().javadocNoArgMethodLink("build"))
+        .addLine(" * <p>The copied builders' %s will not be called until",
+            element.builderType().javadocNoArgMethodLink("build").withText("build methods"))
+        .addLine(" * this object's %s is, so if any builder's state is not",
+            datatype.getBuilder().javadocNoArgMethodLink("build").withText("build method"))
         .addLine(" * legal, you will not get failures until then.")
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())

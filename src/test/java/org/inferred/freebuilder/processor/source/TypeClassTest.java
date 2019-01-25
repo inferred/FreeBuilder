@@ -46,6 +46,8 @@ public class TypeClassTest {
     assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType#foo()}",
         prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
+    assertEquals("{@link MyType#foo() bar}",
+        prettyPrint(type.javadocNoArgMethodLink("foo").withText("bar"), SourceLevel.JAVA_8));
   }
 
   @Test
@@ -76,6 +78,8 @@ public class TypeClassTest {
     assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType#foo()}",
         prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
+    assertEquals("{@link MyType#foo() bar}",
+        prettyPrint(type.javadocNoArgMethodLink("foo").withText("bar"), SourceLevel.JAVA_8));
   }
 
   @Test
