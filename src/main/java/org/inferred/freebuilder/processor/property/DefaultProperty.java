@@ -215,7 +215,7 @@ public class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+  public void addAssignToBuilder(SourceBuilder code, Excerpt builder) {
     code.addLine("%s = %s;", property.getField().on(builder), property.getField());
   }
 
@@ -288,11 +288,11 @@ public class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addToStringValue(SourceBuilder code) {
+  public void addToStringValue(SourceBuilder code, Object instance) {
     if (kind == TypeKind.ARRAY) {
-      code.add("%s.toString(%s)", Arrays.class, property.getField());
+      code.add("%s.toString(%s)", Arrays.class, property.getField().on(instance));
     } else {
-      code.add(property.getField());
+      code.add(property.getField().on(instance));
     }
   }
 }

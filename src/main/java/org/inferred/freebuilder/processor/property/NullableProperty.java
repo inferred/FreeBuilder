@@ -173,7 +173,7 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+  public void addAssignToBuilder(SourceBuilder code, Excerpt builder) {
     code.addLine("%s = %s;", property.getField().on(builder), property.getField());
   }
 

@@ -15,6 +15,8 @@
  */
 package org.inferred.freebuilder.processor.source;
 
+import java.util.Objects;
+
 public class FieldAccess extends ValueType implements Excerpt {
 
   private final String fieldName;
@@ -37,7 +39,11 @@ public class FieldAccess extends ValueType implements Excerpt {
   }
 
   public Excerpt on(Object obj) {
-    return code -> code.add("%s.%s", obj, fieldName);
+    if (Objects.equals(obj, "this")) {
+      return this;
+    } else {
+      return code -> code.add("%s.%s", obj, fieldName);
+    }
   }
 
   @Override

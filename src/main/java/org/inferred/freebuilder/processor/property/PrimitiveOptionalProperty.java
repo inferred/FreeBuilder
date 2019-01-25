@@ -298,7 +298,7 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+  public void addAssignToBuilder(SourceBuilder code, Excerpt builder) {
     code.addLine("%s = %s;", property.getField().on(builder), property.getField());
   }
 
@@ -328,12 +328,12 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addToStringCondition(SourceBuilder code) {
-    code.add("%s.isPresent()", property.getField());
+  public void addToStringCondition(SourceBuilder code, Object instance) {
+    code.add("%s.isPresent()", property.getField().on(instance));
   }
 
   @Override
-  public void addToStringValue(SourceBuilder code) {
-    code.add("%s.%s()", property.getField(), optional.getter);
+  public void addToStringValue(SourceBuilder code, Object instance) {
+    code.add("%s.%s()", property.getField().on(instance), optional.getter);
   }
 }

@@ -33,16 +33,17 @@ class ToStringGenerator {
     boolean anyOptional = generatorsByProperty.values().stream().anyMatch(isOptional);
     boolean allOptional = generatorsByProperty.values().stream().allMatch(isOptional)
         && !generatorsByProperty.isEmpty();
+    String instance = forPartial ? "super" : "this";
 
     code.addLine("")
         .addLine("@%s", Override.class)
         .addLine("public %s toString() {", String.class);
     if (allOptional) {
-      bodyWithBuilderAndSeparator(code, datatype, generatorsByProperty, typename);
+      bodyWithBuilderAndSeparator(code, datatype, generatorsByProperty, typename, instance);
     } else if (anyOptional) {
-      bodyWithBuilder(code, datatype, generatorsByProperty, typename, isOptional);
+      bodyWithBuilder(code, datatype, generatorsByProperty, typename, instance, isOptional);
     } else {
-      bodyWithConcatenation(code, generatorsByProperty, typename);
+      bodyWithConcatenation(code, generatorsByProperty, typename, instance);
     }
     code.addLine("}");
   }
@@ -58,13 +59,14 @@ class ToStringGenerator {
   private static void bodyWithConcatenation(
       SourceBuilder code,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
-      String typename) {
+      String typename,
+      String instance) {
     code.add("  return \"%s{", typename);
     String prefix = "";
     for (Property property : generatorsByProperty.keySet()) {
       PropertyCodeGenerator generator = generatorsByProperty.get(property);
       code.add("%s%s=\" + %s + \"",
-          prefix, property.getName(), (Excerpt) generator::addToStringValue);
+          prefix, property.getName(), (Excerpt) c -> generator.addToStringValue(c, instance));
       prefix = ", ";
     }
     code.add("}\";%n");
@@ -91,6 +93,7 @@ class ToStringGenerator {
       Datatype datatype,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
       String typename,
+      String instance,
       Predicate<PropertyCodeGenerator> isOptional) {
     Variable result = new Variable("result");
 
@@ -116,7 +119,7 @@ class ToStringGenerator {
         }
         code.add("if (");
         if (generator.initialState() == Initially.OPTIONAL) {
-          generator.addToStringCondition(code);
+          generator.addToStringCondition(code, instance);
         } else {
           code.add("!%s.contains(%s.%s)",
               UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
@@ -125,7 +128,8 @@ class ToStringGenerator {
         if (prependCommas) {
           code.add(", ");
         }
-        code.add("%s=\").append(%s)", property.getName(), property.getField());
+        code.add("%s=\").append(%s)",
+            property.getName(), (Excerpt) c -> generator.addToStringValue(c, instance));
         if (!prependCommas) {
           code.add(".append(\", \")");
         }
@@ -148,7 +152,8 @@ class ToStringGenerator {
         if (prependCommas) {
           code.add(", ");
         }
-        code.add("%s=\").append(%s)", property.getName(), (Excerpt) generator::addToStringValue);
+        code.add("%s=\").append(%s)",
+            property.getName(), (Excerpt) c -> generator.addToStringValue(c, instance));
         midStringLiteral = false;
         midAppends = true;
         prependCommas = true;
@@ -180,7 +185,8 @@ class ToStringGenerator {
       SourceBuilder code,
       Datatype datatype,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
-      String typename) {
+      String typename,
+      String instance) {
     Variable result = new Variable("result");
     Variable separator = new Variable("separator");
 
@@ -199,7 +205,7 @@ class ToStringGenerator {
           throw new RuntimeException("Internal error: unexpected default field");
 
         case OPTIONAL:
-          code.addLine("  if (%s) {", (Excerpt) generator::addToStringCondition);
+          code.addLine("  if (%s) {", (Excerpt) c -> generator.addToStringCondition(c, instance));
           break;
 
         case REQUIRED:
@@ -212,7 +218,7 @@ class ToStringGenerator {
         code.add(".append(%s)", separator);
       }
       code.add(".append(\"%s=\").append(%s)",
-          property.getName(), (Excerpt) generator::addToStringValue);
+          property.getName(), (Excerpt) c -> generator.addToStringValue(c, instance));
       if (property != last) {
         code.add(";%n    %s = \", \"", separator);
       }

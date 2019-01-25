@@ -243,7 +243,7 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+  public void addAssignToBuilder(SourceBuilder code, Excerpt builder) {
     if (type.partialToBuilder() == PartialToBuilderMethod.TO_BUILDER_AND_MERGE) {
       code.add("%s = %s.toBuilder();",
           property.getField().on(builder), property.getField());

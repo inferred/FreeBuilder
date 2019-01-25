@@ -43,7 +43,6 @@ import org.inferred.freebuilder.processor.source.FunctionalType;
 import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Type;
-import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -479,7 +478,7 @@ class SortedSetProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+  public void addAssignToBuilder(SourceBuilder code, Excerpt builder) {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("%s = %s;", property.getField().on(builder), property.getField());
     } else {

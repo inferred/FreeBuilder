@@ -43,7 +43,6 @@ import org.inferred.freebuilder.processor.excerpt.CheckedSetMultimap;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.FunctionalType;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Collection;
 import java.util.Map.Entry;
@@ -385,7 +384,7 @@ class SetMultimapProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+  public void addAssignToBuilder(SourceBuilder code, Excerpt builder) {
     code.addLine("%s.putAll(%s);", property.getField().on(builder), property.getField());
   }
 

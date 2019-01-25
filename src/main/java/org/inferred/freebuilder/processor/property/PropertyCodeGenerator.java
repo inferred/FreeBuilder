@@ -26,7 +26,6 @@ import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.Variable;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -157,7 +156,7 @@ public abstract class PropertyCodeGenerator {
   }
 
   /** Adds an assignment to the field on the builder from the Value/Partial implementation. */
-  public abstract void addAssignToBuilder(SourceBuilder code, Variable builder);
+  public abstract void addAssignToBuilder(SourceBuilder code, Excerpt builder);
 
   /** Add a merge from value for the property to the builder's source code. */
   public abstract void addMergeFromValue(SourceBuilder code, String value);
@@ -185,16 +184,16 @@ public abstract class PropertyCodeGenerator {
    *
    * @throws IllegalStateException if {@link #initialState()} is not {@link Initially#OPTIONAL}
    */
-  public void addToStringCondition(SourceBuilder code) {
+  public void addToStringCondition(SourceBuilder code, Object instance) {
     checkState(initialState() == Initially.OPTIONAL);
-    code.add("%s != null", property.getField());
+    code.add("%s != null", property.getField().on(instance));
   }
 
   /**
    * Adds value to an ongoing toString concatenation or append sequence.
    */
-  public void addToStringValue(SourceBuilder code) {
-    code.add(property.getField());
+  public void addToStringValue(SourceBuilder code, Object instance) {
+    code.add(property.getField().on(instance));
   }
 
   public void addAccessorAnnotations(SourceBuilder code) {

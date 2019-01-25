@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Initially;
+import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.QualifiedName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class ToStringGeneratorTest {
     assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
-        + "  return \"partial Person{name=\" + name + \"}\";\n"
+        + "  return \"partial Person{name=\" + super.name + \"}\";\n"
         + "}\n");
   }
 
@@ -70,7 +71,7 @@ public class ToStringGeneratorTest {
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {\n"
-        + "    result.append(\"name=\").append(name);\n"
+        + "    result.append(\"name=\").append(super.name);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -93,8 +94,8 @@ public class ToStringGeneratorTest {
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
-        + "  if (name != null) {\n"
-        + "    result.append(\"name=\").append(name);\n"
+        + "  if (super.name != null) {\n"
+        + "    result.append(\"name=\").append(super.name);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -112,7 +113,7 @@ public class ToStringGeneratorTest {
     assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
-        + "  return \"partial Person{name=\" + name + \", age=\" + age + \"}\";\n"
+        + "  return \"partial Person{name=\" + super.name + \", age=\" + super.age + \"}\";\n"
         + "}\n");
   }
 
@@ -131,11 +132,11 @@ public class ToStringGeneratorTest {
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  String separator = \"\";\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {\n"
-        + "    result.append(\"name=\").append(name);\n"
+        + "    result.append(\"name=\").append(super.name);\n"
         + "    separator = \", \";\n"
         + "  }\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {\n"
-        + "    result.append(separator).append(\"age=\").append(age);\n"
+        + "    result.append(separator).append(\"age=\").append(super.age);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -164,12 +165,12 @@ public class ToStringGeneratorTest {
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  String separator = \"\";\n"
-        + "  if (name != null) {\n"
-        + "    result.append(\"name=\").append(name);\n"
+        + "  if (super.name != null) {\n"
+        + "    result.append(\"name=\").append(super.name);\n"
         + "    separator = \", \";\n"
         + "  }\n"
-        + "  if (age != null) {\n"
-        + "    result.append(separator).append(\"age=\").append(age);\n"
+        + "  if (super.age != null) {\n"
+        + "    result.append(separator).append(\"age=\").append(super.age);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -187,9 +188,10 @@ public class ToStringGeneratorTest {
     assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
-        + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(name);\n"
+        + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(super.name);"
+            +"\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {\n"
-        + "    result.append(\", age=\").append(age);\n"
+        + "    result.append(\", age=\").append(super.age);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -209,9 +211,9 @@ public class ToStringGeneratorTest {
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {\n"
-        + "    result.append(\"name=\").append(name).append(\", \");\n"
+        + "    result.append(\"name=\").append(super.name).append(\", \");\n"
         + "  }\n"
-        + "  return result.append(\"age=\").append(age).append(\"}\").toString();\n"
+        + "  return result.append(\"age=\").append(super.age).append(\"}\").toString();\n"
         + "}\n");
   }
 
@@ -231,9 +233,10 @@ public class ToStringGeneratorTest {
     assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
-        + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(name);\n"
-        + "  if (age != null) {\n"
-        + "    result.append(\", age=\").append(age);\n"
+        + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(super.name);"
+            + "\n"
+        + "  if (super.age != null) {\n"
+        + "    result.append(\", age=\").append(super.age);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -256,10 +259,10 @@ public class ToStringGeneratorTest {
         + "@Override\n"
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
-        + "  if (name != null) {\n"
-        + "    result.append(\"name=\").append(name).append(\", \");\n"
+        + "  if (super.name != null) {\n"
+        + "    result.append(\"name=\").append(super.name).append(\", \");\n"
         + "  }\n"
-        + "  return result.append(\"age=\").append(age).append(\"}\").toString();\n"
+        + "  return result.append(\"age=\").append(super.age).append(\"}\").toString();\n"
         + "}\n");
   }
 
@@ -282,11 +285,11 @@ public class ToStringGeneratorTest {
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  String separator = \"\";\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {\n"
-        + "    result.append(\"name=\").append(name);\n"
+        + "    result.append(\"name=\").append(super.name);\n"
         + "    separator = \", \";\n"
         + "  }\n"
-        + "  if (age != null) {\n"
-        + "    result.append(separator).append(\"age=\").append(age);\n"
+        + "  if (super.age != null) {\n"
+        + "    result.append(separator).append(\"age=\").append(super.age);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -310,12 +313,12 @@ public class ToStringGeneratorTest {
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  String separator = \"\";\n"
-        + "  if (name != null) {\n"
-        + "    result.append(\"name=\").append(name);\n"
+        + "  if (super.name != null) {\n"
+        + "    result.append(\"name=\").append(super.name);\n"
         + "    separator = \", \";\n"
         + "  }\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {\n"
-        + "    result.append(separator).append(\"age=\").append(age);\n"
+        + "    result.append(separator).append(\"age=\").append(super.age);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -337,8 +340,8 @@ public class ToStringGeneratorTest {
     assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
-        + "  return \"partial Person{name=\" + name + \", age=\" + age + \", shoeSize=\" + shoeSize"
-            + " + \"}\";\n"
+        + "  return \"partial Person{name=\" + super.name + \", age=\" + super.age + \", "
+            + "shoeSize=\" + super.shoeSize + \"}\";\n"
         + "}\n");
   }
 
@@ -361,15 +364,15 @@ public class ToStringGeneratorTest {
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  String separator = \"\";\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {\n"
-        + "    result.append(\"name=\").append(name);\n"
+        + "    result.append(\"name=\").append(super.name);\n"
         + "    separator = \", \";\n"
         + "  }\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {\n"
-        + "    result.append(separator).append(\"age=\").append(age);\n"
+        + "    result.append(separator).append(\"age=\").append(super.age);\n"
         + "    separator = \", \";\n"
         + "  }\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)) {\n"
-        + "    result.append(separator).append(\"shoeSize=\").append(shoeSize);\n"
+        + "    result.append(separator).append(\"shoeSize=\").append(super.shoeSize);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -405,16 +408,16 @@ public class ToStringGeneratorTest {
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  String separator = \"\";\n"
-        + "  if (name != null) {\n"
-        + "    result.append(\"name=\").append(name);\n"
+        + "  if (super.name != null) {\n"
+        + "    result.append(\"name=\").append(super.name);\n"
         + "    separator = \", \";\n"
         + "  }\n"
-        + "  if (age != null) {\n"
-        + "    result.append(separator).append(\"age=\").append(age);\n"
+        + "  if (super.age != null) {\n"
+        + "    result.append(separator).append(\"age=\").append(super.age);\n"
         + "    separator = \", \";\n"
         + "  }\n"
-        + "  if (shoeSize != null) {\n"
-        + "    result.append(separator).append(\"shoeSize=\").append(shoeSize);\n"
+        + "  if (super.shoeSize != null) {\n"
+        + "    result.append(separator).append(\"shoeSize=\").append(super.shoeSize);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -438,11 +441,11 @@ public class ToStringGeneratorTest {
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {\n"
-        + "    result.append(\"name=\").append(name).append(\", \");\n"
+        + "    result.append(\"name=\").append(super.name).append(\", \");\n"
         + "  }\n"
-        + "  result.append(\"age=\").append(age);\n"
+        + "  result.append(\"age=\").append(super.age);\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)) {\n"
-        + "    result.append(\", shoeSize=\").append(shoeSize);\n"
+        + "    result.append(\", shoeSize=\").append(super.shoeSize);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -464,10 +467,10 @@ public class ToStringGeneratorTest {
     assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
-        + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(name)"
-            + ".append(\", age=\").append(age);\n"
+        + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(super.name)"
+            + ".append(\", age=\").append(super.age);\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.SHOE_SIZE)) {\n"
-        + "    result.append(\", shoeSize=\").append(shoeSize);\n"
+        + "    result.append(\", shoeSize=\").append(super.shoeSize);\n"
         + "  }\n"
         + "  return result.append(\"}\").toString();\n"
         + "}\n");
@@ -489,11 +492,13 @@ public class ToStringGeneratorTest {
     assertThat(builder.partialToString()).isEqualTo("\n"
         + "@Override\n"
         + "public String toString() {\n"
-        + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(name);\n"
+        + "  StringBuilder result = new StringBuilder(\"partial Person{name=\").append(super.name);"
+            +"\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.AGE)) {\n"
-        + "    result.append(\", age=\").append(age);\n"
+        + "    result.append(\", age=\").append(super.age);\n"
         + "  }\n"
-        + "  return result.append(\", shoeSize=\").append(shoeSize).append(\"}\").toString();\n"
+        + "  return result.append(\", shoeSize=\").append(super.shoeSize).append(\"}\").toString();"
+            + "\n"
         + "}\n");
   }
 
@@ -515,10 +520,10 @@ public class ToStringGeneratorTest {
         + "public String toString() {\n"
         + "  StringBuilder result = new StringBuilder(\"partial Person{\");\n"
         + "  if (!_unsetProperties.contains(Person_Builder.Property.NAME)) {\n"
-        + "    result.append(\"name=\").append(name).append(\", \");\n"
+        + "    result.append(\"name=\").append(super.name).append(\", \");\n"
         + "  }\n"
-        + "  return result.append(\"age=\").append(age).append(\", shoeSize=\").append(shoeSize)"
-            + ".append(\"}\").toString();\n"
+        + "  return result.append(\"age=\").append(super.age).append(\", "
+            + "shoeSize=\").append(super.shoeSize).append(\"}\").toString();\n"
         + "}\n");
   }
 
@@ -564,6 +569,7 @@ public class ToStringGeneratorTest {
     }
 
     private ToStringBuilder with(PropertyCodeGenerator.Initially initially, String name) {
+      FieldAccess field = new FieldAccess(name);
       Property property = new Property.Builder()
           .setName(name)
           .setAllCapsName(name.replaceAll("([A-Z])", "_$1").toUpperCase())
@@ -573,17 +579,19 @@ public class ToStringGeneratorTest {
       if (generator.initialState() == Initially.OPTIONAL) {
         doAnswer(invocation -> {
           SourceBuilder code = invocation.getArgumentAt(0, SourceBuilder.class);
-          code.add("%s != null", name);
+          Object instance = invocation.getArgumentAt(1, Object.class);
+          code.add("%s != null", field.on(instance));
           return null;
-        }).when(generator).addToStringCondition(any());
+        }).when(generator).addToStringCondition(any(), any());
       } else {
-        doThrow(IllegalStateException.class).when(generator).addToStringCondition(any());
+        doThrow(IllegalStateException.class).when(generator).addToStringCondition(any(), any());
       }
       doAnswer(invocation -> {
         SourceBuilder code = invocation.getArgumentAt(0, SourceBuilder.class);
-        code.add(name);
+        Object instance = invocation.getArgumentAt(1, Object.class);
+        code.add("%s", field.on(instance));
         return null;
-      }).when(generator).addToStringValue(any());
+      }).when(generator).addToStringValue(any(), any());
       generatorsByProperty.put(property, generator);
       return this;
     }

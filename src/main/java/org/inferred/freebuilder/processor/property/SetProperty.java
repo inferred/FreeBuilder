@@ -43,7 +43,6 @@ import org.inferred.freebuilder.processor.source.LazyName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Type;
 import org.inferred.freebuilder.processor.source.ValueType;
-import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -416,7 +415,7 @@ class SetProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+  public void addAssignToBuilder(SourceBuilder code, Excerpt builder) {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("%s = %s;", property.getField().on(builder), property.getField());
     } else {
