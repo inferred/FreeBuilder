@@ -231,10 +231,10 @@ public class GeneratedBuilder extends GeneratedType {
     if (datatype.getHasToBuilderMethod()
         && datatype.getBuilderFactory().equals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR))) {
       code.addLine(" *")
-          .addLine(" * <p>The builder returned by a partial's {@link %s#toBuilder() toBuilder}",
-              datatype.getType())
-          .addLine(" * method overrides {@link %s#build() build()} to return another partial.",
-              datatype.getBuilder())
+          .addLine(" * <p>The builder returned by a partial's %s",
+              datatype.getType().javadocNoArgMethodLink("toBuilder").withText("toBuilder"))
+          .addLine(" * method overrides %s to return another partial.",
+              datatype.getBuilder().javadocNoArgMethodLink("build").withText("build()"))
           .addLine(" * This allows for robust tests of modify-rebuild code.");
     }
     code.addLine(" *")

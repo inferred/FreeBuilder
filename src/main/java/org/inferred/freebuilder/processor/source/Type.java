@@ -77,18 +77,38 @@ public abstract class Type extends ValueType implements Excerpt {
     return Excerpts.add("new %s%s", getQualifiedName(), diamondOperator());
   }
 
+  public static class JavadocLink implements Excerpt {
+
+    private final String fmt;
+    private final Object[] args;
+
+    public JavadocLink(String fmt, Object... args) {
+      this.fmt = fmt;
+      this.args = args;
+    }
+
+    @Override
+    public void addTo(SourceBuilder code) {
+      code.add("{@link ").add(fmt, args).add("}");
+    }
+
+    public Excerpt withText(String fmt, Object... args) {
+      return code -> code.add("{@link ").add(this.fmt, this.args).add(" ").add(fmt, args).add("}");
+    }
+  }
+
   /**
    * Returns a source excerpt of a JavaDoc link to this type.
    */
-  public Excerpt javadocLink() {
-    return Excerpts.add("{@link %s}", getQualifiedName());
+  public JavadocLink javadocLink() {
+    return new JavadocLink("%s", getQualifiedName());
   }
 
   /**
    * Returns a source excerpt of a JavaDoc link to a no-args method on this type.
    */
-  public Excerpt javadocNoArgMethodLink(String memberName) {
-    return Excerpts.add("{@link %s#%s()}", getQualifiedName(), memberName);
+  public JavadocLink javadocNoArgMethodLink(String memberName) {
+    return new JavadocLink("%s#%s()", getQualifiedName(), memberName);
   }
 
   /**
