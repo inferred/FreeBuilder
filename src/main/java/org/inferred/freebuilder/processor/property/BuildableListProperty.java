@@ -432,6 +432,11 @@ class BuildableListProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+    code.addLine("%s.%s(%s);", builder, addAllMethod(property), property.getField());
+  }
+
+  @Override
   public void addMergeFromValue(SourceBuilder code, String value) {
     code.addLine("%s(%s.%s());", addAllMethod(property), value, property.getGetterName());
   }

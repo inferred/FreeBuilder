@@ -137,6 +137,7 @@ public class OptionalPropertyTest {
         .addLine("  public abstract %s<%s> %s;",
             optional, element.type(), convention.get("item"))
         .addLine("")
+        .addLine("  public abstract Builder toBuilder();")
         .addLine("  public static class Builder extends DataType_Builder {")
         .addLine("    @Override public Builder %s(%s item) {",
             convention.set("item"), element.unwrappedType())
@@ -482,6 +483,23 @@ public class OptionalPropertyTest {
         .with(testBuilder()
             .addLine("DataType.Builder template = DataType.builder()")
             .addLine("    .%s(%s.%s());", convention.set("item"), optional, empty)
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testCustomization_toBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(validatedProperty)
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder()")
+            .addLine("    .build()")
+            .addLine("    .toBuilder()")
+            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+            .addLine("    .build();")
+            .addLine("assertEquals(%s.of(%s), value.%s);",
+                optional, element.example(0), convention.get("item"))
             .build())
         .runTest();
   }

@@ -93,6 +93,7 @@ public class MapPropertyTest {
         .addLine("public interface DataType {")
         .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.get())
         .addLine("")
+        .addLine("  Builder toBuilder();")
         .addLine("  class Builder extends DataType_Builder {}")
         .addLine("}");
   }
@@ -406,6 +407,24 @@ public class MapPropertyTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
                 convention.get(), exampleMap(0, 2, 3, 3))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToBuilder() {
+    behaviorTester
+        .with(mapPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .build()")
+            .addLine("    .toBuilder()")
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(2))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.get(), exampleMap(0, 0, 1, 2))
             .build())
         .runTest();
   }

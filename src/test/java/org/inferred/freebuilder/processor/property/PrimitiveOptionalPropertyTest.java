@@ -121,6 +121,7 @@ public class PrimitiveOptionalPropertyTest {
         .addLine("public interface DataType {")
         .addLine("  %s %s;", optional.type, convention.get("item"))
         .addLine("")
+        .addLine("  Builder toBuilder();")
         .addLine("  class Builder extends DataType_Builder {")
         .addLine("    @Override public Builder %s(%s item) {",
             convention.set("item"), optional.primitiveType)
@@ -562,6 +563,20 @@ public class PrimitiveOptionalPropertyTest {
             .addLine("    .clear()")
             .addLine("    .build();")
             .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(datatype)
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder().%s(%s).build();",
+                convention.set("item"), optional.example(0))
+            .addLine("DataType copy = value.toBuilder().build();")
+            .addLine("assertEquals(value, copy);")
             .build())
         .runTest();
   }

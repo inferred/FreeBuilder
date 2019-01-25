@@ -93,6 +93,7 @@ public class NullablePropertyTest {
         .addLine("  @%s %s %s;", Nullable.class, element.type(), convention.get("item1"))
         .addLine("  @%s %s %s;", Nullable.class, element.type(), convention.get("item2"))
         .addLine("")
+        .addLine("  Builder toBuilder();")
         .addLine("  class Builder extends DataType_Builder {}")
         .addLine("}");
   }
@@ -380,6 +381,26 @@ public class NullablePropertyTest {
             .addLine("assertEquals(\"partial DataType{item1=\" + %s + \", item2=\" + %s + \"}\","
                     + " pp.toString());",
                 element.example(0), element.example(1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPartialToBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(twoProperties)
+        .with(testBuilder()
+            .addLine("DataType partial = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
+            .addLine("    .buildPartial()")
+            .addLine("    .toBuilder()")
+            .addLine("    .%s(%s)", convention.set("item1"), element.example(1))
+            .addLine("    .build();")
+            .addLine("DataType expected = new DataType.Builder()")
+            .addLine("    .%s(%s)", convention.set("item1"), element.example(1))
+            .addLine("    .buildPartial();")
+            .addLine("assertEquals(expected, partial);")
             .build())
         .runTest();
   }

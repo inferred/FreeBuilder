@@ -215,6 +215,11 @@ public class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+    code.addLine("%s = %s;", property.getField().on(builder), property.getField());
+  }
+
+  @Override
   public void addMergeFromValue(SourceBuilder code, String value) {
     Excerpt defaults = Declarations.freshBuilder(code, datatype).orElse(null);
     if (defaults != null) {
@@ -264,18 +269,6 @@ public class DefaultProperty extends PropertyCodeGenerator {
     }
     code.addLine("  %s(%s.%s());", setter(property), builder, getter(property));
     if (defaults != null || !hasDefault) {
-      code.addLine("}");
-    }
-  }
-
-  @Override
-  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
-    if (!hasDefault) {
-      code.add("if (!%s.contains(%s.%s)) {",
-          UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
-    }
-    code.addLine("  %s.%s(%s);", builder, setter(property), property.getField());
-    if (!hasDefault) {
       code.addLine("}");
     }
   }

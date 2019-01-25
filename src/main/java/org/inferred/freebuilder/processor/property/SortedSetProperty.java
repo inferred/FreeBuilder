@@ -38,10 +38,12 @@ import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedNavigableSet;
 import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.FunctionalType;
 import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Type;
+import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -445,6 +447,15 @@ class SortedSetProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
+    if (code.feature(GUAVA).isAvailable()) {
+      code.addLine("private final %s<%s> %s;", ImmutableSortedSet.class, elementType, finalField);
+    } else {
+      code.addLine("private final %s<%s> %s;", SortedSet.class, elementType, finalField);
+    }
+  }
+
+  @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
     code.addLine("if (%s == null) {", property.getField().on(builder));
     if (code.feature(GUAVA).isAvailable()) {
@@ -465,6 +476,16 @@ class SortedSetProperty extends PropertyCodeGenerator {
               finalField, Collections.class, TreeSet.class, property.getField().on(builder));
     }
     code.addLine("}");
+  }
+
+  @Override
+  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+    if (code.feature(GUAVA).isAvailable()) {
+      code.addLine("%s = %s;", property.getField().on(builder), property.getField());
+    } else {
+      code.addLine("%s = new %s<>(%s);",
+          property.getField().on(builder), TreeSet.class, property.getField());
+    }
   }
 
   @Override

@@ -156,16 +156,14 @@ public abstract class PropertyCodeGenerator {
     addFinalFieldAssignment(code, finalField, builder);
   }
 
+  /** Adds an assignment to the field on the builder from the Value/Partial implementation. */
+  public abstract void addAssignToBuilder(SourceBuilder code, Variable builder);
+
   /** Add a merge from value for the property to the builder's source code. */
   public abstract void addMergeFromValue(SourceBuilder code, String value);
 
   /** Add a merge from builder for the property to the builder's source code. */
   public abstract void addMergeFromBuilder(SourceBuilder code, String builder);
-
-  /** Sets the property on a builder from within a partial value's toBuilder() method. */
-  public void addSetBuilderFromPartial(SourceBuilder code, Variable builder) {
-    addSetFromResult(code, builder, property.getField());
-  }
 
   /** Adds method annotations for the value type getter method. */
   public void addGetterAnnotations(@SuppressWarnings("unused") SourceBuilder code) {}

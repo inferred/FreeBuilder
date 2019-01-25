@@ -43,6 +43,7 @@ import org.inferred.freebuilder.processor.source.LazyName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Type;
 import org.inferred.freebuilder.processor.source.ValueType;
+import org.inferred.freebuilder.processor.source.Variable;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -394,6 +395,15 @@ class ListProperty extends PropertyCodeGenerator {
       immutableListMethod = ImmutableListMethod.REFERENCE;
     }
     code.addLine("%s = %s(%s);", finalField, immutableListMethod, property.getField().on(builder));
+  }
+
+  @Override
+  public void addAssignToBuilder(SourceBuilder code, Variable builder) {
+    if (code.feature(GUAVA).isAvailable()) {
+      code.add("%s = %s;", property.getField().on(builder), property.getField());
+    } else {
+      code.add("%s.addAll(%s);", property.getField().on(builder), property.getField());
+    }
   }
 
   @Override
