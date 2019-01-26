@@ -21,14 +21,18 @@ import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.ABSENT;
 import static org.inferred.freebuilder.processor.Datatype.UnderrideLevel.FINAL;
 import static org.inferred.freebuilder.processor.ToStringGenerator.addToString;
 import static org.inferred.freebuilder.processor.property.DefaultProperty.UNSET_PROPERTIES;
+import static org.inferred.freebuilder.processor.property.MergeAction.addActionsTo;
 import static org.inferred.freebuilder.processor.source.LazyName.addLazyDefinitions;
 import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUAVA;
+
+import static java.util.stream.Collectors.toSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
+import org.inferred.freebuilder.processor.property.MergeAction;
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Initially;
@@ -47,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -156,7 +161,7 @@ public class GeneratedBuilder extends GeneratedType {
     boolean hasRequiredProperties = generatorsByProperty.values().stream().anyMatch(IS_REQUIRED);
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Returns a newly-created %s based on the contents of the {@code %s}.",
+        .addLine(" * Returns a newly-created %s based on the contents of this {@code %s}.",
             datatype.getType().javadocLink(), datatype.getBuilder().getSimpleName());
     if (hasRequiredProperties) {
       code.addLine(" *")
@@ -175,8 +180,10 @@ public class GeneratedBuilder extends GeneratedType {
   private void addMergeFromValueMethod(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Sets all property values using the given {@code %s} as a template.",
-            datatype.getType().getQualifiedName())
+        .addLine(" * Copies values from {@code value}%s.",
+            (Excerpt) c -> addActionsTo(c, mergeActions(), false))
+        .addLine(" *")
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
         .addLine("public %s mergeFrom(%s value) {", datatype.getBuilder(), datatype.getType());
     generatorsByProperty.values().forEach(generator -> generator.addMergeFromValue(code, "value"));
@@ -187,9 +194,10 @@ public class GeneratedBuilder extends GeneratedType {
   private void addMergeFromBuilderMethod(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Copies values from the given {@code %s}.",
-            datatype.getBuilder().getSimpleName())
-        .addLine(" * Does not affect any properties not set on the input.")
+        .addLine(" * Copies values from {@code template}%s.",
+            (Excerpt) c -> addActionsTo(c, mergeActions(), true))
+        .addLine(" *")
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
         .addLine("public %1$s mergeFrom(%1$s template) {", datatype.getBuilder());
     generatorsByProperty.values().forEach(generator -> {
@@ -199,10 +207,19 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine("}");
   }
 
+  private Set<MergeAction> mergeActions() {
+    return generatorsByProperty.values()
+        .stream()
+        .flatMap(generator -> generator.getMergeActions().stream())
+        .collect(toSet());
+  }
+
   private void addClearMethod(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Resets the state of this builder.")
+        .addLine(" *")
+        .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
         .addLine("public %s clear() {", datatype.getBuilder());
     generatorsByProperty.values().forEach(codeGenerator -> {

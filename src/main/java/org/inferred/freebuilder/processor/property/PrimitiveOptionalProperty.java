@@ -9,12 +9,14 @@ import static org.inferred.freebuilder.processor.BuilderMethods.setter;
 import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.override;
+import static org.inferred.freebuilder.processor.property.MergeAction.skippingEmptyOptionals;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypesAcceptedByMethod;
 import static org.inferred.freebuilder.processor.source.FunctionalType.isAssignable;
 import static org.inferred.freebuilder.processor.source.FunctionalType.primitiveUnaryOperator;
 import static org.inferred.freebuilder.processor.source.FunctionalType.unaryOperator;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
@@ -34,6 +36,7 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
+import java.util.Set;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
@@ -310,6 +313,11 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   @Override
   public void addMergeFromBuilder(SourceBuilder code, String builder) {
     code.addLine("%s.%s().ifPresent(this::%s);", builder, getter(property), setter(property));
+  }
+
+  @Override
+  public Set<MergeAction> getMergeActions() {
+    return ImmutableSet.of(skippingEmptyOptionals());
   }
 
   @Override

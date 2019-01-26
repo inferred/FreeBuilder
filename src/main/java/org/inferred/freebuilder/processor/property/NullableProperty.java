@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor.property;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.property.MergeAction.skippingDefaults;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.source.FunctionalType.unaryOperator;
 
@@ -205,6 +206,11 @@ class NullableProperty extends PropertyCodeGenerator {
     if (defaults != null) {
       code.addLine("}");
     }
+  }
+
+  @Override
+  public Set<MergeAction> getMergeActions() {
+    return ImmutableSet.of(skippingDefaults());
   }
 
   @Override

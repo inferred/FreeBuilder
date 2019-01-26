@@ -18,8 +18,12 @@ package org.inferred.freebuilder.processor.property;
 import static org.inferred.freebuilder.processor.BuilderMethods.getter;
 import static org.inferred.freebuilder.processor.BuilderMethods.mapper;
 import static org.inferred.freebuilder.processor.BuilderMethods.setter;
+import static org.inferred.freebuilder.processor.property.MergeAction.skippingDefaults;
+import static org.inferred.freebuilder.processor.property.MergeAction.skippingUnsetProperties;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.source.FunctionalType.unboxedUnaryOperator;
+
+import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
@@ -35,6 +39,7 @@ import org.inferred.freebuilder.processor.source.Variable;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeKind;
@@ -271,6 +276,11 @@ public class DefaultProperty extends PropertyCodeGenerator {
     if (defaults != null || !hasDefault) {
       code.addLine("}");
     }
+  }
+
+  @Override
+  public Set<MergeAction> getMergeActions() {
+    return ImmutableSet.of(hasDefault ? skippingDefaults() : skippingUnsetProperties());
   }
 
   @Override

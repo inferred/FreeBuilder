@@ -165,6 +165,9 @@ public abstract class PropertyCodeGenerator {
   /** Add a merge from builder for the property to the builder's source code. */
   public abstract void addMergeFromBuilder(SourceBuilder code, String builder);
 
+  /** Returns the actions taken in mergeFrom, for generating JavaDoc. */
+  public abstract Set<MergeAction> getMergeActions();
+
   /** Adds method annotations for the value type getter method. */
   public void addGetterAnnotations(@SuppressWarnings("unused") SourceBuilder code) {}
 

@@ -24,10 +24,12 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
+import static org.inferred.freebuilder.processor.property.MergeAction.skippingEmptyOptionals;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.source.FunctionalType.unaryOperator;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
@@ -41,6 +43,7 @@ import org.inferred.freebuilder.processor.source.feature.Jsr305;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import javax.lang.model.type.DeclaredType;
@@ -357,6 +360,11 @@ class OptionalProperty extends PropertyCodeGenerator {
   public void addMergeFromBuilder(SourceBuilder code, String builder) {
     String propertyValue = builder + "." + getter(property) + "()";
     optional.invokeIfPresent(code, propertyValue, setter(property));
+  }
+
+  @Override
+  public Set<MergeAction> getMergeActions() {
+    return ImmutableSet.of(skippingEmptyOptionals());
   }
 
   @Override
