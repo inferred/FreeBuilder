@@ -30,7 +30,6 @@ import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.Excerpts;
-import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.FunctionalType;
 import org.inferred.freebuilder.processor.source.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
@@ -99,9 +98,15 @@ class NullableProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    addGetterAnnotations(code);
+    code.add("private final %s %s;%n", property.getType(), property.getField());
+  }
+
+  @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     addGetterAnnotations(code);
-    code.add("private %s %s = null;\n", property.getType(), property.getField());
+    code.add("private %s %s = null;%n", property.getType(), property.getField());
   }
 
   @Override
@@ -122,7 +127,7 @@ class NullableProperty extends PropertyCodeGenerator {
     addAccessorAnnotations(code);
     code.add("public %s %s(", datatype.getBuilder(), setter(property));
     addGetterAnnotations(code);
-    code.add("%s %s) {\n", property.getType(), property.getName())
+    code.add("%s %s) {%n", property.getType(), property.getName())
         .addLine("  %s = %s;", property.getField(), property.getName())
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
@@ -160,12 +165,6 @@ class NullableProperty extends PropertyCodeGenerator {
     code.addLine("public %s %s() {", property.getType(), getter(property))
         .addLine("  return %s;", property.getField())
         .addLine("}");
-  }
-
-  @Override
-  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
-    addGetterAnnotations(code);
-    code.add("private final %s %s;\n", property.getType(), finalField);
   }
 
   @Override

@@ -158,6 +158,14 @@ class ListProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    code.addLine("private final %s<%s> %s;",
+        code.feature(GUAVA).isAvailable() ? ImmutableList.class : List.class,
+        elementType,
+        property.getField());
+  }
+
+  @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("private %s<%s> %s = %s.of();",

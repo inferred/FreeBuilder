@@ -143,6 +143,12 @@ class SetMultimapProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    code.addLine("private final %s<%s, %s> %s;",
+        ImmutableSetMultimap.class, keyType, valueType, property.getField());
+  }
+
+  @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     code.addLine("private final %1$s<%2$s, %3$s> %4$s = %1$s.create();",
         LinkedHashMultimap.class, keyType, valueType, property.getField());

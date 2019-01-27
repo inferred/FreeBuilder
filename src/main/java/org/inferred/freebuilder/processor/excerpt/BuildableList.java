@@ -182,10 +182,10 @@ public class BuildableList extends ValueType implements Excerpt {
   }
 
   private void addBuild(SourceBuilder code, String buildMethod) {
-    code.addLine("")
-        .addLine("%s<%s> %s() {", List.class, element.type(), buildMethod);
+    code.addLine("");
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("  if (elements instanceof %s) {", ImmutableList.class)
+      code.addLine("%s<%s> %s() {", ImmutableList.class, element.type(), buildMethod)
+          .addLine("  if (elements instanceof %s) {", ImmutableList.class)
           .addLine("    return (%s<%s>) elements;", ImmutableList.class, element.type())
           .addLine("  }")
           .addLine("  %1$s.Builder<%2$s> values = %1$s.builder();",
@@ -195,7 +195,8 @@ public class BuildableList extends ValueType implements Excerpt {
           .addLine("  }")
           .addLine("  return values.build();");
     } else {
-      code.addLine("  switch (elements.size()) {")
+      code.addLine("%s<%s> %s() {", List.class, element.type(), buildMethod)
+          .addLine("  switch (elements.size()) {")
           .addLine("    case 0:")
           .addLine("      return %s.emptyList();", Collections.class)
           .addLine("    case 1:")

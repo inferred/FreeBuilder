@@ -134,6 +134,14 @@ class BuildableListProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    code.addLine("private final %s<%s> %s;",
+        code.feature(GUAVA).isAvailable() ? ImmutableList.class : List.class,
+        element.type(),
+        property.getField());
+  }
+
+  @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     code.addLine("private final %1$s %2$s = new %1$s();",
         BuildableList.of(element), property.getField());

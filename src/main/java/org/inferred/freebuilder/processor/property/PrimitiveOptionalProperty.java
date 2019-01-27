@@ -22,7 +22,6 @@ import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.model.MethodIntrospector;
 import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.FunctionalType;
 import org.inferred.freebuilder.processor.source.QualifiedName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
@@ -160,8 +159,8 @@ public class PrimitiveOptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
-    code.addLine("private final %s %s;", optional.type, finalField);
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    code.addLine("private final %s %s;", optional.type, property.getField());
   }
 
   @Override
