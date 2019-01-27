@@ -40,7 +40,6 @@ import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedNavigableSet;
 import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.FunctionalType;
 import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
@@ -152,6 +151,14 @@ class SortedSetProperty extends PropertyCodeGenerator {
     this.needsSafeVarargs = needsSafeVarargs;
     this.overridesAddMethod = overridesAddMethod;
     this.overridesVarargsAddMethod = overridesVarargsAddMethod;
+  }
+
+  @Override
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    code.addLine("private final %s<%s> %s;",
+        code.feature(GUAVA).isAvailable() ? ImmutableSortedSet.class : SortedSet.class,
+        elementType,
+        property.getField());
   }
 
   @Override
@@ -447,15 +454,6 @@ class SortedSetProperty extends PropertyCodeGenerator {
     addConvertToTreeSet(code);
     code.addLine("  return %s.unmodifiableSortedSet(%s);", Collections.class, property.getField())
         .addLine("}");
-  }
-
-  @Override
-  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
-    if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("private final %s<%s> %s;", ImmutableSortedSet.class, elementType, finalField);
-    } else {
-      code.addLine("private final %s<%s> %s;", SortedSet.class, elementType, finalField);
-    }
   }
 
   @Override

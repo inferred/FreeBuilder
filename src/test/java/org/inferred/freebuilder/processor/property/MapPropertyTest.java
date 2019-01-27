@@ -533,7 +533,6 @@ public class MapPropertyTest {
             .addLine("    .build();")
             .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
             .addLine("String json = mapper.writeValueAsString(value);")
-            .addLine("%s.out.println(json);", System.class)
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
             .addLine("assertThat(clone.%s).isEqualTo(%s);",
                 convention.get(), exampleMap(0, 0, 1, 1))

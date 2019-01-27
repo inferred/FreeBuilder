@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableSet;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.FunctionalType;
 import org.inferred.freebuilder.processor.source.QualifiedName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
@@ -196,11 +195,11 @@ class OptionalProperty extends PropertyCodeGenerator {
   }
 
   @Override
-  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
+  public void addValueFieldDeclaration(SourceBuilder code) {
     code.addLine("// Store a nullable object instead of an Optional. Escape analysis then")
         .addLine("// allows the JVM to optimize away the Optional objects created by our")
         .addLine("// getter method.")
-        .addLine("private final %s %s;", elementType, finalField);
+        .addLine("private final %s %s;", elementType, property.getField());
   }
 
   @Override

@@ -115,6 +115,11 @@ public class DefaultProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    code.addLine("private final %s %s;", property.getType(), property.getField());
+  }
+
+  @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     code.addLine("private %s %s;", property.getType(), property.getField());
   }
@@ -207,11 +212,6 @@ public class DefaultProperty extends PropertyCodeGenerator {
     }
     code.addLine("  return %s;", property.getField())
         .addLine("}");
-  }
-
-  @Override
-  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
-    code.add("private final %s %s;\n", property.getType(), finalField);
   }
 
   @Override

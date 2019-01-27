@@ -299,9 +299,7 @@ public class GeneratedBuilder extends GeneratedType {
         datatype.getValueTypeVisibility(),
         datatype.getValueType().declaration(),
         extending(datatype.getType(), datatype.isInterfaceType()));
-    generatorsByProperty.forEach((property, generator) -> {
-      generator.addValueFieldDeclaration(code, property.getField());
-    });
+    generatorsByProperty.values().forEach(generator -> generator.addValueFieldDeclaration(code));
     addValueTypeConstructor(code);
     addValueTypeGetters(code);
     if (datatype.getHasToBuilderMethod()) {
@@ -448,9 +446,7 @@ public class GeneratedBuilder extends GeneratedType {
   }
 
   private void addPartialFields(SourceBuilder code) {
-    generatorsByProperty.forEach((property, generator) -> {
-      generator.addValueFieldDeclaration(code, property.getField());
-    });
+    generatorsByProperty.values().forEach(generator -> generator.addValueFieldDeclaration(code));
     if (generatorsByProperty.values().stream().anyMatch(IS_REQUIRED)) {
       code.addLine("  private final %s<%s> %s;",
           EnumSet.class, datatype.getPropertyEnum(), UNSET_PROPERTIES);

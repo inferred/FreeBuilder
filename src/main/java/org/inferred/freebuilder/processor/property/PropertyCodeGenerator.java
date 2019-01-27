@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Variable;
 
@@ -136,9 +135,7 @@ public abstract class PropertyCodeGenerator {
   }
 
   /** Add the field declaration for the property to the value's source code. */
-  public void addValueFieldDeclaration(SourceBuilder code, FieldAccess finalField) {
-    code.addLine("private final %s %s;", property.getType(), finalField);
-  }
+  public abstract void addValueFieldDeclaration(SourceBuilder code);
 
   /** Add the field declaration for the property to the builder's source code. */
   public abstract void addBuilderFieldDeclaration(SourceBuilder code);

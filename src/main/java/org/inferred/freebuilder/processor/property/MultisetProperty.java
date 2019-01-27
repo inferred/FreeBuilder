@@ -154,6 +154,12 @@ class MultisetProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    code.addLine("private final %s<%s> %s;",
+        ImmutableMultiset.class, elementType, property.getField());
+  }
+
+  @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     code.addLine("private final %1$s<%2$s> %3$s = %1$s.create();",
         LinkedHashMultiset.class, elementType, property.getField());

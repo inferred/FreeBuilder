@@ -94,6 +94,11 @@ class BuildableProperty extends PropertyCodeGenerator {
   }
 
   @Override
+  public void addValueFieldDeclaration(SourceBuilder code) {
+    code.addLine("private final %s %s;", property.getType(), property.getField());
+  }
+
+  @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     code.addLine("private Object %s = null;", property.getField());
   }
