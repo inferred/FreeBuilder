@@ -968,7 +968,11 @@ abstract class Datatype_Builder {
     return Collections.unmodifiableList(nestedClasses);
   }
 
-  /** Sets all property values using the given {@code Datatype} as a template. */
+  /**
+   * Copies values from {@code value}, appending to collections, and skipping empty optionals.
+   *
+   * @return this {@code Builder} object
+   */
   public Datatype.Builder mergeFrom(Datatype value) {
     Datatype_Builder defaults = new Datatype.Builder();
     if (defaults._unsetProperties.contains(Property.TYPE)
@@ -1036,8 +1040,10 @@ abstract class Datatype_Builder {
   }
 
   /**
-   * Copies values from the given {@code Builder}. Does not affect any properties not set on the
-   * input.
+   * Copies values from {@code template}, appending to collections, and skipping empty optionals and
+   * unset properties.
+   *
+   * @return this {@code Builder} object
    */
   public Datatype.Builder mergeFrom(Datatype.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
@@ -1107,7 +1113,11 @@ abstract class Datatype_Builder {
     return (Datatype.Builder) this;
   }
 
-  /** Resets the state of this builder. */
+  /**
+   * Resets the state of this builder.
+   *
+   * @return this {@code Builder} object
+   */
   public Datatype.Builder clear() {
     Datatype_Builder defaults = new Datatype.Builder();
     type = defaults.type;
@@ -1132,7 +1142,7 @@ abstract class Datatype_Builder {
   }
 
   /**
-   * Returns a newly-created {@link Datatype} based on the contents of the {@code Builder}.
+   * Returns a newly-created {@link Datatype} based on the contents of this {@code Builder}.
    *
    * @throws IllegalStateException if any field has not been set
    */

@@ -25,6 +25,8 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.source.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.inferred.freebuilder.processor.BuildableType;
 import org.inferred.freebuilder.processor.BuildableType.MergeBuilderMethod;
 import org.inferred.freebuilder.processor.BuildableType.PartialToBuilderMethod;
@@ -38,6 +40,7 @@ import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.lang.model.type.DeclaredType;
 
@@ -286,6 +289,11 @@ class BuildableProperty extends PropertyCodeGenerator {
     }
     code.add(");\n")
         .addLine("}");
+  }
+
+  @Override
+  public Set<MergeAction> getMergeActions() {
+    return ImmutableSet.of();
   }
 
   @Override

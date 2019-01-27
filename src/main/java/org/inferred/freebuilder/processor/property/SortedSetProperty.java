@@ -28,10 +28,12 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
+import static org.inferred.freebuilder.processor.property.MergeAction.appendingToCollections;
 import static org.inferred.freebuilder.processor.source.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUAVA;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.inferred.freebuilder.processor.Datatype;
@@ -51,6 +53,7 @@ import java.util.Comparator;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.TreeSet;
@@ -519,6 +522,11 @@ class SortedSetProperty extends PropertyCodeGenerator {
     code.addLine("if (%s != null) {", property.getField().on(base))
         .addLine("  %s(%s);", addAllMethod(property), property.getField().on(base))
         .addLine("}");
+  }
+
+  @Override
+  public Set<MergeAction> getMergeActions() {
+    return ImmutableSet.of(appendingToCollections());
   }
 
   @Override

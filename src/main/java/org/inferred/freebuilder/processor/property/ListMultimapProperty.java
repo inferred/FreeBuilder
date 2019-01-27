@@ -27,12 +27,14 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
+import static org.inferred.freebuilder.processor.property.MergeAction.appendingToCollections;
 import static org.inferred.freebuilder.processor.source.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
@@ -49,6 +51,7 @@ import org.inferred.freebuilder.processor.source.Variable;
 import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -399,6 +402,11 @@ class ListMultimapProperty extends PropertyCodeGenerator {
   public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", putAllMethod(property), property.getField().on(base));
+  }
+
+  @Override
+  public Set<MergeAction> getMergeActions() {
+    return ImmutableSet.of(appendingToCollections());
   }
 
   @Override

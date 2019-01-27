@@ -220,7 +220,11 @@ abstract class TypeUsage_Builder {
     return Optional.ofNullable(scope);
   }
 
-  /** Sets all property values using the given {@code TypeUsage} as a template. */
+  /**
+   * Copies values from {@code value}, skipping empty optionals.
+   *
+   * @return this {@code Builder} object
+   */
   public TypeUsage.Builder mergeFrom(TypeUsage value) {
     TypeUsage_Builder defaults = new TypeUsage.Builder();
     if (defaults._unsetProperties.contains(Property.START) || value.start() != defaults.start()) {
@@ -238,8 +242,9 @@ abstract class TypeUsage_Builder {
   }
 
   /**
-   * Copies values from the given {@code Builder}. Does not affect any properties not set on the
-   * input.
+   * Copies values from {@code template}, skipping empty optionals and unset properties.
+   *
+   * @return this {@code Builder} object
    */
   public TypeUsage.Builder mergeFrom(TypeUsage.Builder template) {
     // Upcast to access private fields; otherwise, oddly, we get an access violation.
@@ -263,7 +268,11 @@ abstract class TypeUsage_Builder {
     return (TypeUsage.Builder) this;
   }
 
-  /** Resets the state of this builder. */
+  /**
+   * Resets the state of this builder.
+   *
+   * @return this {@code Builder} object
+   */
   public TypeUsage.Builder clear() {
     TypeUsage_Builder defaults = new TypeUsage.Builder();
     start = defaults.start;
@@ -276,7 +285,7 @@ abstract class TypeUsage_Builder {
   }
 
   /**
-   * Returns a newly-created {@link TypeUsage} based on the contents of the {@code Builder}.
+   * Returns a newly-created {@link TypeUsage} based on the contents of this {@code Builder}.
    *
    * @throws IllegalStateException if any field has not been set
    */

@@ -28,11 +28,13 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
 import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
+import static org.inferred.freebuilder.processor.property.MergeAction.appendingToCollections;
 import static org.inferred.freebuilder.processor.source.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
@@ -48,6 +50,7 @@ import org.inferred.freebuilder.processor.source.Variable;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.stream.BaseStream;
 
@@ -402,6 +405,11 @@ class MultisetProperty extends PropertyCodeGenerator {
   public void addMergeFromBuilder(SourceBuilder code, String builder) {
     Excerpt base = Declarations.upcastToGeneratedBuilder(code, datatype, builder);
     code.addLine("%s(%s);", addAllMethod(property), property.getField().on(base));
+  }
+
+  @Override
+  public Set<MergeAction> getMergeActions() {
+    return ImmutableSet.of(appendingToCollections());
   }
 
   @Override
