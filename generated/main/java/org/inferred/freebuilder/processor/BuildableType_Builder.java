@@ -3,17 +3,14 @@ package org.inferred.freebuilder.processor;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.function.UnaryOperator;
+import javax.annotation.Generated;
 import org.inferred.freebuilder.processor.BuildableType.MergeBuilderMethod;
 import org.inferred.freebuilder.processor.BuildableType.PartialToBuilderMethod;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.Type;
-
-import java.util.EnumSet;
-import java.util.Objects;
-import java.util.function.UnaryOperator;
-
-import javax.annotation.Generated;
 
 /**
  * Auto-generated superclass of {@link BuildableType.Builder}, derived from the API of {@link

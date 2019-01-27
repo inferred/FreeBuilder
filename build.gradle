@@ -33,6 +33,14 @@ compileTestJava {
   targetCompatibility = 1.8
 }
 
+sourceSets {
+  main {
+    java {
+      srcDir file('generated/main/java')
+    }
+  }
+}
+
 dependencies {
   compile googleJavaFormat
   compile guava
@@ -534,9 +542,10 @@ eclipse.classpath {
   // This allows us to compile it with an older JVM than the tests
   file.withXml { xml ->
     node = xml.asNode()
-    node.findAll { it.@kind == 'src' && it.@path != 'src/main/java' }.each { src ->
-        node.remove(src)
-    }
+    node.findAll { it.@kind == 'src' &&
+                   ( it.@path.contains('/test/') ||
+                     it.@path.contains('/it/')) }
+        .each { src -> node.remove(src) }
   }
   // Don't include test dependencies in the classpath
   plusConfigurations.clear()

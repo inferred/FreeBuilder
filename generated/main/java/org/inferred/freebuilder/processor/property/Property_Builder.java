@@ -4,9 +4,6 @@ package org.inferred.freebuilder.processor.property;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.source.Excerpt;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,9 +16,9 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.BaseStream;
-
 import javax.annotation.Generated;
 import javax.lang.model.type.TypeMirror;
+import org.inferred.freebuilder.processor.source.Excerpt;
 
 /**
  * Auto-generated superclass of {@link Property.Builder}, derived from the API of {@link Property}.

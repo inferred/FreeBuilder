@@ -1,7 +1,10 @@
 package org.inferred.freebuilder.processor.source;
 
+import org.inferred.freebuilder.FreeBuilder;
+
 import java.util.Optional;
 
+@FreeBuilder
 interface TypeUsage {
 
   int start();

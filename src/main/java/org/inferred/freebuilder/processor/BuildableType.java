@@ -55,6 +55,7 @@ import javax.lang.model.util.Types;
  * <li> a mergeWith(Value) method.
  * </ul>
  */
+@FreeBuilder
 public abstract class BuildableType {
 
   /** How to merge the values from one Builder into another. */

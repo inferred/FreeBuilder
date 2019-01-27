@@ -2,6 +2,7 @@ package org.inferred.freebuilder.processor.property;
 
 import com.google.common.collect.ImmutableList;
 
+import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.FieldAccess;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import javax.lang.model.type.TypeMirror;
 
 /** Datatype about a property of a {@link Datatype}. */
+@FreeBuilder
 public abstract class Property {
 
   /** Returns the type of the property. */

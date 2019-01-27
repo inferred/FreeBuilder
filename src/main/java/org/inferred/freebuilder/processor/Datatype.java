@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.QualifiedName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
@@ -31,6 +32,7 @@ import java.util.Optional;
 /**
  * Metadata about a user's datatype.
  */
+@FreeBuilder
 public abstract class Datatype {
 
   /** Standard Java methods that may be underridden. */
