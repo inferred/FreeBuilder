@@ -42,6 +42,7 @@ import org.inferred.freebuilder.processor.source.FieldAccess;
 import org.inferred.freebuilder.processor.source.ObjectsExcerpts;
 import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.TypeClass;
 import org.inferred.freebuilder.processor.source.Variable;
 
 import java.io.Serializable;
@@ -104,6 +105,7 @@ public class GeneratedBuilder extends GeneratedType {
     addBuildMethod(code);
     addBuildPartialMethod(code);
 
+    addRebuildableSuperclass(code);
     addValueType(code);
     addPartialType(code);
     datatype.getNestedClasses().forEach(code::add);
@@ -132,14 +134,25 @@ public class GeneratedBuilder extends GeneratedType {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Creates a new builder using {@code value} as a template.")
+        .addLine(" *")
+        .addLine(" * <p>If {@code value} is a partial, the builder will return more partials.")
         .addLine(" */")
         .addLine("public static %s %s from(%s value) {",
             datatype.getType().declarationParameters(),
             datatype.getBuilder(),
-            datatype.getType())
-        .addLine("  return %s.mergeFrom(value);",
-            builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES))
-        .addLine("}");
+            datatype.getType());
+    if (datatype.getHasToBuilderMethod()) {
+      code.addLine("  return value.toBuilder();");
+    } else {
+      TypeClass rebuildable = datatype.getRebuildableType().get();
+      code.addLine("  if (value instanceof %s) {", rebuildable.getQualifiedName())
+          .addLine("    return ((%s) value).toBuilder();", rebuildable)
+          .addLine("  } else {")
+          .addLine("    return %s.mergeFrom(value);",
+              builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES))
+          .addLine("  }");
+    }
+    code.addLine("}");
   }
 
   private void addFieldDeclarations(SourceBuilder code) {
@@ -246,16 +259,17 @@ public class GeneratedBuilder extends GeneratedType {
               UnsupportedOperationException.class)
           .addLine(" * when accessed via the partial object.");
     }
-    if (datatype.getHasToBuilderMethod()
-        && datatype.getBuilderFactory().equals(Optional.of(BuilderFactory.NO_ARGS_CONSTRUCTOR))) {
-      code.addLine(" *")
-          .addLine(" * <p>The builder returned by a partial's %s",
-              datatype.getType().javadocNoArgMethodLink("toBuilder").withText("toBuilder"))
-          .addLine(" * method overrides %s to return another partial.",
-              datatype.getBuilder().javadocNoArgMethodLink("build").withText("build()"))
-          .addLine(" * This allows for robust tests of modify-rebuild code.");
-    }
     code.addLine(" *")
+        .addLine(" * <p>The builder returned by %s",
+            datatype.getBuilder().javadocMethodLink("from", datatype.getType()));
+    if (datatype.getHasToBuilderMethod()) {
+      code.addLine(" * or %s", datatype.getType().javadocNoArgMethodLink("toBuilder"));
+    }
+    code.addLine("will propagate the partial status of its input, overriding")
+        .addLine(" * %s to return another partial.",
+            datatype.getBuilder().javadocNoArgMethodLink("build").withText("build()"))
+        .addLine(" * This allows for robust tests of modify-rebuild code.")
+        .addLine(" *")
         .addLine(" * <p>Partials should only ever be used in tests. They permit writing robust")
         .addLine(" * test cases that won't fail if this type gains more application-level")
         .addLine(" * constraints (e.g. new required fields) in future. If you require partially")
@@ -292,17 +306,29 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine("}");
   }
 
+  private void addRebuildableSuperclass(SourceBuilder code) {
+    datatype.getRebuildableType().ifPresent(rebuildable -> {
+      code.addLine("")
+          .addLine("private abstract static class %s %s {",
+              rebuildable.declaration(), extending(datatype.getType(), datatype.isInterfaceType()))
+          .addLine("  public abstract %s toBuilder();", datatype.getBuilder())
+          .addLine("}");
+    });
+  }
+
   private void addValueType(SourceBuilder code) {
     code.addLine("");
     datatype.getValueTypeAnnotations().forEach(code::add);
     code.addLine("%s static final class %s %s {",
         datatype.getValueTypeVisibility(),
         datatype.getValueType().declaration(),
-        extending(datatype.getType(), datatype.isInterfaceType()));
+        datatype.getRebuildableType()
+            .map(rebuildable -> extending(rebuildable, false))
+            .orElse(extending(datatype.getType(), datatype.isInterfaceType())));
     generatorsByProperty.values().forEach(generator -> generator.addValueFieldDeclaration(code));
     addValueTypeConstructor(code);
     addValueTypeGetters(code);
-    if (datatype.getHasToBuilderMethod()) {
+    if (datatype.getHasToBuilderMethod() || datatype.getRebuildableType().isPresent()) {
       addValueTypeToBuilder(code);
     }
     switch (datatype.standardMethodUnderride(StandardMethod.EQUALS)) {
@@ -428,7 +454,9 @@ public class GeneratedBuilder extends GeneratedType {
     code.addLine("")
         .addLine("private static final class %s %s {",
             datatype.getPartialType().declaration(),
-            extending(datatype.getType(), datatype.isInterfaceType()));
+            datatype.getRebuildableType()
+                .map(rebuildable -> extending(rebuildable, false))
+                .orElse(extending(datatype.getType(), datatype.isInterfaceType())));
     addPartialFields(code);
     addPartialConstructor(code);
     addPartialGetters(code);
@@ -490,7 +518,7 @@ public class GeneratedBuilder extends GeneratedType {
   }
 
   private void addPartialToBuilderMethod(SourceBuilder code) {
-    if (!datatype.getHasToBuilderMethod()) {
+    if (!datatype.getHasToBuilderMethod() && !datatype.getRebuildableType().isPresent()) {
       return;
     }
     boolean hasRequiredProperties = generatorsByProperty.values().stream().anyMatch(IS_REQUIRED);

@@ -29,10 +29,18 @@ import javax.lang.model.type.TypeMirror;
 @Generated("org.inferred.freebuilder.processor.Processor")
 abstract class Property_Builder {
 
-  /** Creates a new builder using {@code value} as a template. */
+  /**
+   * Creates a new builder using {@code value} as a template.
+   *
+   * <p>If {@code value} is a partial, the builder will return more partials.
+   */
   public static org.inferred.freebuilder.processor.property.Property.Builder from(
       org.inferred.freebuilder.processor.property.Property value) {
-    return new org.inferred.freebuilder.processor.property.Property.Builder().mergeFrom(value);
+    if (value instanceof Rebuildable) {
+      return ((Rebuildable) value).toBuilder();
+    } else {
+      return new org.inferred.freebuilder.processor.property.Property.Builder().mergeFrom(value);
+    }
   }
 
   private enum Property {
@@ -686,6 +694,12 @@ abstract class Property_Builder {
    * for use in unit tests. State checking will not be performed. Unset properties will throw an
    * {@link UnsupportedOperationException} when accessed via the partial object.
    *
+   * <p>The builder returned by {@link
+   * org.inferred.freebuilder.processor.property.Property.Builder#from(org.inferred.freebuilder.processor.property.Property)}
+   * will propagate the partial status of its input, overriding {@link
+   * org.inferred.freebuilder.processor.property.Property.Builder#build() build()} to return another
+   * partial. This allows for robust tests of modify-rebuild code.
+   *
    * <p>Partials should only ever be used in tests. They permit writing robust test cases that won't
    * fail if this type gains more application-level constraints (e.g. new required fields) in
    * future. If you require partially complete values in production code, consider using a Builder.
@@ -695,7 +709,12 @@ abstract class Property_Builder {
     return new Partial(this);
   }
 
-  private static final class Value extends org.inferred.freebuilder.processor.property.Property {
+  private abstract static class Rebuildable
+      extends org.inferred.freebuilder.processor.property.Property {
+    public abstract Builder toBuilder();
+  }
+
+  private static final class Value extends Rebuildable {
     private final TypeMirror type;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
@@ -767,6 +786,22 @@ abstract class Property_Builder {
     }
 
     @Override
+    public Builder toBuilder() {
+      Property_Builder builder = new Builder();
+      builder.type = type;
+      builder.boxedType = boxedType;
+      builder.name = name;
+      builder.capitalizedName = capitalizedName;
+      builder.allCapsName = allCapsName;
+      builder.usingBeanConvention = usingBeanConvention;
+      builder.getterName = getterName;
+      builder.fullyCheckedCast = fullyCheckedCast;
+      builder.accessorAnnotations = accessorAnnotations;
+      builder._unsetProperties.clear();
+      return (Builder) builder;
+    }
+
+    @Override
     public boolean equals(Object obj) {
       if (!(obj instanceof Value)) {
         return false;
@@ -823,7 +858,7 @@ abstract class Property_Builder {
     }
   }
 
-  private static final class Partial extends org.inferred.freebuilder.processor.property.Property {
+  private static final class Partial extends Rebuildable {
     private final TypeMirror type;
     // Store a nullable object instead of an Optional. Escape analysis then
     // allows the JVM to optimize away the Optional objects created by our
@@ -915,6 +950,30 @@ abstract class Property_Builder {
     @Override
     public ImmutableList<Excerpt> getAccessorAnnotations() {
       return accessorAnnotations;
+    }
+
+    private static class PartialBuilder extends Builder {
+      @Override
+      public org.inferred.freebuilder.processor.property.Property build() {
+        return buildPartial();
+      }
+    }
+
+    @Override
+    public Builder toBuilder() {
+      Property_Builder builder = new PartialBuilder();
+      builder.type = type;
+      builder.boxedType = boxedType;
+      builder.name = name;
+      builder.capitalizedName = capitalizedName;
+      builder.allCapsName = allCapsName;
+      builder.usingBeanConvention = usingBeanConvention;
+      builder.getterName = getterName;
+      builder.fullyCheckedCast = fullyCheckedCast;
+      builder.accessorAnnotations = accessorAnnotations;
+      builder._unsetProperties.clear();
+      builder._unsetProperties.addAll(_unsetProperties);
+      return (Builder) builder;
     }
 
     @Override

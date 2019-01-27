@@ -19,9 +19,17 @@ import javax.annotation.Generated;
 @Generated("org.inferred.freebuilder.processor.Processor")
 abstract class TypeUsage_Builder {
 
-  /** Creates a new builder using {@code value} as a template. */
+  /**
+   * Creates a new builder using {@code value} as a template.
+   *
+   * <p>If {@code value} is a partial, the builder will return more partials.
+   */
   public static TypeUsage.Builder from(TypeUsage value) {
-    return new TypeUsage.Builder().mergeFrom(value);
+    if (value instanceof Rebuildable) {
+      return ((Rebuildable) value).toBuilder();
+    } else {
+      return new TypeUsage.Builder().mergeFrom(value);
+    }
   }
 
   private enum Property {
@@ -299,6 +307,10 @@ abstract class TypeUsage_Builder {
    * not be performed. Unset properties will throw an {@link UnsupportedOperationException} when
    * accessed via the partial object.
    *
+   * <p>The builder returned by {@link TypeUsage.Builder#from(TypeUsage)} will propagate the partial
+   * status of its input, overriding {@link TypeUsage.Builder#build() build()} to return another
+   * partial. This allows for robust tests of modify-rebuild code.
+   *
    * <p>Partials should only ever be used in tests. They permit writing robust test cases that won't
    * fail if this type gains more application-level constraints (e.g. new required fields) in
    * future. If you require partially complete values in production code, consider using a Builder.
@@ -308,7 +320,11 @@ abstract class TypeUsage_Builder {
     return new Partial(this);
   }
 
-  private static final class Value implements TypeUsage {
+  private abstract static class Rebuildable implements TypeUsage {
+    public abstract Builder toBuilder();
+  }
+
+  private static final class Value extends Rebuildable {
     private final int start;
     private final int end;
     private final QualifiedName type;
@@ -345,6 +361,17 @@ abstract class TypeUsage_Builder {
     }
 
     @Override
+    public Builder toBuilder() {
+      TypeUsage_Builder builder = new Builder();
+      builder.start = start;
+      builder.end = end;
+      builder.type = type;
+      builder.scope = scope;
+      builder._unsetProperties.clear();
+      return (Builder) builder;
+    }
+
+    @Override
     public boolean equals(Object obj) {
       if (!(obj instanceof Value)) {
         return false;
@@ -377,7 +404,7 @@ abstract class TypeUsage_Builder {
     }
   }
 
-  private static final class Partial implements TypeUsage {
+  private static final class Partial extends Rebuildable {
     private final int start;
     private final int end;
     private final QualifiedName type;
@@ -422,6 +449,25 @@ abstract class TypeUsage_Builder {
     @Override
     public Optional<QualifiedName> scope() {
       return Optional.ofNullable(scope);
+    }
+
+    private static class PartialBuilder extends Builder {
+      @Override
+      public TypeUsage build() {
+        return buildPartial();
+      }
+    }
+
+    @Override
+    public Builder toBuilder() {
+      TypeUsage_Builder builder = new PartialBuilder();
+      builder.start = start;
+      builder.end = end;
+      builder.type = type;
+      builder.scope = scope;
+      builder._unsetProperties.clear();
+      builder._unsetProperties.addAll(_unsetProperties);
+      return (Builder) builder;
     }
 
     @Override

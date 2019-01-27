@@ -107,6 +107,9 @@ public abstract class Datatype {
   /** Returns the partial value class that should be generated. */
   public abstract TypeClass getPartialType();
 
+  /** Returns the Rebuildable interface that should be generated, if any. */
+  public abstract Optional<TypeClass> getRebuildableType();
+
   /** Returns the Property enum that may be generated. */
   public abstract TypeClass getPropertyEnum();
 

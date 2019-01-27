@@ -112,6 +112,22 @@ public abstract class Type extends ValueType implements Excerpt {
   }
 
   /**
+   * Returns a source excerpt of a JavaDoc link to a method on this type.
+   */
+  public JavadocLink javadocMethodLink(String memberName, Type... types) {
+    return new JavadocLink("%s#%s(%s)",
+        getQualifiedName(),
+        memberName,
+        (Excerpt) code -> {
+          String separator = "";
+          for (Type type : types) {
+            code.add("%s%s", separator, type.getQualifiedName());
+            separator = ", ";
+          }
+        });
+  }
+
+  /**
    * Returns a source excerpt of the type parameters of this type, including angle brackets.
    * Always an empty string if the type class is not generic.
    *

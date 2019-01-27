@@ -41,6 +41,7 @@ _Automatic generation of the Builder pattern for Java 1.8+_
   - [Eclipse](#eclipse)
   - [IntelliJ](#intellij)
 - [Release notes](#release-notes)
+  - [2.3—From method testability](#23from-method-testability)
   - [2.2—Primitive optional types](#22primitive-optional-types)
   - [2.1—Lists of buildable types](#21lists-of-buildable-types)
   - [Upgrading from v1](#upgrading-from-v1)
@@ -134,7 +135,7 @@ If you write the Person interface shown above, you get:
      * getters (throwing `IllegalStateException` for unset fields)
      * setters
      * lambda-accepting mapper methods
-     * `from` and `mergeFrom` methods to copy data from existing values or builders
+     * `mergeFrom` and static `from` methods to copy data from existing values or builders
      * a `build` method that verifies all fields have been set
         * [see below for default values and constraint checking](#defaults-and-constraints)
   * An implementation of `Person` with:
@@ -144,8 +145,6 @@ If you write the Person interface shown above, you get:
      * `UnsupportedOperationException`-throwing getters for unset fields
      * `toString`
      * `equals` and `hashCode`
-     * a special `toBuilder()` method that preserves the 'partial' aspect on newly-minted
-       Person instances
 
 
 ```java
@@ -578,17 +577,20 @@ restrictions of the value type, partials can reduce the fragility of your test
 suite, allowing you to add new required fields or other constraints to an
 existing value type without breaking swathes of test code.
 
-To allow robust tests of modify-rebuild code, the `toBuilder()` method on
-partials returns a subclass of Builder that returns partials from the `build()`
-method.
+To allow robust tests of modify-rebuild code, Builders created from partials
+(either via the static `Builder.from` method or the optional `toBuilder()`
+method) will override `build()` to instead call `buildPartial()`.
 
 ```java
 Person anotherPerson = person.toBuilder().name("Bob").build();
 System.out.println(anotherPerson);  // prints: partial Person{name=Bob}
 ```
 
-(Note the `from` and `mergeFrom` methods do not behave this way; instead, they
-will throw an UnsupportedOperationException if given a partial.)
+This "infectious" behavior of partials is another reason to confine them to
+test code.
+
+(Note the `mergeFrom` method does not behave this way; instead, it will throw an
+UnsupportedOperationException if given a partial.)
 
 
 ### Jackson
@@ -724,6 +726,20 @@ directory** setting) and select **Mark Directory As > Generated Sources Root**.
 
 Release notes
 -------------
+
+### 2.3—From method testability
+
+FreeBuilder 2.3 now allows partials to be passed to the static `Builder.from`
+method. Previously this would have thrown an UnsupportedOperationException
+if any field was unset; now, as with the optional `toBuilder` method, a Builder
+subclass will be returned that redirects `build` to `buildPartial`. This allows
+unit tests to be written that won't break if new constraints or required fields
+are later added to the datatype. You can restore the old behaviour by overriding
+the `from` method to delegate to `mergeFrom`.
+
+Note that use of partials outside of tests is considered undefined behaviour
+by FreeBuilder, as documented here and on the `buildPartial` method. Incomplete
+values should always be represented by Builder instances, not partials.
 
 ### 2.2—Primitive optional types
 
