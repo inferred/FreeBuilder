@@ -3,13 +3,11 @@ package org.inferred.freebuilder.processor.source;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
-
 import javax.annotation.Generated;
 
 /**
