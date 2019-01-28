@@ -146,6 +146,11 @@ class Analyser {
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
         .setBuilder(Type.from(builder));
+    if (datatypeBuilder.getBuilderFactory().isPresent()
+        && !datatypeBuilder.getHasToBuilderMethod()) {
+      datatypeBuilder.setRebuildableType(
+          generatedBuilder.nestedType("Rebuildable").withParameters(typeParameters));
+    }
     Datatype baseDatatype = datatypeBuilder.build();
     Map<Property, PropertyCodeGenerator> generatorsByProperty = pickPropertyGenerators(
         type, baseDatatype, builder, removeNonGetterMethods(builder, methods));

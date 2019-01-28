@@ -22,9 +22,17 @@ import javax.annotation.Generated;
 @Generated("org.inferred.freebuilder.processor.Processor")
 abstract class BuildableType_Builder {
 
-  /** Creates a new builder using {@code value} as a template. */
+  /**
+   * Creates a new builder using {@code value} as a template.
+   *
+   * <p>If {@code value} is a partial, the builder will return more partials.
+   */
   public static BuildableType.Builder from(BuildableType value) {
-    return new BuildableType.Builder().mergeFrom(value);
+    if (value instanceof Rebuildable) {
+      return ((Rebuildable) value).toBuilder();
+    } else {
+      return new BuildableType.Builder().mergeFrom(value);
+    }
   }
 
   private enum Property {
@@ -380,6 +388,10 @@ abstract class BuildableType_Builder {
    * will not be performed. Unset properties will throw an {@link UnsupportedOperationException}
    * when accessed via the partial object.
    *
+   * <p>The builder returned by {@link BuildableType.Builder#from(BuildableType)} will propagate the
+   * partial status of its input, overriding {@link BuildableType.Builder#build() build()} to return
+   * another partial. This allows for robust tests of modify-rebuild code.
+   *
    * <p>Partials should only ever be used in tests. They permit writing robust test cases that won't
    * fail if this type gains more application-level constraints (e.g. new required fields) in
    * future. If you require partially complete values in production code, consider using a Builder.
@@ -389,7 +401,11 @@ abstract class BuildableType_Builder {
     return new Partial(this);
   }
 
-  private static final class Value extends BuildableType {
+  private abstract static class Rebuildable extends BuildableType {
+    public abstract Builder toBuilder();
+  }
+
+  private static final class Value extends Rebuildable {
     private final Type type;
     private final Type builderType;
     private final MergeBuilderMethod mergeBuilder;
@@ -437,6 +453,19 @@ abstract class BuildableType_Builder {
     }
 
     @Override
+    public Builder toBuilder() {
+      BuildableType_Builder builder = new Builder();
+      builder.type = type;
+      builder.builderType = builderType;
+      builder.mergeBuilder = mergeBuilder;
+      builder.partialToBuilder = partialToBuilder;
+      builder.builderFactory = builderFactory;
+      builder.suppressUnchecked = suppressUnchecked;
+      builder._unsetProperties.clear();
+      return (Builder) builder;
+    }
+
+    @Override
     public boolean equals(Object obj) {
       if (!(obj instanceof Value)) {
         return false;
@@ -474,7 +503,7 @@ abstract class BuildableType_Builder {
     }
   }
 
-  private static final class Partial extends BuildableType {
+  private static final class Partial extends Rebuildable {
     private final Type type;
     private final Type builderType;
     private final MergeBuilderMethod mergeBuilder;
@@ -539,6 +568,27 @@ abstract class BuildableType_Builder {
         throw new UnsupportedOperationException("suppressUnchecked not set");
       }
       return suppressUnchecked;
+    }
+
+    private static class PartialBuilder extends Builder {
+      @Override
+      public BuildableType build() {
+        return buildPartial();
+      }
+    }
+
+    @Override
+    public Builder toBuilder() {
+      BuildableType_Builder builder = new PartialBuilder();
+      builder.type = type;
+      builder.builderType = builderType;
+      builder.mergeBuilder = mergeBuilder;
+      builder.partialToBuilder = partialToBuilder;
+      builder.builderFactory = builderFactory;
+      builder.suppressUnchecked = suppressUnchecked;
+      builder._unsetProperties.clear();
+      builder._unsetProperties.addAll(_unsetProperties);
+      return (Builder) builder;
     }
 
     @Override

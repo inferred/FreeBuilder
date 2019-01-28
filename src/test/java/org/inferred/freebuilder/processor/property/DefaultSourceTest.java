@@ -75,9 +75,13 @@ public class DefaultSourceTest {
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
         "",
-        "  /** Creates a new builder using {@code value} as a template. */",
+        "  /**",
+        "   * Creates a new builder using {@code value} as a template.",
+        "   *",
+        "   * <p>If {@code value} is a partial, the builder will return more partials.",
+        "   */",
         "  public static Person.Builder from(Person value) {",
-        "    return new Person.Builder().mergeFrom(value);",
+        "    return value.toBuilder();",
         "  }",
         "",
         "  private String name;",
@@ -193,11 +197,12 @@ public class DefaultSourceTest {
             + "State checking will not",
         "   * be performed.",
         "   *",
-        "   * <p>The builder returned by a partial's {@link Person#toBuilder() toBuilder} method "
-            + "overrides",
-        "   * {@link Person.Builder#build() build()} to return another partial. This allows for "
-            + "robust tests",
-        "   * of modify-rebuild code.",
+        "   * <p>The builder returned by {@link Person.Builder#from(Person)} or "
+            + "{@link Person#toBuilder()}",
+        "   * will propagate the partial status of its input, overriding "
+            + "{@link Person.Builder#build()",
+        "   * build()} to return another partial. This allows for robust tests of modify-rebuild "
+            + "code.",
         "   *",
         "   * <p>Partials should only ever be used in tests. "
             + "They permit writing robust test cases that won't",
@@ -371,9 +376,13 @@ public class DefaultSourceTest {
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder {",
         "",
-        "  /** Creates a new builder using {@code value} as a template. */",
+        "  /**",
+        "   * Creates a new builder using {@code value} as a template.",
+        "   *",
+        "   * <p>If {@code value} is a partial, the builder will return more partials.",
+        "   */",
         "  public static Person.Builder from(Person value) {",
-        "    return new Person.Builder().mergeFrom(value);",
+        "    return value.toBuilder();",
         "  }",
         "",
         "  private enum Property {",
@@ -542,11 +551,12 @@ public class DefaultSourceTest {
             + "when",
         "   * accessed via the partial object.",
         "   *",
-        "   * <p>The builder returned by a partial's {@link Person#toBuilder() toBuilder} method "
-            + "overrides",
-        "   * {@link Person.Builder#build() build()} to return another partial. This allows for "
-            + "robust tests",
-        "   * of modify-rebuild code.",
+        "   * <p>The builder returned by {@link Person.Builder#from(Person)} or "
+            + "{@link Person#toBuilder()}",
+        "   * will propagate the partial status of its input, overriding "
+            + "{@link Person.Builder#build()",
+        "   * build()} to return another partial. This allows for robust tests of modify-rebuild "
+            + "code.",
         "   *",
         "   * <p>Partials should only ever be used in tests. "
             + "They permit writing robust test cases that won't",
@@ -742,9 +752,13 @@ public class DefaultSourceTest {
             + "derived from the API of {@link Person}. */",
         "abstract class Person_Builder<A, B> {",
         "",
-        "  /** Creates a new builder using {@code value} as a template. */",
+        "  /**",
+        "   * Creates a new builder using {@code value} as a template.",
+        "   *",
+        "   * <p>If {@code value} is a partial, the builder will return more partials.",
+        "   */",
         "  public static <A, B> Person.Builder<A, B> from(Person<A, B> value) {",
-        "    return new Person.Builder<A, B>().mergeFrom(value);",
+        "    return value.toBuilder();",
         "  }",
         "",
         "  private enum Property {",
@@ -914,11 +928,12 @@ public class DefaultSourceTest {
             + "when",
         "   * accessed via the partial object.",
         "   *",
-        "   * <p>The builder returned by a partial's {@link Person#toBuilder() toBuilder} method "
-            + "overrides",
-        "   * {@link Person.Builder#build() build()} to return another partial. This allows for "
-            + "robust tests",
-        "   * of modify-rebuild code.",
+        "   * <p>The builder returned by {@link Person.Builder#from(Person)} or "
+            + "{@link Person#toBuilder()}",
+        "   * will propagate the partial status of its input, overriding "
+            + "{@link Person.Builder#build()",
+        "   * build()} to return another partial. This allows for robust tests of modify-rebuild "
+            + "code.",
         "   *",
         "   * <p>Partials should only ever be used in tests. "
             + "They permit writing robust test cases that won't",

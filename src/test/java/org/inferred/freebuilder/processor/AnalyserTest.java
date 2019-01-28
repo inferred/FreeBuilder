@@ -155,6 +155,7 @@ public class AnalyserTest {
             .setInterfaceType(false)
             .setPartialType(generatedType.nestedType("Partial").withParameters())
             .setPropertyEnum(generatedType.nestedType("Property").withParameters())
+            .setRebuildableType(generatedType.nestedType("Rebuildable").withParameters())
             .setType(dataType.withParameters())
             .setValueType(generatedType.nestedType("Value").withParameters())
             .build(),
@@ -189,6 +190,7 @@ public class AnalyserTest {
             .setInterfaceType(true)
             .setPartialType(generatedType.nestedType("Partial").withParameters(k, v))
             .setPropertyEnum(generatedType.nestedType("Property").withParameters())
+            .setRebuildableType(generatedType.nestedType("Rebuildable").withParameters(k, v))
             .setType(dataType.withParameters(k, v))
             .setValueType(generatedType.nestedType("Value").withParameters(k, v))
             .build(),
@@ -1085,6 +1087,7 @@ public class AnalyserTest {
         .setInterfaceType(false)
         .setPartialType(generatedType.nestedType("Partial").withParameters(a, b))
         .setPropertyEnum(generatedType.nestedType("Property").withParameters())
+        .setRebuildableType(generatedType.nestedType("Rebuildable").withParameters(a, b))
         .setType(dataType.withParameters(a, b))
         .setValueType(generatedType.nestedType("Value").withParameters(a, b))
         .build());
@@ -1180,25 +1183,23 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
-    QualifiedName partialType = expectedBuilder.nestedType("Partial");
-    QualifiedName propertyType = expectedBuilder.nestedType("Property");
-    QualifiedName valueType = expectedBuilder.nestedType("Value");
-    Datatype expectedDatatype = new Datatype.Builder()
+    QualifiedName generatedType = QualifiedName.of("com.example", "DataType_Builder");
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
-        .setGeneratedBuilder(expectedBuilder.withParameters())
+        .setGeneratedBuilder(generatedType.withParameters())
         .setHasToBuilderMethod(false)
         .setInterfaceType(false)
-        .setPartialType(partialType.withParameters())
-        .setPropertyEnum(propertyType.withParameters())
+        .setPartialType(generatedType.nestedType("Partial").withParameters())
+        .setPropertyEnum(generatedType.nestedType("Property").withParameters())
+        .setRebuildableType(generatedType.nestedType("Rebuildable").withParameters())
         .setType(QualifiedName.of("com.example", "DataType").withParameters())
-        .setValueType(valueType.withParameters())
+        .setValueType(generatedType.nestedType("Value").withParameters())
         .build();
 
-    assertEquals(expectedDatatype, builder.getDatatype());
+    assertEquals(datatype, builder.getDatatype());
   }
 
   @Test
@@ -1212,25 +1213,23 @@ public class AnalyserTest {
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    QualifiedName expectedBuilder = QualifiedName.of("com.example", "DataType_Builder");
-    QualifiedName partialType = expectedBuilder.nestedType("Partial");
-    QualifiedName propertyType = expectedBuilder.nestedType("Property");
-    QualifiedName valueType = expectedBuilder.nestedType("Value");
-    Datatype expectedDatatype = new Datatype.Builder()
+    QualifiedName generatedType = QualifiedName.of("com.example", "DataType_Builder");
+    Datatype datatype = new Datatype.Builder()
         .setBuilder(QualifiedName.of("com.example", "DataType", "Builder").withParameters())
         .setExtensible(true)
         .setBuilderFactory(NO_ARGS_CONSTRUCTOR)
         .setBuilderSerializable(false)
-        .setGeneratedBuilder(expectedBuilder.withParameters())
+        .setGeneratedBuilder(generatedType.withParameters())
         .setHasToBuilderMethod(false)
         .setInterfaceType(false)
-        .setPartialType(partialType.withParameters())
-        .setPropertyEnum(propertyType.withParameters())
+        .setPartialType(generatedType.nestedType("Partial").withParameters())
+        .setPropertyEnum(generatedType.nestedType("Property").withParameters())
+        .setRebuildableType(generatedType.nestedType("Rebuildable").withParameters())
         .setType(QualifiedName.of("com.example", "DataType").withParameters())
-        .setValueType(valueType.withParameters())
+        .setValueType(generatedType.nestedType("Value").withParameters())
         .build();
 
-    assertEquals(expectedDatatype, builder.getDatatype());
+    assertEquals(datatype, builder.getDatatype());
   }
 
   @Test

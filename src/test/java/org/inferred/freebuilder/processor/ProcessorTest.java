@@ -214,6 +214,160 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testFrom_partial() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("  int getAge();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("DataType.Builder copyBuilder = DataType.Builder.from(value);")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"partial DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testFrom_partial_withGenerics() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<T> {")
+            .addLine("  T getName();")
+            .addLine("  int getAge();")
+            .addLine("")
+            .addLine("  class Builder<T> extends DataType_Builder<T> {}")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType<String> value = new DataType.Builder<String>()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("DataType.Builder<String> copyBuilder = DataType.Builder.from(value);")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("DataType<String> copy = copyBuilder.build();")
+            .addLine("assertEquals(\"partial DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .compiles()
+        .withNoWarnings()
+        .allTestsPass();
+  }
+
+  @Test
+  public void testFrom_partial_withProtectedConstructorAndStaticBuilderMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  public static Builder builder() { return new Builder(); }")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    Builder() {}")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("DataType.Builder copyBuilder = DataType.Builder.from(value);")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"partial DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testFrom_partial_withProtectedConstructorAndParameterizedBuilderMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract String getName();")
+            .addLine("  public abstract int getAge();")
+            .addLine("")
+            .addLine("  public static Builder builder(String name) {")
+            .addLine("    return new Builder().setName(name);")
+            .addLine("  }")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    Builder() {}")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = DataType.builder(\"fred\")")
+            .addLine("    .buildPartial();")
+            .addLine("DataType.Builder copyBuilder = DataType.Builder.from(value);")
+            .addLine("copyBuilder.setName(copyBuilder.getName() + \" 2\");")
+            .addLine("DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"partial DataType{name=fred 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testFrom_propertyCalledBuilder() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String builder();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .builder(\"Bob\")")
+            .addLine("    .build();")
+            .addLine("DataType.Builder copyBuilder = DataType.Builder.from(value);")
+            .addLine("copyBuilder.builder(copyBuilder.builder() + \" 2\");")
+            .addLine("DataType copy = copyBuilder.build();")
+            .addLine("assertEquals(\"DataType{builder=Bob 2}\", copy.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testFrom_otherImplementation() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(twoPropertyType())
+        .with(testBuilder()
+            .addLine("DataType value = new DataType() {")
+            .addLine("  @Override public int getPropertyA() {")
+            .addLine("    return 11;")
+            .addLine("  }")
+            .addLine("  @Override public boolean isPropertyB() {")
+            .addLine("    return true;")
+            .addLine("  }")
+            .addLine("};")
+            .addLine("DataType.Builder builder = DataType.Builder.from(value);")
+            .addLine("assertEquals(11, builder.getPropertyA());")
+            .addLine("assertTrue(builder.isPropertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testClear_implicitConstructor() {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Not set: [propertyA, propertyB]");

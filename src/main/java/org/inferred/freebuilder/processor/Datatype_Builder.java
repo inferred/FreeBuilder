@@ -35,9 +35,17 @@ import javax.annotation.Generated;
 @Generated("org.inferred.freebuilder.processor.Processor")
 abstract class Datatype_Builder {
 
-  /** Creates a new builder using {@code value} as a template. */
+  /**
+   * Creates a new builder using {@code value} as a template.
+   *
+   * <p>If {@code value} is a partial, the builder will return more partials.
+   */
   public static Datatype.Builder from(Datatype value) {
-    return new Datatype.Builder().mergeFrom(value);
+    if (value instanceof Rebuildable) {
+      return ((Rebuildable) value).toBuilder();
+    } else {
+      return new Datatype.Builder().mergeFrom(value);
+    }
   }
 
   private enum Property {
@@ -77,6 +85,10 @@ abstract class Datatype_Builder {
   private TypeClass generatedBuilder;
   private TypeClass valueType;
   private TypeClass partialType;
+  // Store a nullable object instead of an Optional. Escape analysis then
+  // allows the JVM to optimize away the Optional objects created by and
+  // passed to our API.
+  private TypeClass rebuildableType = null;
   private TypeClass propertyEnum;
   private final LinkedHashMap<StandardMethod, UnderrideLevel> standardMethodUnderrides =
       new LinkedHashMap<>();
@@ -398,6 +410,72 @@ abstract class Datatype_Builder {
     Preconditions.checkState(
         !_unsetProperties.contains(Property.PARTIAL_TYPE), "partialType not set");
     return partialType;
+  }
+
+  /**
+   * Sets the value to be returned by {@link Datatype#getRebuildableType()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code rebuildableType} is null
+   */
+  public Datatype.Builder setRebuildableType(TypeClass rebuildableType) {
+    this.rebuildableType = Objects.requireNonNull(rebuildableType);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Sets the value to be returned by {@link Datatype#getRebuildableType()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Datatype.Builder setRebuildableType(Optional<? extends TypeClass> rebuildableType) {
+    if (rebuildableType.isPresent()) {
+      return setRebuildableType(rebuildableType.get());
+    } else {
+      return clearRebuildableType();
+    }
+  }
+
+  /**
+   * Sets the value to be returned by {@link Datatype#getRebuildableType()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Datatype.Builder setNullableRebuildableType(TypeClass rebuildableType) {
+    if (rebuildableType != null) {
+      return setRebuildableType(rebuildableType);
+    } else {
+      return clearRebuildableType();
+    }
+  }
+
+  /**
+   * If the value to be returned by {@link Datatype#getRebuildableType()} is present, replaces it by
+   * applying {@code mapper} to it and using the result.
+   *
+   * <p>If the result is null, clears the value.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null
+   */
+  public Datatype.Builder mapRebuildableType(UnaryOperator<TypeClass> mapper) {
+    return setRebuildableType(getRebuildableType().map(mapper));
+  }
+
+  /**
+   * Sets the value to be returned by {@link Datatype#getRebuildableType()} to {@link
+   * Optional#empty() Optional.empty()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public Datatype.Builder clearRebuildableType() {
+    rebuildableType = null;
+    return (Datatype.Builder) this;
+  }
+
+  /** Returns the value that will be returned by {@link Datatype#getRebuildableType()}. */
+  public Optional<TypeClass> getRebuildableType() {
+    return Optional.ofNullable(rebuildableType);
   }
 
   /**
@@ -1004,6 +1082,7 @@ abstract class Datatype_Builder {
         || !Objects.equals(value.getPartialType(), defaults.getPartialType())) {
       setPartialType(value.getPartialType());
     }
+    value.getRebuildableType().ifPresent(this::setRebuildableType);
     if (defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
         || !Objects.equals(value.getPropertyEnum(), defaults.getPropertyEnum())) {
       setPropertyEnum(value.getPropertyEnum());
@@ -1085,6 +1164,7 @@ abstract class Datatype_Builder {
             || !Objects.equals(template.getPartialType(), defaults.getPartialType()))) {
       setPartialType(template.getPartialType());
     }
+    template.getRebuildableType().ifPresent(this::setRebuildableType);
     if (!base._unsetProperties.contains(Property.PROPERTY_ENUM)
         && (defaults._unsetProperties.contains(Property.PROPERTY_ENUM)
             || !Objects.equals(template.getPropertyEnum(), defaults.getPropertyEnum()))) {
@@ -1128,6 +1208,7 @@ abstract class Datatype_Builder {
     generatedBuilder = defaults.generatedBuilder;
     valueType = defaults.valueType;
     partialType = defaults.partialType;
+    rebuildableType = defaults.rebuildableType;
     propertyEnum = defaults.propertyEnum;
     standardMethodUnderrides.clear();
     builderSerializable = defaults.builderSerializable;
@@ -1156,6 +1237,10 @@ abstract class Datatype_Builder {
    * be performed. Unset properties will throw an {@link UnsupportedOperationException} when
    * accessed via the partial object.
    *
+   * <p>The builder returned by {@link Datatype.Builder#from(Datatype)} will propagate the partial
+   * status of its input, overriding {@link Datatype.Builder#build() build()} to return another
+   * partial. This allows for robust tests of modify-rebuild code.
+   *
    * <p>Partials should only ever be used in tests. They permit writing robust test cases that won't
    * fail if this type gains more application-level constraints (e.g. new required fields) in
    * future. If you require partially complete values in production code, consider using a Builder.
@@ -1165,7 +1250,11 @@ abstract class Datatype_Builder {
     return new Partial(this);
   }
 
-  private static final class Value extends Datatype {
+  private abstract static class Rebuildable extends Datatype {
+    public abstract Builder toBuilder();
+  }
+
+  private static final class Value extends Rebuildable {
     private final TypeClass type;
     private final boolean interfaceType;
     private final Type builder;
@@ -1177,6 +1266,10 @@ abstract class Datatype_Builder {
     private final TypeClass generatedBuilder;
     private final TypeClass valueType;
     private final TypeClass partialType;
+    // Store a nullable object instead of an Optional. Escape analysis then
+    // allows the JVM to optimize away the Optional objects created by our
+    // getter method.
+    private final TypeClass rebuildableType;
     private final TypeClass propertyEnum;
     private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1195,6 +1288,7 @@ abstract class Datatype_Builder {
       this.generatedBuilder = builder.generatedBuilder;
       this.valueType = builder.valueType;
       this.partialType = builder.partialType;
+      this.rebuildableType = builder.rebuildableType;
       this.propertyEnum = builder.propertyEnum;
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
@@ -1246,6 +1340,11 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public Optional<TypeClass> getRebuildableType() {
+      return Optional.ofNullable(rebuildableType);
+    }
+
+    @Override
     public TypeClass getPropertyEnum() {
       return propertyEnum;
     }
@@ -1286,6 +1385,30 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public Builder toBuilder() {
+      Datatype_Builder builder = new Builder();
+      builder.type = type;
+      builder.interfaceType = interfaceType;
+      builder.builder = this.builder;
+      builder.extensible = extensible;
+      builder.builderFactory = builderFactory;
+      builder.generatedBuilder = generatedBuilder;
+      builder.valueType = valueType;
+      builder.partialType = partialType;
+      builder.rebuildableType = rebuildableType;
+      builder.propertyEnum = propertyEnum;
+      builder.standardMethodUnderrides.putAll(standardMethodUnderrides);
+      builder.builderSerializable = builderSerializable;
+      builder.hasToBuilderMethod = hasToBuilderMethod;
+      builder.generatedBuilderAnnotations = generatedBuilderAnnotations;
+      builder.valueTypeAnnotations = valueTypeAnnotations;
+      builder.valueTypeVisibility = valueTypeVisibility;
+      builder.nestedClasses = nestedClasses;
+      builder._unsetProperties.clear();
+      return (Builder) builder;
+    }
+
+    @Override
     public boolean equals(Object obj) {
       if (!(obj instanceof Value)) {
         return false;
@@ -1299,6 +1422,7 @@ abstract class Datatype_Builder {
           && Objects.equals(generatedBuilder, other.generatedBuilder)
           && Objects.equals(valueType, other.valueType)
           && Objects.equals(partialType, other.partialType)
+          && Objects.equals(rebuildableType, other.rebuildableType)
           && Objects.equals(propertyEnum, other.propertyEnum)
           && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
           && builderSerializable == other.builderSerializable
@@ -1320,6 +1444,7 @@ abstract class Datatype_Builder {
           generatedBuilder,
           valueType,
           partialType,
+          rebuildableType,
           propertyEnum,
           standardMethodUnderrides,
           builderSerializable,
@@ -1344,13 +1469,17 @@ abstract class Datatype_Builder {
       if (builderFactory != null) {
         result.append(", builderFactory=").append(builderFactory);
       }
-      return result
+      result
           .append(", generatedBuilder=")
           .append(generatedBuilder)
           .append(", valueType=")
           .append(valueType)
           .append(", partialType=")
-          .append(partialType)
+          .append(partialType);
+      if (rebuildableType != null) {
+        result.append(", rebuildableType=").append(rebuildableType);
+      }
+      return result
           .append(", propertyEnum=")
           .append(propertyEnum)
           .append(", standardMethodUnderrides=")
@@ -1372,7 +1501,7 @@ abstract class Datatype_Builder {
     }
   }
 
-  private static final class Partial extends Datatype {
+  private static final class Partial extends Rebuildable {
     private final TypeClass type;
     private final boolean interfaceType;
     private final Type builder;
@@ -1384,6 +1513,10 @@ abstract class Datatype_Builder {
     private final TypeClass generatedBuilder;
     private final TypeClass valueType;
     private final TypeClass partialType;
+    // Store a nullable object instead of an Optional. Escape analysis then
+    // allows the JVM to optimize away the Optional objects created by our
+    // getter method.
+    private final TypeClass rebuildableType;
     private final TypeClass propertyEnum;
     private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
     private final boolean builderSerializable;
@@ -1403,6 +1536,7 @@ abstract class Datatype_Builder {
       this.generatedBuilder = builder.generatedBuilder;
       this.valueType = builder.valueType;
       this.partialType = builder.partialType;
+      this.rebuildableType = builder.rebuildableType;
       this.propertyEnum = builder.propertyEnum;
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
@@ -1476,6 +1610,11 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public Optional<TypeClass> getRebuildableType() {
+      return Optional.ofNullable(rebuildableType);
+    }
+
+    @Override
     public TypeClass getPropertyEnum() {
       if (_unsetProperties.contains(Property.PROPERTY_ENUM)) {
         throw new UnsupportedOperationException("propertyEnum not set");
@@ -1527,6 +1666,38 @@ abstract class Datatype_Builder {
       return nestedClasses;
     }
 
+    private static class PartialBuilder extends Builder {
+      @Override
+      public Datatype build() {
+        return buildPartial();
+      }
+    }
+
+    @Override
+    public Builder toBuilder() {
+      Datatype_Builder builder = new PartialBuilder();
+      builder.type = type;
+      builder.interfaceType = interfaceType;
+      builder.builder = this.builder;
+      builder.extensible = extensible;
+      builder.builderFactory = builderFactory;
+      builder.generatedBuilder = generatedBuilder;
+      builder.valueType = valueType;
+      builder.partialType = partialType;
+      builder.rebuildableType = rebuildableType;
+      builder.propertyEnum = propertyEnum;
+      builder.standardMethodUnderrides.putAll(standardMethodUnderrides);
+      builder.builderSerializable = builderSerializable;
+      builder.hasToBuilderMethod = hasToBuilderMethod;
+      builder.generatedBuilderAnnotations = generatedBuilderAnnotations;
+      builder.valueTypeAnnotations = valueTypeAnnotations;
+      builder.valueTypeVisibility = valueTypeVisibility;
+      builder.nestedClasses = nestedClasses;
+      builder._unsetProperties.clear();
+      builder._unsetProperties.addAll(_unsetProperties);
+      return (Builder) builder;
+    }
+
     @Override
     public boolean equals(Object obj) {
       if (!(obj instanceof Partial)) {
@@ -1541,6 +1712,7 @@ abstract class Datatype_Builder {
           && Objects.equals(generatedBuilder, other.generatedBuilder)
           && Objects.equals(valueType, other.valueType)
           && Objects.equals(partialType, other.partialType)
+          && Objects.equals(rebuildableType, other.rebuildableType)
           && Objects.equals(propertyEnum, other.propertyEnum)
           && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
           && builderSerializable == other.builderSerializable
@@ -1563,6 +1735,7 @@ abstract class Datatype_Builder {
           generatedBuilder,
           valueType,
           partialType,
+          rebuildableType,
           propertyEnum,
           standardMethodUnderrides,
           builderSerializable,
@@ -1600,6 +1773,9 @@ abstract class Datatype_Builder {
       }
       if (!_unsetProperties.contains(Property.PARTIAL_TYPE)) {
         result.append("partialType=").append(partialType).append(", ");
+      }
+      if (rebuildableType != null) {
+        result.append("rebuildableType=").append(rebuildableType).append(", ");
       }
       if (!_unsetProperties.contains(Property.PROPERTY_ENUM)) {
         result.append("propertyEnum=").append(propertyEnum).append(", ");
