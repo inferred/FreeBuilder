@@ -459,6 +459,8 @@ public class GuavaOptionalSourceTest {
         .setName("name")
         .setType(optionalString)
         .setUsingBeanConvention(false)
+        .setInEqualsAndHashCode(true)
+        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -469,6 +471,8 @@ public class GuavaOptionalSourceTest {
         .setName("age")
         .setType(optionalInteger)
         .setUsingBeanConvention(false)
+        .setInEqualsAndHashCode(true)
+        .setInToString(true)
         .build();
 
     return new GeneratedBuilder(datatype, ImmutableMap.of(

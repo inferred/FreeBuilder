@@ -567,6 +567,7 @@ public class ToStringGeneratorTest {
       Property property = new Property.Builder()
           .setName(name)
           .setAllCapsName(name.replaceAll("([A-Z])", "_$1").toUpperCase())
+          .setInToString(true)
           .buildPartial();
       PropertyCodeGenerator generator = mock(PropertyCodeGenerator.class, new ReturnsSmartNulls());
       when(generator.initialState()).thenReturn(initially);

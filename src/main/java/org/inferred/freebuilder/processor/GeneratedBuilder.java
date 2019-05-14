@@ -46,7 +46,6 @@ import org.inferred.freebuilder.processor.source.TypeClass;
 import org.inferred.freebuilder.processor.source.Variable;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +53,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Code generation for the &#64;{@link FreeBuilder} annotation.
@@ -414,11 +415,15 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine("      return false;")
         .addLine("    }")
         .addLine("    %1$s other = (%1$s) obj;", datatype.getValueType().withWildcards());
-    if (generatorsByProperty.isEmpty()) {
+    List<Property> properties = generatorsByProperty.keySet()
+        .stream()
+        .filter(Property::isInEqualsAndHashCode)
+        .collect(Collectors.toList());
+    if (properties.isEmpty()) {
       code.addLine("    return true;");
     } else {
       String prefix = "    return ";
-      for (Property property : generatorsByProperty.keySet()) {
+      for (Property property : properties) {
         code.add(prefix);
         code.add(ObjectsExcerpts.equals(
             property.getField(),
@@ -442,7 +447,10 @@ public class GeneratedBuilder extends GeneratedType {
   }
 
   private void addValueTypeHashCode(SourceBuilder code) {
-    FieldAccessList fields = getFields(generatorsByProperty.keySet());
+    Stream<Property> properties = generatorsByProperty.keySet()
+        .stream()
+        .filter(Property::isInEqualsAndHashCode);
+    FieldAccessList fields = getFields(properties);
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public int hashCode() {")
@@ -561,11 +569,15 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine("      return false;")
         .addLine("    }")
         .addLine("    %1$s other = (%1$s) obj;", datatype.getPartialType().withWildcards());
-    if (generatorsByProperty.isEmpty()) {
+    List<Property> properties = generatorsByProperty.keySet()
+        .stream()
+        .filter(Property::isInEqualsAndHashCode)
+        .collect(Collectors.toList());
+    if (properties.isEmpty()) {
       code.addLine("    return true;");
     } else {
       String prefix = "    return ";
-      for (Property property : generatorsByProperty.keySet()) {
+      for (Property property : properties) {
         code.add(prefix);
         code.add(ObjectsExcerpts.equals(
             property.getField(),
@@ -587,8 +599,10 @@ public class GeneratedBuilder extends GeneratedType {
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public int hashCode() {");
-
-    FieldAccessList fields = getFields(generatorsByProperty.keySet());
+    Stream<Property> properties = generatorsByProperty.keySet()
+        .stream()
+        .filter(Property::isInEqualsAndHashCode);
+    FieldAccessList fields = getFields(properties);
     if (generatorsByProperty.values().stream().anyMatch(IS_REQUIRED)) {
       fields = fields.plus(UNSET_PROPERTIES);
     }
@@ -626,7 +640,7 @@ public class GeneratedBuilder extends GeneratedType {
     }
   }
 
-  private static FieldAccessList getFields(Collection<Property> properties) {
+  private static FieldAccessList getFields(Stream<Property> properties) {
     ImmutableList.Builder<FieldAccess> fieldAccesses = ImmutableList.builder();
     properties.forEach(property -> fieldAccesses.add(property.getField()));
     return new FieldAccessList(fieldAccesses.build());

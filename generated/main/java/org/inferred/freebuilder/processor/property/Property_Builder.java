@@ -46,6 +46,8 @@ abstract class Property_Builder {
     CAPITALIZED_NAME("capitalizedName"),
     ALL_CAPS_NAME("allCapsName"),
     USING_BEAN_CONVENTION("usingBeanConvention"),
+    IN_TO_STRING("inToString"),
+    IN_EQUALS_AND_HASH_CODE("inEqualsAndHashCode"),
     GETTER_NAME("getterName"),
     FULLY_CHECKED_CAST("fullyCheckedCast"),
     ;
@@ -71,6 +73,8 @@ abstract class Property_Builder {
   private String capitalizedName;
   private String allCapsName;
   private boolean usingBeanConvention;
+  private boolean inToString;
+  private boolean inEqualsAndHashCode;
   private String getterName;
   private boolean fullyCheckedCast;
   private List<Excerpt> accessorAnnotations = ImmutableList.of();
@@ -356,6 +360,85 @@ abstract class Property_Builder {
 
   /**
    * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.property.Property#isInToString()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder setInToString(boolean inToString) {
+    this.inToString = inToString;
+    _unsetProperties.remove(Property.IN_TO_STRING);
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.property.Property#isInToString()} by applying {@code mapper} to it
+   * and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder mapInToString(
+      UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setInToString(mapper.apply(isInToString()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.property.Property#isInToString()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public boolean isInToString() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Property.IN_TO_STRING), "inToString not set");
+    return inToString;
+  }
+
+  /**
+   * Sets the value to be returned by {@link
+   * org.inferred.freebuilder.processor.property.Property#isInEqualsAndHashCode()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder setInEqualsAndHashCode(
+      boolean inEqualsAndHashCode) {
+    this.inEqualsAndHashCode = inEqualsAndHashCode;
+    _unsetProperties.remove(Property.IN_EQUALS_AND_HASH_CODE);
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link
+   * org.inferred.freebuilder.processor.property.Property#isInEqualsAndHashCode()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder mapInEqualsAndHashCode(
+      UnaryOperator<Boolean> mapper) {
+    Objects.requireNonNull(mapper);
+    return setInEqualsAndHashCode(mapper.apply(isInEqualsAndHashCode()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link
+   * org.inferred.freebuilder.processor.property.Property#isInEqualsAndHashCode()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public boolean isInEqualsAndHashCode() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE), "inEqualsAndHashCode not set");
+    return inEqualsAndHashCode;
+  }
+
+  /**
+   * Sets the value to be returned by {@link
    * org.inferred.freebuilder.processor.property.Property#getGetterName()}.
    *
    * @return this {@code Builder} object
@@ -587,6 +670,14 @@ abstract class Property_Builder {
         || value.isUsingBeanConvention() != defaults.isUsingBeanConvention()) {
       setUsingBeanConvention(value.isUsingBeanConvention());
     }
+    if (defaults._unsetProperties.contains(Property.IN_TO_STRING)
+        || value.isInToString() != defaults.isInToString()) {
+      setInToString(value.isInToString());
+    }
+    if (defaults._unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)
+        || value.isInEqualsAndHashCode() != defaults.isInEqualsAndHashCode()) {
+      setInEqualsAndHashCode(value.isInEqualsAndHashCode());
+    }
     if (defaults._unsetProperties.contains(Property.GETTER_NAME)
         || !Objects.equals(value.getGetterName(), defaults.getGetterName())) {
       setGetterName(value.getGetterName());
@@ -640,6 +731,16 @@ abstract class Property_Builder {
             || template.isUsingBeanConvention() != defaults.isUsingBeanConvention())) {
       setUsingBeanConvention(template.isUsingBeanConvention());
     }
+    if (!base._unsetProperties.contains(Property.IN_TO_STRING)
+        && (defaults._unsetProperties.contains(Property.IN_TO_STRING)
+            || template.isInToString() != defaults.isInToString())) {
+      setInToString(template.isInToString());
+    }
+    if (!base._unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)
+        && (defaults._unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)
+            || template.isInEqualsAndHashCode() != defaults.isInEqualsAndHashCode())) {
+      setInEqualsAndHashCode(template.isInEqualsAndHashCode());
+    }
     if (!base._unsetProperties.contains(Property.GETTER_NAME)
         && (defaults._unsetProperties.contains(Property.GETTER_NAME)
             || !Objects.equals(template.getGetterName(), defaults.getGetterName()))) {
@@ -667,6 +768,8 @@ abstract class Property_Builder {
     capitalizedName = defaults.capitalizedName;
     allCapsName = defaults.allCapsName;
     usingBeanConvention = defaults.usingBeanConvention;
+    inToString = defaults.inToString;
+    inEqualsAndHashCode = defaults.inEqualsAndHashCode;
     getterName = defaults.getterName;
     fullyCheckedCast = defaults.fullyCheckedCast;
     clearAccessorAnnotations();
@@ -721,6 +824,8 @@ abstract class Property_Builder {
     private final String capitalizedName;
     private final String allCapsName;
     private final boolean usingBeanConvention;
+    private final boolean inToString;
+    private final boolean inEqualsAndHashCode;
     private final String getterName;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
@@ -732,6 +837,8 @@ abstract class Property_Builder {
       this.capitalizedName = builder.capitalizedName;
       this.allCapsName = builder.allCapsName;
       this.usingBeanConvention = builder.usingBeanConvention;
+      this.inToString = builder.inToString;
+      this.inEqualsAndHashCode = builder.inEqualsAndHashCode;
       this.getterName = builder.getterName;
       this.fullyCheckedCast = builder.fullyCheckedCast;
       this.accessorAnnotations = ImmutableList.copyOf(builder.accessorAnnotations);
@@ -768,6 +875,16 @@ abstract class Property_Builder {
     }
 
     @Override
+    public boolean isInToString() {
+      return inToString;
+    }
+
+    @Override
+    public boolean isInEqualsAndHashCode() {
+      return inEqualsAndHashCode;
+    }
+
+    @Override
     public String getGetterName() {
       return getterName;
     }
@@ -791,6 +908,8 @@ abstract class Property_Builder {
       builder.capitalizedName = capitalizedName;
       builder.allCapsName = allCapsName;
       builder.usingBeanConvention = usingBeanConvention;
+      builder.inToString = inToString;
+      builder.inEqualsAndHashCode = inEqualsAndHashCode;
       builder.getterName = getterName;
       builder.fullyCheckedCast = fullyCheckedCast;
       builder.accessorAnnotations = accessorAnnotations;
@@ -810,6 +929,8 @@ abstract class Property_Builder {
           && Objects.equals(capitalizedName, other.capitalizedName)
           && Objects.equals(allCapsName, other.allCapsName)
           && usingBeanConvention == other.usingBeanConvention
+          && inToString == other.inToString
+          && inEqualsAndHashCode == other.inEqualsAndHashCode
           && Objects.equals(getterName, other.getterName)
           && fullyCheckedCast == other.fullyCheckedCast
           && Objects.equals(accessorAnnotations, other.accessorAnnotations);
@@ -824,6 +945,8 @@ abstract class Property_Builder {
           capitalizedName,
           allCapsName,
           usingBeanConvention,
+          inToString,
+          inEqualsAndHashCode,
           getterName,
           fullyCheckedCast,
           accessorAnnotations);
@@ -844,6 +967,10 @@ abstract class Property_Builder {
           .append(allCapsName)
           .append(", usingBeanConvention=")
           .append(usingBeanConvention)
+          .append(", inToString=")
+          .append(inToString)
+          .append(", inEqualsAndHashCode=")
+          .append(inEqualsAndHashCode)
           .append(", getterName=")
           .append(getterName)
           .append(", fullyCheckedCast=")
@@ -865,6 +992,8 @@ abstract class Property_Builder {
     private final String capitalizedName;
     private final String allCapsName;
     private final boolean usingBeanConvention;
+    private final boolean inToString;
+    private final boolean inEqualsAndHashCode;
     private final String getterName;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
@@ -877,6 +1006,8 @@ abstract class Property_Builder {
       this.capitalizedName = builder.capitalizedName;
       this.allCapsName = builder.allCapsName;
       this.usingBeanConvention = builder.usingBeanConvention;
+      this.inToString = builder.inToString;
+      this.inEqualsAndHashCode = builder.inEqualsAndHashCode;
       this.getterName = builder.getterName;
       this.fullyCheckedCast = builder.fullyCheckedCast;
       this.accessorAnnotations = ImmutableList.copyOf(builder.accessorAnnotations);
@@ -929,6 +1060,22 @@ abstract class Property_Builder {
     }
 
     @Override
+    public boolean isInToString() {
+      if (_unsetProperties.contains(Property.IN_TO_STRING)) {
+        throw new UnsupportedOperationException("inToString not set");
+      }
+      return inToString;
+    }
+
+    @Override
+    public boolean isInEqualsAndHashCode() {
+      if (_unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)) {
+        throw new UnsupportedOperationException("inEqualsAndHashCode not set");
+      }
+      return inEqualsAndHashCode;
+    }
+
+    @Override
     public String getGetterName() {
       if (_unsetProperties.contains(Property.GETTER_NAME)) {
         throw new UnsupportedOperationException("getterName not set");
@@ -965,6 +1112,8 @@ abstract class Property_Builder {
       builder.capitalizedName = capitalizedName;
       builder.allCapsName = allCapsName;
       builder.usingBeanConvention = usingBeanConvention;
+      builder.inToString = inToString;
+      builder.inEqualsAndHashCode = inEqualsAndHashCode;
       builder.getterName = getterName;
       builder.fullyCheckedCast = fullyCheckedCast;
       builder.accessorAnnotations = accessorAnnotations;
@@ -985,6 +1134,8 @@ abstract class Property_Builder {
           && Objects.equals(capitalizedName, other.capitalizedName)
           && Objects.equals(allCapsName, other.allCapsName)
           && usingBeanConvention == other.usingBeanConvention
+          && inToString == other.inToString
+          && inEqualsAndHashCode == other.inEqualsAndHashCode
           && Objects.equals(getterName, other.getterName)
           && fullyCheckedCast == other.fullyCheckedCast
           && Objects.equals(accessorAnnotations, other.accessorAnnotations)
@@ -1000,6 +1151,8 @@ abstract class Property_Builder {
           capitalizedName,
           allCapsName,
           usingBeanConvention,
+          inToString,
+          inEqualsAndHashCode,
           getterName,
           fullyCheckedCast,
           accessorAnnotations,
@@ -1026,6 +1179,12 @@ abstract class Property_Builder {
       }
       if (!_unsetProperties.contains(Property.USING_BEAN_CONVENTION)) {
         result.append("usingBeanConvention=").append(usingBeanConvention).append(", ");
+      }
+      if (!_unsetProperties.contains(Property.IN_TO_STRING)) {
+        result.append("inToString=").append(inToString).append(", ");
+      }
+      if (!_unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)) {
+        result.append("inEqualsAndHashCode=").append(inEqualsAndHashCode).append(", ");
       }
       if (!_unsetProperties.contains(Property.GETTER_NAME)) {
         result.append("getterName=").append(getterName).append(", ");

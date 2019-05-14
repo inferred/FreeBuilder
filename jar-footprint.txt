@@ -5,6 +5,10 @@ META-INF/services/javax.annotation.processing.Processor
 org/
 org/inferred/
 org/inferred/freebuilder/
+org/inferred/freebuilder/EqualsAndHashCode$Exclude.class
+org/inferred/freebuilder/EqualsAndHashCode.class
 org/inferred/freebuilder/FreeBuilder.class
 org/inferred/freebuilder/processor
 org/inferred/freebuilder/shaded
+org/inferred/freebuilder/ToString$Exclude.class
+org/inferred/freebuilder/ToString.class

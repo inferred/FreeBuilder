@@ -12,8 +12,10 @@ import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Variable;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 class ToStringGenerator {
 
@@ -25,6 +27,18 @@ class ToStringGenerator {
       Datatype datatype,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
       boolean forPartial) {
+    generatorsByProperty = generatorsByProperty.entrySet().stream()
+        .filter(e -> e.getKey().isInToString())
+        .collect(
+            Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (u, v) -> {
+                  throw new IllegalStateException(String.format("Duplicate key %s", u));
+                },
+                LinkedHashMap::new
+            )
+        );
     String typename = (forPartial ? "partial " : "") + datatype.getType().getSimpleName();
     Predicate<PropertyCodeGenerator> isOptional = generator -> {
       Initially initially = generator.initialState();

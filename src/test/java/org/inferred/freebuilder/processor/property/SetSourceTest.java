@@ -703,6 +703,8 @@ public class SetSourceTest {
         .setName("name")
         .setType(setString)
         .setUsingBeanConvention(false)
+        .setInEqualsAndHashCode(true)
+        .setInToString(true)
         .build();
 
     return new GeneratedBuilder(datatype, ImmutableMap.of(

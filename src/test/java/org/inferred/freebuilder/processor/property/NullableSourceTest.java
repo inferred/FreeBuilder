@@ -364,6 +364,8 @@ public class NullableSourceTest {
         .setName("name")
         .setType(STRING)
         .setUsingBeanConvention(false)
+        .setInEqualsAndHashCode(true)
+        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -374,6 +376,8 @@ public class NullableSourceTest {
         .setName("age")
         .setType(INTEGER)
         .setUsingBeanConvention(false)
+        .setInEqualsAndHashCode(true)
+        .setInToString(true)
         .build();
 
     return new GeneratedBuilder(datatype, ImmutableMap.of(
