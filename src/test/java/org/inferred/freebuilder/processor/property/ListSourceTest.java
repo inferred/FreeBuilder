@@ -941,8 +941,6 @@ public class ListSourceTest {
         .setName("name")
         .setType(listString)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -953,8 +951,6 @@ public class ListSourceTest {
         .setName("age")
         .setType(listInteger)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
 
     return new GeneratedBuilder(datatype, ImmutableMap.of(

@@ -67,5 +67,10 @@ public abstract class Property {
   }
 
   /** Builder for {@link Property}. */
-  public static class Builder extends Property_Builder {}
+  public static class Builder extends Property_Builder {
+    public Builder() {
+      setInEqualsAndHashCode(true);
+      setInToString(true);
+    }
+  }
 }

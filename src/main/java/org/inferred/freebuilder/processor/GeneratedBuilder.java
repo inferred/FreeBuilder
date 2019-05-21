@@ -447,10 +447,11 @@ public class GeneratedBuilder extends GeneratedType {
   }
 
   private void addValueTypeHashCode(SourceBuilder code) {
-    Stream<Property> properties = generatorsByProperty.keySet()
-        .stream()
-        .filter(Property::isInEqualsAndHashCode);
-    FieldAccessList fields = getFields(properties);
+    FieldAccessList fields = getFields(
+        generatorsByProperty.keySet()
+            .stream()
+            .filter(Property::isInEqualsAndHashCode)
+    );
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public int hashCode() {")
@@ -599,10 +600,11 @@ public class GeneratedBuilder extends GeneratedType {
     code.addLine("")
         .addLine("  @%s", Override.class)
         .addLine("  public int hashCode() {");
-    Stream<Property> properties = generatorsByProperty.keySet()
-        .stream()
-        .filter(Property::isInEqualsAndHashCode);
-    FieldAccessList fields = getFields(properties);
+    FieldAccessList fields = getFields(
+        generatorsByProperty.keySet()
+            .stream()
+            .filter(Property::isInEqualsAndHashCode)
+    );
     if (generatorsByProperty.values().stream().anyMatch(IS_REQUIRED)) {
       fields = fields.plus(UNSET_PROPERTIES);
     }

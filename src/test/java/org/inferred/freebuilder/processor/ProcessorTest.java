@@ -24,6 +24,8 @@ import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.IgnoredByEquals;
+import org.inferred.freebuilder.NotInToString;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.feature.FeatureSet;
 import org.inferred.freebuilder.processor.source.testing.BehaviorTester;
@@ -129,7 +131,7 @@ public class ProcessorTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  @org.inferred.freebuilder.EqualsAndHashCode.Exclude int propertyA();")
+            .addLine("  @%s int propertyA();", IgnoredByEquals.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}"))
@@ -162,7 +164,7 @@ public class ProcessorTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  @org.inferred.freebuilder.EqualsAndHashCode.Exclude int propertyA();")
+            .addLine("  @%s int propertyA();", IgnoredByEquals.class)
             .addLine("  boolean propertyB();")
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
@@ -762,14 +764,14 @@ public class ProcessorTest {
 
 
   @Test
-  public void testToString_ignoreAllProperties() {
+  public void testToString_ignoreOnlyProperty() {
     behaviorTester
         .with(new Processor(features))
         .with(SourceBuilder.forTesting()
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  @org.inferred.freebuilder.ToString.Exclude int propertyA();")
+            .addLine("  @%s int propertyA();", NotInToString.class)
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")
             .addLine("}"))
@@ -788,7 +790,7 @@ public class ProcessorTest {
             .addLine("package com.example;")
             .addLine("@%s", FreeBuilder.class)
             .addLine("public interface DataType {")
-            .addLine("  @org.inferred.freebuilder.ToString.Exclude int propertyA();")
+            .addLine("  @%s int propertyA();", NotInToString.class)
             .addLine("  boolean propertyB();")
             .addLine("")
             .addLine("  public static class Builder extends DataType_Builder {}")

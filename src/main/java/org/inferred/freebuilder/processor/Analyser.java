@@ -36,8 +36,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import org.inferred.freebuilder.EqualsAndHashCode;
-import org.inferred.freebuilder.ToString;
+import org.inferred.freebuilder.IgnoredByEquals;
+import org.inferred.freebuilder.NotInToString;
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
 import org.inferred.freebuilder.processor.model.MethodIntrospector;
@@ -453,12 +453,8 @@ class Analyser {
     if (jacksonSupport.isPresent()) {
       jacksonSupport.get().addJacksonAnnotations(propertyBuilder, method);
     }
-    propertyBuilder.setInEqualsAndHashCode(
-        method.getAnnotation(EqualsAndHashCode.Exclude.class) == null
-    );
-    propertyBuilder.setInToString(
-        method.getAnnotation(ToString.Exclude.class) == null
-    );
+    propertyBuilder.setInEqualsAndHashCode(method.getAnnotation(IgnoredByEquals.class) == null);
+    propertyBuilder.setInToString(method.getAnnotation(NotInToString.class) == null);
     if (propertyType.getKind().isPrimitive()) {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
       TypeMirror boxedType = types.erasure(types.boxedClass(unboxedType).asType());

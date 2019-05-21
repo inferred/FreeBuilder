@@ -611,8 +611,6 @@ public class MapSourceTest {
         .setName("name")
         .setType(mapIntString)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
 
     return new GeneratedBuilder(datatype, ImmutableMap.of(

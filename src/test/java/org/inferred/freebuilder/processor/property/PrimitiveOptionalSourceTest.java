@@ -395,8 +395,6 @@ public class PrimitiveOptionalSourceTest {
         .setName("cost")
         .setType(optionalInt)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     Property tax = new Property.Builder()
         .setAllCapsName("TAX")
@@ -406,8 +404,6 @@ public class PrimitiveOptionalSourceTest {
         .setName("tax")
         .setType(optionalDouble)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
 
     return new GeneratedBuilder(datatype, ImmutableMap.of(

@@ -47,8 +47,6 @@ public class DefaultSourceTest {
         .setName("name")
         .setType(STRING)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -59,8 +57,6 @@ public class DefaultSourceTest {
         .setName("age")
         .setType(INT)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     GeneratedBuilder generatedType = new GeneratedBuilder(datatype, ImmutableMap.of(
         name, new DefaultProperty(datatype, name, true, unaryOperator(STRING)),
@@ -349,8 +345,6 @@ public class DefaultSourceTest {
         .setName("name")
         .setType(STRING)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -361,8 +355,6 @@ public class DefaultSourceTest {
         .setName("age")
         .setType(INT)
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     GeneratedBuilder builder = new GeneratedBuilder(datatype, ImmutableMap.of(
         name, new DefaultProperty(datatype, name, false, unaryOperator(STRING)),
@@ -731,8 +723,6 @@ public class DefaultSourceTest {
         .setName("name")
         .setType(paramA.asType())
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -742,8 +732,6 @@ public class DefaultSourceTest {
         .setName("age")
         .setType(paramB.asType())
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     GeneratedBuilder builder = new GeneratedBuilder(datatype, ImmutableMap.of(
         name, new DefaultProperty(datatype, name, false, unaryOperator(paramA.asType())),

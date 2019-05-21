@@ -366,8 +366,6 @@ public class AnalyserTest {
         .setName("name")
         .setType(model.typeMirror(String.class))
         .setUsingBeanConvention(true)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -378,8 +376,6 @@ public class AnalyserTest {
         .setName("age")
         .setType(model.typeMirror(int.class))
         .setUsingBeanConvention(true)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name, age).inOrder();
   }
@@ -402,8 +398,6 @@ public class AnalyserTest {
         .setName("name")
         .setType(model.typeMirror(String.class))
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -414,8 +408,6 @@ public class AnalyserTest {
         .setName("age")
         .setType(model.typeMirror(int.class))
         .setUsingBeanConvention(false)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name, age).inOrder();
   }
@@ -454,8 +446,6 @@ public class AnalyserTest {
         .setName("name")
         .setType(model.typeMirror(String.class))
         .setUsingBeanConvention(true)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     Property age = new Property.Builder()
         .setAllCapsName("AGE")
@@ -466,8 +456,6 @@ public class AnalyserTest {
         .setName("age")
         .setType(model.typeMirror(int.class))
         .setUsingBeanConvention(true)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name, age).inOrder();
   }
@@ -477,7 +465,7 @@ public class AnalyserTest {
     GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
-        "  @org.inferred.freebuilder.EqualsAndHashCode.Exclude public abstract String getName();",
+        "  @org.inferred.freebuilder.IgnoredByEquals public abstract String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
@@ -490,7 +478,6 @@ public class AnalyserTest {
         .setType(model.typeMirror(String.class))
         .setUsingBeanConvention(true)
         .setInEqualsAndHashCode(false)
-        .setInToString(true)
         .build();
     assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(available);
   }
@@ -500,7 +487,7 @@ public class AnalyserTest {
     GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
-        "  @org.inferred.freebuilder.ToString.Exclude public abstract String getName();",
+        "  @org.inferred.freebuilder.NotInToString public abstract String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
@@ -512,7 +499,6 @@ public class AnalyserTest {
         .setName("name")
         .setType(model.typeMirror(String.class))
         .setUsingBeanConvention(true)
-        .setInEqualsAndHashCode(true)
         .setInToString(false)
         .build();
     assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(available);
@@ -523,8 +509,8 @@ public class AnalyserTest {
     GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
-        "  @org.inferred.freebuilder.EqualsAndHashCode.Exclude",
-        "  @org.inferred.freebuilder.ToString.Exclude",
+        "  @org.inferred.freebuilder.IgnoredByEquals",
+        "  @org.inferred.freebuilder.NotInToString",
         "  public abstract String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
@@ -561,8 +547,6 @@ public class AnalyserTest {
         .setName("available")
         .setType(model.typeMirror(boolean.class))
         .setUsingBeanConvention(true)
-        .setInEqualsAndHashCode(true)
-        .setInToString(true)
         .build();
     assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(available);
   }
@@ -1186,8 +1170,6 @@ public class AnalyserTest {
                 .setName("name")
                 .setType(a.asType())
                 .setUsingBeanConvention(true)
-                .setInEqualsAndHashCode(true)
-                .setInToString(true)
                 .build(),
             new Property.Builder()
                 .setAllCapsName("AGE")
@@ -1197,8 +1179,6 @@ public class AnalyserTest {
                 .setName("age")
                 .setType(b.asType())
                 .setUsingBeanConvention(true)
-                .setInEqualsAndHashCode(true)
-                .setInToString(true)
                 .build())
         .inOrder();
   }

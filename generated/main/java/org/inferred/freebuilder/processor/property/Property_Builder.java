@@ -46,8 +46,6 @@ abstract class Property_Builder {
     CAPITALIZED_NAME("capitalizedName"),
     ALL_CAPS_NAME("allCapsName"),
     USING_BEAN_CONVENTION("usingBeanConvention"),
-    IN_TO_STRING("inToString"),
-    IN_EQUALS_AND_HASH_CODE("inEqualsAndHashCode"),
     GETTER_NAME("getterName"),
     FULLY_CHECKED_CAST("fullyCheckedCast"),
     ;
@@ -366,7 +364,6 @@ abstract class Property_Builder {
    */
   public org.inferred.freebuilder.processor.property.Property.Builder setInToString(boolean inToString) {
     this.inToString = inToString;
-    _unsetProperties.remove(Property.IN_TO_STRING);
     return (org.inferred.freebuilder.processor.property.Property.Builder) this;
   }
 
@@ -392,8 +389,6 @@ abstract class Property_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public boolean isInToString() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Property.IN_TO_STRING), "inToString not set");
     return inToString;
   }
 
@@ -406,7 +401,6 @@ abstract class Property_Builder {
   public org.inferred.freebuilder.processor.property.Property.Builder setInEqualsAndHashCode(
       boolean inEqualsAndHashCode) {
     this.inEqualsAndHashCode = inEqualsAndHashCode;
-    _unsetProperties.remove(Property.IN_EQUALS_AND_HASH_CODE);
     return (org.inferred.freebuilder.processor.property.Property.Builder) this;
   }
 
@@ -432,8 +426,6 @@ abstract class Property_Builder {
    * @throws IllegalStateException if the field has not been set
    */
   public boolean isInEqualsAndHashCode() {
-    Preconditions.checkState(
-        !_unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE), "inEqualsAndHashCode not set");
     return inEqualsAndHashCode;
   }
 
@@ -670,12 +662,10 @@ abstract class Property_Builder {
         || value.isUsingBeanConvention() != defaults.isUsingBeanConvention()) {
       setUsingBeanConvention(value.isUsingBeanConvention());
     }
-    if (defaults._unsetProperties.contains(Property.IN_TO_STRING)
-        || value.isInToString() != defaults.isInToString()) {
+    if (!Objects.equals(value.isInToString(), defaults.isInToString())) {
       setInToString(value.isInToString());
     }
-    if (defaults._unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)
-        || value.isInEqualsAndHashCode() != defaults.isInEqualsAndHashCode()) {
+    if (!Objects.equals(value.isInEqualsAndHashCode(), defaults.isInEqualsAndHashCode())) {
       setInEqualsAndHashCode(value.isInEqualsAndHashCode());
     }
     if (defaults._unsetProperties.contains(Property.GETTER_NAME)
@@ -731,14 +721,10 @@ abstract class Property_Builder {
             || template.isUsingBeanConvention() != defaults.isUsingBeanConvention())) {
       setUsingBeanConvention(template.isUsingBeanConvention());
     }
-    if (!base._unsetProperties.contains(Property.IN_TO_STRING)
-        && (defaults._unsetProperties.contains(Property.IN_TO_STRING)
-            || template.isInToString() != defaults.isInToString())) {
+    if (template.isInToString() != defaults.isInToString()) {
       setInToString(template.isInToString());
     }
-    if (!base._unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)
-        && (defaults._unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)
-            || template.isInEqualsAndHashCode() != defaults.isInEqualsAndHashCode())) {
+    if (template.isInEqualsAndHashCode() != defaults.isInEqualsAndHashCode()) {
       setInEqualsAndHashCode(template.isInEqualsAndHashCode());
     }
     if (!base._unsetProperties.contains(Property.GETTER_NAME)
@@ -1061,17 +1047,11 @@ abstract class Property_Builder {
 
     @Override
     public boolean isInToString() {
-      if (_unsetProperties.contains(Property.IN_TO_STRING)) {
-        throw new UnsupportedOperationException("inToString not set");
-      }
       return inToString;
     }
 
     @Override
     public boolean isInEqualsAndHashCode() {
-      if (_unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)) {
-        throw new UnsupportedOperationException("inEqualsAndHashCode not set");
-      }
       return inEqualsAndHashCode;
     }
 
@@ -1180,12 +1160,8 @@ abstract class Property_Builder {
       if (!_unsetProperties.contains(Property.USING_BEAN_CONVENTION)) {
         result.append("usingBeanConvention=").append(usingBeanConvention).append(", ");
       }
-      if (!_unsetProperties.contains(Property.IN_TO_STRING)) {
-        result.append("inToString=").append(inToString).append(", ");
-      }
-      if (!_unsetProperties.contains(Property.IN_EQUALS_AND_HASH_CODE)) {
-        result.append("inEqualsAndHashCode=").append(inEqualsAndHashCode).append(", ");
-      }
+      result.append("inToString=").append(inToString).append(", ");
+      result.append("inEqualsAndHashCode=").append(inEqualsAndHashCode).append(", ");
       if (!_unsetProperties.contains(Property.GETTER_NAME)) {
         result.append("getterName=").append(getterName).append(", ");
       }
