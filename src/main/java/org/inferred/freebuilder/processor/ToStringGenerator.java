@@ -27,6 +27,9 @@ class ToStringGenerator {
       Datatype datatype,
       Map<Property, PropertyCodeGenerator> generatorsByProperty,
       boolean forPartial) {
+    // This code is to ensure entry order is preserved.
+    // Specifically this code is boiler plate from Collectors.toMap.
+    // Except with a LinkedHashMap supplier.
     generatorsByProperty = generatorsByProperty.entrySet().stream()
         .filter(e -> e.getKey().isInToString())
         .collect(

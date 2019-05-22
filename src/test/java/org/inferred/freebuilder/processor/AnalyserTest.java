@@ -33,6 +33,8 @@ import static java.util.stream.Collectors.toMap;
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.collect.ImmutableMap;
 
+import org.inferred.freebuilder.IgnoredByEquals;
+import org.inferred.freebuilder.NotInToString;
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
@@ -465,11 +467,11 @@ public class AnalyserTest {
     GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
-        "  @org.inferred.freebuilder.IgnoredByEquals public abstract String getName();",
+        "  @" + IgnoredByEquals.class.getName() + " public abstract String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Property available = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
@@ -479,7 +481,7 @@ public class AnalyserTest {
         .setUsingBeanConvention(true)
         .setInEqualsAndHashCode(false)
         .build();
-    assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(available);
+    assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name);
   }
 
   @Test
@@ -487,11 +489,11 @@ public class AnalyserTest {
     GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
-        "  @org.inferred.freebuilder.NotInToString public abstract String getName();",
+        "  @" + NotInToString.class.getName() + " public abstract String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Property available = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
@@ -501,7 +503,7 @@ public class AnalyserTest {
         .setUsingBeanConvention(true)
         .setInToString(false)
         .build();
-    assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(available);
+    assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name);
   }
 
   @Test
@@ -509,13 +511,13 @@ public class AnalyserTest {
     GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
-        "  @org.inferred.freebuilder.IgnoredByEquals",
-        "  @org.inferred.freebuilder.NotInToString",
+        "  @" + IgnoredByEquals.class.getName(),
+        "  @" + NotInToString.class.getName(),
         "  public abstract String getName();",
         "  public static class Builder extends DataType_Builder {}",
         "}"));
 
-    Property available = new Property.Builder()
+    Property name = new Property.Builder()
         .setAllCapsName("NAME")
         .setCapitalizedName("Name")
         .setFullyCheckedCast(true)
@@ -526,7 +528,7 @@ public class AnalyserTest {
         .setInEqualsAndHashCode(false)
         .setInToString(false)
         .build();
-    assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(available);
+    assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name);
   }
 
   @Test
