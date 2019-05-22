@@ -24,6 +24,8 @@ import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.IgnoredByEquals;
+import org.inferred.freebuilder.NotInToString;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.feature.FeatureSet;
 import org.inferred.freebuilder.processor.source.testing.BehaviorTester;
@@ -117,6 +119,95 @@ public class ProcessorTest {
             .addLine("    .build();")
             .addLine("assertEquals(11, value.propertyA());")
             .addLine("assertTrue(value.propertyB());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIgnoredEquality_allProperties() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s int propertyA();", IgnoredByEquals.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("new %s()", EqualsTester.class)
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(11)")
+            .addLine("            .build(),")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(14)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(11)")
+            .addLine("            .buildPartial(),")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(14)")
+            .addLine("            .buildPartial())")
+            .addLine("    .testEquals();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIgnoredEquality_partialProperties() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s int propertyA();", IgnoredByEquals.class)
+            .addLine("  boolean propertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("new %s()", EqualsTester.class)
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(11)")
+            .addLine("            .propertyB(true)")
+            .addLine("            .build(),")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(14)")
+            .addLine("            .propertyB(true)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(11)")
+            .addLine("            .propertyB(false)")
+            .addLine("            .build(),")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(14)")
+            .addLine("            .propertyB(false)")
+            .addLine("            .build())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(11)")
+            .addLine("            .propertyB(true)")
+            .addLine("            .buildPartial(),")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(14)")
+            .addLine("            .propertyB(true)")
+            .addLine("            .buildPartial())")
+            .addLine("    .addEqualityGroup(")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(11)")
+            .addLine("            .propertyB(false)")
+            .addLine("            .buildPartial(),")
+            .addLine("        new DataType.Builder()")
+            .addLine("            .propertyA(14)")
+            .addLine("            .propertyB(false)")
+            .addLine("            .buildPartial())")
+            .addLine("    .testEquals();")
             .build())
         .runTest();
   }
@@ -667,6 +758,49 @@ public class ProcessorTest {
         .with(testBuilder()
             .addLine("DataType value = DataType.builder().build();")
             .addLine("assertEquals(\"DataType{}\", value.toString());")
+            .build())
+        .runTest();
+  }
+
+
+  @Test
+  public void testToString_ignoreOnlyProperty() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s int propertyA();", NotInToString.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder().propertyA(15).build();")
+            .addLine("assertEquals(\"DataType{}\", value.toString());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testToString_ignorePartialProperties() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  @%s int propertyA();", NotInToString.class)
+            .addLine("  boolean propertyB();")
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("  .propertyA(15)")
+            .addLine("  .propertyB(true)")
+            .addLine("  .build();")
+            .addLine("assertEquals(\"DataType{propertyB=true}\", value.toString());")
             .build())
         .runTest();
   }

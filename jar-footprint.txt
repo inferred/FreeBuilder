@@ -6,5 +6,7 @@ org/
 org/inferred/
 org/inferred/freebuilder/
 org/inferred/freebuilder/FreeBuilder.class
+org/inferred/freebuilder/IgnoredByEquals.class
 org/inferred/freebuilder/processor
+org/inferred/freebuilder/NotInToString.class
 org/inferred/freebuilder/shaded

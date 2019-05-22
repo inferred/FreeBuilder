@@ -38,6 +38,12 @@ public abstract class Property {
   /** Returns true if getters start with "get"; setters should follow suit with "set". */
   public abstract boolean isUsingBeanConvention();
 
+  /** Returns true if the field is to appear in the toString. */
+  public abstract boolean isInToString();
+
+  /** Returns true if the field is to be used in equals and hashCode. */
+  public abstract boolean isInEqualsAndHashCode();
+
   /** Returns the name of the getter for the property, e.g. getMyProperty, or isSomethingTrue. */
   public abstract String getGetterName();
 
@@ -61,5 +67,10 @@ public abstract class Property {
   }
 
   /** Builder for {@link Property}. */
-  public static class Builder extends Property_Builder {}
+  public static class Builder extends Property_Builder {
+    public Builder() {
+      setInEqualsAndHashCode(true);
+      setInToString(true);
+    }
+  }
 }
