@@ -45,7 +45,7 @@ dependencies {
   compile googleJavaFormat
   compile guava
   compileOnly autoService
-  compileOnly files(org.gradle.internal.jvm.Jvm.current().toolsJar)
+  compileOnly files(jvms["1.8"].toolsJar)
   annotationProcessor autoService
 
   testCompile guavaTestlib

@@ -30,6 +30,7 @@ Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
   return javaInfo
 }
 jvms[(JavaVersion.current().name)] = Jvm.current()
+project.ext.jvms = jvms
 
 // Fork the correct JVM version if installed.
 // Runs lazily so users lacking some JVMs can still run most tasks.
