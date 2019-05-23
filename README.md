@@ -506,10 +506,13 @@ abstract class Person {
 
 Note that it is a compile error to leave hashCode abstract if equals is implemented, and vice versa, as FreeBuilder has no reasonable way to ensure the consistency of any implementation it might generate.
 
+If you have a small set of properties you wish to exclude from equals or toString without losing the generated code entirely, you can annotate them `@IgnoredByEquals` and/or `@NotInToString`.
+
 **Warning:**
 It is rarely a good idea to redefine equality on a value type, as it makes testing very hard.
 For instance, `assertEquals` in JUnit relies on equality; it will not know to check individual fields, and as a result, tests may be failing to catch bugs that, on the face of it, they looks like they should be.
 If you are only testing a subset of your fields for equality, consider separating your class in two, as you may have accidentally combined the key and the value of a map into a single object, and you may find your code becomes healthier after the separation.
+Alternatively, creating a custom [Comparator] will make it explicit that you are not using the natural definition of equality.
 
 ### Custom functional interfaces
 
