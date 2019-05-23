@@ -6,7 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * If present, do not include this property in the generated {@link Object#toString()}.
+ * {@link FreeBuilder} will not include properties annotated {@code @NotInToString} in the output of
+ * its generated {@link Object#toString()} implementation.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
