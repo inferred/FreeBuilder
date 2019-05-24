@@ -453,8 +453,10 @@ class Analyser {
     if (jacksonSupport.isPresent()) {
       jacksonSupport.get().addJacksonAnnotations(propertyBuilder, method);
     }
-    propertyBuilder.setInEqualsAndHashCode(method.getAnnotation(IgnoredByEquals.class) == null);
-    propertyBuilder.setInToString(method.getAnnotation(NotInToString.class) == null);
+    if (method.getEnclosingElement().equals(valueType)) {
+        propertyBuilder.setInEqualsAndHashCode(method.getAnnotation(IgnoredByEquals.class) == null);
+        propertyBuilder.setInToString(method.getAnnotation(NotInToString.class) == null);
+    }
     if (propertyType.getKind().isPrimitive()) {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
       TypeMirror boxedType = types.erasure(types.boxedClass(unboxedType).asType());
