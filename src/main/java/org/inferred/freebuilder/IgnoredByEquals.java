@@ -1,8 +1,6 @@
 package org.inferred.freebuilder;
 
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Comparator;
 import java.util.Map;
@@ -22,6 +20,5 @@ import java.util.Set;
  * explicit field-ignoring {@link Comparator} in the parts of the code that need it.
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.SOURCE)
 public @interface IgnoredByEquals {
 }
