@@ -463,7 +463,7 @@ public class AnalyserTest {
   }
 
   @Test
-  public void ignoredEqualsAndHashCode() throws CannotGenerateCodeException {
+  public void ignoredByEquals() throws CannotGenerateCodeException {
     GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
@@ -485,7 +485,33 @@ public class AnalyserTest {
   }
 
   @Test
-  public void ignoredToString() throws CannotGenerateCodeException {
+  public void ignoredByEquals_notInherited() throws CannotGenerateCodeException {
+    model.newType(
+        "package com.example;",
+        "public interface HasName {",
+        "  @" + IgnoredByEquals.class.getName() + " public abstract String getName();",
+        "}");
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType implements HasName {",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+
+    Property name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName("getName")
+        .setName("name")
+        .setType(model.typeMirror(String.class))
+        .setUsingBeanConvention(true)
+        .setInEqualsAndHashCode(true)
+        .build();
+    assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name);
+  }
+
+  @Test
+  public void notInToString() throws CannotGenerateCodeException {
     GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
         "package com.example;",
         "public class DataType {",
@@ -502,6 +528,32 @@ public class AnalyserTest {
         .setType(model.typeMirror(String.class))
         .setUsingBeanConvention(true)
         .setInToString(false)
+        .build();
+    assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name);
+  }
+
+  @Test
+  public void notInToString_notInherited() throws CannotGenerateCodeException {
+    model.newType(
+        "package com.example;",
+        "public interface HasName {",
+        "  @" + NotInToString.class.getName() + " public abstract String getName();",
+        "}");
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType implements HasName {",
+        "  public static class Builder extends DataType_Builder {}",
+        "}"));
+
+    Property name = new Property.Builder()
+        .setAllCapsName("NAME")
+        .setCapitalizedName("Name")
+        .setFullyCheckedCast(true)
+        .setGetterName("getName")
+        .setName("name")
+        .setType(model.typeMirror(String.class))
+        .setUsingBeanConvention(true)
+        .setInToString(true)
         .build();
     assertThat(builder.getGeneratorsByProperty().keySet()).containsExactly(name);
   }
