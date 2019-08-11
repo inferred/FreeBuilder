@@ -214,6 +214,7 @@ class NullableProperty extends PropertyCodeGenerator {
 
   @Override
   public void addGetterAnnotations(SourceBuilder code) {
+    super.addGetterAnnotations(code);
     for (TypeElement nullableAnnotation : nullables) {
       code.add("@%s ", nullableAnnotation);
     }

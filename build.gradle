@@ -192,6 +192,8 @@ configurations {
 dependencies {
   vanillaCompile guava
   vanillaCompile gwtUser
+  vanillaCompile jackson('core')
+  vanillaCompile jackson('databind')
   vanillaTestCompile junit
 }
 task vanillaTest {

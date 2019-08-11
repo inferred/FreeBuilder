@@ -62,6 +62,19 @@ public abstract class Property {
    */
   public abstract ImmutableList<Excerpt> getAccessorAnnotations();
 
+  /**
+   * Returns a list of annotations that should be applied to the getter method of this
+   * property.
+   */
+  public abstract ImmutableList<Excerpt> getGetterAnnotations();
+
+  /**
+   * Returns a list of annotations that should be applied to the put method of this
+   * property. This only applies to map properties.
+   * Annotation will be added to put(key, value) method.
+   */
+  public abstract ImmutableList<Excerpt> getPutAnnotations();
+
   public Property.Builder toBuilder() {
     return new Builder().mergeFrom(this);
   }

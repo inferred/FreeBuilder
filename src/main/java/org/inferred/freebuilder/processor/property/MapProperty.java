@@ -192,8 +192,9 @@ class MapProperty extends PropertyCodeGenerator {
       }
       code.add(" null\n");
     }
-    code.addLine(" */")
-        .addLine("public %s %s(%s key, %s value) {",
+    code.addLine(" */");
+    addPutAnnotations(code);
+    code.addLine("public %s %s(%s key, %s value) {",
             datatype.getBuilder(),
             putMethod(property),
             unboxedKeyType.orElse(keyType),
