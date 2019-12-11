@@ -166,7 +166,11 @@ public abstract class PropertyCodeGenerator {
   public abstract Set<MergeAction> getMergeActions();
 
   /** Adds method annotations for the value type getter method. */
-  public void addGetterAnnotations(@SuppressWarnings("unused") SourceBuilder code) {}
+  public void addGetterAnnotations(SourceBuilder code) {
+    for (Excerpt annotation : property.getGetterAnnotations()) {
+      code.add(annotation);
+    }
+  }
 
   /** Adds a fragment converting the value object's field to the property's type. */
   public void addReadValueFragment(SourceBuilder code, Excerpt finalField) {
@@ -199,6 +203,12 @@ public abstract class PropertyCodeGenerator {
 
   public void addAccessorAnnotations(SourceBuilder code) {
     for (Excerpt annotation : property.getAccessorAnnotations()) {
+      code.add(annotation);
+    }
+  }
+
+  public void addPutAnnotations(SourceBuilder code) {
+    for (Excerpt annotation : property.getPutAnnotations()) {
       code.add(annotation);
     }
   }

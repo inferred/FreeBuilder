@@ -76,6 +76,8 @@ abstract class Property_Builder {
   private String getterName;
   private boolean fullyCheckedCast;
   private List<Excerpt> accessorAnnotations = ImmutableList.of();
+  private List<Excerpt> getterAnnotations = ImmutableList.of();
+  private List<Excerpt> putAnnotations = ImmutableList.of();
   private final EnumSet<Property> _unsetProperties = EnumSet.allOf(Property.class);
 
   /**
@@ -362,31 +364,28 @@ abstract class Property_Builder {
    *
    * @return this {@code Builder} object
    */
-  public org.inferred.freebuilder.processor.property.Property.Builder setInToString(boolean inToString) {
+  public org.inferred.freebuilder.processor.property.Property.Builder setInToString(
+      boolean inToString) {
     this.inToString = inToString;
     return (org.inferred.freebuilder.processor.property.Property.Builder) this;
   }
 
   /**
    * Replaces the value to be returned by {@link
-   * org.inferred.freebuilder.processor.property.Property#isInToString()} by applying {@code mapper} to it
-   * and using the result.
+   * org.inferred.freebuilder.processor.property.Property#isInToString()} by applying {@code mapper}
+   * to it and using the result.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code mapper} is null or returns null
-   * @throws IllegalStateException if the field has not been set
    */
   public org.inferred.freebuilder.processor.property.Property.Builder mapInToString(
       UnaryOperator<Boolean> mapper) {
-    Objects.requireNonNull(mapper);
     return setInToString(mapper.apply(isInToString()));
   }
 
   /**
    * Returns the value that will be returned by {@link
    * org.inferred.freebuilder.processor.property.Property#isInToString()}.
-   *
-   * @throws IllegalStateException if the field has not been set
    */
   public boolean isInToString() {
     return inToString;
@@ -406,24 +405,20 @@ abstract class Property_Builder {
 
   /**
    * Replaces the value to be returned by {@link
-   * org.inferred.freebuilder.processor.property.Property#isInEqualsAndHashCode()} by applying {@code
-   * mapper} to it and using the result.
+   * org.inferred.freebuilder.processor.property.Property#isInEqualsAndHashCode()} by applying
+   * {@code mapper} to it and using the result.
    *
    * @return this {@code Builder} object
    * @throws NullPointerException if {@code mapper} is null or returns null
-   * @throws IllegalStateException if the field has not been set
    */
   public org.inferred.freebuilder.processor.property.Property.Builder mapInEqualsAndHashCode(
       UnaryOperator<Boolean> mapper) {
-    Objects.requireNonNull(mapper);
     return setInEqualsAndHashCode(mapper.apply(isInEqualsAndHashCode()));
   }
 
   /**
    * Returns the value that will be returned by {@link
    * org.inferred.freebuilder.processor.property.Property#isInEqualsAndHashCode()}.
-   *
-   * @throws IllegalStateException if the field has not been set
    */
   public boolean isInEqualsAndHashCode() {
     return inEqualsAndHashCode;
@@ -634,7 +629,253 @@ abstract class Property_Builder {
   }
 
   /**
-   * Copies values from {@code value}, appending to collections, and skipping empty optionals.
+   * Adds {@code element} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getGetterAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code element} is null
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addGetterAnnotations(
+      Excerpt element) {
+    if (getterAnnotations instanceof ImmutableList) {
+      getterAnnotations = new ArrayList<>(getterAnnotations);
+    }
+    getterAnnotations.add(Objects.requireNonNull(element));
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getGetterAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addGetterAnnotations(
+      Excerpt... elements) {
+    return addAllGetterAnnotations(Arrays.asList(elements));
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getGetterAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addAllGetterAnnotations(
+      Spliterator<? extends Excerpt> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
+        if (getterAnnotations instanceof ImmutableList) {
+          getterAnnotations = new ArrayList<>(getterAnnotations);
+        }
+        ((ArrayList<?>) getterAnnotations)
+            .ensureCapacity(getterAnnotations.size() + (int) elementsSize);
+      }
+    }
+    elements.forEachRemaining(this::addGetterAnnotations);
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getGetterAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addAllGetterAnnotations(
+      BaseStream<? extends Excerpt, ?> elements) {
+    return addAllGetterAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getGetterAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addAllGetterAnnotations(
+      Iterable<? extends Excerpt> elements) {
+    return addAllGetterAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getGetterAnnotations()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder mutateGetterAnnotations(
+      Consumer<? super List<Excerpt>> mutator) {
+    if (getterAnnotations instanceof ImmutableList) {
+      getterAnnotations = new ArrayList<>(getterAnnotations);
+    }
+    // If addGetterAnnotations is overridden, this method will be updated to delegate to it
+    mutator.accept(getterAnnotations);
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Clears the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getGetterAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder clearGetterAnnotations() {
+    if (getterAnnotations instanceof ImmutableList) {
+      getterAnnotations = ImmutableList.of();
+    } else {
+      getterAnnotations.clear();
+    }
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Returns an unmodifiable view of the list that will be returned by {@link
+   * org.inferred.freebuilder.processor.property.Property#getGetterAnnotations()}. Changes to this
+   * builder will be reflected in the view.
+   */
+  public List<Excerpt> getGetterAnnotations() {
+    if (getterAnnotations instanceof ImmutableList) {
+      getterAnnotations = new ArrayList<>(getterAnnotations);
+    }
+    return Collections.unmodifiableList(getterAnnotations);
+  }
+
+  /**
+   * Adds {@code element} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getPutAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code element} is null
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addPutAnnotations(
+      Excerpt element) {
+    if (putAnnotations instanceof ImmutableList) {
+      putAnnotations = new ArrayList<>(putAnnotations);
+    }
+    putAnnotations.add(Objects.requireNonNull(element));
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getPutAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addPutAnnotations(
+      Excerpt... elements) {
+    return addAllPutAnnotations(Arrays.asList(elements));
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getPutAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addAllPutAnnotations(
+      Spliterator<? extends Excerpt> elements) {
+    if ((elements.characteristics() & Spliterator.SIZED) != 0) {
+      long elementsSize = elements.estimateSize();
+      if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {
+        if (putAnnotations instanceof ImmutableList) {
+          putAnnotations = new ArrayList<>(putAnnotations);
+        }
+        ((ArrayList<?>) putAnnotations).ensureCapacity(putAnnotations.size() + (int) elementsSize);
+      }
+    }
+    elements.forEachRemaining(this::addPutAnnotations);
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getPutAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addAllPutAnnotations(
+      BaseStream<? extends Excerpt, ?> elements) {
+    return addAllPutAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Adds each element of {@code elements} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getPutAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code elements} is null or contains a null element
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder addAllPutAnnotations(
+      Iterable<? extends Excerpt> elements) {
+    return addAllPutAnnotations(elements.spliterator());
+  }
+
+  /**
+   * Applies {@code mutator} to the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getPutAnnotations()}.
+   *
+   * <p>This method mutates the list in-place. {@code mutator} is a void consumer, so any value
+   * returned from a lambda will be ignored. Take care not to call pure functions, like {@link
+   * Collection#stream()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mutator} is null
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder mutatePutAnnotations(
+      Consumer<? super List<Excerpt>> mutator) {
+    if (putAnnotations instanceof ImmutableList) {
+      putAnnotations = new ArrayList<>(putAnnotations);
+    }
+    // If addPutAnnotations is overridden, this method will be updated to delegate to it
+    mutator.accept(putAnnotations);
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Clears the list to be returned from {@link
+   * org.inferred.freebuilder.processor.property.Property#getPutAnnotations()}.
+   *
+   * @return this {@code Builder} object
+   */
+  public org.inferred.freebuilder.processor.property.Property.Builder clearPutAnnotations() {
+    if (putAnnotations instanceof ImmutableList) {
+      putAnnotations = ImmutableList.of();
+    } else {
+      putAnnotations.clear();
+    }
+    return (org.inferred.freebuilder.processor.property.Property.Builder) this;
+  }
+
+  /**
+   * Returns an unmodifiable view of the list that will be returned by {@link
+   * org.inferred.freebuilder.processor.property.Property#getPutAnnotations()}. Changes to this
+   * builder will be reflected in the view.
+   */
+  public List<Excerpt> getPutAnnotations() {
+    if (putAnnotations instanceof ImmutableList) {
+      putAnnotations = new ArrayList<>(putAnnotations);
+    }
+    return Collections.unmodifiableList(putAnnotations);
+  }
+
+  /**
+   * Copies values from {@code value}, appending to collections, and skipping defaults and empty
+   * optionals.
    *
    * @return this {@code Builder} object
    */
@@ -662,10 +903,10 @@ abstract class Property_Builder {
         || value.isUsingBeanConvention() != defaults.isUsingBeanConvention()) {
       setUsingBeanConvention(value.isUsingBeanConvention());
     }
-    if (!Objects.equals(value.isInToString(), defaults.isInToString())) {
+    if (value.isInToString() != defaults.isInToString()) {
       setInToString(value.isInToString());
     }
-    if (!Objects.equals(value.isInEqualsAndHashCode(), defaults.isInEqualsAndHashCode())) {
+    if (value.isInEqualsAndHashCode() != defaults.isInEqualsAndHashCode()) {
       setInEqualsAndHashCode(value.isInEqualsAndHashCode());
     }
     if (defaults._unsetProperties.contains(Property.GETTER_NAME)
@@ -681,12 +922,22 @@ abstract class Property_Builder {
     } else {
       addAllAccessorAnnotations(value.getAccessorAnnotations());
     }
+    if (value instanceof Value && getterAnnotations == ImmutableList.<Excerpt>of()) {
+      getterAnnotations = ImmutableList.copyOf(value.getGetterAnnotations());
+    } else {
+      addAllGetterAnnotations(value.getGetterAnnotations());
+    }
+    if (value instanceof Value && putAnnotations == ImmutableList.<Excerpt>of()) {
+      putAnnotations = ImmutableList.copyOf(value.getPutAnnotations());
+    } else {
+      addAllPutAnnotations(value.getPutAnnotations());
+    }
     return (org.inferred.freebuilder.processor.property.Property.Builder) this;
   }
 
   /**
-   * Copies values from {@code template}, appending to collections, and skipping empty optionals and
-   * unset properties.
+   * Copies values from {@code template}, appending to collections, and skipping defaults, empty
+   * optionals and unset properties.
    *
    * @return this {@code Builder} object
    */
@@ -738,6 +989,8 @@ abstract class Property_Builder {
       setFullyCheckedCast(template.isFullyCheckedCast());
     }
     addAllAccessorAnnotations(base.accessorAnnotations);
+    addAllGetterAnnotations(base.getterAnnotations);
+    addAllPutAnnotations(base.putAnnotations);
     return (org.inferred.freebuilder.processor.property.Property.Builder) this;
   }
 
@@ -759,6 +1012,8 @@ abstract class Property_Builder {
     getterName = defaults.getterName;
     fullyCheckedCast = defaults.fullyCheckedCast;
     clearAccessorAnnotations();
+    clearGetterAnnotations();
+    clearPutAnnotations();
     _unsetProperties.clear();
     _unsetProperties.addAll(defaults._unsetProperties);
     return (org.inferred.freebuilder.processor.property.Property.Builder) this;
@@ -815,6 +1070,8 @@ abstract class Property_Builder {
     private final String getterName;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
+    private final ImmutableList<Excerpt> getterAnnotations;
+    private final ImmutableList<Excerpt> putAnnotations;
 
     private Value(Property_Builder builder) {
       this.type = builder.type;
@@ -828,6 +1085,8 @@ abstract class Property_Builder {
       this.getterName = builder.getterName;
       this.fullyCheckedCast = builder.fullyCheckedCast;
       this.accessorAnnotations = ImmutableList.copyOf(builder.accessorAnnotations);
+      this.getterAnnotations = ImmutableList.copyOf(builder.getterAnnotations);
+      this.putAnnotations = ImmutableList.copyOf(builder.putAnnotations);
     }
 
     @Override
@@ -886,6 +1145,16 @@ abstract class Property_Builder {
     }
 
     @Override
+    public ImmutableList<Excerpt> getGetterAnnotations() {
+      return getterAnnotations;
+    }
+
+    @Override
+    public ImmutableList<Excerpt> getPutAnnotations() {
+      return putAnnotations;
+    }
+
+    @Override
     public Builder toBuilder() {
       Property_Builder builder = new Builder();
       builder.type = type;
@@ -899,6 +1168,8 @@ abstract class Property_Builder {
       builder.getterName = getterName;
       builder.fullyCheckedCast = fullyCheckedCast;
       builder.accessorAnnotations = accessorAnnotations;
+      builder.getterAnnotations = getterAnnotations;
+      builder.putAnnotations = putAnnotations;
       builder._unsetProperties.clear();
       return (Builder) builder;
     }
@@ -919,7 +1190,9 @@ abstract class Property_Builder {
           && inEqualsAndHashCode == other.inEqualsAndHashCode
           && Objects.equals(getterName, other.getterName)
           && fullyCheckedCast == other.fullyCheckedCast
-          && Objects.equals(accessorAnnotations, other.accessorAnnotations);
+          && Objects.equals(accessorAnnotations, other.accessorAnnotations)
+          && Objects.equals(getterAnnotations, other.getterAnnotations)
+          && Objects.equals(putAnnotations, other.putAnnotations);
     }
 
     @Override
@@ -935,7 +1208,9 @@ abstract class Property_Builder {
           inEqualsAndHashCode,
           getterName,
           fullyCheckedCast,
-          accessorAnnotations);
+          accessorAnnotations,
+          getterAnnotations,
+          putAnnotations);
     }
 
     @Override
@@ -963,6 +1238,10 @@ abstract class Property_Builder {
           .append(fullyCheckedCast)
           .append(", accessorAnnotations=")
           .append(accessorAnnotations)
+          .append(", getterAnnotations=")
+          .append(getterAnnotations)
+          .append(", putAnnotations=")
+          .append(putAnnotations)
           .append("}")
           .toString();
     }
@@ -983,6 +1262,8 @@ abstract class Property_Builder {
     private final String getterName;
     private final boolean fullyCheckedCast;
     private final ImmutableList<Excerpt> accessorAnnotations;
+    private final ImmutableList<Excerpt> getterAnnotations;
+    private final ImmutableList<Excerpt> putAnnotations;
     private final EnumSet<Property> _unsetProperties;
 
     Partial(Property_Builder builder) {
@@ -997,6 +1278,8 @@ abstract class Property_Builder {
       this.getterName = builder.getterName;
       this.fullyCheckedCast = builder.fullyCheckedCast;
       this.accessorAnnotations = ImmutableList.copyOf(builder.accessorAnnotations);
+      this.getterAnnotations = ImmutableList.copyOf(builder.getterAnnotations);
+      this.putAnnotations = ImmutableList.copyOf(builder.putAnnotations);
       this._unsetProperties = builder._unsetProperties.clone();
     }
 
@@ -1076,6 +1359,16 @@ abstract class Property_Builder {
       return accessorAnnotations;
     }
 
+    @Override
+    public ImmutableList<Excerpt> getGetterAnnotations() {
+      return getterAnnotations;
+    }
+
+    @Override
+    public ImmutableList<Excerpt> getPutAnnotations() {
+      return putAnnotations;
+    }
+
     private static class PartialBuilder extends Builder {
       @Override
       public org.inferred.freebuilder.processor.property.Property build() {
@@ -1097,6 +1390,8 @@ abstract class Property_Builder {
       builder.getterName = getterName;
       builder.fullyCheckedCast = fullyCheckedCast;
       builder.accessorAnnotations = accessorAnnotations;
+      builder.getterAnnotations = getterAnnotations;
+      builder.putAnnotations = putAnnotations;
       builder._unsetProperties.clear();
       builder._unsetProperties.addAll(_unsetProperties);
       return (Builder) builder;
@@ -1119,6 +1414,8 @@ abstract class Property_Builder {
           && Objects.equals(getterName, other.getterName)
           && fullyCheckedCast == other.fullyCheckedCast
           && Objects.equals(accessorAnnotations, other.accessorAnnotations)
+          && Objects.equals(getterAnnotations, other.getterAnnotations)
+          && Objects.equals(putAnnotations, other.putAnnotations)
           && Objects.equals(_unsetProperties, other._unsetProperties);
     }
 
@@ -1136,6 +1433,8 @@ abstract class Property_Builder {
           getterName,
           fullyCheckedCast,
           accessorAnnotations,
+          getterAnnotations,
+          putAnnotations,
           _unsetProperties);
     }
 
@@ -1160,17 +1459,24 @@ abstract class Property_Builder {
       if (!_unsetProperties.contains(Property.USING_BEAN_CONVENTION)) {
         result.append("usingBeanConvention=").append(usingBeanConvention).append(", ");
       }
-      result.append("inToString=").append(inToString).append(", ");
-      result.append("inEqualsAndHashCode=").append(inEqualsAndHashCode).append(", ");
+      result
+          .append("inToString=")
+          .append(inToString)
+          .append(", inEqualsAndHashCode=")
+          .append(inEqualsAndHashCode);
       if (!_unsetProperties.contains(Property.GETTER_NAME)) {
-        result.append("getterName=").append(getterName).append(", ");
+        result.append(", getterName=").append(getterName);
       }
       if (!_unsetProperties.contains(Property.FULLY_CHECKED_CAST)) {
-        result.append("fullyCheckedCast=").append(fullyCheckedCast).append(", ");
+        result.append(", fullyCheckedCast=").append(fullyCheckedCast);
       }
       return result
-          .append("accessorAnnotations=")
+          .append(", accessorAnnotations=")
           .append(accessorAnnotations)
+          .append(", getterAnnotations=")
+          .append(getterAnnotations)
+          .append(", putAnnotations=")
+          .append(putAnnotations)
           .append("}")
           .toString();
     }
