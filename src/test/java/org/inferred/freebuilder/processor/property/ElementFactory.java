@@ -214,6 +214,10 @@ public enum ElementFactory {
     return IntStream.of(ids).mapToObj(this::example).collect(Collectors.joining(", "));
   }
 
+  public String exampleToString(int id) {
+    return exampleGenerator.apply(id).toString();
+  }
+
   public Object intern(String variableName) {
     return String.format(intern, variableName);
   }

@@ -17,6 +17,7 @@ public class Factories {
       new SetProperty.Factory(),
       new SortedSetProperty.Factory(),
       new MapProperty.Factory(),
+      new BiMapProperty.Factory(),
       new MultisetProperty.Factory(),
       new ListMultimapProperty.Factory(),
       new SetMultimapProperty.Factory(),

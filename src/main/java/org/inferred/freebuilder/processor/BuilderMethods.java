@@ -61,6 +61,10 @@ public class BuilderMethods {
     return "put" + property.getCapitalizedName();
   }
 
+  public static String forcePutMethod(Property property) {
+    return "forcePut" + property.getCapitalizedName();
+  }
+
   public static String putAllMethod(Property property) {
     return "putAll" + property.getCapitalizedName();
   }
@@ -71,6 +75,14 @@ public class BuilderMethods {
 
   public static String removeAllMethod(Property property) {
     return "removeAll" + property.getCapitalizedName();
+  }
+
+  public static String removeKeyFromMethod(Property property) {
+    return "removeKeyFrom" + property.getCapitalizedName();
+  }
+
+  public static String removeValueFromMethod(Property property) {
+    return "removeValueFrom" + property.getCapitalizedName();
   }
 
   public static String setComparatorMethod(Property property) {
