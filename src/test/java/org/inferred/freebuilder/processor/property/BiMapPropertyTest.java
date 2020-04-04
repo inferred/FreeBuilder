@@ -23,11 +23,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
+
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -77,6 +79,7 @@ public class BiMapPropertyTest {
   private final FeatureSet features;
 
   private final SourceBuilder biMapPropertyType;
+  private final SourceBuilder validatedType;
 
   public BiMapPropertyTest(
       ElementFactory keys,
@@ -96,6 +99,24 @@ public class BiMapPropertyTest {
         .addLine("")
         .addLine("  Builder toBuilder();")
         .addLine("  class Builder extends DataType_Builder {}")
+        .addLine("}");
+
+    validatedType = SourceBuilder.forTesting()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  %s<%s, %s> %s;", BiMap.class, keys.type(), values.type(), convention.get())
+        .addLine("")
+        .addLine("  class Builder extends DataType_Builder {")
+        .addLine("    @Override public Builder forcePutItems(%s key, %s value) {",
+            keys.unwrappedType(), values.unwrappedType())
+        .addLine("      %s.checkArgument(%s, \"%s\");",
+            Preconditions.class, keys.validation("key"), keys.errorMessage("key"))
+        .addLine("      %s.checkArgument(%s, \"%s\");",
+            Preconditions.class, values.validation("value"), values.errorMessage("value"))
+        .addLine("      return super.forcePutItems(key, value);")
+        .addLine("    }")
+        .addLine("  }")
         .addLine("}");
   }
 
@@ -430,6 +451,29 @@ public class BiMapPropertyTest {
   }
 
   @Test
+  public void testFrom_invalidData() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(keys.errorMessage("key"));
+    behaviorTester
+        .with(validatedType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType() {")
+            .addLine("  @Override public %s<%s, %s> %s {",
+                BiMap.class, keys.type(), values.type(), convention.get())
+            .addLine("    return %s.of(%s, %s, %s, %s);",
+                ImmutableBiMap.class,
+                keys.example(0),
+                values.example(0),
+                keys.invalidExample(),
+                values.example(1))
+            .addLine("  }")
+            .addLine("};")
+            .addLine("DataType.Builder.from(value);")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
         .with(biMapPropertyType)
@@ -555,28 +599,27 @@ public class BiMapPropertyTest {
   }
 
   @Test
-  public void testOverridingForcePut() {
+  public void testValidation_put() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(keys.errorMessage("key"));
     behaviorTester
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s, %s> %s;", BiMap.class, keys.type(), values.type(), convention.get())
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder forcePutItems(%s key, %s value) {",
-                keys.unwrappedType(), values.unwrappedType())
-            .addLine("      return this;")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
+        .with(validatedType)
         .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .putAllItems(%s)", exampleBiMap(2, 2, 3, 3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.get())
+            .addLine("new DataType.Builder().putItems(%s, %s);",
+                keys.invalidExample(), values.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testValidation_putAll() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(keys.errorMessage("key"));
+    behaviorTester
+        .with(validatedType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder().putAllItems(ImmutableBiMap.of(%s, %s, %s, %s));",
+                keys.example(0), values.example(0), keys.invalidExample(), values.example(1))
             .build())
         .runTest();
   }
