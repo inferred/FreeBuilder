@@ -289,7 +289,7 @@ public class BiMapPropertyTest {
   }
 
   @Test
-  public void testPutAll_duplicate() {
+  public void testPutAll_duplicateKey() {
     behaviorTester
         .with(biMapPropertyType)
         .with(testBuilder()
@@ -299,6 +299,20 @@ public class BiMapPropertyTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
                 convention.get(), exampleBiMap(0, 2, 1, 1, 3, 3))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPutAll_duplicateValue() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("value already present: " + values.exampleToString(0));
+    behaviorTester
+        .with(biMapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putAllItems(%s)", exampleBiMap(0, 0, 1, 1))
+            .addLine("    .putAllItems(%s);", exampleBiMap(2, 0, 3, 3))
             .build())
         .runTest();
   }
