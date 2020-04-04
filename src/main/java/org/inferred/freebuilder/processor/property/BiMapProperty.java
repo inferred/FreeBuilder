@@ -33,13 +33,18 @@ import static org.inferred.freebuilder.processor.property.MergeAction.appendingT
 import static org.inferred.freebuilder.processor.source.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import org.inferred.freebuilder.processor.BuilderMethods;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedBiMap;
@@ -49,17 +54,12 @@ import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Type;
 import org.inferred.freebuilder.processor.source.Variable;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 
 /**
  * {@link PropertyCodeGenerator} providing fluent methods for {@link BiMap} properties.
@@ -72,18 +72,14 @@ class BiMapProperty extends PropertyCodeGenerator {
     public Optional<BiMapProperty> create(Config config) {
       Property property = config.getProperty();
       DeclaredType type = maybeDeclared(property.getType()).orElse(null);
-      if (!erasesToAnyOf(
-          type,
-          BiMap.class,
-          ImmutableBiMap.class
-      )) {
+      if (!erasesToAnyOf(type, BiMap.class, ImmutableBiMap.class)) {
         return Optional.empty();
       }
       TypeMirror keyType = upperBound(config.getElements(), type.getTypeArguments().get(0));
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
-      boolean overridesforcePutMethod = hasforcePutMethodOverride(
+      boolean overridesForcePutMethod = hasForcePutMethodOverride(
           config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
@@ -91,45 +87,40 @@ class BiMapProperty extends PropertyCodeGenerator {
           mutator(property),
           consumer(biMap(keyType, valueType, config.getElements(), config.getTypes())),
           config.getElements(),
-          config.getTypes()
-      );
+          config.getTypes());
 
       return Optional.of(new BiMapProperty(
           config.getDatatype(),
           property,
-          overridesforcePutMethod,
+          overridesForcePutMethod,
           keyType,
           unboxedKeyType,
           valueType,
           unboxedValueType,
-          mutatorType
-      ));
+          mutatorType));
     }
 
-    private static boolean hasforcePutMethodOverride(
-        Config config, TypeMirror keyType, TypeMirror valueType
-    ) {
+    private static boolean hasForcePutMethodOverride(
+        Config config, TypeMirror keyType, TypeMirror valueType) {
       return overrides(
           config.getBuilder(),
           config.getTypes(),
-          BuilderMethods.forcePutMethod(config.getProperty()),
+          forcePutMethod(config.getProperty()),
           keyType,
-          valueType
-      );
+          valueType);
     }
 
     private static TypeMirror biMap(
         TypeMirror keyType,
         TypeMirror valueType,
         Elements elements,
-        Types types
-    ) {
+        Types types) {
       TypeElement mapType = elements.getTypeElement(BiMap.class.getName());
       return types.getDeclaredType(mapType, keyType, valueType);
     }
   }
 
-  private final boolean overridesforcePutMethod;
+  private final boolean overridesForcePutMethod;
   private final TypeMirror keyType;
   private final Optional<TypeMirror> unboxedKeyType;
   private final TypeMirror valueType;
@@ -139,15 +130,14 @@ class BiMapProperty extends PropertyCodeGenerator {
   BiMapProperty(
       Datatype datatype,
       Property property,
-      boolean overridesforcePutMethod,
+      boolean overridesForcePutMethod,
       TypeMirror keyType,
       Optional<TypeMirror> unboxedKeyType,
       TypeMirror valueType,
       Optional<TypeMirror> unboxedValueType,
-      FunctionalType mutatorType
-  ) {
+      FunctionalType mutatorType) {
     super(datatype, property);
-    this.overridesforcePutMethod = overridesforcePutMethod;
+    this.overridesForcePutMethod = overridesForcePutMethod;
     this.keyType = keyType;
     this.unboxedKeyType = unboxedKeyType;
     this.valueType = valueType;
@@ -157,24 +147,14 @@ class BiMapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addValueFieldDeclaration(SourceBuilder code) {
-    code.addLine(
-        "private final %s<%s, %s> %s;",
-        ImmutableBiMap.class,
-        keyType,
-        valueType,
-        property.getField()
-    );
+    code.addLine("private final %s<%s, %s> %s;",
+        ImmutableBiMap.class, keyType, valueType, property.getField());
   }
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine(
-        "private final %1$s<%2$s, %3$s> %4$s = %1$s.create();",
-        HashBiMap.class,
-        keyType,
-        valueType,
-        property.getField()
-    );
+    code.addLine("private final %1$s<%2$s, %3$s> %4$s = %1$s.create();",
+        HashBiMap.class, keyType, valueType, property.getField());
   }
 
   @Override
@@ -199,8 +179,8 @@ class BiMapProperty extends PropertyCodeGenerator {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws IllegalArgumentException if the given value is already bound to a")
-        .addLine(" * different key in this bimap. The bimap will remain unmodified in this")
-        .addLine(" * event. To avoid this exception, call {@link #forcePut} instead.");
+        .addLine(" *     different key in this bimap. The bimap will remain unmodified in this")
+        .addLine(" *     event. To avoid this exception, call {@link #forcePut} instead.");
     if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
       code.add(" * @throws NullPointerException if ");
       if (unboxedKeyType.isPresent()) {
@@ -219,21 +199,17 @@ class BiMapProperty extends PropertyCodeGenerator {
         datatype.getBuilder(),
         putMethod(property),
         unboxedKeyType.orElse(keyType),
-        unboxedValueType.orElse(valueType)
-    );
+        unboxedValueType.orElse(valueType));
     if (!unboxedKeyType.isPresent()) {
       code.addLine("  %s.requireNonNull(key);", Objects.class);
     }
     if (!unboxedValueType.isPresent()) {
       code.addLine("  %s.requireNonNull(value);", Objects.class);
     }
-    code.addLine(
-        "  %s.checkArgument(!%s.containsValue(value), \"value already present: %s\", value);",
-        Preconditions.class,
-        property.getField(),
-        "%s"
-    );
-    code.addLine("  %s(key, value);", forcePutMethod(property))
+    code.addLine("  %s.checkArgument(", Preconditions.class)
+        .addLine("      !%s.containsValue(value), \"value already present: %%s\", value);",
+            property.getField())
+        .addLine("  %s(key, value);", forcePutMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
   }
@@ -259,13 +235,11 @@ class BiMapProperty extends PropertyCodeGenerator {
     }
     code.addLine(" */");
     addPutAnnotations(code);
-    code.addLine(
-        "public %s %s(%s key, %s value) {",
-        datatype.getBuilder(),
-        BuilderMethods.forcePutMethod(property),
-        unboxedKeyType.orElse(keyType),
-        unboxedValueType.orElse(valueType)
-    );
+    code.addLine("public %s %s(%s key, %s value) {",
+            datatype.getBuilder(),
+            forcePutMethod(property),
+            unboxedKeyType.orElse(keyType),
+            unboxedValueType.orElse(valueType));
     if (!unboxedKeyType.isPresent()) {
       code.addLine("  %s.requireNonNull(key);", Objects.class);
     }
@@ -281,27 +255,18 @@ class BiMapProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Copies all of the mappings from {@code bimap} to the bimap to be returned ")
-        .addLine(
-            " * from %s.",
-            datatype.getType().javadocNoArgMethodLink(property.getGetterName())
-        )
+        .addLine(" * from %s.",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code bimap} is null or contains a")
         .addLine(" *     null key or value")
         .addLine(" */");
     addAccessorAnnotations(code);
-    code.addLine(
-        "public %s %s(%s<? extends %s, ? extends %s> bimap) {",
-        datatype.getBuilder(),
-        putAllMethod(property),
-        BiMap.class,
-        keyType,
-        valueType
-    )
+    code.addLine("public %s %s(%s<? extends %s, ? extends %s> bimap) {",
+            datatype.getBuilder(), putAllMethod(property), BiMap.class, keyType, valueType)
         .addLine("  for (%s<? extends %s, ? extends %s> entry : bimap.entrySet()) {",
-            Map.Entry.class, keyType, valueType
-        )
+            Map.Entry.class, keyType, valueType)
         .addLine("    %s(entry.getKey(), entry.getValue());", putMethod(property))
         .addLine("  }")
         .addLine("  return (%s) this;", datatype.getBuilder())
@@ -312,22 +277,16 @@ class BiMapProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes the mapping for {@code key} from the bimap to be returned from")
-        .addLine(
-            " * %s, if one is present.",
-            datatype.getType().javadocNoArgMethodLink(property.getGetterName())
-        )
+        .addLine(" * %s, if one is present.",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedKeyType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code key} is null");
     }
     code.addLine(" */")
-        .addLine(
-            "public %s %s(%s key) {",
-            datatype.getBuilder(),
-            removeKeyFromMethod(property),
-            unboxedKeyType.orElse(keyType)
-        );
+        .addLine("public %s %s(%s key) {",
+            datatype.getBuilder(), removeKeyFromMethod(property), unboxedKeyType.orElse(keyType));
     if (!unboxedKeyType.isPresent()) {
       code.addLine("  %s.requireNonNull(key);", Objects.class);
     }
@@ -340,22 +299,18 @@ class BiMapProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes the mapping for {@code value} from the bimap to be returned from")
-        .addLine(
-            " * %s, if one is present.",
-            datatype.getType().javadocNoArgMethodLink(property.getGetterName())
-        )
+        .addLine(" * %s, if one is present.",
+            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedValueType.isPresent()) {
       code.addLine(" * @throws NullPointerException if {@code value} is null");
     }
     code.addLine(" */")
-        .addLine(
-            "public %s %s(%s value) {",
+        .addLine("public %s %s(%s value) {",
             datatype.getBuilder(),
             removeValueFromMethod(property),
-            unboxedValueType.orElse(valueType)
-        );
+            unboxedValueType.orElse(valueType));
     if (!unboxedValueType.isPresent()) {
       code.addLine("  %s.requireNonNull(value);", Objects.class);
     }
@@ -372,33 +327,23 @@ class BiMapProperty extends PropertyCodeGenerator {
         .addLine(" *")
         .addLine(" * <p>This method mutates the bimap in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
-        .addLine(
-            " * not to call pure functions, like %s.",
-            Type.from(Collection.class).javadocNoArgMethodLink("stream")
-        )
+        .addLine(" * not to call pure functions, like %s.",
+            Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine(
-            "public %s %s(%s mutator) {",
-            datatype.getBuilder(),
-            mutator(property),
-            mutatorType.getFunctionalInterface()
-        );
-    if (overridesforcePutMethod) {
-      code.addLine(
-          "  mutator.%s(new %s<>(%s, this::%s));",
+        .addLine("public %s %s(%s mutator) {",
+            datatype.getBuilder(), mutator(property), mutatorType.getFunctionalInterface());
+    if (overridesForcePutMethod) {
+      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(),
           CheckedBiMap.TYPE,
           property.getField(),
-          BuilderMethods.forcePutMethod(property)
-      );
+          forcePutMethod(property));
     } else {
-      code.addLine(
-          "  // If %s is overridden, this method will be updated to delegate to it",
-          BuilderMethods.forcePutMethod(property)
-      )
+      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+              forcePutMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
     code.addLine("  return (%s) this;", datatype.getBuilder())
