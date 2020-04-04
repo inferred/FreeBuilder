@@ -261,6 +261,9 @@ class BiMapProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code bimap} is null or contains a")
         .addLine(" *     null key or value")
+        .addLine(" * @throws IllegalArgumentException if an attempt to {@code put} any")
+        .addLine(" *     entry fails. Note that some map entries may have been added to the")
+        .addLine(" *     bimap before the exception was thrown.")
         .addLine(" */");
     addAccessorAnnotations(code);
     code.addLine("public %s %s(%s<? extends %s, ? extends %s> bimap) {",

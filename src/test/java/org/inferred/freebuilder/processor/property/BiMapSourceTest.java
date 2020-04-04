@@ -115,6 +115,8 @@ public class BiMapSourceTest {
         "   *",
         "   * @return this {@code Builder} object",
         "   * @throws NullPointerException if {@code bimap} is null or contains a null key or value",
+        "   * @throws IllegalArgumentException if an attempt to {@code put} any entry fails. Note that some",
+        "   *     map entries may have been added to the bimap before the exception was thrown.",
         "   */",
         "  public Person.Builder putAllName(BiMap<? extends Integer, ? extends String> bimap) {",
         "    for (Map.Entry<? extends Integer, ? extends String> entry : bimap.entrySet()) {",
