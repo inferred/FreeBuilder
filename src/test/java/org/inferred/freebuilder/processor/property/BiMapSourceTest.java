@@ -90,7 +90,6 @@ public class BiMapSourceTest {
         "   * @throws NullPointerException if {@code value} is null",
         "   */",
         "  public Person.Builder putName(int key, String value) {",
-        "    Objects.requireNonNull(value);",
         "    Preconditions.checkArgument(!name.containsValue(value), \"value already present: %s\", value);",
         "    forcePutName(key, value);",
         "    return (Person.Builder) this;",
