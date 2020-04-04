@@ -200,12 +200,6 @@ class BiMapProperty extends PropertyCodeGenerator {
         putMethod(property),
         unboxedKeyType.orElse(keyType),
         unboxedValueType.orElse(valueType));
-    if (!unboxedKeyType.isPresent()) {
-      code.addLine("  %s.requireNonNull(key);", Objects.class);
-    }
-    if (!unboxedValueType.isPresent()) {
-      code.addLine("  %s.requireNonNull(value);", Objects.class);
-    }
     code.addLine("  %s.checkArgument(", Preconditions.class)
         .addLine("      !%s.containsValue(value), \"value already present: %%s\", value);",
             property.getField())
