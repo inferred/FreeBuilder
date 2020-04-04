@@ -19,26 +19,24 @@ public class CheckedBiMap extends ValueType implements Excerpt {
 
   public static final LazyName TYPE = LazyName.of("CheckedBiMap", new CheckedBiMap());
 
-  private CheckedBiMap() {
-  }
+  private CheckedBiMap() {}
 
   @Override
   public void addTo(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * A bimap implementation that delegates to a provided put method")
+        .addLine(" * A bimap implementation that delegates to a provided forcePut method")
         .addLine(" * to perform entry validation and insertion into a backing bimap.")
         .addLine(" */")
         .addLine("private static class %s<K, V> extends %s<K, V> implements %s<K, V> {",
-            TYPE, AbstractMap.class, BiMap.class
-        )
+            TYPE, AbstractMap.class, BiMap.class)
         .addLine("")
         .addLine("  private final %s<K, V> biMap;", BiMap.class)
-        .addLine("  private final %s<K, V> put;", BiConsumer.class)
+        .addLine("  private final %s<K, V> forcePut;", BiConsumer.class)
         .addLine("")
-        .addLine("  %s(%s<K, V> biMap, %s<K, V> put) {", TYPE, BiMap.class, BiConsumer.class)
+        .addLine("  %s(%s<K, V> biMap, %s<K, V> forcePut) {", TYPE, BiMap.class, BiConsumer.class)
         .addLine("    this.biMap = biMap;")
-        .addLine("    this.put = put;")
+        .addLine("    this.forcePut = forcePut;")
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public V get(Object key) {")
@@ -50,21 +48,16 @@ public class CheckedBiMap extends ValueType implements Excerpt {
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public V put(K key, V value) {")
-        .addLine(
-            "  %s.checkArgument(!biMap.containsValue(value), "
-                + "\"value already present: %s\","
-                + " value);",
-            Preconditions.class,
-            "%s"
-        )
+        .addLine("    %s.checkArgument(", Preconditions.class)
+        .addLine("        !biMap.containsValue(value), \"value already present: %%s\", value);")
         .addLine("    V oldValue = biMap.get(key);")
-        .addLine("    put.accept(key, value);")
+        .addLine("    forcePut.accept(key, value);")
         .addLine("    return oldValue;")
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public V forcePut(K key, V value) {")
         .addLine("    V oldValue = biMap.get(key);")
-        .addLine("    put.accept(key, value);")
+        .addLine("    forcePut.accept(key, value);")
         .addLine("    return oldValue;")
         .addLine("  }")
         .addLine("")
@@ -76,17 +69,13 @@ public class CheckedBiMap extends ValueType implements Excerpt {
         .addLine("    biMap.clear();")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public %s<%s<K, V>> entrySet() {",
-            Set.class, Map.Entry.class
-        )
-        .addLine("    return new %s<>(biMap, put);", CheckedBiMap.CheckedEntrySet.TYPE)
+        .addLine("  @Override public %s<%s<K, V>> entrySet() {", Set.class, Map.Entry.class)
+        .addLine("    return new %s<>(biMap, forcePut);", CheckedEntrySet.TYPE)
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public %s<V,K> inverse() {", BiMap.class)
-        .addLine("    return new %s<V, K>(biMap.inverse(), "
-            + "(value, key) -> put.accept(key, value));",
-            TYPE
-        )
+        .addLine("    return new %s<V, K>(", TYPE)
+        .addLine("        biMap.inverse(), (value, key) -> forcePut.accept(key, value));")
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public %s<V> values() {", Set.class)
@@ -102,15 +91,13 @@ public class CheckedBiMap extends ValueType implements Excerpt {
   }
 
   @Override
-  protected void addFields(FieldReceiver fields) {
-  }
+  protected void addFields(FieldReceiver fields) {}
 
   private static class CheckedEntry extends ValueType implements Excerpt {
 
-    static final LazyName TYPE = LazyName.of("CheckedEntry", new CheckedBiMap.CheckedEntry());
+    static final LazyName TYPE = LazyName.of("CheckedEntry", new CheckedEntry());
 
-    private CheckedEntry() {
-    }
+    private CheckedEntry() {}
 
     @Override
     public void addTo(SourceBuilder code) {
@@ -120,16 +107,14 @@ public class CheckedBiMap extends ValueType implements Excerpt {
           .addLine("  private final %s<K, V> biMap;", BiMap.class)
           .addLine("  private final K key;")
           .addLine("  private V value;")
-          .addLine("  private final %s<K, V> put;", BiConsumer.class)
+          .addLine("  private final %s<K, V> forcePut;", BiConsumer.class)
           .addLine("")
-          .addLine("  %s(", TYPE)
-          .addLine("      %s<K, V> biMap,", BiMap.class)
-          .addLine("      %s<K, V> entry, ", Map.Entry.class)
-          .addLine("      %s<K, V> put) {", BiConsumer.class)
+          .addLine("  %s(%s<K, V> biMap, %s<K, V> entry, %s<K, V> forcePut) {",
+              TYPE, BiMap.class, Map.Entry.class, BiConsumer.class)
           .addLine("    this.biMap = biMap;")
           .addLine("    this.key = entry.getKey();")
           .addLine("    this.value = entry.getValue();")
-          .addLine("    this.put = put;")
+          .addLine("    this.forcePut = forcePut;")
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public K getKey() {")
@@ -141,16 +126,11 @@ public class CheckedBiMap extends ValueType implements Excerpt {
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public V setValue(V value) {")
-          .addLine(
-              "  %s.checkArgument(!biMap.containsValue(value), "
-                  + "\"value already present: %s\","
-                  + " value);",
-              Preconditions.class,
-              "%s"
-          )
+          .addLine("    %s.checkArgument(", Preconditions.class)
+          .addLine("        !biMap.containsValue(value), \"value already present: %%s\", value);")
           .addLine("    V oldValue = value;")
           .addLine("    this.value = %s.requireNonNull(value);", Objects.class)
-          .addLine("    put.accept(key, value);")
+          .addLine("    forcePut.accept(key, value);")
           .addLine("    return oldValue;")
           .addLine("  }")
           .addLine("")
@@ -158,7 +138,7 @@ public class CheckedBiMap extends ValueType implements Excerpt {
           .addLine("    if (!(o instanceof %s)) {", TYPE)
           .addLine("      return false;")
           .addLine("    }")
-          .addLine("    final %1$s other = (%1$s) o;", TYPE)
+          .addLine("    %1$s other = (%1$s) o;", TYPE)
           .addLine("    return getKey().equals(other.getKey())")
           .addLine("        && getValue().equals(other.getValue());")
           .addLine("  }")
@@ -170,37 +150,30 @@ public class CheckedBiMap extends ValueType implements Excerpt {
     }
 
     @Override
-    protected void addFields(FieldReceiver fields) {
-    }
+    protected void addFields(FieldReceiver fields) {}
   }
 
   private static class CheckedEntryIterator extends ValueType implements Excerpt {
 
-    static final LazyName TYPE = LazyName.of(
-        "CheckedEntryIterator",
-        new CheckedBiMap.CheckedEntryIterator());
+    static final LazyName TYPE = LazyName.of("CheckedEntryIterator", new CheckedEntryIterator());
 
-    private CheckedEntryIterator() {
-    }
+    private CheckedEntryIterator() {}
 
     @Override
     public void addTo(SourceBuilder code) {
       code.addLine("")
           .addLine("private static class %s<K, V> implements %s<%s<K, V>> {",
-              TYPE, Iterator.class, Map.Entry.class
-          )
+              TYPE, Iterator.class, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<K, V> biMap;", BiMap.class)
           .addLine("  private final %s<%s<K, V>> iterator;", Iterator.class, Map.Entry.class)
-          .addLine("  private final %s<K, V> put;", BiConsumer.class)
+          .addLine("  private final %s<K, V> forcePut;", BiConsumer.class)
           .addLine("")
-          .addLine("  %s(", TYPE)
-          .addLine("      %s<K, V> biMap,", BiMap.class)
-          .addLine("      %s<%s<K, V>> iterator,", Iterator.class, Map.Entry.class)
-          .addLine("      %s<K, V> put) {", BiConsumer.class)
+          .addLine("  %s(%s<K, V> biMap, %s<%s<K, V>> iterator, %s<K, V> forcePut) {",
+              TYPE, BiMap.class, Iterator.class, Map.Entry.class, BiConsumer.class)
           .addLine("    this.biMap = biMap;")
           .addLine("    this.iterator = iterator;")
-          .addLine("    this.put = put;")
+          .addLine("    this.forcePut = forcePut;")
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public boolean hasNext() {")
@@ -208,8 +181,7 @@ public class CheckedBiMap extends ValueType implements Excerpt {
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public %s<K, V> next() {", Map.Entry.class)
-          .addLine("    return new %s<K, V>(biMap, iterator.next(), put);",
-              CheckedBiMap.CheckedEntry.TYPE)
+          .addLine("    return new %s<K, V>(biMap, iterator.next(), forcePut);", CheckedEntry.TYPE)
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public void remove() {")
@@ -219,34 +191,29 @@ public class CheckedBiMap extends ValueType implements Excerpt {
     }
 
     @Override
-    protected void addFields(FieldReceiver fields) {
-    }
+    protected void addFields(FieldReceiver fields) {}
   }
 
   private static class CheckedEntrySet extends ValueType implements Excerpt {
 
-    static final LazyName TYPE = LazyName.of("CheckedEntrySet", new CheckedBiMap.CheckedEntrySet());
+    static final LazyName TYPE = LazyName.of("CheckedEntrySet", new CheckedEntrySet());
 
-    private CheckedEntrySet() {
-    }
+    private CheckedEntrySet() {}
 
     @Override
     public void addTo(SourceBuilder code) {
       code.addLine("")
           .addLine("private static class %s<K, V> extends %s<%s<K, V>> {",
-              TYPE, AbstractSet.class, Map.Entry.class
-          )
+              TYPE, AbstractSet.class, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<K, V> biMap;", BiMap.class)
           .addLine("  private final %s<%s<K, V>> set;", Set.class, Map.Entry.class)
-          .addLine("  private final %s<K, V> put;", BiConsumer.class)
+          .addLine("  private final %s<K, V> forcePut;", BiConsumer.class)
           .addLine("")
-          .addLine("  %s(", TYPE)
-          .addLine("      %s<K, V> biMap,", BiMap.class)
-          .addLine("      %s<K, V> put) {", BiConsumer.class)
+          .addLine("  %s(%s<K, V> biMap, %s<K, V> forcePut) {", TYPE, BiMap.class, BiConsumer.class)
           .addLine("    this.biMap = biMap;")
           .addLine("    this.set = biMap.entrySet();")
-          .addLine("    this.put = put;")
+          .addLine("    this.forcePut = forcePut;")
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public int size() {")
@@ -254,12 +221,9 @@ public class CheckedBiMap extends ValueType implements Excerpt {
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public %s<%s<K, V>> iterator() {",
-              Iterator.class, BiMap.Entry.class
-          )
-          .addLine(
-              "    return new %s<K, V>(biMap, set.iterator(), put);",
-              CheckedBiMap.CheckedEntryIterator.TYPE
-          )
+              Iterator.class, BiMap.Entry.class)
+          .addLine("    return new %s<K, V>(biMap, set.iterator(), forcePut);",
+              CheckedEntryIterator.TYPE)
           .addLine("  }")
           .addLine("")
           .addLine("  @Override public boolean contains(Object o) {")
@@ -277,7 +241,6 @@ public class CheckedBiMap extends ValueType implements Excerpt {
     }
 
     @Override
-    protected void addFields(FieldReceiver fields) {
-    }
+    protected void addFields(FieldReceiver fields) {}
   }
 }

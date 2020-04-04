@@ -335,8 +335,7 @@ public class BiMapSourceTest {
         "      return \"partial Person{name=\" + name + \"}\";",
         "    }",
         "  }",
-        "}"
-    );
+        "}");
   }
 
   private static GeneratedBuilder builder() {
@@ -378,7 +377,6 @@ public class BiMapSourceTest {
             Optional.of(INT),
             STRING,
             Optional.empty(),
-            consumer(wildcardSuper(mapIntString))
-        )));
+            consumer(wildcardSuper(mapIntString)))));
   }
 }
