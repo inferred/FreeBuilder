@@ -27,23 +27,19 @@ import static org.inferred.freebuilder.processor.BuilderMethods.removeValueFromM
 import static org.inferred.freebuilder.processor.model.ModelUtils.erasesToAnyOf;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeUnbox;
+import static org.inferred.freebuilder.processor.model.ModelUtils.override;
 import static org.inferred.freebuilder.processor.model.ModelUtils.overrides;
 import static org.inferred.freebuilder.processor.model.ModelUtils.upperBound;
 import static org.inferred.freebuilder.processor.property.MergeAction.appendingToCollections;
 import static org.inferred.freebuilder.processor.source.FunctionalType.consumer;
 import static org.inferred.freebuilder.processor.source.FunctionalType.functionalTypeAcceptedByMethod;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
@@ -54,12 +50,19 @@ import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Type;
 import org.inferred.freebuilder.processor.source.Variable;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+import javax.tools.Diagnostic.Kind;
 
 /**
  * {@link PropertyCodeGenerator} providing fluent methods for {@link BiMap} properties.
@@ -79,8 +82,21 @@ class BiMapProperty extends PropertyCodeGenerator {
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
+      Optional<ExecutableElement> putMethodOverride = putMethodOverride(
+          config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
       boolean overridesForcePutMethod = hasForcePutMethodOverride(
           config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
+      
+      if (putMethodOverride.isPresent() && !overridesForcePutMethod) {
+        config.getEnvironment().getMessager().printMessage(
+            Kind.ERROR, 
+            "Overriding "
+                + putMethod(property)
+                + " will not correctly validate all inputs. Please override "
+                + forcePutMethod(property)
+                + ".",
+            putMethodOverride.get());
+      }
 
       FunctionalType mutatorType = functionalTypeAcceptedByMethod(
           config.getBuilder(),
@@ -98,6 +114,16 @@ class BiMapProperty extends PropertyCodeGenerator {
           valueType,
           unboxedValueType,
           mutatorType));
+    }
+
+    private static Optional<ExecutableElement> putMethodOverride(
+        Config config, TypeMirror keyType, TypeMirror valueType) {
+      return override(
+          config.getBuilder(),
+          config.getTypes(),
+          putMethod(config.getProperty()),
+          keyType,
+          valueType);
     }
 
     private static boolean hasForcePutMethodOverride(

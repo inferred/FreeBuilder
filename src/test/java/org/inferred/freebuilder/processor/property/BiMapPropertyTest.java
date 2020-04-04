@@ -669,6 +669,32 @@ public class BiMapPropertyTest {
   }
 
   @Test
+  public void testCompileErrorIfOnlyPutOverridden() {
+    behaviorTester
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s, %s> %s;", BiMap.class, keys.type(), values.type(), convention.get())
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    @Override public Builder putItems(%s key, %s value) {",
+                keys.unwrappedType(), values.unwrappedType())
+            .addLine("      %s.checkArgument(%s, \"%s\");",
+                Preconditions.class, keys.validation("key"), keys.errorMessage("key"))
+            .addLine("      %s.checkArgument(%s, \"%s\");",
+                Preconditions.class, values.validation("value"), values.errorMessage("value"))
+            .addLine("      return super.putItems(key, value);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .failsToCompile()
+        .withErrorThat(subject -> subject
+            .hasMessage("Overriding putItems will not correctly validate all inputs. "
+                + "Please override forcePutItems."));
+  }
+
+  @Test
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     assumeTrue(keys.isSerializableAsMapKey());
