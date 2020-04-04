@@ -76,6 +76,8 @@ public class MapPropertyTest {
   private final FeatureSet features;
 
   private final SourceBuilder mapPropertyType;
+  private final SourceBuilder validatedType;
+
 
   public MapPropertyTest(
       ElementFactory keys,
@@ -95,6 +97,23 @@ public class MapPropertyTest {
         .addLine("")
         .addLine("  Builder toBuilder();")
         .addLine("  class Builder extends DataType_Builder {}")
+        .addLine("}");
+
+    validatedType = SourceBuilder.forTesting()
+        .addLine("package com.example;")
+        .addLine("@%s", FreeBuilder.class)
+        .addLine("public interface DataType {")
+        .addLine("  %s<%s, %s> %s;", Map.class, keys.type(), values.type(), convention.get())
+        .addLine("")
+        .addLine("  class Builder extends DataType_Builder {")
+        .addLine("    @Override public Builder putItems(%s key, %s value) {",
+            keys.unwrappedType(), values.unwrappedType())
+        .addLine("      if (!(%s)) {", keys.validation("key"))
+        .addLine("        throw new IllegalArgumentException(\"%s\");", keys.errorMessage("key"))
+        .addLine("      }")
+        .addLine("      return super.putItems(key, value);")
+        .addLine("    }")
+        .addLine("  }")
         .addLine("}");
   }
 
@@ -329,6 +348,29 @@ public class MapPropertyTest {
   }
 
   @Test
+  public void testFrom_invalidData() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(keys.errorMessage("key"));
+    behaviorTester
+        .with(validatedType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType() {")
+            .addLine("  @Override public %s<%s, %s> %s {",
+                Map.class, keys.type(), values.type(), convention.get())
+            .addLine("    return %s.of(%s, %s, %s, %s);",
+                ImmutableMap.class,
+                keys.example(0),
+                values.example(0),
+                keys.invalidExample(),
+                values.example(1))
+            .addLine("  }")
+            .addLine("};")
+            .addLine("DataType.Builder.from(value);")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testMergeFrom_valueInstance() {
     behaviorTester
         .with(mapPropertyType)
@@ -476,6 +518,19 @@ public class MapPropertyTest {
             .addLine("    .putAllItems(%s)", exampleMap(2, 2, 3, 3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEmpty();", convention.get())
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testValidation_putAll() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(keys.errorMessage("key"));
+    behaviorTester
+        .with(validatedType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder().putAllItems(ImmutableMap.of(%s, %s, %s, %s));",
+                keys.example(0), values.example(0), keys.invalidExample(), values.example(1))
             .build())
         .runTest();
   }
