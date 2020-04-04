@@ -254,21 +254,21 @@ class BiMapProperty extends PropertyCodeGenerator {
   private void addPutAll(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Copies all of the mappings from {@code bimap} to the bimap to be returned ")
+        .addLine(" * Copies all of the mappings from {@code map} to the bimap to be returned ")
         .addLine(" * from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
-        .addLine(" * @throws NullPointerException if {@code bimap} is null or contains a")
+        .addLine(" * @throws NullPointerException if {@code map} is null or contains a")
         .addLine(" *     null key or value")
         .addLine(" * @throws IllegalArgumentException if an attempt to {@code put} any")
         .addLine(" *     entry fails. Note that some map entries may have been added to the")
         .addLine(" *     bimap before the exception was thrown.")
         .addLine(" */");
     addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s, ? extends %s> bimap) {",
-            datatype.getBuilder(), putAllMethod(property), BiMap.class, keyType, valueType)
-        .addLine("  for (%s<? extends %s, ? extends %s> entry : bimap.entrySet()) {",
+    code.addLine("public %s %s(%s<? extends %s, ? extends %s> map) {",
+            datatype.getBuilder(), putAllMethod(property), Map.class, keyType, valueType)
+        .addLine("  for (%s<? extends %s, ? extends %s> entry : map.entrySet()) {",
             Map.Entry.class, keyType, valueType)
         .addLine("    %s(entry.getKey(), entry.getValue());", putMethod(property))
         .addLine("  }")
