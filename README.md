@@ -366,6 +366,24 @@ A <code>[Map][]</code> property called 'albums' would generate:
 | `albums()` | Returns an unmodifiable view of the map of albums. Changes to the map held by the builder will be reflected in this view. |
 
 ```java
+  /** Returns a bimap of favourite albums by year. **/
+  BiMap<Integer, String> albums();
+```
+
+A <code>[BiMap][]</code> property called 'albums' would generate:
+
+| Method | Description |
+|:------:| ----------- |
+| `putAlbums(int key, String value)` | Associates `key` with `value` in albums.  Throws a NullPointerException if either parameter is null, or an IllegalArgumentException if `value` is already bound to a different key. Replaces any existing entry for `key`. |
+| `forcePutAlbums(int key, String value)` | Associates `key` with `value` in albums.  Throws a NullPointerException if either parameter is null. Replaces any existing entry for both `key` _and_ `value`. _Override this method to implement [constraint checks](#defaults-and-constraints)._ |
+| `putAllAlbums(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in albums. Throws a NullPointerException if the map is null or contains a null key or value. Replaces any existing mapping for all keys in `map`. Throws an IllegalArgumentException if an attempt to put any entry fails. |
+| `removeKeyFromAlbums(int key)` | Removes the mapping for `key` from albums. Throws a NullPointerException if the parameter is null. Does nothing if the key is not present. |
+| `removeValueFromAlbums(String value)` | Removes the mapping for `value` from albums. Throws a NullPointerException if the parameter is null. Does nothing if the value is not present. |
+| `mutateAlbums(​Consumer<BiMap<Integer, String>> mutator)` | Invokes the [Consumer] `mutator` with the bimap of albums. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned map to replace the existing map. |
+| `clearAlbums()` | Removes all mappings from albums, leaving it empty. |
+| `albums()` | Returns an unmodifiable view of the bimap of albums. Changes to the bimap held by the builder will be reflected in this view. |
+
+```java
   /** Returns a multimap of all awards by year. **/
   SetMultimap<Integer, String> awards();
 ```
@@ -403,6 +421,7 @@ personBuilder
 [Stream]: https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html
 [Multiset]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multiset
 [Map]: http://docs.oracle.com/javase/tutorial/collections/interfaces/map.html
+[BiMap]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#bimap
 [Multimap]: https://github.com/google/guava/wiki/NewCollectionTypesExplained#multimap
 [natural ordering]: https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html
 [sort]: http://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#sort-java.util.List-
