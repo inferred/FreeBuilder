@@ -20,6 +20,7 @@ import static org.inferred.freebuilder.processor.property.ElementFactory.TYPES;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.inferred.freebuilder.FreeBuilder;
@@ -372,6 +373,129 @@ public class BiMapMutateMethodTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
                 convention.get(), exampleBiMap(0, 1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void putAllModifiesUnderlyingProperty() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.putAll(%s))", exampleBiMap(1, 1, 2, 2))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.get(), exampleBiMap(0, 0, 1, 1, 2, 2))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void putAllChecksArguments() {
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage("key " + keys.errorMessage());
+    }
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .mutateItems(items -> items.putAll(%s.of(%s, %s)));",
+                ImmutableMap.class, keys.invalidExample(), values.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void putAllReplacesDuplicateKey() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.putAll(%s))", exampleBiMap(0, 1, 2, 3))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.get(), exampleBiMap(0, 1, 2, 3))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void putAllRejectsDuplicateValue() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("value already present: " + values.exampleToString(0));
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.putAll(%s));", exampleBiMap(1, 0, 2, 3))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void inversePutAllModifiesUnderlyingProperty() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.inverse().putAll(%s))",
+                exampleInverseBiMap(1, 1, 2, 2))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.get(), exampleBiMap(0, 0, 1, 1, 2, 2))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void inversePutAllChecksArguments() {
+    if (checked) {
+      thrown.expect(IllegalArgumentException.class);
+      thrown.expectMessage("key " + keys.errorMessage());
+    }
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .mutateItems(items -> items.inverse().putAll(%s.of(%s, %s)));",
+                ImmutableMap.class, values.example(0), keys.invalidExample())
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void inversePutAllReplacesDuplicateValue() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.inverse().putAll(%s))",
+                exampleInverseBiMap(0, 1, 2, 3))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.get(), exampleBiMap(1, 0, 3, 2))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void inversePutAllRejectsDuplicateKey() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("value already present: " + keys.exampleToString(0));
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.inverse().putAll(%s));",
+                exampleInverseBiMap(1, 0, 2, 3))
             .build())
         .runTest();
   }
@@ -845,6 +969,18 @@ public class BiMapMutateMethodTest {
   private String exampleBiMap(int key1, int value1, int key2, int value2) {
     return String.format("ImmutableBiMap.of(%s, %s, %s, %s)",
         keys.example(key1), values.example(value1), keys.example(key2), values.example(value2));
+  }
+
+  private String exampleInverseBiMap(int value1, int key1, int value2, int key2) {
+    return String.format("ImmutableBiMap.of(%s, %s, %s, %s)",
+        values.example(value1), keys.example(key1), values.example(value2), keys.example(key2));
+  }
+
+  private String exampleBiMap(int key1, int value1, int key2, int value2, int key3, int value3) {
+    return String.format("ImmutableBiMap.of(%s, %s, %s, %s, %s, %s)",
+        keys.example(key1), values.example(value1),
+        keys.example(key2), values.example(value2),
+        keys.example(key3), values.example(value3));
   }
 
   private static TestBuilder testBuilder() {
