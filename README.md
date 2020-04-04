@@ -359,7 +359,7 @@ A <code>[Map][]</code> property called 'albums' would generate:
 | Method | Description |
 |:------:| ----------- |
 | `putAlbums(int key, String value)` | Associates `key` with `value` in albums.  Throws a NullPointerException if either parameter is null. Replaces any existing entry. |
-| `putAllAlbums(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in albums. Throws a NullPointerException if the map is null or contains a null key or value. Throws an IllegalArgumentException if any key is already present. |
+| `putAllAlbums(Map<? extends Integer, ? extends String> map)` | Associates all of `map`'s keys and values in albums. Throws a NullPointerException if the map is null or contains a null key or value. Replaces any existing mapping for all keys in `map`. |
 | `removeAlbums(int key)` | Removes the mapping for `key` from albums. Throws a NullPointerException if the parameter is null. Does nothing if the key is not present. |
 | `mutateAlbums(​Consumer<Map<Integer, String>> mutator)` | Invokes the [Consumer] `mutator` with the map of albums. Throws a NullPointerException if `mutator` is null. As `mutator` is a void consumer, any value returned from a lambda will be ignored, so be careful not to call pure functions like [stream()] expecting the returned map to replace the existing map. |
 | `clearAlbums()` | Removes all mappings from albums, leaving it empty. |
