@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -762,6 +763,42 @@ public class BiMapMutateMethodTest {
             .addLine("    .mutateItems(items -> items.inverse().clear())")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEmpty();", convention.get())
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void valuesReturnsLiveViewOfValuesInMap() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("%s<%s<%s>> values = new %s<>();",
+                List.class, Set.class, values.type(), ArrayList.class)
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .mutateItems(items -> values.add(items.values()));")
+            .addLine("assertThat(values.get(0)).containsExactly(%s);", values.examples(0, 1))
+            .addLine("builder.putItems(%s, %s);", keys.example(2), values.example(2))
+            .addLine("assertThat(values.get(0)).containsExactly(%s);", values.examples(0, 1, 2))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void inverseValuesReturnsLiveViewOfKeysInMap() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("%s<%s<%s>> keys = new %s<>();",
+                List.class, Set.class, keys.type(), ArrayList.class)
+            .addLine("DataType.Builder builder = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+            .addLine("    .mutateItems(items -> keys.add(items.inverse().values()));")
+            .addLine("assertThat(keys.get(0)).containsExactly(%s);", keys.examples(0, 1))
+            .addLine("builder.putItems(%s, %s);", keys.example(2), values.example(2))
+            .addLine("assertThat(keys.get(0)).containsExactly(%s);", keys.examples(0, 1, 2))
             .build())
         .runTest();
   }
