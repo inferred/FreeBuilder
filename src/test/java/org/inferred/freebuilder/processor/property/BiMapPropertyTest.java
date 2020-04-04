@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
 
@@ -42,7 +43,6 @@ import org.inferred.freebuilder.processor.source.testing.ParameterizedBehaviorTe
 import org.inferred.freebuilder.processor.source.testing.TestBuilder;
 import org.inferred.freebuilder.processor.testtype.NonComparable;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -148,7 +148,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s)", convention.get())
-            .addLine("    .isEqualTo(%s);", exampleBiMap(0, 0, 1, 1))
+            .addLine("    .isEqualTo(%s);", exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -186,7 +186,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 1))
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(0, 1))
             .build())
         .runTest();
   }
@@ -201,7 +201,7 @@ public class BiMapPropertyTest {
             .addLine("    .forcePutItems(%s, %s)", keys.example(1), values.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s)", convention.get())
-            .addLine("    .isEqualTo(%s);", exampleBiMap(0, 0, 1, 1))
+            .addLine("    .isEqualTo(%s);", exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -239,7 +239,7 @@ public class BiMapPropertyTest {
             .addLine("    .forcePutItems(%s, %s)", keys.example(0), values.example(0))
             .addLine("    .forcePutItems(%s, %s)", keys.example(0), values.example(1))
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 1))
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(0, 1))
             .build())
         .runTest();
   }
@@ -250,10 +250,10 @@ public class BiMapPropertyTest {
         .with(biMapPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s)", exampleBiMap(0, 0, 1, 1))
+            .addLine("    .putAllItems(%s)", exampleMap(0, 0, 1, 1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -294,11 +294,11 @@ public class BiMapPropertyTest {
         .with(biMapPropertyType)
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s)", exampleBiMap(0, 0, 1, 1))
-            .addLine("    .putAllItems(%s)", exampleBiMap(0, 2, 3, 3))
+            .addLine("    .putAllItems(%s)", exampleMap(0, 0, 1, 1))
+            .addLine("    .putAllItems(%s)", exampleMap(0, 2, 3, 3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 2, 1, 1, 3, 3))
+                convention.get(), exampleMap(0, 2, 1, 1, 3, 3))
             .build())
         .runTest();
   }
@@ -311,8 +311,8 @@ public class BiMapPropertyTest {
         .with(biMapPropertyType)
         .with(testBuilder()
             .addLine("new DataType.Builder()")
-            .addLine("    .putAllItems(%s)", exampleBiMap(0, 0, 1, 1))
-            .addLine("    .putAllItems(%s);", exampleBiMap(2, 0, 3, 3))
+            .addLine("    .putAllItems(%s)", exampleMap(0, 0, 1, 1))
+            .addLine("    .putAllItems(%s);", exampleMap(2, 0, 3, 3))
             .build())
         .runTest();
   }
@@ -329,7 +329,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(2), values.example(4))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 2, 2, 4))
+                convention.get(), exampleMap(0, 2, 2, 4))
             .build())
         .runTest();
   }
@@ -346,7 +346,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(2), values.example(4))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 2, 2, 4))
+                convention.get(), exampleMap(0, 2, 2, 4))
             .build())
         .runTest();
   }
@@ -362,7 +362,7 @@ public class BiMapPropertyTest {
             .addLine("    .removeKeyFromItems(%s)", keys.example(4))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 2, 1, 3))
+                convention.get(), exampleMap(0, 2, 1, 3))
             .build())
         .runTest();
   }
@@ -378,7 +378,7 @@ public class BiMapPropertyTest {
             .addLine("    .removeValueFromItems(%s)", values.example(4))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 2, 1, 3))
+                convention.get(), exampleMap(0, 2, 1, 3))
             .build())
         .runTest();
   }
@@ -424,7 +424,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(3), values.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 2, 3, 3))
+                convention.get(), exampleMap(0, 2, 3, 3))
             .build())
         .runTest();
   }
@@ -440,12 +440,12 @@ public class BiMapPropertyTest {
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.putItems(%s, %s);", keys.example(0), values.example(0))
             .addLine("builder.putItems(%s, %s);", keys.example(1), values.example(1))
-            .addLine("assertThat(itemsView).isEqualTo(%s);", exampleBiMap(0, 0, 1, 1))
+            .addLine("assertThat(itemsView).isEqualTo(%s);", exampleMap(0, 0, 1, 1))
             .addLine("builder.clearItems();")
             .addLine("assertThat(itemsView).isEmpty();")
             .addLine("builder.putItems(%s, %s);", keys.example(0), values.example(2))
             .addLine("builder.putItems(%s, %s);", keys.example(3), values.example(3))
-            .addLine("assertThat(itemsView).isEqualTo(%s);", exampleBiMap(0, 2, 3, 3))
+            .addLine("assertThat(itemsView).isEqualTo(%s);", exampleMap(0, 2, 3, 3))
             .build())
         .runTest();
   }
@@ -500,7 +500,7 @@ public class BiMapPropertyTest {
             .addLine("    .mergeFrom(template)")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -517,7 +517,7 @@ public class BiMapPropertyTest {
             .addLine("    .mergeFrom(template)")
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -535,7 +535,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(3), values.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 2, 3, 3))
+                convention.get(), exampleMap(0, 2, 3, 3))
             .build())
         .runTest();
   }
@@ -565,7 +565,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(3), values.example(3))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 2, 3, 3))
+                convention.get(), exampleMap(0, 2, 3, 3))
             .build())
         .runTest();
   }
@@ -583,7 +583,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(1), values.example(2))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 2))
+                convention.get(), exampleMap(0, 0, 1, 2))
             .build())
         .runTest();
   }
@@ -607,7 +607,7 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
@@ -632,7 +632,7 @@ public class BiMapPropertyTest {
     behaviorTester
         .with(validatedType)
         .with(testBuilder()
-            .addLine("new DataType.Builder().putAllItems(ImmutableBiMap.of(%s, %s, %s, %s));",
+            .addLine("new DataType.Builder().putAllItems(ImmutableMap.of(%s, %s, %s, %s));",
                 keys.example(0), values.example(0), keys.invalidExample(), values.example(1))
             .build())
         .runTest();
@@ -669,10 +669,6 @@ public class BiMapPropertyTest {
   }
 
   @Test
-  // Ignored as not all BiMaps are supported by jackson.
-  // See https://github.com/FasterXML/jackson-datatypes-collections
-  // File GuavaDeserializers.
-  @Ignore
   public void testJacksonInteroperability() {
     // See also https://github.com/google/FreeBuilder/issues/68
     assumeTrue(keys.isSerializableAsMapKey());
@@ -698,22 +694,22 @@ public class BiMapPropertyTest {
             .addLine("String json = mapper.writeValueAsString(value);")
             .addLine("DataType clone = mapper.readValue(json, DataType.class);")
             .addLine("assertThat(clone.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
+                convention.get(), exampleMap(0, 0, 1, 1))
             .build())
         .runTest();
   }
 
-  private String exampleBiMap(int key, int value) {
-    return String.format("ImmutableBiMap.of(%s, %s)", keys.example(key), values.example(value));
+  private String exampleMap(int key, int value) {
+    return String.format("ImmutableMap.of(%s, %s)", keys.example(key), values.example(value));
   }
 
-  private String exampleBiMap(int key1, int value1, int key2, int value2) {
-    return String.format("ImmutableBiMap.of(%s, %s, %s, %s)",
+  private String exampleMap(int key1, int value1, int key2, int value2) {
+    return String.format("ImmutableMap.of(%s, %s, %s, %s)",
         keys.example(key1), values.example(value1), keys.example(key2), values.example(value2));
   }
 
-  private String exampleBiMap(int key1, int value1, int key2, int value2, int key3, int value3) {
-    return String.format("ImmutableBiMap.of(%s, %s, %s, %s, %s, %s)",
+  private String exampleMap(int key1, int value1, int key2, int value2, int key3, int value3) {
+    return String.format("ImmutableMap.of(%s, %s, %s, %s, %s, %s)",
         keys.example(key1), values.example(value1),
         keys.example(key2), values.example(value2),
         keys.example(key3), values.example(value3));
@@ -723,6 +719,6 @@ public class BiMapPropertyTest {
     return new TestBuilder()
         .addImport("com.example.DataType")
         .addImport(BiMap.class)
-        .addImport(ImmutableBiMap.class);
+        .addImport(ImmutableMap.class);
   }
 }
