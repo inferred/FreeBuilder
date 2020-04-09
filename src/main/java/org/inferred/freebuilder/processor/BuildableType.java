@@ -52,7 +52,7 @@ import javax.lang.model.util.Types;
  * API to proto or &#64;FreeBuilder:<ul>
  * <li> a public constructor, or static builder()/newBuilder() method;
  * <li> build(), buildPartial() and clear() methods; and
- * <li> a mergeWith(Value) method.
+ * <li> a mergeFrom(Value) method.
  * </ul>
  */
 @FreeBuilder
