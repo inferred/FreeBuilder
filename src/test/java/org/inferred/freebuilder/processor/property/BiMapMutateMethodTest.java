@@ -172,6 +172,22 @@ public class BiMapMutateMethodTest {
   }
 
   @Test
+  public void putReplacesDuplicateKeyAndValue() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.put(%s, %s))",
+                keys.example(0), values.example(0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.get(), exampleBiMap(0, 0))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void putRejectsDuplicateValue() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("value already present: " + values.exampleToString(0));
@@ -230,6 +246,22 @@ public class BiMapMutateMethodTest {
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);",
                 convention.get(), exampleBiMap(1, 0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void inversePutReplacesDuplicateKeyAndValue() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.inverse().put(%s, %s))",
+                values.example(0), keys.example(0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);",
+                convention.get(), exampleBiMap(0, 0))
             .build())
         .runTest();
   }
@@ -660,6 +692,19 @@ public class BiMapMutateMethodTest {
   }
 
   @Test
+  public void callSetValueOnEntryAllowsDuplicateKeyAndValue() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s));",
+                values.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void callSetValueOnEntryModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
@@ -670,6 +715,24 @@ public class BiMapMutateMethodTest {
                 values.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void callSetValueReturnsOldValue() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> {")
+            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                keys.type(), values.type())
+            .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
+            .addLine("        %s oldValue = entry.setValue(%s);", values.type(), values.example(2))
+            .addLine("        assertThat(oldValue).isEqualTo(%s);", values.example(0))
+            .addLine("    });")
             .build())
         .runTest();
   }
@@ -705,6 +768,20 @@ public class BiMapMutateMethodTest {
             .addLine("    .mutateItems(items -> items")
             .addLine("        .inverse().entrySet().iterator().next().setValue(%s));",
                 keys.example(1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void callSetValueOnInverseEntryAllowsDuplicateKeyAndValue() {
+    behaviorTester
+        .with(bimapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .mutateItems(items -> items")
+            .addLine("        .inverse().entrySet().iterator().next().setValue(%s));",
+                keys.example(0))
             .build())
         .runTest();
   }

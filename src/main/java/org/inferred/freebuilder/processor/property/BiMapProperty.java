@@ -86,10 +86,10 @@ class BiMapProperty extends PropertyCodeGenerator {
           config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
       boolean overridesForcePutMethod = hasForcePutMethodOverride(
           config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
-      
+
       if (putMethodOverride.isPresent() && !overridesForcePutMethod) {
         config.getEnvironment().getMessager().printMessage(
-            Kind.ERROR, 
+            Kind.ERROR,
             "Overriding "
                 + putMethod(property)
                 + " will not correctly validate all inputs. Please override "
@@ -226,9 +226,10 @@ class BiMapProperty extends PropertyCodeGenerator {
         putMethod(property),
         unboxedKeyType.orElse(keyType),
         unboxedValueType.orElse(valueType));
-    code.addLine("  %s.checkArgument(", Preconditions.class)
-        .addLine("      !%s.containsValue(value), \"value already present: %%s\", value);",
-            property.getField())
+    code.addLine("  %s oldKey = %s.inverse().get(value);", keyType, property.getField())
+        .addLine("  %s.checkArgument(", Preconditions.class)
+        .addLine("      oldKey == null || %s.equals(oldKey, key), \"value already present: %%s\", value);",
+            Objects.class)
         .addLine("  %s(key, value);", forcePutMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");

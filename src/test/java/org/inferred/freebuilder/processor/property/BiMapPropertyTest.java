@@ -178,7 +178,7 @@ public class BiMapPropertyTest {
   }
 
   @Test
-  public void testPut_duplicate() {
+  public void testPut_duplicateKey() {
     behaviorTester
         .with(biMapPropertyType)
         .with(testBuilder()
@@ -187,6 +187,33 @@ public class BiMapPropertyTest {
             .addLine("    .putItems(%s, %s)", keys.example(0), values.example(1))
             .addLine("    .build();")
             .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(0, 1))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPut_duplicateValue() {
+    thrown.expect(IllegalArgumentException.class);
+    behaviorTester
+        .with(biMapPropertyType)
+        .with(testBuilder()
+            .addLine("new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s);", keys.example(1), values.example(0))
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testPut_duplicateKeyAndValue() {
+    behaviorTester
+        .with(biMapPropertyType)
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+            .addLine("    .build();")
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(0, 0))
             .build())
         .runTest();
   }
@@ -237,9 +264,9 @@ public class BiMapPropertyTest {
         .with(testBuilder()
             .addLine("DataType value = new DataType.Builder()")
             .addLine("    .forcePutItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .forcePutItems(%s, %s)", keys.example(0), values.example(1))
+            .addLine("    .forcePutItems(%s, %s)", keys.example(1), values.example(0))
             .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(0, 1))
+            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleMap(1, 0))
             .build())
         .runTest();
   }
