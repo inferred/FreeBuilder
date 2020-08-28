@@ -228,7 +228,8 @@ class BiMapProperty extends PropertyCodeGenerator {
         unboxedValueType.orElse(valueType));
     code.addLine("  %s oldKey = %s.inverse().get(value);", keyType, property.getField())
         .addLine("  %s.checkArgument(", Preconditions.class)
-        .addLine("      oldKey == null || %s.equals(oldKey, key), \"value already present: %%s\", value);",
+        .addLine("      oldKey == null || %s.equals(oldKey, key),"
+                + " \"value already present: %%s\", value);",
             Objects.class)
         .addLine("  %s(key, value);", forcePutMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder())

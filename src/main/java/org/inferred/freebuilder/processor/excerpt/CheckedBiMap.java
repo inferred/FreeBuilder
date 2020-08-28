@@ -50,7 +50,8 @@ public class CheckedBiMap extends ValueType implements Excerpt {
         .addLine("  @Override public V put(K key, V value) {")
         .addLine("    K oldKey = biMap.inverse().get(value);")
         .addLine("    %s.checkArgument(", Preconditions.class)
-        .addLine("        oldKey == null || %s.equals(oldKey, key), \"value already present: %%s\", value);",
+        .addLine("        oldKey == null || %s.equals(oldKey, key),"
+                + " \"value already present: %%s\", value);",
             Objects.class)
         .addLine("    V oldValue = biMap.get(key);")
         .addLine("    forcePut.accept(key, value);")
@@ -130,7 +131,8 @@ public class CheckedBiMap extends ValueType implements Excerpt {
           .addLine("  @Override public V setValue(V value) {")
           .addLine("    K oldKey = biMap.inverse().get(value);")
           .addLine("    %s.checkArgument(", Preconditions.class)
-          .addLine("        oldKey == null || %s.equals(oldKey, key), \"value already present: %%s\", value);",
+          .addLine("        oldKey == null || %s.equals(oldKey, key),"
+                  + " \"value already present: %%s\", value);",
               Objects.class)
           .addLine("    V oldValue = this.value;")
           .addLine("    this.value = %s.requireNonNull(value);", Objects.class)
