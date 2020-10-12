@@ -743,8 +743,38 @@ Run **Build > Rebuild Project**, then right-click the new `generated` folder
 (this may have a different name if you have changed the **Production sources
 directory** setting) and select **Mark Directory As > Generated Sources Root**.
 
+
+If you are using Maven to build your project within IntelliJ, you can alternatively
+configure the POM in a way that enables IntelliJ to automatically detect annotation
+processors when the POM is reloaded:
+
+```
+<plugin>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessors>
+            <annotationProcessor>org.inferred.freebuilder.processor.Processor</annotationProcessor>
+        </annotationProcessors>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.inferred</groupId>
+                <artifactId>freebuilder</artifactId>
+                <version>2.6.2</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
+```
+
+Click **Reload All Maven Projects** in the Maven tool window to force a reload if you have not configured IntelliJ
+for automatic reloading. The Annotation processor should appear in **Build, Execution, Deployment > Compiler > Annotation
+Processors** automatically, with all needed settings applied.
+
+In case you need to use more than one annotation processor, you'll find an example at https://github.com/inferred/FreeBuilder/issues/435 .
+
 [IntelliJ 14.0.3 documentation]: http://www.jetbrains.com/idea/webhelp/configuring-annotation-processing.html
 [Auto Issue #106]: https://github.com/google/auto/issues/106
+
 
 Release notes
 -------------
