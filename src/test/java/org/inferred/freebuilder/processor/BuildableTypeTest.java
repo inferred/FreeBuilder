@@ -36,6 +36,22 @@ public class BuildableTypeTest {
   }
 
   @Test
+  public void simpleFreebuilderAnnotatedTypeWithExplicitBuildMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    public DataType build();",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertTrue(result.isPresent());
+  }
+
+  @Test
   public void freebuilderAnnotatedTypeWithHiddenBuildMethod() {
     TypeElement type = model.newType(
         "package com.example;",
@@ -44,6 +60,38 @@ public class BuildableTypeTest {
         "  int value();",
         "  class Builder extends DataType_Builder {",
         "    protected DataType build();",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void freebuilderAnnotatedTypeWithExplicitBuildPartialMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    public DataType buildPartial();",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertTrue(result.isPresent());
+  }
+
+  @Test
+  public void freebuilderAnnotatedTypeWithHiddenBuildPartialMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    protected DataType buildPartial();",
         "  }",
         "}");
     Optional<DeclaredType> result = maybeBuilder(

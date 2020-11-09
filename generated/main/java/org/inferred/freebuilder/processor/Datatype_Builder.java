@@ -57,6 +57,7 @@ abstract class Datatype_Builder {
     BUILDER_SERIALIZABLE("builderSerializable"),
     HAS_TO_BUILDER_METHOD("hasToBuilderMethod"),
     BUILD_METHOD("buildMethod"),
+    BUILD_PARTIAL_METHOD("buildPartialMethod"),
     VALUE_TYPE_VISIBILITY("valueTypeVisibility"),
     ;
 
@@ -93,6 +94,7 @@ abstract class Datatype_Builder {
   private boolean builderSerializable;
   private boolean hasToBuilderMethod;
   private NameAndVisibility buildMethod;
+  private NameAndVisibility buildPartialMethod;
   private List<Excerpt> generatedBuilderAnnotations = ImmutableList.of();
   private List<Excerpt> valueTypeAnnotations = ImmutableList.of();
   private Datatype.Visibility valueTypeVisibility;
@@ -700,6 +702,42 @@ abstract class Datatype_Builder {
   }
 
   /**
+   * Sets the value to be returned by {@link Datatype#getBuildPartialMethod()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code buildPartialMethod} is null
+   */
+  public Datatype.Builder setBuildPartialMethod(NameAndVisibility buildPartialMethod) {
+    this.buildPartialMethod = Objects.requireNonNull(buildPartialMethod);
+    _unsetProperties.remove(Property.BUILD_PARTIAL_METHOD);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getBuildPartialMethod()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapBuildPartialMethod(UnaryOperator<NameAndVisibility> mapper) {
+    Objects.requireNonNull(mapper);
+    return setBuildPartialMethod(mapper.apply(getBuildPartialMethod()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Datatype#getBuildPartialMethod()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public NameAndVisibility getBuildPartialMethod() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Property.BUILD_PARTIAL_METHOD), "buildPartialMethod not set");
+    return buildPartialMethod;
+  }
+
+  /**
    * Adds {@code element} to the list to be returned from {@link
    * Datatype#getGeneratedBuilderAnnotations()}.
    *
@@ -1135,6 +1173,10 @@ abstract class Datatype_Builder {
         || !Objects.equals(value.getBuildMethod(), defaults.getBuildMethod())) {
       setBuildMethod(value.getBuildMethod());
     }
+    if (defaults._unsetProperties.contains(Property.BUILD_PARTIAL_METHOD)
+        || !Objects.equals(value.getBuildPartialMethod(), defaults.getBuildPartialMethod())) {
+      setBuildPartialMethod(value.getBuildPartialMethod());
+    }
     if (value instanceof Value && generatedBuilderAnnotations == ImmutableList.<Excerpt>of()) {
       generatedBuilderAnnotations = ImmutableList.copyOf(value.getGeneratedBuilderAnnotations());
     } else {
@@ -1225,6 +1267,12 @@ abstract class Datatype_Builder {
             || !Objects.equals(template.getBuildMethod(), defaults.getBuildMethod()))) {
       setBuildMethod(template.getBuildMethod());
     }
+    if (!base._unsetProperties.contains(Property.BUILD_PARTIAL_METHOD)
+        && (defaults._unsetProperties.contains(Property.BUILD_PARTIAL_METHOD)
+            || !Objects.equals(
+                template.getBuildPartialMethod(), defaults.getBuildPartialMethod()))) {
+      setBuildPartialMethod(template.getBuildPartialMethod());
+    }
     addAllGeneratedBuilderAnnotations(base.generatedBuilderAnnotations);
     addAllValueTypeAnnotations(base.valueTypeAnnotations);
     if (!base._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
@@ -1258,6 +1306,7 @@ abstract class Datatype_Builder {
     builderSerializable = defaults.builderSerializable;
     hasToBuilderMethod = defaults.hasToBuilderMethod;
     buildMethod = defaults.buildMethod;
+    buildPartialMethod = defaults.buildPartialMethod;
     clearGeneratedBuilderAnnotations();
     clearValueTypeAnnotations();
     valueTypeVisibility = defaults.valueTypeVisibility;
@@ -1320,6 +1369,7 @@ abstract class Datatype_Builder {
     private final boolean builderSerializable;
     private final boolean hasToBuilderMethod;
     private final NameAndVisibility buildMethod;
+    private final NameAndVisibility buildPartialMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Visibility valueTypeVisibility;
@@ -1340,6 +1390,7 @@ abstract class Datatype_Builder {
       this.builderSerializable = builder.builderSerializable;
       this.hasToBuilderMethod = builder.hasToBuilderMethod;
       this.buildMethod = builder.buildMethod;
+      this.buildPartialMethod = builder.buildPartialMethod;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
       this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
       this.valueTypeVisibility = builder.valueTypeVisibility;
@@ -1417,6 +1468,11 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public NameAndVisibility getBuildPartialMethod() {
+      return buildPartialMethod;
+    }
+
+    @Override
     public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
       return generatedBuilderAnnotations;
     }
@@ -1453,6 +1509,7 @@ abstract class Datatype_Builder {
       builder.builderSerializable = builderSerializable;
       builder.hasToBuilderMethod = hasToBuilderMethod;
       builder.buildMethod = buildMethod;
+      builder.buildPartialMethod = buildPartialMethod;
       builder.generatedBuilderAnnotations = generatedBuilderAnnotations;
       builder.valueTypeAnnotations = valueTypeAnnotations;
       builder.valueTypeVisibility = valueTypeVisibility;
@@ -1481,6 +1538,7 @@ abstract class Datatype_Builder {
           && builderSerializable == other.builderSerializable
           && hasToBuilderMethod == other.hasToBuilderMethod
           && Objects.equals(buildMethod, other.buildMethod)
+          && Objects.equals(buildPartialMethod, other.buildPartialMethod)
           && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
           && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
           && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
@@ -1504,6 +1562,7 @@ abstract class Datatype_Builder {
           builderSerializable,
           hasToBuilderMethod,
           buildMethod,
+          buildPartialMethod,
           generatedBuilderAnnotations,
           valueTypeAnnotations,
           valueTypeVisibility,
@@ -1545,6 +1604,8 @@ abstract class Datatype_Builder {
           .append(hasToBuilderMethod)
           .append(", buildMethod=")
           .append(buildMethod)
+          .append(", buildPartialMethod=")
+          .append(buildPartialMethod)
           .append(", generatedBuilderAnnotations=")
           .append(generatedBuilderAnnotations)
           .append(", valueTypeAnnotations=")
@@ -1579,6 +1640,7 @@ abstract class Datatype_Builder {
     private final boolean builderSerializable;
     private final boolean hasToBuilderMethod;
     private final NameAndVisibility buildMethod;
+    private final NameAndVisibility buildPartialMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Visibility valueTypeVisibility;
@@ -1600,6 +1662,7 @@ abstract class Datatype_Builder {
       this.builderSerializable = builder.builderSerializable;
       this.hasToBuilderMethod = builder.hasToBuilderMethod;
       this.buildMethod = builder.buildMethod;
+      this.buildPartialMethod = builder.buildPartialMethod;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
       this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
       this.valueTypeVisibility = builder.valueTypeVisibility;
@@ -1711,6 +1774,14 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public NameAndVisibility getBuildPartialMethod() {
+      if (_unsetProperties.contains(Property.BUILD_PARTIAL_METHOD)) {
+        throw new UnsupportedOperationException("buildPartialMethod not set");
+      }
+      return buildPartialMethod;
+    }
+
+    @Override
     public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
       return generatedBuilderAnnotations;
     }
@@ -1757,6 +1828,7 @@ abstract class Datatype_Builder {
       builder.builderSerializable = builderSerializable;
       builder.hasToBuilderMethod = hasToBuilderMethod;
       builder.buildMethod = buildMethod;
+      builder.buildPartialMethod = buildPartialMethod;
       builder.generatedBuilderAnnotations = generatedBuilderAnnotations;
       builder.valueTypeAnnotations = valueTypeAnnotations;
       builder.valueTypeVisibility = valueTypeVisibility;
@@ -1786,6 +1858,7 @@ abstract class Datatype_Builder {
           && builderSerializable == other.builderSerializable
           && hasToBuilderMethod == other.hasToBuilderMethod
           && Objects.equals(buildMethod, other.buildMethod)
+          && Objects.equals(buildPartialMethod, other.buildPartialMethod)
           && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
           && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
           && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
@@ -1810,6 +1883,7 @@ abstract class Datatype_Builder {
           builderSerializable,
           hasToBuilderMethod,
           buildMethod,
+          buildPartialMethod,
           generatedBuilderAnnotations,
           valueTypeAnnotations,
           valueTypeVisibility,
@@ -1859,6 +1933,9 @@ abstract class Datatype_Builder {
       }
       if (!_unsetProperties.contains(Property.BUILD_METHOD)) {
         result.append(", buildMethod=").append(buildMethod);
+      }
+      if (!_unsetProperties.contains(Property.BUILD_PARTIAL_METHOD)) {
+        result.append(", buildPartialMethod=").append(buildPartialMethod);
       }
       result
           .append(", generatedBuilderAnnotations=")

@@ -284,7 +284,10 @@ public class GeneratedBuilder extends GeneratedType {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("@%s()", VisibleForTesting.class);
     }
-    code.addLine("public %s buildPartial() {", datatype.getType())
+    code.addLine("%s%s %s() {",
+            datatype.getBuildPartialMethod().visibility(),
+            datatype.getType(),
+            datatype.getBuildPartialMethod().name())
         .addLine("  return %s(this);", datatype.getPartialType().constructor())
         .addLine("}");
   }
@@ -542,7 +545,7 @@ public class GeneratedBuilder extends GeneratedType {
               datatype.getType().declarationParameters(), datatype.getBuilder())
           .addLine("    @Override public %s %s() {",
               datatype.getType(), datatype.getBuildMethod().name())
-          .addLine("      return buildPartial();")
+          .addLine("      return %s();", datatype.getBuildPartialMethod().name())
           .addLine("    }")
           .addLine("  }");
     }

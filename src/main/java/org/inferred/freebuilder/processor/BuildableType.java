@@ -138,9 +138,8 @@ public abstract class BuildableType {
      */
     if (findAnnotationMirror(element, FreeBuilder.class).isPresent()) {
       // Make sure the user isn't preventing us generating required methods.
-      NameAndVisibility buildMethod =
-          pickName(builderMirror, elements, types, element.asType(), "build");
-      if (buildMethod.name() != "build" || buildMethod.visibility() != Visibility.PUBLIC) {
+      if (methodIsObscured(builderMirror, elements, types, type, "build")
+         || methodIsObscured(builderMirror, elements, types, type, "buildPartial")) {
         return Optional.empty();
       }
     } else {
@@ -172,6 +171,17 @@ public abstract class BuildableType {
     }
 
     return Optional.of(builderMirror);
+  }
+
+  private static boolean methodIsObscured(
+      DeclaredType targetType,
+      Elements elements,
+      Types types,
+      DeclaredType returnType,
+      String methodName) {
+    NameAndVisibility buildMethod =
+        pickName(targetType, elements, types, returnType, methodName);
+    return buildMethod.name() != methodName || buildMethod.visibility() != Visibility.PUBLIC;
   }
 
   public static BuildableType create(

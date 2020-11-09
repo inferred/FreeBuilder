@@ -1247,6 +1247,38 @@ public class AnalyserTest {
   }
 
   @Test
+  public void protectedBuildPartialMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    protected DataType buildPartial() {",
+        "      return super.buildPartial();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildPartialMethod())
+        .isEqualTo(NameAndVisibility.of("buildPartial", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void privateBuildPartialMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    private DataType buildPartial() {",
+        "      return super._buildPartialImpl();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildPartialMethod())
+        .isEqualTo(NameAndVisibility.of("_buildPartialImpl", Visibility.PACKAGE));
+  }
+
+  @Test
   public void privateNestedType() {
     try {
       analyser.analyse((TypeElement) model.newElementWithMarker(

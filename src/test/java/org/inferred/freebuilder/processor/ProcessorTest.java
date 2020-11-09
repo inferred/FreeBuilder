@@ -1240,6 +1240,64 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testProtectedBuildPartialMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("  int getValue();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected DataType buildPartial() {")
+            .addLine("      return super.buildPartial();")
+            .addLine("    }")
+            .addLine("    public DataType buildFraction() {")
+            .addLine("      return buildPartial();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildFraction();")
+            .addLine("assertEquals(\"fred\", value.getName());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleBuildPartialMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("  int getValue();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int buildPartial() {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public DataType buildFraction() {")
+            .addLine("      return _buildPartialImpl();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildFraction();")
+            .addLine("assertEquals(\"fred\", value.getName());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testToBuilder() {
     behaviorTester
         .with(new Processor(features))

@@ -146,6 +146,7 @@ class Analyser {
         .setPropertyEnum(propertyType.withParameters())
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setBuildMethod(pickName(builder, elements, types, type.asType(), "build"))
+        .setBuildPartialMethod(pickName(builder, elements, types, type.asType(), "buildPartial"))
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))
