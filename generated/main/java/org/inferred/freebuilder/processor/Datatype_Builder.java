@@ -56,6 +56,7 @@ abstract class Datatype_Builder {
     PROPERTY_ENUM("propertyEnum"),
     BUILDER_SERIALIZABLE("builderSerializable"),
     HAS_TO_BUILDER_METHOD("hasToBuilderMethod"),
+    BUILD_METHOD("buildMethod"),
     VALUE_TYPE_VISIBILITY("valueTypeVisibility"),
     ;
 
@@ -91,6 +92,7 @@ abstract class Datatype_Builder {
       new LinkedHashMap<>();
   private boolean builderSerializable;
   private boolean hasToBuilderMethod;
+  private NameAndVisibility buildMethod;
   private List<Excerpt> generatedBuilderAnnotations = ImmutableList.of();
   private List<Excerpt> valueTypeAnnotations = ImmutableList.of();
   private Datatype.Visibility valueTypeVisibility;
@@ -662,6 +664,42 @@ abstract class Datatype_Builder {
   }
 
   /**
+   * Sets the value to be returned by {@link Datatype#getBuildMethod()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code buildMethod} is null
+   */
+  public Datatype.Builder setBuildMethod(NameAndVisibility buildMethod) {
+    this.buildMethod = Objects.requireNonNull(buildMethod);
+    _unsetProperties.remove(Property.BUILD_METHOD);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getBuildMethod()} by applying {@code
+   * mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapBuildMethod(UnaryOperator<NameAndVisibility> mapper) {
+    Objects.requireNonNull(mapper);
+    return setBuildMethod(mapper.apply(getBuildMethod()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Datatype#getBuildMethod()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public NameAndVisibility getBuildMethod() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Property.BUILD_METHOD), "buildMethod not set");
+    return buildMethod;
+  }
+
+  /**
    * Adds {@code element} to the list to be returned from {@link
    * Datatype#getGeneratedBuilderAnnotations()}.
    *
@@ -1093,6 +1131,10 @@ abstract class Datatype_Builder {
         || value.getHasToBuilderMethod() != defaults.getHasToBuilderMethod()) {
       setHasToBuilderMethod(value.getHasToBuilderMethod());
     }
+    if (defaults._unsetProperties.contains(Property.BUILD_METHOD)
+        || !Objects.equals(value.getBuildMethod(), defaults.getBuildMethod())) {
+      setBuildMethod(value.getBuildMethod());
+    }
     if (value instanceof Value && generatedBuilderAnnotations == ImmutableList.<Excerpt>of()) {
       generatedBuilderAnnotations = ImmutableList.copyOf(value.getGeneratedBuilderAnnotations());
     } else {
@@ -1178,6 +1220,11 @@ abstract class Datatype_Builder {
             || template.getHasToBuilderMethod() != defaults.getHasToBuilderMethod())) {
       setHasToBuilderMethod(template.getHasToBuilderMethod());
     }
+    if (!base._unsetProperties.contains(Property.BUILD_METHOD)
+        && (defaults._unsetProperties.contains(Property.BUILD_METHOD)
+            || !Objects.equals(template.getBuildMethod(), defaults.getBuildMethod()))) {
+      setBuildMethod(template.getBuildMethod());
+    }
     addAllGeneratedBuilderAnnotations(base.generatedBuilderAnnotations);
     addAllValueTypeAnnotations(base.valueTypeAnnotations);
     if (!base._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
@@ -1210,6 +1257,7 @@ abstract class Datatype_Builder {
     standardMethodUnderrides.clear();
     builderSerializable = defaults.builderSerializable;
     hasToBuilderMethod = defaults.hasToBuilderMethod;
+    buildMethod = defaults.buildMethod;
     clearGeneratedBuilderAnnotations();
     clearValueTypeAnnotations();
     valueTypeVisibility = defaults.valueTypeVisibility;
@@ -1271,6 +1319,7 @@ abstract class Datatype_Builder {
     private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
     private final boolean builderSerializable;
     private final boolean hasToBuilderMethod;
+    private final NameAndVisibility buildMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Visibility valueTypeVisibility;
@@ -1290,6 +1339,7 @@ abstract class Datatype_Builder {
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
       this.hasToBuilderMethod = builder.hasToBuilderMethod;
+      this.buildMethod = builder.buildMethod;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
       this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
       this.valueTypeVisibility = builder.valueTypeVisibility;
@@ -1362,6 +1412,11 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public NameAndVisibility getBuildMethod() {
+      return buildMethod;
+    }
+
+    @Override
     public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
       return generatedBuilderAnnotations;
     }
@@ -1397,6 +1452,7 @@ abstract class Datatype_Builder {
       builder.standardMethodUnderrides.putAll(standardMethodUnderrides);
       builder.builderSerializable = builderSerializable;
       builder.hasToBuilderMethod = hasToBuilderMethod;
+      builder.buildMethod = buildMethod;
       builder.generatedBuilderAnnotations = generatedBuilderAnnotations;
       builder.valueTypeAnnotations = valueTypeAnnotations;
       builder.valueTypeVisibility = valueTypeVisibility;
@@ -1424,6 +1480,7 @@ abstract class Datatype_Builder {
           && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
           && builderSerializable == other.builderSerializable
           && hasToBuilderMethod == other.hasToBuilderMethod
+          && Objects.equals(buildMethod, other.buildMethod)
           && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
           && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
           && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
@@ -1446,6 +1503,7 @@ abstract class Datatype_Builder {
           standardMethodUnderrides,
           builderSerializable,
           hasToBuilderMethod,
+          buildMethod,
           generatedBuilderAnnotations,
           valueTypeAnnotations,
           valueTypeVisibility,
@@ -1485,6 +1543,8 @@ abstract class Datatype_Builder {
           .append(builderSerializable)
           .append(", hasToBuilderMethod=")
           .append(hasToBuilderMethod)
+          .append(", buildMethod=")
+          .append(buildMethod)
           .append(", generatedBuilderAnnotations=")
           .append(generatedBuilderAnnotations)
           .append(", valueTypeAnnotations=")
@@ -1518,6 +1578,7 @@ abstract class Datatype_Builder {
     private final ImmutableMap<StandardMethod, UnderrideLevel> standardMethodUnderrides;
     private final boolean builderSerializable;
     private final boolean hasToBuilderMethod;
+    private final NameAndVisibility buildMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Visibility valueTypeVisibility;
@@ -1538,6 +1599,7 @@ abstract class Datatype_Builder {
       this.standardMethodUnderrides = ImmutableMap.copyOf(builder.standardMethodUnderrides);
       this.builderSerializable = builder.builderSerializable;
       this.hasToBuilderMethod = builder.hasToBuilderMethod;
+      this.buildMethod = builder.buildMethod;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
       this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
       this.valueTypeVisibility = builder.valueTypeVisibility;
@@ -1641,6 +1703,14 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public NameAndVisibility getBuildMethod() {
+      if (_unsetProperties.contains(Property.BUILD_METHOD)) {
+        throw new UnsupportedOperationException("buildMethod not set");
+      }
+      return buildMethod;
+    }
+
+    @Override
     public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
       return generatedBuilderAnnotations;
     }
@@ -1686,6 +1756,7 @@ abstract class Datatype_Builder {
       builder.standardMethodUnderrides.putAll(standardMethodUnderrides);
       builder.builderSerializable = builderSerializable;
       builder.hasToBuilderMethod = hasToBuilderMethod;
+      builder.buildMethod = buildMethod;
       builder.generatedBuilderAnnotations = generatedBuilderAnnotations;
       builder.valueTypeAnnotations = valueTypeAnnotations;
       builder.valueTypeVisibility = valueTypeVisibility;
@@ -1714,6 +1785,7 @@ abstract class Datatype_Builder {
           && Objects.equals(standardMethodUnderrides, other.standardMethodUnderrides)
           && builderSerializable == other.builderSerializable
           && hasToBuilderMethod == other.hasToBuilderMethod
+          && Objects.equals(buildMethod, other.buildMethod)
           && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
           && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
           && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
@@ -1737,6 +1809,7 @@ abstract class Datatype_Builder {
           standardMethodUnderrides,
           builderSerializable,
           hasToBuilderMethod,
+          buildMethod,
           generatedBuilderAnnotations,
           valueTypeAnnotations,
           valueTypeVisibility,
@@ -1783,6 +1856,9 @@ abstract class Datatype_Builder {
       }
       if (!_unsetProperties.contains(Property.HAS_TO_BUILDER_METHOD)) {
         result.append(", hasToBuilderMethod=").append(hasToBuilderMethod);
+      }
+      if (!_unsetProperties.contains(Property.BUILD_METHOD)) {
+        result.append(", buildMethod=").append(buildMethod);
       }
       result
           .append(", generatedBuilderAnnotations=")

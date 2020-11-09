@@ -182,7 +182,10 @@ public class GeneratedBuilder extends GeneratedType {
           .addLine(" * @throws IllegalStateException if any field has not been set");
     }
     code.addLine(" */")
-        .addLine("public %s build() {", datatype.getType());
+        .addLine("%s%s %s() {",
+            datatype.getBuildMethod().visibility(),
+            datatype.getType(),
+            datatype.getBuildMethod().name());
     if (hasRequiredProperties) {
       code.add(PreconditionExcerpts.checkState(
           "%1$s.isEmpty()", "Not set: %1$s", UNSET_PROPERTIES));
@@ -268,7 +271,9 @@ public class GeneratedBuilder extends GeneratedType {
     }
     code.addLine("will propagate the partial status of its input, overriding")
         .addLine(" * %s to return another partial.",
-            datatype.getBuilder().javadocNoArgMethodLink("build").withText("build()"))
+            datatype.getBuilder()
+                .javadocNoArgMethodLink(datatype.getBuildMethod().name())
+                .withText(datatype.getBuildMethod().name() + "()"))
         .addLine(" * This allows for robust tests of modify-rebuild code.")
         .addLine(" *")
         .addLine(" * <p>Partials should only ever be used in tests. They permit writing robust")
@@ -535,7 +540,8 @@ public class GeneratedBuilder extends GeneratedType {
       code.addLine("")
           .addLine("  private static class PartialBuilder%s extends %s {",
               datatype.getType().declarationParameters(), datatype.getBuilder())
-          .addLine("    @Override public %s build() {", datatype.getType())
+          .addLine("    @Override public %s %s() {",
+              datatype.getType(), datatype.getBuildMethod().name())
           .addLine("      return buildPartial();")
           .addLine("    }")
           .addLine("  }");

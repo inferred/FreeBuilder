@@ -1184,6 +1184,62 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testProtectedBuildMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected DataType build() {")
+            .addLine("      return super.build();")
+            .addLine("    }")
+            .addLine("    public DataType buildComplete() {")
+            .addLine("      return build();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildComplete();")
+            .addLine("assertEquals(\"fred\", value.getName());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleBuildMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int build() {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public DataType buildComplete() {")
+            .addLine("      return _buildImpl();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildComplete();")
+            .addLine("assertEquals(\"fred\", value.getName());")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testToBuilder() {
     behaviorTester
         .with(new Processor(features))

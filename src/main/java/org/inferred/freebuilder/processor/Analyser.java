@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 
 import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
+import static org.inferred.freebuilder.processor.NamePicker.pickName;
 import static org.inferred.freebuilder.processor.model.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
@@ -144,6 +145,7 @@ class Analyser {
         .setPartialType(partialType.withParameters(typeParameters))
         .setPropertyEnum(propertyType.withParameters())
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
+        .setBuildMethod(pickName(builder, elements, types, type.asType(), "build"))
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))

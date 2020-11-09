@@ -38,6 +38,7 @@ import org.inferred.freebuilder.NotInToString;
 import org.inferred.freebuilder.processor.Analyser.CannotGenerateCodeException;
 import org.inferred.freebuilder.processor.Datatype.StandardMethod;
 import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
+import org.inferred.freebuilder.processor.Datatype.Visibility;
 import org.inferred.freebuilder.processor.property.DefaultProperty;
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
@@ -1112,6 +1113,137 @@ public class AnalyserTest {
         "}"));
 
     assertThat(builder.getDatatype().getStandardMethodUnderrides()).isEmpty();
+  }
+
+  @Test
+  public void protectedBuildMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    protected DataType build() {",
+        "      return super.build();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildMethod())
+        .isEqualTo(NameAndVisibility.of("build", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void packageProtectedBuildMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    DataType build() {",
+        "      return super.build();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildMethod())
+        .isEqualTo(NameAndVisibility.of("build", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void privateBuildMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    private DataType build() {",
+        "      return super._buildImpl();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildMethod())
+        .isEqualTo(NameAndVisibility.of("_buildImpl", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void buildMethodReturningIncompatibleType() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    public int build() {",
+        "      return 0;",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildMethod())
+        .isEqualTo(NameAndVisibility.of("_buildImpl", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void methodCalledBuildWithParameter() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    public int build(int x) {",
+        "      return x;",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildMethod())
+        .isEqualTo(NameAndVisibility.of("build", Visibility.PUBLIC));
+  }
+
+  @Test
+  public void genericBuildMethodReturningCompatibleType() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType<T> {",
+        "  public static class Builder<T> extends DataType_Builder<T> {",
+        "    public DataType<T> build() {",
+        "      return super.build();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildMethod())
+        .isEqualTo(NameAndVisibility.of("build", Visibility.PUBLIC));
+  }
+
+  @Test
+  public void genericBuildMethodReturningIncompatibleType() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType<T> {",
+        "  public static class Builder<T> extends DataType_Builder<T> {",
+        "    public DataType<java.util.List<T>> build() {",
+        "      return null;",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildMethod())
+        .isEqualTo(NameAndVisibility.of("_buildImpl", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void privateBuildAndBuildImplMethods() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    private DataType build() {",
+        "      return _buildImpl2();",
+        "    }",
+        "    private DataType _buildImpl() {",
+        "      return _buildImpl2();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getBuildMethod())
+        .isEqualTo(NameAndVisibility.of("_buildImpl2", Visibility.PACKAGE));
   }
 
   @Test
