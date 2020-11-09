@@ -139,7 +139,8 @@ public abstract class BuildableType {
     if (findAnnotationMirror(element, FreeBuilder.class).isPresent()) {
       // Make sure the user isn't preventing us generating required methods.
       if (methodIsObscured(builderMirror, elements, types, type, "build")
-         || methodIsObscured(builderMirror, elements, types, type, "buildPartial")) {
+         || methodIsObscured(builderMirror, elements, types, type, "buildPartial")
+         || methodIsObscured(builderMirror, elements, types, builderMirror, "clear")) {
         return Optional.empty();
       }
     } else {

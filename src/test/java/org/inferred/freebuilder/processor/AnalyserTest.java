@@ -1279,6 +1279,38 @@ public class AnalyserTest {
   }
 
   @Test
+  public void protectedClearMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    protected Builder clear() {",
+        "      return super.clear();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getClearMethod())
+        .isEqualTo(NameAndVisibility.of("clear", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void privateClearMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    private Builder clear() {",
+        "      return super._clearImpl();",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getClearMethod())
+        .isEqualTo(NameAndVisibility.of("_clearImpl", Visibility.PACKAGE));
+  }
+
+  @Test
   public void privateNestedType() {
     try {
       analyser.analyse((TypeElement) model.newElementWithMarker(

@@ -1298,6 +1298,64 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testProtectedClearMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected Builder clear() {")
+            .addLine("      return super.clear();")
+            .addLine("    }")
+            .addLine("    public Builder wipe() {")
+            .addLine("      return clear();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .wipe()")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleClearMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int clear() {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public Builder wipe() {")
+            .addLine("      return _clearImpl();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .wipe()")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testToBuilder() {
     behaviorTester
         .with(new Processor(features))

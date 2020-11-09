@@ -147,6 +147,7 @@ class Analyser {
         .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
         .setBuildMethod(pickName(builder, elements, types, type.asType(), "build"))
         .setBuildPartialMethod(pickName(builder, elements, types, type.asType(), "buildPartial"))
+        .setClearMethod(pickName(builder, elements, types, builder, "clear"))
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))

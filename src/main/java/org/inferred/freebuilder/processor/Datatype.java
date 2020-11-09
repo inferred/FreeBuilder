@@ -134,6 +134,9 @@ public abstract class Datatype {
   /** Returns the partial build method to be generated. */
   public abstract NameAndVisibility getBuildPartialMethod();
 
+  /** Returns the clear method to be generated. */
+  public abstract NameAndVisibility getClearMethod();
+
   /** Returns a list of annotations that should be applied to the generated builder class. */
   public abstract ImmutableList<Excerpt> getGeneratedBuilderAnnotations();
 
@@ -156,6 +159,7 @@ public abstract class Datatype {
     public Builder() {
       super.setBuildMethod(NameAndVisibility.of("build", Visibility.PUBLIC));
       super.setBuildPartialMethod(NameAndVisibility.of("buildPartial", Visibility.PUBLIC));
+      super.setClearMethod(NameAndVisibility.of("clear", Visibility.PUBLIC));
       super.setValueTypeVisibility(Visibility.PRIVATE);
       super.setHasToBuilderMethod(false);
     }

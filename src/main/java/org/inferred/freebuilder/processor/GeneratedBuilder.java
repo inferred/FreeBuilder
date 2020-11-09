@@ -238,7 +238,10 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s clear() {", datatype.getBuilder());
+        .addLine("%s%s %s() {",
+            datatype.getClearMethod().visibility(),
+            datatype.getBuilder(),
+            datatype.getClearMethod().name());
     generatorsByProperty.values().forEach(codeGenerator -> {
       codeGenerator.addClearField(code);
     });

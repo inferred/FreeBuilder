@@ -98,4 +98,36 @@ public class BuildableTypeTest {
         (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
     assertFalse(result.isPresent());
   }
+
+  @Test
+  public void freebuilderAnnotatedTypeWithExplicitClearMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    public Builder clear();",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertTrue(result.isPresent());
+  }
+
+  @Test
+  public void freebuilderAnnotatedTypeWithHiddenClearMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    protected Builder clear();",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertFalse(result.isPresent());
+  }
 }
