@@ -140,7 +140,10 @@ public abstract class BuildableType {
       // Make sure the user isn't preventing us generating required methods.
       if (methodIsObscured(builderMirror, elements, types, type, "build")
          || methodIsObscured(builderMirror, elements, types, type, "buildPartial")
-         || methodIsObscured(builderMirror, elements, types, builderMirror, "clear")) {
+         || methodIsObscured(builderMirror, elements, types, builderMirror, "clear")
+         || methodIsObscured(
+             builderMirror, elements, types, builderMirror, "mergeFrom", builderMirror)
+         || methodIsObscured(builderMirror, elements, types, builderMirror, "mergeFrom", type)) {
         return Optional.empty();
       }
     } else {
@@ -179,9 +182,10 @@ public abstract class BuildableType {
       Elements elements,
       Types types,
       DeclaredType returnType,
-      String methodName) {
+      String methodName,
+      DeclaredType... parameterTypes) {
     NameAndVisibility buildMethod =
-        pickName(targetType, elements, types, returnType, methodName);
+        pickName(targetType, elements, types, returnType, methodName, parameterTypes);
     return buildMethod.name() != methodName || buildMethod.visibility() != Visibility.PUBLIC;
   }
 

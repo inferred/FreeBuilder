@@ -130,4 +130,68 @@ public class BuildableTypeTest {
         (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
     assertFalse(result.isPresent());
   }
+
+  @Test
+  public void freebuilderAnnotatedTypeWithExplicitMergeFromBuilderMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    public Builder mergeFrom(Builder builder);",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertTrue(result.isPresent());
+  }
+
+  @Test
+  public void freebuilderAnnotatedTypeWithHiddenMergeFromBuilderMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    protected Builder mergeFrom(Builder builder);",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void freebuilderAnnotatedTypeWithExplicitMergeFromValueMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    public Builder mergeFrom(DataType value);",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertTrue(result.isPresent());
+  }
+
+  @Test
+  public void freebuilderAnnotatedTypeWithHiddenMergeFromValueMethod() {
+    TypeElement type = model.newType(
+        "package com.example;",
+        "@" + FreeBuilder.class.getName(),
+        "public interface DataType {",
+        "  int value();",
+        "  class Builder extends DataType_Builder {",
+        "    protected Builder mergeFrom(DataType value);",
+        "  }",
+        "}");
+    Optional<DeclaredType> result = maybeBuilder(
+        (DeclaredType) type.asType(), model.elementUtils(), model.typeUtils());
+    assertFalse(result.isPresent());
+  }
 }

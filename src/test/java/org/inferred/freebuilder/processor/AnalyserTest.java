@@ -1311,6 +1311,70 @@ public class AnalyserTest {
   }
 
   @Test
+  public void protectedMergeFromBuilderMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    protected Builder mergeFrom(Builder builder) {",
+        "      return super.mergeFrom(builder);",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getMergeFromBuilderMethod())
+        .isEqualTo(NameAndVisibility.of("mergeFrom", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void privateMergeFromBuilderMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    private Builder mergeFrom(Builder builder) {",
+        "      return super._mergeFromImpl(builder);",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getMergeFromBuilderMethod())
+        .isEqualTo(NameAndVisibility.of("_mergeFromImpl", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void protectedMergeFromValueMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    protected Builder mergeFrom(DataType value) {",
+        "      return super.mergeFrom(value);",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getMergeFromValueMethod())
+        .isEqualTo(NameAndVisibility.of("mergeFrom", Visibility.PACKAGE));
+  }
+
+  @Test
+  public void privateMergeFromValueMethod() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "public class DataType {",
+        "  public static class Builder extends DataType_Builder {",
+        "    private Builder mergeFrom(DataType value) {",
+        "      return super._mergeFromImpl(value);",
+        "    }",
+        "  }",
+        "}"));
+
+    assertThat(builder.getDatatype().getMergeFromValueMethod())
+        .isEqualTo(NameAndVisibility.of("_mergeFromImpl", Visibility.PACKAGE));
+  }
+
+  @Test
   public void privateNestedType() {
     try {
       analyser.analyse((TypeElement) model.newElementWithMarker(

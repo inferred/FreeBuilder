@@ -14,6 +14,7 @@ import java.util.stream.Collector;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -27,11 +28,12 @@ public class NamePicker {
       Elements elements,
       Types types,
       TypeMirror returnType,
-      String preferredName) {
+      String preferredName,
+      TypeMirror... parameterTypes) {
     Map<String, ExecutableElement> methodsByName =
         methodsOn(asElement(targetType), elements, errorType -> { })
             .stream()
-            .filter(noParameters())
+            .filter(matchingErasedParameters(types, parameterTypes))
             .collect(byName());
 
     String name = preferredName;
@@ -44,9 +46,10 @@ public class NamePicker {
         return NameAndVisibility.of(name, visibility);
       }
       boolean sufficientVisibility = !method.getModifiers().contains(Modifier.PRIVATE);
+      boolean correctSignature = parametersMatchExactly(types, method, parameterTypes);
       TypeMirror actualReturnType = getReturnType(targetType, method, types);
       boolean correctReturnType = types.isSameType(actualReturnType, returnType);
-      if (sufficientVisibility && correctReturnType) {
+      if (sufficientVisibility && correctSignature && correctReturnType) {
         // A method exists with this name, but it is not incompatible
         if (!method.getModifiers().contains(Modifier.PUBLIC)) {
           visibility = Visibility.PACKAGE;
@@ -63,8 +66,36 @@ public class NamePicker {
     }
   }
 
-  private static Predicate<? super ExecutableElement> noParameters() {
-    return method -> method.getParameters().isEmpty();
+  private static Predicate<? super ExecutableElement> matchingErasedParameters(
+      Types types, TypeMirror... parameterTypes) {
+    return method -> {
+      if (method.getParameters().size() != parameterTypes.length) {
+        return false;
+      }
+      for (int i = 0; i < parameterTypes.length; i++) {
+        VariableElement parameter = method.getParameters().get(i);
+        TypeMirror erasedType = types.erasure(parameterTypes[i]);
+        TypeMirror expectedErasedType = types.erasure(parameter.asType());
+        if (!types.isSameType(erasedType, expectedErasedType)) {
+          return false;
+        }
+      }
+      return true;
+    };
+  }
+
+  private static boolean parametersMatchExactly(
+      Types types, ExecutableElement method, TypeMirror... parameterTypes) {
+    if (method.getParameters().size() != parameterTypes.length) {
+      return false;
+    }
+    for (int i = 0; i < parameterTypes.length; i++) {
+      VariableElement parameter = method.getParameters().get(i);
+      if (!types.isSameType(parameterTypes[i], parameter.asType())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static Collector<ExecutableElement, ?, Map<String, ExecutableElement>> byName() {

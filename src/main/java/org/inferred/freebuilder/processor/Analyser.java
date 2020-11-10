@@ -148,6 +148,10 @@ class Analyser {
         .setBuildMethod(pickName(builder, elements, types, type.asType(), "build"))
         .setBuildPartialMethod(pickName(builder, elements, types, type.asType(), "buildPartial"))
         .setClearMethod(pickName(builder, elements, types, builder, "clear"))
+        .setMergeFromBuilderMethod(pickName(
+            builder, elements, types, builder, "mergeFrom", builder))
+        .setMergeFromValueMethod(pickName(
+            builder, elements, types, builder, "mergeFrom", type.asType()))
         .setHasToBuilderMethod(hasToBuilderMethod(
             builder, constructionAndExtension.isExtensible(), methods))
         .setBuilderSerializable(shouldBuilderBeSerializable(builder))

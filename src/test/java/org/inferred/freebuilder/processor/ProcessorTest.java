@@ -1356,6 +1356,130 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testProtectedMergeFromBuilderMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected Builder mergeFrom(Builder builder) {")
+            .addLine("      return super.mergeFrom(builder);")
+            .addLine("    }")
+            .addLine("    public Builder coalesce(Builder builder) {")
+            .addLine("      return mergeFrom(builder);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder().addNames(\"jill\");")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .coalesce(template)")
+            .addLine("    .addNames(\"bob\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).containsExactly(\"fred\", \"jill\", \"bob\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleMergeFromBuilderMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int mergeFrom(Builder builder) {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public Builder coalesce(Builder builder) {")
+            .addLine("      return _mergeFromImpl(builder);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder().addNames(\"jill\");")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .coalesce(template)")
+            .addLine("    .addNames(\"bob\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).containsExactly(\"fred\", \"jill\", \"bob\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testProtectedMergeFromValueMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected Builder mergeFrom(DataType value) {")
+            .addLine("      return super.mergeFrom(value);")
+            .addLine("    }")
+            .addLine("    public Builder coalesce(DataType value) {")
+            .addLine("      return mergeFrom(value);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType template = new DataType.Builder().addNames(\"jill\").build();")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .coalesce(template)")
+            .addLine("    .addNames(\"bob\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).containsExactly(\"fred\", \"jill\", \"bob\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleMergeFromValueMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int mergeFrom(DataType value) {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public Builder coalesce(DataType value) {")
+            .addLine("      return _mergeFromImpl(value);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType template = new DataType.Builder().addNames(\"jill\").build();")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .coalesce(template)")
+            .addLine("    .addNames(\"bob\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).containsExactly(\"fred\", \"jill\", \"bob\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testToBuilder() {
     behaviorTester
         .with(new Processor(features))

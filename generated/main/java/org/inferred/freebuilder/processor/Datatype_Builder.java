@@ -59,6 +59,8 @@ abstract class Datatype_Builder {
     BUILD_METHOD("buildMethod"),
     BUILD_PARTIAL_METHOD("buildPartialMethod"),
     CLEAR_METHOD("clearMethod"),
+    MERGE_FROM_BUILDER_METHOD("mergeFromBuilderMethod"),
+    MERGE_FROM_VALUE_METHOD("mergeFromValueMethod"),
     VALUE_TYPE_VISIBILITY("valueTypeVisibility"),
     ;
 
@@ -97,6 +99,8 @@ abstract class Datatype_Builder {
   private NameAndVisibility buildMethod;
   private NameAndVisibility buildPartialMethod;
   private NameAndVisibility clearMethod;
+  private NameAndVisibility mergeFromBuilderMethod;
+  private NameAndVisibility mergeFromValueMethod;
   private List<Excerpt> generatedBuilderAnnotations = ImmutableList.of();
   private List<Excerpt> valueTypeAnnotations = ImmutableList.of();
   private Datatype.Visibility valueTypeVisibility;
@@ -776,6 +780,80 @@ abstract class Datatype_Builder {
   }
 
   /**
+   * Sets the value to be returned by {@link Datatype#getMergeFromBuilderMethod()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mergeFromBuilderMethod} is null
+   */
+  public Datatype.Builder setMergeFromBuilderMethod(NameAndVisibility mergeFromBuilderMethod) {
+    this.mergeFromBuilderMethod = Objects.requireNonNull(mergeFromBuilderMethod);
+    _unsetProperties.remove(Property.MERGE_FROM_BUILDER_METHOD);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getMergeFromBuilderMethod()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapMergeFromBuilderMethod(UnaryOperator<NameAndVisibility> mapper) {
+    Objects.requireNonNull(mapper);
+    return setMergeFromBuilderMethod(mapper.apply(getMergeFromBuilderMethod()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Datatype#getMergeFromBuilderMethod()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public NameAndVisibility getMergeFromBuilderMethod() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Property.MERGE_FROM_BUILDER_METHOD),
+        "mergeFromBuilderMethod not set");
+    return mergeFromBuilderMethod;
+  }
+
+  /**
+   * Sets the value to be returned by {@link Datatype#getMergeFromValueMethod()}.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mergeFromValueMethod} is null
+   */
+  public Datatype.Builder setMergeFromValueMethod(NameAndVisibility mergeFromValueMethod) {
+    this.mergeFromValueMethod = Objects.requireNonNull(mergeFromValueMethod);
+    _unsetProperties.remove(Property.MERGE_FROM_VALUE_METHOD);
+    return (Datatype.Builder) this;
+  }
+
+  /**
+   * Replaces the value to be returned by {@link Datatype#getMergeFromValueMethod()} by applying
+   * {@code mapper} to it and using the result.
+   *
+   * @return this {@code Builder} object
+   * @throws NullPointerException if {@code mapper} is null or returns null
+   * @throws IllegalStateException if the field has not been set
+   */
+  public Datatype.Builder mapMergeFromValueMethod(UnaryOperator<NameAndVisibility> mapper) {
+    Objects.requireNonNull(mapper);
+    return setMergeFromValueMethod(mapper.apply(getMergeFromValueMethod()));
+  }
+
+  /**
+   * Returns the value that will be returned by {@link Datatype#getMergeFromValueMethod()}.
+   *
+   * @throws IllegalStateException if the field has not been set
+   */
+  public NameAndVisibility getMergeFromValueMethod() {
+    Preconditions.checkState(
+        !_unsetProperties.contains(Property.MERGE_FROM_VALUE_METHOD),
+        "mergeFromValueMethod not set");
+    return mergeFromValueMethod;
+  }
+
+  /**
    * Adds {@code element} to the list to be returned from {@link
    * Datatype#getGeneratedBuilderAnnotations()}.
    *
@@ -1219,6 +1297,15 @@ abstract class Datatype_Builder {
         || !Objects.equals(value.getClearMethod(), defaults.getClearMethod())) {
       setClearMethod(value.getClearMethod());
     }
+    if (defaults._unsetProperties.contains(Property.MERGE_FROM_BUILDER_METHOD)
+        || !Objects.equals(
+            value.getMergeFromBuilderMethod(), defaults.getMergeFromBuilderMethod())) {
+      setMergeFromBuilderMethod(value.getMergeFromBuilderMethod());
+    }
+    if (defaults._unsetProperties.contains(Property.MERGE_FROM_VALUE_METHOD)
+        || !Objects.equals(value.getMergeFromValueMethod(), defaults.getMergeFromValueMethod())) {
+      setMergeFromValueMethod(value.getMergeFromValueMethod());
+    }
     if (value instanceof Value && generatedBuilderAnnotations == ImmutableList.<Excerpt>of()) {
       generatedBuilderAnnotations = ImmutableList.copyOf(value.getGeneratedBuilderAnnotations());
     } else {
@@ -1320,6 +1407,18 @@ abstract class Datatype_Builder {
             || !Objects.equals(template.getClearMethod(), defaults.getClearMethod()))) {
       setClearMethod(template.getClearMethod());
     }
+    if (!base._unsetProperties.contains(Property.MERGE_FROM_BUILDER_METHOD)
+        && (defaults._unsetProperties.contains(Property.MERGE_FROM_BUILDER_METHOD)
+            || !Objects.equals(
+                template.getMergeFromBuilderMethod(), defaults.getMergeFromBuilderMethod()))) {
+      setMergeFromBuilderMethod(template.getMergeFromBuilderMethod());
+    }
+    if (!base._unsetProperties.contains(Property.MERGE_FROM_VALUE_METHOD)
+        && (defaults._unsetProperties.contains(Property.MERGE_FROM_VALUE_METHOD)
+            || !Objects.equals(
+                template.getMergeFromValueMethod(), defaults.getMergeFromValueMethod()))) {
+      setMergeFromValueMethod(template.getMergeFromValueMethod());
+    }
     addAllGeneratedBuilderAnnotations(base.generatedBuilderAnnotations);
     addAllValueTypeAnnotations(base.valueTypeAnnotations);
     if (!base._unsetProperties.contains(Property.VALUE_TYPE_VISIBILITY)
@@ -1355,6 +1454,8 @@ abstract class Datatype_Builder {
     buildMethod = defaults.buildMethod;
     buildPartialMethod = defaults.buildPartialMethod;
     clearMethod = defaults.clearMethod;
+    mergeFromBuilderMethod = defaults.mergeFromBuilderMethod;
+    mergeFromValueMethod = defaults.mergeFromValueMethod;
     clearGeneratedBuilderAnnotations();
     clearValueTypeAnnotations();
     valueTypeVisibility = defaults.valueTypeVisibility;
@@ -1419,6 +1520,8 @@ abstract class Datatype_Builder {
     private final NameAndVisibility buildMethod;
     private final NameAndVisibility buildPartialMethod;
     private final NameAndVisibility clearMethod;
+    private final NameAndVisibility mergeFromBuilderMethod;
+    private final NameAndVisibility mergeFromValueMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Visibility valueTypeVisibility;
@@ -1441,6 +1544,8 @@ abstract class Datatype_Builder {
       this.buildMethod = builder.buildMethod;
       this.buildPartialMethod = builder.buildPartialMethod;
       this.clearMethod = builder.clearMethod;
+      this.mergeFromBuilderMethod = builder.mergeFromBuilderMethod;
+      this.mergeFromValueMethod = builder.mergeFromValueMethod;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
       this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
       this.valueTypeVisibility = builder.valueTypeVisibility;
@@ -1528,6 +1633,16 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public NameAndVisibility getMergeFromBuilderMethod() {
+      return mergeFromBuilderMethod;
+    }
+
+    @Override
+    public NameAndVisibility getMergeFromValueMethod() {
+      return mergeFromValueMethod;
+    }
+
+    @Override
     public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
       return generatedBuilderAnnotations;
     }
@@ -1566,6 +1681,8 @@ abstract class Datatype_Builder {
       builder.buildMethod = buildMethod;
       builder.buildPartialMethod = buildPartialMethod;
       builder.clearMethod = clearMethod;
+      builder.mergeFromBuilderMethod = mergeFromBuilderMethod;
+      builder.mergeFromValueMethod = mergeFromValueMethod;
       builder.generatedBuilderAnnotations = generatedBuilderAnnotations;
       builder.valueTypeAnnotations = valueTypeAnnotations;
       builder.valueTypeVisibility = valueTypeVisibility;
@@ -1596,6 +1713,8 @@ abstract class Datatype_Builder {
           && Objects.equals(buildMethod, other.buildMethod)
           && Objects.equals(buildPartialMethod, other.buildPartialMethod)
           && Objects.equals(clearMethod, other.clearMethod)
+          && Objects.equals(mergeFromBuilderMethod, other.mergeFromBuilderMethod)
+          && Objects.equals(mergeFromValueMethod, other.mergeFromValueMethod)
           && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
           && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
           && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
@@ -1621,6 +1740,8 @@ abstract class Datatype_Builder {
           buildMethod,
           buildPartialMethod,
           clearMethod,
+          mergeFromBuilderMethod,
+          mergeFromValueMethod,
           generatedBuilderAnnotations,
           valueTypeAnnotations,
           valueTypeVisibility,
@@ -1666,6 +1787,10 @@ abstract class Datatype_Builder {
           .append(buildPartialMethod)
           .append(", clearMethod=")
           .append(clearMethod)
+          .append(", mergeFromBuilderMethod=")
+          .append(mergeFromBuilderMethod)
+          .append(", mergeFromValueMethod=")
+          .append(mergeFromValueMethod)
           .append(", generatedBuilderAnnotations=")
           .append(generatedBuilderAnnotations)
           .append(", valueTypeAnnotations=")
@@ -1702,6 +1827,8 @@ abstract class Datatype_Builder {
     private final NameAndVisibility buildMethod;
     private final NameAndVisibility buildPartialMethod;
     private final NameAndVisibility clearMethod;
+    private final NameAndVisibility mergeFromBuilderMethod;
+    private final NameAndVisibility mergeFromValueMethod;
     private final ImmutableList<Excerpt> generatedBuilderAnnotations;
     private final ImmutableList<Excerpt> valueTypeAnnotations;
     private final Visibility valueTypeVisibility;
@@ -1725,6 +1852,8 @@ abstract class Datatype_Builder {
       this.buildMethod = builder.buildMethod;
       this.buildPartialMethod = builder.buildPartialMethod;
       this.clearMethod = builder.clearMethod;
+      this.mergeFromBuilderMethod = builder.mergeFromBuilderMethod;
+      this.mergeFromValueMethod = builder.mergeFromValueMethod;
       this.generatedBuilderAnnotations = ImmutableList.copyOf(builder.generatedBuilderAnnotations);
       this.valueTypeAnnotations = ImmutableList.copyOf(builder.valueTypeAnnotations);
       this.valueTypeVisibility = builder.valueTypeVisibility;
@@ -1852,6 +1981,22 @@ abstract class Datatype_Builder {
     }
 
     @Override
+    public NameAndVisibility getMergeFromBuilderMethod() {
+      if (_unsetProperties.contains(Property.MERGE_FROM_BUILDER_METHOD)) {
+        throw new UnsupportedOperationException("mergeFromBuilderMethod not set");
+      }
+      return mergeFromBuilderMethod;
+    }
+
+    @Override
+    public NameAndVisibility getMergeFromValueMethod() {
+      if (_unsetProperties.contains(Property.MERGE_FROM_VALUE_METHOD)) {
+        throw new UnsupportedOperationException("mergeFromValueMethod not set");
+      }
+      return mergeFromValueMethod;
+    }
+
+    @Override
     public ImmutableList<Excerpt> getGeneratedBuilderAnnotations() {
       return generatedBuilderAnnotations;
     }
@@ -1900,6 +2045,8 @@ abstract class Datatype_Builder {
       builder.buildMethod = buildMethod;
       builder.buildPartialMethod = buildPartialMethod;
       builder.clearMethod = clearMethod;
+      builder.mergeFromBuilderMethod = mergeFromBuilderMethod;
+      builder.mergeFromValueMethod = mergeFromValueMethod;
       builder.generatedBuilderAnnotations = generatedBuilderAnnotations;
       builder.valueTypeAnnotations = valueTypeAnnotations;
       builder.valueTypeVisibility = valueTypeVisibility;
@@ -1931,6 +2078,8 @@ abstract class Datatype_Builder {
           && Objects.equals(buildMethod, other.buildMethod)
           && Objects.equals(buildPartialMethod, other.buildPartialMethod)
           && Objects.equals(clearMethod, other.clearMethod)
+          && Objects.equals(mergeFromBuilderMethod, other.mergeFromBuilderMethod)
+          && Objects.equals(mergeFromValueMethod, other.mergeFromValueMethod)
           && Objects.equals(generatedBuilderAnnotations, other.generatedBuilderAnnotations)
           && Objects.equals(valueTypeAnnotations, other.valueTypeAnnotations)
           && Objects.equals(valueTypeVisibility, other.valueTypeVisibility)
@@ -1957,6 +2106,8 @@ abstract class Datatype_Builder {
           buildMethod,
           buildPartialMethod,
           clearMethod,
+          mergeFromBuilderMethod,
+          mergeFromValueMethod,
           generatedBuilderAnnotations,
           valueTypeAnnotations,
           valueTypeVisibility,
@@ -2012,6 +2163,12 @@ abstract class Datatype_Builder {
       }
       if (!_unsetProperties.contains(Property.CLEAR_METHOD)) {
         result.append(", clearMethod=").append(clearMethod);
+      }
+      if (!_unsetProperties.contains(Property.MERGE_FROM_BUILDER_METHOD)) {
+        result.append(", mergeFromBuilderMethod=").append(mergeFromBuilderMethod);
+      }
+      if (!_unsetProperties.contains(Property.MERGE_FROM_VALUE_METHOD)) {
+        result.append(", mergeFromValueMethod=").append(mergeFromValueMethod);
       }
       result
           .append(", generatedBuilderAnnotations=")

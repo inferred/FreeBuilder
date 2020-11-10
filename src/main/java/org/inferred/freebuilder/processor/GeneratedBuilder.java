@@ -149,8 +149,9 @@ public class GeneratedBuilder extends GeneratedType {
       code.addLine("  if (value instanceof %s) {", rebuildable.getQualifiedName())
           .addLine("    return ((%s) value).toBuilder();", rebuildable)
           .addLine("  } else {")
-          .addLine("    return %s.mergeFrom(value);",
-              builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES))
+          .addLine("    return %s.%s(value);",
+              builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES),
+              datatype.getMergeFromValueMethod().name())
           .addLine("  }");
     }
     code.addLine("}");
@@ -202,7 +203,11 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s mergeFrom(%s value) {", datatype.getBuilder(), datatype.getType());
+        .addLine("%s%s %s(%s value) {",
+            datatype.getMergeFromValueMethod().visibility(),
+            datatype.getBuilder(),
+            datatype.getMergeFromValueMethod().name(),
+            datatype.getType());
     generatorsByProperty.values().forEach(generator -> generator.addMergeFromValue(code, "value"));
     code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
@@ -216,7 +221,10 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %1$s mergeFrom(%1$s template) {", datatype.getBuilder());
+        .addLine("%1$s%2$s %3$s(%2$s template) {",
+            datatype.getMergeFromBuilderMethod().visibility(),
+            datatype.getBuilder(),
+            datatype.getMergeFromBuilderMethod().name());
     generatorsByProperty.values().forEach(generator -> {
       generator.addMergeFromBuilder(code, "template");
     });
