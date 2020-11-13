@@ -29,6 +29,7 @@ _Automatic generation of the Builder pattern for Java 1.8+_
   - [Lists of buildable types](#lists-of-buildable-types)
     - [Disabling buildable lists](#disabling-buildable-lists)
   - [Custom toString method](#custom-tostring-method)
+  - [Custom conventional method names](#custom-conventional-method-names)
   - [Custom functional interfaces](#custom-functional-interfaces)
   - [Builder construction](#builder-construction)
   - [Partials](#partials)
