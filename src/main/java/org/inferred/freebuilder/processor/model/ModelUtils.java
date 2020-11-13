@@ -298,9 +298,24 @@ public class ModelUtils {
    * javac works fine.)
    */
   public static TypeMirror getReturnType(TypeElement type, ExecutableElement method, Types types) {
+    return getReturnType((DeclaredType) type.asType(), method, types);
+  }
+
+  /**
+   * Determines the return type of {@code method}, if called on an instance of type {@code type}.
+   *
+   * <p>For instance, in this example, myY.getProperty() returns List&lt;T&gt;, not T:<pre><code>
+   *    interface X&lt;T&gt; {
+   *      T getProperty();
+   *    }
+   *    &#64;FreeBuilder interface Y&lt;T&gt; extends X&lt;List&lt;T&gt;&gt; { }</code></pre>
+   *
+   * <p>(Unfortunately, a bug in Eclipse prevents us handling these cases correctly at the moment.
+   * javac works fine.)
+   */
+  public static TypeMirror getReturnType(DeclaredType type, ExecutableElement method, Types types) {
     try {
-      ExecutableType executableType = (ExecutableType)
-          types.asMemberOf((DeclaredType) type.asType(), method);
+      ExecutableType executableType = (ExecutableType) types.asMemberOf(type, method);
       return executableType.getReturnType();
     } catch (IllegalArgumentException e) {
       // Eclipse incorrectly throws an IllegalArgumentException here:

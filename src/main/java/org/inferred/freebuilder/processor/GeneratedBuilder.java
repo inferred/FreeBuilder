@@ -149,8 +149,9 @@ public class GeneratedBuilder extends GeneratedType {
       code.addLine("  if (value instanceof %s) {", rebuildable.getQualifiedName())
           .addLine("    return ((%s) value).toBuilder();", rebuildable)
           .addLine("  } else {")
-          .addLine("    return %s.mergeFrom(value);",
-              builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES))
+          .addLine("    return %s.%s(value);",
+              builderFactory.newBuilder(datatype.getBuilder(), EXPLICIT_TYPES),
+              datatype.getMergeFromValueMethod().name())
           .addLine("  }");
     }
     code.addLine("}");
@@ -182,7 +183,10 @@ public class GeneratedBuilder extends GeneratedType {
           .addLine(" * @throws IllegalStateException if any field has not been set");
     }
     code.addLine(" */")
-        .addLine("public %s build() {", datatype.getType());
+        .addLine("%s%s %s() {",
+            datatype.getBuildMethod().visibility(),
+            datatype.getType(),
+            datatype.getBuildMethod().name());
     if (hasRequiredProperties) {
       code.add(PreconditionExcerpts.checkState(
           "%1$s.isEmpty()", "Not set: %1$s", UNSET_PROPERTIES));
@@ -199,7 +203,11 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s mergeFrom(%s value) {", datatype.getBuilder(), datatype.getType());
+        .addLine("%s%s %s(%s value) {",
+            datatype.getMergeFromValueMethod().visibility(),
+            datatype.getBuilder(),
+            datatype.getMergeFromValueMethod().name(),
+            datatype.getType());
     generatorsByProperty.values().forEach(generator -> generator.addMergeFromValue(code, "value"));
     code.addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
@@ -213,7 +221,10 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %1$s mergeFrom(%1$s template) {", datatype.getBuilder());
+        .addLine("%1$s%2$s %3$s(%2$s template) {",
+            datatype.getMergeFromBuilderMethod().visibility(),
+            datatype.getBuilder(),
+            datatype.getMergeFromBuilderMethod().name());
     generatorsByProperty.values().forEach(generator -> {
       generator.addMergeFromBuilder(code, "template");
     });
@@ -235,7 +246,10 @@ public class GeneratedBuilder extends GeneratedType {
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" */")
-        .addLine("public %s clear() {", datatype.getBuilder());
+        .addLine("%s%s %s() {",
+            datatype.getClearMethod().visibility(),
+            datatype.getBuilder(),
+            datatype.getClearMethod().name());
     generatorsByProperty.values().forEach(codeGenerator -> {
       codeGenerator.addClearField(code);
     });
@@ -268,7 +282,9 @@ public class GeneratedBuilder extends GeneratedType {
     }
     code.addLine("will propagate the partial status of its input, overriding")
         .addLine(" * %s to return another partial.",
-            datatype.getBuilder().javadocNoArgMethodLink("build").withText("build()"))
+            datatype.getBuilder()
+                .javadocNoArgMethodLink(datatype.getBuildMethod().name())
+                .withText(datatype.getBuildMethod().name() + "()"))
         .addLine(" * This allows for robust tests of modify-rebuild code.")
         .addLine(" *")
         .addLine(" * <p>Partials should only ever be used in tests. They permit writing robust")
@@ -279,7 +295,10 @@ public class GeneratedBuilder extends GeneratedType {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("@%s()", VisibleForTesting.class);
     }
-    code.addLine("public %s buildPartial() {", datatype.getType())
+    code.addLine("%s%s %s() {",
+            datatype.getBuildPartialMethod().visibility(),
+            datatype.getType(),
+            datatype.getBuildPartialMethod().name())
         .addLine("  return %s(this);", datatype.getPartialType().constructor())
         .addLine("}");
   }
@@ -535,8 +554,9 @@ public class GeneratedBuilder extends GeneratedType {
       code.addLine("")
           .addLine("  private static class PartialBuilder%s extends %s {",
               datatype.getType().declarationParameters(), datatype.getBuilder())
-          .addLine("    @Override public %s build() {", datatype.getType())
-          .addLine("      return buildPartial();")
+          .addLine("    @Override public %s %s() {",
+              datatype.getType(), datatype.getBuildMethod().name())
+          .addLine("      return %s();", datatype.getBuildPartialMethod().name())
           .addLine("    }")
           .addLine("  }");
     }

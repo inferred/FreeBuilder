@@ -141,7 +141,8 @@ class GwtSupport {
               .addLine("    }");
         }
       }
-      code.addLine("    return (%s) %s.build();", datatype.getValueType(), builder)
+      code.addLine("    return (%s) %s.%s();",
+              datatype.getValueType(), builder, datatype.getBuildMethod().name())
           .addLine("  }");
     }
 

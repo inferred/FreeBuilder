@@ -1184,6 +1184,302 @@ public class ProcessorTest {
   }
 
   @Test
+  public void testProtectedBuildMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected DataType build() {")
+            .addLine("      return super.build();")
+            .addLine("    }")
+            .addLine("    public DataType buildComplete() {")
+            .addLine("      return build();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildComplete();")
+            .addLine("assertEquals(\"fred\", value.getName());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleBuildMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int build() {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public DataType buildComplete() {")
+            .addLine("      return _buildImpl();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildComplete();")
+            .addLine("assertEquals(\"fred\", value.getName());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testProtectedBuildPartialMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("  int getValue();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected DataType buildPartial() {")
+            .addLine("      return super.buildPartial();")
+            .addLine("    }")
+            .addLine("    public DataType buildFraction() {")
+            .addLine("      return buildPartial();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildFraction();")
+            .addLine("assertEquals(\"fred\", value.getName());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleBuildPartialMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  String getName();")
+            .addLine("  int getValue();")
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int buildPartial() {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public DataType buildFraction() {")
+            .addLine("      return _buildPartialImpl();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .setName(\"fred\")")
+            .addLine("    .buildFraction();")
+            .addLine("assertEquals(\"fred\", value.getName());")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testProtectedClearMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected Builder clear() {")
+            .addLine("      return super.clear();")
+            .addLine("    }")
+            .addLine("    public Builder wipe() {")
+            .addLine("      return clear();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .wipe()")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleClearMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int clear() {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public Builder wipe() {")
+            .addLine("      return _clearImpl();")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .wipe()")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).isEmpty();")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testProtectedMergeFromBuilderMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected Builder mergeFrom(Builder builder) {")
+            .addLine("      return super.mergeFrom(builder);")
+            .addLine("    }")
+            .addLine("    public Builder coalesce(Builder builder) {")
+            .addLine("      return mergeFrom(builder);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder().addNames(\"jill\");")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .coalesce(template)")
+            .addLine("    .addNames(\"bob\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).containsExactly(\"fred\", \"jill\", \"bob\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleMergeFromBuilderMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int mergeFrom(Builder builder) {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public Builder coalesce(Builder builder) {")
+            .addLine("      return _mergeFromImpl(builder);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType.Builder template = new DataType.Builder().addNames(\"jill\");")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .coalesce(template)")
+            .addLine("    .addNames(\"bob\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).containsExactly(\"fred\", \"jill\", \"bob\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testProtectedMergeFromValueMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    protected Builder mergeFrom(DataType value) {")
+            .addLine("      return super.mergeFrom(value);")
+            .addLine("    }")
+            .addLine("    public Builder coalesce(DataType value) {")
+            .addLine("      return mergeFrom(value);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType template = new DataType.Builder().addNames(\"jill\").build();")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .coalesce(template)")
+            .addLine("    .addNames(\"bob\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).containsExactly(\"fred\", \"jill\", \"bob\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
+  public void testIncompatibleMergeFromValueMethod() {
+    behaviorTester
+        .with(new Processor(features))
+        .with(SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<String> getNames();", List.class)
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public int mergeFrom(DataType value) {")
+            .addLine("      return 0;")
+            .addLine("    }")
+            .addLine("    public Builder coalesce(DataType value) {")
+            .addLine("      return _mergeFromImpl(value);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}"))
+        .with(testBuilder()
+            .addLine("DataType template = new DataType.Builder().addNames(\"jill\").build();")
+            .addLine("DataType value = new DataType.Builder()")
+            .addLine("    .addNames(\"fred\")")
+            .addLine("    .coalesce(template)")
+            .addLine("    .addNames(\"bob\")")
+            .addLine("    .build();")
+            .addLine("assertThat(value.getNames()).containsExactly(\"fred\", \"jill\", \"bob\");")
+            .build())
+        .runTest();
+  }
+
+  @Test
   public void testToBuilder() {
     behaviorTester
         .with(new Processor(features))

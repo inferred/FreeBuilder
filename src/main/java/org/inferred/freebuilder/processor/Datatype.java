@@ -128,6 +128,21 @@ public abstract class Datatype {
   /** Returns whether the value type has a toBuilder method that needs to be generated. */
   public abstract boolean getHasToBuilderMethod();
 
+  /** Returns the build method to be generated. */
+  public abstract NameAndVisibility getBuildMethod();
+
+  /** Returns the partial build method to be generated. */
+  public abstract NameAndVisibility getBuildPartialMethod();
+
+  /** Returns the clear method to be generated. */
+  public abstract NameAndVisibility getClearMethod();
+
+  /** Returns the mergeFrom(Builder) method to be generated. */
+  public abstract NameAndVisibility getMergeFromBuilderMethod();
+
+  /** Returns the mergeFrom(Value) method to be generated. */
+  public abstract NameAndVisibility getMergeFromValueMethod();
+
   /** Returns a list of annotations that should be applied to the generated builder class. */
   public abstract ImmutableList<Excerpt> getGeneratedBuilderAnnotations();
 
@@ -148,6 +163,11 @@ public abstract class Datatype {
   public static class Builder extends Datatype_Builder {
 
     public Builder() {
+      super.setBuildMethod(NameAndVisibility.of("build", Visibility.PUBLIC));
+      super.setBuildPartialMethod(NameAndVisibility.of("buildPartial", Visibility.PUBLIC));
+      super.setClearMethod(NameAndVisibility.of("clear", Visibility.PUBLIC));
+      super.setMergeFromBuilderMethod(NameAndVisibility.of("mergeFrom", Visibility.PUBLIC));
+      super.setMergeFromValueMethod(NameAndVisibility.of("mergeFrom", Visibility.PUBLIC));
       super.setValueTypeVisibility(Visibility.PRIVATE);
       super.setHasToBuilderMethod(false);
     }

@@ -533,6 +533,27 @@ For instance, `assertEquals` in JUnit relies on equality; it will not know to ch
 If you are only testing a subset of your fields for equality, consider separating your class in two, as you may have accidentally combined the key and the value of a map into a single object, and you may find your code becomes healthier after the separation.
 Alternatively, creating a custom [Comparator] will make it explicit that you are not using the natural definition of equality.
 
+### Custom conventional method names
+
+If for any reason your types cannot use the conventional method names (`build`, `buildPartial`, `clear` and `mergeFrom`), you can force FreeBuilder to generate package protected implementations, and even select alternative fallback names if necessary, by declaring an alternative visibility and/or incompatible signature. If the default name is not available, FreeBuilder will prepend an underscore and append "Impl" (and, if necessary, a number), e.g. `build` becomes `_buildImpl`.
+
+```java
+public interface MyType {
+  class Builder extends MyType_Builder {
+    public OtherDataType build() {
+      // This signature is not compatible with the default build method.
+      // FreeBuilder will instead declare a package-scoped _buildImpl.
+      ...
+    }
+    public DataType buildMyType() {
+      return _buildImpl();
+    }
+  }
+}
+```
+
+Note that this will, unfortunately, disable FreeBuilder's [enhanced support for nested builders](#nested-buildable-types) for this type, as it needs to be able to call these methods.
+
 ### Custom functional interfaces
 
 FreeBuilder's generated map and mutate methods take [UnaryOperator] or [Consumer] functional interfaces. If you need to use a different functional interface, you can override the generated methods in your Builder and change the parameter type. FreeBuilder will spot the incompatible override and change the code it generates to match:

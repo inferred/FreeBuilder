@@ -15,6 +15,7 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static org.inferred.freebuilder.processor.NamePicker.pickName;
 import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.model.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.model.ModelUtils.needsSafeVarargs;
@@ -24,6 +25,7 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.Datatype.Visibility;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.Excerpts;
 import org.inferred.freebuilder.processor.source.Type;
@@ -134,7 +136,17 @@ public abstract class BuildableType {
      * probably skip this for @FreeBuilder-types anyway, to avoid extra types whenever possible,
      * which leaves a lot of complicated code supporting a currently non-existent edge case.
      */
-    if (!findAnnotationMirror(element, FreeBuilder.class).isPresent()) {
+    if (findAnnotationMirror(element, FreeBuilder.class).isPresent()) {
+      // Make sure the user isn't preventing us generating required methods.
+      if (methodIsObscured(builderMirror, elements, types, type, "build")
+         || methodIsObscured(builderMirror, elements, types, type, "buildPartial")
+         || methodIsObscured(builderMirror, elements, types, builderMirror, "clear")
+         || methodIsObscured(
+             builderMirror, elements, types, builderMirror, "mergeFrom", builderMirror)
+         || methodIsObscured(builderMirror, elements, types, builderMirror, "mergeFrom", type)) {
+        return Optional.empty();
+      }
+    } else {
       List<ExecutableElement> methods = elements.getAllMembers(builder)
           .stream()
           .flatMap(METHODS)
@@ -163,6 +175,18 @@ public abstract class BuildableType {
     }
 
     return Optional.of(builderMirror);
+  }
+
+  private static boolean methodIsObscured(
+      DeclaredType targetType,
+      Elements elements,
+      Types types,
+      DeclaredType returnType,
+      String methodName,
+      DeclaredType... parameterTypes) {
+    NameAndVisibility buildMethod =
+        pickName(targetType, elements, types, returnType, methodName, parameterTypes);
+    return buildMethod.name() != methodName || buildMethod.visibility() != Visibility.PUBLIC;
   }
 
   public static BuildableType create(
