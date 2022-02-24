@@ -710,6 +710,24 @@ interoperable implementation code (e.g returning [immutable collections]).
 
 ### Gradle
 
+#### 4.6+
+
+Add the following lines to your project's build.gradle file:
+
+```
+dependencies {
+  annotationProcessor 'org.inferred:freebuilder:<current version>'
+  compileOnly 'org.inferred:freebuilder:<current version>'
+}
+```
+
+If [Guava] is available, FreeBuilder will use it to generate cleaner, more
+interoperable implementation code (e.g returning [immutable collections]).
+You may also wish to use the [org.inferred.processors plugin] to correctly configure code
+generation in your IDE.
+
+#### Pre-4.6
+
 Add the following lines to your project's build.gradle file:
 
 ```
