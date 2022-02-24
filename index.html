@@ -28,13 +28,17 @@
           <figcaption>
             Want a Builder API without the hassle? In your
             <select id="build" onchange="var elements = document.getElementsByClassName(this.id); for (var i = 0; i < elements.length; i++) { elements[i].style.display = 'none'; } elements = document.getElementsByClassName(this.value); for (var i = 0; i < elements.length; i++) { elements[i].style.display = null; }">
-              <option value="gradle">build.gradle</option>
+              <option value="gradle">build.gradle (4.6+)</option>
+              <option value="gradle-pre-46">build.gradle (pre-4.6)</option>
               <option value="maven">pom.xml</option>
               <option value="javac">javac</option>
               <option value="eclipse">Eclipse</option>
               <option value="idea">IntelliJ</option>
             </select>
             <span class="build gradle">
+              file, add:
+            </span>
+            <span class="build gradle-pre-46" style="display: none">
               file, add:
             </span>
             <span class="build maven" style="display: none">
@@ -77,6 +81,11 @@
             </span>
           </figcaption>
           <pre class="build gradle">
+dependencies {
+  annotationProcessor 'org.inferred:freebuilder:<freebuilder-version>&lt;current version&gt;</freebuilder-version>'
+  compileOnly 'org.inferred:freebuilder:<freebuilder-version>&lt;current version&gt;</freebuilder-version>'
+}</pre>
+          <pre class="build gradle-pre-46" style="display: none">
 plugins {
   id 'org.inferred.processors' version '<processors-version>xx</processors-version>'
 }
