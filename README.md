@@ -940,7 +940,7 @@ relevant file to trigger the incremental compiler. (Or run javac.)
 
 [mailing list]: https://groups.google.com/forum/#!forum/freebuilder
 [issue tracker]: https://github.com/inferred/freebuilder/issues
-[contributing]: https://github.com/inferred/FreeBuilder/blob/master/CONTRIBUTING.md
+[contributing]: https://github.com/inferred/FreeBuilder/blob/main/CONTRIBUTING.md
 
 
 Alternatives
