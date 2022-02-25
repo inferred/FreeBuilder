@@ -85,7 +85,7 @@ public abstract class PropertyCodeGenerator {
     /**
      * Create a new {@link PropertyCodeGenerator} for the property described in {@code config}.
      *
-     * @return A new {@link PropertyCodeGenerator}, or {@link Optional#absent()} if the factory
+     * @return A new {@link PropertyCodeGenerator}, or {@link Optional#empty()} if the factory
      *     does not support this type of property.
      */
     Optional<? extends PropertyCodeGenerator> create(Config config);
