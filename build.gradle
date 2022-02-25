@@ -314,8 +314,10 @@ tasks.register("compileGwtToJs", GwtCompile) {
   group = 'GWT'
   modules = ['org.inferred.freebuilder.TestServer']
   src = files(sourceSets['gwt'].allJava.srcDirs,
+              sourceSets['gwt'].output.generatedSourcesDirs,
               sourceSets['gwt'].output.resourcesDir,
               sourceSets['gwtTest'].allJava.srcDirs,
+              sourceSets['gwt'].output.generatedSourcesDirs,
               sourceSets['gwtTest'].output.resourcesDir)
   classpath = (sourceSets['gwt'].compileClasspath +
                sourceSets['gwtTest'].compileClasspath)
