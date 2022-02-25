@@ -269,10 +269,6 @@ public class SharedBehaviorTesting {
    * Fails the {@link #introspection} test unless we managed to share a compiler.
    */
   private void verifyCompilerShared(RunNotifier notifier, int numChildren, int numCompilations) {
-    System.out.println(String.format(
-        "Merged %d tests into %d compiler passes",
-        numChildren,
-        numCompilations));
     int numFilteredChildren = superDescription.get().getChildren().size();
     if (numFilteredChildren == numChildren) {
       if (numChildren == numCompilations) {
