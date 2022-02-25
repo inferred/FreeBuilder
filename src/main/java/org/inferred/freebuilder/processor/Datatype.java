@@ -87,11 +87,7 @@ public abstract class Datatype {
   /** Returns true if the type is an interface. */
   public abstract boolean isInterfaceType();
 
-  /**
-   * Returns the builder type that users will see.
-   *
-   * @throws IllegalStateException if {@link #hasBuilder} returns false.
-   */
+  /** Returns the builder type that users will see.  */
   public abstract Type getBuilder();
 
   /** Whether there is a package-visible, no-args constructor so we can subclass the Builder. */
