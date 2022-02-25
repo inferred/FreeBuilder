@@ -15,23 +15,13 @@
  */
 package org.inferred.freebuilder.processor.source.testing;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.google.common.collect.FluentIterable;
-
-import org.inferred.freebuilder.processor.source.feature.FeatureSet;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.Description;
 import org.junit.runner.Runner;
-import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.Parameterized;
-import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.Statement;
-import org.junit.runners.parameterized.BlockJUnit4ClassRunnerWithParameters;
 import org.junit.runners.parameterized.ParametersRunnerFactory;
 import org.junit.runners.parameterized.TestWithParameters;
 
@@ -65,54 +55,6 @@ public class ParameterizedBehaviorTestFactory implements ParametersRunnerFactory
   @Retention(RUNTIME)
   @Target(FIELD)
   public @interface Shared {}
-
-  private static class ParameterizedBehaviorTestRunner
-        extends BlockJUnit4ClassRunnerWithParameters {
-
-    private final SharedBehaviorTesting testing;
-
-    ParameterizedBehaviorTestRunner(TestWithParameters test) throws InitializationError {
-      super(test);
-
-      FeatureSet features = FluentIterable
-          .from(test.getParameters())
-          .filter(FeatureSet.class)
-          .first()
-          .orNull();
-      checkState(features != null, "No FeatureSet parameter found");
-
-      // JDK-8 bug: Cannot use `super::` if the superclass method is protected; see
-      //     https://bugs.openjdk.java.net/browse/JDK-8139836
-      testing = new SharedBehaviorTesting(
-          notifier -> super.childrenInvoker(notifier),
-          (method, notifier) -> super.runChild(method, notifier),
-          super::createTest,
-          super::getDescription,
-          super::getTestClass,
-          (cls, name) -> Description.createTestDescription(cls, name + test.getParameters()),
-          features);
-    }
-
-    @Override
-    public Description getDescription() {
-      return testing.getDescription();
-    }
-
-    @Override
-    protected Statement childrenInvoker(RunNotifier notifier) {
-      return testing.childrenInvoker(notifier);
-    }
-
-    @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-      testing.runChild(method, notifier);
-    }
-
-    @Override
-    public Object createTest() throws Exception {
-      return testing.createTest();
-    }
-  }
 
   @Override
   public Runner createRunnerForTestWithParameters(TestWithParameters test)
