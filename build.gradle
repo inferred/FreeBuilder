@@ -42,27 +42,27 @@ sourceSets {
 }
 
 dependencies {
-  compile googleJavaFormat
-  compile guava
+  implementation googleJavaFormat
+  implementation guava
   compileOnly autoService
   compileOnly files(jvms["1.8"].toolsJar)
   annotationProcessor autoService
 
-  testCompile guavaTestlib
-  testCompile gwtUser
-  testCompile hamcrest
-  testCompile jackson('annotations')
-  testCompile jackson('core')
-  testCompile jackson('databind')
-  testCompile jackson('datatype-guava')
-  testCompile jackson('datatype-jdk8')
-  testCompile jackson('dataformat-xml')
-  testCompile javassist
-  testCompile jsr305
-  testCompile junit
-  testCompile mockito
-  testCompile reflections
-  testCompile truth
+  testImplementation guavaTestlib
+  testImplementation gwtUser
+  testImplementation hamcrest
+  testImplementation jackson('annotations')
+  testImplementation jackson('core')
+  testImplementation jackson('databind')
+  testImplementation jackson('datatype-guava')
+  testImplementation jackson('datatype-jdk8')
+  testImplementation jackson('dataformat-xml')
+  testImplementation javassist
+  testImplementation jsr305
+  testImplementation junit
+  testImplementation mockito
+  testImplementation reflections
+  testImplementation truth
 }
 
 String jackson(String pkg) {
