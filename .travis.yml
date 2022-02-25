@@ -7,7 +7,7 @@ jdk: oraclejdk11
 
 branches:
   only:
-   - master
+   - main
    - /^v\d+\.\d+(\.\d+)*(-\S*)?$/
 
 install: ./gradlew clean shadowJar
