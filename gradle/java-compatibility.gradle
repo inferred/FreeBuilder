@@ -11,10 +11,15 @@
 import org.gradle.internal.jvm.JavaInfo
 import org.gradle.internal.jvm.Jvm
 
+// These JDKs must be installed
+// For other versions, we will fall back to the closest required JDK if unavailable
+TreeSet<JavaVersion> requiredJdks = [JavaVersion.toVersion("8"), JavaVersion.toVersion("11")]
+
 // Map Java version to JVM information, using $JAVA_x_HOME environment variables
 // and falling back to gradle properties as an extra option for devs.
 Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
   JavaVersion version = JavaVersion.toVersion(versionString)
+  JavaVersion fallback = requiredJdks.higher(version);
   String propertyName = "java${version.majorVersion}Home"
   String envName = "JAVA_${version.majorVersion}_HOME"
   JavaInfo javaInfo
@@ -22,6 +27,9 @@ Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
     javaInfo = Jvm.forHome(file(getProperty(propertyName)))
   } else if (System.env.containsKey(envName)) {
     javaInfo = Jvm.forHome(file(System.env[envName]))
+  } else if (!requiredJdks.contains(version) && fallback != null) {
+    logger.info "Java ${versionString} not found; falling back to ${fallback}";
+    return jvms[fallback.majorVersion];
   } else {
     throw new RuntimeException("Set the property $propertyName in your gradle.properties"
         + " pointing to a Java $version installation")
