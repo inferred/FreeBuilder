@@ -314,8 +314,10 @@ tasks.register("compileGwtToJs", GwtCompile) {
   group = 'GWT'
   modules = ['org.inferred.freebuilder.TestServer']
   src = files(sourceSets['gwt'].allJava.srcDirs,
+              sourceSets['gwt'].output.generatedSourcesDirs,
               sourceSets['gwt'].output.resourcesDir,
               sourceSets['gwtTest'].allJava.srcDirs,
+              sourceSets['gwt'].output.generatedSourcesDirs,
               sourceSets['gwtTest'].output.resourcesDir)
   classpath = (sourceSets['gwt'].compileClasspath +
                sourceSets['gwtTest'].compileClasspath)
@@ -577,10 +579,9 @@ import org.gradle.plugins.ide.eclipse.model.EclipseClasspath
 import org.gradle.plugins.ide.eclipse.model.EclipseJdt
 import org.gradle.api.internal.PropertiesTransformer
 import org.gradle.plugins.ide.api.PropertiesFileContentMerger
-def eclipseTestModel = objects.newInstance(EclipseModel)
+def eclipseTestModel = extensions.create("eclipseTest", EclipseModel.class, project)
 eclipseTestModel.jdt = objects.newInstance(EclipseJdt, new PropertiesFileContentMerger(new PropertiesTransformer()))
 eclipseTestModel.classpath = objects.newInstance(EclipseClasspath, project)
-extensions.add("eclipseTest", eclipseTestModel)
 
 eclipseTest {
   project {
@@ -617,6 +618,7 @@ task eclipseTestJdt(type: GenerateEclipseJdt, constructorArgs: [eclipseTest.jdt]
 import org.gradle.plugins.ide.eclipse.GenerateEclipseClasspath
 import org.gradle.internal.xml.XmlTransformer
 import org.gradle.plugins.ide.api.XmlFileContentMerger
+import org.gradle.plugins.ide.eclipse.model.AbstractClasspathEntry
 task eclipseTestClasspath(type: GenerateEclipseClasspath, constructorArgs: [eclipseTest.classpath]) {
   description = 'Generates the Eclipse test classpath file.'
   inputFile = project.file('.test/.classpath')
@@ -636,6 +638,15 @@ task eclipseTestClasspath(type: GenerateEclipseClasspath, constructorArgs: [ecli
     configurations.testCompileClasspath,
     configurations.testRuntimeClasspath
   ]
+  classpath.file.whenMerged {
+    entries.each { entry ->
+      if (entry instanceof AbstractClasspathEntry) {
+        // Remove test attribute, as this causes Eclipse to complain about missing class files
+        // https://github.com/gradle/gradle/blob/v5.6.0/subprojects/ide/src/main/java/org/gradle/plugins/ide/eclipse/model/internal/EclipseDependenciesCreator.java#L211
+        entry.entryAttributes.remove("test")
+      }
+    }
+  }
   classpath.defaultOutputDir = project.file('.test/bin')
   dependsOn sourceSets.main.output.dirs
   dependsOn sourceSets.test.output.dirs
