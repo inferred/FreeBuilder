@@ -65,6 +65,7 @@ dependencies {
   testImplementation truth
 }
 
+//// Jackson /////////////////////////////////////////////////////
 String jackson(String pkg) {
   String namespace
   if (pkg.startsWith('datatype-')) {
@@ -76,6 +77,19 @@ String jackson(String pkg) {
   }
   return String.format('com.fasterxml.jackson.%s:jackson-%s:%s',
       namespace, pkg, jacksonVersion)
+}
+
+class JacksonAlignmentRule implements ComponentMetadataRule {
+  void execute(ComponentMetadataContext ctx) {
+    ctx.details.with {
+      if (id.group.startsWith("com.fasterxml.jackson")) {
+        belongsTo("com.fasterxml.jackson:jackson-platform:${id.version}")
+      }
+    }
+  }
+}
+dependencies {
+  components.all(JacksonAlignmentRule)
 }
 
 //// Testing /////////////////////////////////////////////////////
