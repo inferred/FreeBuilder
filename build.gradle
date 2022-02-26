@@ -42,27 +42,27 @@ sourceSets {
 }
 
 dependencies {
-  compile googleJavaFormat
-  compile guava
+  implementation googleJavaFormat
+  implementation guava
   compileOnly autoService
   compileOnly files(jvms["1.8"].toolsJar)
   annotationProcessor autoService
 
-  testCompile guavaTestlib
-  testCompile gwtUser
-  testCompile hamcrest
-  testCompile jackson('annotations')
-  testCompile jackson('core')
-  testCompile jackson('databind')
-  testCompile jackson('datatype-guava')
-  testCompile jackson('datatype-jdk8')
-  testCompile jackson('dataformat-xml')
-  testCompile javassist
-  testCompile jsr305
-  testCompile junit
-  testCompile mockito
-  testCompile reflections
-  testCompile truth
+  testImplementation guavaTestlib
+  testImplementation gwtUser
+  testImplementation hamcrest
+  testImplementation jackson('annotations')
+  testImplementation jackson('core')
+  testImplementation jackson('databind')
+  testImplementation jackson('datatype-guava')
+  testImplementation jackson('datatype-jdk8')
+  testImplementation jackson('dataformat-xml')
+  testImplementation javassist
+  testImplementation jsr305
+  testImplementation junit
+  testImplementation mockito
+  testImplementation reflections
+  testImplementation truth
 }
 
 String jackson(String pkg) {
@@ -146,7 +146,7 @@ tasks.shadowJar.shouldRunAfter tasks.test
 import java.util.zip.ZipFile
 import java.util.zip.ZipException
 
-task shadowTest {
+tasks.register("shadowTest") {
   description 'Verifies freebuilder.jar is shaded correctly.'
   group = 'Verification'
   check.dependsOn it
@@ -196,7 +196,7 @@ dependencies {
   vanillaCompile jackson('databind')
   vanillaTestCompile junit
 }
-task vanillaTest {
+tasks.register("vanillaTest") {
   description 'Runs the vanilla integration tests.'
   group = 'Verification'
   check.dependsOn it
@@ -236,7 +236,7 @@ task vanillaTest {
   testCompile.extendsFrom compile
   testRuntime.extendsFrom runtime
 
-  def test = task("vanilla${jdk}Test", type: Test) {
+  def test = tasks.register("vanilla${jdk}Test", Test) {
     vanillaTest.dependsOn it
     testClassesDirs = sourceSets["vanilla${jdk}Test"].output.classesDirs
     classpath = sourceSets["vanilla${jdk}Test"].runtimeClasspath
@@ -303,7 +303,7 @@ tasks.compileGwtTestJava {
 
 import de.richsource.gradle.plugins.gwt.GwtCompile
 import de.richsource.gradle.plugins.gwt.LogLevel
-task compileGwtToJs(type: GwtCompile) {
+tasks.register("compileGwtToJs", GwtCompile) {
   def gwtDir = new File(buildDir, 'gwt')
   war = new File(gwtDir, 'out')
   extra = new File(gwtDir, 'extra')
@@ -325,7 +325,7 @@ task compileGwtToJs(type: GwtCompile) {
   dependsOn gwtClasses, gwtTestClasses
 }
 
-task gwtTest(type: Test) {
+tasks.register("gwtTest", Test) {
   description 'Runs the GWT integration tests.'
   group = 'Verification'
   check.dependsOn it
@@ -357,7 +357,7 @@ dependencies {
   noGuavaCompile gwtUser
   noGuavaTestCompile junit
 }
-task noGuavaTest {
+tasks.register("noGuavaTest") {
   description 'Runs the no-guava integration tests.'
   group = 'Verification'
   check.dependsOn it
@@ -397,7 +397,7 @@ task noGuavaTest {
   testCompile.extendsFrom compile
   testRuntime.extendsFrom runtime
 
-  def test = task("noGuava${jdk}Test", type: Test) {
+  def test = tasks.register("noGuava${jdk}Test", Test) {
     noGuavaTest.dependsOn it
     testClassesDirs = sourceSets["noGuava${jdk}Test"].output.classesDirs
     classpath = sourceSets["noGuava${jdk}Test"].runtimeClasspath
@@ -442,7 +442,7 @@ tasks.compileNoGuavaJ8TestJava {
   targetCompatibility = "1.8"
 }
 
-task noGuavaJ8Test(type: Test) {
+tasks.register("noGuavaJ8Test", Test) {
   description 'Runs the no-guava-j8 integration tests.'
   group = 'Verification'
   check.dependsOn it
@@ -489,7 +489,7 @@ tasks.compileLambdaTestJava {
   targetCompatibility = "1.8"
 }
 
-task("lambdaTest", type: Test) {
+tasks.register("lambdaTest", Test) {
   description 'Runs the lambda integration tests.'
   group = 'Verification'
   check.dependsOn it

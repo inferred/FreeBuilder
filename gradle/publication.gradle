@@ -117,12 +117,14 @@ class PomConvention {
 project.convention.plugins.pom = new PomConvention()
 project.convention.pom = project.convention.plugins.pom
 
-task sourcesJar(type: Jar, dependsOn: classes) {
+tasks.register("sourcesJar", Jar) {
+    dependsOn classes
     classifier = 'sources'
     from sourceSets.main.allSource
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
+tasks.register("javadocJar", Jar) {
+    dependsOn javadoc
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
