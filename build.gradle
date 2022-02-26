@@ -13,6 +13,7 @@ plugins {
   id 'java'
   id 'java-library'
   id 'maven-publish'
+  id 'com.diffplug.spotless' version '6.3.0'
   id 'com.github.johnrengelman.shadow' version '4.0.3'
   id 'com.jfrog.bintray' version '1.8.4'
 }
@@ -125,6 +126,14 @@ tasks.withType(Checkstyle).each { checkstyleTask ->
 eclipse.project {
   natures 'net.sf.eclipsecs.core.CheckstyleNature'
   buildCommand 'net.sf.eclipsecs.core.CheckstyleBuilder'
+}
+
+//// Spotless ////////////////////////////////////////////////////
+spotless {
+  java {
+    googleJavaFormat()
+    removeUnusedImports()
+  }
 }
 
 //// Shadow JAR //////////////////////////////////////////////////
