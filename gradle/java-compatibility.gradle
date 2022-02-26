@@ -23,16 +23,16 @@ Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
   String propertyName = "java${version.majorVersion}Home"
   String envName = "JAVA_${version.majorVersion}_HOME"
   JavaInfo javaInfo
-  if (hasProperty(propertyName)) {
-    javaInfo = Jvm.forHome(file(getProperty(propertyName)))
+  if (project.hasProperty(propertyName)) {
+    javaInfo = Jvm.forHome(file(project.getProperty(propertyName)))
   } else if (System.env.containsKey(envName)) {
     javaInfo = Jvm.forHome(file(System.env[envName]))
   } else if (!requiredJdks.contains(version) && fallback != null) {
     logger.info "Java ${versionString} not found; falling back to ${fallback}";
     return jvms[fallback.majorVersion];
   } else {
-    throw new RuntimeException("Set the property $propertyName in your gradle.properties"
-        + " pointing to a Java $version installation")
+    throw new RuntimeException("Set the property $propertyName in your"
+        + "$HOME/.gradle/gradle.properties, pointing to a Java $version installation")
   }
   logger.info "Java ${versionString} found at ${javaInfo.javaHome}"
   return javaInfo
