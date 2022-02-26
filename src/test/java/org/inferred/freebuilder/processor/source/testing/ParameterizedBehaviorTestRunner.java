@@ -3,6 +3,7 @@ package org.inferred.freebuilder.processor.source.testing;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
 import org.inferred.freebuilder.processor.source.feature.FeatureSet;
@@ -17,7 +18,8 @@ import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-import org.junit.runners.model.TestClass;
+import org.junit.runners.parameterized.BlockJUnit4ClassRunnerWithParameters;
+import org.junit.runners.parameterized.TestWithParameters;
 
 import java.lang.reflect.Field;
 import java.util.ArrayDeque;
@@ -29,19 +31,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.annotation.processing.Processor;
 import javax.tools.JavaFileObject;
 
-/**
- * Code shared between BehaviorTestRunner and ParameterizedBehaviorTest
- */
-public class SharedBehaviorTesting {
+/** Test runner for {@link ParameterizedBehaviorTestRunner}. */
+class ParameterizedBehaviorTestRunner extends BlockJUnit4ClassRunnerWithParameters {
 
   interface TestSupplier {
     Object get() throws Exception;
@@ -60,10 +56,6 @@ public class SharedBehaviorTesting {
   /** The "Introspection" test, which fails if no tests can share a compiler. */
   private final Description introspection;
 
-  private final Function<RunNotifier, Statement> superChildrenInvoker;
-  private final BiConsumer<FrameworkMethod, RunNotifier> superChildRunner;
-  private final TestSupplier superCreateTest;
-  private final Supplier<Description> superDescription;
   private final FeatureSet features;
 
   /** Metadata about the child tests, built by {@link #getChildMetadata()}. */
@@ -71,21 +63,13 @@ public class SharedBehaviorTesting {
   /** The BehaviorTester to inject into test fixtures created by {@link #createTest()}. */
   private BehaviorTester tester;
 
-  public SharedBehaviorTesting(
-      Function<RunNotifier, Statement> superChildrenInvoker,
-      BiConsumer<FrameworkMethod, RunNotifier> superChildRunner,
-      TestSupplier superCreateTest,
-      Supplier<Description> superDescription,
-      Supplier<TestClass> testClass,
-      BiFunction<Class<?>, String, Description> descriptionFactory,
-      FeatureSet features)
-          throws InitializationError {
-    this.superChildrenInvoker = superChildrenInvoker;
-    this.superChildRunner = superChildRunner;
-    this.superCreateTest = superCreateTest;
-    this.superDescription = superDescription;
-    this.features = features;
-    List<FrameworkField> testerFields = testClass.get().getAnnotatedFields(Shared.class);
+  ParameterizedBehaviorTestRunner(TestWithParameters test) throws InitializationError {
+    super(test);
+
+    features = FluentIterable.from(test.getParameters()).filter(FeatureSet.class).first().orNull();
+    checkState(features != null, "No FeatureSet parameter found");
+
+    List<FrameworkField> testerFields = getTestClass().getAnnotatedFields(Shared.class);
     if (testerFields.isEmpty()) {
       throw new InitializationError("No public @Shared field found");
     } else if (testerFields.size() > 1) {
@@ -96,21 +80,24 @@ public class SharedBehaviorTesting {
       throw new InitializationError("@Shared field " + frameworkField + " must be public");
     }
     if (!frameworkField.getType().isAssignableFrom(BehaviorTester.class)) {
-      throw new InitializationError(String.format(
-          "@Shared field %s must be of type %s",
-          frameworkField,
-          BehaviorTester.class.getSimpleName()));
+      throw new InitializationError(
+          String.format(
+              "@Shared field %s must be of type %s",
+              frameworkField, BehaviorTester.class.getSimpleName()));
     }
     testerField = frameworkField.getField();
-    introspection = descriptionFactory.apply(testClass.get().getJavaClass(), "Introspect");
+    introspection =
+        Description.createTestDescription(
+            getTestClass().getJavaClass(), "Introspect" + test.getParameters());
   }
 
   /**
    * Returns a {@link Description} showing the {@link #introspection} task, plus the children of
    * this runner.
    */
+  @Override
   public Description getDescription() {
-    Description originalDescription = superDescription.get();
+    Description originalDescription = super.getDescription();
     if (originalDescription.getChildren().size() > 1) {
       Description suiteDescription = originalDescription.childlessCopy();
       suiteDescription.addChild(introspection);
@@ -122,9 +109,8 @@ public class SharedBehaviorTesting {
     }
   }
 
-  /**
-   * Returns a statement that runs all children with compilations coalesced for performance.
-   */
+  /** Returns a statement that runs all children with compilations coalesced for performance. */
+  @Override
   public Statement childrenInvoker(RunNotifier notifier) {
     return new Statement() {
       @Override
@@ -134,11 +120,9 @@ public class SharedBehaviorTesting {
     };
   }
 
-  /**
-   * Runs all children with compilations coalesced for performance.
-   */
+  /** Runs all children with compilations coalesced for performance. */
   private void runChildren(RunNotifier notifier) throws Throwable {
-    if (superDescription.get().getChildren().size() > 1) {
+    if (super.getDescription().getChildren().size() > 1) {
       Queue<SharedCompiler> sharedCompilers = getSharedCompilers(notifier);
       while (!sharedCompilers.isEmpty()) {
         // Removing each shared compiler from the queue as we start it ensures it can be
@@ -152,16 +136,14 @@ public class SharedBehaviorTesting {
       // Rerun individual tests with the default BehaviorTester.
       tester = BehaviorTester.create(features);
       try {
-        superChildrenInvoker.apply(notifier).evaluate();
+        super.childrenInvoker(notifier).evaluate();
       } finally {
         tester = null;
       }
     }
   }
 
-  /**
-   * Determines how many compilers we need and which children to pass them to.
-   */
+  /** Determines how many compilers we need and which children to pass them to. */
   private Queue<SharedCompiler> getSharedCompilers(RunNotifier notifier) throws Throwable {
     notifier.fireTestStarted(introspection);
     try {
@@ -176,13 +158,11 @@ public class SharedBehaviorTesting {
     }
   }
 
-  /**
-   * Pre-runs children to find out what they want to compile.
-   */
+  /** Pre-runs children to find out what they want to compile. */
   private List<Child> getChildMetadata() throws Throwable {
     children = new ArrayList<>();
     try {
-      Statement childrenInvoker = superChildrenInvoker.apply(new RunNotifier() {});
+      Statement childrenInvoker = super.childrenInvoker(new RunNotifier() {});
       childrenInvoker.evaluate();
       return children;
     } finally {
@@ -194,41 +174,40 @@ public class SharedBehaviorTesting {
    * Pre-runs child, injecting a {@link Child} behavior tester to determine what they pass to the
    * compiler.
    */
+  @Override
   public void runChild(FrameworkMethod method, RunNotifier notifier) {
     if (tester != null) {
       // Only one child, no pre-run needed.
-      superChildRunner.accept(method, notifier);
+      super.runChild(method, notifier);
       return;
     }
     Child child = new Child(method);
     tester = child;
     try {
-      superChildRunner.accept(method, new RunNotifier() {
-        @Override
-        public void fireTestFailure(Failure failure) {
-          if (COMPILATION_FAILURE_EXPECTED.equals(failure.getMessage())) {
-            // Test is expecting compilation to fail, so merging with other tests will only
-            // propagate the failure. Mark the test as unmergeable.
-            child.unmergeable = true;
-          }
-        }
-      });
+      super.runChild(
+          method,
+          new RunNotifier() {
+            @Override
+            public void fireTestFailure(Failure failure) {
+              if (COMPILATION_FAILURE_EXPECTED.equals(failure.getMessage())) {
+                // Test is expecting compilation to fail, so merging with other tests will only
+                // propagate the failure. Mark the test as unmergeable.
+                child.unmergeable = true;
+              }
+            }
+          });
     } finally {
       tester = null;
       children.add(child);
     }
   }
 
-  /**
-   * Runs {@code child} with {@code sharedCompiler}.
-   */
+  /** Runs {@code child} with {@code sharedCompiler}. */
   private void runChild(
-      RunNotifier notifier,
-      SharedCompiler sharedCompiler,
-      FrameworkMethod child) {
+      RunNotifier notifier, SharedCompiler sharedCompiler, FrameworkMethod child) {
     tester = sharedCompiler.behaviorTester();
     try {
-      superChildRunner.accept(child, notifier);
+      super.runChild(child, notifier);
     } finally {
       tester = null;
     }
@@ -238,24 +217,21 @@ public class SharedBehaviorTesting {
    * Returns a new fixture for running a test. Executes the test class's no-argument constructor,
    * then injects the correct BehaviorTester implementation.
    */
+  @Override
   public Object createTest() throws Exception {
     checkState(tester != null);
-    Object test = superCreateTest.get();
+    Object test = super.createTest();
     // Inject the correct BehaviorTester implementation.
     testerField.set(test, tester);
     return test;
   }
 
-  /**
-   * Groups children that can share a compiler.
-   */
+  /** Groups children that can share a compiler. */
   private Queue<SharedCompiler> shareCompilers(List<Child> children) {
     Queue<SharedCompiler> sharedCompilers = new ArrayDeque<>();
     for (Child child : children) {
-      Optional<SharedCompiler> sharedCompiler = sharedCompilers
-          .stream()
-          .filter(c -> c.canShareCompiler(child))
-          .findAny();
+      Optional<SharedCompiler> sharedCompiler =
+          sharedCompilers.stream().filter(c -> c.canShareCompiler(child)).findAny();
       if (sharedCompiler.isPresent()) {
         sharedCompiler.get().addChild(child);
       } else {
@@ -265,19 +241,13 @@ public class SharedBehaviorTesting {
     return sharedCompilers;
   }
 
-  /**
-   * Fails the {@link #introspection} test unless we managed to share a compiler.
-   */
+  /** Fails the {@link #introspection} test unless we managed to share a compiler. */
   private void verifyCompilerShared(RunNotifier notifier, int numChildren, int numCompilations) {
-    System.out.println(String.format(
-        "Merged %d tests into %d compiler passes",
-        numChildren,
-        numCompilations));
-    int numFilteredChildren = superDescription.get().getChildren().size();
+    int numFilteredChildren = super.getDescription().getChildren().size();
     if (numFilteredChildren == numChildren) {
       if (numChildren == numCompilations) {
-        notifier.fireTestFailure(new Failure(
-            introspection, new AssertionError(MERGE_FAILURE_MESSAGE)));
+        notifier.fireTestFailure(
+            new Failure(introspection, new AssertionError(MERGE_FAILURE_MESSAGE)));
       }
     }
   }
@@ -337,8 +307,8 @@ public class SharedBehaviorTesting {
       unmergeable = true;
       return new CompilationFailureSubject() {
         @Override
-        public CompilationFailureSubject
-            withErrorThat(Consumer<DiagnosticSubject> diagnosticAssertions) {
+        public CompilationFailureSubject withErrorThat(
+            Consumer<DiagnosticSubject> diagnosticAssertions) {
           return this;
         }
       };
@@ -366,17 +336,14 @@ public class SharedBehaviorTesting {
 
         @Override
         public CompilationSubject testsPass(
-            Iterable<? extends TestSource> testSources,
-            boolean shouldSetContextClassLoader) {
+            Iterable<? extends TestSource> testSources, boolean shouldSetContextClassLoader) {
           return this;
         }
       };
     }
   }
 
-  /**
-   * A compiler that can be shared between a set of children.
-   */
+  /** A compiler that can be shared between a set of children. */
   private static class SharedCompiler {
     private final Set<FrameworkMethod> children = new LinkedHashSet<>();
     final boolean unmergeable;
@@ -445,7 +412,7 @@ public class SharedBehaviorTesting {
         for (Processor processor : processors) {
           tester.with(processor);
         }
-        processors = null;  // Allow compilers to be reclaimed by GC (processors retain a reference)
+        processors = null; // Allow compilers to be reclaimed by GC (processors retain a reference)
         for (JavaFileObject compilationUnit : compilationUnits.values()) {
           tester.with(compilationUnit);
         }
@@ -544,8 +511,7 @@ public class SharedBehaviorTesting {
 
           @Override
           public CompilationSubject testsPass(
-              Iterable<? extends TestSource> testSources,
-              boolean shouldSetContextClassLoader) {
+              Iterable<? extends TestSource> testSources, boolean shouldSetContextClassLoader) {
             assertCompiled.testsPass(testSources, shouldSetContextClassLoader);
             return this;
           }
