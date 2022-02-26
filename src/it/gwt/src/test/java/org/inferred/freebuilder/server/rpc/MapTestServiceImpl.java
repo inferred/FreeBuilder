@@ -15,15 +15,14 @@
  */
 package org.inferred.freebuilder.server.rpc;
 
+import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.inferred.freebuilder.client.rpc.MapGwtType;
 import org.inferred.freebuilder.client.rpc.MapTestService;
 
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-
 public class MapTestServiceImpl extends RemoteServiceServlet implements MapTestService {
 
-    @Override
-    public MapGwtType echo(MapGwtType mapGwtType) {
-        return mapGwtType;
-    }
+  @Override
+  public MapGwtType echo(MapGwtType mapGwtType) {
+    return mapGwtType;
+  }
 }

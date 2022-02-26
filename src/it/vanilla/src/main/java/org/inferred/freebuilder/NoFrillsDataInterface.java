@@ -19,6 +19,7 @@ package org.inferred.freebuilder;
 @FreeBuilder
 public interface NoFrillsDataInterface {
   int getPropertyA();
+
   boolean isPropertyB();
 
   /** Builder for {@link NoFrillsDataInterface}. */

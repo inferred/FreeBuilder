@@ -19,7 +19,11 @@ import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
-
+import static javax.lang.model.element.ElementKind.INTERFACE;
+import static javax.lang.model.util.ElementFilter.constructorsIn;
+import static javax.lang.model.util.ElementFilter.typesIn;
+import static javax.tools.Diagnostic.Kind.ERROR;
+import static javax.tools.Diagnostic.Kind.NOTE;
 import static org.inferred.freebuilder.processor.GwtSupport.gwtMetadata;
 import static org.inferred.freebuilder.processor.NamePicker.pickName;
 import static org.inferred.freebuilder.processor.model.MethodFinder.methodsOn;
@@ -27,29 +31,9 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
 import static org.inferred.freebuilder.processor.naming.NamingConventions.determineNamingConvention;
 
-import static javax.lang.model.element.ElementKind.INTERFACE;
-import static javax.lang.model.util.ElementFilter.constructorsIn;
-import static javax.lang.model.util.ElementFilter.typesIn;
-import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.NOTE;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
-import org.inferred.freebuilder.IgnoredByEquals;
-import org.inferred.freebuilder.NotInToString;
-import org.inferred.freebuilder.processor.Datatype.StandardMethod;
-import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
-import org.inferred.freebuilder.processor.model.MethodIntrospector;
-import org.inferred.freebuilder.processor.naming.NamingConvention;
-import org.inferred.freebuilder.processor.property.Factories;
-import org.inferred.freebuilder.processor.property.Property;
-import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
-import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Config;
-import org.inferred.freebuilder.processor.source.QualifiedName;
-import org.inferred.freebuilder.processor.source.Type;
-
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,7 +41,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
@@ -77,24 +60,35 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
+import org.inferred.freebuilder.IgnoredByEquals;
+import org.inferred.freebuilder.NotInToString;
+import org.inferred.freebuilder.processor.Datatype.StandardMethod;
+import org.inferred.freebuilder.processor.Datatype.UnderrideLevel;
+import org.inferred.freebuilder.processor.model.MethodIntrospector;
+import org.inferred.freebuilder.processor.naming.NamingConvention;
+import org.inferred.freebuilder.processor.property.Factories;
+import org.inferred.freebuilder.processor.property.Property;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
+import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Config;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.Type;
 
 /**
- * Analyses a {@link org.inferred.freebuilder.FreeBuilder FreeBuilder} datatype type, returning
- * a {@link GeneratedType} for a Builder superclass derived from its API.
+ * Analyses a {@link org.inferred.freebuilder.FreeBuilder FreeBuilder} datatype type, returning a
+ * {@link GeneratedType} for a Builder superclass derived from its API.
  *
  * <p>Any deviations from the FreeBuilder spec in the user's class will result in errors being
- * issued, but unless code generation is totally impossible, a type will still be returned.
- * This allows the user to extend an existing type without worrying that a mistake will cause
- * compiler errors in all dependent code&mdash;which would make it very hard to find the real
- * error.
+ * issued, but unless code generation is totally impossible, a type will still be returned. This
+ * allows the user to extend an existing type without worrying that a mistake will cause compiler
+ * errors in all dependent code&mdash;which would make it very hard to find the real error.
  */
 class Analyser {
 
   /**
-   * Thrown when a FreeBuilder type cannot have a Builder type generated, for instance if
-   * it is private.
+   * Thrown when a FreeBuilder type cannot have a Builder type generated, for instance if it is
+   * private.
    */
-  public static class CannotGenerateCodeException extends Exception { }
+  public static class CannotGenerateCodeException extends Exception {}
 
   private static final String BUILDER_SIMPLE_NAME_TEMPLATE = "%s_Builder";
   private static final String USER_BUILDER_NAME = "Builder";
@@ -119,51 +113,57 @@ class Analyser {
   GeneratedType analyse(TypeElement type) throws CannotGenerateCodeException {
     PackageElement pkg = elements.getPackageOf(type);
     verifyType(type, pkg);
-    QualifiedName generatedBuilder = QualifiedName.of(
-        pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
+    QualifiedName generatedBuilder =
+        QualifiedName.of(pkg.getQualifiedName().toString(), generatedBuilderSimpleName(type));
     List<? extends TypeParameterElement> typeParameters = type.getTypeParameters();
     DeclaredType builder = tryFindBuilder(generatedBuilder, type).orElse(null);
     if (builder == null) {
       return new GeneratedStub(
-        QualifiedName.of(type),
-        generatedBuilder.withParameters(typeParameters));
+          QualifiedName.of(type), generatedBuilder.withParameters(typeParameters));
     }
 
-    ImmutableSet<ExecutableElement> methods = methodsOn(type, elements, errorType -> {
-      throw new CannotGenerateCodeException();
-    });
+    ImmutableSet<ExecutableElement> methods =
+        methodsOn(
+            type,
+            elements,
+            errorType -> {
+              throw new CannotGenerateCodeException();
+            });
     Datatype.Builder constructionAndExtension = constructionAndExtension(builder);
     QualifiedName valueType = generatedBuilder.nestedType("Value");
     QualifiedName partialType = generatedBuilder.nestedType("Partial");
     QualifiedName propertyType = generatedBuilder.nestedType("Property");
-    Datatype.Builder datatypeBuilder = new Datatype.Builder()
-        .setType(QualifiedName.of(type).withParameters(typeParameters))
-        .setInterfaceType(type.getKind().isInterface())
-        .mergeFrom(constructionAndExtension)
-        .setGeneratedBuilder(generatedBuilder.withParameters(typeParameters))
-        .setValueType(valueType.withParameters(typeParameters))
-        .setPartialType(partialType.withParameters(typeParameters))
-        .setPropertyEnum(propertyType.withParameters())
-        .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
-        .setBuildMethod(pickName(builder, elements, types, type.asType(), "build"))
-        .setBuildPartialMethod(pickName(builder, elements, types, type.asType(), "buildPartial"))
-        .setClearMethod(pickName(builder, elements, types, builder, "clear"))
-        .setMergeFromBuilderMethod(pickName(
-            builder, elements, types, builder, "mergeFrom", builder))
-        .setMergeFromValueMethod(pickName(
-            builder, elements, types, builder, "mergeFrom", type.asType()))
-        .setHasToBuilderMethod(hasToBuilderMethod(
-            builder, constructionAndExtension.isExtensible(), methods))
-        .setBuilderSerializable(shouldBuilderBeSerializable(builder))
-        .setBuilder(Type.from(builder));
+    Datatype.Builder datatypeBuilder =
+        new Datatype.Builder()
+            .setType(QualifiedName.of(type).withParameters(typeParameters))
+            .setInterfaceType(type.getKind().isInterface())
+            .mergeFrom(constructionAndExtension)
+            .setGeneratedBuilder(generatedBuilder.withParameters(typeParameters))
+            .setValueType(valueType.withParameters(typeParameters))
+            .setPartialType(partialType.withParameters(typeParameters))
+            .setPropertyEnum(propertyType.withParameters())
+            .putAllStandardMethodUnderrides(findUnderriddenMethods(methods))
+            .setBuildMethod(pickName(builder, elements, types, type.asType(), "build"))
+            .setBuildPartialMethod(
+                pickName(builder, elements, types, type.asType(), "buildPartial"))
+            .setClearMethod(pickName(builder, elements, types, builder, "clear"))
+            .setMergeFromBuilderMethod(
+                pickName(builder, elements, types, builder, "mergeFrom", builder))
+            .setMergeFromValueMethod(
+                pickName(builder, elements, types, builder, "mergeFrom", type.asType()))
+            .setHasToBuilderMethod(
+                hasToBuilderMethod(builder, constructionAndExtension.isExtensible(), methods))
+            .setBuilderSerializable(shouldBuilderBeSerializable(builder))
+            .setBuilder(Type.from(builder));
     if (datatypeBuilder.getBuilderFactory().isPresent()
         && !datatypeBuilder.getHasToBuilderMethod()) {
       datatypeBuilder.setRebuildableType(
           generatedBuilder.nestedType("Rebuildable").withParameters(typeParameters));
     }
     Datatype baseDatatype = datatypeBuilder.build();
-    Map<Property, PropertyCodeGenerator> generatorsByProperty = pickPropertyGenerators(
-        type, baseDatatype, builder, removeNonGetterMethods(builder, methods));
+    Map<Property, PropertyCodeGenerator> generatorsByProperty =
+        pickPropertyGenerators(
+            type, baseDatatype, builder, removeNonGetterMethods(builder, methods));
     datatypeBuilder.mergeFrom(gwtMetadata(type, baseDatatype, generatorsByProperty));
     return new GeneratedBuilder(datatypeBuilder.build(), generatorsByProperty);
   }
@@ -197,7 +197,8 @@ class Analyser {
             messager.printMessage(
                 ERROR,
                 "FreeBuilder types cannot be private, but enclosing type "
-                    + e.getSimpleName() + " is inaccessible",
+                    + e.getSimpleName()
+                    + " is inaccessible",
                 type);
             throw new CannotGenerateCodeException();
           }
@@ -232,8 +233,7 @@ class Analyser {
   }
 
   /** Issues an error if {@code type} does not have a package-visible no-args constructor. */
-  private void verifyTypeIsConstructible(TypeElement type)
-      throws CannotGenerateCodeException {
+  private void verifyTypeIsConstructible(TypeElement type) throws CannotGenerateCodeException {
     List<ExecutableElement> constructors = constructorsIn(type.getEnclosedElements());
     if (constructors.isEmpty()) {
       return;
@@ -267,10 +267,12 @@ class Analyser {
     }
     if (standardMethods.containsKey(StandardMethod.EQUALS)
         != standardMethods.containsKey(StandardMethod.HASH_CODE)) {
-      ExecutableElement underriddenMethod = standardMethods.containsKey(StandardMethod.EQUALS)
-          ? standardMethods.get(StandardMethod.EQUALS)
-          : standardMethods.get(StandardMethod.HASH_CODE);
-      messager.printMessage(ERROR,
+      ExecutableElement underriddenMethod =
+          standardMethods.containsKey(StandardMethod.EQUALS)
+              ? standardMethods.get(StandardMethod.EQUALS)
+              : standardMethods.get(StandardMethod.HASH_CODE);
+      messager.printMessage(
+          ERROR,
           "hashCode and equals must be implemented together on FreeBuilder types",
           underriddenMethod);
     }
@@ -287,13 +289,12 @@ class Analyser {
 
   /** Find a toBuilder method, if the user has provided one. */
   private boolean hasToBuilderMethod(
-      DeclaredType builder,
-      boolean isExtensible,
-      Iterable<ExecutableElement> methods) {
+      DeclaredType builder, boolean isExtensible, Iterable<ExecutableElement> methods) {
     for (ExecutableElement method : methods) {
       if (isToBuilderMethod(builder, method)) {
         if (!isExtensible) {
-          messager.printMessage(ERROR,
+          messager.printMessage(
+              ERROR,
               "No accessible no-args Builder constructor available to implement toBuilder",
               method);
         }
@@ -304,10 +305,10 @@ class Analyser {
   }
 
   private boolean isToBuilderMethod(DeclaredType declaredType, ExecutableElement method) {
-      return (method.getSimpleName().contentEquals("toBuilder")
-          && method.getModifiers().contains(Modifier.ABSTRACT)
-          && method.getParameters().isEmpty()
-          && types.isSameType(method.getReturnType(), declaredType));
+    return (method.getSimpleName().contentEquals("toBuilder")
+        && method.getModifiers().contains(Modifier.ABSTRACT)
+        && method.getParameters().isEmpty()
+        && types.isSameType(method.getReturnType(), declaredType));
   }
 
   private Set<ExecutableElement> removeNonGetterMethods(
@@ -341,11 +342,11 @@ class Analyser {
    */
   private Optional<DeclaredType> tryFindBuilder(
       final QualifiedName superclass, TypeElement valueType) {
-    TypeElement builderType = typesIn(valueType.getEnclosedElements())
-        .stream()
-        .filter(element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME))
-        .findAny()
-        .orElse(null);
+    TypeElement builderType =
+        typesIn(valueType.getEnclosedElements()).stream()
+            .filter(element -> element.getSimpleName().contentEquals(USER_BUILDER_NAME))
+            .findAny()
+            .orElse(null);
     if (builderType == null) {
       if (valueType.getKind() == INTERFACE) {
         messager.printMessage(
@@ -386,8 +387,9 @@ class Analyser {
     }
 
     DeclaredType declaredValueType = (DeclaredType) valueType.asType();
-    DeclaredType declaredBuilderType = types.getDeclaredType(
-        builderType, declaredValueType.getTypeArguments().toArray(new TypeMirror[0]));
+    DeclaredType declaredBuilderType =
+        types.getDeclaredType(
+            builderType, declaredValueType.getTypeArguments().toArray(new TypeMirror[0]));
 
     return Optional.of(declaredBuilderType);
   }
@@ -416,17 +418,17 @@ class Analyser {
     ImmutableMap.Builder<Property, PropertyCodeGenerator> generatorsByProperty =
         ImmutableMap.builder();
     for (ExecutableElement method : methods) {
-      namingConvention.getPropertyNames(type, method).ifPresent(propertyBuilder -> {
-        addPropertyData(propertyBuilder, type, method, jacksonSupport);
-        Property property = propertyBuilder.build();
-        Config config = new ConfigImpl(
-            builder,
-            datatype,
-            property,
-            method,
-            methodsInvokedInBuilderConstructor);
-        generatorsByProperty.put(property, createCodeGenerator(config));
-      });
+      namingConvention
+          .getPropertyNames(type, method)
+          .ifPresent(
+              propertyBuilder -> {
+                addPropertyData(propertyBuilder, type, method, jacksonSupport);
+                Property property = propertyBuilder.build();
+                Config config =
+                    new ConfigImpl(
+                        builder, datatype, property, method, methodsInvokedInBuilderConstructor);
+                generatorsByProperty.put(property, createCodeGenerator(config));
+              });
     }
     return generatorsByProperty.build();
   }
@@ -445,9 +447,7 @@ class Analyser {
     return ImmutableSet.copyOf(transform(result, toStringFunction()));
   }
 
-  /**
-   * Introspects {@code method}, as found on {@code valueType}.
-   */
+  /** Introspects {@code method}, as found on {@code valueType}. */
   private void addPropertyData(
       Property.Builder propertyBuilder,
       TypeElement valueType,
@@ -462,8 +462,8 @@ class Analyser {
       jacksonSupport.get().addJacksonAnnotations(propertyBuilder, method);
     }
     if (method.getEnclosingElement().equals(valueType)) {
-        propertyBuilder.setInEqualsAndHashCode(method.getAnnotation(IgnoredByEquals.class) == null);
-        propertyBuilder.setInToString(method.getAnnotation(NotInToString.class) == null);
+      propertyBuilder.setInEqualsAndHashCode(method.getAnnotation(IgnoredByEquals.class) == null);
+      propertyBuilder.setInToString(method.getAnnotation(NotInToString.class) == null);
     }
     if (propertyType.getKind().isPrimitive()) {
       PrimitiveType unboxedType = types.getPrimitiveType(propertyType.getKind());
@@ -571,22 +571,23 @@ class Analyser {
           return true;
         }
 
-        @Override protected Boolean defaultAction(TypeMirror e, Void p) {
+        @Override
+        protected Boolean defaultAction(TypeMirror e, Void p) {
           return true;
         }
       };
 
-  /**
-   * Visitor that returns true if the visited type is an unbounded wildcard, i.e. {@code <?>}.
-   */
+  /** Visitor that returns true if the visited type is an unbounded wildcard, i.e. {@code <?>}. */
   private static final SimpleTypeVisitor8<Boolean, ?> IS_UNBOUNDED_WILDCARD =
       new SimpleTypeVisitor8<Boolean, Void>() {
-        @Override public Boolean visitWildcard(WildcardType t, Void p) {
+        @Override
+        public Boolean visitWildcard(WildcardType t, Void p) {
           return t.getExtendsBound() == null
               || t.getExtendsBound().toString().equals("java.lang.Object");
         }
 
-        @Override protected Boolean defaultAction(TypeMirror e, Void p) {
+        @Override
+        protected Boolean defaultAction(TypeMirror e, Void p) {
           return false;
         }
       };
@@ -609,10 +610,7 @@ class Analyser {
   private boolean shouldBuilderBeSerializable(DeclaredType builder) {
     // If there is a user-provided subclass, only make its generated superclass serializable if
     // it is itself; otherwise, tools may complain about missing a serialVersionUID field.
-    return asElement(builder)
-        .getInterfaces()
-        .stream()
-        .anyMatch(isEqualTo(Serializable.class));
+    return asElement(builder).getInterfaces().stream().anyMatch(isEqualTo(Serializable.class));
   }
 
   /** Returns whether a method is one of the {@link StandardMethod}s, and if so, which. */
@@ -646,8 +644,8 @@ class Analyser {
    * Visitor that returns true if the visited type extends a generated {@code superclass} in the
    * same package.
    */
-  private static final class IsSubclassOfGeneratedTypeVisitor extends
-      SimpleTypeVisitor8<Boolean, Void> {
+  private static final class IsSubclassOfGeneratedTypeVisitor
+      extends SimpleTypeVisitor8<Boolean, Void> {
     private final QualifiedName superclass;
     private final List<? extends TypeParameterElement> typeParameters;
 
@@ -659,8 +657,8 @@ class Analyser {
     }
 
     /**
-     * Any reference to the as-yet-ungenerated builder should be an unresolved ERROR.
-     * Similarly for many copy-and-paste errors
+     * Any reference to the as-yet-ungenerated builder should be an unresolved ERROR. Similarly for
+     * many copy-and-paste errors
      */
     @Override
     public Boolean visitError(ErrorType t, Void p) {
@@ -675,9 +673,9 @@ class Analyser {
     }
 
     /**
-     * However, with some setups (e.g. Eclipse+blaze), the builder may have already been
-     * generated and provided via a jar, in which case the reference will be DECLARED and
-     * qualified. We still want to generate it.
+     * However, with some setups (e.g. Eclipse+blaze), the builder may have already been generated
+     * and provided via a jar, in which case the reference will be DECLARED and qualified. We still
+     * want to generate it.
      */
     @Override
     public Boolean visitDeclared(DeclaredType t, Void p) {
@@ -689,7 +687,8 @@ class Analyser {
   private static String camelCaseToAllCaps(String camelCase) {
     // The first half of the pattern spots lowercase to uppercase boundaries.
     // The second half spots the end of uppercase sequences, like "URL" in "myURLShortener".
-    return camelCase.replaceAll("(?<=[^A-Z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][^A-Z])", "_")
+    return camelCase
+        .replaceAll("(?<=[^A-Z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][^A-Z])", "_")
         .toUpperCase();
   }
 

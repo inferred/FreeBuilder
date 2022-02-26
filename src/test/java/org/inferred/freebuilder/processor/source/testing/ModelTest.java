@@ -16,27 +16,15 @@
 package org.inferred.freebuilder.processor.source.testing;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
-
+import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import static javax.lang.model.util.ElementFilter.methodsIn;
-
 import com.google.common.reflect.TypeToken;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.util.List;
 import java.util.Map;
-
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.NestingKind;
@@ -45,6 +33,13 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link Model}. */
 @RunWith(JUnit4.class)
@@ -89,18 +84,21 @@ public class ModelTest {
 
   @Test
   public void newElementWithMarker() {
-    TypeElement type = (TypeElement) model.newElementWithMarker(
-        "package foo.bar;",
-        "public class MyType {",
-        "  ---> public class MyInnerType {",
-        "    public void doNothing() { }",
-        "  }",
-        "}");
+    TypeElement type =
+        (TypeElement)
+            model.newElementWithMarker(
+                "package foo.bar;",
+                "public class MyType {",
+                "  ---> public class MyInnerType {",
+                "    public void doNothing() { }",
+                "  }",
+                "}");
     assertEquals(ElementKind.CLASS, type.getKind());
     assertEquals(NestingKind.MEMBER, type.getNestingKind());
     assertEquals("MyInnerType", type.getSimpleName().toString());
     assertEquals("foo.bar.MyType.MyInnerType", type.toString());
-    assertEquals("doNothing",
+    assertEquals(
+        "doNothing",
         getOnlyElement(methodsIn(type.getEnclosedElements())).getSimpleName().toString());
   }
 
@@ -119,19 +117,22 @@ public class ModelTest {
 
   @Test
   public void newElementAnnotatedWith() {
-    TypeElement type = (TypeElement) model.newElementAnnotatedWith(
-        Deprecated.class,
-        "package foo.bar;",
-        "public class MyType {",
-        "  @Deprecated public class MyInnerType {",
-        "    public void doNothing() { }",
-        "  }",
-        "}");
+    TypeElement type =
+        (TypeElement)
+            model.newElementAnnotatedWith(
+                Deprecated.class,
+                "package foo.bar;",
+                "public class MyType {",
+                "  @Deprecated public class MyInnerType {",
+                "    public void doNothing() { }",
+                "  }",
+                "}");
     assertEquals(ElementKind.CLASS, type.getKind());
     assertEquals(NestingKind.MEMBER, type.getNestingKind());
     assertEquals("MyInnerType", type.getSimpleName().toString());
     assertEquals("foo.bar.MyType.MyInnerType", type.toString());
-    assertEquals("doNothing",
+    assertEquals(
+        "doNothing",
         getOnlyElement(methodsIn(type.getEnclosedElements())).getSimpleName().toString());
   }
 
@@ -178,39 +179,35 @@ public class ModelTest {
 
   @Test
   public void newType_class() {
-    TypeElement type = model.newType(
-        "package foo.bar;",
-        "public class MyType {",
-        "  public void doNothing() { }",
-        "}");
+    TypeElement type =
+        model.newType(
+            "package foo.bar;", "public class MyType {", "  public void doNothing() { }", "}");
     assertEquals(ElementKind.CLASS, type.getKind());
     assertEquals(NestingKind.TOP_LEVEL, type.getNestingKind());
     assertEquals("MyType", type.getSimpleName().toString());
     assertEquals("foo.bar.MyType", type.toString());
-    assertEquals("doNothing",
+    assertEquals(
+        "doNothing",
         getOnlyElement(methodsIn(type.getEnclosedElements())).getSimpleName().toString());
   }
 
   @Test
   public void newType_interface() {
-    TypeElement type = model.newType(
-        "package foo.bar;",
-        "public interface MyType {",
-        "  public void doNothing();",
-        "}");
+    TypeElement type =
+        model.newType(
+            "package foo.bar;", "public interface MyType {", "  public void doNothing();", "}");
     assertEquals(ElementKind.INTERFACE, type.getKind());
     assertEquals(NestingKind.TOP_LEVEL, type.getNestingKind());
     assertEquals("MyType", type.getSimpleName().toString());
     assertEquals("foo.bar.MyType", type.toString());
-    assertEquals("doNothing",
+    assertEquals(
+        "doNothing",
         getOnlyElement(methodsIn(type.getEnclosedElements())).getSimpleName().toString());
   }
 
   @Test
   public void newType_enum() {
-    TypeElement type = model.newType(
-        "package foo.bar;",
-        "public enum MyType { A, B; }");
+    TypeElement type = model.newType("package foo.bar;", "public enum MyType { A, B; }");
     assertEquals(ElementKind.ENUM, type.getKind());
     assertEquals(NestingKind.TOP_LEVEL, type.getNestingKind());
     assertEquals("MyType", type.getSimpleName().toString());
@@ -219,17 +216,14 @@ public class ModelTest {
 
   @Test
   public void newType_annotation() {
-    TypeElement type = model.newType(
-        "package foo.bar;",
-        "public @interface MyType {",
-        "  String param();",
-        "}");
+    TypeElement type =
+        model.newType("package foo.bar;", "public @interface MyType {", "  String param();", "}");
     assertEquals(ElementKind.ANNOTATION_TYPE, type.getKind());
     assertEquals(NestingKind.TOP_LEVEL, type.getNestingKind());
     assertEquals("MyType", type.getSimpleName().toString());
     assertEquals("foo.bar.MyType", type.toString());
-    assertEquals("param",
-        getOnlyElement(methodsIn(type.getEnclosedElements())).getSimpleName().toString());
+    assertEquals(
+        "param", getOnlyElement(methodsIn(type.getEnclosedElements())).getSimpleName().toString());
   }
 
   @Test
@@ -277,16 +271,17 @@ public class ModelTest {
   public void typeMirror_string_argumentSubstitution() {
     TypeMirror t1 = model.typeMirror("java.util.Map<Integer, String>");
     assertEquals("java.util.Map<java.lang.Integer,java.lang.String>", t1.toString());
-    TypeMirror t2 = model.typeMirror(
-        "java.util.Map<%1, %2>", model.typeMirror("Integer"), model.typeMirror("String"));
+    TypeMirror t2 =
+        model.typeMirror(
+            "java.util.Map<%1, %2>", model.typeMirror("Integer"), model.typeMirror("String"));
     assertEquals("java.util.Map<java.lang.Integer,java.lang.String>", t2.toString());
     assertTrue("Same type", model.typeUtils().isSameType(t1, t2));
   }
 
   @Test
   public void typeMirror_string_rawTypeSubstitution() {
-    TypeMirror t = model.typeMirror(
-        "%1<%2>", model.typeMirror("java.util.List"), model.typeMirror("Integer"));
+    TypeMirror t =
+        model.typeMirror("%1<%2>", model.typeMirror("java.util.List"), model.typeMirror("Integer"));
     assertEquals("java.util.List<java.lang.Integer>", t.toString());
   }
 
@@ -295,8 +290,7 @@ public class ModelTest {
     TypeMirror stringList = model.typeMirror("java.util.List<String>");
     TypeMirror integer = model.typeMirror("Integer");
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(
-        "Expected raw type, got 'java.util.List<java.lang.String>'");
+    thrown.expectMessage("Expected raw type, got 'java.util.List<java.lang.String>'");
     model.typeMirror("%1<%2>", stringList, integer);
   }
 
@@ -476,11 +470,10 @@ public class ModelTest {
 
   @Test
   public void typeMirrorEqualsMethodReturnType() {
-    ExecutableElement method = (ExecutableElement) model.newElementWithMarker(
-        "package example.com;",
-        "interface Foo {",
-        "  ---> String method();",
-        "}");
+    ExecutableElement method =
+        (ExecutableElement)
+            model.newElementWithMarker(
+                "package example.com;", "interface Foo {", "  ---> String method();", "}");
     TypeMirror stringType = model.typeMirror("String");
     assertTrue("Same type", model.typeUtils().isSameType(stringType, method.getReturnType()));
   }

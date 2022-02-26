@@ -26,6 +26,13 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import javax.annotation.processing.Filer;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -40,15 +47,6 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-
-import javax.annotation.processing.Filer;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-import javax.tools.JavaFileObject;
-
 /** Tests for {@link FilerUtils}. */
 @RunWith(MockitoJUnitRunner.class)
 public class FilerUtilsTest {
@@ -59,9 +57,8 @@ public class FilerUtilsTest {
   private final StringWriter source = new StringWriter();
   private TypeElement originatingElement;
 
-  private final SourceBuilder unit = SourceBuilder.forTesting()
-      .addLine("package com.example;")
-      .addLine("class Bar { }");
+  private final SourceBuilder unit =
+      SourceBuilder.forTesting().addLine("package com.example;").addLine("class Bar { }");
 
   @Before
   public void setup() throws IOException {
@@ -81,14 +78,18 @@ public class FilerUtilsTest {
     // Due to a bug in Eclipse, we *must* call close on the object returned from openWriter().
     // Eclipse proxies a Writer but does not implement the fluent API correctly.
     // Here, we implement the fluent Writer API with the same bug:
-    Writer mockWriter = Mockito.mock(Writer.class, (Answer<?>) invocation -> {
-      if (Writer.class.isAssignableFrom(invocation.getMethod().getReturnType())) {
-        // Erroneously return the delegate writer (matching the Eclipse bug!)
-        return source;
-      } else {
-        return Answers.RETURNS_SMART_NULLS.get().answer(invocation);
-      }
-    });
+    Writer mockWriter =
+        Mockito.mock(
+            Writer.class,
+            (Answer<?>)
+                invocation -> {
+                  if (Writer.class.isAssignableFrom(invocation.getMethod().getReturnType())) {
+                    // Erroneously return the delegate writer (matching the Eclipse bug!)
+                    return source;
+                  } else {
+                    return Answers.RETURNS_SMART_NULLS.get().answer(invocation);
+                  }
+                });
     when(sourceFile.openWriter()).thenReturn(mockWriter);
 
     FilerUtils.writeCompilationUnit(filer, unit, originatingElement);
@@ -148,5 +149,4 @@ public class FilerUtilsTest {
       }
     };
   }
-
 }

@@ -20,13 +20,6 @@ import static org.inferred.freebuilder.processor.BuilderFactory.TypeInference.EX
 import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUAVA;
 
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.BuildableType;
-import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.LazyName;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.ValueType;
-
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,10 +28,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.RandomAccess;
+import org.inferred.freebuilder.processor.BuildableType;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.LazyName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.ValueType;
 
-/**
- * Excerpts defining a list implementation that stores a mixture of builders and value types.
- */
+/** Excerpts defining a list implementation that stores a mixture of builders and value types. */
 public class BuildableList extends ValueType implements Excerpt {
 
   public static LazyName of(BuildableType element) {
@@ -58,11 +54,9 @@ public class BuildableList extends ValueType implements Excerpt {
   @Override
   public void addTo(SourceBuilder code) {
     code.addLine("@%s({\"rawtypes\", \"unchecked\"})", SuppressWarnings.class)
-        .addLine("private class %s extends %s<%s> implements %s {",
-            name(),
-            AbstractList.class,
-            element.builderType(),
-            RandomAccess.class)
+        .addLine(
+            "private class %s extends %s<%s> implements %s {",
+            name(), AbstractList.class, element.builderType(), RandomAccess.class)
         .addLine("")
         .addLine("  // A list of value or builder instances");
     if (code.feature(GUAVA).isAvailable()) {
@@ -113,9 +107,7 @@ public class BuildableList extends ValueType implements Excerpt {
     code.addLine("  Object oldElement = elements.set(index, element);")
         .addLine("  if (oldElement instanceof %s) {", element.type().getQualifiedName());
     convertToBuilder("oldElement", code);
-    code.addLine("  }")
-        .addLine("  return (%s) oldElement;", element.builderType())
-        .addLine("}");
+    code.addLine("  }").addLine("  return (%s) oldElement;", element.builderType()).addLine("}");
   }
 
   private void addAdd(SourceBuilder code) {
@@ -123,8 +115,7 @@ public class BuildableList extends ValueType implements Excerpt {
         .addLine("@Override")
         .addLine("public void add(int index, %s element) {", element.builderType());
     convertToArrayList(code);
-    code.addLine("  elements.add(index, element);")
-        .addLine("}");
+    code.addLine("  elements.add(index, element);").addLine("}");
   }
 
   private void addRemove(SourceBuilder code) {
@@ -135,22 +126,18 @@ public class BuildableList extends ValueType implements Excerpt {
     code.addLine("  Object oldElement = elements.remove(index);")
         .addLine("  if (oldElement instanceof %s) {", element.type().getQualifiedName());
     convertToBuilder("oldElement", code);
-    code.addLine("  }")
-        .addLine("  return (%s) oldElement;", element.builderType())
-        .addLine("}");
+    code.addLine("  }").addLine("  return (%s) oldElement;", element.builderType()).addLine("}");
   }
 
   private static void addEnsureCapacity(SourceBuilder code) {
-    code.addLine("")
-        .addLine("void ensureCapacity(int minCapacity) {");
+    code.addLine("").addLine("void ensureCapacity(int minCapacity) {");
     if (code.feature(GUAVA).isAvailable()) {
       convertToArrayList(code);
       code.add("  ((%s) elements)", ArrayList.class);
     } else {
       code.add("  elements");
     }
-    code.add(".ensureCapacity(minCapacity);%n")
-        .addLine("}");
+    code.add(".ensureCapacity(minCapacity);%n").addLine("}");
   }
 
   private void addAddValue(SourceBuilder code) {
@@ -158,8 +145,7 @@ public class BuildableList extends ValueType implements Excerpt {
         .addLine("void addValue(%s element) {", element.type())
         .addLine("  %s.requireNonNull(element);", Objects.class);
     convertToArrayList(code);
-    code.addLine("  elements.add(element);")
-        .addLine("}");
+    code.addLine("  elements.add(element);").addLine("}");
   }
 
   private void addAddAllValues(SourceBuilder code) {
@@ -188,8 +174,8 @@ public class BuildableList extends ValueType implements Excerpt {
           .addLine("  if (elements instanceof %s) {", ImmutableList.class)
           .addLine("    return (%s<%s>) elements;", ImmutableList.class, element.type())
           .addLine("  }")
-          .addLine("  %1$s.Builder<%2$s> values = %1$s.builder();",
-              ImmutableList.class, element.type())
+          .addLine(
+              "  %1$s.Builder<%2$s> values = %1$s.builder();", ImmutableList.class, element.type())
           .addLine("  for (Object element : elements) {")
           .addLine("    values.add(%s(element));", buildMethod)
           .addLine("  }")
@@ -200,16 +186,16 @@ public class BuildableList extends ValueType implements Excerpt {
           .addLine("    case 0:")
           .addLine("      return %s.emptyList();", Collections.class)
           .addLine("    case 1:")
-          .addLine("      return %s.singletonList(%s(elements.get(0)));",
-              Collections.class, buildMethod)
+          .addLine(
+              "      return %s.singletonList(%s(elements.get(0)));", Collections.class, buildMethod)
           .addLine("    default:")
           .addLine("      Object[] values = new Object[elements.size()];")
           .addLine("      for (int i = 0; i < elements.size(); i++) {")
           .addLine("        values[i] = %s(elements.get(i));", buildMethod)
           .addLine("      }")
           .addLine("      return (%1$s<%2$s>)(%1$s<?>)", List.class, element.type())
-          .addLine("          %s.unmodifiableList(%s.asList(values));",
-              Collections.class, Arrays.class)
+          .addLine(
+              "          %s.unmodifiableList(%s.asList(values));", Collections.class, Arrays.class)
           .addLine("  }");
     }
     code.addLine("}")
@@ -240,7 +226,8 @@ public class BuildableList extends ValueType implements Excerpt {
     if (element.partialToBuilder() == TO_BUILDER_AND_MERGE) {
       code.addLine("    %1$s = ((%2$s) %1$s).toBuilder();", variable, element.type());
     } else {
-      code.addLine("    %1$s = %2$s.mergeFrom((%3$s) %1$s);",
+      code.addLine(
+          "    %1$s = %2$s.mergeFrom((%3$s) %1$s);",
           variable,
           element.builderFactory().newBuilder(element.builderType(), EXPLICIT_TYPES),
           element.type());

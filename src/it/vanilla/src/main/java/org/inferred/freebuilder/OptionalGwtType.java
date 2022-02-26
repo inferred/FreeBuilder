@@ -17,15 +17,14 @@ package org.inferred.freebuilder;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Optional;
-
 import java.io.Serializable;
 
-/** Simple GWT-compatible FreeBuilder type with a single optional String property.  */
+/** Simple GWT-compatible FreeBuilder type with a single optional String property. */
 @FreeBuilder
 @GwtCompatible(serializable = true)
 public interface OptionalGwtType extends Serializable {
   Optional<String> getName();
 
   /** Builder for {@link OptionalGwtType}. */
-  class Builder extends OptionalGwtType_Builder { }
+  class Builder extends OptionalGwtType_Builder {}
 }

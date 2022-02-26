@@ -1,8 +1,7 @@
 package org.inferred.freebuilder.processor;
 
-import org.inferred.freebuilder.processor.Datatype.Visibility;
-
 import java.util.Objects;
+import org.inferred.freebuilder.processor.Datatype.Visibility;
 
 public class NameAndVisibility {
 

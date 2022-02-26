@@ -18,6 +18,8 @@ package org.inferred.freebuilder.processor.source.testing;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -25,22 +27,19 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.parameterized.ParametersRunnerFactory;
 import org.junit.runners.parameterized.TestWithParameters;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
 /**
  * Optimized test runner factory for {@link Parameterized} tests using {@link BehaviorTester}.
  *
- * <p>Pre-runs all tests once with no compilation, to determine which can use the same compiler.
- * If two tests add the same processors and do not give conflicting java files, they will be
- * run back-to-back with the same compiler instance. This means <b>all tests are run twice</b>.
- * Any tests which do not compile the same code every time (e.g. random or time-based code) will
- * flake with this runner.
+ * <p>Pre-runs all tests once with no compilation, to determine which can use the same compiler. If
+ * two tests add the same processors and do not give conflicting java files, they will be run
+ * back-to-back with the same compiler instance. This means <b>all tests are run twice</b>. Any
+ * tests which do not compile the same code every time (e.g. random or time-based code) will flake
+ * with this runner.
  *
- * <p>Tests that provide <em>non-compilable</em> test code <b>must</b> use
- * {@link ExpectedException} to catch the {@link CompilationException}, as this runner uses the
- * resulting pre-run error message to mark the test as <b>unmergeable</b>. (If we did not do this,
- * all tests using the same compiler would fail with the same compilation exception!)
+ * <p>Tests that provide <em>non-compilable</em> test code <b>must</b> use {@link ExpectedException}
+ * to catch the {@link CompilationException}, as this runner uses the resulting pre-run error
+ * message to mark the test as <b>unmergeable</b>. (If we did not do this, all tests using the same
+ * compiler would fail with the same compilation exception!)
  *
  * <p>Adds an "Introspection" test to the suite to show how much time the initial pre-run is taking.
  * If no tests can share a compiler, the "Introspection" test will fail. This may indicate your

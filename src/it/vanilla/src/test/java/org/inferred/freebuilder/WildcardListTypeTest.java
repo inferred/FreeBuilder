@@ -18,7 +18,6 @@ package org.inferred.freebuilder;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -33,10 +32,7 @@ public class WildcardListTypeTest {
 
   @Test
   public void testBuild() {
-    WildcardListType value = new WildcardListType.Builder()
-        .addNumbers(1)
-        .addNumbers(2.8)
-        .build();
+    WildcardListType value = new WildcardListType.Builder().addNumbers(1).addNumbers(2.8).build();
     assertEquals(Arrays.asList(1, 2.8), value.numbers());
   }
 }

@@ -17,11 +17,10 @@ package org.inferred.freebuilder.processor.source.testing;
 
 import static java.util.stream.Collectors.joining;
 
-import org.inferred.freebuilder.processor.source.QualifiedName;
-
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.tools.JavaFileObject;
+import org.inferred.freebuilder.processor.source.QualifiedName;
 
 public class InMemoryJavaFile extends InMemoryFile implements JavaFileObject {
 

@@ -18,10 +18,8 @@ package org.inferred.freebuilder.processor.source;
 import static com.google.common.collect.Iterables.any;
 
 import com.google.common.base.Predicate;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -38,8 +36,8 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.AbstractTypeVisitor8;
 
 /** A type visitor that returns true if the type will be invalid if we write it out. */
-public class IsInvalidTypeVisitor
-    extends AbstractTypeVisitor8<Boolean, Void> implements Predicate<TypeMirror> {
+public class IsInvalidTypeVisitor extends AbstractTypeVisitor8<Boolean, Void>
+    implements Predicate<TypeMirror> {
 
   public static boolean isLegalType(TypeMirror mirror) {
     return !(new IsInvalidTypeVisitor().visit(mirror));
@@ -48,7 +46,7 @@ public class IsInvalidTypeVisitor
   /** Handles self-referential types like {@code Comparable<E extends Comparable<E>>}. */
   private final Map<DeclaredType, Boolean> invalidity = new LinkedHashMap<>();
 
-  private IsInvalidTypeVisitor() { }
+  private IsInvalidTypeVisitor() {}
 
   /** Returns true if input is neither null nor invalid. */
   @Override

@@ -1,17 +1,14 @@
 package org.inferred.freebuilder.processor.model;
 
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.source.Partial;
-
 import java.util.List;
-
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import org.inferred.freebuilder.processor.source.Partial;
 
 public abstract class TypeParameterElementImpl implements TypeParameterElement {
 

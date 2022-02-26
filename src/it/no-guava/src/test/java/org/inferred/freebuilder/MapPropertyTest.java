@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -46,14 +45,13 @@ public class MapPropertyTest {
     assertEquals(mapOf(NAME_1, DISTANCE_1), distancesView);
     assertEquals(mapOf(NAME_1, DISTANCE_1), builder.build().getDistances());
     builder.putAllDistances(mapOf(NAME_2, DISTANCE_2, NAME_3, DISTANCE_3));
-    assertEquals(mapOf(NAME_1, DISTANCE_1, NAME_2, DISTANCE_2, NAME_3, DISTANCE_3),
-        distancesView);
-    assertEquals(mapOf(NAME_1, DISTANCE_1, NAME_2, DISTANCE_2, NAME_3, DISTANCE_3),
+    assertEquals(mapOf(NAME_1, DISTANCE_1, NAME_2, DISTANCE_2, NAME_3, DISTANCE_3), distancesView);
+    assertEquals(
+        mapOf(NAME_1, DISTANCE_1, NAME_2, DISTANCE_2, NAME_3, DISTANCE_3),
         builder.build().getDistances());
     builder.removeDistances(NAME_2);
     assertEquals(mapOf(NAME_1, DISTANCE_1, NAME_3, DISTANCE_3), distancesView);
-    assertEquals(mapOf(NAME_1, DISTANCE_1, NAME_3, DISTANCE_3),
-        builder.build().getDistances());
+    assertEquals(mapOf(NAME_1, DISTANCE_1, NAME_3, DISTANCE_3), builder.build().getDistances());
     builder.clearDistances();
     assertEquals(Collections.emptyMap(), distancesView);
     assertEquals(Collections.emptyMap(), builder.build().getDistances());

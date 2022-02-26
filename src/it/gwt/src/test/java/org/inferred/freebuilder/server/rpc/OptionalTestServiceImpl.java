@@ -15,15 +15,14 @@
  */
 package org.inferred.freebuilder.server.rpc;
 
+import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.inferred.freebuilder.client.rpc.OptionalGwtType;
 import org.inferred.freebuilder.client.rpc.OptionalTestService;
 
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-
 public class OptionalTestServiceImpl extends RemoteServiceServlet implements OptionalTestService {
 
-    @Override
-    public OptionalGwtType echo(OptionalGwtType mapGwtType) {
-        return mapGwtType;
-    }
+  @Override
+  public OptionalGwtType echo(OptionalGwtType mapGwtType) {
+    return mapGwtType;
+  }
 }

@@ -16,14 +16,11 @@
 package org.inferred.freebuilder.processor.naming;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-
+import static javax.tools.Diagnostic.Kind.ERROR;
 import static org.inferred.freebuilder.processor.naming.BeanConvention.GETTER_PATTERN;
 import static org.inferred.freebuilder.processor.naming.BeanConvention.GET_PREFIX;
 
-import static javax.tools.Diagnostic.Kind.ERROR;
-
 import java.util.regex.Matcher;
-
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -31,26 +28,21 @@ import javax.lang.model.util.Types;
 
 public class NamingConventions {
 
-  /**
-   * Determine whether the user has followed bean-like naming convention or not.
-   */
+  /** Determine whether the user has followed bean-like naming convention or not. */
   public static NamingConvention determineNamingConvention(
-      TypeElement type,
-      Iterable<ExecutableElement> methods,
-      Messager messager,
-      Types types) {
+      TypeElement type, Iterable<ExecutableElement> methods, Messager messager, Types types) {
     ExecutableElement beanMethod = null;
     ExecutableElement prefixlessMethod = null;
     for (ExecutableElement method : methods) {
       switch (methodNameConvention(method)) {
-      case BEAN:
-        beanMethod = firstNonNull(beanMethod, method);
-        break;
-      case PREFIXLESS:
-        prefixlessMethod = firstNonNull(prefixlessMethod, method);
-        break;
-      default:
-        break;
+        case BEAN:
+          beanMethod = firstNonNull(beanMethod, method);
+          break;
+        case PREFIXLESS:
+          prefixlessMethod = firstNonNull(prefixlessMethod, method);
+          break;
+        default:
+          break;
       }
     }
     if (prefixlessMethod != null) {
@@ -58,8 +50,11 @@ public class NamingConventions {
         messager.printMessage(
             ERROR,
             "Type contains an illegal mix of get-prefixed and unprefixed getter methods, e.g. '"
-                + beanMethod.getSimpleName() + "' and '" + prefixlessMethod.getSimpleName() + "'",
-                type);
+                + beanMethod.getSimpleName()
+                + "' and '"
+                + prefixlessMethod.getSimpleName()
+                + "'",
+            type);
       }
       return new PrefixlessConvention(messager, types);
     } else {
@@ -68,7 +63,9 @@ public class NamingConventions {
   }
 
   private enum Convention {
-    BEAN, PREFIXLESS, UNKNOWN;
+    BEAN,
+    PREFIXLESS,
+    UNKNOWN;
   }
 
   private static Convention methodNameConvention(ExecutableElement method) {

@@ -19,13 +19,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Throwables.throwIfUnchecked;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
-
+import static java.util.stream.Collectors.toSet;
+import static javax.tools.JavaFileObject.Kind.CLASS;
 import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUAVA;
 import static org.inferred.freebuilder.processor.source.feature.SourceLevel.SOURCE_LEVEL;
-
-import static java.util.stream.Collectors.toSet;
-
-import static javax.tools.JavaFileObject.Kind.CLASS;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -34,12 +31,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.io.ByteStreams;
-
-import org.inferred.freebuilder.processor.source.feature.FeatureSet;
-import org.inferred.freebuilder.processor.source.feature.SourceLevel;
-import org.inferred.freebuilder.processor.source.testing.TestBuilder.TestFile;
-import org.inferred.freebuilder.processor.source.testing.TestBuilder.TestSource;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -49,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
@@ -60,15 +50,20 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
+import org.inferred.freebuilder.processor.source.feature.FeatureSet;
+import org.inferred.freebuilder.processor.source.feature.SourceLevel;
+import org.inferred.freebuilder.processor.source.testing.TestBuilder.TestFile;
+import org.inferred.freebuilder.processor.source.testing.TestBuilder.TestSource;
 
 class SingleBehaviorTester implements BehaviorTester {
 
   private final SourceLevel sourceLevel;
-  private final ImmutableSet.Builder<String> permittedPackages = ImmutableSet.<String>builder()
-      .add("java")
-      .add("sun.reflect")
-      .add("com.fasterxml.jackson.annotation")
-      .add("com.fasterxml.jackson.databind.annotation");
+  private final ImmutableSet.Builder<String> permittedPackages =
+      ImmutableSet.<String>builder()
+          .add("java")
+          .add("sun.reflect")
+          .add("com.fasterxml.jackson.annotation")
+          .add("com.fasterxml.jackson.databind.annotation");
   private final List<Processor> processors = new ArrayList<>();
   private final List<JavaFileObject> compilationUnits = new ArrayList<>();
   private boolean shouldSetContextClassLoader = false;
@@ -154,8 +149,8 @@ class SingleBehaviorTester implements BehaviorTester {
   }
 
   /**
-   * A wrapper around the boot classloader that blocks access to packages not in the current
-   * {@link FeatureSet}.
+   * A wrapper around the boot classloader that blocks access to packages not in the current {@link
+   * FeatureSet}.
    */
   private static class RestrictedClassLoader extends ClassLoader {
 
@@ -183,10 +178,7 @@ class SingleBehaviorTester implements BehaviorTester {
     private final JavaFileManager fileManager;
     private final Set<String> testFiles;
 
-    SourceClassLoader(
-        ClassLoader parent,
-        JavaFileManager fileManager,
-        Set<String> testFiles) {
+    SourceClassLoader(ClassLoader parent, JavaFileManager fileManager, Set<String> testFiles) {
       super(parent);
       this.fileManager = fileManager;
       this.testFiles = testFiles;
@@ -198,8 +190,8 @@ class SingleBehaviorTester implements BehaviorTester {
         throw new ClassNotFoundException();
       }
       try {
-        JavaFileObject classFile = fileManager.getJavaFileForInput(
-            StandardLocation.CLASS_OUTPUT, name, CLASS);
+        JavaFileObject classFile =
+            fileManager.getJavaFileForInput(StandardLocation.CLASS_OUTPUT, name, CLASS);
         if (classFile == null) {
           throw new ClassNotFoundException();
         }
@@ -213,8 +205,8 @@ class SingleBehaviorTester implements BehaviorTester {
 
   /**
    * A classloader for compiled test code. Permits access to classes in a parent classloader, as
-   * well as anything visible from the boot classloader. This means test code can access
-   * test libraries without them leaking into the source classloader.
+   * well as anything visible from the boot classloader. This means test code can access test
+   * libraries without them leaking into the source classloader.
    */
   private static class TestClassLoader extends ClassLoader {
 
@@ -238,8 +230,8 @@ class SingleBehaviorTester implements BehaviorTester {
         return SingleBehaviorTester.class.getClassLoader().loadClass(name);
       }
       try {
-        JavaFileObject classFile = fileManager.getJavaFileForInput(
-            StandardLocation.CLASS_OUTPUT, name, CLASS);
+        JavaFileObject classFile =
+            fileManager.getJavaFileForInput(StandardLocation.CLASS_OUTPUT, name, CLASS);
         if (classFile == null) {
           throw new ClassNotFoundException();
         }
@@ -272,10 +264,11 @@ class SingleBehaviorTester implements BehaviorTester {
     @Override
     public CompilationSubject withNoWarnings() {
       checkState(classLoader != null, "CompilationSubject closed");
-      ImmutableList<Diagnostic<? extends JavaFileObject>> warnings = FluentIterable
-          .from(diagnostics)
-          .filter(Diagnostics.isKind(Diagnostic.Kind.WARNING, Diagnostic.Kind.MANDATORY_WARNING))
-          .toList();
+      ImmutableList<Diagnostic<? extends JavaFileObject>> warnings =
+          FluentIterable.from(diagnostics)
+              .filter(
+                  Diagnostics.isKind(Diagnostic.Kind.WARNING, Diagnostic.Kind.MANDATORY_WARNING))
+              .toList();
       if (!warnings.isEmpty()) {
         StringBuilder message =
             new StringBuilder("The following warnings were issued by the compiler:");
@@ -304,13 +297,17 @@ class SingleBehaviorTester implements BehaviorTester {
 
     @Override
     public CompilationSubject testsPass(
-        Iterable<? extends TestSource> testSources,
-        boolean shouldSetContextClassLoader) {
+        Iterable<? extends TestSource> testSources, boolean shouldSetContextClassLoader) {
       checkState(classLoader != null, "CompilationSubject closed");
-      Iterable<TestFile> testFiles = Iterables.transform(testSources, testSource ->
-          testFilesBySource.computeIfAbsent(testSource, s -> {
-              throw new IllegalStateException("Test source not compiled: " + s);
-          }));
+      Iterable<TestFile> testFiles =
+          Iterables.transform(
+              testSources,
+              testSource ->
+                  testFilesBySource.computeIfAbsent(
+                      testSource,
+                      s -> {
+                        throw new IllegalStateException("Test source not compiled: " + s);
+                      }));
       runTests(classLoader, testFiles, shouldSetContextClassLoader);
       return this;
     }
@@ -322,12 +319,13 @@ class SingleBehaviorTester implements BehaviorTester {
       boolean shouldSetContextClassLoader) {
     final List<Throwable> exceptions = new ArrayList<>();
     if (shouldSetContextClassLoader) {
-      Thread t = new Thread() {
-        @Override
-        public void run() {
-          runTests(classLoader, testFiles, exceptions);
-        }
-      };
+      Thread t =
+          new Thread() {
+            @Override
+            public void run() {
+              runTests(classLoader, testFiles, exceptions);
+            }
+          };
       t.setContextClassLoader(classLoader);
       t.start();
       joinUninterruptibly(t);
@@ -376,19 +374,15 @@ class SingleBehaviorTester implements BehaviorTester {
       Iterable<? extends Processor> processors,
       SourceLevel sourceLevel) {
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-    List<String> arguments = ImmutableList.<String>builder()
-        .add("-Xlint:unchecked")
-        .add("-Xlint:varargs")
-        .add("-Xdiags:verbose")
-        .addAll(sourceLevel.javacArguments())
-        .build();
-    CompilationTask task = getCompiler().getTask(
-        null,
-        fileManager,
-        diagnostics,
-        arguments,
-        null,
-        compilationUnits);
+    List<String> arguments =
+        ImmutableList.<String>builder()
+            .add("-Xlint:unchecked")
+            .add("-Xlint:varargs")
+            .add("-Xdiags:verbose")
+            .addAll(sourceLevel.javacArguments())
+            .build();
+    CompilationTask task =
+        getCompiler().getTask(null, fileManager, diagnostics, arguments, null, compilationUnits);
     task.setProcessors(processors);
     boolean successful = task.call();
     if (!successful) {

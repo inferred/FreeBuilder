@@ -5,7 +5,19 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-
+import java.lang.reflect.Field;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.function.Consumer;
+import javax.annotation.processing.Processor;
+import javax.tools.JavaFileObject;
 import org.inferred.freebuilder.processor.source.feature.FeatureSet;
 import org.inferred.freebuilder.processor.source.testing.BehaviorTester.CompilationSubject;
 import org.inferred.freebuilder.processor.source.testing.ParameterizedBehaviorTestFactory.Shared;
@@ -20,21 +32,6 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 import org.junit.runners.parameterized.BlockJUnit4ClassRunnerWithParameters;
 import org.junit.runners.parameterized.TestWithParameters;
-
-import java.lang.reflect.Field;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Set;
-import java.util.function.Consumer;
-
-import javax.annotation.processing.Processor;
-import javax.tools.JavaFileObject;
 
 /** Test runner for {@link ParameterizedBehaviorTestRunner}. */
 class ParameterizedBehaviorTestRunner extends BlockJUnit4ClassRunnerWithParameters {

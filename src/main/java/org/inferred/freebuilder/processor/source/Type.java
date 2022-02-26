@@ -16,16 +16,12 @@
 package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
+import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
-
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 
@@ -41,12 +37,10 @@ public abstract class Type extends ValueType implements Excerpt {
       // Make testing easier by not introducing a distinction between Type and TypeClass for
       // non-generic types.
       return new TypeClass(
-          QualifiedName.of(asElement(declaredType)),
-          ImmutableList.<TypeParameterElement>of());
+          QualifiedName.of(asElement(declaredType)), ImmutableList.<TypeParameterElement>of());
     } else {
       return new TypeImpl(
-          QualifiedName.of(asElement(declaredType)),
-          declaredType.getTypeArguments());
+          QualifiedName.of(asElement(declaredType)), declaredType.getTypeArguments());
     }
   }
 
@@ -97,39 +91,35 @@ public abstract class Type extends ValueType implements Excerpt {
     }
   }
 
-  /**
-   * Returns a source excerpt of a JavaDoc link to this type.
-   */
+  /** Returns a source excerpt of a JavaDoc link to this type. */
   public JavadocLink javadocLink() {
     return new JavadocLink("%s", getQualifiedName());
   }
 
-  /**
-   * Returns a source excerpt of a JavaDoc link to a no-args method on this type.
-   */
+  /** Returns a source excerpt of a JavaDoc link to a no-args method on this type. */
   public JavadocLink javadocNoArgMethodLink(String memberName) {
     return new JavadocLink("%s#%s()", getQualifiedName(), memberName);
   }
 
-  /**
-   * Returns a source excerpt of a JavaDoc link to a method on this type.
-   */
+  /** Returns a source excerpt of a JavaDoc link to a method on this type. */
   public JavadocLink javadocMethodLink(String memberName, Type... types) {
-    return new JavadocLink("%s#%s(%s)",
+    return new JavadocLink(
+        "%s#%s(%s)",
         getQualifiedName(),
         memberName,
-        (Excerpt) code -> {
-          String separator = "";
-          for (Type type : types) {
-            code.add("%s%s", separator, type.getQualifiedName());
-            separator = ", ";
-          }
-        });
+        (Excerpt)
+            code -> {
+              String separator = "";
+              for (Type type : types) {
+                code.add("%s%s", separator, type.getQualifiedName());
+                separator = ", ";
+              }
+            });
   }
 
   /**
-   * Returns a source excerpt of the type parameters of this type, including angle brackets.
-   * Always an empty string if the type class is not generic.
+   * Returns a source excerpt of the type parameters of this type, including angle brackets. Always
+   * an empty string if the type class is not generic.
    *
    * <p>e.g. {@code <N, C>}
    */

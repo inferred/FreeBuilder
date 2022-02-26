@@ -21,4 +21,4 @@ package org.inferred.freebuilder.processor.source.testing;
  * <p>Public as it is used to annotated arbitrary user-supplied code at runtime. Not visible in
  * Blaze, as it should not be used outside of this package.
  */
-public @interface Target { }
+public @interface Target {}

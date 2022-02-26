@@ -17,17 +17,14 @@ package org.inferred.freebuilder.processor.source;
 
 import static java.util.stream.Collectors.toList;
 
-import org.inferred.freebuilder.processor.source.Scope.Level;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.inferred.freebuilder.processor.source.Scope.Level;
 
 public class LazyName extends ValueType implements Excerpt, Scope.Key<LazyName.Declaration> {
 
-  /**
-   * Finds all lazily-declared classes and methods and adds their definitions to the source.
-   */
+  /** Finds all lazily-declared classes and methods and adds their definitions to the source. */
   public static void addLazyDefinitions(SourceBuilder code) {
     Set<Declaration> defined = new HashSet<>();
 
@@ -52,8 +49,8 @@ public class LazyName extends ValueType implements Excerpt, Scope.Key<LazyName.D
   private final Excerpt definition;
 
   /**
-   * A LazyName, when first used, determines a unique name, using {@code preferredName} if
-   * still available, and registers the {@code definition} to be added later.
+   * A LazyName, when first used, determines a unique name, using {@code preferredName} if still
+   * available, and registers the {@code definition} to be added later.
    */
   private LazyName(String preferredName, Excerpt definition) {
     this.preferredName = preferredName;
@@ -73,25 +70,27 @@ public class LazyName extends ValueType implements Excerpt, Scope.Key<LazyName.D
 
   @Override
   public void addTo(SourceBuilder code) {
-    Declaration declaration = code.scope().computeIfAbsent(this, () -> {
-      // Search for an unused name, trying the preferred name first
-      int attempt = 1;
-      Declaration name = new Declaration(preferredName);
-      while (true) {
-        LazyName existingExcerpt = code.scope().putIfAbsent(name, this);
-        if (existingExcerpt == null) {
-          return name;
-        }
-        attempt++;
-        name = new Declaration(preferredName + attempt);
-      }
-    });
+    Declaration declaration =
+        code.scope()
+            .computeIfAbsent(
+                this,
+                () -> {
+                  // Search for an unused name, trying the preferred name first
+                  int attempt = 1;
+                  Declaration name = new Declaration(preferredName);
+                  while (true) {
+                    LazyName existingExcerpt = code.scope().putIfAbsent(name, this);
+                    if (existingExcerpt == null) {
+                      return name;
+                    }
+                    attempt++;
+                    name = new Declaration(preferredName + attempt);
+                  }
+                });
     code.add(declaration.name);
   }
 
-  /**
-   * A Declaration maps a unique static class name to its static excerpt in a scope.
-   */
+  /** A Declaration maps a unique static class name to its static excerpt in a scope. */
   static class Declaration extends ValueType
       implements Comparable<Declaration>, Scope.Key<LazyName> {
 

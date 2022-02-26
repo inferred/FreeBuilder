@@ -16,16 +16,15 @@
 package org.inferred.freebuilder;
 
 import com.google.common.annotations.GwtCompatible;
-
 import java.io.Serializable;
 import java.util.List;
 
-/** Simple GWT-compatible FreeBuilder type with a list of strings.  */
+/** Simple GWT-compatible FreeBuilder type with a list of strings. */
 @FreeBuilder
 @GwtCompatible(serializable = true)
 public interface StringListGwtType extends Serializable {
   List<String> getNames();
 
   /** Builder for {@link StringListGwtType}. */
-  class Builder extends StringListGwtType_Builder { }
+  class Builder extends StringListGwtType_Builder {}
 }

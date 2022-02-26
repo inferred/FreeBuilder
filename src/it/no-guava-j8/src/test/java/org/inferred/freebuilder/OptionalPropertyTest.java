@@ -17,11 +17,10 @@ package org.inferred.freebuilder;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.Optional;
 
 /** FreeBuilder test using {@link ListProperty}. */
 @RunWith(JUnit4.class)

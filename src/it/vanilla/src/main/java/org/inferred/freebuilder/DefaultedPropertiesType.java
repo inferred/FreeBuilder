@@ -3,6 +3,7 @@ package org.inferred.freebuilder;
 @FreeBuilder
 public interface DefaultedPropertiesType {
   String getFirstName();
+
   String getSurname();
 
   class Builder extends DefaultedPropertiesType_Builder {

@@ -34,7 +34,22 @@ import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUA
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.stream.BaseStream;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedList;
@@ -47,27 +62,7 @@ import org.inferred.freebuilder.processor.source.Type;
 import org.inferred.freebuilder.processor.source.ValueType;
 import org.inferred.freebuilder.processor.source.Variable;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Spliterator;
-import java.util.stream.BaseStream;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
-/**
- * {@link PropertyCodeGenerator} providing fluent methods for {@link List} properties.
- */
+/** {@link PropertyCodeGenerator} providing fluent methods for {@link List} properties. */
 class ListProperty extends PropertyCodeGenerator {
   static class Factory implements PropertyCodeGenerator.Factory {
 
@@ -85,30 +80,29 @@ class ListProperty extends PropertyCodeGenerator {
       boolean overridesVarargsAddMethod =
           hasVarargsAddMethodOverride(config, unboxedType.orElse(elementType));
 
-      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
-          config.getBuilder(),
-          mutator(config.getProperty()),
-          consumer(wildcardSuperList(elementType, config.getElements(), config.getTypes())),
-          config.getElements(),
-          config.getTypes());
+      FunctionalType mutatorType =
+          functionalTypeAcceptedByMethod(
+              config.getBuilder(),
+              mutator(config.getProperty()),
+              consumer(wildcardSuperList(elementType, config.getElements(), config.getTypes())),
+              config.getElements(),
+              config.getTypes());
 
-      return Optional.of(new ListProperty(
-          config.getDatatype(),
-          config.getProperty(),
-          needsSafeVarargs,
-          overridesAddMethod,
-          overridesVarargsAddMethod,
-          elementType,
-          unboxedType,
-          mutatorType));
+      return Optional.of(
+          new ListProperty(
+              config.getDatatype(),
+              config.getProperty(),
+              needsSafeVarargs,
+              overridesAddMethod,
+              overridesVarargsAddMethod,
+              elementType,
+              unboxedType,
+              mutatorType));
     }
 
     private static boolean hasAddMethodOverride(Config config, TypeMirror elementType) {
       return overrides(
-          config.getBuilder(),
-          config.getTypes(),
-          addMethod(config.getProperty()),
-          elementType);
+          config.getBuilder(), config.getTypes(), addMethod(config.getProperty()), elementType);
     }
 
     private static boolean hasVarargsAddMethodOverride(Config config, TypeMirror elementType) {
@@ -119,13 +113,9 @@ class ListProperty extends PropertyCodeGenerator {
           config.getTypes().getArrayType(elementType));
     }
 
-    /**
-     * Returns {@code ? super List<elementType>}.
-     */
+    /** Returns {@code ? super List<elementType>}. */
     private static TypeMirror wildcardSuperList(
-        TypeMirror elementType,
-        Elements elements,
-        Types types) {
+        TypeMirror elementType, Elements elements, Types types) {
       TypeElement listType = elements.getTypeElement(List.class.getName());
       return types.getWildcardType(null, types.getDeclaredType(listType, elementType));
     }
@@ -159,7 +149,8 @@ class ListProperty extends PropertyCodeGenerator {
 
   @Override
   public void addValueFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %s<%s> %s;",
+    code.addLine(
+        "private final %s<%s> %s;",
         code.feature(GUAVA).isAvailable() ? ImmutableList.class : List.class,
         elementType,
         property.getField());
@@ -168,16 +159,13 @@ class ListProperty extends PropertyCodeGenerator {
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("private %s<%s> %s = %s.of();",
-          List.class,
-          elementType,
-          property.getField(),
-          ImmutableList.class);
+      code.addLine(
+          "private %s<%s> %s = %s.of();",
+          List.class, elementType, property.getField(), ImmutableList.class);
     } else {
-      code.addLine("private final %1$s<%2$s> %3$s = new %1$s<>();",
-          ArrayList.class,
-          elementType,
-          property.getField());
+      code.addLine(
+          "private final %1$s<%2$s> %3$s = new %1$s<>();",
+          ArrayList.class, elementType, property.getField());
     }
   }
 
@@ -196,7 +184,8 @@ class ListProperty extends PropertyCodeGenerator {
   private void addAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Adds {@code element} to the list to be returned from %s.",
+        .addLine(
+            " * Adds {@code element} to the list to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
@@ -204,7 +193,8 @@ class ListProperty extends PropertyCodeGenerator {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" */")
-        .addLine("public %s %s(%s element) {",
+        .addLine(
+            "public %s %s(%s element) {",
             datatype.getBuilder(), addMethod(property), unboxedType.orElse(elementType));
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
@@ -216,8 +206,7 @@ class ListProperty extends PropertyCodeGenerator {
     } else {
       code.addLine("  %s.add(%s.requireNonNull(element));", property.getField(), Objects.class);
     }
-    code.addLine("  return (%s) this;", datatype.getBuilder())
-        .addLine("}");
+    code.addLine("  return (%s) this;", datatype.getBuilder()).addLine("}");
   }
 
   private void addVarargsAdd(SourceBuilder code) {
@@ -244,10 +233,9 @@ class ListProperty extends PropertyCodeGenerator {
     if (needsSafeVarargs && !overridesVarargsAddMethod) {
       code.add("final ");
     }
-    code.add("%s %s(%s... elements) {\n",
-            datatype.getBuilder(),
-            addMethod(property),
-            unboxedType.orElse(elementType));
+    code.add(
+        "%s %s(%s... elements) {\n",
+        datatype.getBuilder(), addMethod(property), unboxedType.orElse(elementType));
     Optional<Class<?>> arrayUtils = code.feature(GUAVA).arrayUtils(unboxedType.orElse(elementType));
     if (arrayUtils.isPresent()) {
       code.addLine("  return %s(%s.asList(elements));", addAllMethod(property), arrayUtils.get());
@@ -264,11 +252,9 @@ class ListProperty extends PropertyCodeGenerator {
 
   private void addSpliteratorAddAll(SourceBuilder code) {
     addJavadocForAddAll(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(),
-            addAllMethod(property),
-            Spliterator.class,
-            elementType)
+    code.addLine(
+            "public %s %s(%s<? extends %s> elements) {",
+            datatype.getBuilder(), addAllMethod(property), Spliterator.class, elementType)
         .addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class)
         .addLine("    long elementsSize = elements.estimateSize();")
         .addLine("    if (elementsSize > 0 && elementsSize <= Integer.MAX_VALUE) {");
@@ -291,22 +277,18 @@ class ListProperty extends PropertyCodeGenerator {
   private void addIterableAddAll(SourceBuilder code) {
     addJavadocForAddAll(code);
     addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(),
-            addAllMethod(property),
-            Iterable.class,
-            elementType)
+    code.addLine(
+            "public %s %s(%s<? extends %s> elements) {",
+            datatype.getBuilder(), addAllMethod(property), Iterable.class, elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
   }
 
   private void addStreamAddAll(SourceBuilder code) {
     addJavadocForAddAll(code);
-    code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
-            datatype.getBuilder(),
-            addAllMethod(property),
-            BaseStream.class,
-            elementType)
+    code.addLine(
+            "public %s %s(%s<? extends %s, ?> elements) {",
+            datatype.getBuilder(), addAllMethod(property), BaseStream.class, elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
   }
@@ -326,42 +308,45 @@ class ListProperty extends PropertyCodeGenerator {
   private void addMutate(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Applies {@code mutator} to the list to be returned from %s.",
+        .addLine(
+            " * Applies {@code mutator} to the list to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the list in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
-        .addLine(" * not to call pure functions, like %s.",
+        .addLine(
+            " * not to call pure functions, like %s.",
             Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s mutator) {",
-            datatype.getBuilder(),
-            mutator(property),
-            mutatorType.getFunctionalInterface());
+        .addLine(
+            "public %s %s(%s mutator) {",
+            datatype.getBuilder(), mutator(property), mutatorType.getFunctionalInterface());
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  if (%s instanceof %s) {", property.getField(), ImmutableList.class)
           .addLine("    %1$s = new %2$s<>(%1$s);", property.getField(), ArrayList.class)
           .addLine("  }");
     }
     if (overridesAddMethod) {
-      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+      code.addLine(
+          "  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(), CheckedList.TYPE, property.getField(), addMethod(property));
     } else {
-      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      code.addLine(
+              "  // If %s is overridden, this method will be updated to delegate to it",
               addMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    code.addLine("  return (%s) this;", datatype.getBuilder())
-        .addLine("}");
+    code.addLine("  return (%s) this;", datatype.getBuilder()).addLine("}");
   }
 
   private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Clears the list to be returned from %s.",
+        .addLine(
+            " * Clears the list to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
@@ -376,8 +361,7 @@ class ListProperty extends PropertyCodeGenerator {
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  }");
     }
-    code.addLine("  return (%s) this;", datatype.getBuilder())
-        .addLine("}");
+    code.addLine("  return (%s) this;", datatype.getBuilder()).addLine("}");
   }
 
   private void addGetter(SourceBuilder code) {
@@ -420,13 +404,15 @@ class ListProperty extends PropertyCodeGenerator {
   @Override
   public void addMergeFromValue(SourceBuilder code, String value) {
     if (code.feature(GUAVA).isAvailable()) {
-      code.addLine("if (%s instanceof %s && %s == %s.<%s>of()) {",
+      code.addLine(
+              "if (%s instanceof %s && %s == %s.<%s>of()) {",
               value,
               datatype.getValueType().getQualifiedName(),
               property.getField(),
               ImmutableList.class,
               elementType)
-          .addLine("  %s = %s.copyOf(%s.%s());",
+          .addLine(
+              "  %s = %s.copyOf(%s.%s());",
               property.getField(), ImmutableList.class, value, property.getGetterName())
           .addLine("} else {");
     }
@@ -474,7 +460,8 @@ class ListProperty extends PropertyCodeGenerator {
           .addLine("  case 1:")
           .addLine("    return %s.singletonList(elements.get(0));", Collections.class)
           .addLine("  default:")
-          .addLine("    return (%1$s<E>)(%1$s<?>) %2$s.unmodifiableList(%3$s.asList(",
+          .addLine(
+              "    return (%1$s<E>)(%1$s<?>) %2$s.unmodifiableList(%3$s.asList(",
               List.class, Collections.class, Arrays.class)
           .addLine("        elements.toArray()));", Array.class)
           .addLine("  }")

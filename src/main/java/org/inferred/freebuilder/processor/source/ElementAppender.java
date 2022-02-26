@@ -12,7 +12,7 @@ class ElementAppender extends SimpleElementVisitor8<Void, QualifiedNameAppendabl
     INSTANCE.visit(arg, source);
   }
 
-  private ElementAppender() { }
+  private ElementAppender() {}
 
   @Override
   public Void visitPackage(PackageElement pkg, QualifiedNameAppendable a) {

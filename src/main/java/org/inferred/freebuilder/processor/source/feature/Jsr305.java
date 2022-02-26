@@ -1,18 +1,15 @@
 package org.inferred.freebuilder.processor.source.feature;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.util.Elements;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.QualifiedName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.util.Elements;
-
-/**
- * Types from JSR 305, if available. Not available by default in tests.
- */
+/** Types from JSR 305, if available. Not available by default in tests. */
 public enum Jsr305 implements Feature<Jsr305> {
-
-  AVAILABLE("JSR 305"), UNAVAILABLE("No JSR 305");
+  AVAILABLE("JSR 305"),
+  UNAVAILABLE("No JSR 305");
 
   /**
    * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current status of
@@ -32,9 +29,7 @@ public enum Jsr305 implements Feature<Jsr305> {
         }
       };
 
-  /**
-   * Excerpt that adds a JSR-303 Nullable annotation, if available.
-   */
+  /** Excerpt that adds a JSR-303 Nullable annotation, if available. */
   public static Excerpt nullable() {
     return new NullableExcerpt();
   }

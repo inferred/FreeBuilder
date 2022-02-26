@@ -16,13 +16,18 @@
 package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.base.Preconditions.checkArgument;
-
+import static java.lang.ClassLoader.getSystemClassLoader;
 import static org.inferred.freebuilder.processor.source.IsInvalidTypeVisitor.isLegalType;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
-
 import com.google.common.annotations.VisibleForTesting;
-
+import java.util.Optional;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.source.ScopeHandler.Reflection;
 import org.inferred.freebuilder.processor.source.feature.EnvironmentFeatureSet;
 import org.inferred.freebuilder.processor.source.feature.Feature;
@@ -31,19 +36,9 @@ import org.inferred.freebuilder.processor.source.feature.FeatureType;
 import org.inferred.freebuilder.processor.source.feature.GuavaLibrary;
 import org.inferred.freebuilder.processor.source.feature.StaticFeatureSet;
 
-import java.util.Optional;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-
 /**
- * Source code builder, using format strings for readability, with sensible formatting for
- * type objects.
+ * Source code builder, using format strings for readability, with sensible formatting for type
+ * objects.
  *
  * <pre>
  * // Imports StringBuilder and appends "  StringBuilder foo;\n" to the source code.
@@ -91,13 +86,15 @@ public class SourceBuilder {
    * Appends formatted text to the source.
    *
    * <p>Formatting supports {@code %s} and {@code %n$s}. Most args are converted according to their
-   * {@link Object#toString()} method, except that:<ul>
-   * <li> {@link Package} and {@link PackageElement} instances use their fully-qualified names
-   *      (no "package " prefix).
-   * <li> {@link Class}, {@link TypeElement}, {@link DeclaredType} and {@link QualifiedName}
-   *      instances use their qualified names where necessary, or shorter versions if a suitable
-   *      import line can be added.
-   * <li> {@link Excerpt} instances have {@link Excerpt#addTo(SourceBuilder)} called.
+   * {@link Object#toString()} method, except that:
+   *
+   * <ul>
+   *   <li>{@link Package} and {@link PackageElement} instances use their fully-qualified names (no
+   *       "package " prefix).
+   *   <li>{@link Class}, {@link TypeElement}, {@link DeclaredType} and {@link QualifiedName}
+   *       instances use their qualified names where necessary, or shorter versions if a suitable
+   *       import line can be added.
+   *   <li>{@link Excerpt} instances have {@link Excerpt#addTo(SourceBuilder)} called.
    * </ul>
    */
   public SourceBuilder add(String fmt, Object... args) {
@@ -105,9 +102,7 @@ public class SourceBuilder {
     return this;
   }
 
-  /**
-   * Equivalent to {@code add("%s", excerpt)}.
-   */
+  /** Equivalent to {@code add("%s", excerpt)}. */
   public SourceBuilder add(Excerpt excerpt) {
     excerpt.addTo(this);
     return this;
@@ -117,13 +112,15 @@ public class SourceBuilder {
    * Appends a formatted line of code to the source.
    *
    * <p>Formatting supports {@code %s} and {@code %n$s}. Most args are converted according to their
-   * {@link Object#toString()} method, except that:<ul>
-   * <li> {@link Package} and {@link PackageElement} instances use their fully-qualified names
-   *      (no "package " prefix).
-   * <li> {@link Class}, {@link TypeElement}, {@link DeclaredType} and {@link QualifiedName}
-   *      instances use their qualified names where necessary, or shorter versions if a suitable
-   *      import line can be added.
-   * <li> {@link Excerpt} instances have {@link Excerpt#addTo(SourceBuilder)} called.
+   * {@link Object#toString()} method, except that:
+   *
+   * <ul>
+   *   <li>{@link Package} and {@link PackageElement} instances use their fully-qualified names (no
+   *       "package " prefix).
+   *   <li>{@link Class}, {@link TypeElement}, {@link DeclaredType} and {@link QualifiedName}
+   *       instances use their qualified names where necessary, or shorter versions if a suitable
+   *       import line can be added.
+   *   <li>{@link Excerpt} instances have {@link Excerpt#addTo(SourceBuilder)} called.
    * </ul>
    */
   public SourceBuilder addLine(String fmt, Object... args) {
@@ -138,8 +135,8 @@ public class SourceBuilder {
    * GUAVA}).{@link GuavaLibrary#isAvailable() isAvailable()}</code> returns true if the Guava
    * library can be used in the generated source code.
    *
-   * <p>Fluent extension point for features dynamically determined based on the current
-   * {@link ProcessingEnvironment}.
+   * <p>Fluent extension point for features dynamically determined based on the current {@link
+   * ProcessingEnvironment}.
    *
    * @see Feature
    */
@@ -147,9 +144,7 @@ public class SourceBuilder {
     return source.feature(featureType);
   }
 
-  /**
-   * Returns the current scope (e.g. visible method parameters).
-   */
+  /** Returns the current scope (e.g. visible method parameters). */
   public Scope scope() {
     return source.scope();
   }

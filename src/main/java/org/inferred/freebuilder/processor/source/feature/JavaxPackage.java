@@ -1,19 +1,17 @@
 package org.inferred.freebuilder.processor.source.feature;
 
-import org.inferred.freebuilder.processor.source.QualifiedName;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-
 import java.util.Optional;
-
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.util.Elements;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
 
 /**
  * Types in the javax package, if available. Linked to the {@link SourceLevel} by default in tests.
  */
 public enum JavaxPackage implements Feature<JavaxPackage> {
-
-  AVAILABLE("javax"), UNAVAILABLE("No javax");
+  AVAILABLE("javax"),
+  UNAVAILABLE("No javax");
 
   /**
    * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current status of
@@ -41,9 +39,7 @@ public enum JavaxPackage implements Feature<JavaxPackage> {
     this.humanReadableFormat = humanReadableFormat;
   }
 
-  /**
-   * Parameterized type for {@code java.util.function.Consumer<T>}, if available.
-   */
+  /** Parameterized type for {@code java.util.function.Consumer<T>}, if available. */
   public Optional<QualifiedName> generated() {
     return ifAvailable(GENERATED);
   }

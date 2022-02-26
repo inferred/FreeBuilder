@@ -26,7 +26,10 @@ import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.testing.EqualsTester;
-
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Stream;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -46,11 +49,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Stream;
-
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class MultisetPropertyTest {
@@ -60,11 +58,8 @@ public class MultisetPropertyTest {
   public static Iterable<Object[]> parameters() {
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_GUAVA;
-    return () -> Lists
-        .cartesianProduct(TYPES, conventions, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(TYPES, conventions, features).stream().map(List::toArray).iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -77,21 +72,19 @@ public class MultisetPropertyTest {
   private final SourceBuilder dataType;
 
   public MultisetPropertyTest(
-      ElementFactory element,
-      NamingConvention convention,
-      FeatureSet features) {
+      ElementFactory element, NamingConvention convention, FeatureSet features) {
     this.element = element;
     this.convention = convention;
     this.features = features;
-    dataType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  %s<%s> %s;",
-            Multiset.class, element.type(), convention.get("items"))
-        .addLine("")
-        .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}");
+    dataType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s> %s;", Multiset.class, element.type(), convention.get("items"))
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}");
   }
 
   @Before
@@ -104,10 +97,11 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.get("items"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder().build();")
+                .addLine("assertThat(value.%s).isEmpty();", convention.get("items"))
+                .build())
         .runTest();
   }
 
@@ -116,14 +110,16 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.example(0))
-            .addLine("    .addItems(%s)", element.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.example(0))
+                .addLine("    .addItems(%s)", element.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -133,11 +129,12 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.example(0))
-            .addLine("    .addItems((%s) null);", element.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.example(0))
+                .addLine("    .addItems((%s) null);", element.type())
+                .build())
         .runTest();
   }
 
@@ -146,14 +143,16 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.example(0))
-            .addLine("    .addItems(%s)", element.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.example(0))
+                .addLine("    .addItems(%s)", element.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 0))
+                .build())
         .runTest();
   }
 
@@ -162,13 +161,15 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.examples(0, 1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.examples(0, 1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -178,10 +179,12 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().addItems(%s, (%s) null);",
-                element.example(0), element.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "new DataType.Builder().addItems(%s, (%s) null);",
+                    element.example(0), element.type())
+                .build())
         .runTest();
   }
 
@@ -190,13 +193,15 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.examples(0, 0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.examples(0, 0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 0))
+                .build())
         .runTest();
   }
 
@@ -205,13 +210,15 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, element.examples(0, 1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, element.examples(0, 1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -221,10 +228,12 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s, null));", ImmutableList.class, element.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .addAllItems(%s.of(%s, null));", ImmutableList.class, element.example(0))
+                .build())
         .runTest();
   }
 
@@ -233,13 +242,15 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, element.examples(0, 0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, element.examples(0, 0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 0))
+                .build())
         .runTest();
   }
 
@@ -248,14 +259,17 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(new %s<%s>(%s))",
-                DodgyIterable.class, element.type(), element.examples(0, 1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .addAllItems(new %s<%s>(%s))",
+                    DodgyIterable.class, element.type(), element.examples(0, 1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -283,13 +297,15 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s))", Stream.class, element.examples(0, 1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addAllItems(%s.of(%s))", Stream.class, element.examples(0, 1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -299,10 +315,11 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s, null));", Stream.class, element.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .addAllItems(%s.of(%s, null));", Stream.class, element.example(0))
+                .build())
         .runTest();
   }
 
@@ -311,13 +328,15 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s))", Stream.class, element.examples(0, 0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addAllItems(%s.of(%s))", Stream.class, element.examples(0, 0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 0))
+                .build())
         .runTest();
   }
 
@@ -326,14 +345,17 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s).spliterator())",
-                 Stream.class, element.examples(0, 1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .addAllItems(%s.of(%s).spliterator())",
+                    Stream.class, element.examples(0, 1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -343,11 +365,13 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s, null).spliterator());",
-                Stream.class, element.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .addAllItems(%s.of(%s, null).spliterator());",
+                    Stream.class, element.example(0))
+                .build())
         .runTest();
   }
 
@@ -356,14 +380,17 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addAllItems(%s.of(%s).spliterator())",
-                 Stream.class, element.examples(0, 0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .addAllItems(%s.of(%s).spliterator())",
+                    Stream.class, element.examples(0, 0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 0))
+                .build())
         .runTest();
   }
 
@@ -372,14 +399,16 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addCopiesToItems(%s, 3)", element.example(0))
-            .addLine("    .addCopiesToItems(%s, 2)", element.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 0, 0, 1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addCopiesToItems(%s, 3)", element.example(0))
+                .addLine("    .addCopiesToItems(%s, 2)", element.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 0, 0, 1, 1))
+                .build())
         .runTest();
   }
 
@@ -389,11 +418,12 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addCopiesToItems(%s, 3)", element.example(0))
-            .addLine("    .addCopiesToItems((%s) null, 2);", element.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .addCopiesToItems(%s, 3)", element.example(0))
+                .addLine("    .addCopiesToItems((%s) null, 2);", element.type())
+                .build())
         .runTest();
   }
 
@@ -404,11 +434,12 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addCopiesToItems(%s, 3)", element.example(0))
-            .addLine("    .addCopiesToItems(%s, -2);", element.example(1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .addCopiesToItems(%s, 3)", element.example(0))
+                .addLine("    .addCopiesToItems(%s, -2);", element.example(1))
+                .build())
         .runTest();
   }
 
@@ -417,14 +448,16 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addCopiesToItems(%s, 3)", element.example(0))
-            .addLine("    .addCopiesToItems(%s, 2)", element.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 0, 0, 0, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addCopiesToItems(%s, 3)", element.example(0))
+                .addLine("    .addCopiesToItems(%s, 2)", element.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 0, 0, 0, 0))
+                .build())
         .runTest();
   }
 
@@ -433,15 +466,17 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.examples(0, 2))
-            .addLine("    .setCountOfItems(%s, 3)", element.example(0))
-            .addLine("    .setCountOfItems(%s, 2)", element.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 0, 0, 2, 1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.examples(0, 2))
+                .addLine("    .setCountOfItems(%s, 3)", element.example(0))
+                .addLine("    .setCountOfItems(%s, 2)", element.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 0, 0, 2, 1, 1))
+                .build())
         .runTest();
   }
 
@@ -450,15 +485,17 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.examples(0, 1))
-            .addLine("    .setCountOfItems(%s, 0)", element.example(1))
-            .addLine("    .addItems(%s)", element.examples(2, 3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 2, 3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.examples(0, 1))
+                .addLine("    .setCountOfItems(%s, 0)", element.example(1))
+                .addLine("    .addItems(%s)", element.examples(2, 3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 2, 3))
+                .build())
         .runTest();
   }
 
@@ -467,15 +504,17 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.examples(0, 1))
-            .addLine("    .clearItems()")
-            .addLine("    .addItems(%s)", element.examples(2, 3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(2, 3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.examples(0, 1))
+                .addLine("    .clearItems()")
+                .addLine("    .addItems(%s)", element.examples(2, 3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(2, 3))
+                .build())
         .runTest();
   }
 
@@ -484,18 +523,20 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<%s> itemsView = builder.%s;",
-                Multiset.class, element.type(), convention.get("items"))
-            .addLine("assertThat(itemsView).isEmpty();")
-            .addLine("builder.addItems(%s);", element.examples(0, 1))
-            .addLine("assertThat(itemsView).iteratesAs(%s);", element.examples(0, 1))
-            .addLine("builder.clearItems();")
-            .addLine("assertThat(itemsView).isEmpty();")
-            .addLine("builder.addItems(%s);", element.examples(2, 3))
-            .addLine("assertThat(itemsView).iteratesAs(%s);", element.examples(2, 3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine(
+                    "%s<%s> itemsView = builder.%s;",
+                    Multiset.class, element.type(), convention.get("items"))
+                .addLine("assertThat(itemsView).isEmpty();")
+                .addLine("builder.addItems(%s);", element.examples(0, 1))
+                .addLine("assertThat(itemsView).iteratesAs(%s);", element.examples(0, 1))
+                .addLine("builder.clearItems();")
+                .addLine("assertThat(itemsView).isEmpty();")
+                .addLine("builder.addItems(%s);", element.examples(2, 3))
+                .addLine("assertThat(itemsView).iteratesAs(%s);", element.examples(2, 3))
+                .build())
         .runTest();
   }
 
@@ -505,12 +546,14 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<%s> itemsView = builder.%s;",
-                Multiset.class, element.type(), convention.get("items"))
-            .addLine("itemsView.add(%s);", element.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine(
+                    "%s<%s> itemsView = builder.%s;",
+                    Multiset.class, element.type(), convention.get("items"))
+                .addLine("itemsView.add(%s);", element.example(0))
+                .build())
         .runTest();
   }
 
@@ -519,15 +562,17 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.examples(0, 1))
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(builder.build().%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.examples(0, 1))
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .mergeFrom(value);")
+                .addLine(
+                    "assertThat(builder.build().%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -536,14 +581,16 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .addItems(%s);", element.examples(0, 1))
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.build().%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = new DataType.Builder()")
+                .addLine("    .addItems(%s);", element.examples(0, 1))
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .mergeFrom(template);")
+                .addLine(
+                    "assertThat(builder.build().%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -551,25 +598,28 @@ public class MultisetPropertyTest {
   public void testToBuilder_fromPartial() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s> %s;", Multiset.class, element.type(), convention.get())
-            .addLine("")
-            .addLine("  Builder toBuilder();")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value1 = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.examples(0, 1))
-            .addLine("    .buildPartial();")
-            .addLine("DataType value2 = value1.toBuilder()")
-            .addLine("    .addItems(%s)", element.example(2))
-            .addLine("    .build();")
-            .addLine("assertThat(value2.%s).iteratesAs(%s);",
-                convention.get(), element.examples(0, 1, 2))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine("  %s<%s> %s;", Multiset.class, element.type(), convention.get())
+                .addLine("")
+                .addLine("  Builder toBuilder();")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value1 = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.examples(0, 1))
+                .addLine("    .buildPartial();")
+                .addLine("DataType value2 = value1.toBuilder()")
+                .addLine("    .addItems(%s)", element.example(2))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value2.%s).iteratesAs(%s);",
+                    convention.get(), element.examples(0, 1, 2))
+                .build())
         .runTest();
   }
 
@@ -578,15 +628,17 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.examples(0, 1))
-            .addLine("    .clear()")
-            .addLine("    .addItems(%s)", element.examples(2, 3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(2, 3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.examples(0, 1))
+                .addLine("    .clear()")
+                .addLine("    .addItems(%s)", element.examples(2, 3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(2, 3))
+                .build())
         .runTest();
   }
 
@@ -594,27 +646,31 @@ public class MultisetPropertyTest {
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> %s;",
-                Multiset.class, element.type(), convention.get("items"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    public Builder(%s... items) {", element.unwrappedType())
-            .addLine("      addItems(items);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder(%s)", element.example(0))
-            .addLine("    .clear()")
-            .addLine("    .addItems(%s)", element.examples(1, 2))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(1, 2))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine(
+                    "  public abstract %s<%s> %s;",
+                    Multiset.class, element.type(), convention.get("items"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {")
+                .addLine("    public Builder(%s... items) {", element.unwrappedType())
+                .addLine("      addItems(items);")
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder(%s)", element.example(0))
+                .addLine("    .clear()")
+                .addLine("    .addItems(%s)", element.examples(1, 2))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(1, 2))
+                .build())
         .runTest();
   }
 
@@ -622,23 +678,27 @@ public class MultisetPropertyTest {
   public void testImmutableSetProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s> %s;",
-                ImmutableMultiset.class, element.type(), convention.get("items"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.example(0))
-            .addLine("    .addItems(%s)", element.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine(
+                    "  %s<%s> %s;",
+                    ImmutableMultiset.class, element.type(), convention.get("items"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.example(0))
+                .addLine("    .addItems(%s)", element.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -646,30 +706,34 @@ public class MultisetPropertyTest {
   public void testOverridingSetCount() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> %s;",
-                Multiset.class, element.type(), convention.get("items"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder setCountOfItems(%s unused, int unused2) {",
-                element.unwrappedType())
-            .addLine("      return this;")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.example(0))
-            .addLine("    .addItems(%s)", element.examples(1))
-            .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, element.examples(2, 3))
-            .addLine("    .addCopiesToItems(%s, 3)", element.example(4))
-            .addLine("    .setCountOfItems(%s, 3)", element.example(5))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.get("items"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine(
+                    "  public abstract %s<%s> %s;",
+                    Multiset.class, element.type(), convention.get("items"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {")
+                .addLine(
+                    "    @Override public Builder setCountOfItems(%s unused, int unused2) {",
+                    element.unwrappedType())
+                .addLine("      return this;")
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.example(0))
+                .addLine("    .addItems(%s)", element.examples(1))
+                .addLine("    .addAllItems(%s.of(%s))", ImmutableList.class, element.examples(2, 3))
+                .addLine("    .addCopiesToItems(%s, 3)", element.example(4))
+                .addLine("    .setCountOfItems(%s, 3)", element.example(5))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s).isEmpty();", convention.get("items"))
+                .build())
         .runTest();
   }
 
@@ -678,22 +742,29 @@ public class MultisetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new %s()", EqualsTester.class)
-            .addLine("    .addEqualityGroup(")
-            .addLine("        new DataType.Builder().build(),")
-            .addLine("        new DataType.Builder().build())")
-            .addLine("    .addEqualityGroup(")
-            .addLine("        new DataType.Builder().addItems(%s).build(),", element.examples(0, 1))
-            .addLine("        new DataType.Builder().addItems(%s).build())", element.examples(0, 1))
-            .addLine("    .addEqualityGroup(")
-            .addLine("        new DataType.Builder().addItems(%s).build(),", element.examples(0))
-            .addLine("        new DataType.Builder().addItems(%s).build())", element.examples(0))
-            .addLine("    .addEqualityGroup(")
-            .addLine("        new DataType.Builder().addItems(%s).build(),", element.examples(0, 0))
-            .addLine("        new DataType.Builder().addItems(%s).build())", element.examples(0, 0))
-            .addLine("    .testEquals();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new %s()", EqualsTester.class)
+                .addLine("    .addEqualityGroup(")
+                .addLine("        new DataType.Builder().build(),")
+                .addLine("        new DataType.Builder().build())")
+                .addLine("    .addEqualityGroup(")
+                .addLine(
+                    "        new DataType.Builder().addItems(%s).build(),", element.examples(0, 1))
+                .addLine(
+                    "        new DataType.Builder().addItems(%s).build())", element.examples(0, 1))
+                .addLine("    .addEqualityGroup(")
+                .addLine(
+                    "        new DataType.Builder().addItems(%s).build(),", element.examples(0))
+                .addLine(
+                    "        new DataType.Builder().addItems(%s).build())", element.examples(0))
+                .addLine("    .addEqualityGroup(")
+                .addLine(
+                    "        new DataType.Builder().addItems(%s).build(),", element.examples(0, 0))
+                .addLine(
+                    "        new DataType.Builder().addItems(%s).build())", element.examples(0, 0))
+                .addLine("    .testEquals();")
+                .build())
         .runTest();
   }
 
@@ -702,29 +773,33 @@ public class MultisetPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("import " + JsonProperty.class.getName() + ";")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
-            .addLine("public interface DataType {")
-            .addLine("  @JsonProperty(\"stuff\") %s<%s> %s;",
-                Multiset.class, element.type(), convention.get("items"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", element.example(0))
-            .addLine("    .addItems(%s)", element.example(1))
-            .addLine("    .build();")
-            .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
-            .addLine("    .registerModule(new %s());", GuavaModule.class)
-            .addLine("String json = mapper.writeValueAsString(value);")
-            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertThat(clone.%s).iteratesAs(%s);",
-                convention.get("items"), element.examples(0, 1))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("import " + JsonProperty.class.getName() + ";")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+                .addLine("public interface DataType {")
+                .addLine(
+                    "  @JsonProperty(\"stuff\") %s<%s> %s;",
+                    Multiset.class, element.type(), convention.get("items"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", element.example(0))
+                .addLine("    .addItems(%s)", element.example(1))
+                .addLine("    .build();")
+                .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
+                .addLine("    .registerModule(new %s());", GuavaModule.class)
+                .addLine("String json = mapper.writeValueAsString(value);")
+                .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+                .addLine(
+                    "assertThat(clone.%s).iteratesAs(%s);",
+                    convention.get("items"), element.examples(0, 1))
+                .build())
         .runTest();
   }
 
@@ -732,20 +807,23 @@ public class MultisetPropertyTest {
   public void testGenericFieldCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s<%s>> %s;",
-                Multiset.class, List.class, element.type(), convention.get())
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("new DataType.Builder().addItems(")
-            .addLine("    %s.asList(%s),", Arrays.class, element.examples(0, 1))
-            .addLine("    %s.asList(%s));", Arrays.class, element.examples(2, 3))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine(
+                    "  %s<%s<%s>> %s;",
+                    Multiset.class, List.class, element.type(), convention.get())
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder().addItems(")
+                .addLine("    %s.asList(%s),", Arrays.class, element.examples(0, 1))
+                .addLine("    %s.asList(%s));", Arrays.class, element.examples(2, 3))
+                .build())
         .compiles()
         .withNoWarnings();
   }
@@ -754,19 +832,22 @@ public class MultisetPropertyTest {
   public void testGenericBuildableTypeCompilesWithoutHeapPollutionWarnings() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType<T> {")
-            .addLine("  %s<T> %s;", Multiset.class, convention.get())
-            .addLine("")
-            .addLine("  class Builder<T> extends DataType_Builder<T> {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("new DataType.Builder<%s>().addItems(%s)",
-                element.type(), element.examples(0, 1))
-            .addLine("    .build();")
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType<T> {")
+                .addLine("  %s<T> %s;", Multiset.class, convention.get())
+                .addLine("")
+                .addLine("  class Builder<T> extends DataType_Builder<T> {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine(
+                    "new DataType.Builder<%s>().addItems(%s)",
+                    element.type(), element.examples(0, 1))
+                .addLine("    .build();")
+                .build())
         .compiles()
         .withNoWarnings();
   }
@@ -776,23 +857,26 @@ public class MultisetPropertyTest {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s<%s>> %s;",
-                Multiset.class, List.class, element.type(), convention.get())
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {")
-            .addLine("    @%s", Override.class)
-            .addLine("    @%s", SafeVarargs.class)
-            .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
-            .addLine("    public final Builder addItems(%s<%s>... items) {",
-                List.class, element.type())
-            .addLine("      return super.addItems(items);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine(
+                    "  %s<%s<%s>> %s;",
+                    Multiset.class, List.class, element.type(), convention.get())
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {")
+                .addLine("    @%s", Override.class)
+                .addLine("    @%s", SafeVarargs.class)
+                .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
+                .addLine(
+                    "    public final Builder addItems(%s<%s>... items) {",
+                    List.class, element.type())
+                .addLine("      return super.addItems(items);")
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("}"))
         .compiles()
         .withNoWarnings();
   }
@@ -802,27 +886,27 @@ public class MultisetPropertyTest {
     // Ensure we remove the final annotation needed to apply @SafeVarargs.
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType<T> {")
-            .addLine("  %s<T> %s;", Multiset.class, convention.get())
-            .addLine("")
-            .addLine("  class Builder<T> extends DataType_Builder<T> {")
-            .addLine("    @%s", Override.class)
-            .addLine("    @%s", SafeVarargs.class)
-            .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
-            .addLine("    public final Builder<T> addItems(T... items) {")
-            .addLine("      return super.addItems(items);")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType<T> {")
+                .addLine("  %s<T> %s;", Multiset.class, convention.get())
+                .addLine("")
+                .addLine("  class Builder<T> extends DataType_Builder<T> {")
+                .addLine("    @%s", Override.class)
+                .addLine("    @%s", SafeVarargs.class)
+                .addLine("    @%s(\"varargs\")", SuppressWarnings.class)
+                .addLine("    public final Builder<T> addItems(T... items) {")
+                .addLine("      return super.addItems(items);")
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("}"))
         .compiles()
         .withNoWarnings();
   }
 
   private static TestBuilder testBuilder() {
-    return new TestBuilder()
-        .addImport("com.example.DataType");
+    return new TestBuilder().addImport("com.example.DataType");
   }
 }

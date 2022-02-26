@@ -21,5 +21,5 @@ import java.util.List;
 public interface WildcardListType {
   List<? extends Number> numbers();
 
-  class Builder extends WildcardListType_Builder { }
+  class Builder extends WildcardListType_Builder {}
 }

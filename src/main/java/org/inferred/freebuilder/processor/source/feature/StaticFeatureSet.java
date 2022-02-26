@@ -28,8 +28,8 @@ public class StaticFeatureSet implements FeatureSet {
   }
 
   /**
-   * Returns the registered instance of {@code featureType}, or the value of
-   * {@link FeatureType#testDefault} if no explicit instance was registered with this set.
+   * Returns the registered instance of {@code featureType}, or the value of {@link
+   * FeatureType#testDefault} if no explicit instance was registered with this set.
    */
   @Override
   public <T extends Feature<T>> T get(FeatureType<T> featureType) {

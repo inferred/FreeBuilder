@@ -1,12 +1,10 @@
 package org.inferred.freebuilder.processor.property;
 
 import static com.google.common.base.Preconditions.checkState;
-
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Arrays;
 import java.util.Set;
 import java.util.SortedSet;

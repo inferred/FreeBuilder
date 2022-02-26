@@ -18,9 +18,7 @@ package org.inferred.freebuilder;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -46,14 +44,15 @@ public class MapGwtTypeTest {
     assertEquals(ImmutableMap.of(NAME_1, DISTANCE_1), distancesView);
     assertEquals(ImmutableMap.of(NAME_1, DISTANCE_1), builder.build().getDistances());
     builder.putAllDistances(ImmutableMap.of(NAME_2, DISTANCE_2, NAME_3, DISTANCE_3));
-    assertEquals(ImmutableMap.of(NAME_1, DISTANCE_1, NAME_2, DISTANCE_2, NAME_3, DISTANCE_3),
-        distancesView);
-    assertEquals(ImmutableMap.of(NAME_1, DISTANCE_1, NAME_2, DISTANCE_2, NAME_3, DISTANCE_3),
+    assertEquals(
+        ImmutableMap.of(NAME_1, DISTANCE_1, NAME_2, DISTANCE_2, NAME_3, DISTANCE_3), distancesView);
+    assertEquals(
+        ImmutableMap.of(NAME_1, DISTANCE_1, NAME_2, DISTANCE_2, NAME_3, DISTANCE_3),
         builder.build().getDistances());
     builder.removeDistances(NAME_2);
     assertEquals(ImmutableMap.of(NAME_1, DISTANCE_1, NAME_3, DISTANCE_3), distancesView);
-    assertEquals(ImmutableMap.of(NAME_1, DISTANCE_1, NAME_3, DISTANCE_3),
-        builder.build().getDistances());
+    assertEquals(
+        ImmutableMap.of(NAME_1, DISTANCE_1, NAME_3, DISTANCE_3), builder.build().getDistances());
     builder.clearDistances();
     assertEquals(ImmutableMap.of(), distancesView);
     assertEquals(ImmutableMap.of(), builder.build().getDistances());

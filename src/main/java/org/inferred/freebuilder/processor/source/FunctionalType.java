@@ -2,18 +2,14 @@ package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
-
+import static java.util.stream.Collectors.toList;
+import static javax.lang.model.element.Modifier.ABSTRACT;
 import static org.inferred.freebuilder.processor.model.MethodFinder.methodsOn;
 import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeDeclared;
 import static org.inferred.freebuilder.processor.model.ModelUtils.only;
 
-import static java.util.stream.Collectors.toList;
-
-import static javax.lang.model.element.Modifier.ABSTRACT;
-
 import com.google.common.collect.ImmutableList;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,7 +21,6 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.LongUnaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
-
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -36,9 +31,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-/**
- * Metadata about a functional interface.
- */
+/** Metadata about a functional interface. */
 public class FunctionalType extends ValueType {
 
   /**
@@ -70,8 +63,8 @@ public class FunctionalType extends ValueType {
   }
 
   /**
-   * Returns one of {@link IntUnaryOperator}, {@link LongUnaryOperator} or
-   * {@link DoubleUnaryOperator}, depending on {@code type}.
+   * Returns one of {@link IntUnaryOperator}, {@link LongUnaryOperator} or {@link
+   * DoubleUnaryOperator}, depending on {@code type}.
    *
    * @throws IllegalArgumentException if {@code type} is not one of int, long or double
    */
@@ -79,33 +72,22 @@ public class FunctionalType extends ValueType {
     switch (type.getKind()) {
       case INT:
         return new FunctionalType(
-            Type.from(IntUnaryOperator.class),
-            "applyAsInt",
-            ImmutableList.of(type),
-            type);
+            Type.from(IntUnaryOperator.class), "applyAsInt", ImmutableList.of(type), type);
 
       case LONG:
         return new FunctionalType(
-            Type.from(LongUnaryOperator.class),
-            "applyAsLong",
-            ImmutableList.of(type),
-            type);
+            Type.from(LongUnaryOperator.class), "applyAsLong", ImmutableList.of(type), type);
 
       case DOUBLE:
         return new FunctionalType(
-            Type.from(DoubleUnaryOperator.class),
-            "applyAsDouble",
-            ImmutableList.of(type),
-            type);
+            Type.from(DoubleUnaryOperator.class), "applyAsDouble", ImmutableList.of(type), type);
 
       default:
         throw new IllegalArgumentException("No primitive unary operator exists for " + type);
     }
   }
 
-  /**
-   * Returns a unary operator that will accept {@code type}, without autoboxing if possible.
-   */
+  /** Returns a unary operator that will accept {@code type}, without autoboxing if possible. */
   public static FunctionalType unboxedUnaryOperator(TypeMirror type, Types types) {
     switch (type.getKind()) {
       case INT:
@@ -129,8 +111,8 @@ public class FunctionalType extends ValueType {
    * Returns the functional type accepted by {@code methodName} on {@code type}, assignable to
    * {@code prototype}, or {@code prototype} itself if no such method has been declared.
    *
-   * <p>Used to allow the user to override the functional interface used on builder methods,
-   * e.g. to force boxing, or to use Guava types.
+   * <p>Used to allow the user to override the functional interface used on builder methods, e.g. to
+   * force boxing, or to use Guava types.
    */
   public static FunctionalType functionalTypeAcceptedByMethod(
       DeclaredType type,
@@ -138,8 +120,7 @@ public class FunctionalType extends ValueType {
       FunctionalType prototype,
       Elements elements,
       Types types) {
-    return functionalTypesAcceptedByMethod(type, methodName, elements, types)
-        .stream()
+    return functionalTypesAcceptedByMethod(type, methodName, elements, types).stream()
         .filter(functionalType -> isAssignable(functionalType, prototype, types))
         .findAny()
         .orElse(prototype);
@@ -147,52 +128,49 @@ public class FunctionalType extends ValueType {
 
   /** Returns the functional types accepted by {@code methodName} on {@code type}. */
   public static List<FunctionalType> functionalTypesAcceptedByMethod(
-      DeclaredType type,
-      String methodName,
-      Elements elements,
-      Types types) {
+      DeclaredType type, String methodName, Elements elements, Types types) {
     TypeElement typeElement = asElement(type);
-    return methodsOn(typeElement, elements, errorType -> { })
-        .stream()
-        .filter(method -> method.getSimpleName().contentEquals(methodName)
-            && method.getParameters().size() == 1)
-        .flatMap(method -> {
-          ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
-          TypeMirror parameter = getOnlyElement(methodType.getParameterTypes());
-          return maybeFunctionalType(parameter, elements, types)
-              .map(Stream::of).orElse(Stream.of());
-        })
+    return methodsOn(typeElement, elements, errorType -> {}).stream()
+        .filter(
+            method ->
+                method.getSimpleName().contentEquals(methodName)
+                    && method.getParameters().size() == 1)
+        .flatMap(
+            method -> {
+              ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
+              TypeMirror parameter = getOnlyElement(methodType.getParameterTypes());
+              return maybeFunctionalType(parameter, elements, types)
+                  .map(Stream::of)
+                  .orElse(Stream.of());
+            })
         .collect(toList());
   }
 
   public static Optional<FunctionalType> maybeFunctionalType(
-      TypeMirror type,
-      Elements elements,
-      Types types) {
+      TypeMirror type, Elements elements, Types types) {
     return maybeDeclared(type)
         .flatMap(declaredType -> maybeFunctionalType(declaredType, elements, types));
   }
 
   public static Optional<FunctionalType> maybeFunctionalType(
-      DeclaredType type,
-      Elements elements,
-      Types types) {
+      DeclaredType type, Elements elements, Types types) {
     TypeElement typeElement = asElement(type);
     if (!typeElement.getKind().isInterface()) {
       return Optional.empty();
     }
     Set<ExecutableElement> abstractMethods =
-        only(ABSTRACT, methodsOn(typeElement, elements, errorType -> { }));
+        only(ABSTRACT, methodsOn(typeElement, elements, errorType -> {}));
     if (abstractMethods.size() != 1) {
       return Optional.empty();
     }
     ExecutableElement method = getOnlyElement(abstractMethods);
     ExecutableType methodType = (ExecutableType) types.asMemberOf(type, method);
-    return Optional.of(new FunctionalType(
-        Type.from(type),
-        method.getSimpleName().toString(),
-        methodType.getParameterTypes(),
-        methodType.getReturnType()));
+    return Optional.of(
+        new FunctionalType(
+            Type.from(type),
+            method.getSimpleName().toString(),
+            methodType.getParameterTypes(),
+            methodType.getReturnType()));
   }
 
   public static boolean isAssignable(FunctionalType fromType, FunctionalType toType, Types types) {

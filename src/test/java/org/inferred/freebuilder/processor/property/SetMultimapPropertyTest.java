@@ -29,7 +29,9 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.testing.EqualsTester;
-
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.MultimapSubject;
@@ -49,10 +51,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class SetMultimapPropertyTest {
@@ -62,11 +60,10 @@ public class SetMultimapPropertyTest {
   public static Iterable<Object[]> parameters() {
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_GUAVA;
-    return () -> Lists
-        .cartesianProduct(TYPES, TYPES, conventions, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(TYPES, TYPES, conventions, features).stream()
+            .map(List::toArray)
+            .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -80,24 +77,23 @@ public class SetMultimapPropertyTest {
   private final SourceBuilder dataType;
 
   public SetMultimapPropertyTest(
-      ElementFactory key,
-      ElementFactory value,
-      NamingConvention convention,
-      FeatureSet features) {
+      ElementFactory key, ElementFactory value, NamingConvention convention, FeatureSet features) {
     this.key = key;
     this.value = value;
     this.convention = convention;
     this.features = features;
 
-    dataType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  public abstract %s<%s, %s> %s;",
-            SetMultimap.class, key.type(), value.type(), convention.get("items"))
-        .addLine("")
-        .addLine("  class Builder extends DataType_Builder {}")
-        .addLine("}");
+    dataType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine(
+                "  public abstract %s<%s, %s> %s;",
+                SetMultimap.class, key.type(), value.type(), convention.get("items"))
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {}")
+            .addLine("}");
   }
 
   @Test
@@ -105,12 +101,14 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("%s<%s, %s> foo = value.%s;",
-                SetMultimap.class, key.type(), value.type(), convention.get("items"))
-            .addLine("assertThat(foo).isEmpty();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder().build();")
+                .addLine(
+                    "%s<%s, %s> foo = value.%s;",
+                    SetMultimap.class, key.type(), value.type(), convention.get("items"))
+                .addLine("assertThat(foo).isEmpty();")
+                .build())
         .runTest();
   }
 
@@ -119,17 +117,18 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -139,11 +138,12 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .putItems((%s) null, %s);", key.type(), value.example(3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .putItems((%s) null, %s);", key.type(), value.example(3))
+                .build())
         .runTest();
   }
 
@@ -153,11 +153,12 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .putItems(%s, (%s) null);", key.example(2), value.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .putItems(%s, (%s) null);", key.example(2), value.type())
+                .build())
         .runTest();
   }
 
@@ -166,18 +167,19 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -186,20 +188,23 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s, %s.of(%s))",
-                key.example(0), ImmutableList.class, value.examples(1, 2))
-            .addLine("    .putAllItems(%s, %s.of(%s))",
-                key.example(3), ImmutableSet.class, value.example(4))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(0), value.example(2))
-            .addLine("    .and(%s, %s)", key.example(3), value.example(4))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .putAllItems(%s, %s.of(%s))",
+                    key.example(0), ImmutableList.class, value.examples(1, 2))
+                .addLine(
+                    "    .putAllItems(%s, %s.of(%s))",
+                    key.example(3), ImmutableSet.class, value.example(4))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(0), value.example(2))
+                .addLine("    .and(%s, %s)", key.example(3), value.example(4))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -209,11 +214,13 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putAllItems((%s) null, %s.of(%s));",
-                key.type(), ImmutableList.class, value.examples(1, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .putAllItems((%s) null, %s.of(%s));",
+                    key.type(), ImmutableList.class, value.examples(1, 2))
+                .build())
         .runTest();
   }
 
@@ -223,11 +230,13 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putAllItems(%s, %s.asList(%s, (%s) null));",
-                key.example(0), Arrays.class, value.example(1), value.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .putAllItems(%s, %s.asList(%s, (%s) null));",
+                    key.example(0), Arrays.class, value.example(1), value.type())
+                .build())
         .runTest();
   }
 
@@ -236,16 +245,18 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s, %s.of(%s))",
-                key.example(0), ImmutableList.class, value.examples(1, 1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .putAllItems(%s, %s.of(%s))",
+                    key.example(0), ImmutableList.class, value.examples(1, 1))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -254,17 +265,19 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s, new %s<%s>(%s))",
-                key.example(0), DodgyIterable.class, value.type(), value.examples(1, 2))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(0), value.example(2))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .putAllItems(%s, new %s<%s>(%s))",
+                    key.example(0), DodgyIterable.class, value.type(), value.examples(1, 2))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(0), value.example(2))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -292,20 +305,21 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
-            .addLine("        %s, %s,", key.example(0), value.example(1))
-            .addLine("        %s, %s,", key.example(0), value.example(2))
-            .addLine("        %s, %s))", key.example(3), value.example(4))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(0), value.example(2))
-            .addLine("    .and(%s, %s)", key.example(3), value.example(4))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+                .addLine("        %s, %s,", key.example(0), value.example(1))
+                .addLine("        %s, %s,", key.example(0), value.example(2))
+                .addLine("        %s, %s))", key.example(3), value.example(4))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(0), value.example(2))
+                .addLine("    .and(%s, %s)", key.example(3), value.example(4))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -315,12 +329,14 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("%1$s<%2$s, %3$s> values = %1$s.create();",
-                LinkedHashMultimap.class, key.type(), value.type())
-            .addLine("values.put((%s) null, %s);", key.type(), value.example(0))
-            .addLine("new DataType.Builder().putAllItems(values);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "%1$s<%2$s, %3$s> values = %1$s.create();",
+                    LinkedHashMultimap.class, key.type(), value.type())
+                .addLine("values.put((%s) null, %s);", key.type(), value.example(0))
+                .addLine("new DataType.Builder().putAllItems(values);")
+                .build())
         .runTest();
   }
 
@@ -330,12 +346,14 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("%1$s<%2$s, %3$s> values = %1$s.create();",
-                LinkedHashMultimap.class, key.type(), value.type())
-            .addLine("values.put(%s, (%s) null);", key.example(0), value.type())
-            .addLine("new DataType.Builder().putAllItems(values);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "%1$s<%2$s, %3$s> values = %1$s.create();",
+                    LinkedHashMultimap.class, key.type(), value.type())
+                .addLine("values.put(%s, (%s) null);", key.example(0), value.type())
+                .addLine("new DataType.Builder().putAllItems(values);")
+                .build())
         .runTest();
   }
 
@@ -344,19 +362,20 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
-            .addLine("        %s, %s,", key.example(0), value.example(1))
-            .addLine("        %s, %s,", key.example(0), value.example(1))
-            .addLine("        %s, %s))", key.example(2), value.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+                .addLine("        %s, %s,", key.example(0), value.example(1))
+                .addLine("        %s, %s,", key.example(0), value.example(1))
+                .addLine("        %s, %s))", key.example(2), value.example(3))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -365,20 +384,21 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
-            .addLine("        %s, %s,", key.example(0), value.example(1))
-            .addLine("        %s, %s,", key.example(0), value.example(2))
-            .addLine("        %s, %s))", key.example(3), value.example(2))
-            .addLine("    .removeItems(%s, %s)", key.example(0), value.example(2))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(3), value.example(2))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+                .addLine("        %s, %s,", key.example(0), value.example(1))
+                .addLine("        %s, %s,", key.example(0), value.example(2))
+                .addLine("        %s, %s))", key.example(3), value.example(2))
+                .addLine("    .removeItems(%s, %s)", key.example(0), value.example(2))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(3), value.example(2))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -387,19 +407,20 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
-            .addLine("        %s, %s,", key.example(0), value.example(1))
-            .addLine("        %s, %s))", key.example(3), value.example(2))
-            .addLine("    .removeItems(%s, %s)", key.example(0), value.example(2))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(3), value.example(2))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+                .addLine("        %s, %s,", key.example(0), value.example(1))
+                .addLine("        %s, %s))", key.example(3), value.example(2))
+                .addLine("    .removeItems(%s, %s)", key.example(0), value.example(2))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(3), value.example(2))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -409,11 +430,12 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .removeItems((%s) null, %s);", key.type(), value.example(1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .removeItems((%s) null, %s);", key.type(), value.example(1))
+                .build())
         .runTest();
   }
 
@@ -423,11 +445,12 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .removeItems(%s, (%s) null);", key.example(0), value.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .removeItems(%s, (%s) null);", key.example(0), value.type())
+                .build())
         .runTest();
   }
 
@@ -436,18 +459,19 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
-            .addLine("        %s, %s,", key.example(0), value.example(1))
-            .addLine("        %s, %s,", key.example(0), value.example(2))
-            .addLine("        %s, %s))", key.example(3), value.example(2))
-            .addLine("    .removeAllItems(%s)", key.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(3), value.example(2))
-            .addLine("    .andNothingElse();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+                .addLine("        %s, %s,", key.example(0), value.example(1))
+                .addLine("        %s, %s,", key.example(0), value.example(2))
+                .addLine("        %s, %s))", key.example(3), value.example(2))
+                .addLine("    .removeAllItems(%s)", key.example(0))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(3), value.example(2))
+                .addLine("    .andNothingElse();")
+                .build())
         .runTest();
   }
 
@@ -456,16 +480,17 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
-            .addLine("        %s, %s))", key.example(0), value.example(1))
-            .addLine("    .removeAllItems(%s)", key.example(2))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .andNothingElse();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putAllItems(%s.of(", ImmutableMultimap.class)
+                .addLine("        %s, %s))", key.example(0), value.example(1))
+                .addLine("    .removeAllItems(%s)", key.example(2))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .andNothingElse();")
+                .build())
         .runTest();
   }
 
@@ -475,11 +500,12 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .removeAllItems((%s) null);", key.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .removeAllItems((%s) null);", key.type())
+                .build())
         .runTest();
   }
 
@@ -488,19 +514,20 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .clearItems()")
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(4))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .and(%s, %s)", key.example(0), value.example(4))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .clearItems()")
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(4))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .and(%s, %s)", key.example(0), value.example(4))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -509,20 +536,24 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<%s, %s> itemsView = builder.%s;",
-                SetMultimap.class, key.type(), value.type(), convention.get("items"))
-            .addLine("assertThat(itemsView).isEmpty();")
-            .addLine("builder.putItems(%s, %s);", key.example(0), value.example(1))
-            .addLine("assertThat(itemsView).contains(%s, %s).andNothingElse();",
-                key.example(0), value.example(1))
-            .addLine("builder.clearItems();")
-            .addLine("assertThat(itemsView).isEmpty();")
-            .addLine("builder.putItems(%s, %s);", key.example(2), value.example(3))
-            .addLine("assertThat(itemsView).contains(%s, %s).andNothingElse();",
-                key.example(2), value.example(3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine(
+                    "%s<%s, %s> itemsView = builder.%s;",
+                    SetMultimap.class, key.type(), value.type(), convention.get("items"))
+                .addLine("assertThat(itemsView).isEmpty();")
+                .addLine("builder.putItems(%s, %s);", key.example(0), value.example(1))
+                .addLine(
+                    "assertThat(itemsView).contains(%s, %s).andNothingElse();",
+                    key.example(0), value.example(1))
+                .addLine("builder.clearItems();")
+                .addLine("assertThat(itemsView).isEmpty();")
+                .addLine("builder.putItems(%s, %s);", key.example(2), value.example(3))
+                .addLine(
+                    "assertThat(itemsView).contains(%s, %s).andNothingElse();",
+                    key.example(2), value.example(3))
+                .build())
         .runTest();
   }
 
@@ -532,12 +563,14 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("%s<%s, %s> itemsView = builder.%s;",
-                SetMultimap.class, key.type(), value.type(), convention.get("items"))
-            .addLine("itemsView.put(%s, %s);", key.example(0), value.example(1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine(
+                    "%s<%s, %s> itemsView = builder.%s;",
+                    SetMultimap.class, key.type(), value.type(), convention.get("items"))
+                .addLine("itemsView.put(%s, %s);", key.example(0), value.example(1))
+                .build())
         .runTest();
   }
 
@@ -546,19 +579,20 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .mergeFrom(value);")
-            .addLine("assertThat(builder.build().%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .and(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .mergeFrom(value);")
+                .addLine("assertThat(builder.build().%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .and(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -567,18 +601,19 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s);", key.example(0), value.example(1))
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertThat(builder.build().%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .and(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s);", key.example(0), value.example(1))
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .mergeFrom(template);")
+                .addLine("assertThat(builder.build().%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .and(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -586,29 +621,32 @@ public class SetMultimapPropertyTest {
   public void testToBuilder_fromPartial() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s, %s> %s;",
-                SetMultimap.class, key.type(), value.type(), convention.get())
-            .addLine("")
-            .addLine("  Builder toBuilder();")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value1 = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .buildPartial();")
-            .addLine("DataType value2 = value1.toBuilder()")
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value2.%s)", convention.get())
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine(
+                    "  %s<%s, %s> %s;",
+                    SetMultimap.class, key.type(), value.type(), convention.get())
+                .addLine("")
+                .addLine("  Builder toBuilder();")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value1 = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .buildPartial();")
+                .addLine("DataType value2 = value1.toBuilder()")
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .build();")
+                .addLine("assertThat(value2.%s)", convention.get())
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -617,19 +655,20 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .clear()")
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(4))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .and(%s, %s)", key.example(0), value.example(4))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .clear()")
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(4))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .and(%s, %s)", key.example(0), value.example(4))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -637,26 +676,29 @@ public class SetMultimapPropertyTest {
   public void testImmutableSetMultimapProperty() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s, %s> %s;",
-                ImmutableSetMultimap.class, key.type(), value.type(), convention.get("items"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine(
+                    "  %s<%s, %s> %s;",
+                    ImmutableSetMultimap.class, key.type(), value.type(), convention.get("items"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 
@@ -664,31 +706,36 @@ public class SetMultimapPropertyTest {
   public void testOverridingPut() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s<%s, %s> %s;",
-                SetMultimap.class, key.type(), value.type(), convention.get("items"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder putItems(%s unused, %s unused2) {",
-                key.unwrappedType(), value.unwrappedType())
-            .addLine("      return this;")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)",
-                key.example(0), value.example(0))
-            .addLine("    .putAllItems(%s, %s.of(%s))",
-                key.example(1), ImmutableList.class, value.examples(1, 2))
-            .addLine("    .putAllItems(%s.of(%s, %s))",
-                ImmutableMultimap.class, key.example(3), value.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.get("items"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine(
+                    "  %s<%s, %s> %s;",
+                    SetMultimap.class, key.type(), value.type(), convention.get("items"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {")
+                .addLine(
+                    "    @Override public Builder putItems(%s unused, %s unused2) {",
+                    key.unwrappedType(), value.unwrappedType())
+                .addLine("      return this;")
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(0))
+                .addLine(
+                    "    .putAllItems(%s, %s.of(%s))",
+                    key.example(1), ImmutableList.class, value.examples(1, 2))
+                .addLine(
+                    "    .putAllItems(%s.of(%s, %s))",
+                    ImmutableMultimap.class, key.example(3), value.example(3))
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s).isEmpty();", convention.get("items"))
+                .build())
         .runTest();
   }
 
@@ -697,31 +744,32 @@ public class SetMultimapPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new %s()", EqualsTester.class)
-            .addLine("    .addEqualityGroup(")
-            .addLine("        new DataType.Builder().build(),")
-            .addLine("        new DataType.Builder().build())")
-            .addLine("    .addEqualityGroup(")
-            .addLine("        new DataType.Builder()")
-            .addLine("            .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("            .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("            .build(),")
-            .addLine("        new DataType.Builder()")
-            .addLine("            .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("            .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("            .build())")
-            .addLine("    .addEqualityGroup(")
-            .addLine("        new DataType.Builder()")
-            .addLine("            .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("            .putItems(%s, %s)", key.example(0), value.example(3))
-            .addLine("            .build(),")
-            .addLine("        new DataType.Builder()")
-            .addLine("            .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("            .putItems(%s, %s)", key.example(0), value.example(3))
-            .addLine("            .build())")
-            .addLine("    .testEquals();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new %s()", EqualsTester.class)
+                .addLine("    .addEqualityGroup(")
+                .addLine("        new DataType.Builder().build(),")
+                .addLine("        new DataType.Builder().build())")
+                .addLine("    .addEqualityGroup(")
+                .addLine("        new DataType.Builder()")
+                .addLine("            .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("            .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("            .build(),")
+                .addLine("        new DataType.Builder()")
+                .addLine("            .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("            .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("            .build())")
+                .addLine("    .addEqualityGroup(")
+                .addLine("        new DataType.Builder()")
+                .addLine("            .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("            .putItems(%s, %s)", key.example(0), value.example(3))
+                .addLine("            .build(),")
+                .addLine("        new DataType.Builder()")
+                .addLine("            .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("            .putItems(%s, %s)", key.example(0), value.example(3))
+                .addLine("            .build())")
+                .addLine("    .testEquals();")
+                .build())
         .runTest();
   }
 
@@ -730,32 +778,35 @@ public class SetMultimapPropertyTest {
     // See also https://github.com/google/FreeBuilder/issues/68
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
-            .addLine("public interface DataType {")
-            .addLine("  @%s(\"stuff\")", JsonProperty.class)
-            .addLine("  %s<%s, %s> %s;",
-                SetMultimap.class, key.type(), value.type(), convention.get("items"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .build();")
-            .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
-            .addLine("    .registerModule(new %s());", GuavaModule.class)
-            .addLine("String json = mapper.writeValueAsString(value);")
-            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertThat(clone.%s)", convention.get("items"))
-            .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
-            .addLine("    .and(%s, %s)", key.example(2), value.example(3))
-            .addLine("    .andNothingElse()")
-            .addLine("    .inOrder();")
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+                .addLine("public interface DataType {")
+                .addLine("  @%s(\"stuff\")", JsonProperty.class)
+                .addLine(
+                    "  %s<%s, %s> %s;",
+                    SetMultimap.class, key.type(), value.type(), convention.get("items"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .putItems(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .build();")
+                .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
+                .addLine("    .registerModule(new %s());", GuavaModule.class)
+                .addLine("String json = mapper.writeValueAsString(value);")
+                .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+                .addLine("assertThat(clone.%s)", convention.get("items"))
+                .addLine("    .contains(%s, %s)", key.example(0), value.example(1))
+                .addLine("    .and(%s, %s)", key.example(2), value.example(3))
+                .addLine("    .andNothingElse()")
+                .addLine("    .inOrder();")
+                .build())
         .runTest();
   }
 

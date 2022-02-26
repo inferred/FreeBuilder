@@ -16,7 +16,6 @@
 package org.inferred.freebuilder;
 
 import com.google.common.annotations.GwtCompatible;
-
 import java.io.Serializable;
 import java.util.Optional;
 
@@ -24,7 +23,8 @@ import java.util.Optional;
 @GwtCompatible(serializable = true)
 public interface OptionalPropertiesType extends Serializable {
   Optional<String> getFirstName();
+
   Optional<String> getSurname();
 
-  class Builder extends OptionalPropertiesType_Builder { }
+  class Builder extends OptionalPropertiesType_Builder {}
 }

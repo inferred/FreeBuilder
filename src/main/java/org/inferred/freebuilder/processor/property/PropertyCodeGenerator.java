@@ -21,24 +21,21 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.inferred.freebuilder.processor.Datatype;
-import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.Variable;
-
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.inferred.freebuilder.processor.Datatype;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.Variable;
 
 /** Property-type-specific code generation interface. */
 public abstract class PropertyCodeGenerator {
@@ -85,8 +82,8 @@ public abstract class PropertyCodeGenerator {
     /**
      * Create a new {@link PropertyCodeGenerator} for the property described in {@code config}.
      *
-     * @return A new {@link PropertyCodeGenerator}, or {@link Optional#empty()} if the factory
-     *     does not support this type of property.
+     * @return A new {@link PropertyCodeGenerator}, or {@link Optional#empty()} if the factory does
+     *     not support this type of property.
      */
     Optional<? extends PropertyCodeGenerator> create(Config config);
   }
@@ -114,17 +111,17 @@ public abstract class PropertyCodeGenerator {
     /**
      * The property need not be set.
      *
-     * <p>This may mean the user chose an explicit Optional type (e.g. Java 8's Optional), or it
-     * may mean a Nullable annotation has been spotted. The property's field may be null.
+     * <p>This may mean the user chose an explicit Optional type (e.g. Java 8's Optional), or it may
+     * mean a Nullable annotation has been spotted. The property's field may be null.
      */
     OPTIONAL,
 
     /**
      * The property is known to have a default value.
      *
-     * <p>This may be because we detected the property being set in the builder's constructor,
-     * or because the type itself has a reasonable default (e.g. an empty collection). The
-     * property's field will never be null.
+     * <p>This may be because we detected the property being set in the builder's constructor, or
+     * because the type itself has a reasonable default (e.g. an empty collection). The property's
+     * field will never be null.
      */
     HAS_DEFAULT
   }
@@ -148,8 +145,7 @@ public abstract class PropertyCodeGenerator {
       SourceBuilder code, Excerpt finalField, String builder);
 
   /** Add the final assignment of the property to the partial value object's source code. */
-  public void addPartialFieldAssignment(
-      SourceBuilder code, Excerpt finalField, String builder) {
+  public void addPartialFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
     addFinalFieldAssignment(code, finalField, builder);
   }
 
@@ -194,9 +190,7 @@ public abstract class PropertyCodeGenerator {
     code.add("%s != null", property.getField());
   }
 
-  /**
-   * Adds value to an ongoing toString concatenation or append sequence.
-   */
+  /** Adds value to an ongoing toString concatenation or append sequence. */
   public void addToStringValue(SourceBuilder code) {
     code.add(property.getField());
   }

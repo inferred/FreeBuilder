@@ -22,17 +22,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Integration test for {@link org.inferred.freebuilder.FreeBuilder
- * FreeBuilder}, using the {@link PrimitiveProperty}.
+ * Integration test for {@link org.inferred.freebuilder.FreeBuilder FreeBuilder}, using the {@link
+ * PrimitiveProperty}.
  */
 @RunWith(JUnit4.class)
 public class PrimitivePropertyTest {
 
   @Test
   public void test() {
-    PrimitiveProperty b = new PrimitiveProperty.Builder()
-        .setProperty(11)
-        .build();
+    PrimitiveProperty b = new PrimitiveProperty.Builder().setProperty(11).build();
     assertEquals(11, b.getProperty());
   }
 }

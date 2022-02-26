@@ -24,16 +24,16 @@ import org.junit.Test;
 public class AbstractBuilderTest {
   private final BehaviorTester behaviorTester = BehaviorTester.create(new StaticFeatureSet());
 
-  private static final SourceBuilder TYPE_WITH_ABSTRACT_BUILDER = SourceBuilder
-      .forTesting()
-      .addLine("package com.example;")
-      .addLine("@%s", FreeBuilder.class)
-      .addLine("public abstract class TypeWithAbstractBuilder {")
-      .addLine("  public abstract int getItem();")
-      .addLine("")
-      .addLine("  public abstract static class Builder")
-      .addLine("      extends TypeWithAbstractBuilder_Builder {}")
-      .addLine("}");
+  private static final SourceBuilder TYPE_WITH_ABSTRACT_BUILDER =
+      SourceBuilder.forTesting()
+          .addLine("package com.example;")
+          .addLine("@%s", FreeBuilder.class)
+          .addLine("public abstract class TypeWithAbstractBuilder {")
+          .addLine("  public abstract int getItem();")
+          .addLine("")
+          .addLine("  public abstract static class Builder")
+          .addLine("      extends TypeWithAbstractBuilder_Builder {}")
+          .addLine("}");
 
   @Test
   public void testGenericWithConstraint() {

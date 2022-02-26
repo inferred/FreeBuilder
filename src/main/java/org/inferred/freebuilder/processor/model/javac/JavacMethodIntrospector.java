@@ -30,16 +30,13 @@ import com.sun.source.tree.Tree.Kind;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
-
-import org.inferred.freebuilder.processor.model.MethodIntrospector;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
-
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import org.inferred.freebuilder.processor.model.MethodIntrospector;
 
 /** Implementation of {@link MethodIntrospector} for javac. */
 public class JavacMethodIntrospector extends MethodIntrospector {
@@ -62,10 +59,8 @@ public class JavacMethodIntrospector extends MethodIntrospector {
   @Override
   public Set<Name> getOwnMethodInvocations(ExecutableElement method) {
     try {
-      return ImmutableSet.copyOf(trees
-          .getTree(method)
-          .accept(OWN_METHOD_INVOCATIONS_FETCHER, null)
-          .names);
+      return ImmutableSet.copyOf(
+          trees.getTree(method).accept(OWN_METHOD_INVOCATIONS_FETCHER, null).names);
     } catch (RuntimeException e) {
       // Fail gracefully
       return ImmutableSet.of();
@@ -74,14 +69,20 @@ public class JavacMethodIntrospector extends MethodIntrospector {
 
   @Override
   public void visitAllOwnMethodInvocations(
-      ExecutableElement method,
-      OwnMethodInvocationVisitor visitor) {
-    trees.getTree(method).accept(OWN_METHOD_INVOCATIONS_VISITOR, (tree, methodName) -> {
-      visitor.visitInvocation(methodName, (kind, msg) -> {
-        CompilationUnitTree compilationUnit = trees.getPath(method).getCompilationUnit();
-        trees.printMessage(kind, msg, tree, compilationUnit);
-      });
-    });
+      ExecutableElement method, OwnMethodInvocationVisitor visitor) {
+    trees
+        .getTree(method)
+        .accept(
+            OWN_METHOD_INVOCATIONS_VISITOR,
+            (tree, methodName) -> {
+              visitor.visitInvocation(
+                  methodName,
+                  (kind, msg) -> {
+                    CompilationUnitTree compilationUnit =
+                        trees.getPath(method).getCompilationUnit();
+                    trees.printMessage(kind, msg, tree, compilationUnit);
+                  });
+            });
   }
 
   /** Data object retuned by {@link #OWN_METHOD_INVOCATIONS_FETCHER}. */
@@ -183,8 +184,7 @@ public class JavacMethodIntrospector extends MethodIntrospector {
           new TreeScanner<Void, BiConsumer<MethodInvocationTree, Name>>() {
             @Override
             public Void visitMethodInvocation(
-                MethodInvocationTree node,
-                BiConsumer<MethodInvocationTree, Name> biConsumer) {
+                MethodInvocationTree node, BiConsumer<MethodInvocationTree, Name> biConsumer) {
               Name identifier = OWNED_IDENTIFIER.visit(node.getMethodSelect(), null);
               if (identifier != null) {
                 biConsumer.accept(node, identifier);

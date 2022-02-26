@@ -44,6 +44,5 @@ public class Quotes {
     }
   }
 
-  private Quotes() {
-  }
+  private Quotes() {}
 }

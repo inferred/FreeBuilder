@@ -1,15 +1,14 @@
 package org.inferred.freebuilder.processor.source.feature;
 
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-
 import javax.annotation.processing.ProcessingEnvironment;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
 
 /**
  * Algorithm to select the correct instance of a given feature type for a processing environment,
  * and the default to use in tests when an explicit value has not been registered for that feature.
  *
- * <p>Each feature class should expose a single {@code FeatureType} constant for the user to pass
- * to {@link SourceBuilder#feature(FeatureType)}, e.g. {@link SourceLevel#SOURCE_LEVEL}.
+ * <p>Each feature class should expose a single {@code FeatureType} constant for the user to pass to
+ * {@link SourceBuilder#feature(FeatureType)}, e.g. {@link SourceLevel#SOURCE_LEVEL}.
  */
 public abstract class FeatureType<F extends Feature<F>> {
 

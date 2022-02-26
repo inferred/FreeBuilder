@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.QualifiedName;
@@ -27,17 +27,15 @@ import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Type;
 import org.inferred.freebuilder.processor.source.TypeClass;
 
-import java.util.Optional;
-
-/**
- * Metadata about a user's datatype.
- */
+/** Metadata about a user's datatype. */
 @FreeBuilder
 public abstract class Datatype {
 
   /** Standard Java methods that may be underridden. */
   public enum StandardMethod {
-    TO_STRING, HASH_CODE, EQUALS
+    TO_STRING,
+    HASH_CODE,
+    EQUALS
   }
 
   /** How compulsory the underride is. */
@@ -87,7 +85,7 @@ public abstract class Datatype {
   /** Returns true if the type is an interface. */
   public abstract boolean isInterfaceType();
 
-  /** Returns the builder type that users will see.  */
+  /** Returns the builder type that users will see. */
   public abstract Type getBuilder();
 
   /** Whether there is a package-visible, no-args constructor so we can subclass the Builder. */
@@ -181,22 +179,26 @@ public abstract class Datatype {
           Visibility.mostVisible(getValueTypeVisibility(), visibility));
     }
 
-    /**
-     * Returns a newly-built {@link Datatype} based on the content of the {@code Builder}.
-     */
+    /** Returns a newly-built {@link Datatype} based on the content of the {@code Builder}. */
     @Override
     public Datatype build() {
       Datatype datatype = super.build();
       QualifiedName generatedBuilder = datatype.getGeneratedBuilder().getQualifiedName();
-      checkState(datatype.getValueType().getQualifiedName().enclosingType()
-              .equals(generatedBuilder),
-          "%s not a nested class of %s", datatype.getValueType(), generatedBuilder);
-      checkState(datatype.getPartialType().getQualifiedName().enclosingType()
-              .equals(generatedBuilder),
-          "%s not a nested class of %s", datatype.getPartialType(), generatedBuilder);
-      checkState(datatype.getPropertyEnum().getQualifiedName().enclosingType()
-              .equals(generatedBuilder),
-          "%s not a nested class of %s", datatype.getPropertyEnum(), generatedBuilder);
+      checkState(
+          datatype.getValueType().getQualifiedName().enclosingType().equals(generatedBuilder),
+          "%s not a nested class of %s",
+          datatype.getValueType(),
+          generatedBuilder);
+      checkState(
+          datatype.getPartialType().getQualifiedName().enclosingType().equals(generatedBuilder),
+          "%s not a nested class of %s",
+          datatype.getPartialType(),
+          generatedBuilder);
+      checkState(
+          datatype.getPropertyEnum().getQualifiedName().enclosingType().equals(generatedBuilder),
+          "%s not a nested class of %s",
+          datatype.getPropertyEnum(),
+          generatedBuilder);
       return datatype;
     }
   }

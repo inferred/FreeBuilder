@@ -15,11 +15,10 @@
  */
 package org.inferred.freebuilder.processor.model;
 
-import org.inferred.freebuilder.processor.source.Partial;
-
 import javax.lang.model.type.NullType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeVisitor;
+import org.inferred.freebuilder.processor.source.Partial;
 
 public abstract class NullTypeImpl implements NullType {
 
@@ -36,5 +35,4 @@ public abstract class NullTypeImpl implements NullType {
   public <R, P> R accept(TypeVisitor<R, P> v, P p) {
     return v.visitNull(this, p);
   }
-
 }

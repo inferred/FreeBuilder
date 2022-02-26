@@ -24,7 +24,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -42,11 +45,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -87,11 +85,10 @@ public class BuildablePropertyTest {
     List<BuildableType> buildableTypes = Arrays.asList(BuildableType.values());
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
-    return () -> Lists
-        .cartesianProduct(buildableTypes, conventions, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(buildableTypes, conventions, features).stream()
+            .map(List::toArray)
+            .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -106,9 +103,7 @@ public class BuildablePropertyTest {
   private final SourceBuilder nestedListType;
 
   public BuildablePropertyTest(
-      BuildableType buildableType,
-      NamingConvention convention,
-      FeatureSet features) {
+      BuildableType buildableType, NamingConvention convention, FeatureSet features) {
     this.buildableType = buildableType;
     this.convention = convention;
     this.features = features;
@@ -123,9 +118,10 @@ public class BuildablePropertyTest {
       NamingConvention convention,
       boolean hasDefaults,
       boolean hasJacksonAnnotations) {
-    SourceBuilder code = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class);
+    SourceBuilder code =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class);
     if (hasJacksonAnnotations) {
       code.addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class);
     }
@@ -139,8 +135,7 @@ public class BuildablePropertyTest {
           code.addLine("  @%s", FreeBuilder.class);
         }
         if (hasJacksonAnnotations) {
-          code.addLine("@%s(builder = DataType.Item.Builder.class)",
-              JsonDeserialize.class);
+          code.addLine("@%s(builder = DataType.Item.Builder.class)", JsonDeserialize.class);
         }
         code.addLine("  interface Item {")
             .addLine("    String %s;", convention.get("name"))
@@ -156,8 +151,7 @@ public class BuildablePropertyTest {
               .addLine("        %s(0);", convention.set("price"))
               .addLine("      }");
         }
-        code.addLine("    }")
-            .addLine("  }");
+        code.addLine("    }").addLine("  }");
         break;
 
       case PROTO_LIKE:
@@ -191,8 +185,7 @@ public class BuildablePropertyTest {
       boolean hasJacksonAnnotations,
       SourceBuilder code) {
     if (hasJacksonAnnotations) {
-      code.addLine("@%s(builder = DataType.Item.Builder.class)",
-          JsonDeserialize.class);
+      code.addLine("@%s(builder = DataType.Item.Builder.class)", JsonDeserialize.class);
     }
     code.addLine("  class Item {");
     if (hasJacksonAnnotations) {
@@ -204,8 +197,7 @@ public class BuildablePropertyTest {
           .addLine("        throw new UnsupportedOperationException(\"name not set\");")
           .addLine("      }");
     }
-    code.addLine("      return name;")
-        .addLine("    }");
+    code.addLine("      return name;").addLine("    }");
     if (hasJacksonAnnotations) {
       code.addLine("@%s(\"price\")", JsonProperty.class);
     }
@@ -295,10 +287,11 @@ public class BuildablePropertyTest {
         .addLine("        return false;")
         .addLine("      }")
         .addLine("      Item other = (Item) obj;")
-        .addLine("      return (name == other.name ||"
-            + "(name != null && name.equals(other.name)))")
-        .addLine("          && (price.equals(other.price) ||"
-            + "(price != null && price.equals(other.price)));")
+        .addLine(
+            "      return (name == other.name ||" + "(name != null && name.equals(other.name)))")
+        .addLine(
+            "          && (price.equals(other.price) ||"
+                + "(price != null && price.equals(other.price)));")
         .addLine("    }")
         .addLine("")
         .addLine("    @Override")
@@ -338,11 +331,9 @@ public class BuildablePropertyTest {
         .addLine("")
         .addLine("  public DataType.Item.Builder clear() {");
     if (hasDefaults) {
-      code.addLine("     name = \"Air\";")
-          .addLine("     price = 0;");
+      code.addLine("     name = \"Air\";").addLine("     price = 0;");
     } else {
-      code.addLine("     name = null;")
-          .addLine("     price = null;");
+      code.addLine("     name = null;").addLine("     price = null;");
     }
     code.addLine("    return (DataType.Item.Builder) this;")
         .addLine("  }")
@@ -401,9 +392,7 @@ public class BuildablePropertyTest {
           .addLine("        throw new UnsupportedOperationException(\"name not set\");")
           .addLine("      }");
     }
-    code.addLine("      return name;")
-        .addLine("    }")
-        .addLine("");
+    code.addLine("      return name;").addLine("    }").addLine("");
     if (hasJacksonAnnotations) {
       code.addLine("@%s(\"price\")", JsonProperty.class);
     }
@@ -425,10 +414,11 @@ public class BuildablePropertyTest {
     if (hasDefaults) {
       code.addLine("      return name.equals(other.name) && (price == other.price);");
     } else {
-      code.addLine("      return (name == other.name || "
-              + "(name != null && name.equals(other.name)))")
-          .addLine("          && (price.equals(other.price) ||"
-              + "(price != null && price.equals(other.price)));");
+      code.addLine(
+              "      return (name == other.name || " + "(name != null && name.equals(other.name)))")
+          .addLine(
+              "          && (price.equals(other.price) ||"
+                  + "(price != null && price.equals(other.price)));");
     }
     code.addLine("    }")
         .addLine("")
@@ -440,16 +430,15 @@ public class BuildablePropertyTest {
       code.addLine("      return (name == null ? 0 : name.hashCode())")
           .addLine("          + (price == null ? 0 : price.hashCode());");
     }
-    code.addLine("    }")
-        .addLine("  }")
-        .addLine("}");
+    code.addLine("    }").addLine("  }").addLine("}");
   }
 
   private static SourceBuilder generateNestedListType(BuildableType buildableType) {
-    SourceBuilder code = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {");
+    SourceBuilder code =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {");
     switch (buildableType) {
       case FREEBUILDER:
       case FREEBUILDER_WITH_TO_BUILDER:
@@ -463,8 +452,7 @@ public class BuildablePropertyTest {
         if (buildableType == FREEBUILDER_WITH_TO_BUILDER) {
           code.addLine("    Builder toBuilder();");
         }
-        code.addLine("    class Builder extends DataType_Item_Builder {}")
-            .addLine("  }");
+        code.addLine("    class Builder extends DataType_Item_Builder {}").addLine("  }");
         break;
 
       case PROTO_LIKE:
@@ -479,8 +467,8 @@ public class BuildablePropertyTest {
             .addLine("")
             .addLine("    public static class Builder {")
             .addLine("")
-            .addLine("      private final %1$s<String> names = new %1$s<String>();",
-                ArrayList.class)
+            .addLine(
+                "      private final %1$s<String> names = new %1$s<String>();", ArrayList.class)
             .addLine("")
             .addLine("      public Builder addNames(String... names) {")
             .addLine("        for (String name : names) {")
@@ -513,7 +501,8 @@ public class BuildablePropertyTest {
             .addLine("    private final %s<String> names;", List.class)
             .addLine("")
             .addLine("    private Item(%s<String> names) {", List.class)
-            .addLine("      this.names = %s.unmodifiableList(new %s<String>(names));",
+            .addLine(
+                "      this.names = %s.unmodifiableList(new %s<String>(names));",
                 Collections.class, ArrayList.class)
             .addLine("    }")
             .addLine("  }");
@@ -527,40 +516,41 @@ public class BuildablePropertyTest {
         .addLine("}");
 
     if (buildableType == FREEBUILDER_LIKE) {
-        code.addLine("")
-            .addLine("class DataType_Item_Builder {")
-            .addLine("  private final %s<String> names = new %s<String>();",
-                List.class, ArrayList.class)
-            .addLine("  public DataType.Item.Builder addNames(String... names) {")
-            .addLine("    for (String name : names) {")
-            .addLine("      this.names.add(name);")
-            .addLine("    }")
-            .addLine("    return (DataType.Item.Builder) this;")
-            .addLine("  }")
-            .addLine("  public DataType.Item.Builder clear() {")
-            .addLine("    names.clear();")
-            .addLine("    return (DataType.Item.Builder) this;")
-            .addLine("  }")
-            .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item.Builder builder) {")
-            .addLine("    names.addAll(((DataType_Item_Builder) builder).names);")
-            .addLine("    return (DataType.Item.Builder) this;")
-            .addLine("  }")
-            .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item item) {")
-            .addLine("    names.addAll(item.names());")
-            .addLine("    return (DataType.Item.Builder) this;")
-            .addLine("  }")
-            .addLine("  public DataType.Item build() { return new Value(this); }")
-            .addLine("  public DataType.Item buildPartial() { return new Value(this); }")
-            .addLine("  private class Value implements DataType.Item {")
-            .addLine("    private %s<String> names;", List.class)
-            .addLine("    Value(DataType_Item_Builder builder) {")
-            .addLine("      names = %s.unmodifiableList(new %s<String>(builder.names));",
-                Collections.class, ArrayList.class)
-            .addLine("    }")
-            .addLine("    @%s public %s<String> names() { return names; }",
-                Override.class, List.class)
-            .addLine("  }")
-            .addLine("}");
+      code.addLine("")
+          .addLine("class DataType_Item_Builder {")
+          .addLine(
+              "  private final %s<String> names = new %s<String>();", List.class, ArrayList.class)
+          .addLine("  public DataType.Item.Builder addNames(String... names) {")
+          .addLine("    for (String name : names) {")
+          .addLine("      this.names.add(name);")
+          .addLine("    }")
+          .addLine("    return (DataType.Item.Builder) this;")
+          .addLine("  }")
+          .addLine("  public DataType.Item.Builder clear() {")
+          .addLine("    names.clear();")
+          .addLine("    return (DataType.Item.Builder) this;")
+          .addLine("  }")
+          .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item.Builder builder) {")
+          .addLine("    names.addAll(((DataType_Item_Builder) builder).names);")
+          .addLine("    return (DataType.Item.Builder) this;")
+          .addLine("  }")
+          .addLine("  public DataType.Item.Builder mergeFrom(DataType.Item item) {")
+          .addLine("    names.addAll(item.names());")
+          .addLine("    return (DataType.Item.Builder) this;")
+          .addLine("  }")
+          .addLine("  public DataType.Item build() { return new Value(this); }")
+          .addLine("  public DataType.Item buildPartial() { return new Value(this); }")
+          .addLine("  private class Value implements DataType.Item {")
+          .addLine("    private %s<String> names;", List.class)
+          .addLine("    Value(DataType_Item_Builder builder) {")
+          .addLine(
+              "      names = %s.unmodifiableList(new %s<String>(builder.names));",
+              Collections.class, ArrayList.class)
+          .addLine("    }")
+          .addLine(
+              "    @%s public %s<String> names() { return names; }", Override.class, List.class)
+          .addLine("  }")
+          .addLine("}");
     }
     return code;
   }
@@ -571,9 +561,7 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().build();")
-            .build())
+        .with(testBuilder().addLine("new DataType.Builder().build();").build())
         .runTest();
   }
 
@@ -582,17 +570,22 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(defaultsType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertEquals(\"Air\", value.%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(0, value.%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Air\", value.%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(0, value.%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder().build();")
+                .addLine(
+                    "assertEquals(\"Air\", value.%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(0, value.%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Air\", value.%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(0, value.%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .build())
         .runTest();
   }
 
@@ -601,11 +594,12 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .buildPartial();")
-            .addLine("value.%s;", convention.get("item1"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .buildPartial();")
+                .addLine("value.%s;", convention.get("item1"))
+                .build())
         .runTest();
   }
 
@@ -615,12 +609,13 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .buildPartial()")
-            .addLine("    .%s", convention.get("item1"))
-            .addLine("    .%s;", convention.get("name"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .buildPartial()")
+                .addLine("    .%s", convention.get("item1"))
+                .addLine("    .%s;", convention.get("name"))
+                .build())
         .runTest();
   }
 
@@ -629,22 +624,23 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType.Item item1 = %s", buildableType.newBuilder())
-            .addLine("    .%s(\"Foo\")", convention.set("name"))
-            .addLine("    .%s(1)", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("DataType.Item item2 = %s", buildableType.newBuilder())
-            .addLine("    .%s(\"Bar\")", convention.set("name"))
-            .addLine("    .%s(2)", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(item1)", convention.set("item1"))
-            .addLine("    .%s(item2)", convention.set("item2"))
-            .addLine("    .build();")
-            .addLine("assertThat(item1).isSameAs(value.%s);", convention.get("item1"))
-            .addLine("assertThat(item2).isSameAs(value.%s);", convention.get("item2"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Item item1 = %s", buildableType.newBuilder())
+                .addLine("    .%s(\"Foo\")", convention.set("name"))
+                .addLine("    .%s(1)", convention.set("price"))
+                .addLine("    .build();")
+                .addLine("DataType.Item item2 = %s", buildableType.newBuilder())
+                .addLine("    .%s(\"Bar\")", convention.set("name"))
+                .addLine("    .%s(2)", convention.set("price"))
+                .addLine("    .build();")
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(item1)", convention.set("item1"))
+                .addLine("    .%s(item2)", convention.set("item2"))
+                .addLine("    .build();")
+                .addLine("assertThat(item1).isSameAs(value.%s);", convention.get("item1"))
+                .addLine("assertThat(item2).isSameAs(value.%s);", convention.get("item2"))
+                .build())
         .runTest();
   }
 
@@ -653,27 +649,28 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType.Item item1 = %s", buildableType.newBuilder())
-            .addLine("    .%s(\"Foo\")", convention.set("name"))
-            .addLine("    .%s(1)", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("DataType.Item item2 = %s", buildableType.newBuilder())
-            .addLine("    .%s(\"Bar\")", convention.set("name"))
-            .addLine("    .%s(2)", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.%s;", convention.get("item1Builder"))
-            .addLine("builder.%s;", convention.get("item2Builder"))
-            .addLine("DataType value = builder")
-            .addLine("    .%s(item1)", convention.set("item1"))
-            .addLine("    .%s(item2)", convention.set("item2"))
-            .addLine("    .build();")
-            .addLine("assertThat(item1).isEqualTo(value.%s);", convention.get("item1"))
-            .addLine("assertThat(item1).isNotSameAs(value.%s);", convention.get("item1"))
-            .addLine("assertThat(item2).isEqualTo(value.%s);", convention.get("item2"))
-            .addLine("assertThat(item2).isNotSameAs(value.%s);", convention.get("item2"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Item item1 = %s", buildableType.newBuilder())
+                .addLine("    .%s(\"Foo\")", convention.set("name"))
+                .addLine("    .%s(1)", convention.set("price"))
+                .addLine("    .build();")
+                .addLine("DataType.Item item2 = %s", buildableType.newBuilder())
+                .addLine("    .%s(\"Bar\")", convention.set("name"))
+                .addLine("    .%s(2)", convention.set("price"))
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine("builder.%s;", convention.get("item1Builder"))
+                .addLine("builder.%s;", convention.get("item2Builder"))
+                .addLine("DataType value = builder")
+                .addLine("    .%s(item1)", convention.set("item1"))
+                .addLine("    .%s(item2)", convention.set("item2"))
+                .addLine("    .build();")
+                .addLine("assertThat(item1).isEqualTo(value.%s);", convention.get("item1"))
+                .addLine("assertThat(item1).isNotSameAs(value.%s);", convention.get("item1"))
+                .addLine("assertThat(item2).isEqualTo(value.%s);", convention.get("item2"))
+                .addLine("assertThat(item2).isNotSameAs(value.%s);", convention.get("item2"))
+                .build())
         .runTest();
   }
 
@@ -682,19 +679,20 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(nestedListType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(%s", buildableType.newBuilder())
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.item(%s", buildableType.newBuilder())
-            .addLine("    .addNames(\"Cheese\", \"Ham\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine("builder.item(%s", buildableType.newBuilder())
+                .addLine("    .addNames(\"Foo\", \"Bar\")")
+                .addLine("    .build());")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+                .addLine("builder.item(%s", buildableType.newBuilder())
+                .addLine("    .addNames(\"Cheese\", \"Ham\")")
+                .addLine("    .build());")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -703,24 +701,29 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
-            .addLine("        .%s(\"Foo\")", convention.set("name"))
-            .addLine("        .%s(1))", convention.set("price"))
-            .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
-            .addLine("        .%s(\"Bar\")", convention.set("name"))
-            .addLine("        .%s(2))", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("assertEquals(\"Foo\", value.%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(1, value.%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Bar\", value.%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(2, value.%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
+                .addLine("        .%s(\"Foo\")", convention.set("name"))
+                .addLine("        .%s(1))", convention.set("price"))
+                .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
+                .addLine("        .%s(\"Bar\")", convention.set("name"))
+                .addLine("        .%s(2))", convention.set("price"))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(\"Foo\", value.%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(1, value.%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Bar\", value.%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(2, value.%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .build())
         .runTest();
   }
 
@@ -729,17 +732,18 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(nestedListType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(%s", buildableType.newBuilder())
-            .addLine("    .addNames(\"Foo\", \"Bar\"));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.item(%s", buildableType.newBuilder())
-            .addLine("    .addNames(\"Cheese\", \"Ham\"));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine("builder.item(%s", buildableType.newBuilder())
+                .addLine("    .addNames(\"Foo\", \"Bar\"));")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+                .addLine("builder.item(%s", buildableType.newBuilder())
+                .addLine("    .addNames(\"Cheese\", \"Ham\"));")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -749,11 +753,12 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
-            .addLine("        .%s(\"Foo\"));", convention.set("name"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
+                .addLine("        .%s(\"Foo\"));", convention.set("name"))
+                .build())
         .runTest();
   }
 
@@ -762,24 +767,29 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(defaultsType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItem1(b -> b")
-            .addLine("        .%s(\"Bananas\")", convention.set("name"))
-            .addLine("        .%s(5))", convention.set("price"))
-            .addLine("    .mutateItem2(b -> b")
-            .addLine("        .%s(\"Pears\")", convention.set("name"))
-            .addLine("        .%s(15))", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("assertEquals(\"Bananas\", value.%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(5, value.%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Pears\", value.%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(15, value.%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mutateItem1(b -> b")
+                .addLine("        .%s(\"Bananas\")", convention.set("name"))
+                .addLine("        .%s(5))", convention.set("price"))
+                .addLine("    .mutateItem2(b -> b")
+                .addLine("        .%s(\"Pears\")", convention.set("name"))
+                .addLine("        .%s(15))", convention.set("price"))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(\"Bananas\", value.%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(5, value.%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Pears\", value.%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(15, value.%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .build())
         .runTest();
   }
 
@@ -808,24 +818,29 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItem1(b -> b")
-            .addLine("        .%s(\"Bananas\")", convention.set("name"))
-            .addLine("        .%s(5))", convention.set("price"))
-            .addLine("    .mutateItem2(b -> b")
-            .addLine("        .%s(\"Pears\")", convention.set("name"))
-            .addLine("        .%s(15))", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("assertEquals(\"Bananas\", value.%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(5, value.%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Pears\", value.%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(15, value.%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mutateItem1(b -> b")
+                .addLine("        .%s(\"Bananas\")", convention.set("name"))
+                .addLine("        .%s(5))", convention.set("price"))
+                .addLine("    .mutateItem2(b -> b")
+                .addLine("        .%s(\"Pears\")", convention.set("name"))
+                .addLine("        .%s(15))", convention.set("price"))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(\"Bananas\", value.%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(5, value.%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Pears\", value.%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(15, value.%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .build())
         .runTest();
   }
 
@@ -834,13 +849,16 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(defaultsType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.%s.%s(\"Foo\");",
-                convention.get("item1Builder"), convention.set("name"))
-            .addLine("assertEquals(\"Foo\", builder.build().%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine(
+                    "builder.%s.%s(\"Foo\");",
+                    convention.get("item1Builder"), convention.set("name"))
+                .addLine(
+                    "assertEquals(\"Foo\", builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .build())
         .runTest();
   }
 
@@ -849,11 +867,12 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(nestedListType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.itemBuilder().addNames(\"Foo\");")
-            .addLine("assertThat(builder.build().item().names()).containsExactly(\"Foo\");")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine("builder.itemBuilder().addNames(\"Foo\");")
+                .addLine("assertThat(builder.build().item().names()).containsExactly(\"Foo\");")
+                .build())
         .runTest();
   }
 
@@ -862,40 +881,51 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
-            .addLine("        .%s(\"Foo\")", convention.set("name"))
-            .addLine("        .%s(1)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
-            .addLine("        .%s(\"Bar\")", convention.set("name"))
-            .addLine("        .%s(2)", convention.set("price"))
-            .addLine("        .build());")
-            .addLine("assertEquals(\"Foo\", builder.build().%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(1, builder.build().%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Bar\", builder.build().%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(2, builder.build().%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .addLine("DataType.Builder partialBuilder =")
-            .addLine("    new DataType.Builder();")
-            .addLine("partialBuilder.%s.%s(\"Baz\");",
-                convention.get("item1Builder"), convention.set("name"))
-            .addLine("partialBuilder.%s.%s(3);",
-                convention.get("item2Builder"), convention.set("price"))
-            .addLine("builder.mergeFrom(partialBuilder);")
-            .addLine("assertEquals(\"Baz\", builder.build().%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(1, builder.build().%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Bar\", builder.build().%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(3, builder.build().%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
+                .addLine("        .%s(\"Foo\")", convention.set("name"))
+                .addLine("        .%s(1)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
+                .addLine("        .%s(\"Bar\")", convention.set("name"))
+                .addLine("        .%s(2)", convention.set("price"))
+                .addLine("        .build());")
+                .addLine(
+                    "assertEquals(\"Foo\", builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(1, builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Bar\", builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(2, builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .addLine("DataType.Builder partialBuilder =")
+                .addLine("    new DataType.Builder();")
+                .addLine(
+                    "partialBuilder.%s.%s(\"Baz\");",
+                    convention.get("item1Builder"), convention.set("name"))
+                .addLine(
+                    "partialBuilder.%s.%s(3);",
+                    convention.get("item2Builder"), convention.set("price"))
+                .addLine("builder.mergeFrom(partialBuilder);")
+                .addLine(
+                    "assertEquals(\"Baz\", builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(1, builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Bar\", builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(3, builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .build())
         .runTest();
   }
 
@@ -904,22 +934,23 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType.Item item1 = %s", buildableType.newBuilder())
-            .addLine("    .%s(\"Foo\")", convention.set("name"))
-            .addLine("    .%s(1)", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("DataType.Item item2 = %s", buildableType.newBuilder())
-            .addLine("    .%s(\"Bar\")", convention.set("name"))
-            .addLine("    .%s(2)", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(item1)", convention.set("item1"))
-            .addLine("    .%s(item2);", convention.set("item2"))
-            .addLine("DataType value = new DataType.Builder().mergeFrom(builder).build();")
-            .addLine("assertThat(value.%s).isSameAs(item1);", convention.get("item1"))
-            .addLine("assertThat(value.%s).isSameAs(item2);", convention.get("item2"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Item item1 = %s", buildableType.newBuilder())
+                .addLine("    .%s(\"Foo\")", convention.set("name"))
+                .addLine("    .%s(1)", convention.set("price"))
+                .addLine("    .build();")
+                .addLine("DataType.Item item2 = %s", buildableType.newBuilder())
+                .addLine("    .%s(\"Bar\")", convention.set("name"))
+                .addLine("    .%s(2)", convention.set("price"))
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .%s(item1)", convention.set("item1"))
+                .addLine("    .%s(item2);", convention.set("item2"))
+                .addLine("DataType value = new DataType.Builder().mergeFrom(builder).build();")
+                .addLine("assertThat(value.%s).isSameAs(item1);", convention.get("item1"))
+                .addLine("assertThat(value.%s).isSameAs(item2);", convention.get("item2"))
+                .build())
         .runTest();
   }
 
@@ -928,20 +959,21 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(nestedListType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(%s", buildableType.newBuilder())
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .item(%s", buildableType.newBuilder())
-            .addLine("        .addNames(\"Cheese\", \"Ham\")")
-            .addLine("        .build()));")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine("builder.item(%s", buildableType.newBuilder())
+                .addLine("    .addNames(\"Foo\", \"Bar\")")
+                .addLine("    .build());")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+                .addLine("builder.mergeFrom(new DataType.Builder()")
+                .addLine("    .item(%s", buildableType.newBuilder())
+                .addLine("        .addNames(\"Cheese\", \"Ham\")")
+                .addLine("        .build()));")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -950,43 +982,52 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
-            .addLine("        .%s(\"Foo\")", convention.set("name"))
-            .addLine("        .%s(1)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
-            .addLine("        .%s(\"Bar\")", convention.set("name"))
-            .addLine("        .%s(2)", convention.set("price"))
-            .addLine("        .build());")
-            .addLine("assertEquals(\"Foo\", builder.build().%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(1, builder.build().%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Bar\", builder.build().%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(2, builder.build().%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
-            .addLine("        .%s(\"Cheese\")", convention.set("name"))
-            .addLine("        .%s(3)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
-            .addLine("        .%s(\"Ham\")", convention.set("name"))
-            .addLine("        .%s(4)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .build());")
-            .addLine("assertEquals(\"Cheese\", builder.build().%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(3, builder.build().%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Ham\", builder.build().%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(4, builder.build().%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
+                .addLine("        .%s(\"Foo\")", convention.set("name"))
+                .addLine("        .%s(1)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
+                .addLine("        .%s(\"Bar\")", convention.set("name"))
+                .addLine("        .%s(2)", convention.set("price"))
+                .addLine("        .build());")
+                .addLine(
+                    "assertEquals(\"Foo\", builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(1, builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Bar\", builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(2, builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .addLine("builder.mergeFrom(new DataType.Builder()")
+                .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
+                .addLine("        .%s(\"Cheese\")", convention.set("name"))
+                .addLine("        .%s(3)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
+                .addLine("        .%s(\"Ham\")", convention.set("name"))
+                .addLine("        .%s(4)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .build());")
+                .addLine(
+                    "assertEquals(\"Cheese\", builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(3, builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Ham\", builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(4, builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .build())
         .runTest();
   }
 
@@ -995,21 +1036,22 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType value1 = new DataType.Builder()")
-            .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
-            .addLine("        .%s(\"Foo\")", convention.set("name"))
-            .addLine("        .%s(1)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
-            .addLine("        .%s(\"Bar\")", convention.set("name"))
-            .addLine("        .%s(2)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .build();")
-            .addLine("DataType value2 = new DataType.Builder().mergeFrom(value1).build();")
-            .addLine("assertThat(value1.%1$s).isSameAs(value2.%1$s);", convention.get("item1"))
-            .addLine("assertThat(value1.%1$s).isSameAs(value2.%1$s);", convention.get("item2"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value1 = new DataType.Builder()")
+                .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
+                .addLine("        .%s(\"Foo\")", convention.set("name"))
+                .addLine("        .%s(1)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
+                .addLine("        .%s(\"Bar\")", convention.set("name"))
+                .addLine("        .%s(2)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .build();")
+                .addLine("DataType value2 = new DataType.Builder().mergeFrom(value1).build();")
+                .addLine("assertThat(value1.%1$s).isSameAs(value2.%1$s);", convention.get("item1"))
+                .addLine("assertThat(value1.%1$s).isSameAs(value2.%1$s);", convention.get("item2"))
+                .build())
         .runTest();
   }
 
@@ -1018,21 +1060,22 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(nestedListType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(%s", buildableType.newBuilder())
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.mergeFrom(new DataType.Builder()")
-            .addLine("    .item(%s", buildableType.newBuilder())
-            .addLine("        .addNames(\"Cheese\", \"Ham\")")
-            .addLine("        .build())")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine("builder.item(%s", buildableType.newBuilder())
+                .addLine("    .addNames(\"Foo\", \"Bar\")")
+                .addLine("    .build());")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+                .addLine("builder.mergeFrom(new DataType.Builder()")
+                .addLine("    .item(%s", buildableType.newBuilder())
+                .addLine("        .addNames(\"Cheese\", \"Ham\")")
+                .addLine("        .build())")
+                .addLine("    .build());")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Foo\", \"Bar\", \"Cheese\", \"Ham\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -1041,32 +1084,32 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType value1 = new DataType.Builder()")
-            .addLine("    .mutateItem1($ -> $")
-            .addLine("        .%s(\"Foo\")", convention.set("name"))
-            .addLine("        .%s(1))", convention.set("price"))
-            .addLine("    .mutateItem2($ -> $")
-            .addLine("        .%s(\"Bar\")", convention.set("name"))
-            .addLine("        .%s(2))", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("DataType value2 = value1.toBuilder()")
-            .addLine("    .mutateItem2($ -> $")
-            .addLine("        .%s(\"Baz\"))", convention.set("name"))
-            .addLine("    .build();")
-            .addLine("DataType expected = new DataType.Builder()")
-            .addLine("    .mutateItem1($ -> $")
-            .addLine("        .%s(\"Foo\")", convention.set("name"))
-            .addLine("        .%s(1))", convention.set("price"))
-            .addLine("    .mutateItem2($ -> $")
-            .addLine("        .%s(\"Baz\")", convention.set("name"))
-            .addLine("        .%s(2))", convention.set("price"))
-            .addLine("    .build();")
-            .addLine("assertEquals(expected, value2);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value1 = new DataType.Builder()")
+                .addLine("    .mutateItem1($ -> $")
+                .addLine("        .%s(\"Foo\")", convention.set("name"))
+                .addLine("        .%s(1))", convention.set("price"))
+                .addLine("    .mutateItem2($ -> $")
+                .addLine("        .%s(\"Bar\")", convention.set("name"))
+                .addLine("        .%s(2))", convention.set("price"))
+                .addLine("    .build();")
+                .addLine("DataType value2 = value1.toBuilder()")
+                .addLine("    .mutateItem2($ -> $")
+                .addLine("        .%s(\"Baz\"))", convention.set("name"))
+                .addLine("    .build();")
+                .addLine("DataType expected = new DataType.Builder()")
+                .addLine("    .mutateItem1($ -> $")
+                .addLine("        .%s(\"Foo\")", convention.set("name"))
+                .addLine("        .%s(1))", convention.set("price"))
+                .addLine("    .mutateItem2($ -> $")
+                .addLine("        .%s(\"Baz\")", convention.set("name"))
+                .addLine("        .%s(2))", convention.set("price"))
+                .addLine("    .build();")
+                .addLine("assertEquals(expected, value2);")
+                .build())
         .runTest();
   }
-
 
   @Test
   public void testToBuilder_fromPartial() {
@@ -1074,26 +1117,27 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType value1 = new DataType.Builder()")
-            .addLine("    .mutateItem1($ -> $")
-            .addLine("        .%s(\"Foo\"))", convention.set("name"))
-            .addLine("    .mutateItem2($ -> $")
-            .addLine("        .%s(2))", convention.set("price"))
-            .addLine("    .buildPartial();")
-            .addLine("DataType value2 = value1.toBuilder()")
-            .addLine("    .mutateItem2($ -> $")
-            .addLine("        .%s(\"Bar\"))", convention.set("name"))
-            .addLine("    .build();")
-            .addLine("DataType expected = new DataType.Builder()")
-            .addLine("    .mutateItem1($ -> $")
-            .addLine("        .%s(\"Foo\"))", convention.set("name"))
-            .addLine("    .mutateItem2($ -> $")
-            .addLine("        .%s(\"Bar\")", convention.set("name"))
-            .addLine("        .%s(2))", convention.set("price"))
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(expected, value2);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value1 = new DataType.Builder()")
+                .addLine("    .mutateItem1($ -> $")
+                .addLine("        .%s(\"Foo\"))", convention.set("name"))
+                .addLine("    .mutateItem2($ -> $")
+                .addLine("        .%s(2))", convention.set("price"))
+                .addLine("    .buildPartial();")
+                .addLine("DataType value2 = value1.toBuilder()")
+                .addLine("    .mutateItem2($ -> $")
+                .addLine("        .%s(\"Bar\"))", convention.set("name"))
+                .addLine("    .build();")
+                .addLine("DataType expected = new DataType.Builder()")
+                .addLine("    .mutateItem1($ -> $")
+                .addLine("        .%s(\"Foo\"))", convention.set("name"))
+                .addLine("    .mutateItem2($ -> $")
+                .addLine("        .%s(\"Bar\")", convention.set("name"))
+                .addLine("        .%s(2))", convention.set("price"))
+                .addLine("    .buildPartial();")
+                .addLine("assertEquals(expected, value2);")
+                .build())
         .runTest();
   }
 
@@ -1102,43 +1146,52 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(noDefaultsType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
-            .addLine("        .%s(\"Foo\")", convention.set("name"))
-            .addLine("        .%s(1)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
-            .addLine("        .%s(\"Bar\")", convention.set("name"))
-            .addLine("        .%s(2)", convention.set("price"))
-            .addLine("        .build());")
-            .addLine("assertEquals(\"Foo\", builder.build().%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(1, builder.build().%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Bar\", builder.build().%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(2, builder.build().%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .addLine("builder.clear().mergeFrom(new DataType.Builder()")
-            .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
-            .addLine("        .%s(\"Cheese\")", convention.set("name"))
-            .addLine("        .%s(3)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
-            .addLine("        .%s(\"Ham\")", convention.set("name"))
-            .addLine("        .%s(4)", convention.set("price"))
-            .addLine("        .build())")
-            .addLine("    .build());")
-            .addLine("assertEquals(\"Cheese\", builder.build().%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(3, builder.build().%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Ham\", builder.build().%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(4, builder.build().%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
+                .addLine("        .%s(\"Foo\")", convention.set("name"))
+                .addLine("        .%s(1)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
+                .addLine("        .%s(\"Bar\")", convention.set("name"))
+                .addLine("        .%s(2)", convention.set("price"))
+                .addLine("        .build());")
+                .addLine(
+                    "assertEquals(\"Foo\", builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(1, builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Bar\", builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(2, builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .addLine("builder.clear().mergeFrom(new DataType.Builder()")
+                .addLine("    .%s(%s", convention.set("item1"), buildableType.newBuilder())
+                .addLine("        .%s(\"Cheese\")", convention.set("name"))
+                .addLine("        .%s(3)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .%s(%s", convention.set("item2"), buildableType.newBuilder())
+                .addLine("        .%s(\"Ham\")", convention.set("name"))
+                .addLine("        .%s(4)", convention.set("price"))
+                .addLine("        .build())")
+                .addLine("    .build());")
+                .addLine(
+                    "assertEquals(\"Cheese\", builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(3, builder.build().%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Ham\", builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(4, builder.build().%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .build())
         .runTest();
   }
 
@@ -1147,21 +1200,22 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(nestedListType)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("builder.item(%s", buildableType.newBuilder())
-            .addLine("    .addNames(\"Foo\", \"Bar\")")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
-            .addLine("builder.clear().mergeFrom(new DataType.Builder()")
-            .addLine("    .item(%s", buildableType.newBuilder())
-            .addLine("        .addNames(\"Cheese\", \"Ham\")")
-            .addLine("        .build())")
-            .addLine("    .build());")
-            .addLine("assertThat(builder.build().item().names())")
-            .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine("builder.item(%s", buildableType.newBuilder())
+                .addLine("    .addNames(\"Foo\", \"Bar\")")
+                .addLine("    .build());")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Foo\", \"Bar\").inOrder();")
+                .addLine("builder.clear().mergeFrom(new DataType.Builder()")
+                .addLine("    .item(%s", buildableType.newBuilder())
+                .addLine("        .addNames(\"Cheese\", \"Ham\")")
+                .addLine("        .build())")
+                .addLine("    .build());")
+                .addLine("assertThat(builder.build().item().names())")
+                .addLine("    .containsExactly(\"Cheese\", \"Ham\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -1170,20 +1224,22 @@ public class BuildablePropertyTest {
     // Raised in issue #183
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface PIdentityDefinition<T, U> {")
-            .addLine("    class Builder<T, U> extends PIdentityDefinition_Builder<T, U> {}")
-            .addLine("}"))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface PAccess<T, U> {")
-            .addLine("    class Builder<T, U> extends PAccess_Builder<T, U> {}")
-            .addLine("")
-            .addLine("    PIdentityDefinition<T, U> %s;", convention.get("identity"))
-            .addLine("}"))
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface PIdentityDefinition<T, U> {")
+                .addLine("    class Builder<T, U> extends PIdentityDefinition_Builder<T, U> {}")
+                .addLine("}"))
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface PAccess<T, U> {")
+                .addLine("    class Builder<T, U> extends PAccess_Builder<T, U> {}")
+                .addLine("")
+                .addLine("    PIdentityDefinition<T, U> %s;", convention.get("identity"))
+                .addLine("}"))
         .compiles()
         .withNoWarnings();
   }
@@ -1193,29 +1249,32 @@ public class BuildablePropertyTest {
     // mergeFrom(DataType value) must resolve the name collision on "value"
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  @%s", FreeBuilder.class)
-            .addLine("  interface Value {")
-            .addLine("    String %s;", convention.get("name"))
-            .addLine("")
-            .addLine("    class Builder extends DataType_Value_Builder {}")
-            .addLine("  }")
-            .addLine("")
-            .addLine("  Value %s;", convention.get("value"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(new DataType.Value.Builder()", convention.set("value"))
-            .addLine("        .%s(\"thingy\"))", convention.set("name"))
-            .addLine("    .build();")
-            .addLine("assertEquals(\"thingy\", value.%s.%s);",
-                convention.get("value"), convention.get("name"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine("  @%s", FreeBuilder.class)
+                .addLine("  interface Value {")
+                .addLine("    String %s;", convention.get("name"))
+                .addLine("")
+                .addLine("    class Builder extends DataType_Value_Builder {}")
+                .addLine("  }")
+                .addLine("")
+                .addLine("  Value %s;", convention.get("value"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(new DataType.Value.Builder()", convention.set("value"))
+                .addLine("        .%s(\"thingy\"))", convention.set("name"))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(\"thingy\", value.%s.%s);",
+                    convention.get("value"), convention.get("name"))
+                .build())
         .runTest();
   }
 
@@ -1224,29 +1283,32 @@ public class BuildablePropertyTest {
     // mergeFrom(DataType.Template template) must resolve the name collision on "template"
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  @%s", FreeBuilder.class)
-            .addLine("  interface Template {")
-            .addLine("    String %s;", convention.get("name"))
-            .addLine("")
-            .addLine("    class Builder extends DataType_Template_Builder {}")
-            .addLine("  }")
-            .addLine("")
-            .addLine("  Template %s;", convention.get("template"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(new DataType.Template.Builder()", convention.set("template"))
-            .addLine("        .%s(\"thingy\"))", convention.set("name"))
-            .addLine("    .build();")
-            .addLine("assertEquals(\"thingy\", value.%s.%s);",
-                convention.get("template"), convention.get("name"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine("  @%s", FreeBuilder.class)
+                .addLine("  interface Template {")
+                .addLine("    String %s;", convention.get("name"))
+                .addLine("")
+                .addLine("    class Builder extends DataType_Template_Builder {}")
+                .addLine("  }")
+                .addLine("")
+                .addLine("  Template %s;", convention.get("template"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(new DataType.Template.Builder()", convention.set("template"))
+                .addLine("        .%s(\"thingy\"))", convention.set("name"))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(\"thingy\", value.%s.%s);",
+                    convention.get("template"), convention.get("name"))
+                .build())
         .runTest();
   }
 
@@ -1256,31 +1318,38 @@ public class BuildablePropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(generateBuildableType(buildableType, convention, false, true))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.%s(\"Foo\").%s(1).build())",
-                convention.set("item1"),
-                buildableType.newBuilder(),
-                convention.set("name"),
-                convention.set("price"))
-            .addLine("    .%s(%s.%s(\"Bar\").%s(2).build())",
-                convention.set("item2"),
-                buildableType.newBuilder(),
-                convention.set("name"),
-                convention.set("price"))
-            .addLine("    .build();")
-            .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
-            .addLine("String json = mapper.writeValueAsString(value);")
-            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertEquals(\"Foo\", clone.%s.%s);",
-                convention.get("item1"), convention.get("name"))
-            .addLine("assertEquals(1, clone.%s.%s);",
-                convention.get("item1"), convention.get("price"))
-            .addLine("assertEquals(\"Bar\", clone.%s.%s);",
-                convention.get("item2"), convention.get("name"))
-            .addLine("assertEquals(2, clone.%s.%s);",
-                convention.get("item2"), convention.get("price"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .%s(%s.%s(\"Foo\").%s(1).build())",
+                    convention.set("item1"),
+                    buildableType.newBuilder(),
+                    convention.set("name"),
+                    convention.set("price"))
+                .addLine(
+                    "    .%s(%s.%s(\"Bar\").%s(2).build())",
+                    convention.set("item2"),
+                    buildableType.newBuilder(),
+                    convention.set("name"),
+                    convention.set("price"))
+                .addLine("    .build();")
+                .addLine("%1$s mapper = new %1$s();", ObjectMapper.class)
+                .addLine("String json = mapper.writeValueAsString(value);")
+                .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+                .addLine(
+                    "assertEquals(\"Foo\", clone.%s.%s);",
+                    convention.get("item1"), convention.get("name"))
+                .addLine(
+                    "assertEquals(1, clone.%s.%s);",
+                    convention.get("item1"), convention.get("price"))
+                .addLine(
+                    "assertEquals(\"Bar\", clone.%s.%s);",
+                    convention.get("item2"), convention.get("name"))
+                .addLine(
+                    "assertEquals(2, clone.%s.%s);",
+                    convention.get("item2"), convention.get("price"))
+                .build())
         .runTest();
   }
 
@@ -1288,55 +1357,59 @@ public class BuildablePropertyTest {
   public void hiddenBuilderNotIllegallyReferenced() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example.foo;")
-            .addLine("public abstract class Item {")
-            .addLine("  public abstract %s<String> %s;", List.class, convention.get("names"))
-            .addLine("  static class Builder extends Item_Builder {}")
-            .addLine("}"))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example.bar;")
-            .addLine("import com.example.foo.Item;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public interface DataType {")
-            .addLine("  Item %s;", convention.get("item1"))
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example.foo;")
-            .addLine("class Item_Builder {")
-            .addLine("  private final %s<String> names = new %s<String>();",
-                List.class, ArrayList.class)
-            .addLine("  public Item.Builder addNames(String... names) {")
-            .addLine("    for (String name : names) {")
-            .addLine("      this.names.add(name);")
-            .addLine("    }")
-            .addLine("    return (Item.Builder) this;")
-            .addLine("  }")
-            .addLine("  public Item.Builder clear() {")
-            .addLine("    names.clear();")
-            .addLine("    return (Item.Builder) this;")
-            .addLine("  }")
-            .addLine("  public Item.Builder mergeFrom(Item.Builder builder) {")
-            .addLine("    names.addAll(((Item_Builder) builder).names);")
-            .addLine("    return (Item.Builder) this;")
-            .addLine("  }")
-            .addLine("  public Item.Builder mergeFrom(Item item) {")
-            .addLine("    names.addAll(item.%s);", convention.get("names"))
-            .addLine("    return (Item.Builder) this;")
-            .addLine("  }")
-            .addLine("  public Item build() { return new Value(this); }")
-            .addLine("  public Item buildPartial() { return new Value(this); }")
-            .addLine("  private class Value extends Item {")
-            .addLine("    private %s<String> names;", ImmutableList.class)
-            .addLine("    Value(Item_Builder builder) {")
-            .addLine("      names = %s.copyOf(builder.names);",
-                ImmutableList.class)
-            .addLine("    }")
-            .addLine("    @%s public %s<String> %s { return names; }",
-                Override.class, ImmutableList.class, convention.get("names"))
-            .addLine("  }")
-            .addLine("}"))
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example.foo;")
+                .addLine("public abstract class Item {")
+                .addLine("  public abstract %s<String> %s;", List.class, convention.get("names"))
+                .addLine("  static class Builder extends Item_Builder {}")
+                .addLine("}"))
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example.bar;")
+                .addLine("import com.example.foo.Item;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public interface DataType {")
+                .addLine("  Item %s;", convention.get("item1"))
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example.foo;")
+                .addLine("class Item_Builder {")
+                .addLine(
+                    "  private final %s<String> names = new %s<String>();",
+                    List.class, ArrayList.class)
+                .addLine("  public Item.Builder addNames(String... names) {")
+                .addLine("    for (String name : names) {")
+                .addLine("      this.names.add(name);")
+                .addLine("    }")
+                .addLine("    return (Item.Builder) this;")
+                .addLine("  }")
+                .addLine("  public Item.Builder clear() {")
+                .addLine("    names.clear();")
+                .addLine("    return (Item.Builder) this;")
+                .addLine("  }")
+                .addLine("  public Item.Builder mergeFrom(Item.Builder builder) {")
+                .addLine("    names.addAll(((Item_Builder) builder).names);")
+                .addLine("    return (Item.Builder) this;")
+                .addLine("  }")
+                .addLine("  public Item.Builder mergeFrom(Item item) {")
+                .addLine("    names.addAll(item.%s);", convention.get("names"))
+                .addLine("    return (Item.Builder) this;")
+                .addLine("  }")
+                .addLine("  public Item build() { return new Value(this); }")
+                .addLine("  public Item buildPartial() { return new Value(this); }")
+                .addLine("  private class Value extends Item {")
+                .addLine("    private %s<String> names;", ImmutableList.class)
+                .addLine("    Value(Item_Builder builder) {")
+                .addLine("      names = %s.copyOf(builder.names);", ImmutableList.class)
+                .addLine("    }")
+                .addLine(
+                    "    @%s public %s<String> %s { return names; }",
+                    Override.class, ImmutableList.class, convention.get("names"))
+                .addLine("  }")
+                .addLine("}"))
         .compiles();
   }
 
@@ -1345,7 +1418,6 @@ public class BuildablePropertyTest {
   }
 
   private static TestBuilder testBuilder() {
-    return new TestBuilder()
-        .addImport("com.example.DataType");
+    return new TestBuilder().addImport("com.example.DataType");
   }
 }

@@ -18,9 +18,7 @@ package org.inferred.freebuilder.processor.source.testing;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
-
 import static java.util.stream.Collectors.joining;
-
 import static javax.tools.ToolProvider.getSystemJavaCompiler;
 
 import com.google.common.base.Preconditions;
@@ -32,9 +30,6 @@ import com.google.common.util.concurrent.ExecutionError;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
-
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
@@ -49,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -65,6 +59,7 @@ import javax.lang.model.util.Types;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
 
 /**
  * Utility class for creating javax.lang.model instances for testing.
@@ -74,7 +69,9 @@ import javax.tools.JavaFileObject;
  * Java source code snippets, allowing top-level types and even code with errors in to be contained
  * within a single test method.
  *
- * <blockquote><code><pre>
+ * <blockquote>
+ *
+ * <code><pre>
  * {@link Model} model = {@link Model#create()};
  * TypeMirror intType = model.{@link #typeMirror}(int.class);
  * TypeElement myType = model.{@link #newType}(
@@ -84,14 +81,18 @@ import javax.tools.JavaFileObject;
  *     "}");
  * ...
  * model.{@link #destroy()};
- * </pre></code></blockquote>
+ * </pre></code>
+ *
+ * </blockquote>
  *
  * <p>To save walking the hierarchy of elements to find an inner class, or other element, you can
  * grab any annotatable element with {@link #newElementWithMarker} (which uses {@code --->} as an
  * easily-spotted element identifier) or {@link #newElementAnnotatedWith} (which uses a
  * user-supplied annotation as the element identifier):
  *
- * <blockquote><code><pre>
+ * <blockquote>
+ *
+ * <code><pre>
  * VariableElement anArg = (VariableElement) model.{@link #newElementWithMarker}(
  *     "package my.test.package;",
  *     "public class MyType2 {",
@@ -103,7 +104,9 @@ import javax.tools.JavaFileObject;
  *     "public class MyType3 {",
  *     "  {@literal @}Deprecated public void aMethod(int anArg);",
  *     "}");
- * </pre></code></blockquote>
+ * </pre></code>
+ *
+ * </blockquote>
  */
 public class Model {
 
@@ -119,8 +122,8 @@ public class Model {
   private static final int TIMEOUT_SECONDS = jvmDebugging() ? Integer.MAX_VALUE : 30;
 
   private static final Pattern PACKAGE_PATTERN = Pattern.compile("package +([\\w.]+) *;");
-  private static final Pattern TYPE_NAME_PATTERN = Pattern.compile(
-      "(class|[@]?interface|enum) +(\\w+)");
+  private static final Pattern TYPE_NAME_PATTERN =
+      Pattern.compile("(class|[@]?interface|enum) +(\\w+)");
 
   private static class GenerationRequest {
     final SettableFuture<Element> resultFuture = SettableFuture.create();
@@ -181,85 +184,96 @@ public class Model {
   }
 
   /**
-   * Returns a {@link TypeMirror} for the given type, substituting any provided arguments for
-   * %1, %2, etc.
+   * Returns a {@link TypeMirror} for the given type, substituting any provided arguments for %1,
+   * %2, etc.
    *
-   * <p>e.g. {@code typeMirror("java.util.List<%1>", typeMirror(String.class))} will
-   * return the same thing as {@code typeMirror("java.util.List<java.lang.String>")}
+   * <p>e.g. {@code typeMirror("java.util.List<%1>", typeMirror(String.class))} will return the same
+   * thing as {@code typeMirror("java.util.List<java.lang.String>")}
    *
-   * @param typeSnippet the type, represented as a snippet of Java code, e.g.
-   *     {@code "java.lang.String"}, {@code "java.util.Map<%1, %2>"}
+   * @param typeSnippet the type, represented as a snippet of Java code, e.g. {@code
+   *     "java.lang.String"}, {@code "java.util.Map<%1, %2>"}
    * @param args existing {@link TypeMirror} instances to be substituted into the type
    */
   public TypeMirror typeMirror(String typeSnippet, TypeMirror... args) {
     return TypeMirrors.typeMirror(typeUtils(), elementUtils(), typeSnippet, args);
   }
 
-  /**
-   * Returns the {@link TypeElement} of {@code cls}.
-   */
+  /** Returns the {@link TypeElement} of {@code cls}. */
   public TypeElement typeElement(Class<?> cls) {
     return asTypeElement(typeMirror(cls));
   }
 
-  /**
-   * Returns the {@link TypeElement} of {@code qualifiedType}.
-   */
+  /** Returns the {@link TypeElement} of {@code qualifiedType}. */
   public TypeElement typeElement(String qualifiedType) {
     return asTypeElement(typeMirror(qualifiedType));
   }
 
   private static TypeElement asTypeElement(TypeMirror mirror) {
-    checkArgument(mirror.getKind() == TypeKind.DECLARED,
-        "%s is a %s, not a TypeElement", mirror, mirror.getKind());
+    checkArgument(
+        mirror.getKind() == TypeKind.DECLARED,
+        "%s is a %s, not a TypeElement",
+        mirror,
+        mirror.getKind());
     DeclaredType declaredType = (DeclaredType) mirror;
     ElementKind elementKind = declaredType.asElement().getKind();
-    checkArgument(elementKind.isClass() || elementKind.isInterface(),
-        "%s is a %s, not a TypeElement", mirror, elementKind);
+    checkArgument(
+        elementKind.isClass() || elementKind.isInterface(),
+        "%s is a %s, not a TypeElement",
+        mirror,
+        elementKind);
     return (TypeElement) declaredType.asElement();
   }
 
   /** Parses the supplied type definition, returning its {@link TypeElement}. */
   public TypeElement newType(String... code) {
     String codeString = Arrays.stream(code).collect(joining("\n"));
-    codeString = TYPE_NAME_PATTERN.matcher(codeString)
-        .replaceFirst("@" + Target.class.getCanonicalName() + " $0");
+    codeString =
+        TYPE_NAME_PATTERN
+            .matcher(codeString)
+            .replaceFirst("@" + Target.class.getCanonicalName() + " $0");
     return (TypeElement) newElementAnnotatedWith(Target.class, codeString);
   }
 
   /**
-   * Parses the supplied code, returning the {@link Element} marked with "--->". (Only
-   * elements that can be annotated in Java can be found this way; the marker is substituted with
-   * an annotation internally.)
+   * Parses the supplied code, returning the {@link Element} marked with "--->". (Only elements that
+   * can be annotated in Java can be found this way; the marker is substituted with an annotation
+   * internally.)
    *
-   * <blockquote><code><pre>
+   * <blockquote>
+   *
+   * <code><pre>
    * Element element = model.newElementWithMarker(
    *     "interface MyType {",
    *     "  void myMethod(---> int arg);",
    *     "}")
-   * </pre></code></blockquote>
+   * </pre></code>
+   *
+   * </blockquote>
    */
   public Element newElementWithMarker(String... code) {
     String codeString = Arrays.stream(code).collect(joining("\n"));
     checkMarkerPresentExactlyOnce(codeString);
-    codeString = codeString.replaceFirst(
-        IDENTIFYING_STRING, " @" + Target.class.getCanonicalName() + " ");
+    codeString =
+        codeString.replaceFirst(IDENTIFYING_STRING, " @" + Target.class.getCanonicalName() + " ");
     return newElementAnnotatedWith(Target.class, codeString);
   }
 
   /**
    * Parses the supplied code, returning the {@link Element} annotated with the given annotation.
    *
-   * <blockquote><code><pre>
+   * <blockquote>
+   *
+   * <code><pre>
    * Element element = model.newElementAnnotatedWith(MyAnnotation.class
    *     "interface MyType {",
    *     "  void myMethod(@MyAnnotation int arg);",
    *     "}")
-   * </pre></code></blockquote>
+   * </pre></code>
+   *
+   * </blockquote>
    */
   public Element newElementAnnotatedWith(
-      Class<? extends Annotation> annotationType,
-      String... code) {
+      Class<? extends Annotation> annotationType, String... code) {
     try {
       String codeString = Arrays.stream(code).collect(joining("\n"));
       GenerationRequest request = new GenerationRequest(codeString, annotationType);
@@ -343,18 +357,22 @@ public class Model {
       TempJavaFileManager fileManager = TempJavaFileManager.newTempFileManager(null, null, null);
       DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
       try {
-        JavaFileObject bootstrapType = new CompilationUnit(SourceBuilder.forTesting()
-            .addLine("package %s;", PACKAGE)
-            .addLine("@%s", Target.class)
-            .addLine("class %s { }", PLACEHOLDER_TYPE));
+        JavaFileObject bootstrapType =
+            new CompilationUnit(
+                SourceBuilder.forTesting()
+                    .addLine("package %s;", PACKAGE)
+                    .addLine("@%s", Target.class)
+                    .addLine("class %s { }", PLACEHOLDER_TYPE));
 
-        CompilationTask task = getSystemJavaCompiler().getTask(
-            null,  // Writer
-            fileManager,
-            diagnostics,
-            ImmutableList.of("-proc:only", "-encoding", "UTF-8"),
-            null,  // Class names
-            ImmutableList.of(bootstrapType));
+        CompilationTask task =
+            getSystemJavaCompiler()
+                .getTask(
+                    null, // Writer
+                    fileManager,
+                    diagnostics,
+                    ImmutableList.of("-proc:only", "-encoding", "UTF-8"),
+                    null, // Class names
+                    ImmutableList.of(bootstrapType));
         task.setProcessors(ImmutableList.of(new ElementCapturingProcessor()));
         task.call();
       } catch (RuntimeException e) {
@@ -366,8 +384,9 @@ public class Model {
         }
         if (!elementFuture.isDone()) {
           if (diagnostics.getDiagnostics().isEmpty()) {
-            elementFuture.setException(new IllegalStateException(
-                "Code generation terminated abnormally. Was there no annotated element?"));
+            elementFuture.setException(
+                new IllegalStateException(
+                    "Code generation terminated abnormally. Was there no annotated element?"));
           } else {
             elementFuture.setException(new CompilationException(diagnostics.getDiagnostics()));
           }
@@ -399,15 +418,17 @@ public class Model {
       public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         // Some Java compilers may return spurious extra elements; hence the apparently redundant
         // Sets.filter call, just to be sure.
-        Set<? extends Element> elements = Sets.filter(
-            roundEnv.getElementsAnnotatedWith(annotationType),
-            element -> element.getAnnotation(annotationType) != null);
+        Set<? extends Element> elements =
+            Sets.filter(
+                roundEnv.getElementsAnnotatedWith(annotationType),
+                element -> element.getAnnotation(annotationType) != null);
         Element element;
         try {
           element = getOnlyElement(elements, null);
         } catch (IllegalArgumentException e) {
-          elementFuture.setException(new IllegalArgumentException(
-              "Multiple elements annotated with @" + annotationType.getName() + " found"));
+          elementFuture.setException(
+              new IllegalArgumentException(
+                  "Multiple elements annotated with @" + annotationType.getName() + " found"));
           return false;
         }
         if (element != null) {
@@ -436,7 +457,8 @@ public class Model {
 
       private void passSourceCodeToCompiler(String code) {
         try {
-          processingEnv.getFiler()
+          processingEnv
+              .getFiler()
               .createSourceFile(getTypeName(code))
               .openWriter()
               .append(code)
@@ -451,7 +473,8 @@ public class Model {
   /** Returns true if the JVM is likely to be being debugged, so we can adjust timeouts. */
   private static boolean jvmDebugging() {
     return ManagementFactory.getRuntimeMXBean()
-        .getInputArguments().toString()
+        .getInputArguments()
+        .toString()
         .contains("-agentlib:jdwp");
   }
 }

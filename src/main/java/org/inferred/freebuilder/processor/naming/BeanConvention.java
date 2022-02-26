@@ -15,24 +15,21 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
+import static javax.tools.Diagnostic.Kind.ERROR;
 import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
 import static org.inferred.freebuilder.processor.source.IsInvalidTypeVisitor.isLegalType;
-
-import static javax.tools.Diagnostic.Kind.ERROR;
-
-import org.inferred.freebuilder.processor.property.Property;
 
 import java.beans.Introspector;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
+import org.inferred.freebuilder.processor.property.Property;
 
 class BeanConvention implements NamingConvention {
 
@@ -44,6 +41,7 @@ class BeanConvention implements NamingConvention {
    * 'get()' or 'getter()'.
    */
   static final Pattern GETTER_PATTERN = Pattern.compile("^(get|is)([^\\p{javaLowerCase}].*)");
+
   static final String GET_PREFIX = "get";
   static final String IS_PREFIX = "is";
 
@@ -56,8 +54,8 @@ class BeanConvention implements NamingConvention {
   private final Types types;
 
   /**
-   * Verifies {@code method} is an abstract getter following the JavaBean convention. Any
-   * deviations will be logged as an error.
+   * Verifies {@code method} is an abstract getter following the JavaBean convention. Any deviations
+   * will be logged as an error.
    */
   @Override
   public Optional<Property.Builder> getPropertyNames(
@@ -69,8 +67,11 @@ class BeanConvention implements NamingConvention {
       if (declaredOnValueType) {
         messager.printMessage(
             ERROR,
-            "Only getter methods (starting with '" + GET_PREFIX
-                + "' or '" + IS_PREFIX + "') may be declared abstract on FreeBuilder types",
+            "Only getter methods (starting with '"
+                + GET_PREFIX
+                + "' or '"
+                + IS_PREFIX
+                + "') may be declared abstract on FreeBuilder types",
             method);
       } else {
         printNoImplementationMessage(valueType, method);
@@ -81,15 +82,16 @@ class BeanConvention implements NamingConvention {
     String capitalizedName = getterMatcher.group(2);
     if (hasUpperCase(capitalizedName.codePointAt(0))) {
       if (declaredOnValueType) {
-        String message = new StringBuilder()
-            .append("Getter methods cannot have a lowercase character immediately after the '")
-            .append(prefix)
-            .append("' prefix on FreeBuilder types (did you mean '")
-            .append(prefix)
-            .appendCodePoint(Character.toUpperCase(capitalizedName.codePointAt(0)))
-            .append(capitalizedName.substring(capitalizedName.offsetByCodePoints(0, 1)))
-            .append("'?)")
-            .toString();
+        String message =
+            new StringBuilder()
+                .append("Getter methods cannot have a lowercase character immediately after the '")
+                .append(prefix)
+                .append("' prefix on FreeBuilder types (did you mean '")
+                .append(prefix)
+                .appendCodePoint(Character.toUpperCase(capitalizedName.codePointAt(0)))
+                .append(capitalizedName.substring(capitalizedName.offsetByCodePoints(0, 1)))
+                .append("'?)")
+                .toString();
         messager.printMessage(ERROR, message, method);
       } else {
         printNoImplementationMessage(valueType, method);
@@ -110,7 +112,8 @@ class BeanConvention implements NamingConvention {
       if (declaredOnValueType) {
         messager.printMessage(
             ERROR,
-            "Getter methods starting with '" + IS_PREFIX
+            "Getter methods starting with '"
+                + IS_PREFIX
                 + "' must return a boolean on FreeBuilder types",
             method);
       } else {
@@ -133,11 +136,12 @@ class BeanConvention implements NamingConvention {
     }
 
     String camelCaseName = Introspector.decapitalize(capitalizedName);
-    return Optional.of(new Property.Builder()
-        .setUsingBeanConvention(true)
-        .setName(camelCaseName)
-        .setCapitalizedName(capitalizedName)
-        .setGetterName(getterMatcher.group(0)));
+    return Optional.of(
+        new Property.Builder()
+            .setUsingBeanConvention(true)
+            .setName(camelCaseName)
+            .setCapitalizedName(capitalizedName)
+            .setGetterName(getterMatcher.group(0)));
   }
 
   private static boolean hasUpperCase(int codepoint) {
@@ -147,9 +151,10 @@ class BeanConvention implements NamingConvention {
   private void printNoImplementationMessage(TypeElement valueType, ExecutableElement method) {
     messager.printMessage(
         ERROR,
-        "No implementation found for non-getter method '" + method + "'; "
+        "No implementation found for non-getter method '"
+            + method
+            + "'; "
             + "cannot generate FreeBuilder implementation",
         valueType);
   }
-
 }

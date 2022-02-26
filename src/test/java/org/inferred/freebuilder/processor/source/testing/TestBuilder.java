@@ -18,50 +18,42 @@ package org.inferred.freebuilder.processor.source.testing;
 import com.google.common.base.Strings;
 import com.google.common.collect.Multiset;
 import com.google.common.truth.Truth;
-
+import java.util.Objects;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Objects;
-
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-
 /**
- * Simple builder API for a test method, suitable for use in {@link BehaviorTester}. See the
- * JavaDoc on that class for an example.
+ * Simple builder API for a test method, suitable for use in {@link BehaviorTester}. See the JavaDoc
+ * on that class for an example.
  *
  * <p>Automatically imports {@link Assert}.* and {@link Truth#assertThat}.
  *
  * <p>Does some ugly things to get meaningful file names and line numbers in the generated source.
  * If you invoke build() directly from your test method, the generated class name and method name
  * should line up with your test. Additionally, if you invoke addLine() directly from your test
- * method, without loops, the line numbers should line up with your test in Eclipse.
- * (Specifically, if you invoke addLine with line numbers that increase monotonically, and
- * do not include extra newlines in your code strings, then the test builder will be able to
- * generate a source file with those lines at the same line numbers.) Sadly, javac does not
- * appear to produce such specific line numbers when faced with a fluent API.
+ * method, without loops, the line numbers should line up with your test in Eclipse. (Specifically,
+ * if you invoke addLine with line numbers that increase monotonically, and do not include extra
+ * newlines in your code strings, then the test builder will be able to generate a source file with
+ * those lines at the same line numbers.) Sadly, javac does not appear to produce such specific line
+ * numbers when faced with a fluent API.
  *
- * <p>Note that there is no <b>incorrect</b> way to use the class; you will just find compiler
- * error messages and assertion stack traces are more useful when your test code is simple.
+ * <p>Note that there is no <b>incorrect</b> way to use the class; you will just find compiler error
+ * messages and assertion stack traces are more useful when your test code is simple.
  */
 public class TestBuilder {
 
   private final StringBuilder imports = new StringBuilder();
   private final StringBuilder code = new StringBuilder();
-  private int lineNumber = 2;  // Our preamble takes up the first line of the source
+  private int lineNumber = 2; // Our preamble takes up the first line of the source
 
   public TestBuilder addStaticImport(Class<?> cls, String method) {
     return addStaticImport(cls.getCanonicalName(), method);
   }
 
   public TestBuilder addStaticImport(String cls, String method) {
-    imports
-        .append("import static ")
-        .append(cls)
-        .append(".")
-        .append(method)
-        .append("; ");
+    imports.append("import static ").append(cls).append(".").append(method).append("; ");
     return this;
   }
 
@@ -70,18 +62,12 @@ public class TestBuilder {
   }
 
   public TestBuilder addImport(String cls) {
-    imports
-        .append("import ")
-        .append(cls)
-        .append("; ");
+    imports.append("import ").append(cls).append("; ");
     return this;
   }
 
   public TestBuilder addPackageImport(String pkg) {
-    imports
-        .append("import ")
-        .append(pkg)
-        .append(".*; ");
+    imports.append("import ").append(pkg).append(".*; ");
     return this;
   }
 
@@ -108,9 +94,7 @@ public class TestBuilder {
     return this;
   }
 
-  /**
-   * Returns a {@link JavaFileObject} for the test source added to the builder.
-   */
+  /** Returns a {@link JavaFileObject} for the test source added to the builder. */
   public TestSource build() {
     StackTraceElement caller = new Exception().getStackTrace()[1];
     return new TestSource(
@@ -121,14 +105,15 @@ public class TestBuilder {
   }
 
   /**
-   * Creates a unique test class name. Once no longer referenced, it can subsequently be reused,
-   * to keep compiler errors and stack traces cleaner.
+   * Creates a unique test class name. Once no longer referenced, it can subsequently be reused, to
+   * keep compiler errors and stack traces cleaner.
    */
   private static String rootTestClassName(String originalClassName) {
     int periodIndex = originalClassName.lastIndexOf('.');
     if (periodIndex != -1) {
       return originalClassName.substring(0, periodIndex)
-        + ".generatedcode" + originalClassName.substring(periodIndex);
+          + ".generatedcode"
+          + originalClassName.substring(periodIndex);
     } else {
       return "com.example.test.generatedcode.Test";
     }
@@ -199,20 +184,30 @@ public class TestBuilder {
       this.className = className;
       this.methodName = methodName;
       int period = className.lastIndexOf('.');
-      this.source = "package " + className.substring(0, period) + "; "
-          + "import static " + Assert.class.getName() + ".*; "
-          + "import static " + Truth.class.getName() + ".assertThat; "
-          + imports
-          + "public class " + className.substring(period + 1) + " {"
-          + "  @" + Test.class.getName()
-          + "  public static void " + methodName + "() throws Exception {\n"
-          + testCode
-          + "\n  }\n}";
+      this.source =
+          "package "
+              + className.substring(0, period)
+              + "; "
+              + "import static "
+              + Assert.class.getName()
+              + ".*; "
+              + "import static "
+              + Truth.class.getName()
+              + ".assertThat; "
+              + imports
+              + "public class "
+              + className.substring(period + 1)
+              + " {"
+              + "  @"
+              + Test.class.getName()
+              + "  public static void "
+              + methodName
+              + "() throws Exception {\n"
+              + testCode
+              + "\n  }\n}";
     }
 
-    /**
-     * Gets the character content of this file object.
-     */
+    /** Gets the character content of this file object. */
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return source;

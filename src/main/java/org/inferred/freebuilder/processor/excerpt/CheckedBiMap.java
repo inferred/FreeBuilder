@@ -2,11 +2,6 @@ package org.inferred.freebuilder.processor.excerpt;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
-import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.LazyName;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.ValueType;
-
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Iterator;
@@ -14,6 +9,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.LazyName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 public class CheckedBiMap extends ValueType implements Excerpt {
 
@@ -28,7 +27,8 @@ public class CheckedBiMap extends ValueType implements Excerpt {
         .addLine(" * A bimap implementation that delegates to a provided forcePut method")
         .addLine(" * to perform entry validation and insertion into a backing bimap.")
         .addLine(" */")
-        .addLine("private static class %s<K, V> extends %s<K, V> implements %s<K, V> {",
+        .addLine(
+            "private static class %s<K, V> extends %s<K, V> implements %s<K, V> {",
             TYPE, AbstractMap.class, BiMap.class)
         .addLine("")
         .addLine("  private final %s<K, V> biMap;", BiMap.class)
@@ -111,7 +111,8 @@ public class CheckedBiMap extends ValueType implements Excerpt {
           .addLine("  private V value;")
           .addLine("  private final %s<K, V> forcePut;", BiConsumer.class)
           .addLine("")
-          .addLine("  %s(%s<K, V> biMap, %s<K, V> entry, %s<K, V> forcePut) {",
+          .addLine(
+              "  %s(%s<K, V> biMap, %s<K, V> entry, %s<K, V> forcePut) {",
               TYPE, BiMap.class, Map.Entry.class, BiConsumer.class)
           .addLine("    this.biMap = biMap;")
           .addLine("    this.key = entry.getKey();")
@@ -166,14 +167,16 @@ public class CheckedBiMap extends ValueType implements Excerpt {
     @Override
     public void addTo(SourceBuilder code) {
       code.addLine("")
-          .addLine("private static class %s<K, V> implements %s<%s<K, V>> {",
+          .addLine(
+              "private static class %s<K, V> implements %s<%s<K, V>> {",
               TYPE, Iterator.class, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<K, V> biMap;", BiMap.class)
           .addLine("  private final %s<%s<K, V>> iterator;", Iterator.class, Map.Entry.class)
           .addLine("  private final %s<K, V> forcePut;", BiConsumer.class)
           .addLine("")
-          .addLine("  %s(%s<K, V> biMap, %s<%s<K, V>> iterator, %s<K, V> forcePut) {",
+          .addLine(
+              "  %s(%s<K, V> biMap, %s<%s<K, V>> iterator, %s<K, V> forcePut) {",
               TYPE, BiMap.class, Iterator.class, Map.Entry.class, BiConsumer.class)
           .addLine("    this.biMap = biMap;")
           .addLine("    this.iterator = iterator;")
@@ -207,7 +210,8 @@ public class CheckedBiMap extends ValueType implements Excerpt {
     @Override
     public void addTo(SourceBuilder code) {
       code.addLine("")
-          .addLine("private static class %s<K, V> extends %s<%s<K, V>> {",
+          .addLine(
+              "private static class %s<K, V> extends %s<%s<K, V>> {",
               TYPE, AbstractSet.class, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<K, V> biMap;", BiMap.class)
@@ -224,9 +228,10 @@ public class CheckedBiMap extends ValueType implements Excerpt {
           .addLine("    return set.size();")
           .addLine("  }")
           .addLine("")
-          .addLine("  @Override public %s<%s<K, V>> iterator() {",
-              Iterator.class, BiMap.Entry.class)
-          .addLine("    return new %s<K, V>(biMap, set.iterator(), forcePut);",
+          .addLine(
+              "  @Override public %s<%s<K, V>> iterator() {", Iterator.class, BiMap.Entry.class)
+          .addLine(
+              "    return new %s<K, V>(biMap, set.iterator(), forcePut);",
               CheckedEntryIterator.TYPE)
           .addLine("  }")
           .addLine("")

@@ -4,20 +4,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.reflect.TypeToken;
-
-import org.inferred.freebuilder.processor.source.testing.ModelRule;
-import org.junit.ComparisonFailure;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
+import org.inferred.freebuilder.processor.source.testing.ModelRule;
+import org.junit.ComparisonFailure;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ModelUtilsTest {
 
@@ -81,10 +78,9 @@ public class ModelUtilsTest {
 
   @Test
   public void typeArgumentNeedsSafeVarargs() {
-    ExecutableElement method = (ExecutableElement) model.newElementWithMarker(
-        "interface Foo<T> {",
-        "  ---> public T method();",
-        "}");
+    ExecutableElement method =
+        (ExecutableElement)
+            model.newElementWithMarker("interface Foo<T> {", "  ---> public T method();", "}");
     TypeMirror typeArgument = method.getReturnType();
     assertTrue(ModelUtils.needsSafeVarargs(typeArgument));
   }
@@ -99,24 +95,28 @@ public class ModelUtilsTest {
   @Test
   public void testUpperBound_unknownType() {
     // ? -> Object
-    TypeMirror result = ModelUtils.upperBound(
-        model.elementUtils(), model.typeUtils().getWildcardType(null, null));
+    TypeMirror result =
+        ModelUtils.upperBound(model.elementUtils(), model.typeUtils().getWildcardType(null, null));
     assertSameType(model.typeMirror("Object"), result);
   }
 
   @Test
   public void testUpperBound_extendsBound() {
     // ? extends T -> T
-    TypeMirror result = ModelUtils.upperBound(
-        model.elementUtils(), model.typeUtils().getWildcardType(model.typeMirror("Number"), null));
+    TypeMirror result =
+        ModelUtils.upperBound(
+            model.elementUtils(),
+            model.typeUtils().getWildcardType(model.typeMirror("Number"), null));
     assertSameType(model.typeMirror("Number"), result);
   }
 
   @Test
   public void testUpperBound_superBound() {
     // ? super T -> Object
-    TypeMirror result = ModelUtils.upperBound(
-        model.elementUtils(), model.typeUtils().getWildcardType(null, model.typeMirror("Number")));
+    TypeMirror result =
+        ModelUtils.upperBound(
+            model.elementUtils(),
+            model.typeUtils().getWildcardType(null, model.typeMirror("Number")));
     assertSameType(model.typeMirror("Object"), result);
   }
 
@@ -147,39 +147,44 @@ public class ModelUtilsTest {
 
   @Test
   public void testErasesToAnyOf_erasedType() {
-    assertTrue(ModelUtils.erasesToAnyOf(
-        (DeclaredType) model.typeMirror("java.util.List"), List.class));
+    assertTrue(
+        ModelUtils.erasesToAnyOf((DeclaredType) model.typeMirror("java.util.List"), List.class));
   }
 
   @Test
   public void testErasesToAnyOf_fullySpecifiedType() {
-    assertTrue(ModelUtils.erasesToAnyOf(
-        (DeclaredType) model.typeMirror("java.util.List<Double>"), List.class));
+    assertTrue(
+        ModelUtils.erasesToAnyOf(
+            (DeclaredType) model.typeMirror("java.util.List<Double>"), List.class));
   }
 
   @Test
   public void testErasesToAnyOf_wildcardType() {
     WildcardType wildcard = model.typeUtils().getWildcardType(null, null);
-    assertTrue(ModelUtils.erasesToAnyOf(
-        (DeclaredType) model.typeMirror("java.util.List", wildcard), List.class));
+    assertTrue(
+        ModelUtils.erasesToAnyOf(
+            (DeclaredType) model.typeMirror("java.util.List", wildcard), List.class));
   }
 
   @Test
   public void testErasesToAnyOf_firstOfTwo() {
-    assertTrue(ModelUtils.erasesToAnyOf(
-        (DeclaredType) model.typeMirror("java.util.List"), List.class, Set.class));
+    assertTrue(
+        ModelUtils.erasesToAnyOf(
+            (DeclaredType) model.typeMirror("java.util.List"), List.class, Set.class));
   }
 
   @Test
   public void testErasesToAnyOf_secondOfTwo() {
-    assertTrue(ModelUtils.erasesToAnyOf(
-        (DeclaredType) model.typeMirror("java.util.Set"), List.class, Set.class));
+    assertTrue(
+        ModelUtils.erasesToAnyOf(
+            (DeclaredType) model.typeMirror("java.util.Set"), List.class, Set.class));
   }
 
   @Test
   public void testErasesToAnyOf_neitherOfTwo() {
-    assertFalse(ModelUtils.erasesToAnyOf(
-        (DeclaredType) model.typeMirror("java.util.Collection"), List.class, Set.class));
+    assertFalse(
+        ModelUtils.erasesToAnyOf(
+            (DeclaredType) model.typeMirror("java.util.Collection"), List.class, Set.class));
   }
 
   private void assertSameType(TypeMirror expected, TypeMirror actual) {

@@ -16,21 +16,15 @@
 package org.inferred.freebuilder.processor.model;
 
 import static com.google.common.base.Preconditions.checkState;
-
 import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.inferred.freebuilder.processor.source.Partial;
-import org.inferred.freebuilder.processor.source.QualifiedName;
-
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -41,10 +35,10 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import org.inferred.freebuilder.processor.source.Partial;
+import org.inferred.freebuilder.processor.source.QualifiedName;
 
-/**
- * Fake representation of a generic top-level class element.
- */
+/** Fake representation of a generic top-level class element. */
 public abstract class GenericElement implements TypeElement {
 
   /**
@@ -52,8 +46,8 @@ public abstract class GenericElement implements TypeElement {
    *
    * <p>Simple type parameters can be added with {@link #addTypeParameter(String, TypeMirror...)}.
    * For self-referential bounds, e.g. {@code Comparable<E extends Comparable<E>>}, add the
-   * parameters first, then create the bounds with {@link #getTypeParameter(String)},
-   * {@link GenericElementParameter#asType()} and {@link #asType()}.
+   * parameters first, then create the bounds with {@link #getTypeParameter(String)}, {@link
+   * GenericElementParameter#asType()} and {@link #asType()}.
    *
    * <pre>
    * GenericElement.Builder typeBuilder =
@@ -80,10 +74,10 @@ public abstract class GenericElement implements TypeElement {
      * @throws IllegalStateException if a type parameter already exists with this name
      */
     public Builder addTypeParameter(String simpleName, TypeMirror... bounds) {
-      checkState(element == null,
-          "Cannot add a new type parameter after calling asType() or build()");
-      checkState(!typeParameters.containsKey(simpleName),
-          "Duplicate type parameter \"%s\"", simpleName);
+      checkState(
+          element == null, "Cannot add a new type parameter after calling asType() or build()");
+      checkState(
+          !typeParameters.containsKey(simpleName), "Duplicate type parameter \"%s\"", simpleName);
       GenericElementParameter.Builder typeParameter =
           new GenericElementParameter.Builder(simpleName);
       for (TypeMirror bound : bounds) {
@@ -97,14 +91,12 @@ public abstract class GenericElement implements TypeElement {
       return this;
     }
 
-    /**
-     * Returns a builder for type parameter {@code simpleName}, creating one if necessary.
-     */
+    /** Returns a builder for type parameter {@code simpleName}, creating one if necessary. */
     public GenericElementParameter.Builder getTypeParameter(String simpleName) {
       GenericElementParameter.Builder typeParameter = typeParameters.get(simpleName);
       if (typeParameter == null) {
-        checkState(element == null,
-            "Cannot add a new type parameter after calling asType() or build()");
+        checkState(
+            element == null, "Cannot add a new type parameter after calling asType() or build()");
         typeParameter = new GenericElementParameter.Builder(simpleName);
         typeParameters.put(simpleName, typeParameter);
       }
@@ -225,5 +217,4 @@ public abstract class GenericElement implements TypeElement {
       return PackageElementImpl.create(qualifiedName.getPackage());
     }
   }
-
 }

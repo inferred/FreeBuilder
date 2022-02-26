@@ -17,11 +17,10 @@ package org.inferred.freebuilder;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.Optional;
 
 @RunWith(JUnit4.class)
 public class OptionalPropertiesTest {
@@ -38,13 +37,10 @@ public class OptionalPropertiesTest {
     assertEquals(Optional.empty(), builder.build().getSurname());
     assertEquals("OptionalProperties{}", builder.build().toString());
     builder.setFirstName(NAME_1);
-    assertEquals(
-        "OptionalProperties{firstName=name1}",
-        builder.build().toString());
+    assertEquals("OptionalProperties{firstName=name1}", builder.build().toString());
     builder.setMiddleName(NAME_2);
     assertEquals(
-        "OptionalProperties{firstName=name1, middleName=name2}",
-        builder.build().toString());
+        "OptionalProperties{firstName=name1, middleName=name2}", builder.build().toString());
     builder.setSurname(NAME_3);
     assertEquals(Optional.of(NAME_1), builder.build().getFirstName());
     assertEquals(Optional.of(NAME_2), builder.build().getMiddleName());

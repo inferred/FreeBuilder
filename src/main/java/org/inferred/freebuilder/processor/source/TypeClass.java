@@ -2,15 +2,12 @@ package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
-
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -22,8 +19,8 @@ import javax.lang.model.type.TypeMirror;
  *
  * <p>When used as an excerpt or {@link Type}, it acts as a <i>prototypical</i> type of the class.
  * This is the element's invocation on the type variables corresponding to its own formal type
- * parameters. For example, the {@code TypeClass} of {@link EnumSet} would appear in code as
- * {@code EnumSet<E>}. This is probably the most common use of a type class in code generation.
+ * parameters. For example, the {@code TypeClass} of {@link EnumSet} would appear in code as {@code
+ * EnumSet<E>}. This is probably the most common use of a type class in code generation.
  *
  * <p>The {@link #declaration()} and {@link #declarationParameters()} methods, on the other hand,
  * return excerpts reflecting the type element. For example, the declaration of {@link EnumSet}
@@ -48,8 +45,7 @@ public class TypeClass extends Type {
   private final List<TypeParameterElement> typeParameters;
 
   TypeClass(
-      QualifiedName qualifiedName,
-      Collection<? extends TypeParameterElement> typeParameters) {
+      QualifiedName qualifiedName, Collection<? extends TypeParameterElement> typeParameters) {
     this.qualifiedName = qualifiedName;
     this.typeParameters = ImmutableList.copyOf(typeParameters);
   }
@@ -96,8 +92,7 @@ public class TypeClass extends Type {
   }
 
   private static void addDeclarationParameters(
-      SourceBuilder source,
-      List<TypeParameterElement> typeParameters) {
+      SourceBuilder source, List<TypeParameterElement> typeParameters) {
     if (!typeParameters.isEmpty()) {
       String prefix = "<";
       for (TypeParameterElement typeParameter : typeParameters) {

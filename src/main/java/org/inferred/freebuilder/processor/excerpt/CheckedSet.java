@@ -1,18 +1,17 @@
 package org.inferred.freebuilder.processor.excerpt;
 
+import java.util.AbstractSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.function.Consumer;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.LazyName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.ValueType;
 
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.function.Consumer;
-
 /**
- * Excerpts defining a set implementation that delegates to a provided add method to perform
- * element validation and insertion into a backing set.
+ * Excerpts defining a set implementation that delegates to a provided add method to perform element
+ * validation and insertion into a backing set.
  */
 public class CheckedSet extends ValueType implements Excerpt {
 

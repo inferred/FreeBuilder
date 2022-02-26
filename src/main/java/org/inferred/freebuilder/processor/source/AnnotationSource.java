@@ -16,26 +16,20 @@
 package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
-
 import static org.inferred.freebuilder.processor.model.ModelUtils.asElement;
 import static org.inferred.freebuilder.processor.source.Quotes.escapeJava;
 
 import java.util.List;
 import java.util.Map.Entry;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
-/**
- * Static methods for annotation-related source-code generation.
- */
+/** Static methods for annotation-related source-code generation. */
 public class AnnotationSource {
 
-  /**
-   * Adds a source-code representation of {@code annotation} to {@code}.
-   */
+  /** Adds a source-code representation of {@code annotation} to {@code}. */
   public static void addSource(SourceBuilder code, AnnotationMirror annotation) {
     new ValueSourceAdder(code).visitAnnotation(annotation, null);
   }
@@ -75,8 +69,8 @@ public class AnnotationSource {
         visit(value, value);
       } else {
         String separator = "";
-        for (Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
-            : annotation.getElementValues().entrySet()) {
+        for (Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
+            annotation.getElementValues().entrySet()) {
           code.add("%s%s = ", separator, entry.getKey().getSimpleName());
           visit(entry.getValue(), entry.getValue());
           separator = ", ";
@@ -126,5 +120,5 @@ public class AnnotationSource {
     }
   }
 
-  private AnnotationSource() { }
+  private AnnotationSource() {}
 }

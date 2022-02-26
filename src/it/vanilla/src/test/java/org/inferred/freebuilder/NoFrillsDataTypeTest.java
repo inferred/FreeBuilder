@@ -23,18 +23,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Integration test for {@link org.inferred.freebuilder.FreeBuilder
- * FreeBuilder}, using the {@link NoFrillsDataType}.
+ * Integration test for {@link org.inferred.freebuilder.FreeBuilder FreeBuilder}, using the {@link
+ * NoFrillsDataType}.
  */
 @RunWith(JUnit4.class)
 public class NoFrillsDataTypeTest {
 
   @Test
   public void test() {
-    NoFrillsDataType value = NoFrillsDataType.builder()
-        .setPropertyA(11)
-        .setPropertyB(true)
-        .build();
+    NoFrillsDataType value = NoFrillsDataType.builder().setPropertyA(11).setPropertyB(true).build();
     assertEquals(11, value.getPropertyA());
     assertTrue(value.isPropertyB());
   }

@@ -2,9 +2,12 @@ package org.inferred.freebuilder.processor;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
-
 import static org.inferred.freebuilder.processor.property.DefaultProperty.UNSET_PROPERTIES;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator.Initially;
@@ -12,16 +15,9 @@ import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Variable;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 class ToStringGenerator {
 
-  /**
-   * Generates a toString method using concatenation or a StringBuilder.
-   */
+  /** Generates a toString method using concatenation or a StringBuilder. */
   public static void addToString(
       SourceBuilder code,
       Datatype datatype,
@@ -30,30 +26,30 @@ class ToStringGenerator {
     // This code is to ensure entry order is preserved.
     // Specifically this code is boiler plate from Collectors.toMap.
     // Except with a LinkedHashMap supplier.
-    generatorsByProperty = generatorsByProperty.entrySet().stream()
-        .filter(e -> e.getKey().isInToString())
-        .collect(
-            Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                (u, v) -> {
-                  throw new IllegalStateException(String.format("Duplicate key %s", u));
-                },
-                LinkedHashMap::new
-            )
-        );
+    generatorsByProperty =
+        generatorsByProperty.entrySet().stream()
+            .filter(e -> e.getKey().isInToString())
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    (u, v) -> {
+                      throw new IllegalStateException(String.format("Duplicate key %s", u));
+                    },
+                    LinkedHashMap::new));
     String typename = (forPartial ? "partial " : "") + datatype.getType().getSimpleName();
-    Predicate<PropertyCodeGenerator> isOptional = generator -> {
-      Initially initially = generator.initialState();
-      return (initially == Initially.OPTIONAL || (initially == Initially.REQUIRED && forPartial));
-    };
+    Predicate<PropertyCodeGenerator> isOptional =
+        generator -> {
+          Initially initially = generator.initialState();
+          return (initially == Initially.OPTIONAL
+              || (initially == Initially.REQUIRED && forPartial));
+        };
     boolean anyOptional = generatorsByProperty.values().stream().anyMatch(isOptional);
-    boolean allOptional = generatorsByProperty.values().stream().allMatch(isOptional)
-        && !generatorsByProperty.isEmpty();
+    boolean allOptional =
+        generatorsByProperty.values().stream().allMatch(isOptional)
+            && !generatorsByProperty.isEmpty();
 
-    code.addLine("")
-        .addLine("@%s", Override.class)
-        .addLine("public %s toString() {", String.class);
+    code.addLine("").addLine("@%s", Override.class).addLine("public %s toString() {", String.class);
     if (allOptional) {
       bodyWithBuilderAndSeparator(code, datatype, generatorsByProperty, typename);
     } else if (anyOptional) {
@@ -69,8 +65,8 @@ class ToStringGenerator {
    *
    * <p>Conventionally, we join properties with comma separators. If all of the properties are
    * always present, this can be done with a long block of unconditional code. We could use a
-   * StringBuilder for this, but in fact the Java compiler will do this for us under the hood
-   * if we use simple string concatenation, so we use the more readable approach.
+   * StringBuilder for this, but in fact the Java compiler will do this for us under the hood if we
+   * use simple string concatenation, so we use the more readable approach.
    */
   private static void bodyWithConcatenation(
       SourceBuilder code,
@@ -80,8 +76,8 @@ class ToStringGenerator {
     String prefix = "";
     for (Property property : generatorsByProperty.keySet()) {
       PropertyCodeGenerator generator = generatorsByProperty.get(property);
-      code.add("%s%s=\" + %s + \"",
-          prefix, property.getName(), (Excerpt) generator::addToStringValue);
+      code.add(
+          "%s%s=\" + %s + \"", prefix, property.getName(), (Excerpt) generator::addToStringValue);
       prefix = ", ";
     }
     code.add("}\";%n");
@@ -100,8 +96,8 @@ class ToStringGenerator {
    * <p>As well as keeping track of whether we are <b>prepending commas</b> yet (initially false),
    * we also keep track of whether we have just finished an if-then block for an optional property,
    * or if we are in the <b>middle of an append chain</b>, and if so, whether we are in the
-   * <b>middle of a string literal</b>. This lets us output the fewest literals and statements,
-   * much as a mildly compulsive programmer would when writing the same code.
+   * <b>middle of a string literal</b>. This lets us output the fewest literals and statements, much
+   * as a mildly compulsive programmer would when writing the same code.
    */
   private static void bodyWithBuilder(
       SourceBuilder code,
@@ -116,11 +112,11 @@ class ToStringGenerator {
     boolean midAppends = true;
     boolean prependCommas = false;
 
-    PropertyCodeGenerator lastOptionalGenerator = generatorsByProperty.values()
-        .stream()
-        .filter(isOptional)
-        .reduce((first, second) -> second)
-        .get();
+    PropertyCodeGenerator lastOptionalGenerator =
+        generatorsByProperty.values().stream()
+            .filter(isOptional)
+            .reduce((first, second) -> second)
+            .get();
 
     for (Property property : generatorsByProperty.keySet()) {
       PropertyCodeGenerator generator = generatorsByProperty.get(property);
@@ -135,7 +131,8 @@ class ToStringGenerator {
         if (generator.initialState() == Initially.OPTIONAL) {
           generator.addToStringCondition(code);
         } else {
-          code.add("!%s.contains(%s.%s)",
+          code.add(
+              "!%s.contains(%s.%s)",
               UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
         }
         code.add(") {%n    %s.append(\"", result);
@@ -185,13 +182,13 @@ class ToStringGenerator {
    *
    * <p>Conventionally, we join properties with comma separators. If all of the properties are
    * optional, we have no choice but to track the separators at runtime, as apart from the first
-   * one, all properties will need to have a comma prepended. We could do this with a boolean,
-   * maybe called "separatorNeeded", or "firstValueOutput", but then we need either a ternary
-   * operator or an extra nested if block. More readable is to use an initially-empty "separator"
-   * string, which has a comma placed in it once the first value is written.
+   * one, all properties will need to have a comma prepended. We could do this with a boolean, maybe
+   * called "separatorNeeded", or "firstValueOutput", but then we need either a ternary operator or
+   * an extra nested if block. More readable is to use an initially-empty "separator" string, which
+   * has a comma placed in it once the first value is written.
    *
-   * <p>For extra tidiness, we note that the first if block need not try writing the separator
-   * (it is always empty), and the last one need not update it (it will not be used again).
+   * <p>For extra tidiness, we note that the first if block need not try writing the separator (it
+   * is always empty), and the last one need not update it (it will not be used again).
    */
   private static void bodyWithBuilderAndSeparator(
       SourceBuilder code,
@@ -220,7 +217,8 @@ class ToStringGenerator {
           break;
 
         case REQUIRED:
-          code.addLine("  if (!%s.contains(%s.%s)) {",
+          code.addLine(
+              "  if (!%s.contains(%s.%s)) {",
               UNSET_PROPERTIES, datatype.getPropertyEnum(), property.getAllCapsName());
           break;
       }
@@ -228,8 +226,8 @@ class ToStringGenerator {
       if (property != first) {
         code.add(".append(%s)", separator);
       }
-      code.add(".append(\"%s=\").append(%s)",
-          property.getName(), (Excerpt) generator::addToStringValue);
+      code.add(
+          ".append(\"%s=\").append(%s)", property.getName(), (Excerpt) generator::addToStringValue);
       if (property != last) {
         code.add(";%n    %s = \", \"", separator);
       }
@@ -238,5 +236,5 @@ class ToStringGenerator {
     code.addLine("  return %s.append(\"}\").toString();", result);
   }
 
-  private ToStringGenerator() { }
+  private ToStringGenerator() {}
 }

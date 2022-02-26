@@ -3,13 +3,11 @@ package org.inferred.freebuilder;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.Test;
 
 public class DefaultsOptimizationTest {
 

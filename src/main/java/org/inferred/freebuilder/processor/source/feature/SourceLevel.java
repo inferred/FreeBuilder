@@ -16,42 +16,39 @@
 package org.inferred.freebuilder.processor.source.feature;
 
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-
 import java.util.List;
-
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
 
 /**
  * Compliance levels which are idiomatically supported by this processor.
  *
- * <p>{@link SourceVersion} is problematic to use, as the constants themselves will be missing
- * on compilers that do not support them (e.g. "RELEASE_8" is not available on javac v6 or v7).
- * Additionally, {@code sourceLevel.javaUtilObjects().isPresent()} is far more readable than
- * {@code sourceVersion.compareTo(SourceLevel.RELEASE_7) >= 0}.
+ * <p>{@link SourceVersion} is problematic to use, as the constants themselves will be missing on
+ * compilers that do not support them (e.g. "RELEASE_8" is not available on javac v6 or v7).
+ * Additionally, {@code sourceLevel.javaUtilObjects().isPresent()} is far more readable than {@code
+ * sourceVersion.compareTo(SourceLevel.RELEASE_7) >= 0}.
  */
 public enum SourceLevel implements Feature<SourceLevel> {
-
   JAVA_8("Java 8+", 8);
 
   /**
-   * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current
-   * {@link SourceLevel}.
+   * Constant to pass to {@link SourceBuilder#feature(FeatureType)} to get the current {@link
+   * SourceLevel}.
    */
-  public static final FeatureType<SourceLevel> SOURCE_LEVEL = new FeatureType<SourceLevel>() {
+  public static final FeatureType<SourceLevel> SOURCE_LEVEL =
+      new FeatureType<SourceLevel>() {
 
-    @Override
-    protected SourceLevel testDefault(FeatureSet features) {
-      return JAVA_8;
-    }
+        @Override
+        protected SourceLevel testDefault(FeatureSet features) {
+          return JAVA_8;
+        }
 
-    @Override
-    protected SourceLevel forEnvironment(ProcessingEnvironment env, FeatureSet features) {
-      return JAVA_8;
-    }
-  };
+        @Override
+        protected SourceLevel forEnvironment(ProcessingEnvironment env, FeatureSet features) {
+          return JAVA_8;
+        }
+      };
 
   private final String humanReadableFormat;
   private final int version;
@@ -69,5 +66,4 @@ public enum SourceLevel implements Feature<SourceLevel> {
   public String toString() {
     return humanReadableFormat;
   }
-
 }

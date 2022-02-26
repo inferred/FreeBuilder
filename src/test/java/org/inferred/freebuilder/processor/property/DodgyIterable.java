@@ -1,7 +1,6 @@
 package org.inferred.freebuilder.processor.property;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.Iterator;
 
 /** Throws a {@link NullPointerException} the second time {@link #iterator()} is called. */

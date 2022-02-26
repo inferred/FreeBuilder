@@ -15,9 +15,7 @@
  */
 package org.inferred.freebuilder.processor.source;
 
-/**
- * An object representing a source code excerpt, e.g. a type.
- */
+/** An object representing a source code excerpt, e.g. a type. */
 @FunctionalInterface
 public interface Excerpt {
   void addTo(SourceBuilder source);

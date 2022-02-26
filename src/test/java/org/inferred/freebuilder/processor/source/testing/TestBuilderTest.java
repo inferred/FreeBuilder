@@ -16,19 +16,16 @@
 package org.inferred.freebuilder.processor.source.testing;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.runners.MethodSorters.NAME_ASCENDING;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
-
+import javax.tools.JavaFileObject;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import javax.tools.JavaFileObject;
 
 /** Unit tests for {@link TestBuilder}. */
 @RunWith(JUnit4.class)
@@ -40,24 +37,26 @@ public class TestBuilderTest {
   @Test
   public void test1_UniqueNames() {
     JavaFileObject source1 = new TestBuilder().build().selectName(seenNames);
-    assertThat(source1.toUri().toString()).endsWith(
-        "/org/inferred/freebuilder/processor/source/testing/generatedcode/TestBuilderTest.java");
+    assertThat(source1.toUri().toString())
+        .endsWith(
+            "/org/inferred/freebuilder/processor/source/testing/generatedcode/TestBuilderTest.java");
     JavaFileObject source2 = new TestBuilder().build().selectName(seenNames);
     assertThat(source2.toUri().toString()).endsWith("TestBuilderTest__2.java");
     assertEquals(2, seenNames.size());
   }
 
-  public static class InnerClass { }
+  public static class InnerClass {}
 
   @Test
   public void test2_InnerClassNames() {
-    String result = new TestBuilder()
-        .addLine("%s", InnerClass.class)
-        .build()
-        .selectName(seenNames)
-        .getCharContent(false)
-        .toString();
-    assertThat(result).contains(
-        "org.inferred.freebuilder.processor.source.testing.TestBuilderTest.InnerClass");
+    String result =
+        new TestBuilder()
+            .addLine("%s", InnerClass.class)
+            .build()
+            .selectName(seenNames)
+            .getCharContent(false)
+            .toString();
+    assertThat(result)
+        .contains("org.inferred.freebuilder.processor.source.testing.TestBuilderTest.InnerClass");
   }
 }

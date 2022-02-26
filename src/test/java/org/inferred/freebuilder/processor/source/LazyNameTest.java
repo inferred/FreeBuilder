@@ -17,9 +17,8 @@ package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.junit.Test;
-
 import java.util.Arrays;
+import org.junit.Test;
 
 public class LazyNameTest {
 

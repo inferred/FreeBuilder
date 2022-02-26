@@ -17,7 +17,7 @@ class TypeMirrorAppender extends SimpleTypeVisitor8<Void, QualifiedNameAppendabl
     mirror.accept(INSTANCE, a);
   }
 
-  private TypeMirrorAppender() { }
+  private TypeMirrorAppender() {}
 
   @Override
   public Void visitDeclared(DeclaredType mirror, QualifiedNameAppendable a) {

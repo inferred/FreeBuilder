@@ -33,7 +33,18 @@ import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUA
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedMap;
@@ -46,23 +57,7 @@ import org.inferred.freebuilder.processor.source.Type;
 import org.inferred.freebuilder.processor.source.ValueType;
 import org.inferred.freebuilder.processor.source.Variable;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
-/**
- * {@link PropertyCodeGenerator} providing fluent methods for {@link Map} properties.
- */
+/** {@link PropertyCodeGenerator} providing fluent methods for {@link Map} properties. */
 class MapProperty extends PropertyCodeGenerator {
 
   static class Factory implements PropertyCodeGenerator.Factory {
@@ -78,25 +73,29 @@ class MapProperty extends PropertyCodeGenerator {
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
-      boolean overridesPutMethod = hasPutMethodOverride(
-          config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
+      boolean overridesPutMethod =
+          hasPutMethodOverride(
+              config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
 
-      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
-          config.getBuilder(),
-          mutator(property),
-          consumer(wildcardSuperMap(keyType, valueType, config.getElements(), config.getTypes())),
-          config.getElements(),
-          config.getTypes());
+      FunctionalType mutatorType =
+          functionalTypeAcceptedByMethod(
+              config.getBuilder(),
+              mutator(property),
+              consumer(
+                  wildcardSuperMap(keyType, valueType, config.getElements(), config.getTypes())),
+              config.getElements(),
+              config.getTypes());
 
-      return Optional.of(new MapProperty(
-          config.getDatatype(),
-          property,
-          overridesPutMethod,
-          keyType,
-          unboxedKeyType,
-          valueType,
-          unboxedValueType,
-          mutatorType));
+      return Optional.of(
+          new MapProperty(
+              config.getDatatype(),
+              property,
+              overridesPutMethod,
+              keyType,
+              unboxedKeyType,
+              valueType,
+              unboxedValueType,
+              mutatorType));
     }
 
     private static boolean hasPutMethodOverride(
@@ -110,10 +109,7 @@ class MapProperty extends PropertyCodeGenerator {
     }
 
     private static TypeMirror wildcardSuperMap(
-        TypeMirror keyType,
-        TypeMirror valueType,
-        Elements elements,
-        Types types) {
+        TypeMirror keyType, TypeMirror valueType, Elements elements, Types types) {
       TypeElement mapType = elements.getTypeElement(Map.class.getName());
       return types.getWildcardType(null, types.getDeclaredType(mapType, keyType, valueType));
     }
@@ -146,7 +142,8 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addValueFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %s<%s, %s> %s;",
+    code.addLine(
+        "private final %s<%s, %s> %s;",
         (code.feature(GUAVA).isAvailable()) ? ImmutableMap.class : Map.class,
         keyType,
         valueType,
@@ -155,11 +152,9 @@ class MapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %1$s<%2$s, %3$s> %4$s = new %1$s<>();",
-        LinkedHashMap.class,
-        keyType,
-        valueType,
-        property.getField());
+    code.addLine(
+        "private final %1$s<%2$s, %3$s> %4$s = new %1$s<>();",
+        LinkedHashMap.class, keyType, valueType, property.getField());
   }
 
   @Override
@@ -194,11 +189,12 @@ class MapProperty extends PropertyCodeGenerator {
     }
     code.addLine(" */");
     addPutAnnotations(code);
-    code.addLine("public %s %s(%s key, %s value) {",
-            datatype.getBuilder(),
-            putMethod(property),
-            unboxedKeyType.orElse(keyType),
-            unboxedValueType.orElse(valueType));
+    code.addLine(
+        "public %s %s(%s key, %s value) {",
+        datatype.getBuilder(),
+        putMethod(property),
+        unboxedKeyType.orElse(keyType),
+        unboxedValueType.orElse(valueType));
     if (!unboxedKeyType.isPresent()) {
       code.addLine("  %s.requireNonNull(key);", Objects.class);
     }
@@ -221,13 +217,11 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine(" *     null key or value")
         .addLine(" */");
     addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s, ? extends %s> map) {",
-            datatype.getBuilder(),
-            putAllMethod(property),
-            Map.class,
-            keyType,
-            valueType)
-        .addLine("  for (%s<? extends %s, ? extends %s> entry : map.entrySet()) {",
+    code.addLine(
+            "public %s %s(%s<? extends %s, ? extends %s> map) {",
+            datatype.getBuilder(), putAllMethod(property), Map.class, keyType, valueType)
+        .addLine(
+            "  for (%s<? extends %s, ? extends %s> entry : map.entrySet()) {",
             Map.Entry.class, keyType, valueType)
         .addLine("    %s(entry.getKey(), entry.getValue());", putMethod(property))
         .addLine("  }")
@@ -239,7 +233,8 @@ class MapProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes the mapping for {@code key} from the map to be returned from")
-        .addLine(" * %s, if one is present.",
+        .addLine(
+            " * %s, if one is present.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
@@ -247,10 +242,9 @@ class MapProperty extends PropertyCodeGenerator {
       code.addLine(" * @throws NullPointerException if {@code key} is null");
     }
     code.addLine(" */")
-        .addLine("public %s %s(%s key) {",
-            datatype.getBuilder(),
-            removeMethod(property),
-            unboxedKeyType.orElse(keyType));
+        .addLine(
+            "public %s %s(%s key) {",
+            datatype.getBuilder(), removeMethod(property), unboxedKeyType.orElse(keyType));
     if (!unboxedKeyType.isPresent()) {
       code.addLine("  %s.requireNonNull(key);", Objects.class);
     }
@@ -267,26 +261,27 @@ class MapProperty extends PropertyCodeGenerator {
         .addLine(" *")
         .addLine(" * <p>This method mutates the map in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
-        .addLine(" * not to call pure functions, like %s.",
+        .addLine(
+            " * not to call pure functions, like %s.",
             Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s mutator) {",
-            datatype.getBuilder(),
-            mutator(property),
-            mutatorType.getFunctionalInterface());
+        .addLine(
+            "public %s %s(%s mutator) {",
+            datatype.getBuilder(), mutator(property), mutatorType.getFunctionalInterface());
     if (overridesPutMethod) {
-      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+      code.addLine(
+          "  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(), CheckedMap.TYPE, property.getField(), putMethod(property));
     } else {
-      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      code.addLine(
+              "  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    code.addLine("  return (%s) this;", datatype.getBuilder())
-        .addLine("}");
+    code.addLine("  return (%s) this;", datatype.getBuilder()).addLine("}");
   }
 
   private void addClear(SourceBuilder code) {
@@ -366,17 +361,18 @@ class MapProperty extends PropertyCodeGenerator {
     @Override
     public void addTo(SourceBuilder code) {
       code.addLine("")
-          .addLine("private static <K, V> %1$s<K, V> %2$s(%1$s<K, V> entries) {",
-              Map.class, REFERENCE)
+          .addLine(
+              "private static <K, V> %1$s<K, V> %2$s(%1$s<K, V> entries) {", Map.class, REFERENCE)
           .addLine("  switch (entries.size()) {")
           .addLine("  case 0:")
           .addLine("    return %s.emptyMap();", Collections.class)
           .addLine("  case 1:")
           .addLine("    %s<K, V> entry = entries.entrySet().iterator().next();", Map.Entry.class)
-          .addLine("    return %s.singletonMap(entry.getKey(), entry.getValue());",
-              Collections.class)
+          .addLine(
+              "    return %s.singletonMap(entry.getKey(), entry.getValue());", Collections.class)
           .addLine("  default:")
-          .addLine("    return %s.unmodifiableMap(new %s<>(entries));",
+          .addLine(
+              "    return %s.unmodifiableMap(new %s<>(entries));",
               Collections.class, LinkedHashMap.class)
           .addLine("  }")
           .addLine("}");

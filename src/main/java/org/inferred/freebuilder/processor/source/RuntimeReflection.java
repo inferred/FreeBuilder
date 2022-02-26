@@ -1,12 +1,11 @@
 package org.inferred.freebuilder.processor.source;
 
-import org.inferred.freebuilder.processor.source.ScopeHandler.TypeInfo;
-import org.inferred.freebuilder.processor.source.ScopeHandler.Visibility;
-
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.inferred.freebuilder.processor.source.ScopeHandler.TypeInfo;
+import org.inferred.freebuilder.processor.source.ScopeHandler.Visibility;
 
 class RuntimeReflection implements ScopeHandler.Reflection {
 

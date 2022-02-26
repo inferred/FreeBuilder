@@ -1,14 +1,13 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.LazyName;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.ValueType;
-
 import java.util.AbstractList;
 import java.util.List;
 import java.util.RandomAccess;
 import java.util.function.Consumer;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.LazyName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 /**
  * Excerpts defining a list implementation that delegates to a provided add method to perform
@@ -27,7 +26,8 @@ public class CheckedList extends ValueType implements Excerpt {
         .addLine(" * A list implementation that delegates to a provided add method to perform")
         .addLine(" * element validation and insertion into a random-access backing list.")
         .addLine(" */")
-        .addLine("private static class %s<E> extends %s<E> implements %s {",
+        .addLine(
+            "private static class %s<E> extends %s<E> implements %s {",
             TYPE, AbstractList.class, RandomAccess.class)
         .addLine("")
         .addLine("  private final %s<E> list;", List.class)

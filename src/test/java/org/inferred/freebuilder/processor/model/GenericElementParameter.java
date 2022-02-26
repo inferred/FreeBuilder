@@ -17,21 +17,16 @@ package org.inferred.freebuilder.processor.model;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
-
 import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 import static org.inferred.freebuilder.processor.model.NullTypeImpl.NULL;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.inferred.freebuilder.processor.source.Partial;
-
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -43,15 +38,12 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.TypeVisitor;
+import org.inferred.freebuilder.processor.source.Partial;
 
-/**
- * Fake implementation of a formal type parameter of a {@link GenericElement}.
- */
+/** Fake implementation of a formal type parameter of a {@link GenericElement}. */
 public abstract class GenericElementParameter implements TypeParameterElement {
 
-  /**
-   * Builder of {@link GenericElementParameter} instances.
-   */
+  /** Builder of {@link GenericElementParameter} instances. */
   public static class Builder {
     private final String simpleName;
     private final List<TypeMirror> bounds = new ArrayList<>();
@@ -62,8 +54,10 @@ public abstract class GenericElementParameter implements TypeParameterElement {
     }
 
     public Builder addBound(TypeMirror bound) {
-      checkState(element.get() == null,
-          "Cannot modify a %s after calling build()", Builder.class.getName());
+      checkState(
+          element.get() == null,
+          "Cannot modify a %s after calling build()",
+          Builder.class.getName());
       bounds.add(bound);
       return this;
     }
@@ -79,7 +73,6 @@ public abstract class GenericElementParameter implements TypeParameterElement {
       checkState(notYetSet, "Cannot call build() twice on a %s", Builder.class.getName());
       return impl;
     }
-
   }
 
   private final GenericElement genericElement;
@@ -153,9 +146,7 @@ public abstract class GenericElementParameter implements TypeParameterElement {
     return simpleName;
   }
 
-  /**
-   * Fake implementation of a type variable declared by a {@link GenericElement}.
-   */
+  /** Fake implementation of a type variable declared by a {@link GenericElement}. */
   public abstract static class TypeVariableImpl implements TypeVariable {
 
     private final AtomicReference<GenericElementParameter> element;
@@ -205,13 +196,12 @@ public abstract class GenericElementParameter implements TypeParameterElement {
 
     private GenericElementParameter getImpl(String calledMethod) {
       GenericElementParameter impl = element.get();
-      checkState(impl != null,
+      checkState(
+          impl != null,
           "Cannot call %s on a TypeVariable returned from a %s before it is built",
           calledMethod,
           GenericElementParameter.Builder.class.getName());
       return impl;
     }
-
   }
-
 }

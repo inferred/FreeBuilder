@@ -21,7 +21,8 @@ import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
+import java.util.Arrays;
+import java.util.List;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -41,9 +42,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class ListMutateMethodTest {
@@ -54,11 +52,10 @@ public class ListMutateMethodTest {
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
-    return () -> Lists
-        .cartesianProduct(TYPES, checked, conventions, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(TYPES, checked, conventions, features).stream()
+            .map(List::toArray)
+            .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -75,44 +72,41 @@ public class ListMutateMethodTest {
   private final SourceBuilder internedStringsType;
 
   public ListMutateMethodTest(
-      ElementFactory elements,
-      boolean checked,
-      NamingConvention convention,
-      FeatureSet features) {
+      ElementFactory elements, boolean checked, NamingConvention convention, FeatureSet features) {
     this.elements = elements;
     this.checked = checked;
     this.convention = convention;
     this.features = features;
 
-    listPropertyType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  %s<%s> %s;", List.class, elements.type(), convention.get())
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {");
+    listPropertyType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s> %s;", List.class, elements.type(), convention.get())
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {");
     if (checked) {
       listPropertyType
-          .addLine("    @Override public Builder addItems(%s element) {",
-              elements.unwrappedType())
+          .addLine("    @Override public Builder addItems(%s element) {", elements.unwrappedType())
           .addLine("      if (!(%s)) {", elements.validation())
           .addLine("        throw new IllegalArgumentException(\"%s\");", elements.errorMessage())
           .addLine("      }")
           .addLine("      return super.addItems(element);")
           .addLine("    }");
     }
-    listPropertyType
-        .addLine("  }")
-        .addLine("}");
+    listPropertyType.addLine("  }").addLine("}");
 
-    genericType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType<T extends %s> {", elements.supertype())
-        .addLine("  %s<T> %s;", List.class, convention.get())
-        .addLine("")
-        .addLine("  public static class Builder<T extends %s> extends DataType_Builder<T> {",
-            elements.supertype());
+    genericType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType<T extends %s> {", elements.supertype())
+            .addLine("  %s<T> %s;", List.class, convention.get())
+            .addLine("")
+            .addLine(
+                "  public static class Builder<T extends %s> extends DataType_Builder<T> {",
+                elements.supertype());
     if (checked) {
       genericType
           .addLine("    @Override public Builder<T> addItems(T element) {")
@@ -122,23 +116,22 @@ public class ListMutateMethodTest {
           .addLine("      return super.addItems(element);")
           .addLine("    }");
     }
-    genericType
-        .addLine("  }")
-        .addLine("}");
+    genericType.addLine("  }").addLine("}");
 
     if (!checked && elements == STRINGS) {
-      internedStringsType = SourceBuilder.forTesting()
-          .addLine("package com.example;")
-          .addLine("@%s", FreeBuilder.class)
-          .addLine("public interface DataType {")
-          .addLine("  %s<String> %s;", List.class, convention.get())
-          .addLine("")
-          .addLine("  public static class Builder extends DataType_Builder {")
-          .addLine("    @Override public Builder addItems(String element) {")
-          .addLine("      return super.addItems(element.intern());")
-          .addLine("    }")
-          .addLine("  }")
-          .addLine("}");
+      internedStringsType =
+          SourceBuilder.forTesting()
+              .addLine("package com.example;")
+              .addLine("@%s", FreeBuilder.class)
+              .addLine("public interface DataType {")
+              .addLine("  %s<String> %s;", List.class, convention.get())
+              .addLine("")
+              .addLine("  public static class Builder extends DataType_Builder {")
+              .addLine("    @Override public Builder addItems(String element) {")
+              .addLine("      return super.addItems(element.intern());")
+              .addLine("    }")
+              .addLine("  }")
+              .addLine("}");
     } else {
       internedStringsType = null;
     }
@@ -154,13 +147,15 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.example(0))
+                .build())
         .runTest();
   }
 
@@ -173,10 +168,12 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().mutateItems(items -> items.add(%s));",
-                elements.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "new DataType.Builder().mutateItems(items -> items.add(%s));",
+                    elements.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -185,13 +182,15 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(genericType)
-        .with(testBuilder()
-            .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
-            .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
+                .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.example(0))
+                .build())
         .runTest();
   }
 
@@ -204,10 +203,12 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(genericType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder<%s>().mutateItems(items -> items.add(%s));",
-                elements.type(), elements.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "new DataType.Builder<%s>().mutateItems(items -> items.add(%s));",
+                    elements.type(), elements.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -217,15 +218,16 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(internedStringsType)
-        .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
-            .addLine("assertThat(s).isNotSameAs(i);")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.add(s))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s.get(0)).isSameAs(i);", convention.get())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("String s = new String(\"foobar\");")
+                .addLine("String i = s.intern();")
+                .addLine("assertThat(s).isNotSameAs(i);")
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mutateItems(items -> items.add(s))")
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s.get(0)).isSameAs(i);", convention.get())
+                .build())
         .runTest();
   }
 
@@ -234,14 +236,16 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.add(0, %s))", elements.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.examples(3, 0, 1, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.add(0, %s))", elements.example(3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.examples(3, 0, 1, 2))
+                .build())
         .runTest();
   }
 
@@ -250,14 +254,16 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.add(1, %s))", elements.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.examples(0, 3, 1, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.add(1, %s))", elements.example(3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.examples(0, 3, 1, 2))
+                .build())
         .runTest();
   }
 
@@ -266,14 +272,16 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.add(2, %s))", elements.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.examples(0, 1, 3, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.add(2, %s))", elements.example(3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.examples(0, 1, 3, 2))
+                .build())
         .runTest();
   }
 
@@ -282,14 +290,16 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.add(3, %s))", elements.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.examples(0, 1, 2, 3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.add(3, %s))", elements.example(3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.examples(0, 1, 2, 3))
+                .build())
         .runTest();
   }
 
@@ -302,11 +312,12 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.add(2, %s));", elements.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.add(2, %s));", elements.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -316,16 +327,17 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(internedStringsType)
-        .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
-            .addLine("assertThat(s).isNotSameAs(i);")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\", \"three\")")
-            .addLine("    .mutateItems(items -> items.add(2, s))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.get())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("String s = new String(\"foobar\");")
+                .addLine("String i = s.intern();")
+                .addLine("assertThat(s).isNotSameAs(i);")
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(\"one\", \"two\", \"three\")")
+                .addLine("    .mutateItems(items -> items.add(2, s))")
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.get())
+                .build())
         .runTest();
   }
 
@@ -334,14 +346,16 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.set(1, %s))", elements.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.examples(0, 3, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.set(1, %s))", elements.example(3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.examples(0, 3, 2))
+                .build())
         .runTest();
   }
 
@@ -354,11 +368,12 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.set(1, %s));", elements.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.set(1, %s));", elements.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -368,16 +383,17 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(internedStringsType)
-        .with(testBuilder()
-            .addLine("String s = new String(\"foobar\");")
-            .addLine("String i = s.intern();")
-            .addLine("assertThat(s).isNotSameAs(i);")
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"one\", \"two\", \"three\")")
-            .addLine("    .mutateItems(items -> items.set(2, s))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.get())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("String s = new String(\"foobar\");")
+                .addLine("String i = s.intern();")
+                .addLine("assertThat(s).isNotSameAs(i);")
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(\"one\", \"two\", \"three\")")
+                .addLine("    .mutateItems(items -> items.set(2, s))")
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s.get(2)).isSameAs(i);", convention.get())
+                .build())
         .runTest();
   }
 
@@ -386,11 +402,12 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> assertThat(items.size()).isEqualTo(3));")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> assertThat(items.size()).isEqualTo(3));")
+                .build())
         .runTest();
   }
 
@@ -399,12 +416,14 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> assertThat(items.get(1)).isEqualTo(%s));",
-                elements.example(1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine(
+                    "    .mutateItems(items -> assertThat(items.get(1)).isEqualTo(%s));",
+                    elements.example(1))
+                .build())
         .runTest();
   }
 
@@ -413,14 +432,16 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.remove(1))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.examples(0, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.remove(1))")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.examples(0, 2))
+                .build())
         .runTest();
   }
 
@@ -429,15 +450,17 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
-            .addLine("    .mutateItems(items -> items.clear())")
-            .addLine("    .addItems(%s)", elements.example(3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s);",
-                convention.get(), elements.example(3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2))
+                .addLine("    .mutateItems(items -> items.clear())")
+                .addLine("    .addItems(%s)", elements.example(3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s);",
+                    convention.get(), elements.example(3))
+                .build())
         .runTest();
   }
 
@@ -446,14 +469,16 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(listPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(%s)", elements.examples(0, 1, 2, 3, 4, 5, 6))
-            .addLine("    .mutateItems(items -> items.subList(1, 5).clear())")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.examples(0, 5, 6))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(%s)", elements.examples(0, 1, 2, 3, 4, 5, 6))
+                .addLine("    .mutateItems(items -> items.subList(1, 5).clear())")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.examples(0, 5, 6))
+                .build())
         .runTest();
   }
 
@@ -479,13 +504,15 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.example(0))
+                .build())
         .runTest();
   }
 
@@ -511,13 +538,15 @@ public class ListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
-            .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(%s).inOrder();",
-                convention.get(), elements.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType<%1$s> value = new DataType.Builder<%1$s>()", elements.type())
+                .addLine("    .mutateItems(items -> items.add(%s))", elements.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(%s).inOrder();",
+                    convention.get(), elements.example(0))
+                .build())
         .runTest();
   }
 

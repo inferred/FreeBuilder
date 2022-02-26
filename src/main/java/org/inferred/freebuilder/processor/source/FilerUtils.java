@@ -17,7 +17,6 @@ package org.inferred.freebuilder.processor.source;
 
 import java.io.IOException;
 import java.io.Writer;
-
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 
@@ -27,13 +26,11 @@ public class FilerUtils {
   /**
    * Writes {@code unit} to the correct file.
    *
-   * <p>This is complicated by an EJC bug that returns the wrong object from
-   * {@link Writer#append(CharSequence)}.
+   * <p>This is complicated by an EJC bug that returns the wrong object from {@link
+   * Writer#append(CharSequence)}.
    */
   public static void writeCompilationUnit(
-      Filer filer,
-      SourceBuilder unit,
-      Element originatingElement) throws IOException {
+      Filer filer, SourceBuilder unit, Element originatingElement) throws IOException {
     String typename = unit.typename().toString();
     String finalSource = unit.toString();
     try (Writer writer = filer.createSourceFile(typename, originatingElement).openWriter()) {

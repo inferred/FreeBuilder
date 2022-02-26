@@ -19,15 +19,13 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-
-import org.inferred.freebuilder.processor.source.ScopeHandler.ScopeState;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import org.inferred.freebuilder.processor.source.ScopeHandler.ScopeState;
 
 /**
  * Adds imports and applies scope visibility rules to a compilation unit.
@@ -45,8 +43,7 @@ class ImportManager {
       ScopeHandler scopeHandler) {
     ImportManager importManager = new ImportManager(typeUsages, scopeHandler, pkg);
     importManager.selectImports();
-    StringBuilder result = new StringBuilder()
-        .append(codeWithQualifiedNames, 0, importsIndex);
+    StringBuilder result = new StringBuilder().append(codeWithQualifiedNames, 0, importsIndex);
     importManager.appendImports(result);
     int offset = importsIndex;
     for (TypeUsage usage : typeUsages) {
@@ -70,9 +67,9 @@ class ImportManager {
   private final Multimap<QualifiedName, TypeUsage> imports = ArrayListMultimap.create();
   /** Which type, imported or in scope, to use to shorten each type usage. */
   private final Map<TypeUsage, QualifiedName> resolutions = new HashMap<>();
+
   private final ScopeHandler scopeHandler;
   private final String pkg;
-
 
   private ImportManager(List<TypeUsage> usages, ScopeHandler scopeHandler, String pkg) {
     this.scopeHandler = scopeHandler;
@@ -84,19 +81,22 @@ class ImportManager {
     while (!todo.isEmpty()) {
       resolveUsage(todo.removeLast());
     }
-    imports.asMap().forEach((name, usages) -> {
-      usages.forEach(usage -> {
-        resolutions.put(usage, name);
-      });
-    });
+    imports
+        .asMap()
+        .forEach(
+            (name, usages) -> {
+              usages.forEach(
+                  usage -> {
+                    resolutions.put(usage, name);
+                  });
+            });
   }
 
   private void appendImports(StringBuilder result) {
     checkState(todo.isEmpty());
     if (!imports.isEmpty()) {
       result.append("\n");
-      imports.keySet()
-          .stream()
+      imports.keySet().stream()
           .sorted()
           .forEach(type -> result.append("import ").append(type).append(";\n"));
       result.append("\n");
@@ -110,9 +110,7 @@ class ImportManager {
       result.append(usage.type());
     } else {
       result.append(name.getSimpleName());
-      usage.type()
-          .getSimpleNames()
-          .stream()
+      usage.type().getSimpleNames().stream()
           .skip(name.getSimpleNames().size())
           .forEach(simpleName -> result.append('.').append(simpleName));
     }

@@ -19,10 +19,12 @@ package org.inferred.freebuilder;
 @FreeBuilder
 public abstract class NoFrillsDataType {
   public abstract int getPropertyA();
+
   public abstract boolean isPropertyB();
 
   /** Builder for {@link NoFrillsDataType}. */
   public static class Builder extends NoFrillsDataType_Builder {}
+
   public static Builder builder() {
     return new Builder();
   }

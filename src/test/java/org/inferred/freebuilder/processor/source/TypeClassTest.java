@@ -44,25 +44,28 @@ public class TypeClassTest {
     assertEquals("new MyType", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
     assertEquals("MyType", prettyPrint(type.declaration(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
-    assertEquals("{@link MyType#foo()}",
+    assertEquals(
+        "{@link MyType#foo()}",
         prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
-    assertEquals("{@link MyType#foo() bar}",
+    assertEquals(
+        "{@link MyType#foo() bar}",
         prettyPrint(type.javadocNoArgMethodLink("foo").withText("bar"), SourceLevel.JAVA_8));
   }
 
   @Test
   public void testFromTypeElement_nestedType() {
     TypeClass type = TypeClass.from(MY_NESTED_TYPE);
-    assertEquals(QualifiedName.of("com.example", "MyType", "MyNestedType"),
-        type.getQualifiedName());
+    assertEquals(
+        QualifiedName.of("com.example", "MyType", "MyNestedType"), type.getQualifiedName());
     assertFalse(type.isParameterized());
     assertEquals("MyType.MyNestedType", prettyPrint(type, SourceLevel.JAVA_8));
     assertEquals("new MyType.MyNestedType", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
     assertEquals("new MyType.MyNestedType", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
     assertEquals("MyNestedType", prettyPrint(type.declaration(), SourceLevel.JAVA_8));
-    assertEquals("{@link MyType.MyNestedType}",
-        prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
-    assertEquals("{@link MyType.MyNestedType#foo()}",
+    assertEquals(
+        "{@link MyType.MyNestedType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
+    assertEquals(
+        "{@link MyType.MyNestedType#foo()}",
         prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
   }
 
@@ -76,17 +79,20 @@ public class TypeClassTest {
     assertEquals("new MyType<>", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
     assertEquals("MyType<V>", prettyPrint(type.declaration(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
-    assertEquals("{@link MyType#foo()}",
+    assertEquals(
+        "{@link MyType#foo()}",
         prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
-    assertEquals("{@link MyType#foo() bar}",
+    assertEquals(
+        "{@link MyType#foo() bar}",
         prettyPrint(type.javadocNoArgMethodLink("foo").withText("bar"), SourceLevel.JAVA_8));
   }
 
   @Test
   public void testFromTypeElement_parameterWithSingleBound() {
-    GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME)
-        .addTypeParameter("V", newTopLevelClass("java.lang.Number"))
-        .build();
+    GenericElement myType =
+        new GenericElement.Builder(MY_TYPE_NAME)
+            .addTypeParameter("V", newTopLevelClass("java.lang.Number"))
+            .build();
     TypeClass type = TypeClass.from(myType);
     assertEquals(MY_TYPE_NAME, type.getQualifiedName());
     assertTrue(type.isParameterized());
@@ -94,20 +100,24 @@ public class TypeClassTest {
     assertEquals("new MyType<>", prettyPrint(type.constructor(), SourceLevel.JAVA_8));
     assertEquals("MyType<V extends Number>", prettyPrint(type.declaration(), SourceLevel.JAVA_8));
     assertEquals("{@link MyType}", prettyPrint(type.javadocLink(), SourceLevel.JAVA_8));
-    assertEquals("{@link MyType#foo()}",
+    assertEquals(
+        "{@link MyType#foo()}",
         prettyPrint(type.javadocNoArgMethodLink("foo"), SourceLevel.JAVA_8));
   }
 
   @Test
   public void testFromTypeElement_parameterWithMultipleBounds() {
-    GenericElement myType = new GenericElement.Builder(MY_TYPE_NAME)
-        .addTypeParameter("V",
-            newTopLevelClass("java.lang.Number"),
-            newTopLevelClass("java.lang.Comparable"),
-            newTopLevelClass("java.util.Formattable"))
-        .build();
+    GenericElement myType =
+        new GenericElement.Builder(MY_TYPE_NAME)
+            .addTypeParameter(
+                "V",
+                newTopLevelClass("java.lang.Number"),
+                newTopLevelClass("java.lang.Comparable"),
+                newTopLevelClass("java.util.Formattable"))
+            .build();
     TypeClass type = TypeClass.from(myType);
-    assertEquals("MyType<V extends Number & Comparable & Formattable>",
+    assertEquals(
+        "MyType<V extends Number & Comparable & Formattable>",
         prettyPrint(type.declaration(), SourceLevel.JAVA_8));
   }
 

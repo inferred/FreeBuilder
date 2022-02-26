@@ -15,8 +15,6 @@
  */
 package org.inferred.freebuilder.processor.model;
 
-import org.inferred.freebuilder.processor.source.Partial;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
@@ -26,6 +24,7 @@ import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
+import org.inferred.freebuilder.processor.source.Partial;
 
 public abstract class PackageElementImpl implements PackageElement {
 
@@ -111,8 +110,7 @@ public abstract class PackageElementImpl implements PackageElement {
 
     @Override
     public boolean equals(Object obj) {
-      return (obj instanceof PackageTypeImpl)
-        && toString().equals(obj.toString());
+      return (obj instanceof PackageTypeImpl) && toString().equals(obj.toString());
     }
 
     @Override
@@ -126,4 +124,3 @@ public abstract class PackageElementImpl implements PackageElement {
     }
   }
 }
-

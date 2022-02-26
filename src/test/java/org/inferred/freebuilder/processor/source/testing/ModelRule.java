@@ -20,8 +20,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * {@link org.junit.rules.TestRule TestRule} for creating javax.lang.model instances in a unit
- * test.
+ * {@link org.junit.rules.TestRule TestRule} for creating javax.lang.model instances in a unit test.
  *
  * <p>The standard javax.lang.model.util objects, and {@link javax.lang.model.type.TypeMirror
  * TypeMirror} instances for existing classes, are readily available. More complex {@link
@@ -29,7 +28,9 @@ import org.junit.runners.model.Statement;
  * allowing top-level types and even code with errors in to be contained within a single test
  * method.
  *
- * <blockquote><code><pre>
+ * <blockquote>
+ *
+ * <code><pre>
  * {@link org.junit.runner.RunWith @RunWith}({@link org.junit.runners.JUnit4 JUnit4}.class)
  * public class TypeUtilsTest {
  *
@@ -44,7 +45,9 @@ import org.junit.runners.model.Statement;
  *         "  public void aMethod(int anArg);",
  *         "}");
  *     ...
- * </pre></code></blockquote>
+ * </pre></code>
+ *
+ * </blockquote>
  */
 public class ModelRule extends Model implements TestRule {
 

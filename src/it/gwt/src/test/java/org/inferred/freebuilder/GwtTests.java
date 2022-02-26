@@ -1,7 +1,6 @@
 package org.inferred.freebuilder;
 
 import com.google.gwt.junit.tools.GWTTestSuite;
-
 import org.inferred.freebuilder.client.rpc.MapTest;
 import org.inferred.freebuilder.client.rpc.NestedListTest;
 import org.inferred.freebuilder.client.rpc.OptionalTest;

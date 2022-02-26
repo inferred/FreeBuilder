@@ -15,10 +15,9 @@
  */
 package org.inferred.freebuilder.processor;
 
+import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.inferred.freebuilder.processor.model.ModelUtils.findAnnotationMirror;
 import static org.inferred.freebuilder.processor.source.RoundEnvironments.annotatedElementsIn;
-
-import static javax.lang.model.util.ElementFilter.typesIn;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
@@ -26,16 +25,9 @@ import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
-
-import org.inferred.freebuilder.FreeBuilder;
-import org.inferred.freebuilder.processor.source.FilerUtils;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.feature.FeatureSet;
-
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.FilerException;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -43,6 +35,10 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic.Kind;
+import org.inferred.freebuilder.FreeBuilder;
+import org.inferred.freebuilder.processor.source.FilerUtils;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.feature.FeatureSet;
 
 /**
  * Processor for the &#64;{@link FreeBuilder} annotation.
@@ -87,8 +83,10 @@ public class Processor extends AbstractProcessor {
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
     if (registeredProcessors.putIfAbsent(processingEnv, this) != null) {
-      processingEnv.getMessager().printMessage(
-          Kind.NOTE, "FreeBuilder processor registered twice; disabling duplicate instance");
+      processingEnv
+          .getMessager()
+          .printMessage(
+              Kind.NOTE, "FreeBuilder processor registered twice; disabling duplicate instance");
       return;
     }
     analyser = new Analyser(processingEnv, processingEnv.getMessager());
@@ -108,23 +106,29 @@ public class Processor extends AbstractProcessor {
       } catch (Analyser.CannotGenerateCodeException e) {
         // Thrown to skip writing the builder source; the error will already have been issued.
       } catch (FilerException e) {
-        processingEnv.getMessager().printMessage(
-            Kind.WARNING,
-            "Error producing Builder: " + e.getMessage(),
-            type,
-            findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
+        processingEnv
+            .getMessager()
+            .printMessage(
+                Kind.WARNING,
+                "Error producing Builder: " + e.getMessage(),
+                type,
+                findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
       } catch (IOException e) {
-        processingEnv.getMessager().printMessage(
-            Kind.ERROR,
-            "I/O error: " + Throwables.getStackTraceAsString(e),
-            type,
-            findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
+        processingEnv
+            .getMessager()
+            .printMessage(
+                Kind.ERROR,
+                "I/O error: " + Throwables.getStackTraceAsString(e),
+                type,
+                findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
       } catch (RuntimeException e) {
-        processingEnv.getMessager().printMessage(
-            Kind.ERROR,
-            "Internal error: " + Throwables.getStackTraceAsString(e),
-            type,
-            findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
+        processingEnv
+            .getMessager()
+            .printMessage(
+                Kind.ERROR,
+                "Internal error: " + Throwables.getStackTraceAsString(e),
+                type,
+                findAnnotationMirror(type, "org.inferred.freebuilder.FreeBuilder").get());
       }
     }
     return false;

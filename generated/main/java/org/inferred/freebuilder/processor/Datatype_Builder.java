@@ -941,7 +941,8 @@ abstract class Datatype_Builder {
     if (generatedBuilderAnnotations instanceof ImmutableList) {
       generatedBuilderAnnotations = new ArrayList<>(generatedBuilderAnnotations);
     }
-    // If addGeneratedBuilderAnnotations is overridden, this method will be updated to delegate to it
+    // If addGeneratedBuilderAnnotations is overridden, this method will be updated to delegate to
+    // it
     mutator.accept(generatedBuilderAnnotations);
     return (Datatype.Builder) this;
   }

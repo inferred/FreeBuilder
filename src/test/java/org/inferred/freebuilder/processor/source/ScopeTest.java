@@ -16,7 +16,6 @@
 package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.inferred.freebuilder.processor.source.Scope.Level.FILE;
 import static org.inferred.freebuilder.processor.source.Scope.Level.METHOD;
 import static org.junit.rules.ExpectedException.none;

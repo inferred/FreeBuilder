@@ -18,16 +18,6 @@ import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUA
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.inferred.freebuilder.processor.BuildableType;
-import org.inferred.freebuilder.processor.Datatype;
-import org.inferred.freebuilder.processor.Declarations;
-import org.inferred.freebuilder.processor.excerpt.BuildableList;
-import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.Type;
-import org.inferred.freebuilder.processor.source.Variable;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,13 +27,20 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.BaseStream;
-
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import org.inferred.freebuilder.processor.BuildableType;
+import org.inferred.freebuilder.processor.Datatype;
+import org.inferred.freebuilder.processor.Declarations;
+import org.inferred.freebuilder.processor.excerpt.BuildableList;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.Type;
+import org.inferred.freebuilder.processor.source.Variable;
 
 /**
- * {@link PropertyCodeGenerator} providing fluent methods for {@link List} properties
- * containing {@link BuildableType} instances.
+ * {@link PropertyCodeGenerator} providing fluent methods for {@link List} properties containing
+ * {@link BuildableType} instances.
  */
 class BuildableListProperty extends PropertyCodeGenerator {
 
@@ -71,21 +68,23 @@ class BuildableListProperty extends PropertyCodeGenerator {
         return Optional.empty();
       }
 
-      BuildableType element = BuildableType
-          .create(elementType, elementBuilder, config.getElements(), config.getTypes());
+      BuildableType element =
+          BuildableType.create(
+              elementType, elementBuilder, config.getElements(), config.getTypes());
       boolean needsSafeVarargs = needsSafeVarargs(rawElementType);
       boolean overridesValueInstanceVarargsAddMethod =
           hasValueInstanceVarargsAddMethodOverride(config, rawElementType);
       boolean overridesBuilderVarargsAddMethod =
           hasBuilderVarargsAddMethodOverride(config, element.builderType());
 
-      return Optional.of(new BuildableListProperty(
-          config.getDatatype(),
-          config.getProperty(),
-          needsSafeVarargs,
-          overridesValueInstanceVarargsAddMethod,
-          overridesBuilderVarargsAddMethod,
-          element));
+      return Optional.of(
+          new BuildableListProperty(
+              config.getDatatype(),
+              config.getProperty(),
+              needsSafeVarargs,
+              overridesValueInstanceVarargsAddMethod,
+              overridesBuilderVarargsAddMethod,
+              element));
     }
 
     private static boolean disablingGetterExists(Config config) {
@@ -103,9 +102,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
     }
 
     private static boolean hasBuilderVarargsAddMethodOverride(Config config, Type builderType) {
-      TypeMirror rawBuilderType = config.getElements()
-          .getTypeElement(builderType.getQualifiedName().toString())
-          .asType();
+      TypeMirror rawBuilderType =
+          config.getElements().getTypeElement(builderType.getQualifiedName().toString()).asType();
       return overrides(
           config.getBuilder(),
           config.getTypes(),
@@ -135,7 +133,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
 
   @Override
   public void addValueFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %s<%s> %s;",
+    code.addLine(
+        "private final %s<%s> %s;",
         code.feature(GUAVA).isAvailable() ? ImmutableList.class : List.class,
         element.type(),
         property.getField());
@@ -143,8 +142,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %1$s %2$s = new %1$s();",
-        BuildableList.of(element), property.getField());
+    code.addLine(
+        "private final %1$s %2$s = new %1$s();", BuildableList.of(element), property.getField());
   }
 
   @Override
@@ -167,7 +166,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addValueInstanceAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Adds {@code element} to the list to be returned from %s.",
+        .addLine(
+            " * Adds {@code element} to the list to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>The element <em>may</em> be converted to/from a builder in this process;")
@@ -177,7 +177,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code element} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s element) {",
+        .addLine(
+            "public %s %s(%s element) {",
             datatype.getBuilder(), addMethod(property), element.type())
         .addLine("  %s.addValue(element);", property.getField())
         .addLine("  return (%s) this;", datatype.getBuilder())
@@ -187,24 +188,29 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addBuilderAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Adds the value built by {@code builder} to the list to be returned from %s.",
+        .addLine(
+            " * Adds the value built by {@code builder} to the list to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>Only a copy of the builder will be stored; any changes made to it after")
         .addLine(" * returning from this method will not affect the value stored in the list.")
         .addLine(" *")
-        .addLine(" * <p>The copied builder's %s will not be called until",
+        .addLine(
+            " * <p>The copied builder's %s will not be called until",
             element.builderType().javadocNoArgMethodLink("build").withText("build method"))
-        .addLine(" * this object's %s is, so if the builder's state is not",
+        .addLine(
+            " * this object's %s is, so if the builder's state is not",
             datatype.getBuilder().javadocNoArgMethodLink("build").withText("build method"))
         .addLine(" * legal, you will not get failures until then.")
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
         .addLine(" * @throws NullPointerException if {@code builder} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s builder) {",
+        .addLine(
+            "public %s %s(%s builder) {",
             datatype.getBuilder(), addMethod(property), element.builderType())
-        .addLine("  %s.add(%s.mergeFrom(builder));",
+        .addLine(
+            "  %s.add(%s.mergeFrom(builder));",
             property.getField(),
             element.builderFactory().newBuilder(element.builderType(), EXPLICIT_TYPES))
         .addLine("  return (%s) this;", datatype.getBuilder())
@@ -229,15 +235,18 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addJavadocForAddingMultipleBuilders(SourceBuilder code) {
     code.addLine("/**")
         .addLine(" * Adds the values built by each element of {@code elementBuilders} to")
-        .addLine(" * the list to be returned from %s.",
+        .addLine(
+            " * the list to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>Only copies of the builders will be stored; any changes made to them after")
         .addLine(" * returning from this method will not affect the values stored in the list.")
         .addLine(" *")
-        .addLine(" * <p>The copied builders' %s will not be called until",
+        .addLine(
+            " * <p>The copied builders' %s will not be called until",
             element.builderType().javadocNoArgMethodLink("build").withText("build methods"))
-        .addLine(" * this object's %s is, so if any builder's state is not",
+        .addLine(
+            " * this object's %s is, so if any builder's state is not",
             datatype.getBuilder().javadocNoArgMethodLink("build").withText("build method"))
         .addLine(" * legal, you will not get failures until then.")
         .addLine(" *")
@@ -251,8 +260,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
     code.addLine("");
     addJavadocForAddingMultipleValues(code);
     addSafeVarargsForPublicMethod(code, overridesValueInstanceVarargsAddMethod);
-    code.add("%s %s(%s... elements) {%n",
-            datatype.getBuilder(), addMethod(property), element.type())
+    code.add(
+            "%s %s(%s... elements) {%n", datatype.getBuilder(), addMethod(property), element.type())
         .addLine("  return %s(%s.asList(elements));", addAllMethod(property), Arrays.class)
         .addLine("}");
   }
@@ -261,9 +270,11 @@ class BuildableListProperty extends PropertyCodeGenerator {
     code.addLine("");
     addJavadocForAddingMultipleBuilders(code);
     addSafeVarargsForPublicMethod(code, overridesBuilderVarargsAddMethod);
-    code.add("%s %s(%s... elementBuilders) {%n",
+    code.add(
+            "%s %s(%s... elementBuilders) {%n",
             datatype.getBuilder(), addMethod(property), element.builderType())
-        .addLine("  return %s(%s.asList(elementBuilders));",
+        .addLine(
+            "  return %s(%s.asList(elementBuilders));",
             addAllBuildersOfMethod(property), Arrays.class)
         .addLine("}");
   }
@@ -286,7 +297,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addSpliteratorValueInstanceAddAll(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleValues(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
+    code.addLine(
+            "public %s %s(%s<? extends %s> elements) {",
             datatype.getBuilder(), addAllMethod(property), Spliterator.class, element.type())
         .addLine("  if ((elements.characteristics() & %s.SIZED) != 0) {", Spliterator.class);
     Variable newSize = new Variable("newSize");
@@ -304,13 +316,15 @@ class BuildableListProperty extends PropertyCodeGenerator {
     code.addLine("");
     addJavadocForAddingMultipleBuilders(code);
     Variable newSize = new Variable("newSize");
-    code.addLine("public %s %s(%s<? extends %s> elementBuilders) {",
+    code.addLine(
+            "public %s %s(%s<? extends %s> elementBuilders) {",
             datatype.getBuilder(),
             addAllBuildersOfMethod(property),
             Spliterator.class,
             element.builderType())
         .addLine("  if ((elementBuilders.characteristics() & %s.SIZED) != 0) {", Spliterator.class)
-        .addLine("    long %s = elementBuilders.estimateSize() + %s.size();",
+        .addLine(
+            "    long %s = elementBuilders.estimateSize() + %s.size();",
             newSize, property.getField())
         .addLine("    if (%s <= Integer.MAX_VALUE) {", newSize)
         .addLine("      %s.ensureCapacity((int) %s);", property.getField(), newSize)
@@ -325,8 +339,9 @@ class BuildableListProperty extends PropertyCodeGenerator {
     code.addLine("");
     addJavadocForAddingMultipleValues(code);
     addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type());
+    code.addLine(
+        "public %s %s(%s<? extends %s> elements) {",
+        datatype.getBuilder(), addAllMethod(property), Iterable.class, element.type());
     if (code.feature(GUAVA).isAvailable()) {
       code.addLine("  %s.addAllValues(elements);", property.getField())
           .addLine("  return (%s) this;", datatype.getBuilder());
@@ -339,7 +354,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addIterableBuilderAddAll(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleBuilders(code);
-    code.addLine("public %s %s(%s<? extends %s> elementBuilders) {",
+    code.addLine(
+            "public %s %s(%s<? extends %s> elementBuilders) {",
             datatype.getBuilder(),
             addAllBuildersOfMethod(property),
             Iterable.class,
@@ -351,7 +367,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addStreamValueInstanceAddAll(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleValues(code);
-    code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
+    code.addLine(
+            "public %s %s(%s<? extends %s, ?> elements) {",
             datatype.getBuilder(), addAllMethod(property), BaseStream.class, element.type())
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
@@ -360,7 +377,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addStreamBuilderAddAll(SourceBuilder code) {
     code.addLine("");
     addJavadocForAddingMultipleBuilders(code);
-    code.addLine("public %s %s(%s<? extends %s, ?> elementBuilders) {",
+    code.addLine(
+            "public %s %s(%s<? extends %s, ?> elementBuilders) {",
             datatype.getBuilder(),
             addAllBuildersOfMethod(property),
             BaseStream.class,
@@ -373,18 +391,21 @@ class BuildableListProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Applies {@code mutator} to a list of builders for the elements of the list")
-        .addLine(" * that will be returned from %s.",
+        .addLine(
+            " * that will be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the list in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
-        .addLine(" * not to call pure functions, like %s.",
+        .addLine(
+            " * not to call pure functions, like %s.",
             Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s<? super %s<%s>> mutator) {",
+        .addLine(
+            "public %s %s(%s<? super %s<%s>> mutator) {",
             datatype.getBuilder(),
             mutator(property),
             Consumer.class,
@@ -398,7 +419,8 @@ class BuildableListProperty extends PropertyCodeGenerator {
   private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Clears the list to be returned from %s.",
+        .addLine(
+            " * Clears the list to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
@@ -413,13 +435,14 @@ class BuildableListProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Returns an unmodifiable list of mutable builders for the elements of the")
-        .addLine(" * list that will be returned by %s.",
+        .addLine(
+            " * list that will be returned by %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * Changes to this builder will be reflected in the view, and changes to")
         .addLine(" * the element builders in the view will affect this builder.")
         .addLine(" */")
-        .addLine("public %s<%s> %s() {",
-            List.class, element.builderType(), getBuildersMethod(property))
+        .addLine(
+            "public %s<%s> %s() {", List.class, element.builderType(), getBuildersMethod(property))
         .addLine("  return %s.unmodifiableList(%s);", Collections.class, property.getField())
         .addLine("}");
   }
@@ -435,10 +458,7 @@ class BuildableListProperty extends PropertyCodeGenerator {
   }
 
   private void addFieldAssignment(
-      SourceBuilder code,
-      Excerpt finalField,
-      String builder,
-      String buildMethod) {
+      SourceBuilder code, Excerpt finalField, String builder, String buildMethod) {
     code.addLine("%s = %s.%s();", finalField, property.getField().on(builder), buildMethod);
   }
 

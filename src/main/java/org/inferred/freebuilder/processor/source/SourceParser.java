@@ -1,7 +1,6 @@
 package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.base.Preconditions.checkState;
-
 import static javax.lang.model.SourceVersion.isIdentifier;
 
 import java.util.HashSet;
@@ -9,32 +8,30 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.lang.model.SourceVersion;
 
-/**
- * API for parsing Java source with callbacks.
- */
+/** API for parsing Java source with callbacks. */
 class SourceParser {
 
-  /**
-   * Receive notifications of gross Java structure events.
-   */
+  /** Receive notifications of gross Java structure events. */
   interface EventHandler {
     void onPackageStatement(String packageName);
+
     void onTypeBlockStart(String keyword, String simpleName, Set<String> supertypes);
+
     void onMethodBlockStart(String methodName, Set<String> parameterNames);
+
     void onOtherBlockStart();
+
     void onBlockEnd();
   }
 
   private static final Pattern PACKAGE = Pattern.compile("\\bpackage\\s([^;]*);");
-  private static final Pattern TYPE = Pattern.compile(
-      "\\b(class|interface|enum|@interface)\\s+([^\\s<>]+)");
-  private static final Pattern METHOD = Pattern.compile(
-      "\\b([^\\s()<>,.]+)\\s*\\(([^()]*)\\)\\s*(throws\\b|$)");
-  private static final Pattern ARGUMENTS = Pattern.compile(
-      ",?[^,]+\\s([^\\s.,]+)\\s*");
+  private static final Pattern TYPE =
+      Pattern.compile("\\b(class|interface|enum|@interface)\\s+([^\\s<>]+)");
+  private static final Pattern METHOD =
+      Pattern.compile("\\b([^\\s()<>,.]+)\\s*\\(([^()]*)\\)\\s*(throws\\b|$)");
+  private static final Pattern ARGUMENTS = Pattern.compile(",?[^,]+\\s([^\\s.,]+)\\s*");
   private static final Pattern IDENTIFIER = Pattern.compile("[^\\s.,]+(\\s*\\.\\s*[^\\s.,]+)*");
 
   private enum State {
@@ -223,7 +220,12 @@ class SourceParser {
   }
 
   enum AnnotationState {
-    CODE, SYMBOL, NAME, SPACE, PERIOD, BODY
+    CODE,
+    SYMBOL,
+    NAME,
+    SPACE,
+    PERIOD,
+    BODY
   }
 
   private static CharSequence withoutAnnotations(CharSequence chars) {

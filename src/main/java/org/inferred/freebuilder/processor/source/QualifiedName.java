@@ -18,28 +18,23 @@ package org.inferred.freebuilder.processor.source;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
-
-import static org.inferred.freebuilder.processor.source.Shading.unshadedName;
-
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.source.Shading.unshadedName;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
-
-import org.inferred.freebuilder.processor.source.Type.TypeImpl;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
+import org.inferred.freebuilder.processor.source.Type.TypeImpl;
 
 /**
  * The qualified name of a type. Lets us pass a type to a {@link TypeShortener} without a Class or
@@ -56,13 +51,11 @@ public class QualifiedName extends ValueType implements Comparable<QualifiedName
     requireNonNull(!packageName.isEmpty());
     checkArgument(!topLevelType.isEmpty());
     return new QualifiedName(
-        unshadedName(packageName),  // shadowJar modifies string literals; unshade them here
+        unshadedName(packageName), // shadowJar modifies string literals; unshade them here
         ImmutableList.<String>builder().add(topLevelType).add(nestedTypes).build());
   }
 
-  /**
-   * Returns a {@link QualifiedName} for {@code cls}, unshading if necessary.
-   */
+  /** Returns a {@link QualifiedName} for {@code cls}, unshading if necessary. */
   public static QualifiedName of(Class<?> cls) {
     if (cls.getEnclosingClass() != null) {
       return QualifiedName.of(cls.getEnclosingClass()).nestedType(cls.getSimpleName());
@@ -73,9 +66,7 @@ public class QualifiedName extends ValueType implements Comparable<QualifiedName
     }
   }
 
-  /**
-   * Returns a {@link QualifiedName} for {@code type}.
-   */
+  /** Returns a {@link QualifiedName} for {@code type}. */
   public static QualifiedName of(TypeElement type) {
     switch (type.getNestingKind()) {
       case TOP_LEVEL:
@@ -110,8 +101,8 @@ public class QualifiedName extends ValueType implements Comparable<QualifiedName
   /**
    * Returns this qualified name as a string.
    *
-   * <p>Returns the same as {@link Class#getName()} and {@link TypeElement#getQualifiedName()}
-   * would for the same type, e.g. "java.lang.Integer" or "com.example.OuterType.InnerType".
+   * <p>Returns the same as {@link Class#getName()} and {@link TypeElement#getQualifiedName()} would
+   * for the same type, e.g. "java.lang.Integer" or "com.example.OuterType.InnerType".
    */
   @Override
   public String toString() {
@@ -150,12 +141,10 @@ public class QualifiedName extends ValueType implements Comparable<QualifiedName
         && simpleNames.subList(0, other.simpleNames.size()).equals(other.simpleNames);
   }
 
-  /**
-   * Returns the {@link QualifiedName} of a type called {@code simpleName} nested in this one.
-   */
+  /** Returns the {@link QualifiedName} of a type called {@code simpleName} nested in this one. */
   public QualifiedName nestedType(String simpleName) {
-    return new QualifiedName(packageName,
-        ImmutableList.<String>builder().addAll(simpleNames).add(simpleName).build());
+    return new QualifiedName(
+        packageName, ImmutableList.<String>builder().addAll(simpleNames).add(simpleName).build());
   }
 
   public TypeClass withParameters(TypeParameterElement... parameters) {
@@ -163,8 +152,7 @@ public class QualifiedName extends ValueType implements Comparable<QualifiedName
   }
 
   public Type withParameters(TypeMirror first, TypeMirror... rest) {
-    return new TypeImpl(
-        this, ImmutableList.<TypeMirror>builder().add(first).add(rest).build());
+    return new TypeImpl(this, ImmutableList.<TypeMirror>builder().add(first).add(rest).build());
   }
 
   public TypeClass withParameters(Iterable<? extends TypeParameterElement> typeParameters) {
@@ -185,4 +173,3 @@ public class QualifiedName extends ValueType implements Comparable<QualifiedName
     fields.add("simpleNames", simpleNames);
   }
 }
-

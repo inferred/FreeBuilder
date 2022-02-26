@@ -22,50 +22,52 @@ import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 public class MapTest extends GWTTestCase {
 
-    private static final int RPC_TIMEOUT = 15000;
-    private static final String MODULE_NAME = "org.inferred.freebuilder.TestServer";
-    private static final MapGwtType VALUE = new MapGwtType.Builder()
-            .putDistances("small", 1.0)
-            .putDistances("medium", 10.3)
-            .putDistances("large", 112.5)
-            .build();
+  private static final int RPC_TIMEOUT = 15000;
+  private static final String MODULE_NAME = "org.inferred.freebuilder.TestServer";
+  private static final MapGwtType VALUE =
+      new MapGwtType.Builder()
+          .putDistances("small", 1.0)
+          .putDistances("medium", 10.3)
+          .putDistances("large", 112.5)
+          .build();
 
-    private MapTestServiceAsync customFieldSerializerTestService;
+  private MapTestServiceAsync customFieldSerializerTestService;
 
-    @Override
-    public String getModuleName() {
-        return MODULE_NAME;
-    }
+  @Override
+  public String getModuleName() {
+    return MODULE_NAME;
+  }
 
-    @Override
-    protected void gwtSetUp() throws Exception {
-        super.gwtSetUp();
-        delayTestFinish(RPC_TIMEOUT);
-    }
+  @Override
+  protected void gwtSetUp() throws Exception {
+    super.gwtSetUp();
+    delayTestFinish(RPC_TIMEOUT);
+  }
 
-    public void testSerialization() {
-        MapTestServiceAsync service = getServiceAsync();
-        service.echo(VALUE, new AsyncCallback<MapGwtType>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                throw new AssertionError(caught);
-            }
+  public void testSerialization() {
+    MapTestServiceAsync service = getServiceAsync();
+    service.echo(
+        VALUE,
+        new AsyncCallback<MapGwtType>() {
+          @Override
+          public void onFailure(Throwable caught) {
+            throw new AssertionError(caught);
+          }
 
-            @Override
-            public void onSuccess(MapGwtType result) {
-                assertEquals(VALUE, result);
-                finishTest();
-            }
+          @Override
+          public void onSuccess(MapGwtType result) {
+            assertEquals(VALUE, result);
+            finishTest();
+          }
         });
-    }
+  }
 
-    private MapTestServiceAsync getServiceAsync() {
-        if (customFieldSerializerTestService == null) {
-            customFieldSerializerTestService =
-                    (MapTestServiceAsync) GWT.create(MapTestService.class);
-            ((ServiceDefTarget) customFieldSerializerTestService)
-                    .setServiceEntryPoint(GWT.getModuleBaseURL() + "map");
-        }
-        return customFieldSerializerTestService;
+  private MapTestServiceAsync getServiceAsync() {
+    if (customFieldSerializerTestService == null) {
+      customFieldSerializerTestService = (MapTestServiceAsync) GWT.create(MapTestService.class);
+      ((ServiceDefTarget) customFieldSerializerTestService)
+          .setServiceEntryPoint(GWT.getModuleBaseURL() + "map");
     }
+    return customFieldSerializerTestService;
+  }
 }

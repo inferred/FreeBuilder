@@ -3,15 +3,13 @@ package org.inferred.freebuilder.processor.excerpt;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ForwardingMultiset;
 import com.google.common.collect.Multiset;
-
+import java.util.Collection;
+import java.util.function.BiConsumer;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.LazyName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.ValueType;
 import org.inferred.freebuilder.processor.source.feature.Jsr305;
-
-import java.util.Collection;
-import java.util.function.BiConsumer;
 
 /**
  * Excerpts defining a multiset implementation that delegates to a provided setCount method to
@@ -35,7 +33,8 @@ public class CheckedMultiset extends ValueType implements Excerpt {
         .addLine("  private final %s<E> multiset;", Multiset.class)
         .addLine("  private final %s<E, Integer> setCount;", BiConsumer.class)
         .addLine("")
-        .addLine("  %s(%s<E> multiset, %s<E, Integer> setCount) {",
+        .addLine(
+            "  %s(%s<E> multiset, %s<E, Integer> setCount) {",
             TYPE, Multiset.class, BiConsumer.class)
         .addLine("    this.multiset = multiset;")
         .addLine("    this.setCount = setCount;")
@@ -49,28 +48,26 @@ public class CheckedMultiset extends ValueType implements Excerpt {
         .addLine("    return standardAdd(element);")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public int add(%s E element, int occurrences) {",
-            Jsr305.nullable())
+        .addLine("  @Override public int add(%s E element, int occurrences) {", Jsr305.nullable())
         .addLine("    %s.checkArgument(occurrences >= 0,", Preconditions.class)
         .addLine("        \"occurrences cannot be negative: %%s\", occurrences);")
         .addLine("    int oldCount = multiset.count(element);")
         .addLine("    if (occurrences > 0) {")
         .addLine("      long newCount = (long) oldCount + occurrences;")
-        .addLine("      %s.checkArgument(newCount <= %s.MAX_VALUE,",
-            Preconditions.class, Integer.class)
+        .addLine(
+            "      %s.checkArgument(newCount <= %s.MAX_VALUE,", Preconditions.class, Integer.class)
         .addLine("          \"too many occurrences: %%s\", newCount);")
         .addLine("      setCount.accept(element, (int) newCount);")
         .addLine("    }")
         .addLine("    return oldCount;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean addAll(%s<? extends E> elementsToAdd) {",
-            Collection.class)
+        .addLine(
+            "  @Override public boolean addAll(%s<? extends E> elementsToAdd) {", Collection.class)
         .addLine("    return standardAddAll(elementsToAdd);")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public int setCount(%s E element, int count) {",
-            Jsr305.nullable())
+        .addLine("  @Override public int setCount(%s E element, int count) {", Jsr305.nullable())
         .addLine("    return standardSetCount(element, count);")
         .addLine("  }")
         .addLine("")

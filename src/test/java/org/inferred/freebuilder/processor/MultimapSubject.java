@@ -24,7 +24,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Ordered;
 import com.google.common.truth.Subject;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -37,18 +36,14 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
     return new MultimapSubject<>(THROW_ASSERTION_ERROR, subject);
   }
 
-  /**
-   * Fails if the subject is not empty.
-   */
+  /** Fails if the subject is not empty. */
   public void isEmpty() {
     if (!getSubject().isEmpty()) {
       fail("is empty");
     }
   }
 
-  /**
-   * Fails if the subject is empty.
-   */
+  /** Fails if the subject is empty. */
   public void isNotEmpty() {
     if (getSubject().isEmpty()) {
       fail("is empty");
@@ -58,7 +53,9 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
   /**
    * Fails if the subject does not contain the given key-value pair(s).
    *
-   * <p>First part of a fluent API for containment assertions. Example:<pre><code>
+   * <p>First part of a fluent API for containment assertions. Example:
+   *
+   * <pre><code>
    * assertThat(multimap)
    *     .contains("fore", 3.22)
    *     .and("aft", 4.4, 5.2)
@@ -112,7 +109,8 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
       entryIterator = getSubject().entries().iterator();
     }
 
-    @Override protected ContainmentAssertion<K, V> and(Entry<K, V> entry) {
+    @Override
+    protected ContainmentAssertion<K, V> and(Entry<K, V> entry) {
       expected.add(entry);
       if (!entryIterator.hasNext()) {
         fail("contains", expected, "is missing", entry);
@@ -135,7 +133,8 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
       return new OutOfOrderContainmentAssertion(expected, remaining).and(entry);
     }
 
-    @Override public Ordered andNothingElse() {
+    @Override
+    public Ordered andNothingElse() {
       if (entryIterator.hasNext()) {
         failWithBadResults(
             "contains", expected, "has unexpected items", ImmutableList.copyOf(entryIterator));
@@ -155,7 +154,8 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
       this.remaining = remaining;
     }
 
-    @Override protected ContainmentAssertion<K, V> and(Entry<K, V> entry) {
+    @Override
+    protected ContainmentAssertion<K, V> and(Entry<K, V> entry) {
       expected.add(entry);
       if (!remaining.remove(entry.getKey(), entry.getValue())) {
         fail("contains", expected, "is missing", entry);
@@ -164,10 +164,10 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
       return this;
     }
 
-    @Override public Ordered andNothingElse() {
+    @Override
+    public Ordered andNothingElse() {
       if (!remaining.isEmpty()) {
-        failWithBadResults(
-            "contains", expected, "has unexpected items", remaining.entries());
+        failWithBadResults("contains", expected, "has unexpected items", remaining.entries());
       }
       return new NotInOrder("contains only these elements in order", expected);
     }
@@ -181,15 +181,18 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
       return this;
     }
 
-    @Override public Ordered andNothingElse() {
+    @Override
+    public Ordered andNothingElse() {
       return IN_ORDER;
     }
   }
 
   /** Ordered implementation that does nothing because it's already known to be true. */
-  private static final Ordered IN_ORDER = new Ordered() {
-    @Override public void inOrder() {}
-  };
+  private static final Ordered IN_ORDER =
+      new Ordered() {
+        @Override
+        public void inOrder() {}
+      };
 
   /** Ordered implementation that always fails. */
   private class NotInOrder implements Ordered {
@@ -201,7 +204,8 @@ public class MultimapSubject<K, V> extends Subject<MultimapSubject<K, V>, Multim
       this.required = required;
     }
 
-    @Override public void inOrder() {
+    @Override
+    public void inOrder() {
       fail(check, required);
     }
   }

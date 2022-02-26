@@ -16,11 +16,7 @@
 package org.inferred.freebuilder.processor.model;
 
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.source.Partial;
-
 import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
@@ -33,10 +29,9 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
+import org.inferred.freebuilder.processor.source.Partial;
 
-/**
- * Fake implementation of {@link DeclaredType} for unit tests.
- */
+/** Fake implementation of {@link DeclaredType} for unit tests. */
 public abstract class ClassTypeImpl implements DeclaredType {
 
   public static final ClassTypeImpl INTEGER = newTopLevelClass(Integer.class.getName());
@@ -113,9 +108,7 @@ public abstract class ClassTypeImpl implements DeclaredType {
     return (o instanceof ClassTypeImpl) && toString().equals(o.toString());
   }
 
-  /**
-   * Fake implementation of {@link TypeElement} for unit tests.
-   */
+  /** Fake implementation of {@link TypeElement} for unit tests. */
   public abstract class ClassElementImpl implements TypeElement {
 
     @Override
@@ -136,7 +129,8 @@ public abstract class ClassTypeImpl implements DeclaredType {
     @Override
     public NestingKind getNestingKind() {
       return (enclosingElement.getKind() == ElementKind.PACKAGE)
-          ? NestingKind.TOP_LEVEL : NestingKind.MEMBER;
+          ? NestingKind.TOP_LEVEL
+          : NestingKind.MEMBER;
     }
 
     @Override

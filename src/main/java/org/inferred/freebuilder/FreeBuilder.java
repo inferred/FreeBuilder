@@ -25,13 +25,15 @@ import java.lang.annotation.Target;
  *
  * <h3>Quick start</h3>
  *
- * <p>Create your value type (e.g. {@code Person}) as an interface or abstract class, containing
- * an abstract accessor method for each desired field. This accessor must be non-void,
- * parameterless, and start with 'get' or 'is'. Add the {@code @FreeBuilder} annotation to your
- * class, and it will automatically generate an implementing class and a package-visible builder API
- * ({@code Person_Builder}), which you must subclass. For instance:
+ * <p>Create your value type (e.g. {@code Person}) as an interface or abstract class, containing an
+ * abstract accessor method for each desired field. This accessor must be non-void, parameterless,
+ * and start with 'get' or 'is'. Add the {@code @FreeBuilder} annotation to your class, and it will
+ * automatically generate an implementing class and a package-visible builder API ({@code
+ * Person_Builder}), which you must subclass. For instance:
  *
- * <blockquote><pre>&#64;FreeBuilder
+ * <blockquote>
+ *
+ * <pre>&#64;FreeBuilder
  * public interface Person {
  *   /** Returns the person's full (English) name. *&#47;
  *   String getName();
@@ -39,20 +41,25 @@ import java.lang.annotation.Target;
  *   int getAge();
  *   /** Builder of {&#64;link Person} instances. *&#47;
  *   class Builder extends Person_Builder { }
- * }</pre></blockquote>
+ * }</pre>
+ *
+ * </blockquote>
  *
  * <p>You can now use the {@code Builder} class:
  *
- * <blockquote><pre>Person person = new Person.Builder()
+ * <blockquote>
+ *
+ * <pre>Person person = new Person.Builder()
  *     .setName("Phil")
  *     .setAge(31)
  *     .build();
- * System.out.println(person);  // Person{name=Phil, age=31}</pre></blockquote>
+ * System.out.println(person);  // Person{name=Phil, age=31}</pre>
  *
- * @see
- * <a href="http://freebuilder.inferred.org/">Full documentation at freebuilder.inferred.org</a>
+ * </blockquote>
+ *
+ * @see <a href="http://freebuilder.inferred.org/">Full documentation at
+ *     freebuilder.inferred.org</a>
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface FreeBuilder {}
-

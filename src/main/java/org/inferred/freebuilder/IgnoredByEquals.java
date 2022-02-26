@@ -16,12 +16,11 @@ import java.util.Set;
  * also be ignored in the generated implementation of that method.
  *
  * <p><b>Warning</b>: Dropping properties from equality checks makes it very easy to accidentally
- * write broken unit tests (and hard to write good ones). If you find yourself wanting to use
- * this annotation, consider first whether you actually want a different collection type
- * (typicaly a {@link Map} rather than a {@link Set}, for instance), or whether you can use an
- * explicit field-ignoring {@link Comparator} in the parts of the code that need it.
+ * write broken unit tests (and hard to write good ones). If you find yourself wanting to use this
+ * annotation, consider first whether you actually want a different collection type (typicaly a
+ * {@link Map} rather than a {@link Set}, for instance), or whether you can use an explicit
+ * field-ignoring {@link Comparator} in the parts of the code that need it.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
-public @interface IgnoredByEquals {
-}
+public @interface IgnoredByEquals {}

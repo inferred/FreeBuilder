@@ -15,15 +15,11 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
-import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
-
 import static javax.tools.Diagnostic.Kind.ERROR;
-
-import org.inferred.freebuilder.processor.property.Property;
+import static org.inferred.freebuilder.processor.model.ModelUtils.getReturnType;
 
 import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -31,6 +27,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
+import org.inferred.freebuilder.processor.property.Property;
 
 class PrefixlessConvention implements NamingConvention {
 
@@ -50,16 +47,15 @@ class PrefixlessConvention implements NamingConvention {
     }
     String name = method.getSimpleName().toString();
     String capitalizedName = name.substring(0, 1).toUpperCase() + name.substring(1);
-    return Optional.of(new Property.Builder()
-        .setUsingBeanConvention(false)
-        .setName(name)
-        .setCapitalizedName(capitalizedName)
-        .setGetterName(name));
+    return Optional.of(
+        new Property.Builder()
+            .setUsingBeanConvention(false)
+            .setName(name)
+            .setCapitalizedName(capitalizedName)
+            .setGetterName(name));
   }
 
-  /**
-   * Verifies {@code method} is an abstract getter. Any deviations will be logged as an error.
-   */
+  /** Verifies {@code method} is an abstract getter. Any deviations will be logged as an error. */
   private boolean methodIsAbstractGetter(TypeElement valueType, ExecutableElement method) {
     Set<Modifier> modifiers = method.getModifiers();
     if (!modifiers.contains(Modifier.ABSTRACT)) {
@@ -70,9 +66,7 @@ class PrefixlessConvention implements NamingConvention {
     if (returnType.getKind() == TypeKind.VOID || !method.getParameters().isEmpty()) {
       if (declaredOnValueType) {
         messager.printMessage(
-            ERROR,
-            "Only getter methods may be declared abstract on FreeBuilder types",
-            method);
+            ERROR, "Only getter methods may be declared abstract on FreeBuilder types", method);
       } else {
         printNoImplementationMessage(valueType, method);
       }
@@ -84,7 +78,9 @@ class PrefixlessConvention implements NamingConvention {
   private void printNoImplementationMessage(TypeElement valueType, ExecutableElement method) {
     messager.printMessage(
         ERROR,
-        "No implementation found for non-getter method '" + method + "'; "
+        "No implementation found for non-getter method '"
+            + method
+            + "'; "
             + "cannot generate FreeBuilder implementation",
         valueType);
   }

@@ -18,21 +18,16 @@ package org.inferred.freebuilder.processor.model;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.source.Partial;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
+import org.inferred.freebuilder.processor.source.Partial;
 
-/**
- * Fake representation of a generic top-level type.
- */
+/** Fake representation of a generic top-level type. */
 public abstract class GenericMirror implements DeclaredType {
 
   static GenericMirror create(
@@ -62,7 +57,8 @@ public abstract class GenericMirror implements DeclaredType {
   @Override
   public GenericElement asElement() {
     GenericElement impl = element.get();
-    checkState(impl != null,
+    checkState(
+        impl != null,
         "Cannot call asElement() on a GenericMirror referencing an unbuilt GenericType");
     return impl;
   }

@@ -19,8 +19,10 @@ import java.util.Optional;
 @FreeBuilder
 public interface OptionalProperties extends Serializable {
   Optional<String> getFirstName();
+
   Optional<String> getMiddleName();
+
   Optional<String> getSurname();
 
-  class Builder extends OptionalProperties_Builder { }
+  class Builder extends OptionalProperties_Builder {}
 }

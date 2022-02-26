@@ -22,48 +22,49 @@ import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 public class StringListTest extends GWTTestCase {
 
-    private static final int RPC_TIMEOUT = 15000;
-    private static final String MODULE_NAME = "org.inferred.freebuilder.TestServer";
-    private static final StringListGwtType VALUE = new StringListGwtType.Builder()
-            .addNames("john", "alice", "sam")
-            .build();
+  private static final int RPC_TIMEOUT = 15000;
+  private static final String MODULE_NAME = "org.inferred.freebuilder.TestServer";
+  private static final StringListGwtType VALUE =
+      new StringListGwtType.Builder().addNames("john", "alice", "sam").build();
 
-    private StringListTestServiceAsync customFieldSerializerTestService;
+  private StringListTestServiceAsync customFieldSerializerTestService;
 
-    @Override
-    public String getModuleName() {
-        return MODULE_NAME;
-    }
+  @Override
+  public String getModuleName() {
+    return MODULE_NAME;
+  }
 
-    @Override
-    protected void gwtSetUp() throws Exception {
-        super.gwtSetUp();
-        delayTestFinish(RPC_TIMEOUT);
-    }
+  @Override
+  protected void gwtSetUp() throws Exception {
+    super.gwtSetUp();
+    delayTestFinish(RPC_TIMEOUT);
+  }
 
-    public void testSerialization() {
-        StringListTestServiceAsync service = getServiceAsync();
-        service.echo(VALUE, new AsyncCallback<StringListGwtType>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                throw new AssertionError(caught);
-            }
+  public void testSerialization() {
+    StringListTestServiceAsync service = getServiceAsync();
+    service.echo(
+        VALUE,
+        new AsyncCallback<StringListGwtType>() {
+          @Override
+          public void onFailure(Throwable caught) {
+            throw new AssertionError(caught);
+          }
 
-            @Override
-            public void onSuccess(StringListGwtType result) {
-                assertEquals(VALUE, result);
-                finishTest();
-            }
+          @Override
+          public void onSuccess(StringListGwtType result) {
+            assertEquals(VALUE, result);
+            finishTest();
+          }
         });
-    }
+  }
 
-    private StringListTestServiceAsync getServiceAsync() {
-        if (customFieldSerializerTestService == null) {
-            customFieldSerializerTestService =
-                    (StringListTestServiceAsync) GWT.create(StringListTestService.class);
-            ((ServiceDefTarget) customFieldSerializerTestService)
-                    .setServiceEntryPoint(GWT.getModuleBaseURL() + "string-list");
-        }
-        return customFieldSerializerTestService;
+  private StringListTestServiceAsync getServiceAsync() {
+    if (customFieldSerializerTestService == null) {
+      customFieldSerializerTestService =
+          (StringListTestServiceAsync) GWT.create(StringListTestService.class);
+      ((ServiceDefTarget) customFieldSerializerTestService)
+          .setServiceEntryPoint(GWT.getModuleBaseURL() + "string-list");
     }
+    return customFieldSerializerTestService;
+  }
 }

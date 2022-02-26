@@ -15,14 +15,12 @@
  */
 package org.inferred.freebuilder.processor.source.testing;
 
-import org.inferred.freebuilder.processor.source.QualifiedName;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
-
 import javax.tools.SimpleJavaFileObject;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
 
 /** Simple in-memory implementation of {@link javax.tools.JavaFileObject JavaFileObject}. */
 class CompilationUnit extends SimpleJavaFileObject {

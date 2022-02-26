@@ -16,16 +16,13 @@
 package org.inferred.freebuilder.processor.source.testing;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
-
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 /**
- * {@code CompilationException} is thrown when a
- * {@link javax.tools.JavaCompiler.CompilationTask CompilationTask} fails, to capture any emitted
- * {@link Diagnostic} instances.
+ * {@code CompilationException} is thrown when a {@link javax.tools.JavaCompiler.CompilationTask
+ * CompilationTask} fails, to capture any emitted {@link Diagnostic} instances.
  */
 public class CompilationException extends RuntimeException {
 

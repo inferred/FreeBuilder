@@ -16,7 +16,11 @@
 package org.inferred.freebuilder.processor.property;
 
 import com.google.common.collect.Ordering;
-
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.stream.Stream;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.Processor;
@@ -33,12 +37,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.stream.Stream;
 
 /**
  * Partial set of tests of {@link SortedSetProperty}. Tests common to unsorted tests can be found in
@@ -64,59 +62,64 @@ public class SortedSetMutateMethodTest {
 
   public SortedSetMutateMethodTest(FeatureSet features) {
     this.features = features;
-    datatype = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<String> items();", SortedSet.class)
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {")
-        .addLine("    @Override")
-        .addLine("    public Builder setComparatorForItems(%s<? super String> comparator) {",
-            Comparator.class)
-        .addLine("      return super.setComparatorForItems(comparator);")
-        .addLine("    }")
-        .addLine("")
-        .addLine("    @Override")
-        .addLine("    public Builder addItems(String element) {")
-              .addLine("      if (element.startsWith(\"0\")) {")
-              .addLine("        throw new IllegalArgumentException(\"%s\");",
-                  FAILED_VALIDATION_MESSAGE)
-              .addLine("      }")
-        .addLine("      return super.addItems(element);")
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("}");
+    datatype =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<String> items();", SortedSet.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override")
+            .addLine(
+                "    public Builder setComparatorForItems(%s<? super String> comparator) {",
+                Comparator.class)
+            .addLine("      return super.setComparatorForItems(comparator);")
+            .addLine("    }")
+            .addLine("")
+            .addLine("    @Override")
+            .addLine("    public Builder addItems(String element) {")
+            .addLine("      if (element.startsWith(\"0\")) {")
+            .addLine(
+                "        throw new IllegalArgumentException(\"%s\");", FAILED_VALIDATION_MESSAGE)
+            .addLine("      }")
+            .addLine("      return super.addItems(element);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}");
   }
 
-  public static final Comparator<String> NATURAL_ORDER = new Comparator<String>() {
-    private final Comparator<String> delegate =
-        Ordering.natural().onResultOf(Integer::parseInt);
+  public static final Comparator<String> NATURAL_ORDER =
+      new Comparator<String>() {
+        private final Comparator<String> delegate =
+            Ordering.natural().onResultOf(Integer::parseInt);
 
-    @Override
-    public int compare(String o1, String o2) {
-      return delegate.compare(o1, o2);
-    }
+        @Override
+        public int compare(String o1, String o2) {
+          return delegate.compare(o1, o2);
+        }
 
-    @Override
-    public String toString() {
-      return "'natural order'";
-    }
-  };
+        @Override
+        public String toString() {
+          return "'natural order'";
+        }
+      };
 
   @Test
   public void testGetsDataInOrder() {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        assertThat(items).containsExactly(\"3\", \"11\", \"222\").inOrder();")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .mutateItems(items -> {")
+                .addLine(
+                    "        assertThat(items).containsExactly(\"3\", \"11\", \"222\").inOrder();")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -125,14 +128,15 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        assertThat(items.comparator()).isEqualTo(NATURAL_ORDER);")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        assertThat(items.comparator()).isEqualTo(NATURAL_ORDER);")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -141,33 +145,35 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
-            .addLine("        assertThat(subset).containsExactly(\"6\", \"11\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
+                .addLine("        assertThat(subset).containsExactly(\"6\", \"11\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
   @Test
   public void testHeadSet_contents() {
     behaviorTester
-    .with(new Processor(features))
-    .with(datatype)
-    .with(testBuilder()
-        .addLine("new DataType.Builder()")
-        .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-        .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
-        .addLine("    .mutateItems(items -> {")
-        .addLine("        Set<String> subset = items.headSet(\"44\");")
-        .addLine("        assertThat(subset).containsExactly(\"3\", \"6\", \"11\");")
-        .addLine("    });")
-        .build())
-    .runTest();
+        .with(new Processor(features))
+        .with(datatype)
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.headSet(\"44\");")
+                .addLine("        assertThat(subset).containsExactly(\"3\", \"6\", \"11\");")
+                .addLine("    });")
+                .build())
+        .runTest();
   }
 
   @Test
@@ -175,15 +181,17 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.tailSet(\"6\");")
-            .addLine("        assertThat(subset).containsExactly(\"6\", \"11\", \"44\", \"222\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.tailSet(\"6\");")
+                .addLine(
+                    "        assertThat(subset).containsExactly(\"6\", \"11\", \"44\", \"222\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -194,14 +202,15 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
-            .addLine("        subset.add(\"007\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
+                .addLine("        subset.add(\"007\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -210,16 +219,17 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.subSet(\"44\", \"6\");")
-            .addLine("        subset.add(\"44\");")
-            .addLine("        subset.add(\"599999\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"44\", \"599999\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.subSet(\"44\", \"6\");")
+                .addLine("        subset.add(\"44\");")
+                .addLine("        subset.add(\"599999\");")
+                .addLine("    })")
+                .addLine("    .build();")
+                .addLine("assertThat(value.items()).containsExactly(\"44\", \"599999\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -228,17 +238,18 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
-            .addLine("        subset.add(\"43\");")
-            .addLine("        subset.add(\"6\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"6\", \"43\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
+                .addLine("        subset.add(\"43\");")
+                .addLine("        subset.add(\"6\");")
+                .addLine("    })")
+                .addLine("    .build();")
+                .addLine("assertThat(value.items()).containsExactly(\"6\", \"43\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -249,13 +260,14 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.subSet(\"44\", \"6\");")
-            .addLine("        subset.add(\"4399\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.subSet(\"44\", \"6\");")
+                .addLine("        subset.add(\"4399\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -266,14 +278,15 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
-            .addLine("        subset.add(\"5\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
+                .addLine("        subset.add(\"5\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -284,13 +297,14 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.subSet(\"44\", \"6\");")
-            .addLine("        subset.add(\"6\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.subSet(\"44\", \"6\");")
+                .addLine("        subset.add(\"6\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -301,14 +315,15 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
-            .addLine("        subset.add(\"44\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.subSet(\"6\", \"44\");")
+                .addLine("        subset.add(\"44\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -319,14 +334,15 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.headSet(\"44\");")
-            .addLine("        subset.add(\"007\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.headSet(\"44\");")
+                .addLine("        subset.add(\"007\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -335,16 +351,17 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.headSet(\"6\");")
-            .addLine("        subset.add(\"44\");")
-            .addLine("        subset.add(\"599999\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"44\", \"599999\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.headSet(\"6\");")
+                .addLine("        subset.add(\"44\");")
+                .addLine("        subset.add(\"599999\");")
+                .addLine("    })")
+                .addLine("    .build();")
+                .addLine("assertThat(value.items()).containsExactly(\"44\", \"599999\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -353,17 +370,18 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.headSet(\"44\");")
-            .addLine("        subset.add(\"43\");")
-            .addLine("        subset.add(\"6\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"6\", \"43\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.headSet(\"44\");")
+                .addLine("        subset.add(\"43\");")
+                .addLine("        subset.add(\"6\");")
+                .addLine("    })")
+                .addLine("    .build();")
+                .addLine("assertThat(value.items()).containsExactly(\"6\", \"43\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -374,13 +392,14 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.headSet(\"6\");")
-            .addLine("        subset.add(\"6\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.headSet(\"6\");")
+                .addLine("        subset.add(\"6\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -391,14 +410,15 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.headSet(\"44\");")
-            .addLine("        subset.add(\"44\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.headSet(\"44\");")
+                .addLine("        subset.add(\"44\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -409,14 +429,15 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.tailSet(\"6\");")
-            .addLine("        subset.add(\"007\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.tailSet(\"6\");")
+                .addLine("        subset.add(\"007\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -425,16 +446,17 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.tailSet(\"44\");")
-            .addLine("        subset.add(\"44\");")
-            .addLine("        subset.add(\"599999\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"44\", \"599999\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.tailSet(\"44\");")
+                .addLine("        subset.add(\"44\");")
+                .addLine("        subset.add(\"599999\");")
+                .addLine("    })")
+                .addLine("    .build();")
+                .addLine("assertThat(value.items()).containsExactly(\"44\", \"599999\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -443,17 +465,18 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.tailSet(\"6\");")
-            .addLine("        subset.add(\"43\");")
-            .addLine("        subset.add(\"6\");")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"6\", \"43\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.tailSet(\"6\");")
+                .addLine("        subset.add(\"43\");")
+                .addLine("        subset.add(\"6\");")
+                .addLine("    })")
+                .addLine("    .build();")
+                .addLine("assertThat(value.items()).containsExactly(\"6\", \"43\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -464,13 +487,14 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.tailSet(\"44\");")
-            .addLine("        subset.add(\"4399\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.tailSet(\"44\");")
+                .addLine("        subset.add(\"4399\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -481,14 +505,15 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Set<String> subset = items.tailSet(\"6\");")
-            .addLine("        subset.add(\"5\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Set<String> subset = items.tailSet(\"6\");")
+                .addLine("        subset.add(\"5\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -497,15 +522,16 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        assertThat(items.first()).isEqualTo(\"3\");")
-            .addLine("        assertThat(items.last()).isEqualTo(\"222\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        assertThat(items.first()).isEqualTo(\"3\");")
+                .addLine("        assertThat(items.last()).isEqualTo(\"222\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -514,16 +540,17 @@ public class SortedSetMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        SortedSet<String> subset = items.subSet(\"6\", \"44\");")
-            .addLine("        assertThat(subset.first()).isEqualTo(\"6\");")
-            .addLine("        assertThat(subset.last()).isEqualTo(\"11\");")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"6\", \"11\", \"3\", \"222\", \"44\")")
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        SortedSet<String> subset = items.subSet(\"6\", \"44\");")
+                .addLine("        assertThat(subset.first()).isEqualTo(\"6\");")
+                .addLine("        assertThat(subset.last()).isEqualTo(\"11\");")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 

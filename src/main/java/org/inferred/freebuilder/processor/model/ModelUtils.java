@@ -15,20 +15,14 @@
  */
 package org.inferred.freebuilder.processor.model;
 
+import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.inferred.freebuilder.processor.source.Shading.unshadedName;
 
-import static javax.lang.model.util.ElementFilter.methodsIn;
-
 import com.google.common.collect.ImmutableSet;
-
-import org.inferred.freebuilder.processor.source.QualifiedName;
-import org.inferred.freebuilder.processor.source.Shading;
-
 import java.lang.annotation.Annotation;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -45,10 +39,10 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleElementVisitor8;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
+import org.inferred.freebuilder.processor.source.QualifiedName;
+import org.inferred.freebuilder.processor.source.Shading;
 
-/**
- * Utility methods for the javax.lang.model package.
- */
+/** Utility methods for the javax.lang.model package. */
 public class ModelUtils {
 
   /**
@@ -86,12 +80,8 @@ public class ModelUtils {
   }
 
   public static Optional<AnnotationValue> findProperty(
-      AnnotationMirror annotation,
-      String propertyName) {
-    return annotation
-        .getElementValues()
-        .entrySet()
-        .stream()
+      AnnotationMirror annotation, String propertyName) {
+    return annotation.getElementValues().entrySet().stream()
         .filter(element -> element.getKey().getSimpleName().contentEquals(propertyName))
         .findAny()
         .map(Entry::getValue);
@@ -138,8 +128,7 @@ public class ModelUtils {
   /** Returns the method on {@code type} that overrides method {@code methodName(params)}. */
   public static Optional<ExecutableElement> override(
       TypeElement type, Types types, String methodName, TypeMirror... params) {
-    return methodsIn(type.getEnclosedElements())
-        .stream()
+    return methodsIn(type.getEnclosedElements()).stream()
         .filter(method -> signatureMatches(method, types, methodName, params))
         .findAny();
   }
@@ -163,37 +152,39 @@ public class ModelUtils {
   }
 
   /**
-   * Returns true if a method with a variable number of {@code elementType} arguments needs a
-   * {@code &#64;SafeVarargs} annotation to avoid compiler warnings in Java 7+.
+   * Returns true if a method with a variable number of {@code elementType} arguments needs a {@code
+   * &#64;SafeVarargs} annotation to avoid compiler warnings in Java 7+.
    */
   public static boolean needsSafeVarargs(TypeMirror elementType) {
-    return elementType.accept(new SimpleTypeVisitor8<Boolean, Void>() {
-      @Override
-      public Boolean visitDeclared(DeclaredType t, Void p) {
-        // Set<?>... does not need @SafeVarargs; Set<Integer>... or Set<? extends Number> does.
-        for (TypeMirror typeArgument : t.getTypeArguments()) {
-          if (!isPlainWildcard(typeArgument)) {
+    return elementType.accept(
+        new SimpleTypeVisitor8<Boolean, Void>() {
+          @Override
+          public Boolean visitDeclared(DeclaredType t, Void p) {
+            // Set<?>... does not need @SafeVarargs; Set<Integer>... or Set<? extends Number> does.
+            for (TypeMirror typeArgument : t.getTypeArguments()) {
+              if (!isPlainWildcard(typeArgument)) {
+                return true;
+              }
+            }
+            return false;
+          }
+
+          @Override
+          public Boolean visitTypeVariable(TypeVariable t, Void p) {
             return true;
           }
-        }
-        return false;
-      }
 
-      @Override
-      public Boolean visitTypeVariable(TypeVariable t, Void p) {
-        return true;
-      }
+          @Override
+          protected Boolean defaultAction(TypeMirror e, Void p) {
+            return false;
+          }
 
-      @Override
-      protected Boolean defaultAction(TypeMirror e, Void p) {
-        return false;
-      }
-
-      @Override
-      public Boolean visitUnknown(TypeMirror t, Void p) {
-        return false;
-      }
-    }, null);
+          @Override
+          public Boolean visitUnknown(TypeMirror t, Void p) {
+            return false;
+          }
+        },
+        null);
   }
 
   public static Set<ExecutableElement> only(Modifier modifier, Set<ExecutableElement> methods) {
@@ -207,22 +198,24 @@ public class ModelUtils {
   }
 
   private static boolean isPlainWildcard(TypeMirror type) {
-    return type.accept(new SimpleTypeVisitor8<Boolean, Void>() {
-      @Override
-      public Boolean visitWildcard(WildcardType t, Void p) {
-        return (t.getExtendsBound() == null) && (t.getSuperBound() == null);
-      }
+    return type.accept(
+        new SimpleTypeVisitor8<Boolean, Void>() {
+          @Override
+          public Boolean visitWildcard(WildcardType t, Void p) {
+            return (t.getExtendsBound() == null) && (t.getSuperBound() == null);
+          }
 
-      @Override
-      protected Boolean defaultAction(TypeMirror e, Void p) {
-        return false;
-      }
+          @Override
+          protected Boolean defaultAction(TypeMirror e, Void p) {
+            return false;
+          }
 
-      @Override
-      public Boolean visitUnknown(TypeMirror t, Void p) {
-        return false;
-      }
-    }, null);
+          @Override
+          public Boolean visitUnknown(TypeMirror t, Void p) {
+            return false;
+          }
+        },
+        null);
   }
 
   private static boolean signatureMatches(
@@ -288,7 +281,9 @@ public class ModelUtils {
   /**
    * Determines the return type of {@code method}, if called on an instance of type {@code type}.
    *
-   * <p>For instance, in this example, myY.getProperty() returns List&lt;T&gt;, not T:<pre><code>
+   * <p>For instance, in this example, myY.getProperty() returns List&lt;T&gt;, not T:
+   *
+   * <pre><code>
    *    interface X&lt;T&gt; {
    *      T getProperty();
    *    }
@@ -304,7 +299,9 @@ public class ModelUtils {
   /**
    * Determines the return type of {@code method}, if called on an instance of type {@code type}.
    *
-   * <p>For instance, in this example, myY.getProperty() returns List&lt;T&gt;, not T:<pre><code>
+   * <p>For instance, in this example, myY.getProperty() returns List&lt;T&gt;, not T:
+   *
+   * <pre><code>
    *    interface X&lt;T&gt; {
    *      T getProperty();
    *    }
@@ -326,11 +323,13 @@ public class ModelUtils {
   }
 
   /**
-   * Returns the upper bound of {@code type}.<ul>
-   * <li>T -> T
-   * <li>? -> Object
-   * <li>? extends T -> T
-   * <li>? super T -> Object
+   * Returns the upper bound of {@code type}.
+   *
+   * <ul>
+   *   <li>T -> T
+   *   <li>? -> Object
+   *   <li>? extends T -> T
+   *   <li>? super T -> Object
    * </ul>
    */
   public static TypeMirror upperBound(Elements elements, TypeMirror type) {
@@ -371,5 +370,4 @@ public class ModelUtils {
     }
     return false;
   }
-
 }

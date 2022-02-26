@@ -17,15 +17,12 @@ package org.inferred.freebuilder.processor.model;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import org.inferred.freebuilder.processor.source.Partial;
-
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeVisitor;
+import org.inferred.freebuilder.processor.source.Partial;
 
-/**
- * Fake implementation of {@link PrimitiveType} for unit tests.
- */
+/** Fake implementation of {@link PrimitiveType} for unit tests. */
 public abstract class PrimitiveTypeImpl implements PrimitiveType {
 
   public static final PrimitiveType CHAR = Partial.of(PrimitiveTypeImpl.class, TypeKind.CHAR);

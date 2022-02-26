@@ -19,25 +19,23 @@ import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.Excerpts;
-import org.inferred.freebuilder.processor.source.Type;
-
 import java.util.Optional;
 import java.util.Set;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.Excerpts;
+import org.inferred.freebuilder.processor.source.Type;
 
 /** Standard ways of constructing a default Builder. */
 public enum BuilderFactory {
 
   /** A new Builder can be made by calling the class' no-args constructor. */
   NO_ARGS_CONSTRUCTOR {
-    @Override public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
+    @Override
+    public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
       if (typeInference == TypeInference.INFERRED_TYPES) {
         return Excerpts.add("%s()", builderType.constructor());
       } else {
@@ -48,11 +46,13 @@ public enum BuilderFactory {
 
   /** The enclosing class provides a static builder() factory method. */
   BUILDER_METHOD {
-    @Override public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
+    @Override
+    public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
       if (typeInference == TypeInference.INFERRED_TYPES) {
         return Excerpts.add("%s.builder()", builderType.getQualifiedName().enclosingType());
       } else {
-        return Excerpts.add("%s.%sbuilder()",
+        return Excerpts.add(
+            "%s.%sbuilder()",
             builderType.getQualifiedName().enclosingType(), builderType.typeParameters());
       }
     }
@@ -60,11 +60,13 @@ public enum BuilderFactory {
 
   /** The enclosing class provides a static newBuilder() factory method. */
   NEW_BUILDER_METHOD {
-    @Override public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
+    @Override
+    public Excerpt newBuilder(Type builderType, TypeInference typeInference) {
       if (typeInference == TypeInference.INFERRED_TYPES) {
         return Excerpts.add("%s.newBuilder()", builderType.getQualifiedName().enclosingType());
       } else {
-        return Excerpts.add("%s.%snewBuilder()",
+        return Excerpts.add(
+            "%s.%snewBuilder()",
             builderType.getQualifiedName().enclosingType(), builderType.typeParameters());
       }
     }
@@ -82,9 +84,9 @@ public enum BuilderFactory {
     /**
      * Types should be inferred where possible, as specifying them explicitly would be redundant.
      *
-     * <p>Use this when the expression result is immediately assigned to a variable or returned
-     * from a method. Do not use this when the expression result is passed directly into a method,
-     * as Java 6+7 cannot do type inference in this situation.
+     * <p>Use this when the expression result is immediately assigned to a variable or returned from
+     * a method. Do not use this when the expression result is passed directly into a method, as
+     * Java 6+7 cannot do type inference in this situation.
      */
     INFERRED_TYPES
   }

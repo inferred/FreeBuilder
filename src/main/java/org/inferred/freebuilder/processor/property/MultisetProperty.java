@@ -38,7 +38,17 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
-
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.stream.BaseStream;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedMultiset;
@@ -48,22 +58,7 @@ import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Type;
 import org.inferred.freebuilder.processor.source.Variable;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Spliterator;
-import java.util.stream.BaseStream;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
-/**
- * {@link PropertyCodeGenerator} providing fluent methods for {@link Multiset} properties.
- */
+/** {@link PropertyCodeGenerator} providing fluent methods for {@link Multiset} properties. */
 class MultisetProperty extends PropertyCodeGenerator {
 
   static class Factory implements PropertyCodeGenerator.Factory {
@@ -83,26 +78,27 @@ class MultisetProperty extends PropertyCodeGenerator {
       boolean overridesVarargsAddMethod =
           hasVarargsAddMethodOverride(config, unboxedType.orElse(elementType));
 
-      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
-          config.getBuilder(),
-          mutator(config.getProperty()),
-          consumer(multiset(elementType, config.getElements(), config.getTypes())),
-          config.getElements(),
-          config.getTypes());
+      FunctionalType mutatorType =
+          functionalTypeAcceptedByMethod(
+              config.getBuilder(),
+              mutator(config.getProperty()),
+              consumer(multiset(elementType, config.getElements(), config.getTypes())),
+              config.getElements(),
+              config.getTypes());
 
-      return Optional.of(new MultisetProperty(
-          config.getDatatype(),
-          config.getProperty(),
-          needsSafeVarargs,
-          overridesSetCountMethod,
-          overridesVarargsAddMethod,
-          elementType,
-          unboxedType,
-          mutatorType));
+      return Optional.of(
+          new MultisetProperty(
+              config.getDatatype(),
+              config.getProperty(),
+              needsSafeVarargs,
+              overridesSetCountMethod,
+              overridesVarargsAddMethod,
+              elementType,
+              unboxedType,
+              mutatorType));
     }
 
-    private static boolean hasSetCountMethodOverride(
-        Config config, TypeMirror type) {
+    private static boolean hasSetCountMethodOverride(Config config, TypeMirror type) {
       return overrides(
           config.getBuilder(),
           config.getTypes(),
@@ -119,10 +115,7 @@ class MultisetProperty extends PropertyCodeGenerator {
           config.getTypes().getArrayType(elementType));
     }
 
-    private static TypeMirror multiset(
-        TypeMirror elementType,
-        Elements elements,
-        Types types) {
+    private static TypeMirror multiset(TypeMirror elementType, Elements elements, Types types) {
       TypeElement multisetType = elements.getTypeElement(Multiset.class.getName());
       return types.getDeclaredType(multisetType, elementType);
     }
@@ -155,13 +148,14 @@ class MultisetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addValueFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %s<%s> %s;",
-        ImmutableMultiset.class, elementType, property.getField());
+    code.addLine(
+        "private final %s<%s> %s;", ImmutableMultiset.class, elementType, property.getField());
   }
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %1$s<%2$s> %3$s = %1$s.create();",
+    code.addLine(
+        "private final %1$s<%2$s> %3$s = %1$s.create();",
         LinkedHashMultiset.class, elementType, property.getField());
   }
 
@@ -182,7 +176,8 @@ class MultisetProperty extends PropertyCodeGenerator {
   private void addAdd(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Adds {@code element} to the multiset to be returned from %s.",
+        .addLine(
+            " * Adds {@code element} to the multiset to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
@@ -190,10 +185,9 @@ class MultisetProperty extends PropertyCodeGenerator {
       code.addLine(" * @throws NullPointerException if {@code element} is null");
     }
     code.addLine(" */")
-        .addLine("public %s %s(%s element) {",
-            datatype.getBuilder(),
-            addMethod(property),
-            unboxedType.orElse(elementType))
+        .addLine(
+            "public %s %s(%s element) {",
+            datatype.getBuilder(), addMethod(property), unboxedType.orElse(elementType))
         .addLine("  %s(element, 1);", addCopiesMethod(property))
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
@@ -223,10 +217,9 @@ class MultisetProperty extends PropertyCodeGenerator {
     if (needsSafeVarargs && !overridesVarargsAddMethod) {
       code.add("final ");
     }
-    code.add("%s %s(%s... elements) {\n",
-           datatype.getBuilder(),
-            addMethod(property),
-            unboxedType.orElse(elementType))
+    code.add(
+            "%s %s(%s... elements) {\n",
+            datatype.getBuilder(), addMethod(property), unboxedType.orElse(elementType))
         .addLine("  for (%s element : elements) {", unboxedType.orElse(elementType))
         .addLine("    %s(element, 1);", addCopiesMethod(property))
         .addLine("  }")
@@ -236,11 +229,9 @@ class MultisetProperty extends PropertyCodeGenerator {
 
   private void addSpliteratorAddAll(SourceBuilder code) {
     addJavadocForAddAll(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(),
-            addAllMethod(property),
-            Spliterator.class,
-            elementType)
+    code.addLine(
+            "public %s %s(%s<? extends %s> elements) {",
+            datatype.getBuilder(), addAllMethod(property), Spliterator.class, elementType)
         .addLine("  elements.forEachRemaining(element -> {")
         .addLine("    %s(element, 1);", addCopiesMethod(property))
         .addLine("  });")
@@ -250,11 +241,9 @@ class MultisetProperty extends PropertyCodeGenerator {
 
   private void addStreamAddAll(SourceBuilder code) {
     addJavadocForAddAll(code);
-    code.addLine("public %s %s(%s<? extends %s, ?> elements) {",
-            datatype.getBuilder(),
-            addAllMethod(property),
-            BaseStream.class,
-            elementType)
+    code.addLine(
+            "public %s %s(%s<? extends %s, ?> elements) {",
+            datatype.getBuilder(), addAllMethod(property), BaseStream.class, elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
   }
@@ -262,11 +251,9 @@ class MultisetProperty extends PropertyCodeGenerator {
   private void addIterableAddAll(SourceBuilder code) {
     addJavadocForAddAll(code);
     addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s> elements) {",
-            datatype.getBuilder(),
-            addAllMethod(property),
-            Iterable.class,
-            elementType)
+    code.addLine(
+            "public %s %s(%s<? extends %s> elements) {",
+            datatype.getBuilder(), addAllMethod(property), Iterable.class, elementType)
         .addLine("  return %s(elements.spliterator());", addAllMethod(property))
         .addLine("}");
   }
@@ -287,7 +274,8 @@ class MultisetProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds a number of occurrences of {@code element} to the multiset to be")
-        .addLine(" * returned from %s.",
+        .addLine(
+            " * returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
@@ -296,11 +284,11 @@ class MultisetProperty extends PropertyCodeGenerator {
     }
     code.addLine(" * @throws IllegalArgumentException if {@code occurrences} is negative")
         .addLine(" */")
-        .addLine("public %s %s(%s element, int occurrences) {",
-            datatype.getBuilder(),
-            addCopiesMethod(property),
-            unboxedType.orElse(elementType))
-        .addLine("  %s(element, %s.count(element) + occurrences);",
+        .addLine(
+            "public %s %s(%s element, int occurrences) {",
+            datatype.getBuilder(), addCopiesMethod(property), unboxedType.orElse(elementType))
+        .addLine(
+            "  %s(element, %s.count(element) + occurrences);",
             setCountMethod(property), property.getField())
         .addLine("  return (%s) this;", datatype.getBuilder())
         .addLine("}");
@@ -309,40 +297,43 @@ class MultisetProperty extends PropertyCodeGenerator {
   private void addMutate(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Applies {@code mutator} to the multiset to be returned from %s.",
+        .addLine(
+            " * Applies {@code mutator} to the multiset to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the multiset in-place. {@code mutator} is a void")
         .addLine(" * consumer, so any value returned from a lambda will be ignored. Take care")
-        .addLine(" * not to call pure functions, like %s.",
+        .addLine(
+            " * not to call pure functions, like %s.",
             Type.from(Collection.class).javadocNoArgMethodLink("stream"))
         .addLine(" *")
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s mutator) {",
-            datatype.getBuilder(),
-            mutator(property),
-            mutatorType.getFunctionalInterface());
+        .addLine(
+            "public %s %s(%s mutator) {",
+            datatype.getBuilder(), mutator(property), mutatorType.getFunctionalInterface());
     if (overridesSetCountMethod) {
-      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+      code.addLine(
+          "  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(),
           CheckedMultiset.TYPE,
           property.getField(),
           setCountMethod(property));
     } else {
-      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      code.addLine(
+              "  // If %s is overridden, this method will be updated to delegate to it",
               setCountMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    code.addLine("  return (%s) this;", datatype.getBuilder())
-        .addLine("}");
+    code.addLine("  return (%s) this;", datatype.getBuilder()).addLine("}");
   }
 
   private void addClear(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Clears the multiset to be returned from %s.",
+        .addLine(
+            " * Clears the multiset to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName())
@@ -357,7 +348,8 @@ class MultisetProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds or removes the necessary occurrences of {@code element} to/from the")
-        .addLine(" * multiset to be returned from %s, such that it attains the",
+        .addLine(
+            " * multiset to be returned from %s, such that it attains the",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * desired count.")
         .addLine(" *")
@@ -367,10 +359,9 @@ class MultisetProperty extends PropertyCodeGenerator {
     }
     code.addLine(" * @throws IllegalArgumentException if {@code occurrences} is negative")
         .addLine(" */")
-        .addLine("public %s %s(%s element, int occurrences) {",
-            datatype.getBuilder(),
-            setCountMethod(property),
-            unboxedType.orElse(elementType));
+        .addLine(
+            "public %s %s(%s element, int occurrences) {",
+            datatype.getBuilder(), setCountMethod(property), unboxedType.orElse(elementType));
     if (!unboxedType.isPresent()) {
       code.addLine("  %s.checkNotNull(element);", Preconditions.class);
     }
@@ -393,8 +384,9 @@ class MultisetProperty extends PropertyCodeGenerator {
 
   @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
-    code.addLine("%s = %s.copyOf(%s);",
-            finalField, ImmutableMultiset.class, property.getField().on(builder));
+    code.addLine(
+        "%s = %s.copyOf(%s);",
+        finalField, ImmutableMultiset.class, property.getField().on(builder));
   }
 
   @Override

@@ -6,17 +6,15 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.LazyName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.ValueType;
 import org.inferred.freebuilder.processor.source.feature.Jsr305;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
 
 /**
  * Excerpts defining a multimap implementation that delegates to a provided put method to perform
@@ -24,8 +22,7 @@ import java.util.function.BiConsumer;
  */
 public class CheckedListMultimap extends ValueType implements Excerpt {
 
-  public static final LazyName TYPE =
-      LazyName.of("CheckedListMultimap", new CheckedListMultimap());
+  public static final LazyName TYPE = LazyName.of("CheckedListMultimap", new CheckedListMultimap());
 
   private CheckedListMultimap() {}
 
@@ -36,14 +33,14 @@ public class CheckedListMultimap extends ValueType implements Excerpt {
         .addLine(" * A multimap implementation that delegates to a provided put method")
         .addLine(" * to perform entry validation and insertion into a backing multimap.")
         .addLine(" */")
-        .addLine("private static class %s<K, V> extends %s<K, V> {",
-            TYPE, ForwardingListMultimap.class)
+        .addLine(
+            "private static class %s<K, V> extends %s<K, V> {", TYPE, ForwardingListMultimap.class)
         .addLine("")
         .addLine("  private final %s<K, V> multimap;", ListMultimap.class)
         .addLine("  private final %s<K, V> put;", BiConsumer.class)
         .addLine("")
-        .addLine("  %s(%s<K, V> multimap, %s<K, V> put) {",
-            TYPE, ListMultimap.class, BiConsumer.class)
+        .addLine(
+            "  %s(%s<K, V> multimap, %s<K, V> put) {", TYPE, ListMultimap.class, BiConsumer.class)
         .addLine("    this.multimap = multimap;")
         .addLine("    this.put = put;")
         .addLine("  }")
@@ -52,13 +49,13 @@ public class CheckedListMultimap extends ValueType implements Excerpt {
         .addLine("    return multimap;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean put(%1$s K key, %1$s V value) {",
-            Jsr305.nullable())
+        .addLine("  @Override public boolean put(%1$s K key, %1$s V value) {", Jsr305.nullable())
         .addLine("    put.accept(key, value);")
         .addLine("    return true;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean putAll(%s K key, %s<? extends V> values) {",
+        .addLine(
+            "  @Override public boolean putAll(%s K key, %s<? extends V> values) {",
             Jsr305.nullable(), Iterable.class)
         .addLine("    boolean anyModified = false;")
         .addLine("    for (V value : values) {")
@@ -68,11 +65,12 @@ public class CheckedListMultimap extends ValueType implements Excerpt {
         .addLine("    return anyModified;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean putAll(%s<? extends K, ? extends V> multimap) {",
+        .addLine(
+            "  @Override public boolean putAll(%s<? extends K, ? extends V> multimap) {",
             Multimap.class)
         .addLine("    boolean changed = false;")
-        .addLine("    for (%s<? extends K, ? extends V> entry : multimap.entries()) {",
-            Map.Entry.class)
+        .addLine(
+            "    for (%s<? extends K, ? extends V> entry : multimap.entries()) {", Map.Entry.class)
         .addLine("      put.accept(entry.getKey(), entry.getValue());")
         .addLine("      changed = true;")
         .addLine("    }")
@@ -80,7 +78,8 @@ public class CheckedListMultimap extends ValueType implements Excerpt {
         .addLine("  }")
         .addLine("")
         .addLine("  @Override")
-        .addLine("  public %s<V> replaceValues(%s K key, %s<? extends V> values) {",
+        .addLine(
+            "  public %s<V> replaceValues(%s K key, %s<? extends V> values) {",
             List.class, Jsr305.nullable(), Iterable.class)
         .addLine("    %s.checkNotNull(values);", Preconditions.class)
         .addLine("    %s<V> result = removeAll(key);", List.class)
@@ -94,7 +93,8 @@ public class CheckedListMultimap extends ValueType implements Excerpt {
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public %s<K, %s<V>> asMap() {", Map.class, Collection.class)
-        .addLine("    return %s.transformEntries(%s.asMap(multimap), (key, values) -> ",
+        .addLine(
+            "    return %s.transformEntries(%s.asMap(multimap), (key, values) -> ",
             Maps.class, Multimaps.class)
         .addLine("        new %s<>(values, value -> put.accept(key, value)));", CheckedList.TYPE)
         .addLine("  }")

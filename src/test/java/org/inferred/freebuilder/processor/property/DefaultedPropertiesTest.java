@@ -17,7 +17,8 @@ package org.inferred.freebuilder.processor.property;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
+import java.util.Arrays;
+import java.util.List;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -36,9 +37,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class DefaultedPropertiesTest {
@@ -49,11 +47,10 @@ public class DefaultedPropertiesTest {
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<Boolean> optimized = ImmutableList.of(false, true);
     List<FeatureSet> features = FeatureSets.ALL;
-    return () -> Lists
-        .cartesianProduct(conventions, optimized, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(conventions, optimized, features).stream()
+            .map(List::toArray)
+            .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -65,23 +62,22 @@ public class DefaultedPropertiesTest {
   private final SourceBuilder dataType;
 
   public DefaultedPropertiesTest(
-      NamingConvention convention,
-      boolean optimized,
-      FeatureSet features) {
+      NamingConvention convention, boolean optimized, FeatureSet features) {
     this.convention = convention;
     this.features = features;
 
-    dataType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  int %s;", convention.get("propertyA"))
-        .addLine("  boolean %s;", convention.is("propertyB"))
-        .addLine("  String %s;", convention.get("propertyC"))
-        .addLine("  double %s;", convention.get("propertyD"))
-        .addLine("")
-        .addLine("  class Builder extends DataType_Builder {")
-        .addLine("    public Builder() {");
+    dataType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  int %s;", convention.get("propertyA"))
+            .addLine("  boolean %s;", convention.is("propertyB"))
+            .addLine("  String %s;", convention.get("propertyC"))
+            .addLine("  double %s;", convention.get("propertyD"))
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine("    public Builder() {");
     if (!optimized) {
       // Test that defaults work correctly when we cannot detect them at compile-time.
       dataType.addLine("if (true) {  // Disable optimization in javac");
@@ -94,10 +90,7 @@ public class DefaultedPropertiesTest {
     if (!optimized) {
       dataType.addLine("}");
     }
-    dataType
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("}");
+    dataType.addLine("    }").addLine("  }").addLine("}");
   }
 
   @Test
@@ -105,19 +98,20 @@ public class DefaultedPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .%s(\"hello\")", convention.set("propertyC"))
-            .addLine("    .%s(3.2)", convention.set("propertyD"))
-            .addLine("    .mergeFrom(new DataType.Builder())")
-            .addLine("    .build();")
-            .addLine("assertEquals(11, value.%s);", convention.get("propertyA"))
-            .addLine("assertTrue(value.%s);", convention.is("propertyB"))
-            .addLine("assertEquals(\"hello\", value.%s);", convention.get("propertyC"))
-            .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .%s(\"hello\")", convention.set("propertyC"))
+                .addLine("    .%s(3.2)", convention.set("propertyD"))
+                .addLine("    .mergeFrom(new DataType.Builder())")
+                .addLine("    .build();")
+                .addLine("assertEquals(11, value.%s);", convention.get("propertyA"))
+                .addLine("assertTrue(value.%s);", convention.is("propertyB"))
+                .addLine("assertEquals(\"hello\", value.%s);", convention.get("propertyC"))
+                .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
+                .build())
         .runTest();
   }
 
@@ -126,19 +120,20 @@ public class DefaultedPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .%s(\"hello\")", convention.set("propertyC"))
-            .addLine("    .%s(3.2)", convention.set("propertyD"))
-            .addLine("    .mergeFrom(new DataType.Builder().build())")
-            .addLine("    .build();")
-            .addLine("assertEquals(11, value.%s);", convention.get("propertyA"))
-            .addLine("assertTrue(value.%s);", convention.is("propertyB"))
-            .addLine("assertEquals(\"hello\", value.%s);", convention.get("propertyC"))
-            .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .%s(\"hello\")", convention.set("propertyC"))
+                .addLine("    .%s(3.2)", convention.set("propertyD"))
+                .addLine("    .mergeFrom(new DataType.Builder().build())")
+                .addLine("    .build();")
+                .addLine("assertEquals(11, value.%s);", convention.get("propertyA"))
+                .addLine("assertTrue(value.%s);", convention.is("propertyB"))
+                .addLine("assertEquals(\"hello\", value.%s);", convention.get("propertyC"))
+                .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
+                .build())
         .runTest();
   }
 
@@ -147,19 +142,20 @@ public class DefaultedPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .mergeFrom(new DataType.Builder()")
-            .addLine("        .%s(13)", convention.set("propertyA"))
-            .addLine("        .%s(\"hello\")", convention.set("propertyC"))
-            .addLine("        .%s(3.2))", convention.set("propertyD"))
-            .addLine("    .build();")
-            .addLine("assertEquals(13, value.%s);", convention.get("propertyA"))
-            .addLine("assertTrue(value.%s);", convention.is("propertyB"))
-            .addLine("assertEquals(\"hello\", value.%s);", convention.get("propertyC"))
-            .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .mergeFrom(new DataType.Builder()")
+                .addLine("        .%s(13)", convention.set("propertyA"))
+                .addLine("        .%s(\"hello\")", convention.set("propertyC"))
+                .addLine("        .%s(3.2))", convention.set("propertyD"))
+                .addLine("    .build();")
+                .addLine("assertEquals(13, value.%s);", convention.get("propertyA"))
+                .addLine("assertTrue(value.%s);", convention.is("propertyB"))
+                .addLine("assertEquals(\"hello\", value.%s);", convention.get("propertyC"))
+                .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
+                .build())
         .runTest();
   }
 
@@ -168,20 +164,21 @@ public class DefaultedPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .mergeFrom(new DataType.Builder()")
-            .addLine("        .%s(13)", convention.set("propertyA"))
-            .addLine("        .%s(\"hello\")", convention.set("propertyC"))
-            .addLine("        .%s(3.2)", convention.set("propertyD"))
-            .addLine("        .build())")
-            .addLine("    .build();")
-            .addLine("assertEquals(13, value.%s);", convention.get("propertyA"))
-            .addLine("assertTrue(value.%s);", convention.is("propertyB"))
-            .addLine("assertEquals(\"hello\", value.%s);", convention.get("propertyC"))
-            .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .mergeFrom(new DataType.Builder()")
+                .addLine("        .%s(13)", convention.set("propertyA"))
+                .addLine("        .%s(\"hello\")", convention.set("propertyC"))
+                .addLine("        .%s(3.2)", convention.set("propertyD"))
+                .addLine("        .build())")
+                .addLine("    .build();")
+                .addLine("assertEquals(13, value.%s);", convention.get("propertyA"))
+                .addLine("assertTrue(value.%s);", convention.is("propertyB"))
+                .addLine("assertEquals(\"hello\", value.%s);", convention.get("propertyC"))
+                .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
+                .build())
         .runTest();
   }
 
@@ -190,22 +187,23 @@ public class DefaultedPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .%s(\"hello\")", convention.set("propertyC"))
-            .addLine("    .%s(1.9)", convention.set("propertyD"))
-            .addLine("    .mergeFrom(new DataType.Builder()")
-            .addLine("        .%s(13)", convention.set("propertyA"))
-            .addLine("        .%s(\"goodbye\")", convention.set("propertyC"))
-            .addLine("        .%s(3.2))", convention.set("propertyD"))
-            .addLine("    .build();")
-            .addLine("assertEquals(13, value.%s);", convention.get("propertyA"))
-            .addLine("assertTrue(value.%s);", convention.is("propertyB"))
-            .addLine("assertEquals(\"goodbye\", value.%s);", convention.get("propertyC"))
-            .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .%s(\"hello\")", convention.set("propertyC"))
+                .addLine("    .%s(1.9)", convention.set("propertyD"))
+                .addLine("    .mergeFrom(new DataType.Builder()")
+                .addLine("        .%s(13)", convention.set("propertyA"))
+                .addLine("        .%s(\"goodbye\")", convention.set("propertyC"))
+                .addLine("        .%s(3.2))", convention.set("propertyD"))
+                .addLine("    .build();")
+                .addLine("assertEquals(13, value.%s);", convention.get("propertyA"))
+                .addLine("assertTrue(value.%s);", convention.is("propertyB"))
+                .addLine("assertEquals(\"goodbye\", value.%s);", convention.get("propertyC"))
+                .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
+                .build())
         .runTest();
   }
 
@@ -214,23 +212,24 @@ public class DefaultedPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .%s(\"hello\")", convention.set("propertyC"))
-            .addLine("    .%s(1.9)", convention.set("propertyD"))
-            .addLine("    .mergeFrom(new DataType.Builder()")
-            .addLine("        .%s(13)", convention.set("propertyA"))
-            .addLine("        .%s(\"goodbye\")", convention.set("propertyC"))
-            .addLine("        .%s(3.2)", convention.set("propertyD"))
-            .addLine("        .build())")
-            .addLine("    .build();")
-            .addLine("assertEquals(13, value.%s);", convention.get("propertyA"))
-            .addLine("assertTrue(value.%s);", convention.is("propertyB"))
-            .addLine("assertEquals(\"goodbye\", value.%s);", convention.get("propertyC"))
-            .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .%s(\"hello\")", convention.set("propertyC"))
+                .addLine("    .%s(1.9)", convention.set("propertyD"))
+                .addLine("    .mergeFrom(new DataType.Builder()")
+                .addLine("        .%s(13)", convention.set("propertyA"))
+                .addLine("        .%s(\"goodbye\")", convention.set("propertyC"))
+                .addLine("        .%s(3.2)", convention.set("propertyD"))
+                .addLine("        .build())")
+                .addLine("    .build();")
+                .addLine("assertEquals(13, value.%s);", convention.get("propertyA"))
+                .addLine("assertTrue(value.%s);", convention.is("propertyB"))
+                .addLine("assertEquals(\"goodbye\", value.%s);", convention.get("propertyC"))
+                .addLine("assertEquals(3.2, value.%s, 0.0001);", convention.get("propertyD"))
+                .build())
         .runTest();
   }
 
@@ -239,19 +238,20 @@ public class DefaultedPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .%s(\"hello\")", convention.set("propertyC"))
-            .addLine("    .%s(1.9)", convention.set("propertyD"))
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertEquals(0, value.%s);", convention.get("propertyA"))
-            .addLine("assertFalse(value.%s);", convention.is("propertyB"))
-            .addLine("assertEquals(\"default\", value.%s);", convention.get("propertyC"))
-            .addLine("assertEquals(Double.NaN, value.%s, 0.0001);", convention.get("propertyD"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .%s(\"hello\")", convention.set("propertyC"))
+                .addLine("    .%s(1.9)", convention.set("propertyD"))
+                .addLine("    .clear()")
+                .addLine("    .build();")
+                .addLine("assertEquals(0, value.%s);", convention.get("propertyA"))
+                .addLine("assertFalse(value.%s);", convention.is("propertyB"))
+                .addLine("assertEquals(\"default\", value.%s);", convention.get("propertyC"))
+                .addLine("assertEquals(Double.NaN, value.%s, 0.0001);", convention.get("propertyD"))
+                .build())
         .runTest();
   }
 

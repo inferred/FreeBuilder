@@ -17,23 +17,19 @@ package org.inferred.freebuilder.processor.source;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getLast;
-
-import static org.inferred.freebuilder.processor.source.ImportManager.shortenReferences;
-
 import static java.util.stream.Collectors.joining;
+import static org.inferred.freebuilder.processor.source.ImportManager.shortenReferences;
 
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import org.inferred.freebuilder.processor.source.ScopeHandler.Reflection;
 import org.inferred.freebuilder.processor.source.ScopeHandler.Visibility;
 import org.inferred.freebuilder.processor.source.feature.Feature;
 import org.inferred.freebuilder.processor.source.feature.FeatureSet;
 import org.inferred.freebuilder.processor.source.feature.FeatureType;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /** Internals of {@code SourceBuilder}, handling source parsing and type shortening. */
 class CompilationUnitBuilder implements QualifiedNameAppendable, SourceParser.EventHandler {
@@ -145,10 +141,8 @@ class CompilationUnitBuilder implements QualifiedNameAppendable, SourceParser.Ev
       append(type.getSimpleName());
       return;
     }
-    TypeUsage.Builder usage = new TypeUsage.Builder()
-        .start(source.length())
-        .type(type)
-        .nullableScope(getLast(types));
+    TypeUsage.Builder usage =
+        new TypeUsage.Builder().start(source.length()).type(type).nullableScope(getLast(types));
     append(type.toString());
     usages.add(usage.end(source.length()).build());
   }
@@ -182,17 +176,14 @@ class CompilationUnitBuilder implements QualifiedNameAppendable, SourceParser.Ev
     try {
       return new Formatter().formatSource(source);
     } catch (FormatterException | RuntimeException e) {
-      StringBuilder message = new StringBuilder()
-          .append("Formatter failed:\n")
-          .append(e.getMessage())
-          .append("\nGenerated source:");
+      StringBuilder message =
+          new StringBuilder()
+              .append("Formatter failed:\n")
+              .append(e.getMessage())
+              .append("\nGenerated source:");
       int lineNo = 0;
       for (String line : source.split("\n")) {
-        message
-            .append("\n")
-            .append(++lineNo)
-            .append(": ")
-            .append(line);
+        message.append("\n").append(++lineNo).append(": ").append(line);
       }
       throw new RuntimeException(message.toString());
     }

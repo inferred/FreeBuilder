@@ -18,7 +18,9 @@ package org.inferred.freebuilder.processor.property;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
-
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -37,10 +39,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Stream;
-
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class BuildableListMutateMethodTest {
@@ -50,11 +48,8 @@ public class BuildableListMutateMethodTest {
   public static Iterable<Object[]> featureSets() {
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
-    return () -> Lists
-        .cartesianProduct(conventions, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(conventions, features).stream().map(List::toArray).iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -68,24 +63,25 @@ public class BuildableListMutateMethodTest {
   public BuildableListMutateMethodTest(NamingConvention convention, FeatureSet features) {
     this.convention = convention;
     this.features = features;
-    buildableListType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface Receipt {")
-        .addLine("  @%s", FreeBuilder.class)
-        .addLine("  interface Item {")
-        .addLine("    String name();")
-        .addLine("    int price();")
-        .addLine("")
-        .addLine("    Builder toBuilder();")
-        .addLine("    class Builder extends Receipt_Item_Builder {}")
-        .addLine("  }")
-        .addLine("")
-        .addLine("  %s<Item> %s;", List.class, convention.get("items"))
-        .addLine("")
-        .addLine("  Builder toBuilder();")
-        .addLine("  class Builder extends Receipt_Builder {}")
-        .addLine("}");
+    buildableListType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface Receipt {")
+            .addLine("  @%s", FreeBuilder.class)
+            .addLine("  interface Item {")
+            .addLine("    String name();")
+            .addLine("    int price();")
+            .addLine("")
+            .addLine("    Builder toBuilder();")
+            .addLine("    class Builder extends Receipt_Item_Builder {}")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  %s<Item> %s;", List.class, convention.get("items"))
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends Receipt_Builder {}")
+            .addLine("}");
   }
 
   @Test
@@ -93,16 +89,17 @@ public class BuildableListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(buildableListType)
-        .with(testBuilder()
-            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
-            .addLine("Receipt value = new Receipt.Builder()")
-            .addLine("    .addItems(new Item.Builder())")
-            .addLine("    .mutateItems(list -> list.get(0)")
-            .addLine("         .mergeFrom(candy))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(candy.build());",
-                convention.get("items"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
+                .addLine("Receipt value = new Receipt.Builder()")
+                .addLine("    .addItems(new Item.Builder())")
+                .addLine("    .mutateItems(list -> list.get(0)")
+                .addLine("         .mergeFrom(candy))")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(candy.build());", convention.get("items"))
+                .build())
         .runTest();
   }
 
@@ -111,14 +108,15 @@ public class BuildableListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(buildableListType)
-        .with(testBuilder()
-            .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
-            .addLine("Receipt value = new Receipt.Builder()")
-            .addLine("    .mutateItems(list -> list.add(candy))")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).containsExactly(candy.build());",
-                convention.get("items"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("Item.Builder candy = new Item.Builder().name(\"candy\").price(15);")
+                .addLine("Receipt value = new Receipt.Builder()")
+                .addLine("    .mutateItems(list -> list.add(candy))")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(candy.build());", convention.get("items"))
+                .build())
         .runTest();
   }
 
@@ -127,18 +125,20 @@ public class BuildableListMutateMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(buildableListType)
-        .with(testBuilder()
-            .addLine("Receipt.Builder builder = new Receipt.Builder();")
-            .addLine("Item.Builder itemBuilder = new Item.Builder().name(\"candy\").price(15);")
-            .addLine("builder.mutateItems(list -> list.add(itemBuilder));")
-            .addLine("itemBuilder.name(\"apple\").price(50);")
-            .addLine("builder.mutateItems(list -> list.add(itemBuilder));")
-            .addLine("itemBuilder.name(\"poison\").price(500);")
-            .addLine("Item poison = itemBuilder.build();")
-            .addLine("Receipt value = builder.build();")
-            .addLine("assertThat(value.%s).containsExactly(poison, poison);",
-                convention.get("items"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("Receipt.Builder builder = new Receipt.Builder();")
+                .addLine("Item.Builder itemBuilder = new Item.Builder().name(\"candy\").price(15);")
+                .addLine("builder.mutateItems(list -> list.add(itemBuilder));")
+                .addLine("itemBuilder.name(\"apple\").price(50);")
+                .addLine("builder.mutateItems(list -> list.add(itemBuilder));")
+                .addLine("itemBuilder.name(\"poison\").price(500);")
+                .addLine("Item poison = itemBuilder.build();")
+                .addLine("Receipt value = builder.build();")
+                .addLine(
+                    "assertThat(value.%s).containsExactly(poison, poison);",
+                    convention.get("items"))
+                .build())
         .runTest();
   }
 

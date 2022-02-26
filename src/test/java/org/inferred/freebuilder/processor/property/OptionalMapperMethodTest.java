@@ -19,7 +19,8 @@ import static org.inferred.freebuilder.processor.property.ElementFactory.TYPES;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
+import java.util.Arrays;
+import java.util.List;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -39,9 +40,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class OptionalMapperMethodTest {
@@ -49,26 +47,25 @@ public class OptionalMapperMethodTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "{0}<{1}>, checked={2}, {3}, {4}")
   public static Iterable<Object[]> parameters() {
-    List<Class<?>> optionals = Arrays.asList(
-        java.util.Optional.class,
-        com.google.common.base.Optional.class);
+    List<Class<?>> optionals =
+        Arrays.asList(java.util.Optional.class, com.google.common.base.Optional.class);
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
-    return () -> Lists
-        .cartesianProduct(optionals, TYPES, checked, conventions, features)
-        .stream()
-        .filter(parameters -> {
-          Class<?> optional = (Class<?>) parameters.get(0);
-          FeatureSet featureSet = (FeatureSet) parameters.get(4);
-          if (optional.equals(com.google.common.base.Optional.class)
-              && !featureSet.get(GuavaLibrary.GUAVA).isAvailable()) {
-            return false;
-          }
-          return true;
-        })
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(optionals, TYPES, checked, conventions, features).stream()
+            .filter(
+                parameters -> {
+                  Class<?> optional = (Class<?>) parameters.get(0);
+                  FeatureSet featureSet = (FeatureSet) parameters.get(4);
+                  if (optional.equals(com.google.common.base.Optional.class)
+                      && !featureSet.get(GuavaLibrary.GUAVA).isAvailable()) {
+                    return false;
+                  }
+                  return true;
+                })
+            .map(List::toArray)
+            .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -92,16 +89,18 @@ public class OptionalMapperMethodTest {
     this.convention = convention;
     this.features = features;
 
-    dataType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  %s<%s> %s;", optional, element.type(), convention.get("property"))
-        .addLine("")
-        .addLine("  class Builder extends DataType_Builder {");
+    dataType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s> %s;", optional, element.type(), convention.get("property"))
+            .addLine("")
+            .addLine("  class Builder extends DataType_Builder {");
     if (checked) {
       dataType
-          .addLine("    @Override public Builder %s(%s element) {",
+          .addLine(
+              "    @Override public Builder %s(%s element) {",
               convention.set("property"), element.unwrappedType())
           .addLine("      if (!(%s)) {", element.validation())
           .addLine("        throw new IllegalArgumentException(\"%s\");", element.errorMessage())
@@ -109,9 +108,7 @@ public class OptionalMapperMethodTest {
           .addLine("      return super.%s(element);", convention.set("property"))
           .addLine("    }");
     }
-    dataType
-        .addLine("  }")
-        .addLine("}");
+    dataType.addLine("  }").addLine("}");
   }
 
   @Test
@@ -119,17 +116,19 @@ public class OptionalMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
-            .addLine("    .mapProperty(a -> a + %s)", element.example(1))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s + %s, (%s) value.%s.get());",
-                element.example(0),
-                element.example(1),
-                element.unwrappedType(),
-                convention.get("property"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+                .addLine("    .mapProperty(a -> a + %s)", element.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s + %s, (%s) value.%s.get());",
+                    element.example(0),
+                    element.example(1),
+                    element.unwrappedType(),
+                    convention.get("property"))
+                .build())
         .runTest();
   }
 
@@ -142,11 +141,12 @@ public class OptionalMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
-            .addLine("    .mapProperty(a -> %s);", element.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+                .addLine("    .mapProperty(a -> %s);", element.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -156,11 +156,12 @@ public class OptionalMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
-            .addLine("    .mapProperty(null);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+                .addLine("    .mapProperty(null);")
+                .build())
         .runTest();
   }
 
@@ -170,10 +171,11 @@ public class OptionalMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mapProperty(null);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .mapProperty(null);")
+                .build())
         .runTest();
   }
 
@@ -182,13 +184,14 @@ public class OptionalMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
-            .addLine("    .mapProperty(a -> null)")
-            .addLine("    .build();")
-            .addLine("assertFalse(value.%s.isPresent());", convention.get("property"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+                .addLine("    .mapProperty(a -> null)")
+                .addLine("    .build();")
+                .addLine("assertFalse(value.%s.isPresent());", convention.get("property"))
+                .build())
         .runTest();
   }
 
@@ -197,12 +200,13 @@ public class OptionalMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(dataType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mapProperty(a -> { fail(\"mapper called\"); return null; })")
-            .addLine("    .build();")
-            .addLine("assertFalse(value.%s.isPresent());", convention.get("property"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mapProperty(a -> { fail(\"mapper called\"); return null; })")
+                .addLine("    .build();")
+                .addLine("assertFalse(value.%s.isPresent());", convention.get("property"))
+                .build())
         .runTest();
   }
 
@@ -229,14 +233,16 @@ public class OptionalMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
-            .addLine("    .mapProperty(a -> %s)", element.example(1))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s, (%s) value.%s.get());",
-                element.example(1), element.unwrappedType(), convention.get("property"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+                .addLine("    .mapProperty(a -> %s)", element.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s, (%s) value.%s.get());",
+                    element.example(1), element.unwrappedType(), convention.get("property"))
+                .build())
         .runTest();
   }
 
@@ -263,19 +269,20 @@ public class OptionalMapperMethodTest {
     behaviorTester
         .with(new Processor(features))
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("property"), element.example(0))
-            .addLine("    .mapProperty(a -> %s)", element.example(1))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s, (%s) value.%s.get());",
-                element.example(1), element.unwrappedType(), convention.get("property"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("property"), element.example(0))
+                .addLine("    .mapProperty(a -> %s)", element.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s, (%s) value.%s.get());",
+                    element.example(1), element.unwrappedType(), convention.get("property"))
+                .build())
         .runTest();
   }
 
   private static TestBuilder testBuilder() {
-    return new TestBuilder()
-        .addImport("com.example.DataType");
+    return new TestBuilder().addImport("com.example.DataType");
   }
 }

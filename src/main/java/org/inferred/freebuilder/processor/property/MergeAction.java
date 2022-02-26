@@ -5,16 +5,12 @@ import static com.google.common.collect.Iterables.getLast;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
-
+import java.util.List;
+import java.util.Set;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.ValueType;
 
-import java.util.List;
-import java.util.Set;
-
-/**
- * Readable action fragments for documenting mergeFrom behaviors.
- */
+/** Readable action fragments for documenting mergeFrom behaviors. */
 public class MergeAction extends ValueType {
 
   public static MergeAction appendingToCollections() {
@@ -33,19 +29,16 @@ public class MergeAction extends ValueType {
     return new MergeAction("skipping", "unset properties", true);
   }
 
-  /**
-   * Emits a sentence fragment combining all the merge actions.
-   */
+  /** Emits a sentence fragment combining all the merge actions. */
   public static void addActionsTo(
-      SourceBuilder code,
-      Set<MergeAction> mergeActions,
-      boolean forBuilder) {
+      SourceBuilder code, Set<MergeAction> mergeActions, boolean forBuilder) {
     SetMultimap<String, String> nounsByVerb = TreeMultimap.create();
-    mergeActions.forEach(mergeAction -> {
-      if (forBuilder || !mergeAction.builderOnly) {
-        nounsByVerb.put(mergeAction.verb, mergeAction.noun);
-      }
-    });
+    mergeActions.forEach(
+        mergeAction -> {
+          if (forBuilder || !mergeAction.builderOnly) {
+            nounsByVerb.put(mergeAction.verb, mergeAction.noun);
+          }
+        });
     List<String> verbs = ImmutableList.copyOf(nounsByVerb.keySet());
     String lastVerb = getLast(verbs, null);
     for (String verb : nounsByVerb.keySet()) {

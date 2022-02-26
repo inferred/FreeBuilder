@@ -28,7 +28,6 @@ import java.io.Writer;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.file.FileAlreadyExistsException;
-
 import javax.tools.FileObject;
 
 public class InMemoryFile implements FileObject {
@@ -121,5 +120,4 @@ public class InMemoryFile implements FileObject {
   public long getLastModified() {
     return (data == null) ? 0 : data.lastModified;
   }
-
 }

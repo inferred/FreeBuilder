@@ -3,16 +3,13 @@ package org.inferred.freebuilder.processor.source;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-/**
- * Handles the byzantine rules of Java scoping.
- */
+/** Handles the byzantine rules of Java scoping. */
 class ScopeHandler {
 
   enum ScopeState {
@@ -23,15 +20,26 @@ class ScopeHandler {
     /** Type can safely be imported. */
     IMPORTABLE
   }
-  enum Visibility { PUBLIC, PROTECTED, PACKAGE, PRIVATE, UNKNOWN }
+
+  enum Visibility {
+    PUBLIC,
+    PROTECTED,
+    PACKAGE,
+    PRIVATE,
+    UNKNOWN
+  }
 
   interface Reflection {
     Optional<TypeInfo> find(String typename);
   }
+
   interface TypeInfo {
     QualifiedName name();
+
     Visibility visibility();
+
     Stream<TypeInfo> supertypes();
+
     Stream<TypeInfo> nestedTypes();
   }
 
@@ -88,9 +96,7 @@ class ScopeHandler {
   }
 
   void declareGeneratedType(
-      Visibility visibility,
-      QualifiedName generatedType,
-      Set<String> supertypes) {
+      Visibility visibility, QualifiedName generatedType, Set<String> supertypes) {
     generatedTypes.put(generatedType.toString(), generatedType);
     typeVisibility.put(generatedType, visibility);
     if (!generatedType.isTopLevel()) {
@@ -98,13 +104,16 @@ class ScopeHandler {
           .put(generatedType.getSimpleName(), generatedType);
     }
     SetMultimap<String, QualifiedName> visibleInScope = get(visibleTypes, generatedType);
-    supertypes.stream().flatMap(this::lookup).forEach(supertype -> {
-      for (QualifiedName type : typesInScope(supertype).values()) {
-        if (maybeVisibleInScope(generatedType, visibilityOf(type), type)) {
-          visibleInScope.put(type.getSimpleName(), type);
-        }
-      }
-    });
+    supertypes.stream()
+        .flatMap(this::lookup)
+        .forEach(
+            supertype -> {
+              for (QualifiedName type : typesInScope(supertype).values()) {
+                if (maybeVisibleInScope(generatedType, visibilityOf(type), type)) {
+                  visibleInScope.put(type.getSimpleName(), type);
+                }
+              }
+            });
   }
 
   private Stream<QualifiedName> lookup(String typename) {
@@ -135,25 +144,35 @@ class ScopeHandler {
   private SetMultimap<String, QualifiedName> computeTypesInScope(QualifiedName scope) {
     SetMultimap<String, QualifiedName> visibleInScope = HashMultimap.create();
     visibleTypes.put(scope, visibleInScope);
-    reflect.find(scope.toString()).ifPresent(element -> {
-      element.supertypes().forEach(supertype -> {
-        typesInScope(supertype.name()).values().forEach(type -> {
-          if (maybeVisibleInScope(scope, visibilityOf(type), type)) {
-            visibleInScope.put(type.getSimpleName(), type);
-          }
-        });
-      });
-      element.nestedTypes().forEach(nested -> {
-        visibleInScope.put(nested.name().getSimpleName().toString(), nested.name());
-      });
-    });
+    reflect
+        .find(scope.toString())
+        .ifPresent(
+            element -> {
+              element
+                  .supertypes()
+                  .forEach(
+                      supertype -> {
+                        typesInScope(supertype.name())
+                            .values()
+                            .forEach(
+                                type -> {
+                                  if (maybeVisibleInScope(scope, visibilityOf(type), type)) {
+                                    visibleInScope.put(type.getSimpleName(), type);
+                                  }
+                                });
+                      });
+              element
+                  .nestedTypes()
+                  .forEach(
+                      nested -> {
+                        visibleInScope.put(nested.name().getSimpleName().toString(), nested.name());
+                      });
+            });
     return visibleInScope;
   }
 
   private static boolean maybeVisibleInScope(
-      QualifiedName scope,
-      Visibility visibility,
-      QualifiedName type) {
+      QualifiedName scope, Visibility visibility, QualifiedName type) {
     switch (visibility) {
       case PUBLIC:
       case PROTECTED:

@@ -2,18 +2,16 @@ package org.inferred.freebuilder.processor.source;
 
 import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
 
-import org.inferred.freebuilder.processor.source.ScopeHandler.Reflection;
-import org.inferred.freebuilder.processor.source.ScopeHandler.TypeInfo;
-
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
+import org.inferred.freebuilder.processor.source.ScopeHandler.Reflection;
+import org.inferred.freebuilder.processor.source.ScopeHandler.TypeInfo;
 
 /** Encapsulates the parts of {@link Elements} used by {@link ScopeHandler}. */
 class CompilerReflection implements Reflection {
@@ -43,7 +41,7 @@ class CompilerReflection implements Reflection {
         return ScopeHandler.Visibility.PROTECTED;
       } else if (modifiers.contains(Modifier.PRIVATE)) {
         return ScopeHandler.Visibility.PRIVATE;
-      } else  {
+      } else {
         return ScopeHandler.Visibility.PACKAGE;
       }
     }
@@ -51,14 +49,12 @@ class CompilerReflection implements Reflection {
     @Override
     public Stream<ScopeHandler.TypeInfo> supertypes() {
       return Stream.concat(
-          create(element.getSuperclass()),
-          element.getInterfaces().stream().flatMap(this::create));
+          create(element.getSuperclass()), element.getInterfaces().stream().flatMap(this::create));
     }
 
     @Override
     public Stream<ScopeHandler.TypeInfo> nestedTypes() {
-      return ElementFilter.typesIn(element.getEnclosedElements())
-          .stream()
+      return ElementFilter.typesIn(element.getEnclosedElements()).stream()
           .map(element -> new ElementsTypeInfo(elements, element));
     }
 

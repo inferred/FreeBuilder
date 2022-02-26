@@ -17,27 +17,19 @@ package org.inferred.freebuilder.processor.source.testing;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-
 import java.io.File;
 import java.util.EnumSet;
 import java.util.Locale;
-
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
 
-/**
- * Static utilities for {@link Diagnostic} instances.
- */
+/** Static utilities for {@link Diagnostic} instances. */
 public class Diagnostics {
 
-  /**
-   * Appends a human-readable form of {@code diagnostic} to {@code appendable}.
-   */
+  /** Appends a human-readable form of {@code diagnostic} to {@code appendable}. */
   public static void appendTo(
-      StringBuilder appendable,
-      Diagnostic<? extends JavaFileObject> diagnostic,
-      int indentLevel) {
+      StringBuilder appendable, Diagnostic<? extends JavaFileObject> diagnostic, int indentLevel) {
     String indent = "\n" + Strings.repeat(" ", indentLevel);
     appendable.append(diagnostic.getMessage(Locale.getDefault()).replace("\n", indent));
     JavaFileObject source = diagnostic.getSource();
@@ -49,8 +41,8 @@ public class Diagnostics {
   }
 
   /**
-   * Predicate that returns true if its argument is of kind {@code kind} or any of
-   * {@code otherKinds}.
+   * Predicate that returns true if its argument is of kind {@code kind} or any of {@code
+   * otherKinds}.
    */
   public static final Predicate<Diagnostic<?>> isKind(Kind kind, Kind... otherKinds) {
     final EnumSet<Kind> allKinds = EnumSet.of(kind, otherKinds);

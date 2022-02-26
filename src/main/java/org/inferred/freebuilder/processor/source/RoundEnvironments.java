@@ -16,10 +16,8 @@
 package org.inferred.freebuilder.processor.source;
 
 import com.google.common.collect.Sets;
-
 import java.lang.annotation.Annotation;
 import java.util.Set;
-
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 
@@ -27,16 +25,16 @@ import javax.lang.model.element.Element;
 public class RoundEnvironments {
 
   /**
-   * Sanitizes the result of {@link RoundEnvironment#getElementsAnnotatedWith}, which otherwise
-   * can contain elements annotated with annotations of ERROR type.
+   * Sanitizes the result of {@link RoundEnvironment#getElementsAnnotatedWith}, which otherwise can
+   * contain elements annotated with annotations of ERROR type.
    *
    * <p>The canonical example is forgetting to import &#64;Nullable.
    */
   public static Set<? extends Element> annotatedElementsIn(
       RoundEnvironment roundEnv, Class<? extends Annotation> a) {
-    return Sets.filter(roundEnv.getElementsAnnotatedWith(a),
-        element -> element.getAnnotation(a) != null);
+    return Sets.filter(
+        roundEnv.getElementsAnnotatedWith(a), element -> element.getAnnotation(a) != null);
   }
 
-  private RoundEnvironments() { }  // COV_NF_LINE
+  private RoundEnvironments() {} // COV_NF_LINE
 }

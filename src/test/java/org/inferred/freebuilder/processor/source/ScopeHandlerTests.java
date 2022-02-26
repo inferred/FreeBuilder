@@ -3,19 +3,17 @@ package org.inferred.freebuilder.processor.source;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
-
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.inferred.freebuilder.processor.source.ScopeHandler.ScopeState;
 import org.inferred.freebuilder.processor.source.ScopeHandler.Visibility;
 import org.inferred.freebuilder.processor.source.testing.ModelRule;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 public class ScopeHandlerTests {
 
@@ -67,15 +65,16 @@ public class ScopeHandlerTests {
 
   @Test
   public void typeCanBeImportedIntoAnotherScope() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "FooBar"), QualifiedName.of(Set.class));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "FooBar"), QualifiedName.of(Set.class));
     assertThat(result).isEqualTo(ScopeState.IMPORTABLE);
   }
 
   @Test
   public void typeInSamePackageAsScopeIsInScope() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(Map.class), QualifiedName.of(Set.class));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(Map.class), QualifiedName.of(Set.class));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
@@ -89,30 +88,29 @@ public class ScopeHandlerTests {
 
   @Test
   public void nestedTypeInSamePackageAsScopeIsImportable() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(Set.class), QualifiedName.of(Map.Entry.class));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(Set.class), QualifiedName.of(Map.Entry.class));
     assertThat(result).isEqualTo(ScopeState.IMPORTABLE);
   }
 
   @Test
   public void typeInSamePackageAsScopeHidesTypesInOtherPackages() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(Map.class), QualifiedName.of("com.example", "Set"));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(Map.class), QualifiedName.of("com.example", "Set"));
     assertThat(result).isEqualTo(ScopeState.HIDDEN);
   }
 
   @Test
   public void typeInScopeIsInScope() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(Map.class), QualifiedName.of(Map.Entry.class));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(Map.class), QualifiedName.of(Map.Entry.class));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
   @Test
   public void typeInOuterScopeIsInScope() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(Map.Entry.class),
-        QualifiedName.of(Map.Entry.class));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(Map.Entry.class), QualifiedName.of(Map.Entry.class));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
@@ -121,57 +119,63 @@ public class ScopeHandlerTests {
 
   @Test
   public void typeCanBeImportedIntoScopeWithSupertypes() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(HashMap.class), QualifiedName.of("com.example", "FooBar"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of(HashMap.class), QualifiedName.of("com.example", "FooBar"));
     assertThat(result).isEqualTo(ScopeState.IMPORTABLE);
   }
 
   @Test
   public void typeInSamePackageAsScopeWithSupertypesIsInScope() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(HashMap.class), QualifiedName.of(Set.class));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(HashMap.class), QualifiedName.of(Set.class));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
   @Test
   public void nestedTypeInSamePackageAsScopeWithSupertypesIsImportable() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(HashSet.class), QualifiedName.of(Map.Entry.class));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(HashSet.class), QualifiedName.of(Map.Entry.class));
     assertThat(result).isEqualTo(ScopeState.IMPORTABLE);
   }
 
   @Test
   public void typeInSuperclassIsImportable() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(HashMap.class), QualifiedName.of(AbstractMap.SimpleImmutableEntry.class));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of(HashMap.class),
+            QualifiedName.of(AbstractMap.SimpleImmutableEntry.class));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
   @Test
   public void typeInInterfaceIsImportable() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(HashMap.class), QualifiedName.of(Map.Entry.class));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(HashMap.class), QualifiedName.of(Map.Entry.class));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
   @Test
   public void typeInSuperclassHidesTypesInOtherPackages() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(HashMap.class), QualifiedName.of("com.example", "SimpleImmutableEntry"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of(HashMap.class),
+            QualifiedName.of("com.example", "SimpleImmutableEntry"));
     assertThat(result).isEqualTo(ScopeState.HIDDEN);
   }
 
   @Test
   public void typeInInterfaceHidesTypesInOtherPackages() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(HashMap.class), QualifiedName.of("com.example", "Entry"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of(HashMap.class), QualifiedName.of("com.example", "Entry"));
     assertThat(result).isEqualTo(ScopeState.HIDDEN);
   }
 
   @Test
   public void typeInScopeWithSupertypesIsInScope() {
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of(HashMap.class), QualifiedName.of(Map.Entry.class));
+    ScopeState result =
+        handler.visibilityIn(QualifiedName.of(HashMap.class), QualifiedName.of(Map.Entry.class));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
@@ -183,8 +187,10 @@ public class ScopeHandlerTests {
         "  abstract class B extends java.util.AbstractMap<Object, Object> {}",
         "  interface Entry {}",
         "}");
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "Entry"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "A", "B"),
+            QualifiedName.of("com.example", "A", "Entry"));
     assertThat(result).isEqualTo(ScopeState.HIDDEN);
   }
 
@@ -196,8 +202,10 @@ public class ScopeHandlerTests {
         "  abstract class B implements java.util.Map<Object, Object> {}",
         "  interface Entry {}",
         "}");
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "Entry"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "A", "B"),
+            QualifiedName.of("com.example", "A", "Entry"));
     assertThat(result).isEqualTo(ScopeState.HIDDEN);
   }
 
@@ -246,8 +254,9 @@ public class ScopeHandlerTests {
         "class A {",
         "  abstract class B implements I, J {}",
         "}");
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "I", "X"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "I", "X"));
     assertThat(result).isEqualTo(ScopeState.HIDDEN);
   }
 
@@ -261,8 +270,9 @@ public class ScopeHandlerTests {
         "class A {",
         "  abstract class B extends S {}",
         "}");
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "S", "X"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "S", "X"));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
@@ -277,8 +287,9 @@ public class ScopeHandlerTests {
         "  abstract class B extends S {}",
         "  class X {}",
         "}");
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "X"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "X"));
     assertThat(result).isEqualTo(ScopeState.HIDDEN);
   }
 
@@ -293,44 +304,39 @@ public class ScopeHandlerTests {
         "  abstract class B extends S {}",
         "  class X {}",
         "}");
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "X"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "X"));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
   @Test
   public void packageProtectedTypeInSupertypeInDifferentPackageDoesNotHideTypeInOuterScope() {
-    model.newType(
-        "package com.example.n;",
-        "class S {",
-        "  class X {}",
-        "}");
+    model.newType("package com.example.n;", "class S {", "  class X {}", "}");
     model.newType(
         "package com.example;",
         "class A {",
         "  abstract class B extends com.example.n.S {}",
         "  class X {}",
         "}");
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "X"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "X"));
     assertThat(result).isEqualTo(ScopeState.IN_SCOPE);
   }
 
   @Test
   public void protectedTypeInSupertypeInDifferentPackageHidesTypeInOuterScope() {
-    model.newType(
-        "package com.example.n;",
-        "public class S {",
-        "  protected class X {}",
-        "}");
+    model.newType("package com.example.n;", "public class S {", "  protected class X {}", "}");
     model.newType(
         "package com.example;",
         "class A {",
         "  abstract class B extends com.example.n.S {}",
         "  class X {}",
         "}");
-    ScopeState result = handler.visibilityIn(
-        QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "X"));
+    ScopeState result =
+        handler.visibilityIn(
+            QualifiedName.of("com.example", "A", "B"), QualifiedName.of("com.example", "A", "X"));
     assertThat(result).isEqualTo(ScopeState.HIDDEN);
   }
 }

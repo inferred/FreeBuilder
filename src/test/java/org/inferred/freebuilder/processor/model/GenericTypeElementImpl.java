@@ -16,10 +16,6 @@
 package org.inferred.freebuilder.processor.model;
 
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.source.Partial;
-import org.inferred.freebuilder.processor.source.ValueType;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
@@ -35,6 +31,8 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.util.AbstractElementVisitor8;
+import org.inferred.freebuilder.processor.source.Partial;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 public abstract class GenericTypeElementImpl extends ValueType
     implements javax.lang.model.element.TypeElement {
@@ -81,7 +79,8 @@ public abstract class GenericTypeElementImpl extends ValueType
   @Override
   public NestingKind getNestingKind() {
     return (enclosingElement.getKind() == ElementKind.PACKAGE)
-        ? NestingKind.TOP_LEVEL : NestingKind.MEMBER;
+        ? NestingKind.TOP_LEVEL
+        : NestingKind.MEMBER;
   }
 
   @Override

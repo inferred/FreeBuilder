@@ -15,27 +15,23 @@
  */
 package org.inferred.freebuilder.processor.source;
 
+import static java.util.stream.Collectors.joining;
 import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newNestedClass;
 import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 import static org.junit.Assert.assertEquals;
 
-import static java.util.stream.Collectors.joining;
-
 import com.google.common.reflect.TypeToken;
-
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+import javax.lang.model.element.Name;
+import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.model.ClassTypeImpl;
 import org.inferred.freebuilder.processor.source.testing.Model;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.lang.model.element.Name;
-import javax.lang.model.type.TypeMirror;
 
 @RunWith(JUnit4.class)
 public class TypeMirrorAppenderTest {
@@ -109,9 +105,11 @@ public class TypeMirrorAppenderTest {
   @Test
   public void testInnerClassOnGenericType() {
     createModel();
-    assertEquals("{{TypeMirrorAppenderTest.OuterClass}}<{{List}}<{{String}}>>.InnerClass",
-        shorten(model.typeMirror(
-            new TypeToken<TypeMirrorAppenderTest.OuterClass<List<String>>.InnerClass>() {})));
+    assertEquals(
+        "{{TypeMirrorAppenderTest.OuterClass}}<{{List}}<{{String}}>>.InnerClass",
+        shorten(
+            model.typeMirror(
+                new TypeToken<TypeMirrorAppenderTest.OuterClass<List<String>>.InnerClass>() {})));
   }
 
   @Test
@@ -126,7 +124,8 @@ public class TypeMirrorAppenderTest {
   public void testWildcards() {
     createModel();
 
-    assertEquals("{{Map}}<{{Name}}, ? extends {{Logger}}>",
+    assertEquals(
+        "{{Map}}<{{Name}}, ? extends {{Logger}}>",
         shorten(model.typeMirror(new TypeToken<Map<Name, ? extends Logger>>() {})));
   }
 
@@ -137,7 +136,7 @@ public class TypeMirrorAppenderTest {
   }
 
   private static class OuterClass<T> {
-    private class InnerClass { }
+    private class InnerClass {}
 
     @SuppressWarnings("unused")
     T field;

@@ -22,48 +22,49 @@ import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 public class OptionalTest extends GWTTestCase {
 
-    private static final int RPC_TIMEOUT = 15000;
-    private static final String MODULE_NAME = "org.inferred.freebuilder.TestServer";
-    private static final OptionalGwtType VALUE = new OptionalGwtType.Builder()
-            .setName("Brian")
-            .build();
+  private static final int RPC_TIMEOUT = 15000;
+  private static final String MODULE_NAME = "org.inferred.freebuilder.TestServer";
+  private static final OptionalGwtType VALUE =
+      new OptionalGwtType.Builder().setName("Brian").build();
 
-    private OptionalTestServiceAsync customFieldSerializerTestService;
+  private OptionalTestServiceAsync customFieldSerializerTestService;
 
-    @Override
-    public String getModuleName() {
-        return MODULE_NAME;
-    }
+  @Override
+  public String getModuleName() {
+    return MODULE_NAME;
+  }
 
-    @Override
-    protected void gwtSetUp() throws Exception {
-        super.gwtSetUp();
-        delayTestFinish(RPC_TIMEOUT);
-    }
+  @Override
+  protected void gwtSetUp() throws Exception {
+    super.gwtSetUp();
+    delayTestFinish(RPC_TIMEOUT);
+  }
 
-    public void testSerialization() {
-        OptionalTestServiceAsync service = getServiceAsync();
-        service.echo(VALUE, new AsyncCallback<OptionalGwtType>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                throw new AssertionError(caught);
-            }
+  public void testSerialization() {
+    OptionalTestServiceAsync service = getServiceAsync();
+    service.echo(
+        VALUE,
+        new AsyncCallback<OptionalGwtType>() {
+          @Override
+          public void onFailure(Throwable caught) {
+            throw new AssertionError(caught);
+          }
 
-            @Override
-            public void onSuccess(OptionalGwtType result) {
-                assertEquals(VALUE, result);
-                finishTest();
-            }
+          @Override
+          public void onSuccess(OptionalGwtType result) {
+            assertEquals(VALUE, result);
+            finishTest();
+          }
         });
-    }
+  }
 
-    private OptionalTestServiceAsync getServiceAsync() {
-        if (customFieldSerializerTestService == null) {
-            customFieldSerializerTestService =
-                    (OptionalTestServiceAsync) GWT.create(OptionalTestService.class);
-            ((ServiceDefTarget) customFieldSerializerTestService)
-                    .setServiceEntryPoint(GWT.getModuleBaseURL() + "optional");
-        }
-        return customFieldSerializerTestService;
+  private OptionalTestServiceAsync getServiceAsync() {
+    if (customFieldSerializerTestService == null) {
+      customFieldSerializerTestService =
+          (OptionalTestServiceAsync) GWT.create(OptionalTestService.class);
+      ((ServiceDefTarget) customFieldSerializerTestService)
+          .setServiceEntryPoint(GWT.getModuleBaseURL() + "optional");
     }
+    return customFieldSerializerTestService;
+  }
 }

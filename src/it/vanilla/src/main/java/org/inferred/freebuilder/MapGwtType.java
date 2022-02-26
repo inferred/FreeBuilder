@@ -16,16 +16,15 @@
 package org.inferred.freebuilder;
 
 import com.google.common.annotations.GwtCompatible;
-
 import java.io.Serializable;
 import java.util.Map;
 
-/** Simple GWT-compatible FreeBuilder type with a map of strings to doubles.  */
+/** Simple GWT-compatible FreeBuilder type with a map of strings to doubles. */
 @FreeBuilder
 @GwtCompatible(serializable = true)
 public interface MapGwtType extends Serializable {
   Map<String, Double> getDistances();
 
   /** Builder for {@link StringListGwtType}. */
-  class Builder extends MapGwtType_Builder { }
+  class Builder extends MapGwtType_Builder {}
 }

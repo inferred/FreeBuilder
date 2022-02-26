@@ -26,7 +26,6 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
-
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -39,7 +38,6 @@ import java.util.Map;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -53,20 +51,17 @@ public class TypeMirrors {
   /** e.g. '%1' */
   private static final Pattern ARG_REF_PATTERN = Pattern.compile("%(\\d+)");
   /** e.g. '%1[]' or '%1<%2,%3>' */
-  private static final Pattern GENERIC_OR_ARRAY_PATTERN = Pattern.compile(
-      "(%\\d+)\\s*(?:(\\[\\s*\\])|<\\s*((?:%\\d+)\\s*(?:,\\s*(?:%\\d+)\\s*)*)>)");
-  /**  e.g. '><', '][' or ']<' */
-  private static final Pattern INVALID_TYPE_SNIPPET_PATTERN = Pattern.compile(
-      ">\\s*[\\w<]|\\]\\s*[\\w<\\[]");
+  private static final Pattern GENERIC_OR_ARRAY_PATTERN =
+      Pattern.compile("(%\\d+)\\s*(?:(\\[\\s*\\])|<\\s*((?:%\\d+)\\s*(?:,\\s*(?:%\\d+)\\s*)*)>)");
+  /** e.g. '><', '][' or ']<' */
+  private static final Pattern INVALID_TYPE_SNIPPET_PATTERN =
+      Pattern.compile(">\\s*[\\w<]|\\]\\s*[\\w<\\[]");
   /** e.g. 'java.lang.String' */
-  private static final Pattern RAW_TYPE_PATTERN = Pattern.compile(
-      "[^\\W\\d]\\w*(\\s*[.]\\s*[^\\W\\d]\\w*)*");
+  private static final Pattern RAW_TYPE_PATTERN =
+      Pattern.compile("[^\\W\\d]\\w*(\\s*[.]\\s*[^\\W\\d]\\w*)*");
 
   /** Returns a {@link TypeMirror} for the given class (raw T, not T&lt;?&gt;, if T is generic). */
-  public static TypeMirror typeMirror(
-      Types typeUtils,
-      Elements elementUtils,
-      Class<?> cls) {
+  public static TypeMirror typeMirror(Types typeUtils, Elements elementUtils, Class<?> cls) {
     if (cls.equals(void.class)) {
       return typeUtils.getNoType(TypeKind.VOID);
     } else if (cls.isPrimitive()) {
@@ -121,30 +116,28 @@ public class TypeMirrors {
   }
 
   /**
-   * Returns a {@link TypeMirror} for the given type, substituting any provided arguments for
-   * %1, %2, etc.
+   * Returns a {@link TypeMirror} for the given type, substituting any provided arguments for %1,
+   * %2, etc.
    *
-   * <p>e.g. {@code typeMirror(types, elements, "java.util.List<%1>",
-   * typeMirror(types, elements, String.class))} will return the same thing as
-   * {@code typeMirror(types, elements, "java.util.List<java.lang.String>")}
+   * <p>e.g. {@code typeMirror(types, elements, "java.util.List<%1>", typeMirror(types, elements,
+   * String.class))} will return the same thing as {@code typeMirror(types, elements,
+   * "java.util.List<java.lang.String>")}
    *
    * @param typeUtils an implementation of {@link Types}
    * @param elementUtils an implementation of {@link Elements}
-   * @param typeSnippet the type, represented as a snippet of Java code, e.g.
-   *     {@code "java.lang.String"}, {@code "java.util.Map<%1, %2>"}
+   * @param typeSnippet the type, represented as a snippet of Java code, e.g. {@code
+   *     "java.lang.String"}, {@code "java.util.Map<%1, %2>"}
    * @param args existing {@link TypeMirror} instances to be substituted into the type
    */
   public static TypeMirror typeMirror(
-      Types typeUtils,
-      Elements elementUtils,
-      String typeSnippet,
-      TypeMirror... args) {
+      Types typeUtils, Elements elementUtils, String typeSnippet, TypeMirror... args) {
     checkArgReferences(typeSnippet, (args == null) ? 0 : args.length);
 
     // Check for illegal patterns that the substitution algorithm may invalidly accept
     Preconditions.checkArgument(
         !INVALID_TYPE_SNIPPET_PATTERN.matcher(typeSnippet).find(),
-        "Invalid type string '%s'", typeSnippet);
+        "Invalid type string '%s'",
+        typeSnippet);
 
     Substitutions substitutions = new Substitutions(args);
     MutableString mutableSnippet = new MutableString(typeSnippet.trim());
@@ -154,7 +147,8 @@ public class TypeMirrors {
     // Either we have only a '%d' left, or the input was invalid
     Preconditions.checkArgument(
         substitutions.containsKey(mutableSnippet.toString()),
-        "Invalid type string '%s'", typeSnippet);
+        "Invalid type string '%s'",
+        typeSnippet);
     return substitutions.get(mutableSnippet.toString());
   }
 
@@ -169,32 +163,27 @@ public class TypeMirrors {
    * <p>e.g. {@code "Map<String,List<Integer>>"} &#x27fc; {@code "%1<%2,%3<%4>>"}
    */
   private static void substituteRawTypes(
-      Types typeUtils,
-      Elements elementUtils,
-      MutableString snippet,
-      Substitutions substitutions) {
+      Types typeUtils, Elements elementUtils, MutableString snippet, Substitutions substitutions) {
     for (MatchResult m : snippet.instancesOf(RAW_TYPE_PATTERN)) {
       snippet.replace(m, substitutions.put(rawType(typeUtils, elementUtils, m.group(0))));
     }
   }
 
   /**
-   * Evaluate generics and arrays depth-first, and substitute %d strings in their place.
-   *   e.g.  %1<%2,%3<%4>>  -->  %1<%2,%5>  -->  %6
+   * Evaluate generics and arrays depth-first, and substitute %d strings in their place. e.g.
+   * %1<%2,%3<%4>> --> %1<%2,%5> --> %6
    */
   private static void substituteGenericsAndArrays(
-      Types typeUtils,
-      MutableString snippet,
-      Substitutions substitutions) {
+      Types typeUtils, MutableString snippet, Substitutions substitutions) {
     for (MatchResult m : snippet.instancesOf(GENERIC_OR_ARRAY_PATTERN)) {
       // Group 1 is the type on the left, e.g. '%1' in '%1<%2,%5>'
       // Group 2 contains the array brackets if this is an array, e.g. '[]' in '%1[]'
       // Group 3 contains the type list if this is a generic type, e.g. '%2,%5' in '%1<%2,%5>'
       TypeMirror type = substitutions.get(m.group(1));
       if (Strings.isNullOrEmpty(m.group(2))) {
-        List<TypeMirror> argTypes = Lists.transform(
-            Splitter.on(",").trimResults().splitToList(m.group(3)),
-            substitutions.asFunction());
+        List<TypeMirror> argTypes =
+            Lists.transform(
+                Splitter.on(",").trimResults().splitToList(m.group(3)), substitutions.asFunction());
         snippet.replace(m, substitutions.put(parameterisedType(typeUtils, type, argTypes)));
       } else {
         snippet.replace(m, substitutions.put(typeUtils.getArrayType(type)));
@@ -205,13 +194,11 @@ public class TypeMirrors {
   /**
    * Returns a parameterised generic type.
    *
-   * @throws IllegalArgumentException if {@code rawType} is not in fact a raw type, or if
-   *     the number of given parameters does not match the number declared on the raw type.
+   * @throws IllegalArgumentException if {@code rawType} is not in fact a raw type, or if the number
+   *     of given parameters does not match the number declared on the raw type.
    */
   private static DeclaredType parameterisedType(
-      Types typeUtils,
-      TypeMirror rawType,
-      List<TypeMirror> paramTypes) {
+      Types typeUtils, TypeMirror rawType, List<TypeMirror> paramTypes) {
     Preconditions.checkArgument(
         rawType.getKind() == TypeKind.DECLARED
             && ((DeclaredType) rawType).getTypeArguments().isEmpty(),
@@ -224,8 +211,9 @@ public class TypeMirrors {
         genericType,
         genericType.getTypeParameters().size(),
         paramTypes.size());
-    DeclaredType declaredType = typeUtils.getDeclaredType(
-        genericType, paramTypes.toArray(new TypeMirror[paramTypes.size()]));
+    DeclaredType declaredType =
+        typeUtils.getDeclaredType(
+            genericType, paramTypes.toArray(new TypeMirror[paramTypes.size()]));
     return declaredType;
   }
 
@@ -234,17 +222,16 @@ public class TypeMirrors {
     Matcher argRefMatcher = ARG_REF_PATTERN.matcher(typeSnippet);
     while (argRefMatcher.find()) {
       int index = Integer.parseInt(argRefMatcher.group(1), 10) - 1;
-      Preconditions.checkArgument(index >= 0,
-          "%s not allowed, indices start at 1", argRefMatcher.group(0));
-      Preconditions.checkArgument(index < numberOfArgs,
-          "%s too large for number of provided type mirrors", argRefMatcher.group(0));
+      Preconditions.checkArgument(
+          index >= 0, "%s not allowed, indices start at 1", argRefMatcher.group(0));
+      Preconditions.checkArgument(
+          index < numberOfArgs,
+          "%s too large for number of provided type mirrors",
+          argRefMatcher.group(0));
     }
   }
 
-  private static TypeMirror rawType(
-      Types typeUtils,
-      Elements elementUtils,
-      String typeSnippet) {
+  private static TypeMirror rawType(Types typeUtils, Elements elementUtils, String typeSnippet) {
     TypeElement typeElement = elementUtils.getTypeElement(typeSnippet);
     if (typeElement == null && !typeSnippet.contains(".")) {
       typeElement = elementUtils.getTypeElement("java.lang." + typeSnippet);
@@ -264,12 +251,14 @@ public class TypeMirrors {
     /** Iterates through instances of the given pattern, resetting every time the string mutates. */
     Iterable<MatchResult> instancesOf(Pattern pattern) {
       return new Iterable<MatchResult>() {
-        @Override public Iterator<MatchResult> iterator() {
+        @Override
+        public Iterator<MatchResult> iterator() {
           return new AbstractIterator<MatchResult>() {
             Matcher matcher;
             String matchingAgainst;
 
-            @Override protected MatchResult computeNext() {
+            @Override
+            protected MatchResult computeNext() {
               if (matchingAgainst != value) {
                 matchingAgainst = value;
                 matcher = pattern.matcher(matchingAgainst);

@@ -1,15 +1,12 @@
 package org.inferred.freebuilder.processor.property;
 
 import com.google.common.collect.ImmutableList;
-
+import java.util.Optional;
+import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.FieldAccess;
-
-import java.util.Optional;
-
-import javax.lang.model.type.TypeMirror;
 
 /** Datatype about a property of a {@link Datatype}. */
 @FreeBuilder
@@ -48,30 +45,25 @@ public abstract class Property {
   public abstract String getGetterName();
 
   /**
-   * Returns true if a cast to this property type is guaranteed to be fully checked at runtime.
-   * This is true for any type that is non-generic, raw, or parameterized with unbounded
-   * wildcards, such as {@code Integer}, {@code List} or {@code Map<?, ?>}.
+   * Returns true if a cast to this property type is guaranteed to be fully checked at runtime. This
+   * is true for any type that is non-generic, raw, or parameterized with unbounded wildcards, such
+   * as {@code Integer}, {@code List} or {@code Map<?, ?>}.
    */
   public abstract boolean isFullyCheckedCast();
 
   /**
-   * Returns a list of annotations that should be applied to the accessor methods of this
-   * property; that is, the getter method, and a single setter method that will accept the result
-   * of the getter method as its argument. For a list, for example, that would be getX() and
-   * addAllX().
+   * Returns a list of annotations that should be applied to the accessor methods of this property;
+   * that is, the getter method, and a single setter method that will accept the result of the
+   * getter method as its argument. For a list, for example, that would be getX() and addAllX().
    */
   public abstract ImmutableList<Excerpt> getAccessorAnnotations();
 
-  /**
-   * Returns a list of annotations that should be applied to the getter method of this
-   * property.
-   */
+  /** Returns a list of annotations that should be applied to the getter method of this property. */
   public abstract ImmutableList<Excerpt> getGetterAnnotations();
 
   /**
-   * Returns a list of annotations that should be applied to the put method of this
-   * property. This only applies to map properties.
-   * Annotation will be added to put(key, value) method.
+   * Returns a list of annotations that should be applied to the put method of this property. This
+   * only applies to map properties. Annotation will be added to put(key, value) method.
    */
   public abstract ImmutableList<Excerpt> getPutAnnotations();
 

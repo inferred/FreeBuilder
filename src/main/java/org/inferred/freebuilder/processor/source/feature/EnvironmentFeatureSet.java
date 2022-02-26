@@ -2,12 +2,11 @@ package org.inferred.freebuilder.processor.source.feature;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.annotation.processing.ProcessingEnvironment;
 
 /**
- * A set of {@link Feature} instances, determined dynamically by calling
- * {@link FeatureType#forEnvironment}.
+ * A set of {@link Feature} instances, determined dynamically by calling {@link
+ * FeatureType#forEnvironment}.
  */
 public class EnvironmentFeatureSet implements FeatureSet {
 

@@ -22,7 +22,12 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -43,13 +48,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class BiMapMutateMethodTest {
@@ -60,11 +58,10 @@ public class BiMapMutateMethodTest {
     List<Boolean> checked = ImmutableList.of(false, true);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.WITH_GUAVA;
-    return () -> Lists
-        .cartesianProduct(TYPES, TYPES, checked, conventions, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(TYPES, TYPES, checked, conventions, features).stream()
+            .map(List::toArray)
+            .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -90,30 +87,30 @@ public class BiMapMutateMethodTest {
     this.convention = convention;
     this.features = features;
 
-    bimapPropertyType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public interface DataType {")
-        .addLine("  %s<%s, %s> %s;", BiMap.class, keys.type(), values.type(), convention.get())
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {");
+    bimapPropertyType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s<%s, %s> %s;", BiMap.class, keys.type(), values.type(), convention.get())
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {");
     if (checked) {
       bimapPropertyType
-          .addLine("    @Override public Builder forcePutItems(%s key, %s value) {",
+          .addLine(
+              "    @Override public Builder forcePutItems(%s key, %s value) {",
               keys.unwrappedType(), values.unwrappedType())
           .addLine("      if (!(%s)) {", keys.validation("key"))
           .addLine("        throw new IllegalArgumentException(\"key %s\");", keys.errorMessage())
           .addLine("      }")
           .addLine("      if (!(%s)) {", values.validation("value"))
-          .addLine("        throw new IllegalArgumentException(\"value %s\");",
-              values.errorMessage())
+          .addLine(
+              "        throw new IllegalArgumentException(\"value %s\");", values.errorMessage())
           .addLine("      }")
           .addLine("      return super.forcePutItems(key, value);")
           .addLine("    }");
     }
-    bimapPropertyType
-        .addLine("  }")
-        .addLine("}");
+    bimapPropertyType.addLine("  }").addLine("}");
   }
 
   @Before
@@ -127,15 +124,18 @@ public class BiMapMutateMethodTest {
   public void putModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.put(%s, %s))",
-                keys.example(1), values.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.put(%s, %s))",
+                    keys.example(1), values.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(0, 0, 1, 1))
+                .build())
         .runTest();
   }
 
@@ -147,11 +147,13 @@ public class BiMapMutateMethodTest {
     }
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.put(%s, %s));",
-                keys.invalidExample(), values.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .mutateItems(items -> items.put(%s, %s));",
+                    keys.invalidExample(), values.example(0))
+                .build())
         .runTest();
   }
 
@@ -159,15 +161,17 @@ public class BiMapMutateMethodTest {
   public void putReplacesDuplicateKey() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.put(%s, %s))",
-                keys.example(0), values.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.put(%s, %s))",
+                    keys.example(0), values.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 1))
+                .build())
         .runTest();
   }
 
@@ -175,15 +179,17 @@ public class BiMapMutateMethodTest {
   public void putReplacesDuplicateKeyAndValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.put(%s, %s))",
-                keys.example(0), values.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.put(%s, %s))",
+                    keys.example(0), values.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 0))
+                .build())
         .runTest();
   }
 
@@ -193,12 +199,14 @@ public class BiMapMutateMethodTest {
     thrown.expectMessage("value already present: " + values.exampleToString(0));
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.put(%s, %s));",
-                keys.example(1), values.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.put(%s, %s));",
+                    keys.example(1), values.example(0))
+                .build())
         .runTest();
   }
 
@@ -206,15 +214,18 @@ public class BiMapMutateMethodTest {
   public void inversePutModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().put(%s, %s))",
-                values.example(1), keys.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().put(%s, %s))",
+                    values.example(1), keys.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(0, 0, 1, 1))
+                .build())
         .runTest();
   }
 
@@ -226,11 +237,13 @@ public class BiMapMutateMethodTest {
     }
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.inverse().put(%s, %s));",
-                values.example(0), keys.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().put(%s, %s));",
+                    values.example(0), keys.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -238,15 +251,17 @@ public class BiMapMutateMethodTest {
   public void inversePutReplacesDuplicateValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().put(%s, %s))",
-                values.example(0), keys.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(1, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().put(%s, %s))",
+                    values.example(0), keys.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 0))
+                .build())
         .runTest();
   }
 
@@ -254,15 +269,17 @@ public class BiMapMutateMethodTest {
   public void inversePutReplacesDuplicateKeyAndValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().put(%s, %s))",
-                values.example(0), keys.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().put(%s, %s))",
+                    values.example(0), keys.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 0))
+                .build())
         .runTest();
   }
 
@@ -272,12 +289,14 @@ public class BiMapMutateMethodTest {
     thrown.expectMessage("value already present: " + keys.exampleToString(0));
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().put(%s, %s));",
-                values.example(1), keys.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().put(%s, %s));",
+                    values.example(1), keys.example(0))
+                .build())
         .runTest();
   }
 
@@ -285,15 +304,18 @@ public class BiMapMutateMethodTest {
   public void forcePutModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.forcePut(%s, %s))",
-                keys.example(1), values.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.forcePut(%s, %s))",
+                    keys.example(1), values.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(0, 0, 1, 1))
+                .build())
         .runTest();
   }
 
@@ -305,11 +327,13 @@ public class BiMapMutateMethodTest {
     }
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.forcePut(%s, %s));",
-                keys.invalidExample(), values.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .mutateItems(items -> items.forcePut(%s, %s));",
+                    keys.invalidExample(), values.example(0))
+                .build())
         .runTest();
   }
 
@@ -317,15 +341,17 @@ public class BiMapMutateMethodTest {
   public void forcePutReplacesDuplicateKey() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.forcePut(%s, %s))",
-                keys.example(0), values.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.forcePut(%s, %s))",
+                    keys.example(0), values.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 1))
+                .build())
         .runTest();
   }
 
@@ -333,15 +359,17 @@ public class BiMapMutateMethodTest {
   public void forcePutReplacesDuplicateValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.forcePut(%s, %s))",
-                keys.example(1), values.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(1, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.forcePut(%s, %s))",
+                    keys.example(1), values.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 0))
+                .build())
         .runTest();
   }
 
@@ -349,15 +377,18 @@ public class BiMapMutateMethodTest {
   public void inverseForcePutModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().forcePut(%s, %s))",
-                values.example(1), keys.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().forcePut(%s, %s))",
+                    values.example(1), keys.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(0, 0, 1, 1))
+                .build())
         .runTest();
   }
 
@@ -369,11 +400,13 @@ public class BiMapMutateMethodTest {
     }
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.inverse().forcePut(%s, %s));",
-                values.example(0), keys.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().forcePut(%s, %s));",
+                    values.example(0), keys.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -381,15 +414,17 @@ public class BiMapMutateMethodTest {
   public void inverseForcePutReplacesDuplicateValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().forcePut(%s, %s))",
-                values.example(0), keys.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(1, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().forcePut(%s, %s))",
+                    values.example(0), keys.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 0))
+                .build())
         .runTest();
   }
 
@@ -397,15 +432,17 @@ public class BiMapMutateMethodTest {
   public void inverseForcePutReplacesDuplicateKey() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().forcePut(%s, %s))",
-                values.example(1), keys.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().forcePut(%s, %s))",
+                    values.example(1), keys.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 1))
+                .build())
         .runTest();
   }
 
@@ -413,14 +450,16 @@ public class BiMapMutateMethodTest {
   public void putAllModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.putAll(%s))", exampleBiMap(1, 1, 2, 2))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1, 2, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> items.putAll(%s))", exampleBiMap(1, 1, 2, 2))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(0, 0, 1, 1, 2, 2))
+                .build())
         .runTest();
   }
 
@@ -432,11 +471,13 @@ public class BiMapMutateMethodTest {
     }
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.putAll(%s.of(%s, %s)));",
-                ImmutableMap.class, keys.invalidExample(), values.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .mutateItems(items -> items.putAll(%s.of(%s, %s)));",
+                    ImmutableMap.class, keys.invalidExample(), values.example(0))
+                .build())
         .runTest();
   }
 
@@ -444,14 +485,16 @@ public class BiMapMutateMethodTest {
   public void putAllReplacesDuplicateKey() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.putAll(%s))", exampleBiMap(0, 1, 2, 3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 1, 2, 3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> items.putAll(%s))", exampleBiMap(0, 1, 2, 3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(0, 1, 2, 3))
+                .build())
         .runTest();
   }
 
@@ -461,11 +504,12 @@ public class BiMapMutateMethodTest {
     thrown.expectMessage("value already present: " + values.exampleToString(0));
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.putAll(%s));", exampleBiMap(1, 0, 2, 3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> items.putAll(%s));", exampleBiMap(1, 0, 2, 3))
+                .build())
         .runTest();
   }
 
@@ -473,15 +517,18 @@ public class BiMapMutateMethodTest {
   public void inversePutAllModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().putAll(%s))",
-                exampleInverseBiMap(1, 1, 2, 2))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1, 2, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().putAll(%s))",
+                    exampleInverseBiMap(1, 1, 2, 2))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(0, 0, 1, 1, 2, 2))
+                .build())
         .runTest();
   }
 
@@ -493,11 +540,13 @@ public class BiMapMutateMethodTest {
     }
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mutateItems(items -> items.inverse().putAll(%s.of(%s, %s)));",
-                ImmutableMap.class, values.example(0), keys.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().putAll(%s.of(%s, %s)));",
+                    ImmutableMap.class, values.example(0), keys.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -505,15 +554,18 @@ public class BiMapMutateMethodTest {
   public void inversePutAllReplacesDuplicateValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().putAll(%s))",
-                exampleInverseBiMap(0, 1, 2, 3))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(1, 0, 3, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().putAll(%s))",
+                    exampleInverseBiMap(0, 1, 2, 3))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(1, 0, 3, 2))
+                .build())
         .runTest();
   }
 
@@ -523,12 +575,14 @@ public class BiMapMutateMethodTest {
     thrown.expectMessage("value already present: " + keys.exampleToString(0));
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.inverse().putAll(%s));",
-                exampleInverseBiMap(1, 0, 2, 3))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.inverse().putAll(%s));",
+                    exampleInverseBiMap(1, 0, 2, 3))
+                .build())
         .runTest();
   }
 
@@ -536,16 +590,18 @@ public class BiMapMutateMethodTest {
   public void iterateEntrySetFindsContainedEntry() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("      Map.Entry<%s, %s> entry = items.entrySet().iterator().next();",
-                keys.type(), values.type())
-            .addLine("      assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
-            .addLine("      assertThat(entry.getValue()).isEqualTo(%s);", values.example(0))
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> {")
+                .addLine(
+                    "      Map.Entry<%s, %s> entry = items.entrySet().iterator().next();",
+                    keys.type(), values.type())
+                .addLine("      assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
+                .addLine("      assertThat(entry.getValue()).isEqualTo(%s);", values.example(0))
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -553,16 +609,17 @@ public class BiMapMutateMethodTest {
   public void iterateInverseEntrySetFindsContainedEntry() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("      Map.Entry<%s, %s> entry =", values.type(), keys.type())
-            .addLine("          items.inverse().entrySet().iterator().next();")
-            .addLine("      assertThat(entry.getKey()).isEqualTo(%s);", values.example(0))
-            .addLine("      assertThat(entry.getValue()).isEqualTo(%s);", keys.example(0))
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> {")
+                .addLine("      Map.Entry<%s, %s> entry =", values.type(), keys.type())
+                .addLine("          items.inverse().entrySet().iterator().next();")
+                .addLine("      assertThat(entry.getKey()).isEqualTo(%s);", values.example(0))
+                .addLine("      assertThat(entry.getValue()).isEqualTo(%s);", keys.example(0))
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -570,19 +627,22 @@ public class BiMapMutateMethodTest {
   public void callRemoveOnEntrySetIteratorModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
-                keys.type(), values.type())
-            .addLine("        i.next();")
-            .addLine("        i.remove();")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> {")
+                .addLine(
+                    "        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                    keys.type(), values.type())
+                .addLine("        i.next();")
+                .addLine("        i.remove();")
+                .addLine("    })")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 1))
+                .build())
         .runTest();
   }
 
@@ -590,19 +650,21 @@ public class BiMapMutateMethodTest {
   public void callRemoveOnInverseEntrySetIteratorModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Iterator<Map.Entry<%s, %s>> i =", values.type(), keys.type())
-            .addLine("            items.inverse().entrySet().iterator();")
-            .addLine("        i.next();")
-            .addLine("        i.remove();")
-            .addLine("    })")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Iterator<Map.Entry<%s, %s>> i =", values.type(), keys.type())
+                .addLine("            items.inverse().entrySet().iterator();")
+                .addLine("        i.next();")
+                .addLine("        i.remove();")
+                .addLine("    })")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 1))
+                .build())
         .runTest();
   }
 
@@ -610,25 +672,27 @@ public class BiMapMutateMethodTest {
   public void entrySetIteratorRemainsUsableAfterCallingRemove() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
-                keys.type(), values.type())
-            .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
-            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
-            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(0))
-            .addLine("        assertThat(i.hasNext()).isTrue();")
-            .addLine("        i.remove();")
-            .addLine("        assertThat(i.hasNext()).isTrue();")
-            .addLine("        entry = i.next();", Map.Entry.class)
-            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(1))
-            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(1))
-            .addLine("        assertThat(i.hasNext()).isFalse();")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> {")
+                .addLine(
+                    "        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                    keys.type(), values.type())
+                .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
+                .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
+                .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(0))
+                .addLine("        assertThat(i.hasNext()).isTrue();")
+                .addLine("        i.remove();")
+                .addLine("        assertThat(i.hasNext()).isTrue();")
+                .addLine("        entry = i.next();", Map.Entry.class)
+                .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(1))
+                .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(1))
+                .addLine("        assertThat(i.hasNext()).isFalse();")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -636,25 +700,26 @@ public class BiMapMutateMethodTest {
   public void inverseEntrySetIteratorRemainsUsableAfterCallingRemove() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Iterator<Map.Entry<%s, %s>> i =", values.type(), keys.type())
-            .addLine("            items.inverse().entrySet().iterator();")
-            .addLine("        Map.Entry<%s, %s> entry = i.next();", values.type(), keys.type())
-            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", values.example(0))
-            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", keys.example(0))
-            .addLine("        assertThat(i.hasNext()).isTrue();")
-            .addLine("        i.remove();")
-            .addLine("        assertThat(i.hasNext()).isTrue();")
-            .addLine("        entry = i.next();", Map.Entry.class)
-            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", values.example(1))
-            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", keys.example(1))
-            .addLine("        assertThat(i.hasNext()).isFalse();")
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Iterator<Map.Entry<%s, %s>> i =", values.type(), keys.type())
+                .addLine("            items.inverse().entrySet().iterator();")
+                .addLine("        Map.Entry<%s, %s> entry = i.next();", values.type(), keys.type())
+                .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", values.example(0))
+                .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", keys.example(0))
+                .addLine("        assertThat(i.hasNext()).isTrue();")
+                .addLine("        i.remove();")
+                .addLine("        assertThat(i.hasNext()).isTrue();")
+                .addLine("        entry = i.next();", Map.Entry.class)
+                .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", values.example(1))
+                .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", keys.example(1))
+                .addLine("        assertThat(i.hasNext()).isFalse();")
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -666,12 +731,14 @@ public class BiMapMutateMethodTest {
     }
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s));",
-                values.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s));",
+                    values.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -681,13 +748,15 @@ public class BiMapMutateMethodTest {
     thrown.expectMessage("value already present: " + values.exampleToString(1));
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s));",
-                values.example(1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine(
+                    "    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s));",
+                    values.example(1))
+                .build())
         .runTest();
   }
 
@@ -695,12 +764,14 @@ public class BiMapMutateMethodTest {
   public void callSetValueOnEntryAllowsDuplicateKeyAndValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s));",
-                values.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s));",
+                    values.example(0))
+                .build())
         .runTest();
   }
 
@@ -708,14 +779,17 @@ public class BiMapMutateMethodTest {
   public void callSetValueOnEntryModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s))",
-                values.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.entrySet().iterator().next().setValue(%s))",
+                    values.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(0, 1))
+                .build())
         .runTest();
   }
 
@@ -723,17 +797,20 @@ public class BiMapMutateMethodTest {
   public void callSetValueReturnsOldValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
-                keys.type(), values.type())
-            .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
-            .addLine("        %s oldValue = entry.setValue(%s);", values.type(), values.example(2))
-            .addLine("        assertThat(oldValue).isEqualTo(%s);", values.example(0))
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> {")
+                .addLine(
+                    "        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                    keys.type(), values.type())
+                .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
+                .addLine(
+                    "        %s oldValue = entry.setValue(%s);", values.type(), values.example(2))
+                .addLine("        assertThat(oldValue).isEqualTo(%s);", values.example(0))
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -745,13 +822,15 @@ public class BiMapMutateMethodTest {
     }
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items")
-            .addLine("        .inverse().entrySet().iterator().next().setValue(%s));",
-                keys.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> items")
+                .addLine(
+                    "        .inverse().entrySet().iterator().next().setValue(%s));",
+                    keys.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -761,14 +840,16 @@ public class BiMapMutateMethodTest {
     thrown.expectMessage("value already present: " + keys.exampleToString(1));
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> items")
-            .addLine("        .inverse().entrySet().iterator().next().setValue(%s));",
-                keys.example(1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> items")
+                .addLine(
+                    "        .inverse().entrySet().iterator().next().setValue(%s));",
+                    keys.example(1))
+                .build())
         .runTest();
   }
 
@@ -776,13 +857,15 @@ public class BiMapMutateMethodTest {
   public void callSetValueOnInverseEntryAllowsDuplicateKeyAndValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items")
-            .addLine("        .inverse().entrySet().iterator().next().setValue(%s));",
-                keys.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> items")
+                .addLine(
+                    "        .inverse().entrySet().iterator().next().setValue(%s));",
+                    keys.example(0))
+                .build())
         .runTest();
   }
 
@@ -790,15 +873,18 @@ public class BiMapMutateMethodTest {
   public void callSetValueOnInverseEntryModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items")
-            .addLine("        .inverse().entrySet().iterator().next().setValue(%s))",
-                keys.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> items")
+                .addLine(
+                    "        .inverse().entrySet().iterator().next().setValue(%s))",
+                    keys.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 0))
+                .build())
         .runTest();
   }
 
@@ -806,19 +892,21 @@ public class BiMapMutateMethodTest {
   public void entryRemainsUsableAfterCallingSetValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
-                keys.type(), values.type())
-            .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
-            .addLine("        entry.setValue(%s);", values.example(2))
-            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
-            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(2))
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> {")
+                .addLine(
+                    "        Iterator<Map.Entry<%s, %s>> i = items.entrySet().iterator();",
+                    keys.type(), values.type())
+                .addLine("        Map.Entry<%s, %s> entry = i.next();", keys.type(), values.type())
+                .addLine("        entry.setValue(%s);", values.example(2))
+                .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", keys.example(0))
+                .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", values.example(2))
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -826,19 +914,20 @@ public class BiMapMutateMethodTest {
   public void inverseEntryRemainsUsableAfterCallingSetValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> {")
-            .addLine("        Iterator<Map.Entry<%s, %s>> i =", values.type(), keys.type())
-            .addLine("            items.inverse().entrySet().iterator();")
-            .addLine("        Map.Entry<%s, %s> entry = i.next();", values.type(), keys.type())
-            .addLine("        entry.setValue(%s);", keys.example(2))
-            .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", values.example(0))
-            .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", keys.example(2))
-            .addLine("    });")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> {")
+                .addLine("        Iterator<Map.Entry<%s, %s>> i =", values.type(), keys.type())
+                .addLine("            items.inverse().entrySet().iterator();")
+                .addLine("        Map.Entry<%s, %s> entry = i.next();", values.type(), keys.type())
+                .addLine("        entry.setValue(%s);", keys.example(2))
+                .addLine("        assertThat(entry.getKey()).isEqualTo(%s);", values.example(0))
+                .addLine("        assertThat(entry.getValue()).isEqualTo(%s);", keys.example(2))
+                .addLine("    });")
+                .build())
         .runTest();
   }
 
@@ -846,14 +935,16 @@ public class BiMapMutateMethodTest {
   public void getReturnsContainedValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("List<%s> values = new ArrayList<>();", values.type())
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> values.add(items.get(%s)))", keys.example(0))
-            .addLine("    .mutateItems(items -> values.add(items.get(%s)));", keys.example(1))
-            .addLine("assertThat(values).containsExactly(%s, null).inOrder();", values.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("List<%s> values = new ArrayList<>();", values.type())
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .mutateItems(items -> values.add(items.get(%s)))", keys.example(0))
+                .addLine("    .mutateItems(items -> values.add(items.get(%s)));", keys.example(1))
+                .addLine(
+                    "assertThat(values).containsExactly(%s, null).inOrder();", values.example(0))
+                .build())
         .runTest();
   }
 
@@ -861,16 +952,19 @@ public class BiMapMutateMethodTest {
   public void inverseGetReturnsContainedKey() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("List<%s> keys = new ArrayList<>();", keys.type())
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> keys.add(items.inverse().get(%s)))",
-                values.example(0))
-            .addLine("    .mutateItems(items -> keys.add(items.inverse().get(%s)));",
-                values.example(1))
-            .addLine("assertThat(keys).containsExactly(%s, null).inOrder();", keys.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("List<%s> keys = new ArrayList<>();", keys.type())
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> keys.add(items.inverse().get(%s)))",
+                    values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> keys.add(items.inverse().get(%s)));",
+                    values.example(1))
+                .addLine("assertThat(keys).containsExactly(%s, null).inOrder();", keys.example(0))
+                .build())
         .runTest();
   }
 
@@ -878,16 +972,19 @@ public class BiMapMutateMethodTest {
   public void containsKeyFindsContainedKey() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("List<Boolean> results = new ArrayList<>();")
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> results.add(items.containsKey(%s)))",
-                keys.example(0))
-            .addLine("    .mutateItems(items -> results.add(items.containsKey(%s)));",
-                keys.example(1))
-            .addLine("assertThat(results).containsExactly(true, false).inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("List<Boolean> results = new ArrayList<>();")
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> results.add(items.containsKey(%s)))",
+                    keys.example(0))
+                .addLine(
+                    "    .mutateItems(items -> results.add(items.containsKey(%s)));",
+                    keys.example(1))
+                .addLine("assertThat(results).containsExactly(true, false).inOrder();")
+                .build())
         .runTest();
   }
 
@@ -895,16 +992,19 @@ public class BiMapMutateMethodTest {
   public void inverseContainsKeyFindsContainedValue() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("List<Boolean> results = new ArrayList<>();")
-            .addLine("new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> results.add(items.inverse().containsKey(%s)))",
-                values.example(0))
-            .addLine("    .mutateItems(items -> results.add(items.inverse().containsKey(%s)));",
-                values.example(1))
-            .addLine("assertThat(results).containsExactly(true, false).inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("List<Boolean> results = new ArrayList<>();")
+                .addLine("new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> results.add(items.inverse().containsKey(%s)))",
+                    values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> results.add(items.inverse().containsKey(%s)));",
+                    values.example(1))
+                .addLine("assertThat(results).containsExactly(true, false).inOrder();")
+                .build())
         .runTest();
   }
 
@@ -912,14 +1012,16 @@ public class BiMapMutateMethodTest {
   public void removeModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> items.remove(%s))", keys.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> items.remove(%s))", keys.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 1))
+                .build())
         .runTest();
   }
 
@@ -927,14 +1029,16 @@ public class BiMapMutateMethodTest {
   public void inverseRemoveModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> items.inverse().remove(%s))", values.example(0))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> items.inverse().remove(%s))", values.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);", convention.get(), exampleBiMap(1, 1))
+                .build())
         .runTest();
   }
 
@@ -942,14 +1046,15 @@ public class BiMapMutateMethodTest {
   public void clearModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(%s::clear)", BiMap.class)
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.get())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(%s::clear)", BiMap.class)
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s).isEmpty();", convention.get())
+                .build())
         .runTest();
   }
 
@@ -957,14 +1062,15 @@ public class BiMapMutateMethodTest {
   public void inverseClearModifiesUnderlyingProperty() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> items.inverse().clear())")
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEmpty();", convention.get())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> items.inverse().clear())")
+                .addLine("    .build();")
+                .addLine("assertThat(value.%s).isEmpty();", convention.get())
+                .build())
         .runTest();
   }
 
@@ -972,17 +1078,19 @@ public class BiMapMutateMethodTest {
   public void valuesReturnsLiveViewOfValuesInMap() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("%s<%s<%s>> values = new %s<>();",
-                List.class, Set.class, values.type(), ArrayList.class)
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> values.add(items.values()));")
-            .addLine("assertThat(values.get(0)).containsExactly(%s);", values.examples(0, 1))
-            .addLine("builder.putItems(%s, %s);", keys.example(2), values.example(2))
-            .addLine("assertThat(values.get(0)).containsExactly(%s);", values.examples(0, 1, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "%s<%s<%s>> values = new %s<>();",
+                    List.class, Set.class, values.type(), ArrayList.class)
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> values.add(items.values()));")
+                .addLine("assertThat(values.get(0)).containsExactly(%s);", values.examples(0, 1))
+                .addLine("builder.putItems(%s, %s);", keys.example(2), values.example(2))
+                .addLine("assertThat(values.get(0)).containsExactly(%s);", values.examples(0, 1, 2))
+                .build())
         .runTest();
   }
 
@@ -990,17 +1098,19 @@ public class BiMapMutateMethodTest {
   public void inverseValuesReturnsLiveViewOfKeysInMap() {
     behaviorTester
         .with(bimapPropertyType)
-        .with(testBuilder()
-            .addLine("%s<%s<%s>> keys = new %s<>();",
-                List.class, Set.class, keys.type(), ArrayList.class)
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
-            .addLine("    .mutateItems(items -> keys.add(items.inverse().values()));")
-            .addLine("assertThat(keys.get(0)).containsExactly(%s);", keys.examples(0, 1))
-            .addLine("builder.putItems(%s, %s);", keys.example(2), values.example(2))
-            .addLine("assertThat(keys.get(0)).containsExactly(%s);", keys.examples(0, 1, 2))
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "%s<%s<%s>> keys = new %s<>();",
+                    List.class, Set.class, keys.type(), ArrayList.class)
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine("    .putItems(%s, %s)", keys.example(1), values.example(1))
+                .addLine("    .mutateItems(items -> keys.add(items.inverse().values()));")
+                .addLine("assertThat(keys.get(0)).containsExactly(%s);", keys.examples(0, 1))
+                .addLine("builder.putItems(%s, %s);", keys.example(2), values.example(2))
+                .addLine("assertThat(keys.get(0)).containsExactly(%s);", keys.examples(0, 1, 2))
+                .build())
         .runTest();
   }
 
@@ -1013,7 +1123,8 @@ public class BiMapMutateMethodTest {
         customMutatorType
             .addLine("%s", line.substring(0, insertIndex))
             .addLine("    public interface Mutator {")
-            .addLine("      void mutate(%s<%s, %s> multiBiMap);",
+            .addLine(
+                "      void mutate(%s<%s, %s> multiBiMap);",
                 BiMap.class, keys.type(), values.type())
             .addLine("    }")
             .addLine("    @Override public Builder mutateItems(Mutator mutator) {")
@@ -1027,15 +1138,18 @@ public class BiMapMutateMethodTest {
 
     behaviorTester
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
-            .addLine("    .mutateItems(items -> items.put(%s, %s))",
-                keys.example(1), values.example(1))
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s).isEqualTo(%s);",
-                convention.get(), exampleBiMap(0, 0, 1, 1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .putItems(%s, %s)", keys.example(0), values.example(0))
+                .addLine(
+                    "    .mutateItems(items -> items.put(%s, %s))",
+                    keys.example(1), values.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s).isEqualTo(%s);",
+                    convention.get(), exampleBiMap(0, 0, 1, 1))
+                .build())
         .runTest();
   }
 
@@ -1044,20 +1158,26 @@ public class BiMapMutateMethodTest {
   }
 
   private String exampleBiMap(int key1, int value1, int key2, int value2) {
-    return String.format("ImmutableBiMap.of(%s, %s, %s, %s)",
+    return String.format(
+        "ImmutableBiMap.of(%s, %s, %s, %s)",
         keys.example(key1), values.example(value1), keys.example(key2), values.example(value2));
   }
 
   private String exampleInverseBiMap(int value1, int key1, int value2, int key2) {
-    return String.format("ImmutableBiMap.of(%s, %s, %s, %s)",
+    return String.format(
+        "ImmutableBiMap.of(%s, %s, %s, %s)",
         values.example(value1), keys.example(key1), values.example(value2), keys.example(key2));
   }
 
   private String exampleBiMap(int key1, int value1, int key2, int value2, int key3, int value3) {
-    return String.format("ImmutableBiMap.of(%s, %s, %s, %s, %s, %s)",
-        keys.example(key1), values.example(value1),
-        keys.example(key2), values.example(value2),
-        keys.example(key3), values.example(value3));
+    return String.format(
+        "ImmutableBiMap.of(%s, %s, %s, %s, %s, %s)",
+        keys.example(key1),
+        values.example(value1),
+        keys.example(key2),
+        values.example(value2),
+        keys.example(key3),
+        values.example(value3));
   }
 
   private static TestBuilder testBuilder() {

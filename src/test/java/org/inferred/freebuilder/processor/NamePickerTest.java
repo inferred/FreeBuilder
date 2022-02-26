@@ -4,7 +4,15 @@ import static org.inferred.freebuilder.processor.NamePicker.pickName;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.reflect.TypeToken;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import org.inferred.freebuilder.processor.Datatype.Visibility;
 import org.inferred.freebuilder.processor.source.testing.ModelRule;
 import org.junit.Before;
@@ -12,17 +20,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 
 @RunWith(JUnit4.class)
 public class NamePickerTest {
@@ -33,32 +30,32 @@ public class NamePickerTest {
 
   @Before
   public void createExampleType() {
-    TypeElement type = model.newType(
-        "package com.example;",
-        "public class DataType extends ThingThatWillBeGenerated {",
-        "  public int methodReturningInt();",
-        "  protected int protectedMethod();",
-        "  int packageProtectedMethod();",
-        "  private int privateMethod();",
-        "  private int otherPrivateMethod();",
-        "  private int _otherPrivateMethodImpl();",
-        "  public java.util.List<Integer> methodReturningIntegerList();",
-        "  public int methodTakingFloat(float a);",
-        "  protected int protectedMethodTakingFloat(float a);",
-        "  int packageProtectedMethodTakingFloat(float a);",
-        "  private int privateMethodTakingFloat(float a);",
-        "  public int methodTakingIntegerList(java.util.List<Integer> a);",
-        "}");
+    TypeElement type =
+        model.newType(
+            "package com.example;",
+            "public class DataType extends ThingThatWillBeGenerated {",
+            "  public int methodReturningInt();",
+            "  protected int protectedMethod();",
+            "  int packageProtectedMethod();",
+            "  private int privateMethod();",
+            "  private int otherPrivateMethod();",
+            "  private int _otherPrivateMethodImpl();",
+            "  public java.util.List<Integer> methodReturningIntegerList();",
+            "  public int methodTakingFloat(float a);",
+            "  protected int protectedMethodTakingFloat(float a);",
+            "  int packageProtectedMethodTakingFloat(float a);",
+            "  private int privateMethodTakingFloat(float a);",
+            "  public int methodTakingIntegerList(java.util.List<Integer> a);",
+            "}");
     exampleType = (DeclaredType) type.asType();
   }
 
   private NameAndVisibility pickNameForExampleType(
       Class<?> returnType, String preferredName, Class<?>... parameterTypes) {
-    TypeMirror[] parameterTypeMirrors = Arrays
-        .asList(parameterTypes)
-        .stream()
-        .map(model::typeMirror)
-        .collect(toArray(TypeMirror[]::new));
+    TypeMirror[] parameterTypeMirrors =
+        Arrays.asList(parameterTypes).stream()
+            .map(model::typeMirror)
+            .collect(toArray(TypeMirror[]::new));
     return pickName(
         exampleType,
         model.elementUtils(),
@@ -70,11 +67,10 @@ public class NamePickerTest {
 
   private NameAndVisibility pickNameForExampleType(
       TypeToken<?> returnType, String preferredName, TypeToken<?>... parameterTypes) {
-    TypeMirror[] parameterTypeMirrors = Arrays
-        .asList(parameterTypes)
-        .stream()
-        .map(model::typeMirror)
-        .collect(toArray(TypeMirror[]::new));
+    TypeMirror[] parameterTypeMirrors =
+        Arrays.asList(parameterTypes).stream()
+            .map(model::typeMirror)
+            .collect(toArray(TypeMirror[]::new));
     return pickName(
         exampleType,
         model.elementUtils(),
@@ -135,8 +131,8 @@ public class NamePickerTest {
 
   @Test
   public void incompatibleGenericReturnType() {
-    NameAndVisibility result = pickNameForExampleType(
-        new TypeToken<List<String>>() { }, "methodReturningIntegerList");
+    NameAndVisibility result =
+        pickNameForExampleType(new TypeToken<List<String>>() {}, "methodReturningIntegerList");
     assertEquals("_methodReturningIntegerListImpl", result.name());
     assertEquals(Visibility.PACKAGE, result.visibility());
   }
@@ -164,24 +160,24 @@ public class NamePickerTest {
 
   @Test
   public void singleParameterMethodOverrideProtected() {
-    NameAndVisibility result = pickNameForExampleType(
-        int.class, "protectedMethodTakingFloat", float.class);
+    NameAndVisibility result =
+        pickNameForExampleType(int.class, "protectedMethodTakingFloat", float.class);
     assertEquals("protectedMethodTakingFloat", result.name());
     assertEquals(Visibility.PACKAGE, result.visibility());
   }
 
   @Test
   public void singleParameterMethodOverridePackageProtected() {
-    NameAndVisibility result = pickNameForExampleType(
-        int.class, "packageProtectedMethodTakingFloat", float.class);
+    NameAndVisibility result =
+        pickNameForExampleType(int.class, "packageProtectedMethodTakingFloat", float.class);
     assertEquals("packageProtectedMethodTakingFloat", result.name());
     assertEquals(Visibility.PACKAGE, result.visibility());
   }
 
   @Test
   public void singleParameterMethodOverridePrivate() {
-    NameAndVisibility result = pickNameForExampleType(
-        int.class, "privateMethodTakingFloat", float.class);
+    NameAndVisibility result =
+        pickNameForExampleType(int.class, "privateMethodTakingFloat", float.class);
     assertEquals("_privateMethodTakingFloatImpl", result.name());
     assertEquals(Visibility.PACKAGE, result.visibility());
   }
@@ -203,16 +199,18 @@ public class NamePickerTest {
 
   @Test
   public void singleParameterGenericMethodOverload() {
-    NameAndVisibility result = pickNameForExampleType(
-        TypeToken.of(int.class), "methodTakingIntegerList", new TypeToken<List<Integer>>() {});
+    NameAndVisibility result =
+        pickNameForExampleType(
+            TypeToken.of(int.class), "methodTakingIntegerList", new TypeToken<List<Integer>>() {});
     assertEquals("methodTakingIntegerList", result.name());
     assertEquals(Visibility.PUBLIC, result.visibility());
   }
 
   @Test
   public void incompatibleParameter() {
-    NameAndVisibility result = pickNameForExampleType(
-        TypeToken.of(int.class), "methodTakingIntegerList", new TypeToken<List<Float>>() {});
+    NameAndVisibility result =
+        pickNameForExampleType(
+            TypeToken.of(int.class), "methodTakingIntegerList", new TypeToken<List<Float>>() {});
     assertEquals("_methodTakingIntegerListImpl", result.name());
     assertEquals(Visibility.PACKAGE, result.visibility());
   }

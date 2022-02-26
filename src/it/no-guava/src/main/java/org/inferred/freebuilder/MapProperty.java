@@ -22,5 +22,5 @@ import java.util.Map;
 public interface MapProperty extends Serializable {
   Map<String, Double> getDistances();
 
-  class Builder extends MapProperty_Builder { }
+  class Builder extends MapProperty_Builder {}
 }

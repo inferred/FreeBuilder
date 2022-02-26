@@ -1,12 +1,11 @@
 package org.inferred.freebuilder.processor.model;
 
-import org.inferred.freebuilder.processor.source.Partial;
-import org.inferred.freebuilder.processor.source.ValueType;
-
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.type.WildcardType;
+import org.inferred.freebuilder.processor.source.Partial;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 public abstract class WildcardTypeImpl extends ValueType implements WildcardType {
 

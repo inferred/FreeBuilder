@@ -21,7 +21,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
 import com.google.common.testing.EqualsTester;
-
+import java.util.Arrays;
+import java.util.List;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
+import java.util.function.IntFunction;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -40,13 +45,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
-import java.util.OptionalLong;
-import java.util.function.IntFunction;
-
 /** Behavioral tests for primitive optional properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -63,9 +61,7 @@ public class PrimitiveOptionalPropertyTest {
     private final IntFunction<? extends Number> examples;
 
     <T, P extends Number> OptionalFactory(
-        Class<T> type,
-        Class<P> primitiveType,
-        IntFunction<P> examples) {
+        Class<T> type, Class<P> primitiveType, IntFunction<P> examples) {
       this.type = type;
       this.primitiveType = primitiveType;
       this.boxedType = Primitives.wrap(primitiveType);
@@ -90,11 +86,10 @@ public class PrimitiveOptionalPropertyTest {
     List<OptionalFactory> optionals = Arrays.asList(OptionalFactory.values());
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
-    return () -> Lists
-        .cartesianProduct(optionals, conventions, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(optionals, conventions, features).stream()
+            .map(List::toArray)
+            .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -107,35 +102,35 @@ public class PrimitiveOptionalPropertyTest {
   private final SourceBuilder datatype;
 
   public PrimitiveOptionalPropertyTest(
-      OptionalFactory optional,
-      NamingConvention convention,
-      FeatureSet features) {
+      OptionalFactory optional, NamingConvention convention, FeatureSet features) {
     this.optional = optional;
     this.convention = convention;
     this.features = features;
 
-    datatype = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
-        .addLine("public interface DataType {")
-        .addLine("  %s %s;", optional.type, convention.get("item"))
-        .addLine("")
-        .addLine("  Builder toBuilder();")
-        .addLine("  class Builder extends DataType_Builder {")
-        .addLine("    @Override public Builder %s(%s item) {",
-            convention.set("item"), optional.primitiveType)
-        .addLine("      if (item < 0) {")
-        .addLine("        throw new IllegalArgumentException(\"%s\");", INVALID_MESSAGE)
-        .addLine("      }")
-        .addLine("      return super.%s(item);", convention.set("item"))
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("")
-        .addLine("  public static Builder builder() {")
-        .addLine("    return new Builder();")
-        .addLine("  }")
-        .addLine("}");
+    datatype =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+            .addLine("public interface DataType {")
+            .addLine("  %s %s;", optional.type, convention.get("item"))
+            .addLine("")
+            .addLine("  Builder toBuilder();")
+            .addLine("  class Builder extends DataType_Builder {")
+            .addLine(
+                "    @Override public Builder %s(%s item) {",
+                convention.set("item"), optional.primitiveType)
+            .addLine("      if (item < 0) {")
+            .addLine("        throw new IllegalArgumentException(\"%s\");", INVALID_MESSAGE)
+            .addLine("      }")
+            .addLine("      return super.%s(item);", convention.set("item"))
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}");
   }
 
   @Test
@@ -143,10 +138,12 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder().build();")
+                .addLine(
+                    "assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -155,10 +152,12 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("assertEquals(%s.empty(), builder.%s);", optional.type, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine(
+                    "assertEquals(%s.empty(), builder.%s);", optional.type, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -167,12 +166,14 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(%s);", convention.set("item"), optional.example(0))
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional.type, optional.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .%s(%s);", convention.set("item"), optional.example(0))
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional.type, optional.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -181,13 +182,15 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional.type, optional.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional.type, optional.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -196,14 +199,17 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.of(%s))", convention.set("item"),
-                optional.type, optional.example(0))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional.type, optional.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .%s(%s.of(%s))",
+                    convention.set("item"), optional.type, optional.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional.type, optional.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -214,10 +220,11 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s.of(-1));", convention.set("item"), optional.type)
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder()")
+                .addLine("    .%s(%s.of(-1));", convention.set("item"), optional.type)
+                .build())
         .runTest();
   }
 
@@ -226,12 +233,14 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.empty())", convention.set("item"), optional.type)
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s.empty())", convention.set("item"), optional.type)
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -241,9 +250,11 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().%s((%s) null);", convention.set("item"), optional.type)
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "new DataType.Builder().%s((%s) null);", convention.set("item"), optional.type)
+                .build())
         .runTest();
   }
 
@@ -252,14 +263,16 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(1))
-            .addLine("    .mapItem(a -> a + %s)", optional.example(2))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s + %s), value.%s);",
-                optional.type, optional.example(1), optional.example(2), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(1))
+                .addLine("    .mapItem(a -> a + %s)", optional.example(2))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s + %s), value.%s);",
+                    optional.type, optional.example(1), optional.example(2), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -270,11 +283,12 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .mapItem(a -> -1);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .mapItem(a -> -1);")
+                .build())
         .runTest();
   }
 
@@ -284,11 +298,12 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .mapItem(null);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .mapItem(null);")
+                .build())
         .runTest();
   }
 
@@ -298,10 +313,8 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .mapItem(null);")
-            .build())
+        .with(
+            testBuilder().addLine("new DataType.Builder()").addLine("    .mapItem(null);").build())
         .runTest();
   }
 
@@ -310,12 +323,13 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .mapItem(a -> { fail(\"mapper called\"); return -1; })")
-            .addLine("    .build();")
-            .addLine("assertFalse(value.%s.isPresent());", convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .mapItem(a -> { fail(\"mapper called\"); return -1; })")
+                .addLine("    .build();")
+                .addLine("assertFalse(value.%s.isPresent());", convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -342,13 +356,15 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .mapItem(a -> null)")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .mapItem(a -> null)")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -375,14 +391,16 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .mapItem(a -> %s)", optional.example(1))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional.type, optional.example(1), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .mapItem(a -> %s)", optional.example(1))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional.type, optional.example(1), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -409,13 +427,15 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(customMutatorType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .mapItem(a -> %s.empty())", optional.type)
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .mapItem(a -> %s.empty())", optional.type)
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -424,13 +444,15 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .clearItem()")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .clearItem()")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -439,15 +461,17 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = DataType.builder()")
-            .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional.type, optional.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = DataType.builder()")
+                .addLine("    .mergeFrom(value);")
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional.type, optional.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -456,14 +480,16 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s);", convention.set("item"), optional.example(0))
-            .addLine("DataType.Builder builder = DataType.builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional.type, optional.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder()")
+                .addLine("    .%s(%s);", convention.set("item"), optional.example(0))
+                .addLine("DataType.Builder builder = DataType.builder()")
+                .addLine("    .mergeFrom(template);")
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional.type, optional.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -472,15 +498,17 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = DataType.builder()")
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional.type, optional.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = DataType.builder()")
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .mergeFrom(value);")
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional.type, optional.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -489,14 +517,16 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder();")
-            .addLine("DataType.Builder builder = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional.type, optional.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder();")
+                .addLine("DataType.Builder builder = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .mergeFrom(template);")
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional.type, optional.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -505,13 +535,15 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .clear()")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -519,26 +551,29 @@ public class PrimitiveOptionalPropertyTest {
   public void testBuilderClear_customDefault() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s %s;", optional.type, convention.get("item"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder().%s(%s);",
-                convention.set("item"), optional.example(1))
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional.type, optional.example(1), convention.get("item"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine("  public abstract %s %s;", optional.type, convention.get("item"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {}")
+                .addLine("  public static Builder builder() {")
+                .addLine(
+                    "    return new Builder().%s(%s);", convention.set("item"), optional.example(1))
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .clear()")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional.type, optional.example(1), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -546,24 +581,27 @@ public class PrimitiveOptionalPropertyTest {
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s %s;", optional.type, convention.get("item"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    public Builder(%s s) {", optional.primitiveType)
-            .addLine("      %s(s);", convention.set("item"))
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder(%s)", optional.example(0))
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine("  public abstract %s %s;", optional.type, convention.get("item"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {")
+                .addLine("    public Builder(%s s) {", optional.primitiveType)
+                .addLine("      %s(s);", convention.set("item"))
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder(%s)", optional.example(0))
+                .addLine("    .clear()")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.empty(), value.%s);", optional.type, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -572,12 +610,14 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = DataType.builder().%s(%s).build();",
-                convention.set("item"), optional.example(0))
-            .addLine("DataType copy = value.toBuilder().build();")
-            .addLine("assertEquals(value, copy);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "DataType value = DataType.builder().%s(%s).build();",
+                    convention.set("item"), optional.example(0))
+                .addLine("DataType copy = value.toBuilder().build();")
+                .addLine("assertEquals(value, copy);")
+                .build())
         .runTest();
   }
 
@@ -586,27 +626,29 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("new %s()", EqualsTester.class)
-            .addLine("    .addEqualityGroup(")
-            .addLine("        DataType.builder().build(),")
-            .addLine("        DataType.builder()")
-            .addLine("            .%s(%s.empty())", convention.set("item"), optional.type)
-            .addLine("            .build(),")
-            .addLine("        DataType.builder()")
-            .addLine("            .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("            .clearItem()")
-            .addLine("            .build())")
-            .addLine("    .addEqualityGroup(")
-            .addLine("        DataType.builder()")
-            .addLine("            .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("            .build(),")
-            .addLine("        DataType.builder()")
-            .addLine("            .%s(%s.of(%s))",
-                convention.set("item"), optional.type, optional.example(0))
-            .addLine("            .build())")
-            .addLine("    .testEquals();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new %s()", EqualsTester.class)
+                .addLine("    .addEqualityGroup(")
+                .addLine("        DataType.builder().build(),")
+                .addLine("        DataType.builder()")
+                .addLine("            .%s(%s.empty())", convention.set("item"), optional.type)
+                .addLine("            .build(),")
+                .addLine("        DataType.builder()")
+                .addLine("            .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("            .clearItem()")
+                .addLine("            .build())")
+                .addLine("    .addEqualityGroup(")
+                .addLine("        DataType.builder()")
+                .addLine("            .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("            .build(),")
+                .addLine("        DataType.builder()")
+                .addLine(
+                    "            .%s(%s.of(%s))",
+                    convention.set("item"), optional.type, optional.example(0))
+                .addLine("            .build())")
+                .addLine("    .testEquals();")
+                .build())
         .runTest();
   }
 
@@ -615,16 +657,18 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType empty = DataType.builder()")
-            .addLine("    .build();")
-            .addLine("DataType present = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .build();")
-            .addLine("assertEquals(\"DataType{}\", empty.toString());")
-            .addLine("assertEquals(\"DataType{item=\" + %s + \"}\", present.toString());",
-                optional.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType empty = DataType.builder()")
+                .addLine("    .build();")
+                .addLine("DataType present = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .build();")
+                .addLine("assertEquals(\"DataType{}\", empty.toString());")
+                .addLine(
+                    "assertEquals(\"DataType{item=\" + %s + \"}\", present.toString());",
+                    optional.example(0))
+                .build())
         .runTest();
   }
 
@@ -633,16 +677,18 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType empty = DataType.builder()")
-            .addLine("    .buildPartial();")
-            .addLine("DataType present = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(\"partial DataType{}\", empty.toString());")
-            .addLine("assertEquals(\"partial DataType{item=\" + %s + \"}\", present.toString());",
-                optional.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType empty = DataType.builder()")
+                .addLine("    .buildPartial();")
+                .addLine("DataType present = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), optional.example(0))
+                .addLine("    .buildPartial();")
+                .addLine("assertEquals(\"partial DataType{}\", empty.toString());")
+                .addLine(
+                    "assertEquals(\"partial DataType{item=\" + %s + \"}\", present.toString());",
+                    optional.example(0))
+                .build())
         .runTest();
   }
 
@@ -651,17 +697,20 @@ public class PrimitiveOptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder().%s(%s).build();",
-                convention.set("item"), optional.example(0))
-            .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
-            .addLine("    .registerModule(new %s());", Jdk8Module.class)
-            .addLine("String json = mapper.writeValueAsString(value);")
-            .addLine("assertEquals(\"{\\\"item\\\":%s}\", json);", optional.example(0))
-            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertEquals(%s.of(%s), clone.%s);",
-                optional.type, optional.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "DataType value = new DataType.Builder().%s(%s).build();",
+                    convention.set("item"), optional.example(0))
+                .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
+                .addLine("    .registerModule(new %s());", Jdk8Module.class)
+                .addLine("String json = mapper.writeValueAsString(value);")
+                .addLine("assertEquals(\"{\\\"item\\\":%s}\", json);", optional.example(0))
+                .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+                .addLine(
+                    "assertEquals(%s.of(%s), clone.%s);",
+                    optional.type, optional.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -672,33 +721,36 @@ public class PrimitiveOptionalPropertyTest {
     // overflow into a compile-time error.
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting(features)
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
-            .addLine("public interface DataType {")
-            .addLine("  %s %s;", optional.type, convention.get("item"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {")
-            .addLine("    public Builder %s(%s item) {",
-                convention.set("item"), optional.primitiveType)
-            .addLine("      return %s(%s.of(item));", convention.set("item"), optional.type)
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
-            .addLine("}"))
+        .with(
+            SourceBuilder.forTesting(features)
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+                .addLine("public interface DataType {")
+                .addLine("  %s %s;", optional.type, convention.get("item"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {")
+                .addLine(
+                    "    public Builder %s(%s item) {",
+                    convention.set("item"), optional.primitiveType)
+                .addLine("      return %s(%s.of(item));", convention.set("item"), optional.type)
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("")
+                .addLine("  public static Builder builder() {")
+                .addLine("    return new Builder();")
+                .addLine("  }")
+                .addLine("}"))
         .failsToCompile()
-        .withErrorThat(error -> error
-            .hasMessage("Infinite recursive loop detected")
-            .inFile("/com/example/DataType.java")
-            .onLine(14));
+        .withErrorThat(
+            error ->
+                error
+                    .hasMessage("Infinite recursive loop detected")
+                    .inFile("/com/example/DataType.java")
+                    .onLine(14));
   }
 
   private static TestBuilder testBuilder() {
-    return new TestBuilder()
-        .addImport("com.example.DataType");
+    return new TestBuilder().addImport("com.example.DataType");
   }
 }

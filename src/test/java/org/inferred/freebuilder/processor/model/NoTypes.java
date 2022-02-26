@@ -15,15 +15,12 @@
  */
 package org.inferred.freebuilder.processor.model;
 
-import org.inferred.freebuilder.processor.source.Partial;
-
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeVisitor;
+import org.inferred.freebuilder.processor.source.Partial;
 
-/**
- * Fake implementation of {@link NoType} for unit tests.
- */
+/** Fake implementation of {@link NoType} for unit tests. */
 public abstract class NoTypes implements NoType {
 
   public static final NoType NONE = Partial.of(NoTypes.class, TypeKind.NONE);
@@ -49,4 +46,3 @@ public abstract class NoTypes implements NoType {
     return getKind().toString().toLowerCase();
   }
 }
-

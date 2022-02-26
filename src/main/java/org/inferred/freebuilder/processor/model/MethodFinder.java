@@ -15,21 +15,18 @@
  */
 package org.inferred.freebuilder.processor.model;
 
-import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
-
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static org.inferred.freebuilder.processor.model.ModelUtils.maybeAsTypeElement;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
-
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -40,9 +37,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
-/**
- * Static utility method for finding all methods, declared and inherited, on a type.
- */
+/** Static utility method for finding all methods, declared and inherited, on a type. */
 public class MethodFinder {
 
   @FunctionalInterface
@@ -51,32 +46,30 @@ public class MethodFinder {
   }
 
   /**
-   * Returns all methods, declared and inherited, on {@code type}, except those specified by
-   * {@link Object}.
+   * Returns all methods, declared and inherited, on {@code type}, except those specified by {@link
+   * Object}.
    *
    * <p>If method B overrides method A, only method B will be included in the return set.
-   * Additionally, if methods A and B have the same signature, but are on unrelated interfaces,
-   * one will be arbitrarily picked to be returned.
+   * Additionally, if methods A and B have the same signature, but are on unrelated interfaces, one
+   * will be arbitrarily picked to be returned.
    */
   public static <E extends Exception> ImmutableSet<ExecutableElement> methodsOn(
-      TypeElement type,
-      Elements elements,
-      ErrorTypeHandling<E> errorTypeHandling) throws E {
+      TypeElement type, Elements elements, ErrorTypeHandling<E> errorTypeHandling) throws E {
     TypeElement objectType = elements.getTypeElement(Object.class.getCanonicalName());
-    Map<Signature, ExecutableElement> objectMethods = Maps.uniqueIndex(
-        methodsIn(objectType.getEnclosedElements()), Signature::new);
+    Map<Signature, ExecutableElement> objectMethods =
+        Maps.uniqueIndex(methodsIn(objectType.getEnclosedElements()), Signature::new);
     SetMultimap<Signature, ExecutableElement> methods = LinkedHashMultimap.create();
     for (TypeElement supertype : getSupertypes(type, errorTypeHandling)) {
       for (ExecutableElement method : methodsIn(supertype.getEnclosedElements())) {
         Signature signature = new Signature(method);
         if (method.getEnclosingElement().equals(objectType)) {
-          continue;  // Skip methods specified by Object.
+          continue; // Skip methods specified by Object.
         }
         if (objectMethods.containsKey(signature)
             && method.getEnclosingElement().getKind() == ElementKind.INTERFACE
             && method.getModifiers().contains(Modifier.ABSTRACT)
             && elements.overrides(method, objectMethods.get(signature), type)) {
-          continue;  // Skip abstract methods on interfaces redelaring Object methods.
+          continue; // Skip abstract methods on interfaces redelaring Object methods.
         }
         Iterator<ExecutableElement> iterator = methods.get(signature).iterator();
         while (iterator.hasNext()) {
@@ -93,17 +86,15 @@ public class MethodFinder {
   }
 
   private static <E extends Exception> ImmutableSet<TypeElement> getSupertypes(
-      TypeElement type,
-      ErrorTypeHandling<E> errorTypeHandling) throws E {
+      TypeElement type, ErrorTypeHandling<E> errorTypeHandling) throws E {
     Set<TypeElement> supertypes = new LinkedHashSet<>();
     addSupertypesToSet(type, supertypes, errorTypeHandling);
     return ImmutableSet.copyOf(supertypes);
   }
 
   private static <E extends Exception> void addSupertypesToSet(
-      TypeElement type,
-      Set<TypeElement> mutableSet,
-      ErrorTypeHandling<E> errorTypeHandling) throws E {
+      TypeElement type, Set<TypeElement> mutableSet, ErrorTypeHandling<E> errorTypeHandling)
+      throws E {
     for (TypeMirror iface : type.getInterfaces()) {
       TypeElement typeElement = maybeTypeElement(iface, errorTypeHandling).orElse(null);
       if (typeElement != null) {

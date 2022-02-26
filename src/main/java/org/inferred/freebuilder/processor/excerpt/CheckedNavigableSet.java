@@ -1,17 +1,16 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.LazyName;
-import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.ValueType;
-
 import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.LazyName;
+import org.inferred.freebuilder.processor.source.PreconditionExcerpts;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 /**
  * Excerpts defining a navigable set implementation that delegates to a provided add method to
@@ -19,8 +18,7 @@ import java.util.function.Consumer;
  */
 public class CheckedNavigableSet extends ValueType implements Excerpt {
 
-  public static final LazyName TYPE =
-      LazyName.of("CheckedNavigableSet", new CheckedNavigableSet());
+  public static final LazyName TYPE = LazyName.of("CheckedNavigableSet", new CheckedNavigableSet());
 
   private CheckedNavigableSet() {}
 
@@ -31,7 +29,8 @@ public class CheckedNavigableSet extends ValueType implements Excerpt {
         .addLine(" * A set implementation that delegates to a provided add method")
         .addLine(" * to perform element validation and insertion into a backing set.")
         .addLine(" */")
-        .addLine("private static class %s<E> extends %s<E> implements %s<E> {",
+        .addLine(
+            "private static class %s<E> extends %s<E> implements %s<E> {",
             TYPE, AbstractSet.class, NavigableSet.class)
         .addLine("")
         .addLine("  private final %s<E> set;", NavigableSet.class)
@@ -41,8 +40,7 @@ public class CheckedNavigableSet extends ValueType implements Excerpt {
         .addLine("  private final E toElement;")
         .addLine("  private final boolean toInclusive;")
         .addLine("")
-        .addLine("  %s(%s<E> set, %s<E> add) {",
-            TYPE, NavigableSet.class, Consumer.class)
+        .addLine("  %s(%s<E> set, %s<E> add) {", TYPE, NavigableSet.class, Consumer.class)
         .addLine("    this.set = set;")
         .addLine("    this.add = add;")
         .addLine("    this.fromElement = null;")
@@ -148,8 +146,7 @@ public class CheckedNavigableSet extends ValueType implements Excerpt {
         .addLine("      E toElement,")
         .addLine("      boolean inclusive) {")
         .addLine("    %s.requireNonNull(toElement);", Objects.class)
-        .addLine("    %s<E> headSet = set.headSet(toElement, inclusive);",
-            NavigableSet.class)
+        .addLine("    %s<E> headSet = set.headSet(toElement, inclusive);", NavigableSet.class)
         .addLine("    return new %s<>(", TYPE)
         .addLine("        headSet, add, fromElement, fromInclusive, toElement, inclusive);")
         .addLine("  }")
@@ -158,8 +155,7 @@ public class CheckedNavigableSet extends ValueType implements Excerpt {
         .addLine("      E fromElement,")
         .addLine("      boolean inclusive) {")
         .addLine("    %s.requireNonNull(fromElement);", Objects.class)
-        .addLine("    %s<E> tailSet = set.tailSet(fromElement, inclusive);",
-            NavigableSet.class)
+        .addLine("    %s<E> tailSet = set.tailSet(fromElement, inclusive);", NavigableSet.class)
         .addLine("    return new %s<>(", TYPE)
         .addLine("        tailSet, add, fromElement, inclusive, toElement, toInclusive);")
         .addLine("  }")
@@ -168,11 +164,12 @@ public class CheckedNavigableSet extends ValueType implements Excerpt {
 
   private static void addSubSetMethod(SourceBuilder code) {
     code.addLine("")
-        .addLine("  @Override public %s<E> subSet(E fromElement, E toElement) {",
-            NavigableSet.class)
+        .addLine(
+            "  @Override public %s<E> subSet(E fromElement, E toElement) {", NavigableSet.class)
         .addLine("    %s.requireNonNull(fromElement);", Objects.class)
         .addLine("    %s.requireNonNull(toElement);", Objects.class)
-        .addLine("    %s<E> subSet = set.subSet(fromElement, true, toElement, false);",
+        .addLine(
+            "    %s<E> subSet = set.subSet(fromElement, true, toElement, false);",
             NavigableSet.class)
         .addLine("    return new %s<>(", TYPE)
         .addLine("        subSet, add, fromElement, true, toElement, false);")
@@ -200,40 +197,44 @@ public class CheckedNavigableSet extends ValueType implements Excerpt {
         .addLine("      %s<? super E> comparator = set.comparator();", Comparator.class)
         .addLine("      if (comparator == null) {")
         .addLine("        @SuppressWarnings(\"unchecked\")")
-        .addLine("        %1$s<? super E> lowerBound = (%1$s<? super E>) fromElement;",
-            Comparable.class)
+        .addLine(
+            "        %1$s<? super E> lowerBound = (%1$s<? super E>) fromElement;", Comparable.class)
         .addLine("        @SuppressWarnings(\"unchecked\")")
-        .addLine("        %1$s<? super E> upperBound = (%1$s<? super E>) toElement;",
-            Comparable.class)
-        .add(PreconditionExcerpts.checkArgument(
-            "lowerBound == null || lowerBound.compareTo(e) <= (fromInclusive ? 0 : -1)",
-            "element must be %s %s (got %s)",
-            "(fromInclusive ? \"at least\" : \"greater than\")",
-            "lowerBound",
-            "e"))
-        .add(PreconditionExcerpts.checkArgument(
-            "upperBound == null || upperBound.compareTo(e) >= (toInclusive ? 0 : 1)",
-            "element must be %s %s (got %s)",
-            "(toInclusive ? \"at most\" : \"less than\")",
-            "upperBound",
-            "e"))
+        .addLine(
+            "        %1$s<? super E> upperBound = (%1$s<? super E>) toElement;", Comparable.class)
+        .add(
+            PreconditionExcerpts.checkArgument(
+                "lowerBound == null || lowerBound.compareTo(e) <= (fromInclusive ? 0 : -1)",
+                "element must be %s %s (got %s)",
+                "(fromInclusive ? \"at least\" : \"greater than\")",
+                "lowerBound",
+                "e"))
+        .add(
+            PreconditionExcerpts.checkArgument(
+                "upperBound == null || upperBound.compareTo(e) >= (toInclusive ? 0 : 1)",
+                "element must be %s %s (got %s)",
+                "(toInclusive ? \"at most\" : \"less than\")",
+                "upperBound",
+                "e"))
         .addLine("      } else {")
-        .add(PreconditionExcerpts.checkArgument(
-            "fromElement == null "
-                + "|| comparator.compare(fromElement, e) <= (fromInclusive ? 0 : -1)",
-            "element must be %s %s (got %s) using comparator %s",
-            "(fromInclusive ? \"at least\" : \"greater than\")",
-            "fromElement",
-            "e",
-            "comparator"))
-        .add(PreconditionExcerpts.checkArgument(
-            "toElement == null "
-                + "|| comparator.compare(toElement, e) >= (toInclusive ? 0 : 1)",
-            "element must be %s %s (got %s) using comparator %s",
-            "(toInclusive ? \"at most\" : \"less than\")",
-            "toElement",
-            "e",
-            "comparator"))
+        .add(
+            PreconditionExcerpts.checkArgument(
+                "fromElement == null "
+                    + "|| comparator.compare(fromElement, e) <= (fromInclusive ? 0 : -1)",
+                "element must be %s %s (got %s) using comparator %s",
+                "(fromInclusive ? \"at least\" : \"greater than\")",
+                "fromElement",
+                "e",
+                "comparator"))
+        .add(
+            PreconditionExcerpts.checkArgument(
+                "toElement == null "
+                    + "|| comparator.compare(toElement, e) >= (toInclusive ? 0 : 1)",
+                "element must be %s %s (got %s) using comparator %s",
+                "(toInclusive ? \"at most\" : \"less than\")",
+                "toElement",
+                "e",
+                "comparator"))
         .addLine("      }")
         .addLine("    }")
         .addLine("    if (!set.contains(e)) {")

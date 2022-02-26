@@ -16,7 +16,8 @@
 package org.inferred.freebuilder.processor.property;
 
 import com.google.common.collect.Lists;
-
+import java.util.Arrays;
+import java.util.List;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -35,9 +36,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
 public class RequiredPropertiesTest {
@@ -47,11 +45,8 @@ public class RequiredPropertiesTest {
   public static Iterable<Object[]> parameters() {
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
-    return () -> Lists
-        .cartesianProduct(conventions, features)
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(conventions, features).stream().map(List::toArray).iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -66,15 +61,16 @@ public class RequiredPropertiesTest {
     this.convention = convention;
     this.features = features;
 
-    requiredPropertiesType = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract int %s;", convention.get("propertyA"))
-        .addLine("  public abstract boolean %s;", convention.is("propertyB"))
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {}")
-        .addLine("}");
+    requiredPropertiesType =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract int %s;", convention.get("propertyA"))
+            .addLine("  public abstract boolean %s;", convention.is("propertyB"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("}");
   }
 
   @Test
@@ -84,11 +80,12 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .build();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .build();")
+                .build())
         .runTest();
   }
 
@@ -98,23 +95,25 @@ public class RequiredPropertiesTest {
     thrown.expectMessage("Not set: [propertyB, propertyD]");
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract int %s;", convention.get("propertyA"))
-            .addLine("  public abstract boolean %s;", convention.is("propertyB"))
-            .addLine("  public abstract String %s;", convention.get("propertyC"))
-            .addLine("  public abstract int %s;", convention.get("propertyD"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(\"\")", convention.set("propertyC"))
-            .addLine("    .build();")
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine("  public abstract int %s;", convention.get("propertyA"))
+                .addLine("  public abstract boolean %s;", convention.is("propertyB"))
+                .addLine("  public abstract String %s;", convention.get("propertyC"))
+                .addLine("  public abstract int %s;", convention.get("propertyD"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(\"\")", convention.set("propertyC"))
+                .addLine("    .build();")
+                .build())
         .runTest();
   }
 
@@ -123,16 +122,17 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(11, builder.%s);", convention.get("propertyA"))
-            .addLine("assertTrue(builder.%s);", convention.is("propertyB"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .mergeFrom(value);")
+                .addLine("assertEquals(11, builder.%s);", convention.get("propertyA"))
+                .addLine("assertTrue(builder.%s);", convention.is("propertyB"))
+                .build())
         .runTest();
   }
 
@@ -141,15 +141,16 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true);", convention.set("propertyB"))
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(11, builder.%s);", convention.get("propertyA"))
-            .addLine("assertTrue(builder.%s);", convention.is("propertyB"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true);", convention.set("propertyB"))
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .mergeFrom(template);")
+                .addLine("assertEquals(11, builder.%s);", convention.get("propertyA"))
+                .addLine("assertTrue(builder.%s);", convention.is("propertyB"))
+                .build())
         .runTest();
   }
 
@@ -158,13 +159,14 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .%s(11);", convention.set("propertyA"))
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(11, builder.%s);", convention.get("propertyA"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = new DataType.Builder()")
+                .addLine("    .%s(11);", convention.set("propertyA"))
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .mergeFrom(template);")
+                .addLine("assertEquals(11, builder.%s);", convention.get("propertyA"))
+                .build())
         .runTest();
   }
 
@@ -172,32 +174,34 @@ public class RequiredPropertiesTest {
   public void testMergeFrom_noTemplate() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract int %s;", convention.get("propertyA"))
-            .addLine("  public abstract boolean %s;", convention.is("propertyB"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    public Builder(Integer propertyA, Boolean propertyB) {")
-            .addLine("      if (propertyA != null) {")
-            .addLine("        this.%s(propertyA);", convention.set("propertyA"))
-            .addLine("      }")
-            .addLine("      if (propertyB != null) {")
-            .addLine("        this.%s(propertyB);", convention.set("propertyB"))
-            .addLine("      }")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType.Builder template = new DataType")
-            .addLine("    .Builder(11, null);")
-            .addLine("DataType.Builder builder = new DataType")
-            .addLine("    .Builder(null, null)")
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(11, builder.%s);", convention.get("propertyA"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine("  public abstract int %s;", convention.get("propertyA"))
+                .addLine("  public abstract boolean %s;", convention.is("propertyB"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {")
+                .addLine("    public Builder(Integer propertyA, Boolean propertyB) {")
+                .addLine("      if (propertyA != null) {")
+                .addLine("        this.%s(propertyA);", convention.set("propertyA"))
+                .addLine("      }")
+                .addLine("      if (propertyB != null) {")
+                .addLine("        this.%s(propertyB);", convention.set("propertyB"))
+                .addLine("      }")
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = new DataType")
+                .addLine("    .Builder(11, null);")
+                .addLine("DataType.Builder builder = new DataType")
+                .addLine("    .Builder(null, null)")
+                .addLine("    .mergeFrom(template);")
+                .addLine("assertEquals(11, builder.%s);", convention.get("propertyA"))
+                .build())
         .runTest();
   }
 
@@ -208,13 +212,14 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = new DataType.Builder()")
-            .addLine("    .%s(11);", convention.set("propertyA"))
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("builder.%s;", convention.is("propertyB"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = new DataType.Builder()")
+                .addLine("    .%s(11);", convention.set("propertyA"))
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .mergeFrom(template);")
+                .addLine("builder.%s;", convention.is("propertyB"))
+                .build())
         .runTest();
   }
 
@@ -223,12 +228,13 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(11, value.%s);", convention.get("propertyA"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .buildPartial();")
+                .addLine("assertEquals(11, value.%s);", convention.get("propertyA"))
+                .build())
         .runTest();
   }
 
@@ -239,12 +245,13 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .buildPartial();")
-            .addLine("value.%s;", convention.is("propertyB"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .buildPartial();")
+                .addLine("value.%s;", convention.is("propertyB"))
+                .build())
         .runTest();
   }
 
@@ -253,12 +260,13 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(\"partial DataType{propertyA=11}\", value.toString());")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .buildPartial();")
+                .addLine("assertEquals(\"partial DataType{propertyA=11}\", value.toString());")
+                .build())
         .runTest();
   }
 
@@ -267,14 +275,15 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(\"partial DataType{propertyA=11, propertyB=true}\",")
-            .addLine("    value.toString());")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .buildPartial();")
+                .addLine("assertEquals(\"partial DataType{propertyA=11, propertyB=true}\",")
+                .addLine("    value.toString());")
+                .build())
         .runTest();
   }
 
@@ -285,13 +294,14 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s(true)", convention.set("propertyB"))
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s(true)", convention.set("propertyB"))
+                .addLine("    .clear()")
+                .addLine("    .build();")
+                .build())
         .runTest();
   }
 
@@ -302,16 +312,16 @@ public class RequiredPropertiesTest {
     behaviorTester
         .with(new Processor(features))
         .with(requiredPropertiesType)
-        .with(testBuilder()
-            .addLine("new DataType.Builder()")
-            .addLine("    .%s(11)", convention.set("propertyA"))
-            .addLine("    .%s;", convention.is("propertyB"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new DataType.Builder()")
+                .addLine("    .%s(11)", convention.set("propertyA"))
+                .addLine("    .%s;", convention.is("propertyB"))
+                .build())
         .runTest();
   }
 
   private static TestBuilder testBuilder() {
     return new TestBuilder().addImport("com.example.DataType");
   }
-
 }

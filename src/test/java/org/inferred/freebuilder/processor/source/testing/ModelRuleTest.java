@@ -16,19 +16,16 @@
 package org.inferred.freebuilder.processor.source.testing;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
-
-import static org.junit.Assert.assertEquals;
-
 import static javax.lang.model.util.ElementFilter.methodsIn;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.Assert.assertEquals;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link ModelRule}. */
 @RunWith(JUnit4.class)
@@ -39,16 +36,15 @@ public class ModelRuleTest {
 
   @Test
   public void newType() {
-    TypeElement type = model.newType(
-        "package foo.bar;",
-        "public class MyType {",
-        "  public void doNothing() { }",
-        "}");
+    TypeElement type =
+        model.newType(
+            "package foo.bar;", "public class MyType {", "  public void doNothing() { }", "}");
     assertEquals(ElementKind.CLASS, type.getKind());
     assertEquals(NestingKind.TOP_LEVEL, type.getNestingKind());
     assertEquals("MyType", type.getSimpleName().toString());
     assertEquals("foo.bar.MyType", type.toString());
-    assertEquals("doNothing",
+    assertEquals(
+        "doNothing",
         getOnlyElement(methodsIn(type.getEnclosedElements())).getSimpleName().toString());
   }
 

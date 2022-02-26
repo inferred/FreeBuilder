@@ -19,7 +19,11 @@ import static org.inferred.freebuilder.processor.source.feature.GuavaLibrary.GUA
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.Ordering;
-
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.stream.Stream;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.Processor;
@@ -36,12 +40,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
-
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.stream.Stream;
 
 /**
  * Partial set of tests of {@link SortedSetProperty}. Tests specific to the mutateX methods
@@ -66,20 +64,22 @@ public class SortedSetPropertyTest {
 
   public SortedSetPropertyTest(FeatureSet features) {
     this.features = features;
-    datatype = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<String> items();", SortedSet.class)
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {")
-        .addLine("    @Override")
-        .addLine("    public Builder setComparatorForItems(%s<? super String> comparator) {",
-            Comparator.class)
-        .addLine("      return super.setComparatorForItems(comparator);")
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("}");
+    datatype =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine("  public abstract %s<String> items();", SortedSet.class)
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine("    @Override")
+            .addLine(
+                "    public Builder setComparatorForItems(%s<? super String> comparator) {",
+                Comparator.class)
+            .addLine("      return super.setComparatorForItems(comparator);")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("}");
   }
 
   public static final Comparator<String> NATURAL_ORDER =
@@ -91,12 +91,14 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"11\", \"222\", \"3\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.items()).containsExactly(\"11\", \"222\", \"3\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -105,13 +107,15 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(null)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"11\", \"222\", \"3\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(null)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.items()).containsExactly(\"11\", \"222\", \"3\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -120,13 +124,15 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(%s.reverseOrder())", Collections.class)
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"3\", \"222\", \"11\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(%s.reverseOrder())", Collections.class)
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.items()).containsExactly(\"3\", \"222\", \"11\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -135,13 +141,15 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items()).containsExactly(\"3\", \"11\", \"222\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.items()).containsExactly(\"3\", \"11\", \"222\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -150,13 +158,14 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\");")
-            .addLine("assertThat(builder.items())")
-            .addLine("    .containsExactly(\"3\", \"11\", \"222\").inOrder();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\");")
+                .addLine("assertThat(builder.items())")
+                .addLine("    .containsExactly(\"3\", \"11\", \"222\").inOrder();")
+                .build())
         .runTest();
   }
 
@@ -165,13 +174,14 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("assertThat(value.items().comparator()).isEqualTo(NATURAL_ORDER);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine("assertThat(value.items().comparator()).isEqualTo(NATURAL_ORDER);")
+                .build())
         .runTest();
   }
 
@@ -180,12 +190,13 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\");")
-            .addLine("assertThat(builder.items().comparator()).isEqualTo(NATURAL_ORDER);")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\");")
+                .addLine("assertThat(builder.items().comparator()).isEqualTo(NATURAL_ORDER);")
+                .build())
         .runTest();
   }
 
@@ -195,17 +206,18 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(null)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(null)")
-            .addLine("    .mergeFrom(value)")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.items()).isSameAs(value.items());")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(null)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine("DataType copy = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(null)")
+                .addLine("    .mergeFrom(value)")
+                .addLine("    .build();")
+                .addLine("assertThat(copy.items()).isSameAs(value.items());")
+                .build())
         .runTest();
   }
 
@@ -215,16 +227,17 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = new DataType.Builder()")
-            .addLine("    .mergeFrom(value)")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.items()).isSameAs(value.items());")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine("DataType copy = new DataType.Builder()")
+                .addLine("    .mergeFrom(value)")
+                .addLine("    .build();")
+                .addLine("assertThat(copy.items()).isSameAs(value.items());")
+                .build())
         .runTest();
   }
 
@@ -234,17 +247,18 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(NATURAL_ORDER)")
-            .addLine("    .mergeFrom(value)")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.items()).isSameAs(value.items());")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine("DataType copy = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(NATURAL_ORDER)")
+                .addLine("    .mergeFrom(value)")
+                .addLine("    .build();")
+                .addLine("assertThat(copy.items()).isSameAs(value.items());")
+                .build())
         .runTest();
   }
 
@@ -253,18 +267,19 @@ public class SortedSetPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(datatype)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(null)")
-            .addLine("    .addItems(\"11\", \"3\", \"222\")")
-            .addLine("    .build();")
-            .addLine("DataType copy = new DataType.Builder()")
-            .addLine("    .setComparatorForItems(EXPLICIT_DEFAULT_ORDER)")
-            .addLine("    .mergeFrom(value)")
-            .addLine("    .build();")
-            .addLine("assertThat(copy.items()).isEqualTo(value.items());")
-            .addLine("assertThat(copy.items()).isNotSameAs(value.items());")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(null)")
+                .addLine("    .addItems(\"11\", \"3\", \"222\")")
+                .addLine("    .build();")
+                .addLine("DataType copy = new DataType.Builder()")
+                .addLine("    .setComparatorForItems(EXPLICIT_DEFAULT_ORDER)")
+                .addLine("    .mergeFrom(value)")
+                .addLine("    .build();")
+                .addLine("assertThat(copy.items()).isEqualTo(value.items());")
+                .addLine("assertThat(copy.items()).isNotSameAs(value.items());")
+                .build())
         .runTest();
   }
 

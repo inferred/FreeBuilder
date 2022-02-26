@@ -15,17 +15,15 @@
  */
 package org.inferred.freebuilder.processor.naming;
 
-import org.inferred.freebuilder.processor.property.Property;
-
 import java.util.Optional;
-
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import org.inferred.freebuilder.processor.property.Property;
 
 public interface NamingConvention {
   /**
-   * Verifies {@code method} is an abstract getter following this naming convention. Any
-   * deviations will be logged as an error.
+   * Verifies {@code method} is an abstract getter following this naming convention. Any deviations
+   * will be logged as an error.
    */
   Optional<Property.Builder> getPropertyNames(TypeElement valueType, ExecutableElement method);
 }

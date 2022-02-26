@@ -1,7 +1,6 @@
 package org.inferred.freebuilder.processor.property;
 
 import static com.google.common.base.Preconditions.checkState;
-
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 
@@ -9,12 +8,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
-
-import org.inferred.freebuilder.processor.model.NameImpl;
-import org.inferred.freebuilder.processor.testtype.AbstractNonComparable;
-import org.inferred.freebuilder.processor.testtype.NonComparable;
-import org.inferred.freebuilder.processor.testtype.OtherNonComparable;
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -24,8 +17,11 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import javax.annotation.Nullable;
+import org.inferred.freebuilder.processor.model.NameImpl;
+import org.inferred.freebuilder.processor.testtype.AbstractNonComparable;
+import org.inferred.freebuilder.processor.testtype.NonComparable;
+import org.inferred.freebuilder.processor.testtype.OtherNonComparable;
 
 public enum ElementFactory {
   STRINGS(
@@ -40,15 +36,7 @@ public enum ElementFactory {
       "%s cannot be empty",
       "",
       new NameImpl("echo"),
-      i -> Arrays.asList(
-          "alpha",
-          "beta",
-          "cappa",
-          "delta",
-          "echo",
-          "foxtrot",
-          "golf"
-      ).get(i)),
+      i -> Arrays.asList("alpha", "beta", "cappa", "delta", "echo", "foxtrot", "golf").get(i)),
   SHORTS(
       Short.class,
       new TypeToken<UnaryOperator<Short>>() {},
@@ -97,17 +85,15 @@ public enum ElementFactory {
 
   /**
    * Three types, one primitive, one comparable and one not, to test type handling of lookup-based
-   * collections (like OrderedSet) where it's easy to mistakenly rely on the default comparator
-   * and get runtime exceptions.
+   * collections (like OrderedSet) where it's easy to mistakenly rely on the default comparator and
+   * get runtime exceptions.
    */
-  public static final List<ElementFactory> TYPES_WITH_NON_COMPARABLE = ImmutableList.of(
-      INTEGERS, STRINGS, NON_COMPARABLES);
+  public static final List<ElementFactory> TYPES_WITH_NON_COMPARABLE =
+      ImmutableList.of(INTEGERS, STRINGS, NON_COMPARABLES);
 
-  /**
-   * An extended set of types to test primitive-handing edge cases.
-   */
-  public static final List<ElementFactory> TYPES_WITH_EXTRA_PRIMITIVES = ImmutableList.of(
-      SHORTS, INTEGERS, STRINGS);
+  /** An extended set of types to test primitive-handing edge cases. */
+  public static final List<ElementFactory> TYPES_WITH_EXTRA_PRIMITIVES =
+      ImmutableList.of(SHORTS, INTEGERS, STRINGS);
 
   private final Class<?> type;
   private final TypeToken<?> unaryOperator;
@@ -234,12 +220,21 @@ public enum ElementFactory {
       return "new " + NameImpl.class.getName() + "(\"" + example + "\")";
     } else if (example instanceof NonComparable) {
       NonComparable nonComparable = (NonComparable) example;
-      return NonComparable.class.getName() + ".of(" + nonComparable.id() + ", \""
-          + nonComparable.name() + "\")";
+      return NonComparable.class.getName()
+          + ".of("
+          + nonComparable.id()
+          + ", \""
+          + nonComparable.name()
+          + "\")";
     } else if (example instanceof OtherNonComparable) {
       OtherNonComparable otherNonComparable = (OtherNonComparable) example;
-      return "new " + OtherNonComparable.class.getName() + "(" + otherNonComparable.id() + ", \""
-          + otherNonComparable.name() + "\")";
+      return "new "
+          + OtherNonComparable.class.getName()
+          + "("
+          + otherNonComparable.id()
+          + ", \""
+          + otherNonComparable.name()
+          + "\")";
     } else if (example instanceof Short) {
       short value = (short) example;
       return "((short) " + value + ")";
@@ -249,16 +244,17 @@ public enum ElementFactory {
   }
 
   private static void checkExamplesOrdered(
-      @Nullable Class<? extends Comparator<?>> comparator,
-      IntFunction<?> exampleGenerator) {
+      @Nullable Class<? extends Comparator<?>> comparator, IntFunction<?> exampleGenerator) {
     if (comparator == null) {
-      List<Comparable<?>> comparables = IntStream
-          .range(0, 7)
-          .mapToObj(exampleGenerator)
-          .map(v -> (Comparable<?>) v)
-          .collect(toList());
-      checkState(Ordering.natural().isOrdered(comparables),
-          "Examples must be in natural order (got %s)", comparables);
+      List<Comparable<?>> comparables =
+          IntStream.range(0, 7)
+              .mapToObj(exampleGenerator)
+              .map(v -> (Comparable<?>) v)
+              .collect(toList());
+      checkState(
+          Ordering.natural().isOrdered(comparables),
+          "Examples must be in natural order (got %s)",
+          comparables);
     } else {
       try {
         @SuppressWarnings("rawtypes")
@@ -266,8 +262,7 @@ public enum ElementFactory {
         List<?> comparables = range(0, 7).mapToObj(exampleGenerator).collect(toList());
         @SuppressWarnings("unchecked")
         boolean isOrdered = ordering.isOrdered(comparables);
-        checkState(isOrdered,
-          "Examples must be in natural order (got %s)", comparables);
+        checkState(isOrdered, "Examples must be in natural order (got %s)", comparables);
       } catch (ReflectiveOperationException e) {
         throw new RuntimeException(e);
       }

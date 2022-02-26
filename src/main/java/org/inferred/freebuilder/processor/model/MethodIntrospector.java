@@ -19,18 +19,15 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
-
-import org.inferred.freebuilder.processor.model.javac.JavacMethodIntrospector;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Set;
-
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.tools.Diagnostic;
+import org.inferred.freebuilder.processor.model.javac.JavacMethodIntrospector;
 
 /** Compiler-specific methods for introspecting methods during compilation. */
 public abstract class MethodIntrospector {
@@ -47,21 +44,20 @@ public abstract class MethodIntrospector {
   }
 
   /**
-   * Returns a set of methods which are definitely invoked on {@code this} in the given method,
-   * or the empty set if method introspection is not supported on this compiler.
+   * Returns a set of methods which are definitely invoked on {@code this} in the given method, or
+   * the empty set if method introspection is not supported on this compiler.
    */
   public abstract Set<Name> getOwnMethodInvocations(ExecutableElement method);
 
   /**
-   * Calls {@code visitor} with every method invoked on {@code this} in the given method, if
-   * method introspection is supported on this compiler.
+   * Calls {@code visitor} with every method invoked on {@code this} in the given method, if method
+   * introspection is supported on this compiler.
    *
-   * <p>The visitor is given the method name, and a logger to log warnings or errors to the
-   * user at the method invocation site.
+   * <p>The visitor is given the method name, and a logger to log warnings or errors to the user at
+   * the method invocation site.
    */
   public abstract void visitAllOwnMethodInvocations(
-      ExecutableElement method,
-      OwnMethodInvocationVisitor visitor);
+      ExecutableElement method, OwnMethodInvocationVisitor visitor);
 
   /** Returns a {@link MethodIntrospector} implementation for the given environment. */
   public static MethodIntrospector instance(ProcessingEnvironment env) {
@@ -69,11 +65,11 @@ public abstract class MethodIntrospector {
       try {
         return JavacMethodIntrospector.instance(env);
       } catch (LinkageError e) {
-        return (MethodIntrospector) IntrospectorClassLoader
-            .create(MethodIntrospector.class, env)
-            .loadClass(JAVAC_METHOD_INTROSPECTOR)
-            .getMethod("instance", ProcessingEnvironment.class)
-            .invoke(null, env);
+        return (MethodIntrospector)
+            IntrospectorClassLoader.create(MethodIntrospector.class, env)
+                .loadClass(JAVAC_METHOD_INTROSPECTOR)
+                .getMethod("instance", ProcessingEnvironment.class)
+                .invoke(null, env);
       }
     } catch (Exception | LinkageError e) {
       return new NoMethodIntrospector();
@@ -98,8 +94,7 @@ public abstract class MethodIntrospector {
     }
 
     private IntrospectorClassLoader(
-        ClassLoader processorLoader,
-        ClassLoader processingEnvironmentLoader) {
+        ClassLoader processorLoader, ClassLoader processingEnvironmentLoader) {
       this.processorLoader = requireNonNull(processorLoader);
       this.processingEnvironmentLoader = requireNonNull(processingEnvironmentLoader);
     }
@@ -133,7 +128,6 @@ public abstract class MethodIntrospector {
 
     @Override
     public void visitAllOwnMethodInvocations(
-        ExecutableElement method,
-        OwnMethodInvocationVisitor visitor) { }
+        ExecutableElement method, OwnMethodInvocationVisitor visitor) {}
   }
 }

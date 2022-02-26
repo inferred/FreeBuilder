@@ -22,5 +22,5 @@ import java.util.Set;
 public interface SetProperty extends Serializable {
   Set<String> getNames();
 
-  class Builder extends SetProperty_Builder { }
+  class Builder extends SetProperty_Builder {}
 }

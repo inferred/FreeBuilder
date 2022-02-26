@@ -18,7 +18,6 @@ package org.inferred.freebuilder.processor.source;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.testing.EqualsTester;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -27,7 +26,7 @@ import org.junit.runners.JUnit4;
 public class ValueTypeTest {
   private final class Empty extends ValueType {
     @Override
-    protected void addFields(FieldReceiver fields) { }
+    protected void addFields(FieldReceiver fields) {}
   }
 
   private final class Name extends ValueType {
@@ -96,4 +95,3 @@ public class ValueTypeTest {
     tester.testEquals();
   }
 }
-

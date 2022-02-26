@@ -1,9 +1,7 @@
 package org.inferred.freebuilder.processor.source;
 
 import com.google.common.base.Preconditions;
-
 import java.util.Objects;
-
 import javax.lang.model.type.TypeKind;
 
 public class ObjectsExcerpts {
@@ -29,12 +27,16 @@ public class ObjectsExcerpts {
   private static Excerpt equalsExcerpt(boolean areEqual, Object a, Object b, TypeKind kind) {
     switch (kind) {
       case FLOAT:
-        return code -> code.add("%1$s.floatToIntBits(%2$s) %3$s %1$s.floatToIntBits(%4$s)",
-            Float.class, a, areEqual ? "==" : "!=", b);
+        return code ->
+            code.add(
+                "%1$s.floatToIntBits(%2$s) %3$s %1$s.floatToIntBits(%4$s)",
+                Float.class, a, areEqual ? "==" : "!=", b);
 
       case DOUBLE:
-        return code -> code.add("%1$s.doubleToLongBits(%2$s) %3$s %1$s.doubleToLongBits(%4$s)",
-            Double.class, a, areEqual ? "==" : "!=", b);
+        return code ->
+            code.add(
+                "%1$s.doubleToLongBits(%2$s) %3$s %1$s.doubleToLongBits(%4$s)",
+                Double.class, a, areEqual ? "==" : "!=", b);
 
       case BOOLEAN:
       case BYTE:

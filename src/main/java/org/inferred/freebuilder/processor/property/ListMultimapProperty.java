@@ -39,7 +39,15 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-
+import java.util.Collection;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.inferred.freebuilder.processor.Datatype;
 import org.inferred.freebuilder.processor.Declarations;
 import org.inferred.freebuilder.processor.excerpt.CheckedListMultimap;
@@ -48,20 +56,7 @@ import org.inferred.freebuilder.processor.source.FunctionalType;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Variable;
 
-import java.util.Collection;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
-/**
- * {@link PropertyCodeGenerator} providing fluent methods for {@link ListMultimap} properties.
- */
+/** {@link PropertyCodeGenerator} providing fluent methods for {@link ListMultimap} properties. */
 class ListMultimapProperty extends PropertyCodeGenerator {
 
   static class Factory implements PropertyCodeGenerator.Factory {
@@ -70,7 +65,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
     public Optional<ListMultimapProperty> create(Config config) {
       Property property = config.getProperty();
       DeclaredType type = maybeDeclared(property.getType()).orElse(null);
-      if (!erasesToAnyOf(type,
+      if (!erasesToAnyOf(
+          type,
           Multimap.class,
           ImmutableMultimap.class,
           ListMultimap.class,
@@ -82,25 +78,28 @@ class ListMultimapProperty extends PropertyCodeGenerator {
       TypeMirror valueType = upperBound(config.getElements(), type.getTypeArguments().get(1));
       Optional<TypeMirror> unboxedKeyType = maybeUnbox(keyType, config.getTypes());
       Optional<TypeMirror> unboxedValueType = maybeUnbox(valueType, config.getTypes());
-      boolean overridesPutMethod = hasPutMethodOverride(
-          config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
+      boolean overridesPutMethod =
+          hasPutMethodOverride(
+              config, unboxedKeyType.orElse(keyType), unboxedValueType.orElse(valueType));
 
-      FunctionalType mutatorType = functionalTypeAcceptedByMethod(
-          config.getBuilder(),
-          mutator(property),
-          consumer(listMultimap(keyType, valueType, config.getElements(), config.getTypes())),
-          config.getElements(),
-          config.getTypes());
+      FunctionalType mutatorType =
+          functionalTypeAcceptedByMethod(
+              config.getBuilder(),
+              mutator(property),
+              consumer(listMultimap(keyType, valueType, config.getElements(), config.getTypes())),
+              config.getElements(),
+              config.getTypes());
 
-      return Optional.of(new ListMultimapProperty(
-          config.getDatatype(),
-          property,
-          overridesPutMethod,
-          keyType,
-          unboxedKeyType,
-          valueType,
-          unboxedValueType,
-          mutatorType));
+      return Optional.of(
+          new ListMultimapProperty(
+              config.getDatatype(),
+              property,
+              overridesPutMethod,
+              keyType,
+              unboxedKeyType,
+              valueType,
+              unboxedValueType,
+              mutatorType));
     }
 
     private static boolean hasPutMethodOverride(
@@ -114,10 +113,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
     }
 
     private static TypeMirror listMultimap(
-        TypeMirror keyType,
-        TypeMirror valueType,
-        Elements elements,
-        Types types) {
+        TypeMirror keyType, TypeMirror valueType, Elements elements, Types types) {
       TypeElement listMultimapType = elements.getTypeElement(ListMultimap.class.getName());
       return types.getDeclaredType(listMultimapType, keyType, valueType);
     }
@@ -150,13 +146,15 @@ class ListMultimapProperty extends PropertyCodeGenerator {
 
   @Override
   public void addValueFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %s<%s, %s> %s;",
+    code.addLine(
+        "private final %s<%s, %s> %s;",
         ImmutableListMultimap.class, keyType, valueType, property.getField());
   }
 
   @Override
   public void addBuilderFieldDeclaration(SourceBuilder code) {
-    code.addLine("private final %1$s<%2$s, %3$s> %4$s = %1$s.create();",
+    code.addLine(
+        "private final %1$s<%2$s, %3$s> %4$s = %1$s.create();",
         LinkedListMultimap.class, keyType, valueType, property.getField());
   }
 
@@ -176,8 +174,7 @@ class ListMultimapProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds a {@code key}-{@code value} mapping to the multimap to be returned")
-        .addLine(" * from %s.",
-            datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
+        .addLine(" * from %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (!unboxedKeyType.isPresent() || !unboxedValueType.isPresent()) {
@@ -192,7 +189,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
       code.add(" is null\n");
     }
     code.addLine(" */")
-        .addLine("public %s %s(%s key, %s value) {",
+        .addLine(
+            "public %s %s(%s key, %s value) {",
             datatype.getBuilder(),
             putMethod(property),
             unboxedKeyType.orElse(keyType),
@@ -212,19 +210,22 @@ class ListMultimapProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Adds a collection of {@code values} with the same {@code key} to the")
-        .addLine(" * multimap to be returned from %s.",
+        .addLine(
+            " * multimap to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
     if (unboxedKeyType.isPresent()) {
-      code.addLine(" * @throws NullPointerException if {@code values} is null or contains a"
-          + " null element");
+      code.addLine(
+          " * @throws NullPointerException if {@code values} is null or contains a"
+              + " null element");
     } else {
       code.addLine(" * @throws NullPointerException if either {@code key} or {@code values} is")
           .addLine(" *     null, or if {@code values} contains a null element");
     }
     code.addLine(" */")
-        .addLine("public %s %s(%s key, %s<? extends %s> values) {",
+        .addLine(
+            "public %s %s(%s key, %s<? extends %s> values) {",
             datatype.getBuilder(),
             putAllMethod(property),
             unboxedKeyType.orElse(keyType),
@@ -248,13 +249,11 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine(" *     null key or value")
         .addLine(" */");
     addAccessorAnnotations(code);
-    code.addLine("public %s %s(%s<? extends %s, ? extends %s> multimap) {",
-            datatype.getBuilder(),
-            putAllMethod(property),
-            Multimap.class,
-            keyType,
-            valueType)
-        .addLine("  for (%s<? extends %s, ? extends %s<? extends %s>> entry",
+    code.addLine(
+            "public %s %s(%s<? extends %s, ? extends %s> multimap) {",
+            datatype.getBuilder(), putAllMethod(property), Multimap.class, keyType, valueType)
+        .addLine(
+            "  for (%s<? extends %s, ? extends %s<? extends %s>> entry",
             Entry.class, keyType, Collection.class, valueType)
         .addLine("      : multimap.asMap().entrySet()) {")
         .addLine("    %s(entry.getKey(), entry.getValue());", putAllMethod(property))
@@ -266,9 +265,11 @@ class ListMultimapProperty extends PropertyCodeGenerator {
   private void addRemove(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Removes a single key-value pair with the key {@code key} and the value"
-            + " {@code value}")
-        .addLine(" * from the multimap to be returned from %s.",
+        .addLine(
+            " * Removes a single key-value pair with the key {@code key} and the value"
+                + " {@code value}")
+        .addLine(
+            " * from the multimap to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * If multiple key-value pairs in the multimap fit this description, which one")
         .addLine(" * is removed is unspecified.")
@@ -286,7 +287,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
       code.add(" is null\n");
     }
     code.addLine(" */")
-        .addLine("public %s %s(%s key, %s value) {",
+        .addLine(
+            "public %s %s(%s key, %s value) {",
             datatype.getBuilder(),
             removeMethod(property),
             unboxedKeyType.orElse(keyType),
@@ -306,7 +308,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
     code.addLine("")
         .addLine("/**")
         .addLine(" * Removes all values associated with the key {@code key} from the multimap to")
-        .addLine(" * be returned from %s.",
+        .addLine(
+            " * be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * @return this {@code %s} object", datatype.getBuilder().getSimpleName());
@@ -314,10 +317,9 @@ class ListMultimapProperty extends PropertyCodeGenerator {
       code.add(" * @throws NullPointerException if {@code key} is null\n");
     }
     code.addLine(" */")
-        .addLine("public %s %s(%s key) {",
-            datatype.getBuilder(),
-            removeAllMethod(property),
-            unboxedKeyType.orElse(keyType));
+        .addLine(
+            "public %s %s(%s key) {",
+            datatype.getBuilder(), removeAllMethod(property), unboxedKeyType.orElse(keyType));
     if (!unboxedKeyType.isPresent()) {
       code.addLine("  %s.checkNotNull(key);", Preconditions.class);
     }
@@ -329,7 +331,8 @@ class ListMultimapProperty extends PropertyCodeGenerator {
   private void addMutate(SourceBuilder code) {
     code.addLine("")
         .addLine("/**")
-        .addLine(" * Applies {@code mutator} to the multimap to be returned from %s.",
+        .addLine(
+            " * Applies {@code mutator} to the multimap to be returned from %s.",
             datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" *")
         .addLine(" * <p>This method mutates the multimap in-place. {@code mutator} is a void")
@@ -338,23 +341,23 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine(" * @return this {@code Builder} object")
         .addLine(" * @throws NullPointerException if {@code mutator} is null")
         .addLine(" */")
-        .addLine("public %s %s(%s mutator) {",
-            datatype.getBuilder(),
-            mutator(property),
-            mutatorType.getFunctionalInterface());
+        .addLine(
+            "public %s %s(%s mutator) {",
+            datatype.getBuilder(), mutator(property), mutatorType.getFunctionalInterface());
     if (overridesPutMethod) {
-      code.addLine("  mutator.%s(new %s<>(%s, this::%s));",
+      code.addLine(
+          "  mutator.%s(new %s<>(%s, this::%s));",
           mutatorType.getMethodName(),
           CheckedListMultimap.TYPE,
           property.getField(),
           putMethod(property));
     } else {
-      code.addLine("  // If %s is overridden, this method will be updated to delegate to it",
+      code.addLine(
+              "  // If %s is overridden, this method will be updated to delegate to it",
               putMethod(property))
           .addLine("  mutator.%s(%s);", mutatorType.getMethodName(), property.getField());
     }
-    code.addLine("  return (%s) this;", datatype.getBuilder())
-        .addLine("}");
+    code.addLine("  return (%s) this;", datatype.getBuilder()).addLine("}");
   }
 
   private void addClear(SourceBuilder code) {
@@ -378,20 +381,17 @@ class ListMultimapProperty extends PropertyCodeGenerator {
         .addLine(" * %s.", datatype.getType().javadocNoArgMethodLink(property.getGetterName()))
         .addLine(" * Changes to this builder will be reflected in the view.")
         .addLine(" */")
-        .addLine("public %s<%s, %s> %s() {",
-            ListMultimap.class,
-            keyType,
-            valueType,
-            getter(property))
-        .addLine("  return %s.unmodifiableListMultimap(%s);",
-            Multimaps.class, property.getField())
+        .addLine(
+            "public %s<%s, %s> %s() {", ListMultimap.class, keyType, valueType, getter(property))
+        .addLine("  return %s.unmodifiableListMultimap(%s);", Multimaps.class, property.getField())
         .addLine("}");
   }
 
   @Override
   public void addFinalFieldAssignment(SourceBuilder code, Excerpt finalField, String builder) {
-    code.addLine("%s = %s.copyOf(%s);",
-            finalField, ImmutableListMultimap.class, property.getField().on(builder));
+    code.addLine(
+        "%s = %s.copyOf(%s);",
+        finalField, ImmutableListMultimap.class, property.getField().on(builder));
   }
 
   @Override

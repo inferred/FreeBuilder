@@ -6,17 +6,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
-
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
 import org.inferred.freebuilder.processor.source.Excerpt;
 import org.inferred.freebuilder.processor.source.LazyName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.ValueType;
 import org.inferred.freebuilder.processor.source.feature.Jsr305;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
 
 /**
  * Excerpts defining a multimap implementation that delegates to a provided put method to perform
@@ -35,14 +33,14 @@ public class CheckedSetMultimap extends ValueType implements Excerpt {
         .addLine(" * A multimap implementation that delegates to a provided put method")
         .addLine(" * to perform entry validation and insertion into a backing multimap.")
         .addLine(" */")
-        .addLine("private static class %s<K, V> extends %s<K, V> {",
-            TYPE, ForwardingSetMultimap.class)
+        .addLine(
+            "private static class %s<K, V> extends %s<K, V> {", TYPE, ForwardingSetMultimap.class)
         .addLine("")
         .addLine("  private final %s<K, V> multimap;", SetMultimap.class)
         .addLine("  private final %s<K, V> put;", BiConsumer.class)
         .addLine("")
-        .addLine("  %s(%s<K, V> multimap, %s<K, V> put) {",
-            TYPE, SetMultimap.class, BiConsumer.class)
+        .addLine(
+            "  %s(%s<K, V> multimap, %s<K, V> put) {", TYPE, SetMultimap.class, BiConsumer.class)
         .addLine("    this.multimap = multimap;")
         .addLine("    this.put = put;")
         .addLine("  }")
@@ -56,7 +54,8 @@ public class CheckedSetMultimap extends ValueType implements Excerpt {
         .addLine("    return true;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean putAll(%s K key, %s<? extends V> values) {",
+        .addLine(
+            "  @Override public boolean putAll(%s K key, %s<? extends V> values) {",
             Jsr305.nullable(), Iterable.class)
         .addLine("    boolean anyModified = false;")
         .addLine("    for (V value : values) {")
@@ -66,11 +65,12 @@ public class CheckedSetMultimap extends ValueType implements Excerpt {
         .addLine("    return anyModified;")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public boolean putAll(%s<? extends K, ? extends V> multimap) {",
+        .addLine(
+            "  @Override public boolean putAll(%s<? extends K, ? extends V> multimap) {",
             Multimap.class)
         .addLine("    boolean anyModified = false;")
-        .addLine("    for (%s<? extends K, ? extends V> entry : multimap.entries()) {",
-            Map.Entry.class)
+        .addLine(
+            "    for (%s<? extends K, ? extends V> entry : multimap.entries()) {", Map.Entry.class)
         .addLine("      put.accept(entry.getKey(), entry.getValue());")
         .addLine("      anyModified = true;")
         .addLine("    }")
@@ -78,7 +78,8 @@ public class CheckedSetMultimap extends ValueType implements Excerpt {
         .addLine("  }")
         .addLine("")
         .addLine("  @Override")
-        .addLine("  public %s<V> replaceValues(%s K key, %s<? extends V> values) {",
+        .addLine(
+            "  public %s<V> replaceValues(%s K key, %s<? extends V> values) {",
             Set.class, Jsr305.nullable(), Iterable.class)
         .addLine("    %s.checkNotNull(values);", Preconditions.class)
         .addLine("    %s<V> result = removeAll(key);", Set.class)
@@ -92,7 +93,8 @@ public class CheckedSetMultimap extends ValueType implements Excerpt {
         .addLine("  }")
         .addLine("")
         .addLine("  @Override public %s<K, %s<V>> asMap() {", Map.class, Collection.class)
-        .addLine("    return %s.transformEntries(%s.asMap(multimap), (key, values) -> ",
+        .addLine(
+            "    return %s.transformEntries(%s.asMap(multimap), (key, values) -> ",
             Maps.class, Multimaps.class)
         .addLine("        (%s<V>) new %s<>(", Collection.class, CheckedSet.TYPE)
         .addLine("            values, value -> put.accept(key, value)));")

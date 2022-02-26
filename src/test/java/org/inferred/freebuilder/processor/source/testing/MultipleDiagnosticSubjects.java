@@ -2,16 +2,14 @@ package org.inferred.freebuilder.processor.source.testing;
 
 import static java.util.stream.Collectors.joining;
 
-import org.inferred.freebuilder.processor.source.testing.BehaviorTester.DiagnosticSubject;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
+import org.inferred.freebuilder.processor.source.testing.BehaviorTester.DiagnosticSubject;
 
 class MultipleDiagnosticSubjects implements DiagnosticSubject {
 
@@ -21,8 +19,7 @@ class MultipleDiagnosticSubjects implements DiagnosticSubject {
   private final List<String> candidateProfile = new ArrayList<>();
 
   static DiagnosticSubject create(
-      List<Diagnostic<? extends JavaFileObject>> diagnostics,
-      Kind kind) {
+      List<Diagnostic<? extends JavaFileObject>> diagnostics, Kind kind) {
     if (diagnostics.isEmpty()) {
       throw new AssertionError("Expected " + kindAsString(kind) + ", but none were emitted");
     }

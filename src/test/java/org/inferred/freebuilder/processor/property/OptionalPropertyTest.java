@@ -26,7 +26,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
-
+import java.util.Arrays;
+import java.util.List;
 import org.inferred.freebuilder.FreeBuilder;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.NamingConvention;
@@ -46,9 +47,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Parameterized.UseParametersRunnerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-
 /** Behavioral tests for {@code Optional<?>} properties. */
 @RunWith(Parameterized.class)
 @UseParametersRunnerFactory(ParameterizedBehaviorTestFactory.class)
@@ -57,25 +55,24 @@ public class OptionalPropertyTest {
   @SuppressWarnings("unchecked")
   @Parameters(name = "{0}<{1}>, {2}, {3}")
   public static Iterable<Object[]> parameters() {
-    List<Class<?>> optionals = Arrays.asList(
-        java.util.Optional.class,
-        com.google.common.base.Optional.class);
+    List<Class<?>> optionals =
+        Arrays.asList(java.util.Optional.class, com.google.common.base.Optional.class);
     List<NamingConvention> conventions = Arrays.asList(NamingConvention.values());
     List<FeatureSet> features = FeatureSets.ALL;
-    return () -> Lists
-        .cartesianProduct(optionals, TYPES, conventions, features)
-        .stream()
-        .filter(parameters -> {
-          Class<?> optional = (Class<?>) parameters.get(0);
-          FeatureSet featureSet = (FeatureSet) parameters.get(3);
-          if (optional.equals(com.google.common.base.Optional.class)
-              && !featureSet.get(GuavaLibrary.GUAVA).isAvailable()) {
-            return false;
-          }
-          return true;
-        })
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(optionals, TYPES, conventions, features).stream()
+            .filter(
+                parameters -> {
+                  Class<?> optional = (Class<?>) parameters.get(0);
+                  FeatureSet featureSet = (FeatureSet) parameters.get(3);
+                  if (optional.equals(com.google.common.base.Optional.class)
+                      && !featureSet.get(GuavaLibrary.GUAVA).isAvailable()) {
+                    return false;
+                  }
+                  return true;
+                })
+            .map(List::toArray)
+            .iterator();
   }
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -92,69 +89,70 @@ public class OptionalPropertyTest {
   private final SourceBuilder validatedProperty;
 
   public OptionalPropertyTest(
-      Class<?> optional,
-      ElementFactory element,
-      NamingConvention convention,
-      FeatureSet features) {
+      Class<?> optional, ElementFactory element, NamingConvention convention, FeatureSet features) {
     this.optional = optional;
     this.element = element;
     this.convention = convention;
     this.features = features;
     this.empty = optional.getName().startsWith("com.google") ? "absent" : "empty";
 
-    oneProperty = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<%s> %s;",
-            optional, element.type(), convention.get("item"))
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {}")
-        .addLine("  public static Builder builder() {")
-        .addLine("    return new Builder();")
-        .addLine("  }")
-        .addLine("}");
+    oneProperty =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine(
+                "  public abstract %s<%s> %s;", optional, element.type(), convention.get("item"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}");
 
-    twoProperties = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<%s> %s;",
-            optional, element.type(), convention.get("item1"))
-        .addLine("  public abstract %s<%s> %s;",
-            optional, element.type(), convention.get("item2"))
-        .addLine("")
-        .addLine("  public static class Builder extends DataType_Builder {}")
-        .addLine("  public static Builder builder() {")
-        .addLine("    return new Builder();")
-        .addLine("  }")
-        .addLine("}");
+    twoProperties =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine(
+                "  public abstract %s<%s> %s;", optional, element.type(), convention.get("item1"))
+            .addLine(
+                "  public abstract %s<%s> %s;", optional, element.type(), convention.get("item2"))
+            .addLine("")
+            .addLine("  public static class Builder extends DataType_Builder {}")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}");
 
-    validatedProperty = SourceBuilder.forTesting()
-        .addLine("package com.example;")
-        .addLine("@%s", FreeBuilder.class)
-        .addLine("public abstract class DataType {")
-        .addLine("  public abstract %s<%s> %s;",
-            optional, element.type(), convention.get("item"))
-        .addLine("")
-        .addLine("  public abstract Builder toBuilder();")
-        .addLine("  public static class Builder extends DataType_Builder {")
-        .addLine("    @Override public Builder %s(%s item) {",
-            convention.set("item"), element.unwrappedType())
-        .addLine("      if (!(%s)) {", element.validation("item"))
-        .addLine("        throw new IllegalArgumentException(\"%s\");", element.errorMessage())
-        .addLine("      }")
-        .addLine("      return super.%s(item);", convention.set("item"))
-        .addLine("    }")
-        .addLine("    @Override public Builder clearItem() {")
-        .addLine("      throw new UnsupportedOperationException(\"Clearing prohibited\");")
-        .addLine("    }")
-        .addLine("  }")
-        .addLine("")
-        .addLine("  public static Builder builder() {")
-        .addLine("    return new Builder();")
-        .addLine("  }")
-        .addLine("}");
+    validatedProperty =
+        SourceBuilder.forTesting()
+            .addLine("package com.example;")
+            .addLine("@%s", FreeBuilder.class)
+            .addLine("public abstract class DataType {")
+            .addLine(
+                "  public abstract %s<%s> %s;", optional, element.type(), convention.get("item"))
+            .addLine("")
+            .addLine("  public abstract Builder toBuilder();")
+            .addLine("  public static class Builder extends DataType_Builder {")
+            .addLine(
+                "    @Override public Builder %s(%s item) {",
+                convention.set("item"), element.unwrappedType())
+            .addLine("      if (!(%s)) {", element.validation("item"))
+            .addLine("        throw new IllegalArgumentException(\"%s\");", element.errorMessage())
+            .addLine("      }")
+            .addLine("      return super.%s(item);", convention.set("item"))
+            .addLine("    }")
+            .addLine("    @Override public Builder clearItem() {")
+            .addLine("      throw new UnsupportedOperationException(\"Clearing prohibited\");")
+            .addLine("    }")
+            .addLine("  }")
+            .addLine("")
+            .addLine("  public static Builder builder() {")
+            .addLine("    return new Builder();")
+            .addLine("  }")
+            .addLine("}");
   }
 
   @Test
@@ -162,10 +160,12 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder().build();")
-            .addLine("assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder().build();")
+                .addLine(
+                    "assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -174,11 +174,12 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder();")
-            .addLine("assertEquals(%s.%s(), builder.%s);",
-                optional, empty, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder();")
+                .addLine(
+                    "assertEquals(%s.%s(), builder.%s);", optional, empty, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -187,12 +188,14 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType.Builder builder = new DataType.Builder()")
-            .addLine("    .%s(%s);", convention.set("item"), element.example(0))
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder builder = new DataType.Builder()")
+                .addLine("    .%s(%s);", convention.set("item"), element.example(0))
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -201,13 +204,15 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -217,10 +222,11 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().%s((%s) null);",
-                convention.set("item"), element.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "new DataType.Builder().%s((%s) null);", convention.set("item"), element.type())
+                .build())
         .runTest();
   }
 
@@ -229,14 +235,15 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.of(%s))", convention.set("item"),
-                optional, element.example(0))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s.of(%s))", convention.set("item"), optional, element.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -245,12 +252,14 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.%s())", convention.set("item"), optional, empty)
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s.%s())", convention.set("item"), optional, empty)
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -260,10 +269,12 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("new DataType.Builder().%s((%s<%s>) null);",
-                convention.set("item"), optional, element.type())
-            .build())
+        .with(
+            testBuilder()
+                .addLine(
+                    "new DataType.Builder().%s((%s<%s>) null);",
+                    convention.set("item"), optional, element.type())
+                .build())
         .runTest();
   }
 
@@ -272,13 +283,15 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("nullableItem"), element.example(0))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("nullableItem"), element.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -287,12 +300,14 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(null)", convention.set("nullableItem"))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(null)", convention.set("nullableItem"))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -301,13 +316,15 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .clearItem()")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .clearItem()")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -316,15 +333,17 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = DataType.builder()")
-            .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = DataType.builder()")
+                .addLine("    .mergeFrom(value);")
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -333,14 +352,16 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s);", convention.set("item"), element.example(0))
-            .addLine("DataType.Builder builder = DataType.builder()")
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder()")
+                .addLine("    .%s(%s);", convention.set("item"), element.example(0))
+                .addLine("DataType.Builder builder = DataType.builder()")
+                .addLine("    .mergeFrom(template);")
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -349,15 +370,17 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = DataType.builder()")
-            .addLine("    .build();")
-            .addLine("DataType.Builder builder = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .mergeFrom(value);")
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = DataType.builder()")
+                .addLine("    .build();")
+                .addLine("DataType.Builder builder = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .mergeFrom(value);")
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -366,14 +389,16 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder();")
-            .addLine("DataType.Builder builder = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .mergeFrom(template);")
-            .addLine("assertEquals(%s.of(%s), builder.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder();")
+                .addLine("DataType.Builder builder = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .mergeFrom(template);")
+                .addLine(
+                    "assertEquals(%s.of(%s), builder.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -382,13 +407,15 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .clear()")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -396,26 +423,31 @@ public class OptionalPropertyTest {
   public void testBuilderClear_customDefault() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> %s;",
-                optional, element.type(), convention.get("item"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {}")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder().%s(%s);", convention.set("item"), element.example(3))
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional, element.example(3), convention.get("item"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine(
+                    "  public abstract %s<%s> %s;",
+                    optional, element.type(), convention.get("item"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {}")
+                .addLine("  public static Builder builder() {")
+                .addLine(
+                    "    return new Builder().%s(%s);", convention.set("item"), element.example(3))
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .clear()")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional, element.example(3), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -423,25 +455,29 @@ public class OptionalPropertyTest {
   public void testBuilderClear_noBuilderFactory() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> %s;",
-                optional, element.type(), convention.get("item"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    public Builder(%s s) {", element.unwrappedType())
-            .addLine("      %s(s);", convention.set("item"))
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder(%s)", element.example(0))
-            .addLine("    .clear()")
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine(
+                    "  public abstract %s<%s> %s;",
+                    optional, element.type(), convention.get("item"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {")
+                .addLine("    public Builder(%s s) {", element.unwrappedType())
+                .addLine("      %s(s);", convention.set("item"))
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder(%s)", element.example(0))
+                .addLine("    .clear()")
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.%s(), value.%s);", optional, empty, convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -452,11 +488,13 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(validatedProperty)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s.of(%s));",
-                convention.set("item"), optional, element.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder()")
+                .addLine(
+                    "    .%s(%s.of(%s));",
+                    convention.set("item"), optional, element.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -467,10 +505,11 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(validatedProperty)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s);", convention.set("nullableItem"), element.invalidExample())
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder()")
+                .addLine("    .%s(%s);", convention.set("nullableItem"), element.invalidExample())
+                .build())
         .runTest();
   }
 
@@ -480,10 +519,11 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(validatedProperty)
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(%s.%s());", convention.set("item"), optional, empty)
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder()")
+                .addLine("    .%s(%s.%s());", convention.set("item"), optional, empty)
+                .build())
         .runTest();
   }
 
@@ -492,15 +532,17 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(validatedProperty)
-        .with(testBuilder()
-            .addLine("DataType value = DataType.builder()")
-            .addLine("    .build()")
-            .addLine("    .toBuilder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .build();")
-            .addLine("assertEquals(%s.of(%s), value.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType value = DataType.builder()")
+                .addLine("    .build()")
+                .addLine("    .toBuilder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .build();")
+                .addLine(
+                    "assertEquals(%s.of(%s), value.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
@@ -509,27 +551,29 @@ public class OptionalPropertyTest {
     thrown.expectMessage("Fooled you!");
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("public abstract class DataType {")
-            .addLine("  public abstract %s<%s> %s;",
-                optional, String.class, convention.get("item"))
-            .addLine("")
-            .addLine("  public static class Builder extends DataType_Builder {")
-            .addLine("    @Override public Builder clearItem() {")
-            .addLine("      throw new UnsupportedOperationException(\"Fooled you!\");")
-            .addLine("    }")
-            .addLine("  }")
-            .addLine("")
-            .addLine("  public static Builder builder() {")
-            .addLine("    return new Builder();")
-            .addLine("  }")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType.Builder template = DataType.builder()")
-            .addLine("    .%s(null);", convention.set("nullableItem"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine(
+                    "  public abstract %s<%s> %s;", optional, String.class, convention.get("item"))
+                .addLine("")
+                .addLine("  public static class Builder extends DataType_Builder {")
+                .addLine("    @Override public Builder clearItem() {")
+                .addLine("      throw new UnsupportedOperationException(\"Fooled you!\");")
+                .addLine("    }")
+                .addLine("  }")
+                .addLine("")
+                .addLine("  public static Builder builder() {")
+                .addLine("    return new Builder();")
+                .addLine("  }")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType.Builder template = DataType.builder()")
+                .addLine("    .%s(null);", convention.set("nullableItem"))
+                .build())
         .runTest();
   }
 
@@ -538,26 +582,28 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("new %s()", EqualsTester.class)
-            .addLine("    .addEqualityGroup(")
-            .addLine("        DataType.builder().build(),")
-            .addLine("        DataType.builder()")
-            .addLine("            .%s(%s.%s())", convention.set("item"), optional, empty)
-            .addLine("            .build(),")
-            .addLine("        DataType.builder()")
-            .addLine("            .%s(null)", convention.set("nullableItem"))
-            .addLine("            .build())")
-            .addLine("    .addEqualityGroup(")
-            .addLine("        DataType.builder()")
-            .addLine("            .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("            .build(),")
-            .addLine("        DataType.builder()")
-            .addLine("            .%s(%s.of(%s))",
-                convention.set("item"), optional, element.example(0))
-            .addLine("            .build())")
-            .addLine("    .testEquals();")
-            .build())
+        .with(
+            testBuilder()
+                .addLine("new %s()", EqualsTester.class)
+                .addLine("    .addEqualityGroup(")
+                .addLine("        DataType.builder().build(),")
+                .addLine("        DataType.builder()")
+                .addLine("            .%s(%s.%s())", convention.set("item"), optional, empty)
+                .addLine("            .build(),")
+                .addLine("        DataType.builder()")
+                .addLine("            .%s(null)", convention.set("nullableItem"))
+                .addLine("            .build())")
+                .addLine("    .addEqualityGroup(")
+                .addLine("        DataType.builder()")
+                .addLine("            .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("            .build(),")
+                .addLine("        DataType.builder()")
+                .addLine(
+                    "            .%s(%s.of(%s))",
+                    convention.set("item"), optional, element.example(0))
+                .addLine("            .build())")
+                .addLine("    .testEquals();")
+                .build())
         .runTest();
   }
 
@@ -566,16 +612,18 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType empty = DataType.builder()")
-            .addLine("    .build();")
-            .addLine("DataType present = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .build();")
-            .addLine("assertEquals(\"DataType{}\", empty.toString());")
-            .addLine("assertEquals(\"DataType{item=\" + %s + \"}\", present.toString());",
-                element.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType empty = DataType.builder()")
+                .addLine("    .build();")
+                .addLine("DataType present = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .build();")
+                .addLine("assertEquals(\"DataType{}\", empty.toString());")
+                .addLine(
+                    "assertEquals(\"DataType{item=\" + %s + \"}\", present.toString());",
+                    element.example(0))
+                .build())
         .runTest();
   }
 
@@ -584,28 +632,32 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(twoProperties)
-        .with(testBuilder()
-            .addLine("DataType aa = DataType.builder()")
-            .addLine("    .build();")
-            .addLine("DataType pa = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
-            .addLine("    .build();")
-            .addLine("DataType ap = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item2"), element.example(1))
-            .addLine("    .build();")
-            .addLine("DataType pp = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
-            .addLine("    .%s(%s)", convention.set("item2"), element.example(1))
-            .addLine("    .build();")
-            .addLine("assertEquals(\"DataType{}\", aa.toString());")
-            .addLine("assertEquals(\"DataType{item1=\" + %s + \"}\", pa.toString());",
-                element.example(0))
-            .addLine("assertEquals(\"DataType{item2=\" + %s + \"}\", ap.toString());",
-                element.example(1))
-            .addLine("assertEquals(\"DataType{item1=\" + %s + \","
-                    + " item2=\" + %s + \"}\", pp.toString());",
-                element.example(0), element.example(1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType aa = DataType.builder()")
+                .addLine("    .build();")
+                .addLine("DataType pa = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
+                .addLine("    .build();")
+                .addLine("DataType ap = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item2"), element.example(1))
+                .addLine("    .build();")
+                .addLine("DataType pp = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
+                .addLine("    .%s(%s)", convention.set("item2"), element.example(1))
+                .addLine("    .build();")
+                .addLine("assertEquals(\"DataType{}\", aa.toString());")
+                .addLine(
+                    "assertEquals(\"DataType{item1=\" + %s + \"}\", pa.toString());",
+                    element.example(0))
+                .addLine(
+                    "assertEquals(\"DataType{item2=\" + %s + \"}\", ap.toString());",
+                    element.example(1))
+                .addLine(
+                    "assertEquals(\"DataType{item1=\" + %s + \","
+                        + " item2=\" + %s + \"}\", pp.toString());",
+                    element.example(0), element.example(1))
+                .build())
         .runTest();
   }
 
@@ -614,16 +666,18 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(oneProperty)
-        .with(testBuilder()
-            .addLine("DataType empty = DataType.builder()")
-            .addLine("    .buildPartial();")
-            .addLine("DataType present = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(\"partial DataType{}\", empty.toString());")
-            .addLine("assertEquals(\"partial DataType{item=\" + %s + \"}\", present.toString());",
-                element.example(0))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType empty = DataType.builder()")
+                .addLine("    .buildPartial();")
+                .addLine("DataType present = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .buildPartial();")
+                .addLine("assertEquals(\"partial DataType{}\", empty.toString());")
+                .addLine(
+                    "assertEquals(\"partial DataType{item=\" + %s + \"}\", present.toString());",
+                    element.example(0))
+                .build())
         .runTest();
   }
 
@@ -632,28 +686,32 @@ public class OptionalPropertyTest {
     behaviorTester
         .with(new Processor(features))
         .with(twoProperties)
-        .with(testBuilder()
-            .addLine("DataType aa = DataType.builder()")
-            .addLine("    .buildPartial();")
-            .addLine("DataType pa = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
-            .addLine("    .buildPartial();")
-            .addLine("DataType ap = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item2"), element.example(1))
-            .addLine("    .buildPartial();")
-            .addLine("DataType pp = DataType.builder()")
-            .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
-            .addLine("    .%s(%s)", convention.set("item2"), element.example(1))
-            .addLine("    .buildPartial();")
-            .addLine("assertEquals(\"partial DataType{}\", aa.toString());")
-            .addLine("assertEquals(\"partial DataType{item1=\" + %s + \"}\", pa.toString());",
-                element.example(0))
-            .addLine("assertEquals(\"partial DataType{item2=\" + %s + \"}\", ap.toString());",
-                element.example(1))
-            .addLine("assertEquals(\"partial DataType{item1=\" + %s + \","
-                    + " item2=\" + %s + \"}\", pp.toString());",
-                element.example(0), element.example(1))
-            .build())
+        .with(
+            testBuilder()
+                .addLine("DataType aa = DataType.builder()")
+                .addLine("    .buildPartial();")
+                .addLine("DataType pa = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
+                .addLine("    .buildPartial();")
+                .addLine("DataType ap = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item2"), element.example(1))
+                .addLine("    .buildPartial();")
+                .addLine("DataType pp = DataType.builder()")
+                .addLine("    .%s(%s)", convention.set("item1"), element.example(0))
+                .addLine("    .%s(%s)", convention.set("item2"), element.example(1))
+                .addLine("    .buildPartial();")
+                .addLine("assertEquals(\"partial DataType{}\", aa.toString());")
+                .addLine(
+                    "assertEquals(\"partial DataType{item1=\" + %s + \"}\", pa.toString());",
+                    element.example(0))
+                .addLine(
+                    "assertEquals(\"partial DataType{item2=\" + %s + \"}\", ap.toString());",
+                    element.example(1))
+                .addLine(
+                    "assertEquals(\"partial DataType{item1=\" + %s + \","
+                        + " item2=\" + %s + \"}\", pp.toString());",
+                    element.example(0), element.example(1))
+                .build())
         .runTest();
   }
 
@@ -661,22 +719,27 @@ public class OptionalPropertyTest {
   public void testWildcardHandling_noWildcard() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-              .addLine("package com.example;")
-              .addLine("@%s", FreeBuilder.class)
-              .addLine("public abstract class DataType {")
-              .addLine("  public abstract %s<%s<%s>> %s;",
-                      optional, List.class, Number.class, convention.get("items"))
-              .addLine("  public static class Builder extends DataType_Builder {}")
-              .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.of((%s) 1, 2, 3, 4))",
-                convention.set("items"), ImmutableList.class, Number.class)
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s.get()).containsExactly(1, 2, 3, 4).inOrder();",
-                convention.get("items"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine(
+                    "  public abstract %s<%s<%s>> %s;",
+                    optional, List.class, Number.class, convention.get("items"))
+                .addLine("  public static class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine(
+                    "    .%s(%s.of((%s) 1, 2, 3, 4))",
+                    convention.set("items"), ImmutableList.class, Number.class)
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s.get()).containsExactly(1, 2, 3, 4).inOrder();",
+                    convention.get("items"))
+                .build())
         .runTest();
   }
 
@@ -684,21 +747,25 @@ public class OptionalPropertyTest {
   public void testWildcardHandling_unboundedWildcard() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-              .addLine("package com.example;")
-              .addLine("@%s", FreeBuilder.class)
-              .addLine("public abstract class DataType {")
-              .addLine("  public abstract %s<%s<?>> %s;",
-                  optional, List.class, convention.get("items"))
-              .addLine("  public static class Builder extends DataType_Builder {}")
-              .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.of(1, 2, 3, 4))", convention.set("items"), ImmutableList.class)
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s.get()).containsExactly(1, 2, 3, 4).inOrder();",
-                convention.get("items"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine(
+                    "  public abstract %s<%s<?>> %s;",
+                    optional, List.class, convention.get("items"))
+                .addLine("  public static class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s.of(1, 2, 3, 4))", convention.set("items"), ImmutableList.class)
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s.get()).containsExactly(1, 2, 3, 4).inOrder();",
+                    convention.get("items"))
+                .build())
         .runTest();
   }
 
@@ -706,21 +773,25 @@ public class OptionalPropertyTest {
   public void testWildcardHandling_wildcardWithExtendsBound() {
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-              .addLine("package com.example;")
-              .addLine("@%s", FreeBuilder.class)
-              .addLine("public abstract class DataType {")
-              .addLine("  public abstract %s<%s<? extends %s>> %s;",
-                      optional, List.class, Number.class, convention.get("items"))
-              .addLine("  public static class Builder extends DataType_Builder {}")
-              .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s.of(1, 2, 3, 4))", convention.set("items"), ImmutableList.class)
-            .addLine("    .build();")
-            .addLine("assertThat(value.%s.get()).containsExactly(1, 2, 3, 4).inOrder();",
-                convention.get("items"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("public abstract class DataType {")
+                .addLine(
+                    "  public abstract %s<%s<? extends %s>> %s;",
+                    optional, List.class, Number.class, convention.get("items"))
+                .addLine("  public static class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s.of(1, 2, 3, 4))", convention.set("items"), ImmutableList.class)
+                .addLine("    .build();")
+                .addLine(
+                    "assertThat(value.%s.get()).containsExactly(1, 2, 3, 4).inOrder();",
+                    convention.get("items"))
+                .build())
         .runTest();
   }
 
@@ -731,33 +802,36 @@ public class OptionalPropertyTest {
         optional.getName().startsWith("com.google") ? GuavaModule.class : Jdk8Module.class;
     behaviorTester
         .with(new Processor(features))
-        .with(SourceBuilder.forTesting()
-            .addLine("package com.example;")
-            .addLine("import " + JsonProperty.class.getName() + ";")
-            .addLine("@%s", FreeBuilder.class)
-            .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
-            .addLine("public interface DataType {")
-            .addLine("  @JsonProperty(\"stuff\") %s<%s> %s;",
-                optional, element.type(), convention.get("item"))
-            .addLine("")
-            .addLine("  class Builder extends DataType_Builder {}")
-            .addLine("}"))
-        .with(testBuilder()
-            .addLine("DataType value = new DataType.Builder()")
-            .addLine("    .%s(%s)", convention.set("item"), element.example(0))
-            .addLine("    .build();")
-            .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
-            .addLine("    .registerModule(new %s());", module)
-            .addLine("String json = mapper.writeValueAsString(value);")
-            .addLine("DataType clone = mapper.readValue(json, DataType.class);")
-            .addLine("assertEquals(%s.of(%s), clone.%s);",
-                optional, element.example(0), convention.get("item"))
-            .build())
+        .with(
+            SourceBuilder.forTesting()
+                .addLine("package com.example;")
+                .addLine("import " + JsonProperty.class.getName() + ";")
+                .addLine("@%s", FreeBuilder.class)
+                .addLine("@%s(builder = DataType.Builder.class)", JsonDeserialize.class)
+                .addLine("public interface DataType {")
+                .addLine(
+                    "  @JsonProperty(\"stuff\") %s<%s> %s;",
+                    optional, element.type(), convention.get("item"))
+                .addLine("")
+                .addLine("  class Builder extends DataType_Builder {}")
+                .addLine("}"))
+        .with(
+            testBuilder()
+                .addLine("DataType value = new DataType.Builder()")
+                .addLine("    .%s(%s)", convention.set("item"), element.example(0))
+                .addLine("    .build();")
+                .addLine("%1$s mapper = new %1$s()", ObjectMapper.class)
+                .addLine("    .registerModule(new %s());", module)
+                .addLine("String json = mapper.writeValueAsString(value);")
+                .addLine("DataType clone = mapper.readValue(json, DataType.class);")
+                .addLine(
+                    "assertEquals(%s.of(%s), clone.%s);",
+                    optional, element.example(0), convention.get("item"))
+                .build())
         .runTest();
   }
 
   private static TestBuilder testBuilder() {
-    return new TestBuilder()
-        .addImport("com.example.DataType");
+    return new TestBuilder().addImport("com.example.DataType");
   }
 }

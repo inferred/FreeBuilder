@@ -1,7 +1,6 @@
 package org.inferred.freebuilder.processor.property;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.inferred.freebuilder.processor.property.MergeAction.addActionsTo;
 import static org.inferred.freebuilder.processor.property.MergeAction.appendingToCollections;
 import static org.inferred.freebuilder.processor.property.MergeAction.skippingDefaults;
@@ -9,7 +8,6 @@ import static org.inferred.freebuilder.processor.property.MergeAction.skippingEm
 import static org.inferred.freebuilder.processor.property.MergeAction.skippingUnsetProperties;
 
 import com.google.common.collect.ImmutableSet;
-
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.junit.Test;
 
@@ -60,20 +58,20 @@ public class MergeActionTest {
   @Test
   public void appendsThreeSkippingActionsForBuilder() {
     SourceBuilder code = SourceBuilder.forTesting();
-    ImmutableSet<MergeAction> actions = ImmutableSet.of(
-        skippingDefaults(), skippingUnsetProperties(), skippingEmptyOptionals());
+    ImmutableSet<MergeAction> actions =
+        ImmutableSet.of(skippingDefaults(), skippingUnsetProperties(), skippingEmptyOptionals());
     addActionsTo(code, actions, true);
-    assertThat(code.toString()).isEqualTo(
-        ", skipping defaults, empty optionals and unset properties");
+    assertThat(code.toString())
+        .isEqualTo(", skipping defaults, empty optionals and unset properties");
   }
 
   @Test
   public void appendsTwoVerbsForBuilder() {
     SourceBuilder code = SourceBuilder.forTesting();
-    ImmutableSet<MergeAction> actions = ImmutableSet.of(
-        skippingDefaults(), skippingUnsetProperties(), appendingToCollections());
+    ImmutableSet<MergeAction> actions =
+        ImmutableSet.of(skippingDefaults(), skippingUnsetProperties(), appendingToCollections());
     addActionsTo(code, actions, true);
-    assertThat(code.toString()).isEqualTo(
-        ", appending to collections, and skipping defaults and unset properties");
+    assertThat(code.toString())
+        .isEqualTo(", appending to collections, and skipping defaults and unset properties");
   }
 }

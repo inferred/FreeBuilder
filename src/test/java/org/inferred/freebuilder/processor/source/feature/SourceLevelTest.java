@@ -20,12 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.SourceVersion;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.SourceVersion;
 
 @RunWith(JUnit4.class)
 public class SourceLevelTest {

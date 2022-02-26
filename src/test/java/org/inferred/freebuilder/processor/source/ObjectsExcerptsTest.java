@@ -2,7 +2,9 @@ package org.inferred.freebuilder.processor.source;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
+import java.util.Arrays;
+import java.util.List;
+import javax.lang.model.type.TypeKind;
 import org.inferred.freebuilder.processor.FeatureSets;
 import org.inferred.freebuilder.processor.source.feature.FeatureSet;
 import org.inferred.freebuilder.processor.source.testing.BehaviorTester;
@@ -13,11 +15,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-
-import java.util.Arrays;
-import java.util.List;
-
-import javax.lang.model.type.TypeKind;
 
 @RunWith(Parameterized.class)
 public class ObjectsExcerptsTest {
@@ -45,15 +42,17 @@ public class ObjectsExcerptsTest {
   @Parameters(name = "{0}, {1}")
   @SuppressWarnings("unchecked")
   public static Iterable<Object[]> parameters() {
-    return () -> Lists
-        .cartesianProduct(FeatureSets.ALL, Arrays.asList(ValueSet.values()))
-        .stream()
-        .map(List::toArray)
-        .iterator();
+    return () ->
+        Lists.cartesianProduct(FeatureSets.ALL, Arrays.asList(ValueSet.values())).stream()
+            .map(List::toArray)
+            .iterator();
   }
 
-  @Parameter(value = 0) public FeatureSet features;
-  @Parameter(value = 1) public ValueSet valueSet;
+  @Parameter(value = 0)
+  public FeatureSet features;
+
+  @Parameter(value = 1)
+  public ValueSet valueSet;
 
   @Test
   public void testEquals_notNullable() {
@@ -64,11 +63,12 @@ public class ObjectsExcerptsTest {
     }
     for (int i = 0; i < numValues; ++i) {
       for (int j = 0; j < numValues; ++j) {
-        code.addLine("assert%s(value%s + \" equals \" + value%s, %s);",
-                (i == j) ? "True" : "False",
-                i,
-                j,
-                ObjectsExcerpts.equals("value" + i, "value" + j, valueSet.kind));
+        code.addLine(
+            "assert%s(value%s + \" equals \" + value%s, %s);",
+            (i == j) ? "True" : "False",
+            i,
+            j,
+            ObjectsExcerpts.equals("value" + i, "value" + j, valueSet.kind));
       }
     }
     runTesterClass(code);
@@ -84,11 +84,12 @@ public class ObjectsExcerptsTest {
     code.addLine("%s value%s = null;", valueSet.nullableType, numValues);
     for (int i = 0; i < numValues + 1; ++i) {
       for (int j = 0; j < numValues + 1; ++j) {
-        code.addLine("assert%s(value%s + \" equals \" + value%s, %s);",
-                (i == j) ? "True" : "False",
-                i,
-                j,
-                ObjectsExcerpts.equals("value" + i, "value" + j, TypeKind.DECLARED));
+        code.addLine(
+            "assert%s(value%s + \" equals \" + value%s, %s);",
+            (i == j) ? "True" : "False",
+            i,
+            j,
+            ObjectsExcerpts.equals("value" + i, "value" + j, TypeKind.DECLARED));
       }
     }
     runTesterClass(code);
@@ -103,11 +104,12 @@ public class ObjectsExcerptsTest {
     }
     for (int i = 0; i < numValues; ++i) {
       for (int j = 0; j < numValues; ++j) {
-        code.addLine("assert%s(value%s + \" equals \" + value%s, %s);",
-                (i != j) ? "True" : "False",
-                i,
-                j,
-                ObjectsExcerpts.notEquals("value" + i, "value" + j, valueSet.kind));
+        code.addLine(
+            "assert%s(value%s + \" equals \" + value%s, %s);",
+            (i != j) ? "True" : "False",
+            i,
+            j,
+            ObjectsExcerpts.notEquals("value" + i, "value" + j, valueSet.kind));
       }
     }
     runTesterClass(code);
@@ -123,11 +125,12 @@ public class ObjectsExcerptsTest {
     code.addLine("%s value%s = null;", valueSet.nullableType, numValues);
     for (int i = 0; i < numValues + 1; ++i) {
       for (int j = 0; j < numValues + 1; ++j) {
-        code.addLine("assert%s(value%s + \" equals \" + value%s, %s);",
-                (i != j) ? "True" : "False",
-                i,
-                j,
-                ObjectsExcerpts.notEquals("value" + i, "value" + j, TypeKind.DECLARED));
+        code.addLine(
+            "assert%s(value%s + \" equals \" + value%s, %s);",
+            (i != j) ? "True" : "False",
+            i,
+            j,
+            ObjectsExcerpts.notEquals("value" + i, "value" + j, TypeKind.DECLARED));
       }
     }
     runTesterClass(code);
@@ -142,11 +145,11 @@ public class ObjectsExcerptsTest {
   }
 
   private void runTesterClass(SourceBuilder code) {
-    code.addLine("  }")
-        .addLine("}");
+    code.addLine("  }").addLine("}");
     BehaviorTester.create(features)
         .withPermittedPackage(Assert.class.getPackage())
         .with(code)
-        .with(new TestBuilder().addLine("com.example.EqualityTester.test();").build()).runTest();
+        .with(new TestBuilder().addLine("com.example.EqualityTester.test();").build())
+        .runTest();
   }
 }

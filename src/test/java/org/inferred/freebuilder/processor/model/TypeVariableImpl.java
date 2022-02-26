@@ -18,20 +18,15 @@ package org.inferred.freebuilder.processor.model;
 import static org.inferred.freebuilder.processor.model.ClassTypeImpl.newTopLevelClass;
 
 import com.google.common.collect.ImmutableList;
-
-import org.inferred.freebuilder.processor.source.Partial;
-
 import java.util.List;
-
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.TypeVisitor;
+import org.inferred.freebuilder.processor.source.Partial;
 
-/**
- * Fake implementation of {@link TypeVariable} for unit tests.
- */
+/** Fake implementation of {@link TypeVariable} for unit tests. */
 public abstract class TypeVariableImpl implements TypeVariable {
 
   public static TypeVariable newTypeVariable(String variableName) {

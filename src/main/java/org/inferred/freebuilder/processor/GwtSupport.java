@@ -4,7 +4,12 @@ import static org.inferred.freebuilder.processor.model.ModelUtils.findAnnotation
 import static org.inferred.freebuilder.processor.model.ModelUtils.findProperty;
 
 import com.google.common.annotations.GwtCompatible;
-
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.TypeElement;
 import org.inferred.freebuilder.processor.Datatype.Visibility;
 import org.inferred.freebuilder.processor.property.Property;
 import org.inferred.freebuilder.processor.property.PropertyCodeGenerator;
@@ -14,14 +19,6 @@ import org.inferred.freebuilder.processor.source.QualifiedName;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.ValueType;
 import org.inferred.freebuilder.processor.source.Variable;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.TypeElement;
 
 class GwtSupport {
 
@@ -47,8 +44,8 @@ class GwtSupport {
         // Due to a bug in GWT's handling of nested types, we have to declare Value as package
         // scoped so Value_CustomFieldSerializer can access it.
         extraMetadata.setValueTypeVisibility(Visibility.PACKAGE);
-        extraMetadata.addValueTypeAnnotations(Excerpts.add(
-            "@%s(serializable = true)%n", GwtCompatible.class));
+        extraMetadata.addValueTypeAnnotations(
+            Excerpts.add("@%s(serializable = true)%n", GwtCompatible.class));
         extraMetadata.addNestedClasses(new CustomValueSerializer(datatype, generatorsByProperty));
         extraMetadata.addNestedClasses(new GwtWhitelist(datatype, generatorsByProperty.keySet()));
       }
@@ -62,16 +59,14 @@ class GwtSupport {
     private final Map<Property, PropertyCodeGenerator> generatorsByProperty;
 
     private CustomValueSerializer(
-        Datatype datatype,
-        Map<Property, PropertyCodeGenerator> generatorsByProperty) {
+        Datatype datatype, Map<Property, PropertyCodeGenerator> generatorsByProperty) {
       this.datatype = datatype;
       this.generatorsByProperty = generatorsByProperty;
     }
 
     @Override
     public void addTo(SourceBuilder code) {
-      code.addLine("")
-          .addLine("@%s", GwtCompatible.class);
+      code.addLine("").addLine("@%s", GwtCompatible.class);
       if (datatype.getType().isParameterized()) {
         code.addLine("@%s(\"unchecked\")", SuppressWarnings.class);
       }
@@ -79,7 +74,8 @@ class GwtSupport {
           .addLine("    extends %s<%s> {", CUSTOM_FIELD_SERIALIZER, datatype.getValueType())
           .addLine("")
           .addLine("  @%s", Override.class)
-          .addLine("  public void deserializeInstance(%s reader, %s instance) { }",
+          .addLine(
+              "  public void deserializeInstance(%s reader, %s instance) { }",
               SERIALIZATION_STREAM_READER, datatype.getValueType())
           .addLine("")
           .addLine("  @%s", Override.class)
@@ -89,21 +85,25 @@ class GwtSupport {
       addInstantiateInstance(code);
       addSerializeInstance(code);
       code.addLine("")
-          .addLine("  private static final Value_CustomFieldSerializer INSTANCE ="
-              + " new Value_CustomFieldSerializer();")
+          .addLine(
+              "  private static final Value_CustomFieldSerializer INSTANCE ="
+                  + " new Value_CustomFieldSerializer();")
           .addLine("")
-          .addLine("  public static void deserialize(%s reader, %s instance) {",
+          .addLine(
+              "  public static void deserialize(%s reader, %s instance) {",
               SERIALIZATION_STREAM_READER, datatype.getValueType())
           .addLine("    INSTANCE.deserializeInstance(reader, instance);")
           .addLine("  }")
           .addLine("")
-          .addLine("  public static %s instantiate(%s reader)",
+          .addLine(
+              "  public static %s instantiate(%s reader)",
               datatype.getValueType(), SERIALIZATION_STREAM_READER)
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION)
           .addLine("    return INSTANCE.instantiateInstance(reader);")
           .addLine("  }")
           .addLine("")
-          .addLine("  public static void serialize(%s writer, %s instance)",
+          .addLine(
+              "  public static void serialize(%s writer, %s instance)",
               SERIALIZATION_STREAM_WRITER, datatype.getValueType())
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION)
           .addLine("    INSTANCE.serializeInstance(writer, instance);")
@@ -115,13 +115,15 @@ class GwtSupport {
       Variable builder = new Variable("builder");
       code.addLine("")
           .addLine("  @%s", Override.class)
-          .addLine("  public %s instantiateInstance(%s reader) throws %s {",
+          .addLine(
+              "  public %s instantiateInstance(%s reader) throws %s {",
               datatype.getValueType(), SERIALIZATION_STREAM_READER, SERIALIZATION_EXCEPTION)
           .addLine("    %1$s %2$s = new %1$s();", datatype.getBuilder(), builder);
       for (Property property : generatorsByProperty.keySet()) {
         Variable temporary = new Variable(property.getName());
         if (property.getType().getKind().isPrimitive()) {
-          code.addLine("    %s %s = reader.read%s();",
+          code.addLine(
+              "    %s %s = reader.read%s();",
               property.getType(), temporary, withInitialCapital(property.getType()));
           generatorsByProperty.get(property).addSetFromResult(code, builder, temporary);
         } else if (String.class.getName().equals(property.getType().toString())) {
@@ -132,8 +134,8 @@ class GwtSupport {
           if (!property.isFullyCheckedCast()) {
             code.addLine("      @SuppressWarnings(\"unchecked\")");
           }
-          code.addLine("      %1$s %2$s = (%1$s) reader.readObject();",
-              property.getType(), temporary);
+          code.addLine(
+              "      %1$s %2$s = (%1$s) reader.readObject();", property.getType(), temporary);
           generatorsByProperty.get(property).addSetFromResult(code, builder, temporary);
           code.addLine("    } catch (%s e) {", ClassCastException.class)
               .addLine("      throw new %s(", SERIALIZATION_EXCEPTION)
@@ -141,7 +143,8 @@ class GwtSupport {
               .addLine("    }");
         }
       }
-      code.addLine("    return (%s) %s.%s();",
+      code.addLine(
+              "    return (%s) %s.%s();",
               datatype.getValueType(), builder, datatype.getBuildMethod().name())
           .addLine("  }");
     }
@@ -149,7 +152,8 @@ class GwtSupport {
     private void addSerializeInstance(SourceBuilder code) {
       code.addLine("")
           .addLine("  @%s", Override.class)
-          .addLine("  public void serializeInstance(%s writer, %s instance)",
+          .addLine(
+              "  public void serializeInstance(%s writer, %s instance)",
               SERIALIZATION_STREAM_WRITER, datatype.getValueType())
           .addLine("      throws %s {", SERIALIZATION_EXCEPTION);
       for (Property property : generatorsByProperty.keySet()) {
@@ -160,7 +164,8 @@ class GwtSupport {
         } else {
           code.add("    writer.writeObject(");
         }
-        generatorsByProperty.get(property)
+        generatorsByProperty
+            .get(property)
             .addReadValueFragment(code, property.getField().on("instance"));
         code.add(");\n");
       }
@@ -189,7 +194,8 @@ class GwtSupport {
       code.addLine("")
           .addLine("/** This class exists solely to ensure GWT whitelists all required types. */")
           .addLine("@%s(serializable = true)", GwtCompatible.class)
-          .addLine("static final class GwtWhitelist%s %s %s {",
+          .addLine(
+              "static final class GwtWhitelist%s %s %s {",
               datatype.getType().declarationParameters(),
               datatype.isInterfaceType() ? "implements " : "extends ",
               datatype.getType())

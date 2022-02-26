@@ -19,12 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents an instance that compares in {@link Object#hashCode()} and
- * {@link Object#equals(Object)} using a sequence of fields. If two instances have the same runtime
- * class and the same sequence of fields, then they are considered equal.
+ * Represents an instance that compares in {@link Object#hashCode()} and {@link
+ * Object#equals(Object)} using a sequence of fields. If two instances have the same runtime class
+ * and the same sequence of fields, then they are considered equal.
  *
- * <p>This class implements the two {@link Object} methods mentioned above as well as
- * {@link Object#toString()}.
+ * <p>This class implements the two {@link Object} methods mentioned above as well as {@link
+ * Object#toString()}.
  */
 public abstract class ValueType {
   /**
@@ -117,13 +117,10 @@ public abstract class ValueType {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append(getClass().getSimpleName())
-        .append("{");
+    builder.append(getClass().getSimpleName()).append("{");
 
     addFields(new ReceiverIntoStringBuilder(builder));
 
-    return builder.append("}")
-        .toString();
+    return builder.append("}").toString();
   }
 }
-

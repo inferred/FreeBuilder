@@ -1,12 +1,11 @@
 package org.inferred.freebuilder.processor;
 
+import java.util.Optional;
 import org.inferred.freebuilder.processor.BuilderFactory.TypeInference;
 import org.inferred.freebuilder.processor.source.Scope;
 import org.inferred.freebuilder.processor.source.Scope.Level;
 import org.inferred.freebuilder.processor.source.SourceBuilder;
 import org.inferred.freebuilder.processor.source.Variable;
-
-import java.util.Optional;
 
 public class Declarations {
 
@@ -14,7 +13,8 @@ public class Declarations {
       "// Upcast to access private fields; otherwise, oddly, we get an access violation.";
 
   private enum Declaration implements Scope.Key<Variable> {
-    UPCAST, FRESH_BUILDER;
+    UPCAST,
+    FRESH_BUILDER;
 
     @Override
     public Level level() {
@@ -34,12 +34,15 @@ public class Declarations {
    */
   public static Variable upcastToGeneratedBuilder(
       SourceBuilder code, Datatype datatype, String builder) {
-    return code.scope().computeIfAbsent(Declaration.UPCAST, () -> {
-      Variable base = new Variable("base");
-      code.addLine(UPCAST_COMMENT)
-          .addLine("%s %s = %s;", datatype.getGeneratedBuilder(), base, builder);
-      return base;
-    });
+    return code.scope()
+        .computeIfAbsent(
+            Declaration.UPCAST,
+            () -> {
+              Variable base = new Variable("base");
+              code.addLine(UPCAST_COMMENT)
+                  .addLine("%s %s = %s;", datatype.getGeneratedBuilder(), base, builder);
+              return base;
+            });
   }
 
   /**
@@ -47,24 +50,30 @@ public class Declarations {
    *
    * <p>Reuses an existing fresh Builder instance if one was already declared in this scope.
    *
-   * @returns a variable holding a fresh Builder, if a no-args factory method is available to
-   *     create one with
+   * @returns a variable holding a fresh Builder, if a no-args factory method is available to create
+   *     one with
    */
   public static Optional<Variable> freshBuilder(SourceBuilder code, Datatype datatype) {
     if (!datatype.getBuilderFactory().isPresent()) {
       return Optional.empty();
     }
-    return Optional.of(code.scope().computeIfAbsent(Declaration.FRESH_BUILDER, () -> {
-      Variable defaults = new Variable("defaults");
-      code.addLine("%s %s = %s;",
-          datatype.getGeneratedBuilder(),
-          defaults,
-          datatype.getBuilderFactory().get()
-              .newBuilder(datatype.getBuilder(), TypeInference.INFERRED_TYPES));
-      return defaults;
-    }));
+    return Optional.of(
+        code.scope()
+            .computeIfAbsent(
+                Declaration.FRESH_BUILDER,
+                () -> {
+                  Variable defaults = new Variable("defaults");
+                  code.addLine(
+                      "%s %s = %s;",
+                      datatype.getGeneratedBuilder(),
+                      defaults,
+                      datatype
+                          .getBuilderFactory()
+                          .get()
+                          .newBuilder(datatype.getBuilder(), TypeInference.INFERRED_TYPES));
+                  return defaults;
+                }));
   }
 
   private Declarations() {}
-
 }

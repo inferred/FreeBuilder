@@ -1,10 +1,5 @@
 package org.inferred.freebuilder.processor.excerpt;
 
-import org.inferred.freebuilder.processor.source.Excerpt;
-import org.inferred.freebuilder.processor.source.LazyName;
-import org.inferred.freebuilder.processor.source.SourceBuilder;
-import org.inferred.freebuilder.processor.source.ValueType;
-
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Iterator;
@@ -12,6 +7,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import org.inferred.freebuilder.processor.source.Excerpt;
+import org.inferred.freebuilder.processor.source.LazyName;
+import org.inferred.freebuilder.processor.source.SourceBuilder;
+import org.inferred.freebuilder.processor.source.ValueType;
 
 /**
  * Excerpts defining a map implementation that delegates to a provided put method to perform entry
@@ -78,7 +77,8 @@ public class CheckedMap extends ValueType implements Excerpt {
     @Override
     public void addTo(SourceBuilder code) {
       code.addLine("")
-          .addLine("private static class %s<K, V> implements %s<%s<K, V>> {",
+          .addLine(
+              "private static class %s<K, V> implements %s<%s<K, V>> {",
               TYPE, Iterator.class, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<%s<K, V>> iterator;", Iterator.class, Map.Entry.class)
@@ -118,13 +118,15 @@ public class CheckedMap extends ValueType implements Excerpt {
     @Override
     public void addTo(SourceBuilder code) {
       code.addLine("")
-          .addLine("private static class %s<K, V> extends %s<%s<K, V>> {",
+          .addLine(
+              "private static class %s<K, V> extends %s<%s<K, V>> {",
               TYPE, AbstractSet.class, Map.Entry.class)
           .addLine("")
           .addLine("  private final %s<%s<K, V>> set;", Set.class, Map.Entry.class)
           .addLine("  private final %s<K, V> put;", BiConsumer.class)
           .addLine("")
-          .addLine("  %s(%s<%s<K, V>> set, %s<K, V> put) {",
+          .addLine(
+              "  %s(%s<%s<K, V>> set, %s<K, V> put) {",
               TYPE, Set.class, Map.Entry.class, BiConsumer.class)
           .addLine("    this.set = set;")
           .addLine("    this.put = put;")
@@ -134,8 +136,7 @@ public class CheckedMap extends ValueType implements Excerpt {
           .addLine("    return set.size();")
           .addLine("  }")
           .addLine("")
-          .addLine("  @Override public %s<%s<K, V>> iterator() {",
-              Iterator.class, Map.Entry.class)
+          .addLine("  @Override public %s<%s<K, V>> iterator() {", Iterator.class, Map.Entry.class)
           .addLine("    return new %s<K, V>(set.iterator(), put);", CheckedEntryIterator.TYPE)
           .addLine("  }")
           .addLine("")
@@ -198,8 +199,7 @@ public class CheckedMap extends ValueType implements Excerpt {
         .addLine("    map.clear();")
         .addLine("  }")
         .addLine("")
-        .addLine("  @Override public %s<%s<K, V>> entrySet() {",
-            Set.class, Map.Entry.class)
+        .addLine("  @Override public %s<%s<K, V>> entrySet() {", Set.class, Map.Entry.class)
         .addLine("    return new %s<>(map.entrySet(), put);", CheckedEntrySet.TYPE)
         .addLine("  }")
         .addLine("}");

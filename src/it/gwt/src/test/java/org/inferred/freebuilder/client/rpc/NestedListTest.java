@@ -22,49 +22,51 @@ import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 public class NestedListTest extends GWTTestCase {
 
-    private static final int RPC_TIMEOUT = 15000;
-    private static final String MODULE_NAME = "org.inferred.freebuilder.TestServer";
-    private static final NestedListGwtType VALUE = new NestedListGwtType.Builder()
-            .setItem(new StringListGwtType.Builder()
-                    .addNames("john", "alice", "sam"))
-            .build();
+  private static final int RPC_TIMEOUT = 15000;
+  private static final String MODULE_NAME = "org.inferred.freebuilder.TestServer";
+  private static final NestedListGwtType VALUE =
+      new NestedListGwtType.Builder()
+          .setItem(new StringListGwtType.Builder().addNames("john", "alice", "sam"))
+          .build();
 
-    private NestedListTestServiceAsync customFieldSerializerTestService;
+  private NestedListTestServiceAsync customFieldSerializerTestService;
 
-    @Override
-    public String getModuleName() {
-        return MODULE_NAME;
-    }
+  @Override
+  public String getModuleName() {
+    return MODULE_NAME;
+  }
 
-    @Override
-    protected void gwtSetUp() throws Exception {
-        super.gwtSetUp();
-        delayTestFinish(RPC_TIMEOUT);
-    }
+  @Override
+  protected void gwtSetUp() throws Exception {
+    super.gwtSetUp();
+    delayTestFinish(RPC_TIMEOUT);
+  }
 
-    public void testSerialization() {
-        NestedListTestServiceAsync service = getServiceAsync();
-        service.echo(VALUE, new AsyncCallback<NestedListGwtType>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                throw new AssertionError(caught);
-            }
+  public void testSerialization() {
+    NestedListTestServiceAsync service = getServiceAsync();
+    service.echo(
+        VALUE,
+        new AsyncCallback<NestedListGwtType>() {
+          @Override
+          public void onFailure(Throwable caught) {
+            throw new AssertionError(caught);
+          }
 
-            @Override
-            public void onSuccess(NestedListGwtType result) {
-                assertEquals(VALUE, result);
-                finishTest();
-            }
+          @Override
+          public void onSuccess(NestedListGwtType result) {
+            assertEquals(VALUE, result);
+            finishTest();
+          }
         });
-    }
+  }
 
-    private NestedListTestServiceAsync getServiceAsync() {
-        if (customFieldSerializerTestService == null) {
-            customFieldSerializerTestService =
-                    (NestedListTestServiceAsync) GWT.create(NestedListTestService.class);
-            ((ServiceDefTarget) customFieldSerializerTestService)
-                    .setServiceEntryPoint(GWT.getModuleBaseURL() + "nested-list");
-        }
-        return customFieldSerializerTestService;
+  private NestedListTestServiceAsync getServiceAsync() {
+    if (customFieldSerializerTestService == null) {
+      customFieldSerializerTestService =
+          (NestedListTestServiceAsync) GWT.create(NestedListTestService.class);
+      ((ServiceDefTarget) customFieldSerializerTestService)
+          .setServiceEntryPoint(GWT.getModuleBaseURL() + "nested-list");
     }
+    return customFieldSerializerTestService;
+  }
 }

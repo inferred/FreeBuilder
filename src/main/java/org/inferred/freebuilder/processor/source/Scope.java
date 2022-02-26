@@ -19,7 +19,6 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.ConcurrentModificationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,10 +29,10 @@ import java.util.function.Supplier;
  * An append-only, hierarchical map with key-specific value typing.
  *
  * <p>Scopes allow source generators to cooperate with each other&mdash;to avoid namespace clashes
- * or reuse variables, for example&mdash;in a decoupled fashion using a shared key-value space.
- * The key type dictates the type of the value that can be stored in the map, as well as at what
- * level in the source the key should be unique at: {@code FILE} keys are unique within a
- * compilation unit, while {@code METHOD} keys are scoped to the current method.
+ * or reuse variables, for example&mdash;in a decoupled fashion using a shared key-value space. The
+ * key type dictates the type of the value that can be stored in the map, as well as at what level
+ * in the source the key should be unique at: {@code FILE} keys are unique within a compilation
+ * unit, while {@code METHOD} keys are scoped to the current method.
  *
  * <p>While a Scope has to be mutable, it limits the potential for complex bugs by only permitting
  * key-values pairs to be inserted, not modified or removed.
@@ -41,7 +40,8 @@ import java.util.function.Supplier;
 public abstract class Scope {
 
   public enum Level {
-    FILE, METHOD;
+    FILE,
+    METHOD;
   }
 
   @SuppressWarnings("unused")
@@ -88,8 +88,8 @@ public abstract class Scope {
   }
 
   /**
-   * If {@code key} is not already associated with a value, computes its value using
-   * {@code supplier} and enters it into the scope.
+   * If {@code key} is not already associated with a value, computes its value using {@code
+   * supplier} and enters it into the scope.
    *
    * @return the current (existing or computed) value associated with {@code key}
    */
@@ -105,8 +105,7 @@ public abstract class Scope {
     } else if (parent != null) {
       return parent.computeIfAbsent(key, supplier);
     } else {
-      throw new IllegalStateException(
-          "Not in " + key.level().toString().toLowerCase() + " scope");
+      throw new IllegalStateException("Not in " + key.level().toString().toLowerCase() + " scope");
     }
   }
 
@@ -140,8 +139,7 @@ public abstract class Scope {
     } else if (parent != null) {
       return parent.putIfAbsent(key, value);
     } else {
-      throw new IllegalStateException(
-          "Not in " + key.level().toString().toLowerCase() + " scope");
+      throw new IllegalStateException("Not in " + key.level().toString().toLowerCase() + " scope");
     }
   }
 

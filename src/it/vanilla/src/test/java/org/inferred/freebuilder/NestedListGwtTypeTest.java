@@ -16,7 +16,6 @@
 package org.inferred.freebuilder;
 
 import static java.util.Arrays.asList;
-
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -38,27 +37,23 @@ public class NestedListGwtTypeTest {
     builder.getItemBuilder().addNames(NAME_1);
     assertEquals(asList(NAME_1), builder.build().getItem().getNames());
     // setItem(Value)
-    builder.setItem(new StringListGwtType.Builder()
-        .addNames(NAME_2, NAME_3)
-        .build());
+    builder.setItem(new StringListGwtType.Builder().addNames(NAME_2, NAME_3).build());
     assertEquals(asList(NAME_2, NAME_3), builder.build().getItem().getNames());
     // setItem(Builder)
-    builder.setItem(new StringListGwtType.Builder()
-        .addNames(NAME_1, NAME_3));
+    builder.setItem(new StringListGwtType.Builder().addNames(NAME_1, NAME_3));
     assertEquals(asList(NAME_1, NAME_3), builder.build().getItem().getNames());
     // Top-level clear()
     builder.clear();
     assertEquals(asList(), builder.build().getItem().getNames());
     // mergeFrom(Value)
-    builder.mergeFrom(new NestedListGwtType.Builder()
-        .setItem(new StringListGwtType.Builder()
-            .addNames(NAME_2))
-        .build());
+    builder.mergeFrom(
+        new NestedListGwtType.Builder()
+            .setItem(new StringListGwtType.Builder().addNames(NAME_2))
+            .build());
     assertEquals(asList(NAME_2), builder.build().getItem().getNames());
     // mergeFrom(Builder)
-    builder.mergeFrom(new NestedListGwtType.Builder()
-        .setItem(new StringListGwtType.Builder()
-            .addNames(NAME_3)));
+    builder.mergeFrom(
+        new NestedListGwtType.Builder().setItem(new StringListGwtType.Builder().addNames(NAME_3)));
     assertEquals(asList(NAME_2, NAME_3), builder.build().getItem().getNames());
   }
 }
