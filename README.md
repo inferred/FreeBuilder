@@ -455,6 +455,22 @@ Project project = new Project.Builder()
     .build();
 ```
 
+Note that FreeBuilder requires nested buildable types
+provide the following public methods:
+
+* either a no-args constructor or a static `builder()` method on the enclosing type
+* `builder.build()`
+* `builder.buildPartial()`
+* `builder.clear()`
+* `builder.mergeFrom(value)`
+
+The following are also recommended:
+
+* `builder1.mergeFrom(builder2)` (FreeBuilder will otherwise use
+  `builder1.mergeFrom(builder2.toPartial())`)
+* `value.toBuilder()` (FreeBuilder will otherwise use
+  `new Builder().mergeFrom(value)`)
+
 [protos]: https://developers.google.com/protocol-buffers/
 [Consumer]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html
 
@@ -1001,9 +1017,15 @@ seems cleaner!
 
 <em><strong>Can I use both [AutoValue][] and FreeBuilder?</strong></em>
 
-Not really. You can certainly use both annotations, but you will end up with
-two different implementing classes that never compare equal, even if they have
-the same values.
+Absolutely! While you cannot use both annotations on the same type (you will
+end up with two different implementing classes that never compare equal, even
+if they have the same values), you can use them in the same project without
+issues.
+
+FreeBuilder will treat AutoValue types like any other generic type, generating
+a getter, setter and map method for properties. Nested [AutoValue.Builder][]
+properties will not currently get [full API integration](#nested-buildable-types)
+as AutoValue's builders lack `clear`, `buildPartial` and `mergeFrom` methods.
 
 [AutoValue]: https://github.com/google/auto/tree/master/value
 [AutoValue.Builder]: https://github.com/google/auto/tree/master/value#builders
