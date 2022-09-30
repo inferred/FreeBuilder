@@ -128,6 +128,12 @@ artifacts {
     archives javadocJar
 }
 
+nexusPublishing {
+  repositories {
+    sonatype()
+  }
+}
+
 afterEvaluate {
   group = pom.project.groupId
   archivesBaseName = pom.project.artifactId
