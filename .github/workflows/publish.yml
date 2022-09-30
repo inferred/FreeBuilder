@@ -35,5 +35,7 @@ jobs:
       with:
         arguments: publishToSonatype closeAndReleaseSonatypeStagingRepository
       env:
+        ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_SIGNING_KEY }}
+        ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
         ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }} 
         ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }} 

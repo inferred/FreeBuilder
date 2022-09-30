@@ -10,6 +10,7 @@ buildscript {
 plugins {
   id 'checkstyle'
   id 'eclipse'
+  id 'signing'
   id 'java'
   id 'java-library'
   id 'maven-publish'
