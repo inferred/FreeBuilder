@@ -546,9 +546,9 @@ pom {
 
   developers {
     developer {
-      id = 'chrisalice'
+      id = 'alicederyn'
       name = 'Alice Purcell'
-      email = 'Alice.Purcell.39@gmail.com'
+      email = 'alicederyn@gmail.com'
       timezone = 'Europe/London'
     }
   }
