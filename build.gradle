@@ -520,7 +520,11 @@ tasks.register("lambdaTest", Test) {
 group = 'org.inferred'
 archivesBaseName = 'freebuilder'
 
-version = 'UNKNOWN-SNAPSHOT'
+if (System.env.GITHUB_REF_TYPE == 'tag') {
+  version = System.env.GITHUB_REF_NAME.replaceAll('^v','')
+} else {
+  version = 'UNKNOWN-SNAPSHOT'
+}
 
 pom {
   project {
