@@ -10,16 +10,16 @@ buildscript {
 plugins {
   id 'checkstyle'
   id 'eclipse'
+  id 'signing'
   id 'java'
   id 'java-library'
   id 'maven-publish'
   id 'com.github.johnrengelman.shadow' version '4.0.3'
-  id 'com.jfrog.bintray' version '1.8.4'
+  id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
 }
 
 apply from: "gradle/java-compatibility.gradle"
 apply from: "gradle/publication.gradle"
-apply from: "gradle/travis-keep-alive.gradle"
 
 repositories {
   mavenCentral()
@@ -522,10 +522,8 @@ tasks.register("lambdaTest", Test) {
 group = 'org.inferred'
 archivesBaseName = 'freebuilder'
 
-if (System.env.TRAVIS_TAG != null && !System.env.TRAVIS_TAG.isEmpty()) {
-  version = System.env.TRAVIS_TAG.replaceAll('^v','')
-} else if (System.env.TRAVIS_BRANCH != null && !System.env.TRAVIS_BRANCH.isEmpty()) {
-  version = System.env.TRAVIS_BRANCH + '-alpha.' + System.env.TRAVIS_BUILD_NUMBER
+if (System.env.GITHUB_REF_TYPE == 'tag') {
+  version = System.env.GITHUB_REF_NAME.replaceAll('^v','')
 } else {
   version = 'UNKNOWN-SNAPSHOT'
 }
@@ -546,9 +544,9 @@ pom {
 
   developers {
     developer {
-      id = 'chrisalice'
+      id = 'alicederyn'
       name = 'Alice Purcell'
-      email = 'Alice.Purcell.39@gmail.com'
+      email = 'alicederyn@gmail.com'
       timezone = 'Europe/London'
     }
   }
