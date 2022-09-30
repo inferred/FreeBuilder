@@ -1,9 +1,3 @@
-if (System.env.TRAVIS_TAG != null && !System.env.TRAVIS_TAG.isEmpty()) {
-  version = System.env.TRAVIS_TAG.replaceAll('^v','')
-} else if (System.env.TRAVIS_BRANCH != null && !System.env.TRAVIS_BRANCH.isEmpty()) {
-  version = System.env.TRAVIS_BRANCH + '-alpha.' + System.env.TRAVIS_BUILD_NUMBER
-}
-
 class PomConvention {
 
   class ProjectData {
@@ -157,34 +151,6 @@ afterEvaluate {
           root.appendNode('name', project.pom.project.name)
           root.appendNode('url', project.pom.project.url)
           root.children().last() + project.pom.asClosure()
-        }
-      }
-    }
-  }
-
-  if (project.pom.scm.connection != null) {
-    bintray {
-      user = System.env.BINTRAY_USER
-      key = System.env.BINTRAY_KEY
-      publications = ['JarPublication']
-      publish = true
-      pkg {
-        name = project.pom.project.groupId + ':' + project.pom.project.artifactId
-        repo = 'maven'
-        userOrg = System.env.BINTRAY_ORG ?: System.env.BINTRAY_USER
-        vcsUrl = project.pom.scm.connection.replaceAll('^scm:[^:]*:', '')
-        licenses = [project.pom.project.license.shortName]
-        version {
-          name = project.version
-          desc = "$project.archivesBaseName $project.version"
-          released = new Date()
-          vcsTag = System.env.TRAVIS_TAG
-          if (System.env.OSS_USER != null) {
-            mavenCentralSync {
-              user = System.env.OSS_USER
-              password = System.env.OSS_PASSWORD
-            }
-          }
         }
       }
     }

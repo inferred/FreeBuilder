@@ -14,12 +14,10 @@ plugins {
   id 'java-library'
   id 'maven-publish'
   id 'com.github.johnrengelman.shadow' version '4.0.3'
-  id 'com.jfrog.bintray' version '1.8.4'
 }
 
 apply from: "gradle/java-compatibility.gradle"
 apply from: "gradle/publication.gradle"
-apply from: "gradle/travis-keep-alive.gradle"
 
 repositories {
   mavenCentral()
@@ -522,13 +520,7 @@ tasks.register("lambdaTest", Test) {
 group = 'org.inferred'
 archivesBaseName = 'freebuilder'
 
-if (System.env.TRAVIS_TAG != null && !System.env.TRAVIS_TAG.isEmpty()) {
-  version = System.env.TRAVIS_TAG.replaceAll('^v','')
-} else if (System.env.TRAVIS_BRANCH != null && !System.env.TRAVIS_BRANCH.isEmpty()) {
-  version = System.env.TRAVIS_BRANCH + '-alpha.' + System.env.TRAVIS_BUILD_NUMBER
-} else {
-  version = 'UNKNOWN-SNAPSHOT'
-}
+version = 'UNKNOWN-SNAPSHOT'
 
 pom {
   project {
