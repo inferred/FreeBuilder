@@ -80,7 +80,7 @@ class JacksonSupport {
         .stream()
         .filter(this::isXmlAnnotation)
         .forEach(annotation -> {
-          resultBuilder.addAccessorAnnotations(code -> code.addLine("%s", annotation));
+          resultBuilder.addAccessorAnnotations(Excerpts.add("%s%n", annotation));
         });
   }
 
