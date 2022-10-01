@@ -32,9 +32,9 @@ class JacksonSupport {
   private static final String JACKSON_XML_ANNOTATION_PACKAGE =
       "com.fasterxml.jackson.dataformat.xml.annotation";
   private static final QualifiedName JSON_ANY_GETTER =
-          QualifiedName.of("com.fasterxml.jackson.annotation", "JsonAnyGetter");
+      QualifiedName.of("com.fasterxml.jackson.annotation", "JsonAnyGetter");
   private static final QualifiedName JSON_ANY_SETTER =
-          QualifiedName.of("com.fasterxml.jackson.annotation", "JsonAnySetter");
+      QualifiedName.of("com.fasterxml.jackson.annotation", "JsonAnySetter");
   /** Annotations which disable automatic generation of JsonProperty annotations. */
   private static final Set<QualifiedName> DISABLE_PROPERTY_ANNOTATIONS = ImmutableSet.of(
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonIgnore"),
@@ -55,15 +55,15 @@ class JacksonSupport {
   public void addJacksonAnnotations(
       Property.Builder resultBuilder,
       ExecutableElement getterMethod) {
-    Optional<AnnotationMirror> jsonPropertyAnnotation = findAnnotationMirror(getterMethod,
-            JSON_PROPERTY);
+    Optional<AnnotationMirror> jsonPropertyAnnotation =
+        findAnnotationMirror(getterMethod, JSON_PROPERTY);
     if (jsonPropertyAnnotation.isPresent()) {
       resultBuilder.addAccessorAnnotations(Excerpts.add("%s%n", jsonPropertyAnnotation.get()));
     } else {
       switch (generateDefaultAnnotations(getterMethod)) {
         case DEFAULT:
-          resultBuilder.addAccessorAnnotations(Excerpts.add(
-                  "@%s(\"%s\")%n", JSON_PROPERTY, resultBuilder.getName()));
+          resultBuilder.addAccessorAnnotations(
+              Excerpts.add("@%s(\"%s\")%n", JSON_PROPERTY, resultBuilder.getName()));
           break;
         case JSON_ANY:
           resultBuilder.addPutAnnotations(Excerpts.add("@%s%n", JSON_ANY_SETTER));
