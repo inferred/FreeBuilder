@@ -31,6 +31,8 @@ class JacksonSupport {
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonProperty");
   private static final String JACKSON_XML_ANNOTATION_PACKAGE =
       "com.fasterxml.jackson.dataformat.xml.annotation";
+  private static final String JSON_ALIAS =
+      "com.fasterxml.jackson.annotation.JsonAlias";
   private static final QualifiedName JSON_ANY_GETTER =
       QualifiedName.of("com.fasterxml.jackson.annotation", "JsonAnyGetter");
   private static final QualifiedName JSON_ANY_SETTER =
@@ -78,15 +80,18 @@ class JacksonSupport {
     getterMethod
         .getAnnotationMirrors()
         .stream()
-        .filter(this::isXmlAnnotation)
+        .filter(this::shouldCopyAnnotation)
         .forEach(annotation -> {
           resultBuilder.addAccessorAnnotations(Excerpts.add("%s%n", annotation));
         });
   }
 
-  private boolean isXmlAnnotation(AnnotationMirror mirror) {
-    Name pkg = elements.getPackageOf(mirror.getAnnotationType().asElement()).getQualifiedName();
-    return pkg.contentEquals(JACKSON_XML_ANNOTATION_PACKAGE);
+  private boolean shouldCopyAnnotation(AnnotationMirror mirror) {
+    TypeElement annotationTypeElement = (TypeElement) mirror.getAnnotationType().asElement();
+    Name qualifiedName = annotationTypeElement.getQualifiedName();
+    Name pkg = elements.getPackageOf(annotationTypeElement).getQualifiedName();
+    return pkg.contentEquals(JACKSON_XML_ANNOTATION_PACKAGE)
+        || qualifiedName.contentEquals(JSON_ALIAS);
   }
 
   private static GenerateAnnotation generateDefaultAnnotations(ExecutableElement getterMethod) {
