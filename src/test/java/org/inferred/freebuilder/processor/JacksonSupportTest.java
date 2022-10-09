@@ -18,6 +18,7 @@ package org.inferred.freebuilder.processor;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -143,6 +144,21 @@ public class JacksonSupportTest {
 
     Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
     assertThat(property.getAccessorAnnotations()).named("property accessor annotations").isEmpty();
+  }
+
+  @Test
+  public void jsonAliasAnnotationCopied() throws CannotGenerateCodeException {
+    GeneratedBuilder builder = (GeneratedBuilder) analyser.analyse(model.newType(
+        "package com.example;",
+        "@" + JsonDeserialize.class.getName() + "(builder = DataType.Builder.class)",
+        "public interface DataType {",
+        "  @" + JsonAlias.class.getName() + "({\"foo\", \"bar\"}) int getFooBar();",
+        "  class Builder extends DataType_Builder {}",
+        "}"));
+
+    Property property = getOnlyElement(builder.getGeneratorsByProperty().keySet());
+    assertPropertyHasAnnotation(property, JsonProperty.class, "@JsonProperty(\"fooBar\")");
+    assertPropertyHasAnnotation(property, JsonAlias.class, "@JsonAlias({\"foo\", \"bar\"})");
   }
 
   private static void assertPropertyHasAnnotation(
