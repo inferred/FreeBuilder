@@ -32,7 +32,7 @@ Map<Integer, Jvm> jvms = [:].withDefault { String versionString ->
     return jvms[fallback.majorVersion];
   } else {
     throw new RuntimeException("Set the property $propertyName in your"
-        + "$HOME/.gradle/gradle.properties, pointing to a Java $version installation")
+        + "\$HOME/.gradle/gradle.properties, pointing to a Java $version installation")
   }
   logger.info "Java ${versionString} found at ${javaInfo.javaHome}"
   return javaInfo
