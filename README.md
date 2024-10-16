@@ -10,9 +10,24 @@ _Automatic generation of the Builder pattern for Java 1.8+_
 > or static factories would have more than a handful of parameters.
 > &mdash; <em>Effective Java, Second Edition</em>, page 39
 
+Project Archival
+----------------
+
+FreeBuilder was released back in 2015! It was a pet project of my own that unfortunately generated a weird amount of controversy at the company I worked at at the time, and thus ended up being open-sourced after the Immutables project had already been on the scene for most of a year. While I hoped the different design that allowed using partials for robust testing would still be a winner, a community hasn't picked up, and as I haven't used Java at my work for over 5 years now, and it's clearly not keeping up with modern Java, I think it's time to archive it.
+
+If someone feels strongly about picking up where I've left off, please do reach out and let me know! I'd ask that you first fork the project and modernize the dev and CI setup, which really needs doing.
+
+Otherwise, it's been a fun ride, and thanks to everyone who's been building free with me along the way 😁
+
+&mdash; Alice
+
+Table of Contents
+-----------------
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Project Archival](#project-archival)
 - [Background](#background)
 - [How to use FreeBuilder](#how-to-use-freebuilder)
   - [Quick start](#quick-start)
